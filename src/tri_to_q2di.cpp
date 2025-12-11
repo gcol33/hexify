@@ -238,6 +238,85 @@ void quantize_class2(double x, double y, long long& out_i, long long& out_j) {
     quantize_class1(back_x * kSqrt3, back_y * kSqrt3, out_i, out_j);
 }
 
+
+// ============================================================================
+// Class III Quantization (Aperture 7)
+// ============================================================================
+// Class III hexagons are rotated by arctan(sqrt(3/7)) ~= 19.1deg from Class I.
+// This creates a grid where only 1/7 of substrate cells are valid.
+
+// Aperture 7 rotation angle in radians
+constexpr double kAp7RotRad = 19.10660535003926406149339781619697490 * kPi / 180.0;
+
+// Class III-I (even resolutions): Class I surrogate rotated by ~19.1deg
+void quantize_class3i(double x, double y, long long& out_i, long long& out_j) {
+    const double c = std::cos(-kAp7RotRad);
+    const double s = std::sin(-kAp7RotRad);
+
+    // Rotate to surrogate
+    double rx = x * c - y * s;
+    double ry = x * s + y * c;
+
+    // Quantize in Class I surrogate
+    long long sur_i, sur_j;
+    quantize_class1(rx, ry, sur_i, sur_j);
+
+    // Get surrogate center and rotate back
+    double sur_x, sur_y;
+    inv_quantize_class1(sur_i, sur_j, sur_x, sur_y);
+
+    double back_x = sur_x * c + sur_y * s;
+    double back_y = -sur_x * s + sur_y * c;
+
+    // Scale to substrate (sqrt(7)x finer) and re-quantize
+    quantize_class1(back_x * kSqrt7, back_y * kSqrt7, out_i, out_j);
+}
+
+// Class III-II (odd resolutions): Class II surrogate rotated by ~19.1deg
+// The surrogate is a Class II grid (pointy-top, 30° rotated from Class I).
+// We need to:
+//   1. Rotate to surrogate frame (-19.1 degrees)
+//   2. Quantize in Class II surrogate (which is Class I at -30 degrees)
+//   3. Get the Class II surrogate center
+//   4. Rotate back to original frame (+19.1 degrees)
+//   5. Scale to Class I substrate (sqrt(21)x) and re-quantize
+void quantize_class3ii(double x, double y, long long& out_i, long long& out_j) {
+    const double c_ap7 = std::cos(-kAp7RotRad);
+    const double s_ap7 = std::sin(-kAp7RotRad);
+
+    // Step 1: Rotate to surrogate frame (-19.1 degrees)
+    double sur_x = x * c_ap7 - y * s_ap7;
+    double sur_y = x * s_ap7 + y * c_ap7;
+
+    // Step 2: Quantize in Class II surrogate
+    // Class II = Class I rotated by -30 degrees
+    constexpr double c_30 = 0.866025403784438646763723170752936183;  // cos(-30°)
+    constexpr double s_30 = -0.5;  // sin(-30°)
+
+    // Rotate to Class I orientation within the surrogate
+    double c1_x = sur_x * c_30 - sur_y * s_30;
+    double c1_y = sur_x * s_30 + sur_y * c_30;
+
+    // Quantize in Class I
+    long long sur1_i, sur1_j;
+    quantize_class1(c1_x, c1_y, sur1_i, sur1_j);
+
+    // Get Class I center
+    double sur1_cen_x, sur1_cen_y;
+    inv_quantize_class1(sur1_i, sur1_j, sur1_cen_x, sur1_cen_y);
+
+    // Rotate back to Class II orientation (+30 degrees)
+    double c2_back_x = sur1_cen_x * c_30 + sur1_cen_y * s_30;
+    double c2_back_y = -sur1_cen_x * s_30 + sur1_cen_y * c_30;
+
+    // Step 3: Rotate back to original frame (+19.1 degrees)
+    double back_x = c2_back_x * c_ap7 + c2_back_y * s_ap7;
+    double back_y = -c2_back_x * s_ap7 + c2_back_y * c_ap7;
+
+    // Step 4: Scale to substrate (sqrt(21)x finer for Class III-II) and re-quantize
+    quantize_class1(back_x * kSqrt21, back_y * kSqrt21, out_i, out_j);
+}
+
 // ============================================================================
 // Quad Edge Adjacency
 // ============================================================================
@@ -304,7 +383,9 @@ long long get_max_ij(int aperture, int resolution) {
         factor = std::pow(2.0, resolution);
     } else if (aperture == 7) {
         factor = std::pow(std::sqrt(7.0), resolution);
-        factor *= std::sqrt(7.0);  // Class III substrate
+        // Class III-I (even res) uses sqrt(7) substrate, Class III-II (odd res) uses sqrt(21)
+        bool is_class3i = (resolution % 2 == 0);
+        factor *= is_class3i ? kSqrt7 : kSqrt21;
     } else {
         return 0;
     }
@@ -391,12 +472,20 @@ void q2dd_to_q2di(int quad, double qx, double qy,
     double scaled_x = qx * scale;
     double scaled_y = qy * scale;
 
-    // Select quantization based on grid class
-    bool is_class1 = (aperture == 4) || (aperture == 3 && resolution % 2 == 0);
-
-    if (is_class1) {
+    // Select quantization based on aperture and grid class
+    if (aperture == 7) {
+        // Aperture 7: Class III quantization
+        bool is_class3i = (resolution % 2 == 0);
+        if (is_class3i) {
+            quantize_class3i(scaled_x, scaled_y, out_i, out_j);
+        } else {
+            quantize_class3ii(scaled_x, scaled_y, out_i, out_j);
+        }
+    } else if (aperture == 4 || (aperture == 3 && resolution % 2 == 0)) {
+        // Class I quantization
         quantize_class1(scaled_x, scaled_y, out_i, out_j);
     } else {
+        // Class II quantization (aperture 3 odd resolutions)
         quantize_class2(scaled_x, scaled_y, out_i, out_j);
     }
 
@@ -417,21 +506,25 @@ void q2di_to_q2dd(int quad, long long i, long long j,
                   int aperture, int resolution,
                   double& out_qx, double& out_qy) {
 
-    bool is_class1 = (aperture == 4) || (aperture == 3 && resolution % 2 == 0);
-
     double x, y;
     inv_quantize_class1(i, j, x, y);
 
-    // Compute inverse scale
+    // Compute inverse scale accounting for substrate
     double scale;
     if (aperture == 3) {
+        bool is_class1 = (resolution % 2 == 0);
         scale = is_class1
             ? std::pow(kSqrt3, resolution)
             : std::pow(kSqrt3, resolution + 1);  // Class II substrate
     } else if (aperture == 4) {
         scale = std::pow(2.0, resolution);
     } else if (aperture == 7) {
-        scale = std::pow(std::sqrt(7.0), resolution);
+        // Aperture 7: base scale * substrate multiplier
+        double base_scale = std::pow(std::sqrt(7.0), resolution);
+        bool is_class3i = (resolution % 2 == 0);
+        // Class III-I substrate is sqrt(7)x finer, Class III-II is sqrt(21)x finer
+        double substrate_mult = is_class3i ? kSqrt7 : kSqrt21;
+        scale = base_scale * substrate_mult;
     } else {
         throw std::runtime_error("q2di_to_q2dd: unsupported aperture");
     }

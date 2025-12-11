@@ -30,27 +30,6 @@ void center_class1(long long i, long long j, double& x, double& y) {
     cube_to_cartesian(static_cast<double>(i), static_cast<double>(j), x, y, kSin60);
 }
 
-// Class II quantization (30° rotated)
-void quantify_class2(double x, double y, long long& out_i, long long& out_j) {
-    constexpr double angle = -kPi / 6.0;  // -30°
-    double c = std::cos(angle);
-    double s = std::sin(angle);
-
-    double rx = x * c - y * s;
-    double ry = x * s + y * c;
-
-    long long sur_i, sur_j;
-    quantify_class1(rx, ry, sur_i, sur_j);
-
-    double sur_x, sur_y;
-    center_class1(sur_i, sur_j, sur_x, sur_y);
-
-    double back_x = sur_x * c + sur_y * s;
-    double back_y = -sur_x * s + sur_y * c;
-
-    quantify_class1(back_x * kSqrt3, back_y * kSqrt3, out_i, out_j);
-}
-
 // ============================================================================
 // Class III Quantization
 // ============================================================================
@@ -81,29 +60,48 @@ void quantify_class3i(double x, double y, long long& out_i, long long& out_j) {
 }
 
 // Class III-II (odd resolutions): Class II surrogate rotated by kAp7RotDeg
+// The surrogate is a Class II grid (pointy-top, 30° rotated from Class I).
+// We need to:
+//   1. Rotate to surrogate frame (-19.1 degrees)
+//   2. Quantize in Class II surrogate (which is Class I at -30 degrees)
+//   3. Get the Class II surrogate center
+//   4. Rotate back to original frame (+19.1 degrees)
+//   5. Scale to Class I substrate (sqrt(21)x) and re-quantize
 void quantify_class3ii(double x, double y, long long& out_i, long long& out_j) {
-    const double angle = -kAp7RotDeg * kPi / 180.0;
-    double c = std::cos(angle);
-    double s = std::sin(angle);
+    const double c_ap7 = std::cos(-kAp7RotDeg * kPi / 180.0);
+    const double s_ap7 = std::sin(-kAp7RotDeg * kPi / 180.0);
 
-    // Rotate to surrogate
-    double rx = x * c - y * s;
-    double ry = x * s + y * c;
+    // Step 1: Rotate to surrogate frame (-19.1 degrees)
+    double sur_x = x * c_ap7 - y * s_ap7;
+    double sur_y = x * s_ap7 + y * c_ap7;
 
-    // Quantize in Class II surrogate
-    long long sur_i, sur_j;
-    quantify_class2(rx, ry, sur_i, sur_j);
+    // Step 2: Quantize in Class II surrogate
+    // Class II = Class I rotated by -30 degrees
+    constexpr double c_30 = 0.866025403784438646763723170752936183;  // cos(-30°)
+    constexpr double s_30 = -0.5;  // sin(-30°)
 
-    // Get surrogate center
-    double sur_x, sur_y;
-    center_class1(sur_i, sur_j, sur_x, sur_y);
+    // Rotate to Class I orientation within the surrogate
+    double c1_x = sur_x * c_30 - sur_y * s_30;
+    double c1_y = sur_x * s_30 + sur_y * c_30;
 
-    // Rotate back
-    double back_x = sur_x * c + sur_y * s;
-    double back_y = -sur_x * s + sur_y * c;
+    // Quantize in Class I
+    long long sur1_i, sur1_j;
+    quantify_class1(c1_x, c1_y, sur1_i, sur1_j);
 
-    // Scale to substrate (sqrt(7)× finer than Class II base)
-    quantify_class1(back_x * kSqrt7, back_y * kSqrt7, out_i, out_j);
+    // Get Class I center
+    double sur1_cen_x, sur1_cen_y;
+    center_class1(sur1_i, sur1_j, sur1_cen_x, sur1_cen_y);
+
+    // Rotate back to Class II orientation (+30 degrees)
+    double c2_back_x = sur1_cen_x * c_30 + sur1_cen_y * s_30;
+    double c2_back_y = -sur1_cen_x * s_30 + sur1_cen_y * c_30;
+
+    // Step 3: Rotate back to original frame (+19.1 degrees)
+    double back_x = c2_back_x * c_ap7 + c2_back_y * s_ap7;
+    double back_y = -c2_back_x * s_ap7 + c2_back_y * c_ap7;
+
+    // Step 4: Scale to substrate (sqrt(21)x finer for Class III-II) and re-quantize
+    quantify_class1(back_x * kSqrt21, back_y * kSqrt21, out_i, out_j);
 }
 
 } // anonymous namespace

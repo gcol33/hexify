@@ -339,7 +339,21 @@ static long long calc_max_grid_dim_ap4(int resolution) {
     return (1LL << resolution) - 1;  // 2^res - 1
 }
 
-// Calculate grid dimension for aperture 7
+// Calculate SURROGATE grid dimension for aperture 7 (for seqnum encoding)
+// This is the dimension used by DGGRID's seqnum formula
+static long long calc_surrogate_dim_ap7(int resolution) {
+    if (resolution == 0) return 0;
+
+    // Surrogate dimension: sqrt(7)^resolution
+    double scale = 1.0;
+    for (int r = 1; r <= resolution; r++) {
+        scale *= 2.6457513110645905905;  // sqrt(7)
+    }
+
+    return static_cast<long long>(scale + 0.000001);
+}
+
+// Calculate SUBSTRATE grid dimension for aperture 7 (for coordinate space)
 static long long calc_max_grid_dim_ap7(int resolution) {
     if (resolution == 0) return 0;
 
@@ -361,6 +375,12 @@ static long long calc_max_grid_dim_ap7(int resolution) {
     }
 
     return static_cast<long long>(scale + 0.000001) - 1;
+}
+
+// Get substrate scaling factor for aperture 7
+static double get_substrate_scale_ap7(int resolution) {
+    bool is_class3i = (resolution % 2) == 0;
+    return is_class3i ? 2.6457513110645905905 : 4.5825756949558400065;  // sqrt(7) or sqrt(21)
 }
 
 // 2D seqnum for aligned grid (aperture 3 even res, aperture 4 all res)
@@ -391,6 +411,40 @@ static void ij_from_seqnum_offset_ap3(uint64_t sNum, long long dim,
         case 0: break;
         case 1: j += 2; break;
         case 2: j += 1; break;
+    }
+}
+
+// 2D seqnum for offset grid (aperture 7)
+// Based on DGGRID's DgBoundedHexC3RF2D::seqNumAddress
+// Only 1/7 of cells are valid - those satisfying the Class III pattern
+static uint64_t seqnum_2d_offset_ap7(long long i, long long j, long long dim) {
+    uint64_t sNum = static_cast<uint64_t>(i) * dim / 7;
+    switch (i % 7) {
+        case 0: sNum += j / 7; break;
+        case 1: sNum += (j - 5) / 7; break;
+        case 2: sNum += (j - 3) / 7; break;
+        case 3: sNum += (j - 1) / 7; break;
+        case 4: sNum += (j - 6) / 7; break;
+        case 5: sNum += (j - 4) / 7; break;
+        case 6: sNum += (j - 2) / 7; break;
+    }
+    return sNum;
+}
+
+// Inverse: seqnum to (i, j) for offset grid (aperture 7)
+// Based on DGGRID's DgBoundedHexC3RF2D::addFromSeqNum
+static void ij_from_seqnum_offset_ap7(uint64_t sNum, long long dim,
+                                      long long& i, long long& j) {
+    i = (sNum * 7) / dim;
+    j = (sNum * 7) % dim;
+    switch (i % 7) {
+        case 0: break;
+        case 1: j += 5; break;
+        case 2: j += 3; break;
+        case 3: j += 1; break;
+        case 4: j += 6; break;
+        case 5: j += 4; break;
+        case 6: j += 2; break;
     }
 }
 
@@ -476,20 +530,29 @@ NumericVector cpp_lonlat_to_seqnum_dggrid(NumericVector lon, NumericVector lat,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     // Grid dimension depends on aperture
+    // For aperture 7, use SURROGATE dimension for seqnum encoding
     long long dim;
     if (aperture == 3) {
         dim = calc_max_grid_dim_ap3(resolution) + 1;
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_max_grid_dim_ap7(resolution) + 1;
+        // Aperture 7: use surrogate dimension for seqnum formula
+        dim = calc_surrogate_dim_ap7(resolution) + 1;
     }
 
-    // Check if using offset grid (only aperture 3 odd resolutions)
-    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    // Determine grid type:
+    // - Aperture 3 odd resolutions: offset grid with /3, %3
+    // - Aperture 4 all resolutions: aligned grid
+    // - Aperture 7 all resolutions: offset grid with /7, %7
+    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    bool use_offset_ap7 = (aperture == 7);
+
+    // Get substrate scale for aperture 7 coordinate conversion
+    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        // Get Q2DI coordinates
+        // Get Q2DI coordinates (in substrate coordinates)
         hexify::FwdOut fwd = hexify::snyder_fwd(lon[k], lat[k]);
 
         int quad;
@@ -505,8 +568,13 @@ NumericVector cpp_lonlat_to_seqnum_dggrid(NumericVector lon, NumericVector lat,
 
         // Calculate 2D seqnum based on grid pattern
         uint64_t bnd2D_seq;
-        if (use_offset) {
+        if (use_offset_ap3) {
             bnd2D_seq = seqnum_2d_offset_ap3(i, j, dim);
+        } else if (use_offset_ap7) {
+            // For aperture 7: convert substrate (i,j) to surrogate indices
+            long long i_sur = static_cast<long long>(std::round(i / substrate_scale_ap7));
+            long long j_sur = static_cast<long long>(std::round(j / substrate_scale_ap7));
+            bnd2D_seq = seqnum_2d_offset_ap7(i_sur, j_sur, dim);
         } else {
             bnd2D_seq = seqnum_2d_aligned(i, j, dim);
         }
@@ -534,17 +602,26 @@ DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     // Grid dimension depends on aperture
+    // For aperture 7, use SURROGATE dimension for seqnum decoding
     long long dim;
     if (aperture == 3) {
         dim = calc_max_grid_dim_ap3(resolution) + 1;
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_max_grid_dim_ap7(resolution) + 1;
+        // Aperture 7: use surrogate dimension for seqnum formula
+        dim = calc_surrogate_dim_ap7(resolution) + 1;
     }
 
-    // Check if using offset grid (only aperture 3 odd resolutions)
-    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    // Determine grid type:
+    // - Aperture 3 odd resolutions: offset grid with /3, %3
+    // - Aperture 4 all resolutions: aligned grid
+    // - Aperture 7 all resolutions: offset grid with /7, %7
+    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    bool use_offset_ap7 = (aperture == 7);
+
+    // Get substrate scale for aperture 7 coordinate conversion
+    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t sNum = static_cast<uint64_t>(seqnum[k]);
@@ -569,8 +646,14 @@ DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
             sNum -= (quad - 1) * offsetPerQuad;
 
             // Get i, j from remaining seqnum based on grid type
-            if (use_offset) {
+            if (use_offset_ap3) {
                 ij_from_seqnum_offset_ap3(sNum, dim, i, j);
+            } else if (use_offset_ap7) {
+                // Decode to surrogate indices
+                ij_from_seqnum_offset_ap7(sNum, dim, i, j);
+                // Convert surrogate to substrate indices
+                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
+                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
                 i = sNum / dim;
                 j = sNum % dim;
@@ -578,7 +661,7 @@ DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
         }
 
         // Convert Q2DI to lon/lat via Q2DD -> PROJTRI -> lon/lat
-        // Step 1: Q2DI -> Q2DD
+        // Step 1: Q2DI -> Q2DD (i,j are now in substrate coordinates)
         double qx, qy;
         hexify::q2di_to_q2dd(quad, i, j, aperture, resolution, qx, qy);
 
