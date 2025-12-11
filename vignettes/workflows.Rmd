@@ -1,0 +1,313 @@
+---
+title: "Practical Workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Practical Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+This vignette demonstrates practical workflows for common spatial analysis tasks
+using hexify's discrete global grid system.
+
+## Workflow 1: Point Aggregation
+
+### Problem
+
+You have a large dataset of point observations and want to aggregate them into
+equal-area cells for analysis or visualization.
+
+### Solution
+
+```{r}
+library(hexify)
+
+# Simulate species occurrence data
+set.seed(42)
+observations <- data.frame(
+  species = sample(c("Species A", "Species B", "Species C"), 1000, replace = TRUE),
+  lon = runif(1000, -10, 30),  # Europe
+  lat = runif(1000, 35, 60)
+)
+
+# Assign each observation to a grid cell
+observations$cell_id <- hexify_lonlat_to_index(
+  observations$lon, observations$lat,
+  resolution = 5, aperture = 3
+)
+
+# Count observations per cell
+cell_counts <- aggregate(
+  species ~ cell_id,
+  data = observations,
+  FUN = length
+)
+names(cell_counts)[2] <- "count"
+
+head(cell_counts)
+```
+
+### Get cell centers for mapping
+
+```{r}
+# Add cell center coordinates
+cell_centers <- hexify_index_to_lonlat(cell_counts$cell_id, aperture = 3)
+cell_counts$center_lon <- cell_centers[, "lon"]
+cell_counts$center_lat <- cell_centers[, "lat"]
+
+head(cell_counts)
+```
+
+## Workflow 2: Multi-Resolution Analysis
+
+### Problem
+
+You want to analyze data at multiple spatial scales without reprocessing.
+
+### Solution
+
+Use the hierarchical structure of the grid.
+
+```{r}
+# Start with fine-resolution cells
+fine_cells <- unique(observations$cell_id)
+
+# Get parent cells (coarser resolution)
+parent_cells <- sapply(fine_cells, function(idx) {
+  hexify_get_parent(idx, aperture = 3)
+})
+
+# Get resolution of each level
+fine_res <- hexify_get_resolution(fine_cells[1], aperture = 3)
+coarse_res <- hexify_get_resolution(parent_cells[1], aperture = 3)
+
+cat(sprintf("Fine resolution: %d (%d unique cells)\n",
+            fine_res, length(unique(fine_cells))))
+cat(sprintf("Coarse resolution: %d (%d unique cells)\n",
+            coarse_res, length(unique(parent_cells))))
+```
+
+### Build hierarchy table
+
+```{r}
+# Create parent-child relationship table
+hierarchy <- data.frame(
+  child = fine_cells,
+  parent = parent_cells
+)
+
+# Aggregate counts to parent level
+parent_counts <- aggregate(
+  count ~ parent,
+  data = merge(
+    data.frame(child = observations$cell_id),
+    hierarchy
+  ) |> merge(cell_counts, by.x = "child", by.y = "cell_id"),
+  FUN = sum
+)
+
+head(parent_counts)
+```
+
+## Workflow 3: Spatial Joins
+
+### Problem
+
+You have two datasets with different point locations and want to join them
+based on shared grid cells.
+
+### Solution
+
+```{r}
+# Dataset 1: Weather stations
+stations <- data.frame(
+  station_id = paste0("ST", 1:50),
+  lon = runif(50, -10, 30),
+  lat = runif(50, 35, 60),
+  temperature = rnorm(50, 15, 5)
+)
+
+# Dataset 2: Cities
+cities <- data.frame(
+  city = c("Vienna", "Paris", "London", "Berlin", "Rome",
+           "Madrid", "Prague", "Warsaw", "Budapest", "Amsterdam"),
+  lon = c(16.37, 2.35, -0.12, 13.40, 12.50,
+          -3.70, 14.42, 21.01, 19.04, 4.90),
+  lat = c(48.21, 48.86, 51.51, 52.52, 41.90,
+          40.42, 50.08, 52.23, 47.50, 52.37)
+)
+
+# Assign both to the same grid
+resolution <- 4  # Coarse for joining disparate points
+
+stations$cell_id <- hexify_lonlat_to_index(
+  stations$lon, stations$lat,
+  resolution = resolution, aperture = 3
+)
+
+cities$cell_id <- hexify_lonlat_to_index(
+  cities$lon, cities$lat,
+  resolution = resolution, aperture = 3
+)
+
+# Join by cell_id
+city_weather <- merge(
+  cities[, c("city", "cell_id")],
+  aggregate(temperature ~ cell_id, data = stations, FUN = mean),
+  by = "cell_id",
+  all.x = TRUE
+)
+
+city_weather
+```
+
+## Workflow 4: Database Storage
+
+### Problem
+
+You need to store cell assignments in a database and want compact integer IDs.
+
+### Solution
+
+Use sequential numbers (seqnum) instead of string indices.
+
+```{r}
+# Convert to integer seqnum
+observations$seqnum <- hexify_lonlat_to_seqnum(
+  observations$lon, observations$lat,
+  resolution = 5, aperture = 3
+)
+
+# Compare storage requirements
+cat("Index string length:", nchar(observations$cell_id[1]), "characters\n")
+cat("Seqnum:", observations$seqnum[1], "(integer)\n")
+
+# Round-trip verification
+coords <- hexify_seqnum_to_lonlat(
+  observations$seqnum[1:5],
+  resolution = 5, aperture = 3
+)
+print(coords)
+```
+
+## Workflow 5: Choosing Resolution
+
+### Problem
+
+You want cells of approximately a specific area.
+
+### Solution
+
+Use `hexify_construct()` to find the appropriate resolution.
+
+```{r}
+# Target: 100 km² cells
+grid_100 <- hexify_construct(area = 100, aperture = 3)
+cat(sprintf("For ~100 km² cells: resolution %d (actual area: %.1f km²)\n",
+            grid_100$resolution, grid_100$area))
+
+# Target: 1000 km² cells
+grid_1000 <- hexify_construct(area = 1000, aperture = 3)
+cat(sprintf("For ~1000 km² cells: resolution %d (actual area: %.1f km²)\n",
+            grid_1000$resolution, grid_1000$area))
+
+# Target: 10000 km² cells
+grid_10000 <- hexify_construct(area = 10000, aperture = 3)
+cat(sprintf("For ~10000 km² cells: resolution %d (actual area: %.1f km²)\n",
+            grid_10000$resolution, grid_10000$area))
+```
+
+### Compare apertures for target area
+
+```{r}
+target_area <- 500  # km²
+
+for (ap in c(3, 4, 7)) {
+  grid <- hexify_construct(area = target_area, aperture = ap)
+  cat(sprintf("Aperture %d: resolution %d, area %.1f km²\n",
+              ap, grid$resolution, grid$area))
+}
+```
+
+## Workflow 6: Working with sf
+
+### Problem
+
+You want to create sf polygons for visualization.
+
+### Solution
+
+```{r eval=FALSE}
+library(sf)
+
+# Get unique cells
+unique_cells <- unique(observations$cell_id)
+
+# Get cell boundaries (if implemented)
+# boundaries <- hexify_cell_to_boundary(grid, unique_cells)
+
+# Alternative: create point layer with cell centers
+cell_sf <- st_as_sf(
+  cell_counts,
+  coords = c("center_lon", "center_lat"),
+  crs = 4326
+)
+
+# Plot
+plot(cell_sf["count"], pch = 16, main = "Observation counts per cell")
+```
+
+## Best Practices
+
+### 1. Choose aperture based on use case
+
+- **Aperture 3**: Best for fine resolution control, ecological studies
+- **Aperture 4**: Good default, familiar power-of-2 scaling
+- **Aperture 7**: Fast resolution jumps, coarse regional analysis
+
+### 2. Store indices efficiently
+
+- Use string indices for interoperability
+- Use seqnum for database storage
+- Store resolution alongside indices
+
+### 3. Use hierarchical structure
+
+- Pre-compute parent indices for multi-scale analysis
+- Navigate hierarchy rather than re-computing
+
+### 4. Handle edge cases
+
+- Check for NA coordinates before processing
+- Polar regions (lat > 89°) may have projection artifacts
+- Date line (lon = ±180°) works correctly
+
+```{r}
+# Example: handling NA values
+data_with_na <- data.frame(
+  lon = c(16.37, NA, 2.35),
+  lat = c(48.21, 48.86, NA)
+)
+
+# Filter before processing
+valid_rows <- complete.cases(data_with_na[, c("lon", "lat")])
+data_with_na$cell_id <- NA
+data_with_na$cell_id[valid_rows] <- hexify_lonlat_to_index(
+  data_with_na$lon[valid_rows],
+  data_with_na$lat[valid_rows],
+  resolution = 5, aperture = 3
+)
+
+print(data_with_na)
+```

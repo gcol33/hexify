@@ -1,0 +1,177 @@
+---
+title: "Getting Started with hexify"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with hexify}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## What is hexify?
+
+**hexify** is an R package for working with discrete global grid systems (DGGS)
+based on the ISEA (Icosahedral Snyder Equal Area) projection. It provides:
+
+- Equal-area hexagonal cells covering the entire globe
+- Hierarchical indexing with multiple apertures (3, 4, 7)
+- Efficient point-to-cell assignment
+- Cell center and boundary computation
+
+## Installation
+
+```{r eval=FALSE}
+# From GitHub (development version)
+devtools::install_github("username/hexify")
+```
+
+## Basic Usage
+
+### 1. Assign points to grid cells
+
+The most common use case: given longitude/latitude coordinates, find which
+hexagonal cell each point belongs to.
+
+```{r}
+library(hexify)
+
+# Sample coordinates (European cities)
+cities <- data.frame(
+  name = c("Vienna", "Paris", "London", "Berlin", "Rome"),
+  lon = c(16.37, 2.35, -0.12, 13.40, 12.50),
+  lat = c(48.21, 48.86, 51.51, 52.52, 41.90)
+)
+
+# Assign to grid cells (aperture 3, resolution 5)
+indices <- hexify_lonlat_to_index(
+  cities$lon, cities$lat,
+  resolution = 5,
+  aperture = 3
+)
+
+# Add cell indices to data
+cities$cell_id <- indices
+print(cities)
+```
+
+### 2. Get cell centers
+
+Convert cell indices back to geographic coordinates (cell centers):
+
+```{r}
+# Get center of each cell
+centers <- hexify_index_to_lonlat(cities$cell_id, aperture = 3)
+print(centers)
+```
+
+### 3. Using the grid object interface
+
+For more complex workflows, create a grid specification:
+
+```{r}
+# Create grid with target cell area of 1000 km²
+grid <- hexify_construct(area = 1000, aperture = 3)
+print(grid)
+
+# Use with the grid object
+cells <- hexify_geo_to_cell(grid, cities$lon, cities$lat)
+print(cells)
+```
+
+## Aperture Selection
+
+hexify supports three aperture values, each with different characteristics:
+
+| Aperture | Refinement | Cell Count Growth | Best For |
+|----------|------------|-------------------|----------|
+| 3 | 3:1 | Slower | Fine resolution control |
+| 4 | 4:1 | Medium | Standard applications |
+| 7 | 7:1 | Faster | Coarse-to-fine jumps |
+
+```{r}
+# Compare cell counts at resolution 5
+for (ap in c(3, 4, 7)) {
+  idx <- hexify_lonlat_to_index(0, 0, resolution = 5, aperture = ap)
+  cat(sprintf("Aperture %d: index = %s\n", ap, idx))
+}
+```
+
+## Index Types
+
+Each aperture has an optimal index encoding:
+
+- **Aperture 3**: Z3 encoding (default)
+- **Aperture 4**: Z-order (Morton) encoding (default)
+- **Aperture 7**: Z7 encoding (default)
+
+The index type affects how cell indices are represented as strings:
+
+```{r}
+# Z3 index (aperture 3)
+idx_z3 <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
+cat("Z3 index:", idx_z3, "\n")
+
+# Z-order index (aperture 4)
+idx_zo <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 4)
+cat("Z-order index:", idx_zo, "\n")
+```
+
+## Integer Sequential Numbers
+
+For database storage, use integer sequential numbers instead of string indices:
+
+```{r}
+# Convert to integer seqnum
+seqnum <- hexify_lonlat_to_seqnum(
+  cities$lon, cities$lat,
+  resolution = 5, aperture = 3
+)
+print(seqnum)
+
+# Convert back to coordinates
+coords <- hexify_seqnum_to_lonlat(seqnum, resolution = 5, aperture = 3)
+print(coords)
+```
+
+## Hierarchical Operations
+
+Navigate the grid hierarchy:
+
+```{r}
+# Get an index
+idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
+
+# Get parent (coarser resolution)
+parent <- hexify_get_parent(idx, aperture = 3)
+cat("Index:", idx, "\n")
+cat("Parent:", parent, "\n")
+
+# Get children (finer resolution)
+children <- hexify_get_children(idx, aperture = 3)
+cat("Children:", paste(children, collapse = ", "), "\n")
+```
+
+## dggridR Compatibility
+
+If you're familiar with dggridR, hexify provides compatible function names:
+
+```{r}
+# dggridR-style API
+dggs <- dgconstruct(area = 1000, aperture = 3)
+result <- dgGEO_to_SEQNUM(dggs, in_lon_deg = 16.37, in_lat_deg = 48.21)
+print(result$seqnum)
+```
+
+## Next Steps
+
+- See `vignette("theory")` for mathematical details
+- See `vignette("workflows")` for real-world examples
+- See `vignette("apertures")` for aperture comparison
