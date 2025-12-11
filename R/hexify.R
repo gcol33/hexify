@@ -17,7 +17,7 @@
 #' @param resround How to round resolution: "nearest", "up", or "down"
 #'
 #' @return The input data with additional columns:
-#'   \item{hex_id}{Stable DGGS cell identifier (character)}
+#'   \item{hex_id}{Stable DGGS cell identifier (integer SEQNUM)}
 #'   \item{hex_cen_lon}{Longitude of cell center in degrees}
 #'   \item{hex_cen_lat}{Latitude of cell center in degrees}
 #'
@@ -31,6 +31,12 @@
 #'
 #' The spacing (long diagonal) relates to area approximately as:
 #' area ≈ (3 * sqrt(3) / 2) * (spacing / 2)² ≈ 0.6495 * spacing²
+#'
+#' Supported apertures:
+#' - `aperture = 3`: ISEA3H (default, compatible with dggridR).
+#'   Cell count = 10 * 3^res + 2.
+#' - `aperture = 4`: ISEA4H. Cell count = 10 * 4^res + 2.
+#' - `aperture = 7`: ISEA7H. Cell count = 10 * 7^res + 2.
 #'
 #' @export
 #' @examples
@@ -50,6 +56,10 @@
 #'
 #' # Using spacing instead of area
 #' result <- hexify(df, lon = "lon", lat = "lat", spacing = 50)
+#'
+#' # Different apertures
+#' result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+#' result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
 #' }
 hexify <- function(data,
                    lon = "lon",

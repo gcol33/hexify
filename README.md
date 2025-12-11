@@ -4,7 +4,7 @@
 
 **Fast Hexagonal Grid Assignment for Geographic Data**
 
-`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA3H discrete global grid system. It produces output identical to `dggridR` but with a simpler, modern interface.
+`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. It produces output identical to `dggridR` but with a simpler, modern interface. Supports apertures 3, 4, and 7.
 
 ## Quick Start
 
@@ -39,7 +39,7 @@ result
 - **Point-to-cell assignment**: Given lon/lat, return cell ID and center
 - **Area or spacing control**: Specify target cell area (km²) or spacing (km)
 - **sf integration**: Handles any CRS, auto-transforms to WGS84
-- **Aperture 3 grids**: ISEA3H compatible with dggridR
+- **Multiple apertures**: ISEA3H, ISEA4H, and ISEA7H grids (apertures 3, 4, 7)
 
 ## Installation
 
@@ -65,6 +65,10 @@ result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
 # By spacing (long diagonal in km)
 result <- hexify(df, lon = "lon", lat = "lat", spacing = 50)
+
+# Different apertures
+result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
 ```
 
 ### With sf Objects
@@ -108,7 +112,15 @@ all(result$hex_id == ref$seqnum)
 #> TRUE
 ```
 
-## Resolution Reference
+## Aperture Options
+
+| Aperture | Grid Type | Cell Count Formula | Use Case |
+|----------|-----------|-------------------|----------|
+| 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
+| 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
+| 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+
+## Resolution Reference (Aperture 3)
 
 | Resolution | Cells | Area (km²) | Spacing (km) |
 |------------|-------|------------|--------------|
@@ -123,7 +135,6 @@ all(result$hex_id == ref$seqnum)
 
 ## Limitations
 
-- Currently supports aperture 3 only (ISEA3H)
 - No polygon/boundary generation (use dggridR for that)
 - No neighbor/parent/child operations in main API
 

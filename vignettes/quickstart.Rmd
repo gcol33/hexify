@@ -33,7 +33,11 @@ remotes::install_github("gcol33/hexify")
 
 ## What hexify Does
 
-hexify assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA3H (Icosahedral Snyder Equal Area, Aperture 3, Hexagon) discrete global grid system.
+hexify assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) discrete global grid system. Supports apertures 3, 4, and 7:
+
+- **Aperture 3** (ISEA3H): Default, compatible with dggridR
+- **Aperture 4** (ISEA4H): Faster cell count growth per resolution
+- **Aperture 7** (ISEA7H): Densest grid per resolution level
 
 Given a data frame with longitude/latitude columns, `hexify()` returns:
 
@@ -111,7 +115,30 @@ Specify the long diagonal of hexagons in km:
 result <- hexify(cities, lon = "lon", lat = "lat", spacing = 50)
 ```
 
-## Resolution Reference
+## Aperture Options
+
+| Aperture | Grid Type | Cell Count Formula | Use Case |
+|----------|-----------|-------------------|----------|
+| 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
+| 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
+| 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+
+```{r}
+# Using different apertures
+result_ap3 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 3)
+result_ap4 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+result_ap7 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+# Compare cell IDs (different numbering systems)
+data.frame(
+  city = cities$name,
+  ap3 = result_ap3$hex_id,
+  ap4 = result_ap4$hex_id,
+  ap7 = result_ap7$hex_id
+)
+```
+
+## Resolution Reference (Aperture 3)
 
 | Resolution | Total Cells | Area (km²) | Spacing (km) |
 |------------|-------------|------------|--------------|
@@ -190,7 +217,7 @@ hexify(data, lon = "lon", lat = "lat", area = NULL, spacing = NULL,
 | `lat` | Latitude column name (ignored for sf) | `"lat"` |
 | `area` | Target cell area in km² | `NULL` |
 | `spacing` | Long diagonal in km | `NULL` |
-| `aperture` | Grid aperture (only 3 supported) | `3L` |
+| `aperture` | Grid aperture: 3, 4, or 7 | `3L` |
 | `resround` | Resolution rounding: `"nearest"`, `"up"`, `"down"` | `"nearest"` |
 
 **Returns**: Input data with added columns `hex_id`, `hex_cen_lon`, `hex_cen_lat`.
@@ -204,7 +231,7 @@ hexify(data, lon = "lon", lat = "lat", area = NULL, spacing = NULL,
 
 **Different cell IDs than dggridR**
 
-- Ensure same aperture (hexify currently only supports aperture 3)
+- Ensure same aperture (hexify supports apertures 3, 4, and 7)
 - Match resolution via area: use `dgearthstat(dggs)$area_km` from dggridR
 
 **Very large hex_id values**

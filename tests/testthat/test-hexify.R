@@ -97,16 +97,38 @@ test_that("hexify() handles aperture 3 (ISEA3H)", {
   expect_true(result_ap3$hex_id > 0)
 })
 
+test_that("hexify() handles aperture 4 (ISEA4H)", {
+  df <- data.frame(lon = 0, lat = 45)
+
+  result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+
+  # Should work and return integer SEQNUM
+  expect_true("hex_id" %in% names(result_ap4))
+  expect_type(result_ap4$hex_id, "integer")
+  expect_true(result_ap4$hex_id > 0)
+})
+
+test_that("hexify() handles aperture 7 (ISEA7H)", {
+  df <- data.frame(lon = 0, lat = 45)
+
+  result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+  # Should work and return integer SEQNUM
+  expect_true("hex_id" %in% names(result_ap7))
+  expect_type(result_ap7$hex_id, "integer")
+  expect_true(result_ap7$hex_id > 0)
+})
+
 test_that("hexify() rejects unsupported apertures with clear error", {
   df <- data.frame(lon = 0, lat = 45)
 
-  # Aperture 4 and 7 not yet supported for DGGRID-compatible SEQNUM
+  # Apertures other than 3, 4, 7 are not supported
   expect_error(
-    hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4),
-    "only supports aperture 3"
+    hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 5),
+    "Aperture must be 3, 4, or 7"
   )
   expect_error(
-    hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7),
-    "only supports aperture 3"
+    hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 2),
+    "Aperture must be 3, 4, or 7"
   )
 })

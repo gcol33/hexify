@@ -246,26 +246,37 @@ Rcpp::List cpp_lonlat_to_q2di(double lon_deg, double lat_deg,
 // ============================================================================
 // Grid Pattern Helpers
 // ============================================================================
-// ISEA3H grids alternate between two patterns based on resolution:
+// Different apertures use different grid patterns:
+//
+// APERTURE 3 (ISEA3H):
 //   - Even resolutions: "aligned" grid where all integer (i,j) are valid cells
 //   - Odd resolutions: "offset" grid where only 1/3 of cells are valid
 //                      (those where (i+j) % 3 == 0)
+//   - Cell count: N = 10 * 3^res + 2
+//   - Grid dim: sqrt(3)^res for aligned, sqrt(3)^(res+1) for offset
 //
-// DGGRID calls these "Class I" and "Class II" respectively, but those names
-// are confusing without context. Here we use more descriptive names.
+// APERTURE 4 (ISEA4H):
+//   - Always "aligned" (Class I) - all (i,j) pairs valid
+//   - Cell count: N = 10 * 4^res + 2
+//   - Grid dim: 2^res
+//
+// APERTURE 7 (ISEA7H):
+//   - Even resolutions: Class III-I
+//   - Odd resolutions: Class III-II
+//   - Cell count: N = 10 * 7^res + 2
+//   - Grid dim: sqrt(7)^res for Class III-I, sqrt(21)^res for Class III-II
 // ============================================================================
 
-// Check if resolution uses aligned (even) or offset (odd) grid pattern
-static inline bool is_aligned_grid(int resolution) {
+// Check if aperture 3 resolution uses aligned (even) or offset (odd) grid
+static inline bool is_aligned_grid_ap3(int resolution) {
     return (resolution % 2) == 0;
 }
 
-// Calculate maxD (maximum grid dimension - 1) for ISEA3H
-// Grid dimension grows by sqrt(3) per resolution level
-static long long calc_max_grid_dim(int resolution) {
+// Calculate grid dimension for aperture 3
+static long long calc_max_grid_dim_ap3(int resolution) {
     if (resolution == 0) return 0;
 
-    bool aligned = is_aligned_grid(resolution);
+    bool aligned = is_aligned_grid_ap3(resolution);
 
     // Scale factor = sqrt(3)^resolution
     double scale = 1.0;
@@ -281,16 +292,46 @@ static long long calc_max_grid_dim(int resolution) {
     return static_cast<long long>(scale + 0.000001) - 1;
 }
 
-// 2D seqnum for aligned grid (even resolutions)
+// Calculate grid dimension for aperture 4
+static long long calc_max_grid_dim_ap4(int resolution) {
+    if (resolution == 0) return 0;
+    return (1LL << resolution) - 1;  // 2^res - 1
+}
+
+// Calculate grid dimension for aperture 7
+static long long calc_max_grid_dim_ap7(int resolution) {
+    if (resolution == 0) return 0;
+
+    // Aperture 7 alternates between Class III-I (even) and Class III-II (odd)
+    bool is_class3i = (resolution % 2) == 0;
+
+    // Base scale: sqrt(7)^resolution
+    double scale = 1.0;
+    for (int r = 1; r <= resolution; r++) {
+        scale *= 2.6457513110645905905;  // sqrt(7)
+    }
+
+    // Class III-I: substrate is sqrt(7) finer
+    // Class III-II: substrate is sqrt(21) finer
+    if (is_class3i) {
+        scale *= 2.6457513110645905905;  // sqrt(7)
+    } else {
+        scale *= 4.5825756949558400065;  // sqrt(21)
+    }
+
+    return static_cast<long long>(scale + 0.000001) - 1;
+}
+
+// 2D seqnum for aligned grid (aperture 3 even res, aperture 4 all res)
 // Simple row-major ordering where all (i,j) pairs are valid
 static uint64_t seqnum_2d_aligned(long long i, long long j, long long dim) {
     return static_cast<uint64_t>(i) * dim + j;
 }
 
-// 2D seqnum for offset grid (odd resolutions)
+// 2D seqnum for offset grid (aperture 3 odd resolutions)
 // Only 1/3 of cells valid - those where (i+j) % 3 == 0
 // Uses DGGRID's DgBoundedHexC2RF2D formula
-static uint64_t seqnum_2d_offset(long long i, long long j, long long dim) {
+static uint64_t seqnum_2d_offset_ap3(long long i, long long j, long long dim) {
     uint64_t sNum = i * dim / 3;
     switch (i % 3) {
         case 0: sNum += j / 3; break;
@@ -300,9 +341,9 @@ static uint64_t seqnum_2d_offset(long long i, long long j, long long dim) {
     return sNum;
 }
 
-// Inverse: seqnum to (i, j) for offset grid
-static void ij_from_seqnum_offset(uint64_t sNum, long long dim,
-                                  long long& i, long long& j) {
+// Inverse: seqnum to (i, j) for offset grid (aperture 3)
+static void ij_from_seqnum_offset_ap3(uint64_t sNum, long long dim,
+                                      long long& i, long long& j) {
     i = (sNum * 3) / dim;
     j = (sNum * 3) % dim;
     switch (i % 3) {
@@ -312,27 +353,44 @@ static void ij_from_seqnum_offset(uint64_t sNum, long long dim,
     }
 }
 
+// Calculate cell count and offset per quad for any aperture
+// Formula: nCells = 10 * aperture^res + 2
+static void calc_grid_params(int resolution, int aperture,
+                             uint64_t& nCells, uint64_t& offsetPerQuad) {
+    nCells = 10;
+    for (int r = 0; r < resolution; r++) {
+        nCells *= aperture;
+    }
+    nCells += 2;
+    offsetPerQuad = (nCells - 2) / 10;
+}
+
 // [[Rcpp::export]]
 NumericVector cpp_q2di_to_seqnum(IntegerVector quad, NumericVector i,
                                   NumericVector j, int resolution, int aperture) {
-    if (aperture != 3) {
-        stop("cpp_q2di_to_seqnum currently only supports aperture 3");
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        stop("cpp_q2di_to_seqnum: aperture must be 3, 4, or 7");
     }
 
     int n = quad.size();
     NumericVector result(n);
 
     // Calculate grid parameters
-    // nCells = 10 * 3^res + 2
-    uint64_t nCells = 10;
-    for (int r = 0; r < resolution; r++) nCells *= 3;
-    nCells += 2;
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
-    // offsetPerQuad = (nCells - 2) / 10
-    uint64_t offsetPerQuad = (nCells - 2) / 10;
+    // Grid dimension depends on aperture
+    long long dim;
+    if (aperture == 3) {
+        dim = calc_max_grid_dim_ap3(resolution) + 1;
+    } else if (aperture == 4) {
+        dim = calc_max_grid_dim_ap4(resolution) + 1;
+    } else {
+        dim = calc_max_grid_dim_ap7(resolution) + 1;
+    }
 
-    // Grid dimension
-    long long dim = calc_max_grid_dim(resolution) + 1;
+    // Check if using offset grid (only aperture 3 odd resolutions)
+    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];
@@ -345,8 +403,13 @@ NumericVector cpp_q2di_to_seqnum(IntegerVector quad, NumericVector i,
             offset = 1 + (q - 1) * offsetPerQuad;
         }
 
-        // 2D seqnum within quad (row-major, 0-based)
-        uint64_t bnd2D_seq = seqnum_2d_aligned(ii, jj, dim);
+        // 2D seqnum within quad
+        uint64_t bnd2D_seq;
+        if (use_offset) {
+            bnd2D_seq = seqnum_2d_offset_ap3(ii, jj, dim);
+        } else {
+            bnd2D_seq = seqnum_2d_aligned(ii, jj, dim);
+        }
 
         // Final seqnum (1-based)
         uint64_t seqnum = offset + bnd2D_seq + 1;
@@ -360,21 +423,29 @@ NumericVector cpp_q2di_to_seqnum(IntegerVector quad, NumericVector i,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_seqnum_dggrid(NumericVector lon, NumericVector lat,
                                            int resolution, int aperture) {
-    if (aperture != 3) {
-        stop("cpp_lonlat_to_seqnum_dggrid currently only supports aperture 3");
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        stop("cpp_lonlat_to_seqnum_dggrid: aperture must be 3, 4, or 7");
     }
 
     int n = lon.size();
     NumericVector result(n);
 
     // Calculate grid parameters
-    uint64_t nCells = 10;
-    for (int r = 0; r < resolution; r++) nCells *= 3;
-    nCells += 2;
-    uint64_t offsetPerQuad = (nCells - 2) / 10;
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
-    long long dim = calc_max_grid_dim(resolution) + 1;
-    bool aligned = is_aligned_grid(resolution);
+    // Grid dimension depends on aperture
+    long long dim;
+    if (aperture == 3) {
+        dim = calc_max_grid_dim_ap3(resolution) + 1;
+    } else if (aperture == 4) {
+        dim = calc_max_grid_dim_ap4(resolution) + 1;
+    } else {
+        dim = calc_max_grid_dim_ap7(resolution) + 1;
+    }
+
+    // Check if using offset grid (only aperture 3 odd resolutions)
+    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
 
     for (int k = 0; k < n; k++) {
         // Get Q2DI coordinates
@@ -393,10 +464,10 @@ NumericVector cpp_lonlat_to_seqnum_dggrid(NumericVector lon, NumericVector lat,
 
         // Calculate 2D seqnum based on grid pattern
         uint64_t bnd2D_seq;
-        if (aligned) {
-            bnd2D_seq = seqnum_2d_aligned(i, j, dim);
+        if (use_offset) {
+            bnd2D_seq = seqnum_2d_offset_ap3(i, j, dim);
         } else {
-            bnd2D_seq = seqnum_2d_offset(i, j, dim);
+            bnd2D_seq = seqnum_2d_aligned(i, j, dim);
         }
 
         uint64_t seqnum = offset + bnd2D_seq + 1;
@@ -409,8 +480,8 @@ NumericVector cpp_lonlat_to_seqnum_dggrid(NumericVector lon, NumericVector lat,
 // [[Rcpp::export]]
 DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
                                        int aperture) {
-    if (aperture != 3) {
-        stop("cpp_seqnum_to_lonlat_dggrid currently only supports aperture 3");
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        stop("cpp_seqnum_to_lonlat_dggrid: aperture must be 3, 4, or 7");
     }
 
     int n = seqnum.size();
@@ -418,12 +489,21 @@ DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
     NumericVector lat(n);
 
     // Calculate grid parameters
-    uint64_t nCells = 10;
-    for (int r = 0; r < resolution; r++) nCells *= 3;
-    nCells += 2;
-    uint64_t offsetPerQuad = (nCells - 2) / 10;
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
-    long long dim = calc_max_grid_dim(resolution) + 1;
+    // Grid dimension depends on aperture
+    long long dim;
+    if (aperture == 3) {
+        dim = calc_max_grid_dim_ap3(resolution) + 1;
+    } else if (aperture == 4) {
+        dim = calc_max_grid_dim_ap4(resolution) + 1;
+    } else {
+        dim = calc_max_grid_dim_ap7(resolution) + 1;
+    }
+
+    // Check if using offset grid (only aperture 3 odd resolutions)
+    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
 
     for (int k = 0; k < n; k++) {
         uint64_t sNum = static_cast<uint64_t>(seqnum[k]);
@@ -447,9 +527,13 @@ DataFrame cpp_seqnum_to_lonlat_dggrid(NumericVector seqnum, int resolution,
             quad = static_cast<int>(sNum / offsetPerQuad) + 1;
             sNum -= (quad - 1) * offsetPerQuad;
 
-            // Get i, j from remaining seqnum
-            i = sNum / dim;
-            j = sNum % dim;
+            // Get i, j from remaining seqnum based on grid type
+            if (use_offset) {
+                ij_from_seqnum_offset_ap3(sNum, dim, i, j);
+            } else {
+                i = sNum / dim;
+                j = sNum % dim;
+            }
         }
 
         // Convert Q2DI to lon/lat via Q2DD -> PROJTRI -> lon/lat

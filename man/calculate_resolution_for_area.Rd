@@ -4,23 +4,18 @@
 \alias{calculate_resolution_for_area}
 \title{Calculate resolution for target area}
 \usage{
-calculate_resolution_for_area(
-  target_area_km2,
-  aperture = 3,
-  base_area_km2 = NULL
-)
+calculate_resolution_for_area(target_area_km2, aperture = 3)
 }
 \arguments{
 \item{target_area_km2}{Target area in square kilometers}
 
 \item{aperture}{Aperture (3, 4, or 7)}
-
-\item{base_area_km2}{Base area at resolution 0}
 }
 \value{
 Resolution level
 }
 \description{
-Calculate resolution for target area
+Uses the ISEA3H cell count formula: N = 10 * aperture^res + 2
+This matches dggridR's resolution numbering exactly.
 }
 \keyword{internal}
