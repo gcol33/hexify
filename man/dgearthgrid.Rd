@@ -4,18 +4,18 @@
 \alias{dgearthgrid}
 \title{Generate cells for entire Earth (dggridR-compatible)}
 \usage{
-dgearthgrid(dggs, ...)
+dgearthgrid(dggs)
 }
 \arguments{
-\item{dggs}{Grid specification}
-
-\item{...}{Additional arguments passed to dgcellstogrid}
+\item{dggs}{Grid specification from dgconstruct() or hexify_construct()}
 }
 \value{
-sf object or data frame of hexagonal cells
+sf object with hexagon polygons covering the globe
 }
 \description{
+Generates hexagon polygons covering the entire Earth.
 WARNING: This can generate millions of cells at high resolution!
-Use with caution. For most purposes, use dgrectgrid or dgshptogrid
-to generate cells for specific regions instead.
+}
+\seealso{
+\code{\link{hex_grid_global}}
 }

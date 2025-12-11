@@ -807,9 +807,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_lonlat_to_seqnum
-NumericVector cpp_lonlat_to_seqnum(NumericVector lon, NumericVector lat, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_lonlat_to_seqnum(SEXP lonSEXP, SEXP latSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+// cpp_lonlat_to_seqnum_face
+NumericVector cpp_lonlat_to_seqnum_face(NumericVector lon, NumericVector lat, int resolution, int aperture);
+RcppExport SEXP _hexify_cpp_lonlat_to_seqnum_face(SEXP lonSEXP, SEXP latSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -817,20 +817,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_seqnum(lon, lat, resolution, aperture));
+    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_seqnum_face(lon, lat, resolution, aperture));
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_seqnum_to_lonlat
-DataFrame cpp_seqnum_to_lonlat(NumericVector seqnum, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_seqnum_to_lonlat(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+// cpp_seqnum_to_lonlat_face
+DataFrame cpp_seqnum_to_lonlat_face(NumericVector seqnum, int resolution, int aperture);
+RcppExport SEXP _hexify_cpp_seqnum_to_lonlat_face(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_lonlat(seqnum, resolution, aperture));
+    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_lonlat_face(seqnum, resolution, aperture));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -887,6 +887,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_q2dd_to_projtri
+Rcpp::List cpp_q2dd_to_projtri(int quad, double qx, double qy);
+RcppExport SEXP _hexify_cpp_q2dd_to_projtri(SEXP quadSEXP, SEXP qxSEXP, SEXP qySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type quad(quadSEXP);
+    Rcpp::traits::input_parameter< double >::type qx(qxSEXP);
+    Rcpp::traits::input_parameter< double >::type qy(qySEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_q2dd_to_projtri(quad, qx, qy));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_q2di_to_q2dd
+Rcpp::List cpp_q2di_to_q2dd(int quad, double i, double j, int aperture, int resolution);
+RcppExport SEXP _hexify_cpp_q2di_to_q2dd(SEXP quadSEXP, SEXP iSEXP, SEXP jSEXP, SEXP apertureSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type quad(quadSEXP);
+    Rcpp::traits::input_parameter< double >::type i(iSEXP);
+    Rcpp::traits::input_parameter< double >::type j(jSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_q2di_to_q2dd(quad, i, j, aperture, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_lonlat_to_q2di
 Rcpp::List cpp_lonlat_to_q2di(double lon_deg, double lat_deg, int aperture, int resolution);
 RcppExport SEXP _hexify_cpp_lonlat_to_q2di(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP apertureSEXP, SEXP resolutionSEXP) {
@@ -940,6 +968,59 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_lonlat_dggrid(seqnum, resolution, aperture));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_seqnum_to_polygon_dggrid
+DataFrame cpp_seqnum_to_polygon_dggrid(NumericVector seqnum, int resolution, int aperture);
+RcppExport SEXP _hexify_cpp_seqnum_to_polygon_dggrid(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_polygon_dggrid(seqnum, resolution, aperture));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_seqnum_to_corners_dggrid
+List cpp_seqnum_to_corners_dggrid(NumericVector seqnum, int resolution, int aperture);
+RcppExport SEXP _hexify_cpp_seqnum_to_corners_dggrid(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_corners_dggrid(seqnum, resolution, aperture));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_lonlat_to_seqnum_dggrid_ap43
+NumericVector cpp_lonlat_to_seqnum_dggrid_ap43(NumericVector lon, NumericVector lat, int resolution, int mixed_aperture_level);
+RcppExport SEXP _hexify_cpp_lonlat_to_seqnum_dggrid_ap43(SEXP lonSEXP, SEXP latSEXP, SEXP resolutionSEXP, SEXP mixed_aperture_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type lon(lonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type mixed_aperture_level(mixed_aperture_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_seqnum_dggrid_ap43(lon, lat, resolution, mixed_aperture_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_seqnum_to_lonlat_dggrid_ap43
+DataFrame cpp_seqnum_to_lonlat_dggrid_ap43(NumericVector seqnum, int resolution, int mixed_aperture_level);
+RcppExport SEXP _hexify_cpp_seqnum_to_lonlat_dggrid_ap43(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP mixed_aperture_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type mixed_aperture_level(mixed_aperture_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_lonlat_dggrid_ap43(seqnum, resolution, mixed_aperture_level));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1006,16 +1087,22 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_face_xy_to_ll", (DL_FUNC) &_hexify_cpp_face_xy_to_ll, 5},
     {"_hexify_cpp_icosa_face_params", (DL_FUNC) &_hexify_cpp_icosa_face_params, 1},
     {"_hexify_cpp_hex_index_face_to_lonlat", (DL_FUNC) &_hexify_cpp_hex_index_face_to_lonlat, 8},
-    {"_hexify_cpp_lonlat_to_seqnum", (DL_FUNC) &_hexify_cpp_lonlat_to_seqnum, 4},
-    {"_hexify_cpp_seqnum_to_lonlat", (DL_FUNC) &_hexify_cpp_seqnum_to_lonlat, 3},
+    {"_hexify_cpp_lonlat_to_seqnum_face", (DL_FUNC) &_hexify_cpp_lonlat_to_seqnum_face, 4},
+    {"_hexify_cpp_seqnum_to_lonlat_face", (DL_FUNC) &_hexify_cpp_seqnum_to_lonlat_face, 3},
     {"_hexify_cpp_seqnum_to_cell_info", (DL_FUNC) &_hexify_cpp_seqnum_to_cell_info, 3},
     {"_hexify_cpp_decode_z7", (DL_FUNC) &_hexify_cpp_decode_z7, 2},
     {"_hexify_cpp_projtri_to_q2di", (DL_FUNC) &_hexify_cpp_projtri_to_q2di, 5},
     {"_hexify_cpp_projtri_to_q2dd", (DL_FUNC) &_hexify_cpp_projtri_to_q2dd, 3},
+    {"_hexify_cpp_q2dd_to_projtri", (DL_FUNC) &_hexify_cpp_q2dd_to_projtri, 3},
+    {"_hexify_cpp_q2di_to_q2dd", (DL_FUNC) &_hexify_cpp_q2di_to_q2dd, 5},
     {"_hexify_cpp_lonlat_to_q2di", (DL_FUNC) &_hexify_cpp_lonlat_to_q2di, 4},
     {"_hexify_cpp_q2di_to_seqnum", (DL_FUNC) &_hexify_cpp_q2di_to_seqnum, 5},
     {"_hexify_cpp_lonlat_to_seqnum_dggrid", (DL_FUNC) &_hexify_cpp_lonlat_to_seqnum_dggrid, 4},
     {"_hexify_cpp_seqnum_to_lonlat_dggrid", (DL_FUNC) &_hexify_cpp_seqnum_to_lonlat_dggrid, 3},
+    {"_hexify_cpp_seqnum_to_polygon_dggrid", (DL_FUNC) &_hexify_cpp_seqnum_to_polygon_dggrid, 3},
+    {"_hexify_cpp_seqnum_to_corners_dggrid", (DL_FUNC) &_hexify_cpp_seqnum_to_corners_dggrid, 3},
+    {"_hexify_cpp_lonlat_to_seqnum_dggrid_ap43", (DL_FUNC) &_hexify_cpp_lonlat_to_seqnum_dggrid_ap43, 4},
+    {"_hexify_cpp_seqnum_to_lonlat_dggrid_ap43", (DL_FUNC) &_hexify_cpp_seqnum_to_lonlat_dggrid_ap43, 3},
     {NULL, NULL, 0}
 };
 

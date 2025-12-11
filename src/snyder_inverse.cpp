@@ -1,6 +1,7 @@
 #include "snyder_inverse.h"
 #include "snyder_forward.h"
 #include "core_icosa.h"
+#include "constants.h"
 #include <cmath>
 #include <algorithm>
 #include <tuple>
@@ -8,14 +9,18 @@
 
 namespace {
 
-constexpr double kPI = 3.141592653589793238462643383279502884;
+using hexify::kPi;
+using hexify::kTwoPi;
+using hexify::kDegToRad;
+using hexify::k2PiOver3;
+using hexify::k4PiOver3;
 
-// Match forward constants
+// Snyder projection constants
 constexpr double R1    = 0.9103832815;
 constexpr double R1S   = R1 * R1;
-constexpr double DH    = 37.37736814 * (kPI / 180.0);
-constexpr double GH    = 36.0        * (kPI / 180.0);
-constexpr double cot30 = 1.0 / std::tan(30.0 * (kPI/180.0));
+constexpr double DH    = 37.37736814 * kDegToRad;
+constexpr double GH    = 36.0 * kDegToRad;
+constexpr double cot30 = 1.0 / std::tan(30.0 * kDegToRad);
 constexpr double tanDH = std::tan(DH);
 
 // Snyder face-plane normalization (same as forward)
@@ -36,9 +41,9 @@ int ST_calls = 0, ST_iters_total = 0, ST_iters_max = 0, ST_capped = 0;
 constexpr double EPS_BRANCH = 1e-15;
 
 inline double wrap_lon_rad(double L) {
-  double t = std::fmod(L + kPI, 2.0 * kPI);
-  if (t < 0) t += 2.0 * kPI;
-  return t - kPI;
+  double t = std::fmod(L + kPi, kTwoPi);
+  if (t < 0) t += kTwoPi;
+  return t - kPi;
 }
 
 } // anon
@@ -105,14 +110,12 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
 
   // Snyder quirk: azimuth uses atan2(x, y) (not atan2(y, x))
   double azh1 = std::atan2(px, py);
-  if (azh1 < 0.0) azh1 += 2.0 * kPI;
+  if (azh1 < 0.0) azh1 += kTwoPi;
   const double azh0 = azh1;
 
-  // Reduce to [0,120) sector for iteration, then restore later
-  const double S120 = 120.0 * (kPI/180.0);
-  const double S240 = 240.0 * (kPI/180.0);
-  if (azh1 > S120 && azh1 <= S240) azh1 -= S120;
-  if (azh1 > S240)                 azh1 -= S240;
+  // Reduce to [0,120°) sector for iteration, then restore later
+  if (azh1 > k2PiOver3 && azh1 <= k4PiOver3) azh1 -= k2PiOver3;
+  if (azh1 > k4PiOver3)                      azh1 -= k4PiOver3;
 
   double azh = azh1;
 
@@ -126,7 +129,7 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
       h_arg = clampd(h_arg, -1.0, 1.0); // from core_icosa.h
       const double h = std::acos(h_arg);
 
-      const double fazh  = agh - azh - GH + (kPI - h);
+      const double fazh  = agh - azh - GH + (kPi - h);
 
       double denom = std::sin(h);
       if (std::abs(denom) < 1e-18) denom = 1e-18;
@@ -163,12 +166,12 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   const double z   = 2.0 * std::asin(arg);
 
   // Restore original 120° sector and add per-face azimuth
-  if (azh0 >= S120 && azh0 < S240) azh += S120;
-  if (azh0 >= S240)                azh += S240;
+  if (azh0 >= k2PiOver3 && azh0 < k4PiOver3) azh += k2PiOver3;
+  if (azh0 >= k4PiOver3)                     azh += k4PiOver3;
 
   azh += ddazh;
-  while (azh <= -kPI) azh += 2.0 * kPI;
-  while (azh >   kPI) azh -= 2.0 * kPI;
+  while (azh <= -kPi) azh += kTwoPi;
+  while (azh >   kPi) azh -= kTwoPi;
 
   // Great-circle from face center (cent_lon, cent_lat)
   double sinlat = cent_sin * std::cos(z) + cent_cos * std::sin(z) * std::cos(azh);
@@ -176,7 +179,7 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   const double lat = std::asin(sinlat);
 
   double lon;
-  if (std::abs(std::abs(lat) - (kPI/2.0)) < 1e-12) {
+  if (std::abs(std::abs(lat) - (kPi/2.0)) < 1e-12) {
     lon = cent_lon; // poles: azimuth undefined, keep center longitude
   } else {
     double sinlon = std::sin(azh) * std::sin(z) / std::cos(lat);

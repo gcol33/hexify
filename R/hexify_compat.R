@@ -109,18 +109,27 @@ dgSEQNUM_to_GEO <- function(dggs, in_seqnum) {
 }
 
 #' Get cell boundaries (dggridR-compatible)
-#' 
-#' Compatibility wrapper for hexify_cell_to_boundary().
-#' 
-#' @param dggs Grid specification
-#' @param in_seqnum Cell indices
-#' 
-#' @return List of boundary coordinates
-#' 
+#'
+#' Returns boundary coordinates for hexagonal cells as an sf object
+#' or data frame of vertex coordinates.
+#'
+#' @param dggs Grid specification from dgconstruct() or hexify_construct()
+#' @param in_seqnum Cell indices (integer SEQNUM values)
+#' @param return_sf Logical. If TRUE, returns sf object; if FALSE, returns
+#'   data frame with vertex coordinates
+#'
+#' @return If return_sf = TRUE: sf object with polygon geometries
+#'   If return_sf = FALSE: data frame with columns seqnum, lon, lat, order
+#'
 #' @export
-#' @seealso \code{\link{hexify_cell_to_boundary}}
-dgSEQNUM_to_BOUNDARY <- function(dggs, in_seqnum) {
-  return(hexify_cell_to_boundary(dggs, in_seqnum))
+#' @seealso \code{\link{hex_polygons}}
+dgSEQNUM_to_BOUNDARY <- function(dggs, in_seqnum, return_sf = TRUE) {
+  hex_polygons(
+    hex_id = as.integer(in_seqnum),
+    resolution = dggs$resolution,
+    aperture = dggs$aperture,
+    return_sf = return_sf
+  )
 }
 
 #' Set grid resolution (dggridR-compatible)
@@ -186,115 +195,81 @@ dggetres <- function(dggs, res = NULL) {
 }
 
 #' Generate cells for a rectangular region (dggridR-compatible)
-#' 
-#' Generates cell indices for all cells that intersect a rectangular
-#' geographic region defined by min/max longitude and latitude.
-#' 
-#' @param dggs Grid specification
+#'
+#' Generates hexagon polygons covering a rectangular geographic region.
+#'
+#' @param dggs Grid specification from dgconstruct() or hexify_construct()
 #' @param minlat Minimum latitude
 #' @param minlon Minimum longitude
 #' @param maxlat Maximum latitude
 #' @param maxlon Maximum longitude
-#' @param cellsize Sampling density (degrees between sample points)
-#' @param ... Additional arguments passed to dgcellstogrid
-#' 
-#' @return sf object or data frame of hexagonal cells
-#' 
+#'
+#' @return sf object with hexagon polygons covering the specified region
+#'
 #' @export
+#' @seealso \code{\link{hex_grid_rect}}
 #' @examples
 #' \dontrun{
 #' dggs <- dgconstruct(area = 10000, aperture = 3)
-#' 
+#'
 #' # Get cells for a region (e.g., central Europe)
-#' grid <- dgrectgrid(dggs, 
+#' grid <- dgrectgrid(dggs,
 #'                   minlat = 45, minlon = 5,
 #'                   maxlat = 55, maxlon = 15)
-#' 
+#'
 #' # Plot the result
 #' library(sf)
 #' plot(st_geometry(grid))
 #' }
-dgrectgrid <- function(dggs, minlat, minlon, maxlat, maxlon, 
-                       cellsize = 0.1, ...) {
+dgrectgrid <- function(dggs, minlat, minlon, maxlat, maxlon) {
   dgverify(dggs)
-  
-  # Generate a dense grid of sample points
-  lon_seq <- seq(minlon, maxlon, by = cellsize)
-  lat_seq <- seq(minlat, maxlat, by = cellsize)
-  
-  # Create all combinations
-  sample_points <- expand.grid(lon = lon_seq, lat = lat_seq)
-  
-  # Convert sample points to cell indices
-  cells <- dgGEO_to_SEQNUM(dggs, sample_points$lon, sample_points$lat)
-  
-  # Get unique cells (many sample points will be in the same cell)
-  unique_cells <- unique(cells$seqnum)
-  
-  # Convert to grid
-  return(dgcellstogrid(dggs, unique_cells, ...))
+
+  hex_grid_rect(
+    minlon = minlon, maxlon = maxlon,
+    minlat = minlat, maxlat = maxlat,
+    area = dggs$area,
+    aperture = dggs$aperture
+  )
 }
 
 #' Generate cells for entire Earth (dggridR-compatible)
-#' 
+#'
+#' Generates hexagon polygons covering the entire Earth.
 #' WARNING: This can generate millions of cells at high resolution!
-#' Use with caution. For most purposes, use dgrectgrid or dgshptogrid
-#' to generate cells for specific regions instead.
-#' 
-#' @param dggs Grid specification
-#' @param ... Additional arguments passed to dgcellstogrid
-#' 
-#' @return sf object or data frame of hexagonal cells
-#' 
+#'
+#' @param dggs Grid specification from dgconstruct() or hexify_construct()
+#'
+#' @return sf object with hexagon polygons covering the globe
+#'
 #' @export
-dgearthgrid <- function(dggs, ...) {
+#' @seealso \code{\link{hex_grid_global}}
+dgearthgrid <- function(dggs) {
   dgverify(dggs)
-  
-  # Calculate total number of cells
-  stats <- dgearthstat(dggs)
-  
-  if (stats$n_cells > 1000000) {
-    stop(sprintf(
-      "This would generate %.0f million cells! Consider using:\n  1. Lower resolution (current: %d)\n  2. dgrectgrid() for specific region\n  3. dgshptogrid() for specific area",
-      stats$n_cells / 1000000,
-      dggs$resolution
-    ))
-  }
-  
-  warning(sprintf(
-    "Generating %.0f cells. This may take a while...",
-    stats$n_cells
-  ))
-  
-  # For now, use rectangular grid covering entire globe
-  # This is not perfect but generates most cells
-  return(dgrectgrid(dggs, 
-                   minlat = -90, minlon = -180,
-                   maxlat = 90, maxlon = 180,
-                   cellsize = 2,  # Coarse sampling
-                   ...))
+
+  hex_grid_global(
+    area = dggs$area,
+    aperture = dggs$aperture
+  )
 }
 
 #' Generate cells for shapefile region (dggridR-compatible)
-#' 
-#' Generates cell indices for all cells that intersect with a shapefile
-#' polygon or multi-polygon.
-#' 
-#' @param dggs Grid specification
+#'
+#' Generates hexagon polygons covering the bounding box of a shapefile
+#' or sf object.
+#'
+#' @param dggs Grid specification from dgconstruct() or hexify_construct()
 #' @param shpfname Path to shapefile or sf object
-#' @param cellsize Sampling density (degrees between sample points)
-#' @param ... Additional arguments passed to dgcellstogrid
-#' 
-#' @return sf object or data frame of hexagonal cells
-#' 
+#'
+#' @return sf object with hexagon polygons covering the region
+#'
 #' @export
-dgshptogrid <- function(dggs, shpfname, cellsize = 0.1, ...) {
+dgshptogrid <- function(dggs, shpfname) {
   dgverify(dggs)
-  
+
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
-  
+
   # Read shapefile if it's a path
   if (is.character(shpfname)) {
     shp <- sf::st_read(shpfname, quiet = TRUE)
@@ -303,14 +278,13 @@ dgshptogrid <- function(dggs, shpfname, cellsize = 0.1, ...) {
   } else {
     stop("shpfname must be a file path or sf object")
   }
-  
+
   # Get bounding box
+
   bbox <- sf::st_bbox(shp)
-  
+
   # Generate cells for bounding box
-  return(dgrectgrid(dggs,
-                   minlat = bbox["ymin"], minlon = bbox["xmin"],
-                   maxlat = bbox["ymax"], maxlon = bbox["xmax"],
-                   cellsize = cellsize,
-                   ...))
+  dgrectgrid(dggs,
+             minlat = bbox["ymin"], minlon = bbox["xmin"],
+             maxlat = bbox["ymax"], maxlon = bbox["xmax"])
 }

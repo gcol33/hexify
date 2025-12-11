@@ -245,12 +245,12 @@ cpp_hex_index_face_to_lonlat <- function(x, y, cen_lat, cen_lon, dazh, degrees =
     .Call(`_hexify_cpp_hex_index_face_to_lonlat`, x, y, cen_lat, cen_lon, dazh, degrees, tol, max_iters)
 }
 
-cpp_lonlat_to_seqnum <- function(lon, lat, resolution, aperture) {
-    .Call(`_hexify_cpp_lonlat_to_seqnum`, lon, lat, resolution, aperture)
+cpp_lonlat_to_seqnum_face <- function(lon, lat, resolution, aperture) {
+    .Call(`_hexify_cpp_lonlat_to_seqnum_face`, lon, lat, resolution, aperture)
 }
 
-cpp_seqnum_to_lonlat <- function(seqnum, resolution, aperture) {
-    .Call(`_hexify_cpp_seqnum_to_lonlat`, seqnum, resolution, aperture)
+cpp_seqnum_to_lonlat_face <- function(seqnum, resolution, aperture) {
+    .Call(`_hexify_cpp_seqnum_to_lonlat_face`, seqnum, resolution, aperture)
 }
 
 cpp_seqnum_to_cell_info <- function(seqnum, resolution, aperture) {
@@ -269,6 +269,14 @@ cpp_projtri_to_q2dd <- function(tnum, tx, ty) {
     .Call(`_hexify_cpp_projtri_to_q2dd`, tnum, tx, ty)
 }
 
+cpp_q2dd_to_projtri <- function(quad, qx, qy) {
+    .Call(`_hexify_cpp_q2dd_to_projtri`, quad, qx, qy)
+}
+
+cpp_q2di_to_q2dd <- function(quad, i, j, aperture, resolution) {
+    .Call(`_hexify_cpp_q2di_to_q2dd`, quad, i, j, aperture, resolution)
+}
+
 cpp_lonlat_to_q2di <- function(lon_deg, lat_deg, aperture, resolution) {
     .Call(`_hexify_cpp_lonlat_to_q2di`, lon_deg, lat_deg, aperture, resolution)
 }
@@ -283,5 +291,21 @@ cpp_lonlat_to_seqnum_dggrid <- function(lon, lat, resolution, aperture) {
 
 cpp_seqnum_to_lonlat_dggrid <- function(seqnum, resolution, aperture) {
     .Call(`_hexify_cpp_seqnum_to_lonlat_dggrid`, seqnum, resolution, aperture)
+}
+
+cpp_seqnum_to_polygon_dggrid <- function(seqnum, resolution, aperture) {
+    .Call(`_hexify_cpp_seqnum_to_polygon_dggrid`, seqnum, resolution, aperture)
+}
+
+cpp_seqnum_to_corners_dggrid <- function(seqnum, resolution, aperture) {
+    .Call(`_hexify_cpp_seqnum_to_corners_dggrid`, seqnum, resolution, aperture)
+}
+
+cpp_lonlat_to_seqnum_dggrid_ap43 <- function(lon, lat, resolution, mixed_aperture_level) {
+    .Call(`_hexify_cpp_lonlat_to_seqnum_dggrid_ap43`, lon, lat, resolution, mixed_aperture_level)
+}
+
+cpp_seqnum_to_lonlat_dggrid_ap43 <- function(seqnum, resolution, mixed_aperture_level) {
+    .Call(`_hexify_cpp_seqnum_to_lonlat_dggrid_ap43`, seqnum, resolution, mixed_aperture_level)
 }
 

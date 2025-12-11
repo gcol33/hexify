@@ -4,7 +4,7 @@
 
 **Fast Hexagonal Grid Assignment for Geographic Data**
 
-`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. It produces output identical to `dggridR` but with a simpler, modern interface. Supports apertures 3, 4, and 7.
+`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. It produces output identical to `dggridR` but with a simpler, modern interface. Supports apertures 3, 4, 7, and mixed 4/3.
 
 ## Quick Start
 
@@ -21,10 +21,10 @@ df <- data.frame(
 # Assign to ~1000 km² hexagonal cells
 result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 result
-#>     site   lon   lat hex_id hex_cen_lon hex_cen_lat
-#> 1 Vienna 16.37 48.21  12847    16.42035    48.26151
-#> 2  Paris  2.35 48.86  12532     2.31894    48.89826
-#> 3 Madrid -3.70 40.42  22178    -3.71892    40.38721
+#>     site   lon   lat hex_id hex_cen_lon hex_cen_lat hex_area hex_diag
+#> 1 Vienna 16.37 48.21  12847    16.42035    48.26151   863.94    44.67
+#> 2  Paris  2.35 48.86  12532     2.31894    48.89826   863.94    44.67
+#> 3 Madrid -3.70 40.42  22178    -3.71892    40.38721   863.94    44.67
 ```
 
 ## Why hexify?
@@ -37,9 +37,10 @@ result
 ## Features
 
 - **Point-to-cell assignment**: Given lon/lat, return cell ID and center
-- **Area or spacing control**: Specify target cell area (km²) or spacing (km)
+- **Polygon generation**: Native C++ polygon generation (faster than dggridR)
+- **Area or diagonal control**: Specify target cell area (km²) or diagonal (km)
 - **sf integration**: Handles any CRS, auto-transforms to WGS84
-- **Multiple apertures**: ISEA3H, ISEA4H, and ISEA7H grids (apertures 3, 4, 7)
+- **Multiple apertures**: ISEA3H, ISEA4H, ISEA7H, and ISEA43H grids (apertures 3, 4, 7, and mixed 4/3)
 
 ## Installation
 
@@ -63,12 +64,15 @@ df <- data.frame(
 # By area (km²)
 result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
-# By spacing (long diagonal in km)
-result <- hexify(df, lon = "lon", lat = "lat", spacing = 50)
+# By diagonal (long diagonal in km)
+result <- hexify(df, lon = "lon", lat = "lat", diagonal = 50)
 
 # Different apertures
 result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
 result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+# Mixed aperture (ISEA43H)
+result_mixed <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
 ```
 
 ### With sf Objects
@@ -87,13 +91,15 @@ class(result)
 
 ### Output Columns
 
-`hexify()` adds three columns to your data:
+`hexify()` adds five columns to your data:
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `hex_id` | integer | Unique cell identifier (SEQNUM) |
 | `hex_cen_lon` | numeric | Cell center longitude |
 | `hex_cen_lat` | numeric | Cell center latitude |
+| `hex_area` | numeric | Actual cell area in km² |
+| `hex_diag` | numeric | Actual cell diagonal in km |
 
 ## dggridR Compatibility
 
@@ -119,10 +125,11 @@ all(result$hex_id == ref$seqnum)
 | 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
 | 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
 | 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+| "4/3" | ISEA43H | 10 × 4^m × 3^(res-m) + 2 | Mixed aperture (m = mixed_aperture_level) |
 
 ## Resolution Reference (Aperture 3)
 
-| Resolution | Cells | Area (km²) | Spacing (km) |
+| Resolution | Cells | Area (km²) | Diagonal (km) |
 |------------|-------|------------|--------------|
 | 5 | 2,432 | 209,903 | 695 |
 | 6 | 7,292 | 69,968 | 401 |
@@ -133,10 +140,27 @@ all(result$hex_id == ref$seqnum)
 | 11 | 1,771,472 | 288 | 26 |
 | 12 | 5,314,412 | 96 | 15 |
 
-## Limitations
+### Polygon Generation
 
-- No polygon/boundary generation (use dggridR for that)
-- No neighbor/parent/child operations in main API
+Generate hexagon polygons for visualization:
+
+```r
+library(sf)
+
+# After running hexify(), get polygons for unique cells
+result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
+
+# Generate sf polygons
+polys <- hex_polygons(result$hex_id, resolution = 10, aperture = 3)
+plot(st_geometry(polys), col = "lightblue", border = "blue")
+
+# Or generate a grid over a region
+grid <- hex_grid_rect(
+  minlon = -10, maxlon = 20,
+  minlat = 35, maxlat = 60,
+  area = 5000
+)
+```
 
 ## See Also
 

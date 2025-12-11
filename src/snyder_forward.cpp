@@ -1,11 +1,9 @@
 #include "snyder_forward.h"
+#include "constants.h"
 #include <cmath>
 #include <stdexcept>
 
 namespace hexify {
-
-// TU-local pi (internal linkage; won’t collide)
-static const double kPI = std::acos( -1.0 );
 
 // DGGRID Snyder constants (plain const; std::tan/cos/sin aren’t constexpr)
 static const double R1    = 0.9103832815;
@@ -43,14 +41,15 @@ std::pair<double,double> sllxy(const Geo& geo, const IcosaData& sph, int nTri) {
                           cent_cos * sinLat - cent_sin * cosLat * std::cos(glon - clon))
                - dz0;
 
-  if (azh < 0.0) azh += 2.0 * kPI;
+  if (azh < 0.0) azh += kTwoPi;
   const double azh0 = azh;
 
-  if ( (120.0 * kPI / 180.0) <= azh && azh <= (240.0 * kPI / 180.0) ) {
-    azh -= (120.0 * kPI / 180.0);
+  // Reduce azimuth to [0, 120°) sector
+  if (k2PiOver3 <= azh && azh <= k4PiOver3) {
+    azh -= k2PiOver3;
   }
-  if (azh > (240.0 * kPI / 180.0)) {
-    azh -= (240.0 * kPI / 180.0);
+  if (azh > k4PiOver3) {
+    azh -= k4PiOver3;
   }
 
   const double cosAzh = std::cos(azh);
@@ -58,16 +57,17 @@ std::pair<double,double> sllxy(const Geo& geo, const IcosaData& sph, int nTri) {
   const double dz = std::atan2(tanDH, cosAzh + cot30 * sinAzh);
 
   const double h  = std::acos(sinAzh * sinGH * cosDH - cosAzh * cosGH);
-  const double ag = azh + GH + h - kPI;
+  const double ag = azh + GH + h - kPi;
   double azh1 = std::atan2(2.0 * ag, R1S * tanDH * tanDH - 2.0 * ag * cot30);
   const double fh = tanDH / (2.0 * (std::cos(azh1) + cot30 * std::sin(azh1)) * std::sin(dz / 2.0));
   const double ph = 2.0 * R1 * fh * std::sin(z / 2.0);
 
-  if ( (120.0 * kPI / 180.0) <= azh0 && azh0 < (240.0 * kPI / 180.0) ) {
-    azh1 += (120.0 * kPI / 180.0);
+  // Restore to original sector
+  if (k2PiOver3 <= azh0 && azh0 < k4PiOver3) {
+    azh1 += k2PiOver3;
   }
-  if (azh0 >= (240.0 * kPI / 180.0)) {
-    azh1 += (240.0 * kPI / 180.0);
+  if (azh0 >= k4PiOver3) {
+    azh1 += k4PiOver3;
   }
 
   const double x = (ph * std::sin(azh1) + originXOff) / icosaEdge;

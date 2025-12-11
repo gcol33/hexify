@@ -9,8 +9,9 @@ hexify(
   lon = "lon",
   lat = "lat",
   area = NULL,
-  spacing = NULL,
+  diagonal = NULL,
   aperture = 3L,
+  mixed_aperture_level = NULL,
   resround = "nearest"
 )
 }
@@ -21,11 +22,14 @@ hexify(
 
 \item{lat}{Column name for latitude (ignored if data is sf)}
 
-\item{area}{Target cell area in km² (mutually exclusive with spacing)}
+\item{area}{Target cell area in km² (mutually exclusive with diagonal)}
 
-\item{spacing}{Target cell spacing (long diagonal) in km (mutually exclusive with area)}
+\item{diagonal}{Target cell diagonal (long diagonal) in km (mutually exclusive with area)}
 
-\item{aperture}{Grid aperture: 3, 4, or 7 (default 3)}
+\item{aperture}{Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)}
+
+\item{mixed_aperture_level}{For mixed aperture "4/3": number of aperture-4 levels
+before switching to aperture-3 (default NULL, auto-calculated as resolution/2)}
 
 \item{resround}{How to round resolution: "nearest", "up", or "down"}
 }
@@ -34,6 +38,8 @@ The input data with additional columns:
 \item{hex_id}{Stable DGGS cell identifier (integer SEQNUM)}
 \item{hex_cen_lon}{Longitude of cell center in degrees}
 \item{hex_cen_lat}{Latitude of cell center in degrees}
+\item{hex_area}{Actual cell area in km² (based on matched resolution)}
+\item{hex_diag}{Actual cell long diagonal in km}
 }
 \description{
 Takes a data.frame or sf object with geographic coordinates and returns
@@ -43,14 +49,14 @@ the same data with additional columns for hex cell ID and center coordinates.
 For sf objects, coordinates are automatically extracted and transformed to
 WGS84 (EPSG:4326) if needed. The geometry column is preserved.
 
-Either \code{area} or \code{spacing} must be provided, but not both:
+Either \code{area} or \code{diagonal} must be provided, but not both:
 \itemize{
 \item \code{area}: Target cell area in square kilometers
-\item \code{spacing}: Long diagonal of hexagon in kilometers
+\item \code{diagonal}: Long diagonal of hexagon in kilometers
 }
 
-The spacing (long diagonal) relates to area approximately as:
-area ≈ (3 * sqrt(3) / 2) * (spacing / 2)² ≈ 0.6495 * spacing²
+The diagonal relates to area approximately as:
+area ≈ (3 * sqrt(3) / 2) * (diagonal / 2)² ≈ 0.6495 * diagonal²
 
 Supported apertures:
 \itemize{
@@ -58,6 +64,9 @@ Supported apertures:
 Cell count = 10 * 3^res + 2.
 \item \code{aperture = 4}: ISEA4H. Cell count = 10 * 4^res + 2.
 \item \code{aperture = 7}: ISEA7H. Cell count = 10 * 7^res + 2.
+\item \code{aperture = "4/3"}: ISEA43H mixed aperture.
+Uses aperture-4 for first \code{mixed_aperture_level} levels, then aperture-3.
+Cell count = 10 * 4^mixed_level * 3^(res - mixed_level) + 2.
 }
 }
 \examples{
@@ -75,11 +84,14 @@ library(sf)
 pts <- st_as_sf(df, coords = c("lon", "lat"), crs = 4326)
 result_sf <- hexify(pts, area = 1000)
 
-# Using spacing instead of area
-result <- hexify(df, lon = "lon", lat = "lat", spacing = 50)
+# Using diagonal instead of area
+result <- hexify(df, lon = "lon", lat = "lat", diagonal = 50)
 
 # Different apertures
 result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
 result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+# Mixed aperture (ISEA43H)
+result_mixed <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
 }
 }

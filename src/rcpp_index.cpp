@@ -9,6 +9,7 @@
 // - Z7 canonical form
 
 #include <Rcpp.h>
+#include "constants.h"
 #include "core_icosa.h"
 #include "snyder_forward.h"
 #include "snyder_inverse.h"
@@ -300,9 +301,8 @@ List cpp_hex_index_z3_corners(IntegerVector digs,
   std::vector<double> x_coords;
   std::vector<double> y_coords;
 
-  const double PI = 3.14159265358979323846;
   for (int i = 0; i < 6; i++) {
-    double angle = PI / 3.0 * i;
+    double angle = hexify::kPiOver3 * i;
     x_coords.push_back(hex_radius * std::cos(angle));
     y_coords.push_back(hex_radius * std::sin(angle));
   }

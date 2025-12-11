@@ -33,17 +33,20 @@ remotes::install_github("gcol33/hexify")
 
 ## What hexify Does
 
-hexify assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) discrete global grid system. Supports apertures 3, 4, and 7:
+hexify assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) discrete global grid system. Supports apertures 3, 4, 7, and mixed 4/3:
 
 - **Aperture 3** (ISEA3H): Default, compatible with dggridR
 - **Aperture 4** (ISEA4H): Faster cell count growth per resolution
 - **Aperture 7** (ISEA7H): Densest grid per resolution level
+- **Aperture "4/3"** (ISEA43H): Mixed aperture (4 then 3)
 
 Given a data frame with longitude/latitude columns, `hexify()` returns:
 
 - `hex_id`: Unique cell identifier (integer SEQNUM)
 - `hex_cen_lon`: Cell center longitude
 - `hex_cen_lat`: Cell center latitude
+- `hex_area`: Actual cell area in km²
+- `hex_diag`: Actual cell diagonal in km
 
 ## Quick Examples
 
@@ -62,13 +65,13 @@ result <- hexify(cities, lon = "lon", lat = "lat", area = 1000)
 result
 ```
 
-### Using Spacing Instead of Area
+### Using Diagonal Instead of Area
 
 Specify the long diagonal of hexagons in kilometers:
 
 ```{r}
-# 50 km spacing (long diagonal)
-result <- hexify(cities, lon = "lon", lat = "lat", spacing = 50)
+# 50 km diagonal (long diagonal)
+result <- hexify(cities, lon = "lon", lat = "lat", diagonal = 50)
 result[, c("name", "hex_id")]
 ```
 
@@ -105,14 +108,14 @@ cat("Fine grid cell IDs:", fine$hex_id, "\n")
 cat("Coarse grid cell IDs:", coarse$hex_id, "\n")
 ```
 
-### Spacing-Based
+### Diagonal-Based
 
 Specify the long diagonal of hexagons in km:
 
 ```{r}
-# Relationship: area ≈ 0.866 * spacing²
-# 50 km spacing → ~2165 km² cells
-result <- hexify(cities, lon = "lon", lat = "lat", spacing = 50)
+# Relationship: area ≈ 0.866 * diagonal²
+# 50 km diagonal → ~2165 km² cells
+result <- hexify(cities, lon = "lon", lat = "lat", diagonal = 50)
 ```
 
 ## Aperture Options
@@ -122,6 +125,7 @@ result <- hexify(cities, lon = "lon", lat = "lat", spacing = 50)
 | 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
 | 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
 | 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+| "4/3" | ISEA43H | 10 × 4^m × 3^(res-m) + 2 | Mixed aperture |
 
 ```{r}
 # Using different apertures
@@ -138,9 +142,19 @@ data.frame(
 )
 ```
 
+### Mixed Aperture (ISEA43H)
+
+Mixed aperture uses aperture 4 for the first levels, then switches to aperture 3:
+
+```{r}
+# Mixed aperture grid
+result_mixed <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
+result_mixed[, c("name", "hex_id", "hex_area")]
+```
+
 ## Resolution Reference (Aperture 3)
 
-| Resolution | Total Cells | Area (km²) | Spacing (km) |
+| Resolution | Total Cells | Area (km²) | Diagonal (km) |
 |------------|-------------|------------|--------------|
 | 5 | 2,432 | 209,903 | 695 |
 | 6 | 7,292 | 69,968 | 401 |
@@ -202,12 +216,51 @@ names(richness)[2] <- "n_species"
 richness
 ```
 
+## Polygon Generation
+
+Generate hexagon polygons for visualization and spatial analysis:
+
+### Basic Polygon Generation
+
+```{r, eval = requireNamespace("sf", quietly = TRUE)}
+library(sf)
+
+# Get hex_ids from hexify result
+result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
+
+# Generate polygons (requires resolution and aperture)
+polys <- hex_polygons(result$hex_id, resolution = 8, aperture = 3)
+polys
+```
+
+### Plotting Hexagons
+
+```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width=7, fig.height=5}
+# Plot the hexagons
+plot(st_geometry(polys), col = "lightblue", border = "darkblue",
+     main = "European Cities - Hexagonal Grid")
+```
+
+### Grid Over a Region
+
+```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width=7, fig.height=5}
+# Generate a grid covering Western Europe
+europe_grid <- hex_grid_rect(
+  minlon = -5, maxlon = 20,
+  minlat = 40, maxlat = 55,
+  area = 10000
+)
+
+plot(st_geometry(europe_grid), border = "gray",
+     main = "Hexagonal Grid over Western Europe")
+```
+
 ## Function Reference
 
 ### hexify()
 ```r
-hexify(data, lon = "lon", lat = "lat", area = NULL, spacing = NULL,
-       aperture = 3L, resround = "nearest")
+hexify(data, lon = "lon", lat = "lat", area = NULL, diagonal = NULL,
+       aperture = 3L, mixed_aperture_level = NULL, resround = "nearest")
 ```
 
 | Parameter | Description | Default |
@@ -216,11 +269,33 @@ hexify(data, lon = "lon", lat = "lat", area = NULL, spacing = NULL,
 | `lon` | Longitude column name (ignored for sf) | `"lon"` |
 | `lat` | Latitude column name (ignored for sf) | `"lat"` |
 | `area` | Target cell area in km² | `NULL` |
-| `spacing` | Long diagonal in km | `NULL` |
-| `aperture` | Grid aperture: 3, 4, or 7 | `3L` |
+| `diagonal` | Long diagonal in km | `NULL` |
+| `aperture` | Grid aperture: 3, 4, 7, or "4/3" | `3L` |
+| `mixed_aperture_level` | For "4/3": number of aperture-4 levels | `NULL` (auto) |
 | `resround` | Resolution rounding: `"nearest"`, `"up"`, `"down"` | `"nearest"` |
 
-**Returns**: Input data with added columns `hex_id`, `hex_cen_lon`, `hex_cen_lat`.
+**Returns**: Input data with added columns `hex_id`, `hex_cen_lon`, `hex_cen_lat`, `hex_area`, `hex_diag`.
+
+### hex_polygons()
+```r
+hex_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `hex_id` | Integer vector of cell IDs (SEQNUM) | *required* |
+| `resolution` | Grid resolution level | *required* |
+| `aperture` | Grid aperture: 3, 4, or 7 | `3L` |
+| `return_sf` | Return sf object (TRUE) or data frame (FALSE) | `TRUE` |
+
+**Returns**: sf object with POLYGON geometries, or data frame with vertex coordinates.
+
+### hex_grid_rect()
+```r
+hex_grid_rect(minlon, maxlon, minlat, maxlat, area, aperture = 3L)
+```
+
+Generates a grid of hexagon polygons covering a rectangular region.
 
 ## Troubleshooting
 
@@ -231,7 +306,7 @@ hexify(data, lon = "lon", lat = "lat", area = NULL, spacing = NULL,
 
 **Different cell IDs than dggridR**
 
-- Ensure same aperture (hexify supports apertures 3, 4, and 7)
+- Ensure same aperture (hexify supports apertures 3, 4, 7, and "4/3")
 - Match resolution via area: use `dgearthstat(dggs)$area_km` from dggridR
 
 **Very large hex_id values**

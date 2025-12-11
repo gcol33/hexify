@@ -14,21 +14,23 @@ No grids, no polygon generation, no complex joins. Just: "Here is my point; tell
 
 ## Build & Development Commands
 
+**Important:** Use `Rscript` for command-line R execution (not `R -e`).
+
 ```bash
 # Load for development
-devtools::load_all()
+Rscript -e "devtools::load_all()"
 
 # Run all tests
-devtools::test()
+Rscript -e "devtools::test()"
 
 # Run single test file
-testthat::test_file("tests/testthat/test-core_icosa.R")
+Rscript -e "testthat::test_file('tests/testthat/test-core_icosa.R')"
 
 # Rebuild documentation
-devtools::document()
+Rscript -e "devtools::document()"
 
 # Compile C++ code only
-Rcpp::compileAttributes()
+Rscript -e "Rcpp::compileAttributes()"
 ```
 
 ## DGGRID Coordinate Systems
@@ -74,6 +76,17 @@ The 20 triangular faces are grouped into 12 quads. Each quad contains 2 triangle
 The `references/` folder contains known-good implementations:
 - `dggridR-master/` - R wrapper for DGGRID
 - `DGGRID-master/` - Original C++ DGGRID source
+
+### Building DGGRID on Windows
+
+From Git Bash:
+```bash
+export PATH="/c/msys64/mingw64/bin:$PATH"
+cd "c:\Users\Gilles Colling\Documents\dev\hexify\references\DGGRID-master"
+cmake -B build -G Ninja
+cmake --build build
+```
+Executable: `build/src/apps/dggrid/dggrid.exe`
 
 **Validation requirement:** ALL code must be validated against dggridR output. Do not trust existing tests - they may encode incorrect understanding. Always:
 1. Generate reference data from dggridR

@@ -69,11 +69,14 @@ test_that("Class II batch test works", {
 
 test_that("Class I to Class II transition", {
   cpp_build_icosa()
-  
+
+
   # A point should refine consistently across resolutions
-  # Note: Using (0.4, 0.35) instead of (0.5, 0.3) to avoid aligned centers
-  tx <- 0.4
-  ty <- 0.35
+
+  # Note: Using (0.42, 0.41) - chosen to avoid coincidental alignment where
+  # the point falls equidistant from cell centers at different resolutions
+  tx <- 0.42
+  ty <- 0.41
   
   # Get cells at consecutive resolutions
   cell2 <- cpp_hex_quantify_ap3(tx, ty, 2)  # Class I

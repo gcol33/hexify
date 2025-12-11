@@ -1,11 +1,11 @@
 #include "core_icosa.h"
+#include "constants.h"
 #include <array>
 #include <cmath>
 
 namespace hexify {
 
 namespace {
-  constexpr double PI   = 3.141592653589793238462643383279502884;
   constexpr double PREC = 1e-15;
 
   IcosaData g_ico;
@@ -36,7 +36,7 @@ namespace {
                std::cos(A.lat)*std::cos(B.lat)*std::cos(A.lon - B.lon);
     c = clampd(c, -1.0, 1.0);
     double C = std::acos(c);
-    if (C > PI) C = 2.0*PI - C;
+    if (C > kPi) C = kTwoPi - C;
     return C;
   }
 
@@ -48,7 +48,7 @@ namespace {
     const double ptnew_lat = std::acos(cosptnewlat);
 
     double ptnew_lon = 0.0;
-    if (std::abs(ptnew_lat - 0.0) < PREC*100000 || std::abs(ptnew_lat - PI) < PREC*100000) {
+    if (std::abs(ptnew_lat - 0.0) < PREC*100000 || std::abs(ptnew_lat - kPi) < PREC*100000) {
       ptnew_lon = 0.0;
     } else {
       double cosptnewlon = ( ( std::sin(ptold.lat)*std::cos(newNPold.lat) -
@@ -58,22 +58,22 @@ namespace {
       cosptnewlon = clampd(cosptnewlon, -1.0, 1.0);
       ptnew_lon = std::acos(cosptnewlon);
       const double diff = ptold.lon - newNPold.lon;
-      if (0.0 <= diff && diff < PI) ptnew_lon = -ptnew_lon + lon0;
-      else                          ptnew_lon =  ptnew_lon + lon0;
+      if (0.0 <= diff && diff < kPi) ptnew_lon = -ptnew_lon + lon0;
+      else                           ptnew_lon =  ptnew_lon + lon0;
       ptnew_lon = wrap_lon(ptnew_lon);
     }
-    return Geo(ptnew_lon, PI/2.0 - ptnew_lat);
+    return Geo(ptnew_lon, kPiOver2 - ptnew_lat);
   }
   
 } // anon
 
 // ---- exported helpers (single definitions; others should call these) ----
-double deg2rad(double d) { return d * 3.14159265358979323846 / 180.0; }
-double rad2deg(double r) { return r * 180.0 / 3.14159265358979323846; }
+double deg2rad(double d) { return d * kDegToRad; }
+double rad2deg(double r) { return r * kRadToDeg; }
 double clampd(double x, double a, double b) { return x < a ? a : (x > b ? b : x); }
 double wrap_lon(double lon_rad) {
-  if (lon_rad >  3.14159265358979323846) lon_rad -= 2.0 * 3.14159265358979323846;
-  if (lon_rad < -3.14159265358979323846) lon_rad += 2.0 * 3.14159265358979323846;
+  if (lon_rad >  kPi) lon_rad -= kTwoPi;
+  if (lon_rad < -kPi) lon_rad += kTwoPi;
   return lon_rad;
 }
 

@@ -4,19 +4,24 @@
 \alias{dgSEQNUM_to_BOUNDARY}
 \title{Get cell boundaries (dggridR-compatible)}
 \usage{
-dgSEQNUM_to_BOUNDARY(dggs, in_seqnum)
+dgSEQNUM_to_BOUNDARY(dggs, in_seqnum, return_sf = TRUE)
 }
 \arguments{
-\item{dggs}{Grid specification}
+\item{dggs}{Grid specification from dgconstruct() or hexify_construct()}
 
-\item{in_seqnum}{Cell indices}
+\item{in_seqnum}{Cell indices (integer SEQNUM values)}
+
+\item{return_sf}{Logical. If TRUE, returns sf object; if FALSE, returns
+data frame with vertex coordinates}
 }
 \value{
-List of boundary coordinates
+If return_sf = TRUE: sf object with polygon geometries
+If return_sf = FALSE: data frame with columns seqnum, lon, lat, order
 }
 \description{
-Compatibility wrapper for hexify_cell_to_boundary().
+Returns boundary coordinates for hexagonal cells as an sf object
+or data frame of vertex coordinates.
 }
 \seealso{
-\code{\link{hexify_cell_to_boundary}}
+\code{\link{hex_polygons}}
 }

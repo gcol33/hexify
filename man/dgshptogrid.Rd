@@ -4,21 +4,17 @@
 \alias{dgshptogrid}
 \title{Generate cells for shapefile region (dggridR-compatible)}
 \usage{
-dgshptogrid(dggs, shpfname, cellsize = 0.1, ...)
+dgshptogrid(dggs, shpfname)
 }
 \arguments{
-\item{dggs}{Grid specification}
+\item{dggs}{Grid specification from dgconstruct() or hexify_construct()}
 
 \item{shpfname}{Path to shapefile or sf object}
-
-\item{cellsize}{Sampling density (degrees between sample points)}
-
-\item{...}{Additional arguments passed to dgcellstogrid}
 }
 \value{
-sf object or data frame of hexagonal cells
+sf object with hexagon polygons covering the region
 }
 \description{
-Generates cell indices for all cells that intersect with a shapefile
-polygon or multi-polygon.
+Generates hexagon polygons covering the bounding box of a shapefile
+or sf object.
 }

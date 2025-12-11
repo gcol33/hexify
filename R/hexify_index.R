@@ -202,7 +202,7 @@ hexify_compare_indices <- function(idx1, idx2) {
 #' @examples
 #' seqnum <- hexify_lonlat_to_seqnum(0, 45, resolution = 5, aperture = 3)
 hexify_lonlat_to_seqnum <- function(lon, lat, resolution, aperture) {
-  cpp_lonlat_to_seqnum(lon, lat, resolution, aperture)
+  cpp_lonlat_to_seqnum_dggrid(lon, lat, resolution, aperture)
 }
 
 #' Convert sequential number to longitude/latitude
@@ -219,7 +219,7 @@ hexify_lonlat_to_seqnum <- function(lon, lat, resolution, aperture) {
 #' @examples
 #' coords <- hexify_seqnum_to_lonlat(1702, resolution = 5, aperture = 3)
 hexify_seqnum_to_lonlat <- function(seqnum, resolution, aperture) {
-  cpp_seqnum_to_lonlat(seqnum, resolution, aperture)
+  cpp_seqnum_to_lonlat_dggrid(seqnum, resolution, aperture)
 }
 
 #' Get cell info from sequential number

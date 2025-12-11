@@ -1,20 +1,12 @@
 // tri_to_q2di.h - Convert PROJTRI (triangle coords) to Q2DI (quad integer coords)
-// Port of DGGRID's triTable and conversion logic from DgIDGGutil.cpp
+//
+// Coordinate transformations for ISEA DGGS grids.
+// Copyright (c) 2024 hexify authors. MIT License.
 
 #ifndef HEXIFY_TRI_TO_Q2DI_H
 #define HEXIFY_TRI_TO_Q2DI_H
 
 namespace hexify {
-
-// triTable entry: maps triangle number to quad transformation parameters
-struct TriTableEntry {
-    int quadNum;        // Target quad number (1-10, note: DGGRID uses 1-based for middle quads)
-    int triNum;         // Original triangle number (0-19)
-    int subTri;         // Sub-triangle index (0 or 1)
-    double trans_x;     // Translation vector X
-    double trans_y;     // Translation vector Y
-    int rot60;          // Number of 60° rotations (clockwise)
-};
 
 // Convert from PROJTRI (tnum, tx, ty) to Q2DD (quad, qx, qy)
 // This applies triTable rotation and translation
@@ -38,9 +30,13 @@ void q2di_to_q2dd(int quad, long long i, long long j,
                   int aperture, int resolution,
                   double& out_qx, double& out_qy);
 
-// Inverse: Q2DD → PROJTRI
+// Inverse: Q2DD → PROJTRI (throws on invalid region)
 void q2dd_to_projtri(int quad, double qx, double qy,
                      int& out_tnum, double& out_tx, double& out_ty);
+
+// Inverse: Q2DD → PROJTRI (returns false on invalid region)
+bool try_q2dd_to_projtri(int quad, double qx, double qy,
+                         int& out_tnum, double& out_tx, double& out_ty);
 
 // Get maxI/maxJ for a given aperture and resolution
 long long get_max_ij(int aperture, int resolution);

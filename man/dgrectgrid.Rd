@@ -4,10 +4,10 @@
 \alias{dgrectgrid}
 \title{Generate cells for a rectangular region (dggridR-compatible)}
 \usage{
-dgrectgrid(dggs, minlat, minlon, maxlat, maxlon, cellsize = 0.1, ...)
+dgrectgrid(dggs, minlat, minlon, maxlat, maxlon)
 }
 \arguments{
-\item{dggs}{Grid specification}
+\item{dggs}{Grid specification from dgconstruct() or hexify_construct()}
 
 \item{minlat}{Minimum latitude}
 
@@ -16,24 +16,19 @@ dgrectgrid(dggs, minlat, minlon, maxlat, maxlon, cellsize = 0.1, ...)
 \item{maxlat}{Maximum latitude}
 
 \item{maxlon}{Maximum longitude}
-
-\item{cellsize}{Sampling density (degrees between sample points)}
-
-\item{...}{Additional arguments passed to dgcellstogrid}
 }
 \value{
-sf object or data frame of hexagonal cells
+sf object with hexagon polygons covering the specified region
 }
 \description{
-Generates cell indices for all cells that intersect a rectangular
-geographic region defined by min/max longitude and latitude.
+Generates hexagon polygons covering a rectangular geographic region.
 }
 \examples{
 \dontrun{
 dggs <- dgconstruct(area = 10000, aperture = 3)
 
 # Get cells for a region (e.g., central Europe)
-grid <- dgrectgrid(dggs, 
+grid <- dgrectgrid(dggs,
                   minlat = 45, minlon = 5,
                   maxlat = 55, maxlon = 15)
 
@@ -41,4 +36,7 @@ grid <- dgrectgrid(dggs,
 library(sf)
 plot(st_geometry(grid))
 }
+}
+\seealso{
+\code{\link{hex_grid_rect}}
 }
