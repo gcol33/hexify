@@ -20,7 +20,12 @@ project_and_quantize <- function(lon, lat, effective_res, match_dggrid_parity) {
     flip_classes = match_dggrid_parity
   )
 
-  list(face = face, icosa_triangle_x = icosa_triangle_x, icosa_triangle_y = icosa_triangle_y, digits = quant$digits)
+  list(
+    face = face,
+    icosa_triangle_x = icosa_triangle_x,
+    icosa_triangle_y = icosa_triangle_y,
+    digits = quant$digits
+  )
 }
 
 #' Compute cell center coordinates from digits
@@ -72,7 +77,12 @@ build_hex_polygon <- function(digits, face, match_dggrid_parity) {
 hexify_assign <- function(lon, lat, effective_res,
                           match_dggrid_parity = TRUE,
                           make_polygons = FALSE) {
-  stopifnot(length(lon) == length(lat), length(effective_res) == 1L, effective_res >= 1L)
+
+  stopifnot(
+    length(lon) == length(lat),
+    length(effective_res) == 1L,
+    effective_res >= 1L
+  )
 
   n <- length(lon)
 
@@ -84,8 +94,12 @@ hexify_assign <- function(lon, lat, effective_res,
 
   # Process each point: project, quantize, compute centers
   results <- lapply(seq_len(n), function(k) {
-    proj <- project_and_quantize(lon[k], lat[k], effective_res, match_dggrid_parity)
-    center <- compute_cell_center(proj$digits, proj$face, match_dggrid_parity)
+    proj <- project_and_quantize(
+      lon[k], lat[k], effective_res, match_dggrid_parity
+    )
+    center <- compute_cell_center(
+      proj$digits, proj$face, match_dggrid_parity
+    )
 
     list(
       id = make_cell_id(proj$face, proj$digits),
@@ -113,7 +127,9 @@ hexify_assign <- function(lon, lat, effective_res,
   }
 
   sfg_list <- lapply(seq_len(n), function(k) {
-    poly <- build_hex_polygon(results[[k]]$digits, results[[k]]$face, match_dggrid_parity)
+    poly <- build_hex_polygon(
+      results[[k]]$digits, results[[k]]$face, match_dggrid_parity
+    )
     sf::st_geometry(poly)[[1]]
   })
 

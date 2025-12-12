@@ -144,8 +144,12 @@ validate_resolution <- function(resolution) {
     stop("Resolution must be a single numeric value")
   }
   resolution <- as.integer(resolution)
-  if (is.na(resolution) || resolution < MIN_RESOLUTION || resolution > MAX_RESOLUTION) {
-    stop(sprintf("Resolution must be between %d and %d", MIN_RESOLUTION, MAX_RESOLUTION))
+  if (is.na(resolution) ||
+      resolution < MIN_RESOLUTION ||
+      resolution > MAX_RESOLUTION) {
+    stop(sprintf(
+      "Resolution must be between %d and %d", MIN_RESOLUTION, MAX_RESOLUTION
+    ))
   }
   TRUE
 }
@@ -160,7 +164,9 @@ validate_aperture <- function(aperture) {
   }
   aperture <- as.integer(aperture)
   if (!aperture %in% VALID_APERTURES) {
-    stop(sprintf("Aperture must be one of: %s", paste(VALID_APERTURES, collapse = ", ")))
+    stop(sprintf(
+      "Aperture must be one of: %s", paste(VALID_APERTURES, collapse = ", ")
+    ))
   }
   TRUE
 }
@@ -194,8 +200,10 @@ validate_cell_id <- function(cell_id, resolution, aperture, warn = TRUE) {
   max_id <- max_cell_id(resolution, aperture)
   valid <- is.na(cell_id) | (cell_id >= 1 & cell_id <= max_id)
   if (warn && any(!valid, na.rm = TRUE)) {
-    warning(sprintf("Some cell IDs are outside valid range [1, %.0f] for resolution %d, aperture %d",
-                    max_id, resolution, aperture))
+    warning(sprintf(
+      "Some cell IDs are outside valid range [1, %.0f] for res %d, ap %d",
+      max_id, resolution, aperture
+    ))
   }
   valid
 }

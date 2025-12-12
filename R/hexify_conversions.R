@@ -347,7 +347,9 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
     R <- EARTH_RADIUS_KM
     dlat <- (coords$lat - lat) * pi / 180
     dlon <- (coords$lon - lon) * pi / 180
-    a <- sin(dlat/2)^2 + cos(lat * pi/180) * cos(coords$lat * pi/180) * sin(dlon/2)^2
+    lat_rad <- lat * pi / 180
+    cen_lat_rad <- coords$lat * pi / 180
+    a <- sin(dlat/2)^2 + cos(lat_rad) * cos(cen_lat_rad) * sin(dlon/2)^2
     c <- 2 * atan2(sqrt(a), sqrt(1-a))
     distance <- R * c
   } else {
@@ -858,7 +860,8 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #'                                    resolution = 10, aperture = 3)
 #' print(cell_id)
 #' }
-hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution, aperture = 3L) {
+hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
+                                   aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
     stop("aperture must be 3, 4, or 7")

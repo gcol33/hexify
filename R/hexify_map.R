@@ -19,7 +19,10 @@ calculate_view_buffer <- function(bbox, factor = 0.1, min_buffer = 1) {
 #' Check if string is a color palette name (not a hex color or named color)
 #' @noRd
 is_palette_name <- function(x) {
-  length(x) == 1 && is.character(x) && !grepl("^#", x) && !x %in% grDevices::colors()
+  length(x) == 1 &&
+    is.character(x) &&
+    !grepl("^#", x) &&
+    !x %in% grDevices::colors()
 }
 
 #' Check if palette is a valid RColorBrewer palette
@@ -33,41 +36,57 @@ is_brewer_palette <- function(palette_name) {
 #' @noRd
 apply_discrete_scale <- function(p, colors, legend_title, na_color, n_levels) {
   if (is.null(colors)) {
-    return(p + ggplot2::scale_fill_viridis_d(name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_viridis_d(
+      name = legend_title, na.value = na_color
+    ))
   }
 
   if (!is_palette_name(colors)) {
-    return(p + ggplot2::scale_fill_manual(values = colors, name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_manual(
+      values = colors, name = legend_title, na.value = na_color
+    ))
   }
 
   if (is_brewer_palette(colors)) {
     max_colors <- RColorBrewer::brewer.pal.info[colors, "maxcolors"]
     pal_colors <- RColorBrewer::brewer.pal(min(n_levels, max_colors), colors)
-    return(p + ggplot2::scale_fill_manual(values = pal_colors, name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_manual(
+      values = pal_colors, name = legend_title, na.value = na_color
+    ))
   }
 
   # Fallback: treat as viridis option name
-
-  p + ggplot2::scale_fill_viridis_d(option = tolower(colors), name = legend_title, na.value = na_color)
+  p + ggplot2::scale_fill_viridis_d(
+    option = tolower(colors), name = legend_title, na.value = na_color
+  )
 }
 
 #' Apply continuous color scale to ggplot
 #' @noRd
 apply_continuous_scale <- function(p, colors, legend_title, na_color) {
   if (is.null(colors)) {
-    return(p + ggplot2::scale_fill_viridis_c(name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_viridis_c(
+      name = legend_title, na.value = na_color
+    ))
   }
 
   if (!is_palette_name(colors)) {
-    return(p + ggplot2::scale_fill_gradientn(colors = colors, name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_gradientn(
+      colors = colors, name = legend_title, na.value = na_color
+    ))
   }
 
   if (is_brewer_palette(colors)) {
-    return(p + ggplot2::scale_fill_distiller(palette = colors, direction = 1, name = legend_title, na.value = na_color))
+    return(p + ggplot2::scale_fill_distiller(
+      palette = colors, direction = 1,
+      name = legend_title, na.value = na_color
+    ))
   }
 
   # Fallback: treat as viridis option name
-  p + ggplot2::scale_fill_viridis_c(option = tolower(colors), name = legend_title, na.value = na_color)
+  p + ggplot2::scale_fill_viridis_c(
+    option = tolower(colors), name = legend_title, na.value = na_color
+  )
 }
 
 #' Convert hexify data to sf polygons
@@ -76,7 +95,7 @@ prepare_hex_sf <- function(data, aperture) {
   if (inherits(data, "sf")) return(data)
 
   if (!is.data.frame(data) || !"hex_id" %in% names(data)) {
-    stop("data must be a data.frame from hexify() or an sf object with polygons")
+    stop("data must be a data.frame from hexify() or an sf object")
   }
 
   if (!"hex_area" %in% names(data)) {
@@ -90,7 +109,8 @@ prepare_hex_sf <- function(data, aperture) {
 
   extra_cols <- setdiff(names(data), c("hex_id", "geometry"))
   if (length(extra_cols) > 0) {
-    data_unique <- data[!duplicated(data$hex_id), c("hex_id", extra_cols), drop = FALSE]
+    cols <- c("hex_id", extra_cols)
+    data_unique <- data[!duplicated(data$hex_id), cols, drop = FALSE]
     hex_sf <- merge(hex_sf, data_unique, by = "hex_id", all.x = TRUE)
   }
 
@@ -125,7 +145,9 @@ resolve_basemap <- function(basemap) {
 #' @noRd
 create_outside_mask <- function(hex_sf, basemap_sf, xlim, ylim) {
   if (!is.null(xlim) && !is.null(ylim)) {
-    bbox_coords <- c(xmin = xlim[1], xmax = xlim[2], ymin = ylim[1], ymax = ylim[2])
+    bbox_coords <- c(
+      xmin = xlim[1], xmax = xlim[2], ymin = ylim[1], ymax = ylim[2]
+    )
   } else {
     hex_bbox <- sf::st_bbox(hex_sf)
     buffer <- calculate_view_buffer(hex_bbox)
@@ -144,8 +166,9 @@ create_outside_mask <- function(hex_sf, basemap_sf, xlim, ylim) {
 
 #' Build heatmap layers with masking
 #' @noRd
-build_masked_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
-                                 basemap_sf, basemap_border, basemap_lwd, mask_sf) {
+build_masked_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
+                                hex_alpha, basemap_sf, basemap_border,
+                                basemap_lwd, mask_sf) {
   # Hexagons first
 
   p <- p + ggplot2::geom_sf(
@@ -172,8 +195,9 @@ build_masked_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd, hex_al
 
 #' Build standard heatmap layers (basemap under hexes)
 #' @noRd
-build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
-                                   basemap_sf, basemap_fill, basemap_border, basemap_lwd) {
+build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
+                                  hex_alpha, basemap_sf, basemap_fill,
+                                  basemap_border, basemap_lwd) {
   if (!is.null(basemap_sf)) {
     p <- p + ggplot2::geom_sf(
       data = basemap_sf,
@@ -198,7 +222,7 @@ prepare_hex_sf_simple <- function(data, aperture) {
   if (inherits(data, "sf")) return(data)
 
   if (!is.data.frame(data) || !"hex_id" %in% names(data)) {
-    stop("data must be a data.frame from hexify() or an sf object with polygons")
+    stop("data must be a data.frame from hexify() or an sf object")
   }
 
   if (!"hex_area" %in% names(data)) {
@@ -242,7 +266,9 @@ prepare_fill_column <- function(hex_sf, value, breaks, labels) {
   }
 
   bin_col <- paste0(value, "_bin")
-  hex_sf[[bin_col]] <- cut(value_data, breaks = breaks, labels = labels, include.lowest = TRUE)
+  hex_sf[[bin_col]] <- cut(
+    value_data, breaks = breaks, labels = labels, include.lowest = TRUE
+  )
 
   list(data = hex_sf, fill_col = bin_col, is_discrete = TRUE)
 }
@@ -704,11 +730,15 @@ hexify_heatmap <- function(data,
   # Build ggplot with layers
   p <- ggplot2::ggplot()
   if (mask_outside && !is.null(basemap_sf)) {
-    p <- build_masked_layers(p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
-                              basemap_sf, basemap_border, basemap_lwd, mask_sf)
+    p <- build_masked_layers(
+      p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
+      basemap_sf, basemap_border, basemap_lwd, mask_sf
+    )
   } else {
-    p <- build_standard_layers(p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
-                                basemap_sf, basemap_fill, basemap_border, basemap_lwd)
+    p <- build_standard_layers(
+      p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,
+      basemap_sf, basemap_fill, basemap_border, basemap_lwd
+    )
   }
 
   # Apply color scale using helper functions
