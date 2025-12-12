@@ -545,3 +545,4 @@ test_that("plane conversions work for all apertures", {
     expect_true(is.finite(plane$plane_y))
   }
 })
+

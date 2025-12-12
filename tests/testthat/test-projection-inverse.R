@@ -148,3 +148,125 @@ test_that("projection_stats tracks calls", {
   stats <- hexify_projection_stats()
   expect_equal(as.integer(stats["calls"]), n_calls)
 })
+
+# =============================================================================
+# HEXIFY_SET_VERBOSE
+# =============================================================================
+
+test_that("hexify_set_verbose accepts TRUE and FALSE", {
+  expect_no_error(hexify_set_verbose(TRUE))
+  expect_no_error(hexify_set_verbose(FALSE))
+})
+
+# =============================================================================
+# CUSTOM PRECISION SETTINGS
+# =============================================================================
+
+test_that("hexify_set_precision accepts custom tol", {
+  expect_no_error(hexify_set_precision(tol = 1e-10))
+})
+
+test_that("hexify_set_precision accepts custom max_iters", {
+  expect_no_error(hexify_set_precision(max_iters = 50))
+})
+
+test_that("hexify_set_precision accepts both custom parameters", {
+  expect_no_error(hexify_set_precision(tol = 1e-12, max_iters = 100))
+})
+
+# =============================================================================
+# HEXIFY_BUILD_ICOSA
+# =============================================================================
+
+test_that("hexify_build_icosa with custom parameters", {
+  # Custom vertex position
+  expect_no_error(hexify_build_icosa(vert0_lon = 0, vert0_lat = 90, azimuth = 0))
+
+  # Reset to standard orientation
+  hexify_build_icosa()
+})
+
+# =============================================================================
+# HEXIFY_FACE_CENTERS
+# =============================================================================
+
+test_that("hexify_face_centers returns 20 faces", {
+  hexify_build_icosa()
+
+  centers <- hexify_face_centers()
+
+  expect_s3_class(centers, "data.frame")
+  expect_equal(nrow(centers), 20)
+  expect_true(all(c("lon", "lat") %in% names(centers)))
+})
+
+test_that("hexify_face_centers returns valid coordinates", {
+  hexify_build_icosa()
+
+  centers <- hexify_face_centers()
+
+  expect_true(all(centers$lon >= -180 & centers$lon <= 180))
+  expect_true(all(centers$lat >= -90 & centers$lat <= 90))
+})
+
+# =============================================================================
+# HEXIFY_WHICH_FACE
+# =============================================================================
+
+test_that("hexify_which_face returns valid face indices", {
+  hexify_build_icosa()
+
+  set.seed(42)
+  for (i in 1:50) {
+    lon <- runif(1, -180, 180)
+    lat <- runif(1, -89, 89)
+
+    face <- hexify_which_face(lon, lat)
+    expect_true(face >= 0 && face <= 19)
+  }
+})
+
+test_that("hexify_which_face is consistent with hexify_forward", {
+  hexify_build_icosa()
+
+  set.seed(123)
+  for (i in 1:30) {
+    lon <- runif(1, -180, 180)
+    lat <- runif(1, -85, 85)
+
+    face <- hexify_which_face(lon, lat)
+    forward_result <- hexify_forward(lon, lat)
+
+    expect_equal(face, as.integer(forward_result["face"]))
+  }
+})
+
+# =============================================================================
+# HEXIFY_INVERSE WITH CUSTOM PARAMETERS
+# =============================================================================
+
+test_that("hexify_inverse with custom tol parameter", {
+  hexify_build_icosa()
+
+  result <- hexify_inverse(0.5, 0.3, face = 0, tol = 1e-10)
+
+  expect_true(is.finite(result["lon"]))
+  expect_true(is.finite(result["lat"]))
+})
+
+test_that("hexify_inverse with custom max_iters parameter", {
+  hexify_build_icosa()
+
+  result <- hexify_inverse(0.5, 0.3, face = 0, max_iters = 50)
+
+  expect_true(is.finite(result["lon"]))
+  expect_true(is.finite(result["lat"]))
+})
+
+test_that("hexify_inverse validates input lengths", {
+  hexify_build_icosa()
+
+  expect_error(hexify_inverse(c(0.5, 0.6), 0.3, face = 0))
+  expect_error(hexify_inverse(0.5, c(0.3, 0.4), face = 0))
+  expect_error(hexify_inverse(0.5, 0.3, face = c(0, 1)))
+})

@@ -182,3 +182,75 @@ test_that("hexify_print_resolutions outputs to console", {
     "Grid Resolution Comparison"
   )
 })
+
+# =============================================================================
+# ADDITIONAL COVERAGE FOR HEXIFY_STATS
+# =============================================================================
+
+test_that("dgearthstat handles aperture 7 differently", {
+  grid <- hexify_grid(area = 10000, aperture = 7)
+  stats <- dgearthstat(grid)
+
+  # Aperture 7 uses 12 base faces
+  expected_cells <- 12 * (7 ^ stats$resolution)
+  expect_equal(stats$n_cells, expected_cells)
+})
+
+test_that("dg_closest_res_to_area handles non-metric input", {
+  grid <- list(aperture = 3, topology = "HEXAGON")
+  class(grid) <- c("hexify_grid", "dggs", "list")
+
+  # Square miles input
+  res <- dg_closest_res_to_area(grid, area = 386, metric = FALSE)
+
+  expect_type(res, "double")
+  expect_gte(res, 0)
+})
+
+test_that("dg_closest_res_to_spacing handles non-metric input", {
+  grid <- list(aperture = 3, topology = "HEXAGON")
+  class(grid) <- c("hexify_grid", "dggs", "list")
+
+  # Miles input
+  res <- dg_closest_res_to_spacing(grid, spacing = 30, metric = FALSE)
+
+  expect_type(res, "double")
+  expect_gte(res, 0)
+})
+
+test_that("dg_closest_res_to_cls handles non-metric input", {
+  grid <- list(aperture = 3, topology = "HEXAGON")
+  class(grid) <- c("hexify_grid", "dggs", "list")
+
+  # Miles input
+  res <- dg_closest_res_to_cls(grid, cls = 20, metric = FALSE)
+
+  expect_type(res, "double")
+  expect_gte(res, 0)
+})
+
+test_that("hexify_compare_resolutions works for different apertures", {
+  comp_ap3 <- hexify_compare_resolutions(aperture = 3, res_range = 0:3)
+  comp_ap4 <- hexify_compare_resolutions(aperture = 4, res_range = 0:3)
+  comp_ap7 <- hexify_compare_resolutions(aperture = 7, res_range = 0:3)
+
+  expect_equal(nrow(comp_ap3), 4)
+  expect_equal(nrow(comp_ap4), 4)
+  expect_equal(nrow(comp_ap7), 4)
+})
+
+test_that("hexify_print_resolutions formats large cell counts", {
+  # Resolution 10 should have cells in millions
+  expect_output(
+    hexify_print_resolutions(aperture = 3, res_range = 8:10),
+    "M"  # Million suffix
+  )
+})
+
+test_that("hexify_print_resolutions formats thousand cell counts", {
+  # Resolution 3-5 should have cells in thousands
+  expect_output(
+    hexify_print_resolutions(aperture = 3, res_range = 3:5),
+    "K"  # Thousand suffix
+  )
+})

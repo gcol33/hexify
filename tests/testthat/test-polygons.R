@@ -367,3 +367,192 @@ test_that(".resolution_from_area returns valid resolution", {
   expect_true(is.numeric(res))
   expect_true(res >= 0 && res <= 30)
 })
+
+# =============================================================================
+# HEXIFY_GRID_RECT
+# =============================================================================
+
+test_that("hexify_grid_rect validates parameters", {
+  skip_if_not_installed("sf")
+
+  # Test basic functionality was already done, test different apertures
+  grid_ap4 <- hexify_grid_rect(
+    minlon = 0, maxlon = 5,
+    minlat = 45, maxlat = 48,
+    area = 5000, aperture = 4
+  )
+
+  expect_s3_class(grid_ap4, "sf")
+  expect_true(nrow(grid_ap4) > 0)
+})
+
+test_that("hexify_grid_rect works with resround", {
+  skip_if_not_installed("sf")
+
+  grid_up <- hexify_grid_rect(
+    minlon = 0, maxlon = 5,
+    minlat = 45, maxlat = 48,
+    area = 5000, resround = "up"
+  )
+
+  grid_down <- hexify_grid_rect(
+    minlon = 0, maxlon = 5,
+    minlat = 45, maxlat = 48,
+    area = 5000, resround = "down"
+  )
+
+  expect_s3_class(grid_up, "sf")
+  expect_s3_class(grid_down, "sf")
+})
+
+# =============================================================================
+# HEXIFY_GRID_GLOBAL
+# =============================================================================
+
+test_that("hexify_grid_global works with large area", {
+  skip_if_not_installed("sf")
+
+  # Use very large area to avoid warning
+  grid <- hexify_grid_global(area = 10000000)
+
+  expect_s3_class(grid, "sf")
+  expect_true(nrow(grid) > 0)
+})
+
+test_that("hexify_grid_global warns on small area", {
+  skip_if_not_installed("sf")
+
+  expect_warning(
+    hexify_grid_global(area = 1000),
+    "approximately.*cells"
+  )
+})
+
+# =============================================================================
+# HEXIFY_PLOT
+# =============================================================================
+
+test_that("hexify_plot works with different apertures", {
+  df <- data.frame(
+    hex_id = c(100, 200),
+    hex_area = c(1000, 1000)
+  )
+
+  # Test aperture parameter
+  expect_silent(hexify_plot(df, aperture = 3, col = "lightblue"))
+})
+
+test_that("hexify_plot add=TRUE works", {
+  df <- data.frame(
+    hex_id = c(100, 200),
+    hex_area = c(1000, 1000)
+  )
+
+  # First create a plot
+  expect_silent(hexify_plot(df, col = "lightblue"))
+
+  # Then add to it
+  df2 <- data.frame(
+    hex_id = c(300),
+    hex_area = c(1000)
+  )
+  expect_silent(hexify_plot(df2, add = TRUE, col = "red"))
+})
+
+# =============================================================================
+# EDGE CASES FOR HEXIFY_CELL_TO_SF
+# =============================================================================
+
+test_that("hexify_cell_to_sf works with large cell IDs", {
+  skip_if_not_installed("sf")
+
+  # Higher resolution -> larger cell IDs
+  hex_ids <- c(100000, 200000, 300000)
+
+  result <- hexify_cell_to_sf(
+    hex_ids, resolution = 12, aperture = 3, return_sf = TRUE
+  )
+
+  expect_s3_class(result, "sf")
+  expect_equal(nrow(result), 3)
+})
+
+test_that("hexify_cell_to_sf handles duplicate IDs correctly", {
+  skip_if_not_installed("sf")
+
+  hex_ids <- c(100, 100, 200, 200, 200)
+
+  result <- hexify_cell_to_sf(
+    hex_ids, resolution = 5, aperture = 3, return_sf = TRUE
+  )
+
+  expect_s3_class(result, "sf")
+  expect_equal(nrow(result), 2)  # Should be deduplicated
+})
+
+test_that("hexify_cell_to_sf with return_sf=FALSE produces correct structure", {
+  hex_ids <- c(100, 200)
+
+  result <- hexify_cell_to_sf(
+    hex_ids, resolution = 5, aperture = 3, return_sf = FALSE
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("hex_id", "lon", "lat", "order") %in% names(result)))
+  expect_equal(nrow(result), 2 * 7)  # 7 vertices per hex
+})
+
+# =============================================================================
+# HEXIFY_TO_SF ADDITIONAL TESTS
+# =============================================================================
+
+test_that("hexify_to_sf preserves all columns", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    name = c("A", "B"),
+    hex_id = c(12847, 12532),
+    hex_cen_lon = c(10.5, 11.2),
+    hex_cen_lat = c(48.5, 49.1),
+    hex_area = c(863.94, 863.94),
+    custom_col = c("x", "y")
+  )
+
+  result <- hexify_to_sf(df, geometry = "point")
+
+  expect_true("name" %in% names(result))
+  expect_true("custom_col" %in% names(result))
+})
+
+test_that("hexify_to_sf polygon geometry preserves attributes", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    hex_id = c(12847, 12532),
+    hex_area = c(863.94, 863.94),
+    value = c(100, 200)
+  )
+
+  result <- hexify_to_sf(df, geometry = "polygon")
+
+  expect_s3_class(result, "sf")
+  expect_true("value" %in% names(result))
+})
+
+# =============================================================================
+# HEXIFY_TO_POLYGONS ADDITIONAL TESTS
+# =============================================================================
+
+test_that("hexify_to_polygons deduplicates hex_ids", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    hex_id = c(12847, 12847, 12532),  # duplicate
+    hex_area = c(863.94, 863.94, 863.94)
+  )
+
+  result <- hexify_to_polygons(df, aperture = 3, return_sf = TRUE)
+
+  expect_s3_class(result, "sf")
+  expect_equal(nrow(result), 2)  # Should deduplicate
+})
