@@ -164,3 +164,38 @@ validate_aperture <- function(aperture) {
   }
   TRUE
 }
+
+#' Calculate maximum cell ID for given resolution and aperture
+#' @param resolution Integer resolution value
+#' @param aperture Integer aperture value
+#' @return Maximum valid cell ID (numeric)
+#' @noRd
+max_cell_id <- function(resolution, aperture) {
+  # Cell count formula: N = 10 * aperture^res + 2
+  # But for cell numbering, we use 20 faces with aperture^res cells each
+  # Max cell ID = 20 * (max_coord + 1)^2 for the simple linear indexing
+
+  # This matches the C++ cell_numbering.cpp logic
+  if (resolution == 0) return(20)
+  10 * (aperture^resolution) + 2
+}
+
+#' Validate cell ID values
+#' @param cell_id Numeric vector of cell IDs
+#' @param resolution Integer resolution value
+#' @param aperture Integer aperture value
+#' @param warn Whether to warn on out-of-range values (default TRUE)
+#' @return Logical vector indicating valid values
+#' @noRd
+validate_cell_id <- function(cell_id, resolution, aperture, warn = TRUE) {
+  if (!is.numeric(cell_id)) {
+    stop("Cell ID must be numeric")
+  }
+  max_id <- max_cell_id(resolution, aperture)
+  valid <- is.na(cell_id) | (cell_id >= 1 & cell_id <= max_id)
+  if (warn && any(!valid, na.rm = TRUE)) {
+    warning(sprintf("Some cell IDs are outside valid range [1, %.0f] for resolution %d, aperture %d",
+                    max_id, resolution, aperture))
+  }
+  valid
+}

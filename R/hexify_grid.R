@@ -145,7 +145,14 @@ hexify_grid <- function(area,
 
 #' Backwards-compatible alias for hexify_grid
 #'
+#' @description
+#' \lifecycle{deprecated}
+#'
+#' `hexify_construct()` was renamed to `hexify_grid()` for clarity.
+#' Use `hexify_grid()` instead.
+#'
 #' @rdname hexify_grid
+#' @keywords internal
 #' @export
 hexify_construct <- function(area,
                              topology = "HEXAGON",
@@ -153,6 +160,7 @@ hexify_construct <- function(area,
                              resround = "nearest",
                              aperture = 3,
                              projection = "ISEA") {
+  .Deprecated("hexify_grid")
   hexify_grid(area, topology, metric, resround, aperture, projection)
 }
 

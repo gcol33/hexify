@@ -127,7 +127,9 @@ void seqnum_to_cell_ap3(uint64_t seqnum, int resolution,
     // Resolution 0: face is seqnum - 1 (20 faces)
     if (resolution == 0) {
         face = static_cast<int>(seqnum - 1);
-        if (face > 19) face = 19;
+        if (face > 19) {
+            throw std::runtime_error("cell_numbering: seqnum out of range for resolution 0");
+        }
         i = 0;
         j = 0;
         return;
@@ -142,7 +144,9 @@ void seqnum_to_cell_ap3(uint64_t seqnum, int resolution,
 
     // Calculate face and cell index
     face = static_cast<int>(snum / cpf);
-    if (face > 19) face = 19;
+    if (face > 19) {
+        throw std::runtime_error("cell_numbering: seqnum out of range (face > 19)");
+    }
     uint64_t cell_idx = snum % cpf;
 
     // Convert cell index to (i, j)
@@ -183,7 +187,9 @@ void seqnum_to_cell_ap4(uint64_t seqnum, int resolution,
 
     if (resolution == 0) {
         face = static_cast<int>(seqnum - 1);
-        if (face > 19) face = 19;
+        if (face > 19) {
+            throw std::runtime_error("cell_numbering: seqnum out of range for resolution 0");
+        }
         i = 0;
         j = 0;
         return;
@@ -194,7 +200,9 @@ void seqnum_to_cell_ap4(uint64_t seqnum, int resolution,
     uint64_t cpf = max_val * max_val;
 
     face = static_cast<int>(snum / cpf);
-    if (face > 19) face = 19;
+    if (face > 19) {
+        throw std::runtime_error("cell_numbering: seqnum out of range (face > 19)");
+    }
     uint64_t cell_idx = snum % cpf;
 
     linear_index_to_cell(cell_idx, resolution, 4, i, j);
@@ -234,7 +242,9 @@ void seqnum_to_cell_ap7(uint64_t seqnum, int resolution,
 
     if (resolution == 0) {
         face = static_cast<int>(seqnum - 1);
-        if (face > 19) face = 19;
+        if (face > 19) {
+            throw std::runtime_error("cell_numbering: seqnum out of range for resolution 0");
+        }
         i = 0;
         j = 0;
         return;
@@ -245,7 +255,9 @@ void seqnum_to_cell_ap7(uint64_t seqnum, int resolution,
     uint64_t cpf = max_val * max_val;
 
     face = static_cast<int>(snum / cpf);
-    if (face > 19) face = 19;
+    if (face > 19) {
+        throw std::runtime_error("cell_numbering: seqnum out of range (face > 19)");
+    }
     uint64_t cell_idx = snum % cpf;
 
     linear_index_to_cell(cell_idx, resolution, 7, i, j);

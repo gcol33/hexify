@@ -102,8 +102,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
   
   return(data.frame(
     h_index = cell_indices,
-    face = faces,
-    stringsAsFactors = FALSE
+    face = faces
   ))
 }
 
@@ -182,8 +181,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 
   return(data.frame(
     lon = lon,
-    lat = lat,
-    stringsAsFactors = FALSE
+    lat = lat
   ))
 }
 

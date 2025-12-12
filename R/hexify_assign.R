@@ -102,8 +102,7 @@ hexify_assign <- function(lon, lat, effective_res,
     face = vapply(results, `[[`, integer(1), "face"),
     effective_res = effective_res,
     center_lon = vapply(results, `[[`, numeric(1), "center_lon"),
-    center_lat = vapply(results, `[[`, numeric(1), "center_lat"),
-    stringsAsFactors = FALSE
+    center_lat = vapply(results, `[[`, numeric(1), "center_lat")
   )
 
   if (!isTRUE(make_polygons)) return(df)

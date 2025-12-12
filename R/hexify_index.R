@@ -230,6 +230,7 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
 hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
+  validate_cell_id(cell_id, resolution, aperture)
   cpp_cell_to_lonlat(cell_id, resolution, aperture)
 }
 
@@ -249,6 +250,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 hexify_seqnum_to_cell <- function(seqnum, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
+  validate_cell_id(seqnum, resolution, aperture)
   result <- cpp_seqnum_to_cell_info(seqnum, resolution, aperture)
   as.data.frame(result)
 }

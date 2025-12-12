@@ -174,3 +174,88 @@ test_that("mixed aperture corners form valid hexagons", {
     expect_true(all(is.finite(corners$y)))
   }
 })
+
+# =============================================================================
+# EDGE CASES - MIXED APERTURE LEVEL BOUNDARIES
+# =============================================================================
+
+test_that("mixed aperture level = 0 (all aperture 3)", {
+  setup_icosa()
+
+  # When mixed_aperture_level = 0, should behave like pure aperture 3
+  test_lon <- c(0, 45, -120, 16.37)
+  test_lat <- c(0, 30, -45, 48.21)
+
+  for (res in c(3, 5, 7)) {
+    # Mixed with level 0 = all ap3
+    cell_mixed <- cpp_lonlat_to_cell_ap43(test_lon, test_lat, res, 0)
+
+    # Pure aperture 3
+    cell_pure <- cpp_lonlat_to_cell(test_lon, test_lat, res, 3)
+
+    expect_equal(cell_mixed, cell_pure,
+                 info = sprintf("res=%d, mixed_level=0 should equal pure ap3", res))
+  }
+})
+
+test_that("mixed aperture level = resolution produces valid cells", {
+  setup_icosa()
+
+  # When mixed_aperture_level = resolution, all resolutions use aperture 4
+  # Note: Cell IDs may differ from pure ap4 due to different numbering schemes
+  test_lon <- c(0, 45, -120, 16.37)
+  test_lat <- c(0, 30, -45, 48.21)
+
+  for (res in c(2, 4, 6)) {
+    # Mixed with level = res = all ap4 subdivisions
+    cell_mixed <- cpp_lonlat_to_cell_ap43(test_lon, test_lat, res, res)
+
+    # Verify cells are valid (positive integers)
+    expect_true(all(cell_mixed >= 1),
+                info = sprintf("res=%d, mixed_level=res should produce valid cells", res))
+    expect_true(all(is.finite(cell_mixed)),
+                info = sprintf("res=%d cells should be finite", res))
+
+    # Verify round-trip works
+    centers <- cpp_cell_to_lonlat_ap43(cell_mixed, res, res)
+    cell2 <- cpp_lonlat_to_cell_ap43(centers$lon_deg, centers$lat_deg, res, res)
+    expect_equal(cell_mixed, cell2,
+                 info = sprintf("res=%d, mixed_level=res round-trip", res))
+  }
+})
+
+test_that("mixed aperture round-trip at boundary resolutions", {
+  setup_icosa()
+
+  test_lon <- c(0, 45, -120)
+  test_lat <- c(0, 30, -45)
+
+  # Test at resolution boundaries
+  # Skip res=1 with mixed_level=1 as it's a degenerate case
+  for (res in c(2, 5, 10)) {
+    for (mixed_level in c(0, 1, min(res - 1, 5))) {
+      cell <- cpp_lonlat_to_cell_ap43(test_lon, test_lat, res, mixed_level)
+      centers <- cpp_cell_to_lonlat_ap43(cell, res, mixed_level)
+      cell2 <- cpp_lonlat_to_cell_ap43(centers$lon_deg, centers$lat_deg, res, mixed_level)
+
+      expect_equal(cell, cell2,
+                   info = sprintf("res=%d, mixed_level=%d round-trip", res, mixed_level))
+    }
+  }
+})
+
+test_that("mixed aperture invalid level throws error", {
+  setup_icosa()
+
+  # mixed_aperture_level > resolution should fail
+  expect_error(
+    cpp_lonlat_to_cell_ap43(0, 0, 5, 6),
+    "mixed_aperture_level must be between 0 and resolution"
+  )
+
+  # Negative mixed_aperture_level should fail
+  expect_error(
+    cpp_lonlat_to_cell_ap43(0, 0, 5, -1),
+    "mixed_aperture_level must be between 0 and resolution"
+  )
+})

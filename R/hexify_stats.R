@@ -262,8 +262,7 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
       n_cells = stats$n_cells,
       cell_area_km2 = stats$cell_area_km2,
       cell_spacing_km = stats$cell_spacing_km,
-      cls_km = stats$cls_km,
-      stringsAsFactors = FALSE
+      cls_km = stats$cls_km
     )
   })
   
