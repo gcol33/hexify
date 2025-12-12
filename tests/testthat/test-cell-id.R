@@ -53,7 +53,7 @@ test_that("lonlat_to_cell handles extreme coordinates", {
     lat = c(0, 0, -89, 89)
   )
 
-  for (i in 1:nrow(extreme_coords)) {
+  for (i in seq_len(nrow(extreme_coords))) {
     cell_id <- hexify_lonlat_to_cell(
       extreme_coords$lon[i],
       extreme_coords$lat[i],

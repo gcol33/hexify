@@ -249,7 +249,7 @@ test_that("Z7: Canonical forms provide stability", {
 
   # The 110001 cycle - all should have same canonical form
   cycle_indices <- c("110001", "110002", "110004", "110006")
-  canonicals <- sapply(cycle_indices, hexify_z7_canonical)
+  canonicals <- vapply(cycle_indices, hexify_z7_canonical, character(1))
   expect_true(all(canonicals == "110001"),
               info = "All cycle members should canonicalize to 110001")
 

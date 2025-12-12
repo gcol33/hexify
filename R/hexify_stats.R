@@ -292,7 +292,7 @@ hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
               "Res", "# Cells", "Area (km²)", "Spacing (km)", "CLS (km)"))
   cat(paste(rep("-", 70), collapse = ""), "\n")
   
-  for (i in 1:nrow(comparison)) {
+  for (i in seq_len(nrow(comparison))) {
     row <- comparison[i, ]
     
     # Format numbers nicely

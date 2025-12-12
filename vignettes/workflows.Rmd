@@ -84,9 +84,9 @@ Use the hierarchical structure of the grid.
 fine_cells <- unique(observations$cell_id)
 
 # Get parent cells (coarser resolution)
-parent_cells <- sapply(fine_cells, function(idx) {
+parent_cells <- vapply(fine_cells, function(idx) {
   hexify_get_parent(idx, aperture = 3)
-})
+}, character(1))
 
 # Get resolution of each level
 fine_res <- hexify_get_resolution(fine_cells[1], aperture = 3)

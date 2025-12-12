@@ -71,7 +71,7 @@ test_that("which_face returns valid face numbers", {
     lat = c(0, 0, 0, 0, 45, -45)
   )
 
-  for (i in 1:nrow(test_points)) {
+  for (i in seq_len(nrow(test_points))) {
     face <- hexify_which_face(test_points$lon[i], test_points$lat[i])
     expect_true(face >= 0 && face <= 19,
                 info = sprintf("lon=%.2f, lat=%.2f",

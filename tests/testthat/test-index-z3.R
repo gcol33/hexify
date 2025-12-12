@@ -264,7 +264,7 @@ test_that("Z3: basic roundtrip for small coordinates", {
     return(TRUE)
   }), ]
   
-  for (idx in 1:nrow(test_cases)) {
+  for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
     
     # Roundtrip

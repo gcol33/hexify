@@ -115,9 +115,9 @@ test_that("Z-Order aperture 3: comprehensive roundtrip", {
     res = 1:3
   )
   
-  for (idx in 1:nrow(test_cases)) {
+  for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
-    
+
     # Skip invalid coordinates
     max_coord <- get_max_coord(3, tc$res)
     if (tc$i > max_coord || tc$j > max_coord) next
@@ -204,9 +204,9 @@ test_that("Z-Order aperture 4: comprehensive roundtrip", {
     res = 1:4
   )
   
-  for (idx in 1:nrow(test_cases)) {
+  for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
-    
+
     # Skip invalid coordinates
     max_coord <- get_max_coord(4, tc$res)
     if (tc$i > max_coord || tc$j > max_coord) next
@@ -253,7 +253,7 @@ test_that("Z-Order aperture 7: comprehensive roundtrip", {
     res = 1:2
   )
   
-  for (idx in 1:nrow(test_cases)) {
+  for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
     
     # Skip invalid coordinates
