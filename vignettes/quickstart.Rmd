@@ -1,0 +1,326 @@
+---
+title: "Quick Start"
+author: "Gilles Colling"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick Start}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+library(hexify)
+```
+
+## Installation
+
+```{r, eval = FALSE}
+# Install from GitHub
+remotes::install_github("gcol33/hexify")
+```
+
+**Suggested packages** (for extended functionality):
+
+- `sf`: Spatial data handling, CRS transformations
+- `dggridR`: Polygon generation, full DGGRID functionality
+
+## What hexify Does
+
+hexify assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) discrete global grid system. Supports apertures 3, 4, 7, and mixed 4/3:
+
+- **Aperture 3** (ISEA3H): Default, compatible with dggridR
+- **Aperture 4** (ISEA4H): Faster cell count growth per resolution
+- **Aperture 7** (ISEA7H): Densest grid per resolution level
+- **Aperture "4/3"** (ISEA43H): Mixed aperture (4 then 3)
+
+Given a data frame with longitude/latitude columns, `hexify()` returns:
+
+- `hex_id`: Unique cell identifier (integer SEQNUM)
+- `hex_cen_lon`: Cell center longitude
+- `hex_cen_lat`: Cell center latitude
+- `hex_area`: Actual cell area in km²
+- `hex_diag`: Actual cell diagonal in km
+
+## Quick Examples
+
+### Basic Usage
+
+```{r}
+# Sample data: European cities
+cities <- data.frame(
+  name = c("Vienna", "Paris", "Madrid", "Berlin", "Rome"),
+  lon = c(16.37, 2.35, -3.70, 13.40, 12.50),
+  lat = c(48.21, 48.86, 40.42, 52.52, 41.90)
+)
+
+# Assign to ~1000 km² hexagonal cells
+result <- hexify(cities, lon = "lon", lat = "lat", area = 1000)
+result
+```
+
+### Using Diagonal Instead of Area
+
+Specify the long diagonal of hexagons in kilometers:
+
+```{r}
+# 50 km diagonal (long diagonal)
+result <- hexify(cities, lon = "lon", lat = "lat", diagonal = 50)
+result[, c("name", "hex_id")]
+```
+
+### With sf Objects
+
+```{r, eval = requireNamespace("sf", quietly = TRUE)}
+library(sf)
+
+# Create sf object (any CRS works)
+pts <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
+
+# hexify handles CRS transformation automatically
+result_sf <- hexify(pts, area = 1000)
+
+# sf class is preserved
+class(result_sf)
+```
+
+## Grid Specification
+
+### Area-Based
+
+Specify target cell area in km²:
+
+```{r}
+# Fine grid (~100 km²)
+fine <- hexify(cities, lon = "lon", lat = "lat", area = 100)
+
+# Coarse grid (~10,000 km²)
+coarse <- hexify(cities, lon = "lon", lat = "lat", area = 10000)
+
+# Compare: more cells at finer resolution
+cat("Fine grid cell IDs:", fine$hex_id, "\n")
+cat("Coarse grid cell IDs:", coarse$hex_id, "\n")
+```
+
+### Diagonal-Based
+
+Specify the long diagonal of hexagons in km:
+
+```{r}
+# Relationship: area ≈ 0.866 * diagonal²
+# 50 km diagonal → ~2165 km² cells
+result <- hexify(cities, lon = "lon", lat = "lat", diagonal = 50)
+```
+
+## Aperture Options
+
+| Aperture | Grid Type | Cell Count Formula | Use Case |
+|----------|-----------|-------------------|----------|
+| 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
+| 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
+| 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+| "4/3" | ISEA43H | 10 × 4^m × 3^(res-m) + 2 | Mixed aperture |
+
+```{r}
+# Using different apertures
+result_ap3 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 3)
+result_ap4 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+result_ap7 <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+# Compare cell IDs (different numbering systems)
+data.frame(
+  city = cities$name,
+  ap3 = result_ap3$hex_id,
+  ap4 = result_ap4$hex_id,
+  ap7 = result_ap7$hex_id
+)
+```
+
+### Mixed Aperture (ISEA43H)
+
+Mixed aperture uses aperture 4 for the first levels, then switches to aperture 3:
+
+```{r}
+# Mixed aperture grid
+result_mixed <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
+result_mixed[, c("name", "hex_id", "hex_area")]
+```
+
+## Resolution Reference (Aperture 3)
+
+| Resolution | Total Cells | Area (km²) | Diagonal (km) |
+|------------|-------------|------------|--------------|
+| 5 | 2,432 | 209,903 | 695 |
+| 6 | 7,292 | 69,968 | 401 |
+| 7 | 21,872 | 23,323 | 232 |
+| 8 | 65,612 | 7,774 | 134 |
+| 9 | 196,832 | 2,591 | 77 |
+| 10 | 590,492 | 864 | 45 |
+| 11 | 1,771,472 | 288 | 26 |
+| 12 | 5,314,412 | 96 | 15 |
+
+## dggridR Compatibility
+
+hexify produces identical cell assignments to dggridR:
+
+```{r, eval = FALSE}
+library(dggridR)
+library(hexify)
+
+# dggridR reference
+dggs <- dggridR::dgconstruct(res = 10, aperture = 3)
+ref <- dggridR::dgGEO_to_SEQNUM(dggs, cities$lon, cities$lat)
+
+# hexify result (res 10 ≈ 864 km²)
+result <- hexify(cities, lon = "lon", lat = "lat", area = 864)
+
+# Verify identical
+all(result$hex_id == ref$seqnum)
+#> TRUE
+```
+
+## Aggregating Data by Grid Cell
+
+Common use case: aggregate point data to grid cells.
+
+```{r}
+# Sample occurrence data
+occurrences <- data.frame(
+  species = c("A", "A", "A", "B", "B", "C"),
+  lon = c(16.37, 16.40, 2.35, 2.35, 13.40, 12.50),
+  lat = c(48.21, 48.22, 48.86, 48.86, 52.52, 41.90)
+)
+
+# Assign to grid
+occ_grid <- hexify(occurrences, lon = "lon", lat = "lat", area = 1000)
+
+# Count occurrences per cell
+cell_counts <- aggregate(species ~ hex_id, data = occ_grid, FUN = length)
+names(cell_counts)[2] <- "n_occurrences"
+cell_counts
+```
+
+### Species Richness per Cell
+
+```{r}
+# Count unique species per cell
+richness <- aggregate(species ~ hex_id, data = occ_grid,
+                      FUN = function(x) length(unique(x)))
+names(richness)[2] <- "n_species"
+richness
+```
+
+## Polygon Generation
+
+Generate hexagon polygons for visualization and spatial analysis:
+
+### Basic Polygon Generation
+
+```{r, eval = requireNamespace("sf", quietly = TRUE)}
+library(sf)
+
+# Get hex_ids from hexify result
+result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
+
+# Generate polygons (requires resolution and aperture)
+polys <- hex_polygons(result$hex_id, resolution = 8, aperture = 3)
+polys
+```
+
+### Plotting Hexagons
+
+```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width=7, fig.height=5}
+# Plot the hexagons
+plot(st_geometry(polys), col = "lightblue", border = "darkblue",
+     main = "European Cities - Hexagonal Grid")
+```
+
+### Grid Over a Region
+
+```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width=7, fig.height=5}
+# Generate a grid covering Western Europe
+europe_grid <- hex_grid_rect(
+  minlon = -5, maxlon = 20,
+  minlat = 40, maxlat = 55,
+  area = 10000
+)
+
+plot(st_geometry(europe_grid), border = "gray",
+     main = "Hexagonal Grid over Western Europe")
+```
+
+## Function Reference
+
+### hexify()
+```r
+hexify(data, lon = "lon", lat = "lat", area = NULL, diagonal = NULL,
+       aperture = 3L, mixed_aperture_level = NULL, resround = "nearest")
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `data` | data.frame or sf object | *required* |
+| `lon` | Longitude column name (ignored for sf) | `"lon"` |
+| `lat` | Latitude column name (ignored for sf) | `"lat"` |
+| `area` | Target cell area in km² | `NULL` |
+| `diagonal` | Long diagonal in km | `NULL` |
+| `aperture` | Grid aperture: 3, 4, 7, or "4/3" | `3L` |
+| `mixed_aperture_level` | For "4/3": number of aperture-4 levels | `NULL` (auto) |
+| `resround` | Resolution rounding: `"nearest"`, `"up"`, `"down"` | `"nearest"` |
+
+**Returns**: Input data with added columns `hex_id`, `hex_cen_lon`, `hex_cen_lat`, `hex_area`, `hex_diag`.
+
+### hex_polygons()
+```r
+hex_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `hex_id` | Integer vector of cell IDs (SEQNUM) | *required* |
+| `resolution` | Grid resolution level | *required* |
+| `aperture` | Grid aperture: 3, 4, or 7 | `3L` |
+| `return_sf` | Return sf object (TRUE) or data frame (FALSE) | `TRUE` |
+
+**Returns**: sf object with POLYGON geometries, or data frame with vertex coordinates.
+
+### hex_grid_rect()
+```r
+hex_grid_rect(minlon, maxlon, minlat, maxlat, area, aperture = 3L)
+```
+
+Generates a grid of hexagon polygons covering a rectangular region.
+
+## Troubleshooting
+
+**"Column 'lon' not found" error**
+
+- Check column names match `lon` and `lat` parameters
+- For sf objects, coordinates are extracted automatically
+
+**Different cell IDs than dggridR**
+
+- Ensure same aperture (hexify supports apertures 3, 4, 7, and "4/3")
+- Match resolution via area: use `dgearthstat(dggs)$area_km` from dggridR
+
+**Very large hex_id values**
+
+- Normal for high resolutions; R stores as integer up to 2^31-1
+- For res > 15, consider using string indices via `hexify_lonlat_to_index()`
+
+## See Also
+
+- `vignette("theory")` - Mathematical foundations
+- `vignette("workflows")` - Real-world analysis examples
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
