@@ -81,9 +81,7 @@ hexify_grid <- function(area,
     stop("Only ISEA projection is supported")
   }
   
-  if (!aperture %in% c(3, 4, 7)) {
-    stop("Aperture must be 3, 4, or 7")
-  }
+  validate_aperture(aperture)
   
   if (!resround %in% c("nearest", "up", "down")) {
     stop("resround must be 'nearest', 'up', or 'down'")
@@ -102,7 +100,7 @@ hexify_grid <- function(area,
   }
   
   # Ensure resolution is valid
-  resolution <- max(0, min(30, resolution))
+  resolution <- max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
   
   # Initialize icosahedron geometry (C++ function)
   cpp_build_icosa()
@@ -131,9 +129,9 @@ hexify_grid <- function(area,
     res = resolution,
     topology_family = topology,
     metric_radius = if (metric) sqrt(area / pi) else NULL,
-    pole_lon_deg = 11.25,        # Default ISEA orientation
-    pole_lat_deg = 58.28252559,  # Default ISEA orientation
-    azimuth_deg = 0.0,
+    pole_lon_deg = ISEA_VERT0_LON_DEG,
+    pole_lat_deg = ISEA_VERT0_LAT_DEG,
+    azimuth_deg = ISEA_AZIMUTH_DEG,
     aperture_type = "SEQUENCE",
     res_spec = resolution,
     precision = 7
@@ -193,15 +191,9 @@ dgverify <- function(dggs) {
   
   resolution <- get_grid_resolution(dggs, require = TRUE)
   
-  # Validate resolution
-  if (!is.numeric(resolution) || resolution < 0 || resolution > 30) {
-    stop("Invalid resolution (must be numeric value between 0 and 30)")
-  }
-  
-  # Validate aperture
-  if (!dggs$aperture %in% c(3, 4, 7)) {
-    stop("Aperture must be 3, 4, or 7")
-  }
+  # Validate resolution and aperture
+  validate_resolution(resolution)
+  validate_aperture(dggs$aperture)
   
   # Validate topology
   if (dggs$topology != "HEXAGON") {

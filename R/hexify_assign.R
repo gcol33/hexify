@@ -78,7 +78,7 @@ hexify_assign <- function(lon, lat, effective_res,
 
   # Initialize icosahedron with ISEA3H default orientation
   if ("cpp_build_icosa" %in% getNamespaceExports("hexify")) {
-    cpp_build_icosa(11.25, 58.28252559, 0)
+    cpp_build_icosa(ISEA_VERT0_LON_DEG, ISEA_VERT0_LAT_DEG, ISEA_AZIMUTH_DEG)
   }
   hexify_set_precision("ultra")
 

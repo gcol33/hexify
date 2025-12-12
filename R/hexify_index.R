@@ -203,6 +203,10 @@ hexify_compare_indices <- function(idx1, idx2) {
 #' @examples
 #' cell_id <- hexify_lonlat_to_cell(0, 45, resolution = 5, aperture = 3)
 hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
+  validate_lon(lon)
+  validate_lat(lat)
+  validate_resolution(resolution)
+  validate_aperture(aperture)
   cpp_lonlat_to_cell(lon, lat, resolution, aperture)
 }
 
@@ -224,6 +228,8 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
 #' @examples
 #' coords <- hexify_cell_to_lonlat(1702, resolution = 5, aperture = 3)
 hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
+  validate_resolution(resolution)
+  validate_aperture(aperture)
   cpp_cell_to_lonlat(cell_id, resolution, aperture)
 }
 
@@ -241,6 +247,8 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 #' @examples
 #' info <- hexify_seqnum_to_cell(1702, resolution = 5, aperture = 3)
 hexify_seqnum_to_cell <- function(seqnum, resolution, aperture) {
+  validate_resolution(resolution)
+  validate_aperture(aperture)
   result <- cpp_seqnum_to_cell_info(seqnum, resolution, aperture)
   as.data.frame(result)
 }

@@ -64,3 +64,103 @@ MI_TO_KM <- 1.60934
 #' Used for area-to-resolution conversions.
 #' @noRd
 ISEA3H_RES10_AREA_KM2 <- 863.8006
+
+# =============================================================================
+# ISEA Default Orientation Constants
+# =============================================================================
+# Standard ISEA orientation with vertex 0 positioned at these coordinates.
+# Reference: Snyder (1992) "An Equal-Area Map Projection For Polyhedral Globes"
+
+#' Default longitude for ISEA vertex 0 (degrees)
+#' @noRd
+ISEA_VERT0_LON_DEG <- 11.25
+
+#' Default latitude for ISEA vertex 0 (degrees)
+#' @noRd
+ISEA_VERT0_LAT_DEG <- 58.28252559
+
+#' Default azimuth for ISEA orientation (degrees)
+#' @noRd
+ISEA_AZIMUTH_DEG <- 0.0
+
+# =============================================================================
+# Grid Parameter Limits
+# =============================================================================
+
+#' Valid aperture values
+#' @noRd
+VALID_APERTURES <- c(3L, 4L, 7L)
+
+#' Maximum supported resolution
+#' @noRd
+MAX_RESOLUTION <- 30L
+
+#' Minimum supported resolution
+#' @noRd
+MIN_RESOLUTION <- 0L
+
+# =============================================================================
+# Coordinate Validation Helpers
+# =============================================================================
+
+#' Validate longitude values
+#' @param lon Numeric vector of longitudes
+#' @param warn Whether to warn on out-of-range values (default TRUE)
+#' @return Logical vector indicating valid values
+#' @noRd
+validate_lon <- function(lon, warn = TRUE) {
+  if (!is.numeric(lon)) {
+    stop("Longitude must be numeric")
+  }
+  valid <- is.na(lon) | (lon >= -180 & lon <= 180)
+  if (warn && any(!valid, na.rm = TRUE)) {
+    warning("Some longitude values are outside valid range [-180, 180]")
+  }
+  valid
+}
+
+#' Validate latitude values
+#' @param lat Numeric vector of latitudes
+#' @param warn Whether to warn on out-of-range values (default TRUE)
+#' @return Logical vector indicating valid values
+#' @noRd
+validate_lat <- function(lat, warn = TRUE) {
+  if (!is.numeric(lat)) {
+    stop("Latitude must be numeric")
+  }
+  valid <- is.na(lat) | (lat >= -90 & lat <= 90)
+  if (warn && any(!valid, na.rm = TRUE)) {
+    warning("Some latitude values are outside valid range [-90, 90]")
+  }
+  valid
+}
+
+#' Validate resolution value
+#' @param resolution Integer resolution value
+#' @return TRUE if valid, otherwise throws error
+#' @noRd
+validate_resolution <- function(resolution) {
+  if (!is.numeric(resolution) || length(resolution) != 1) {
+    stop("Resolution must be a single numeric value")
+  }
+  resolution <- as.integer(resolution)
+  if (is.na(resolution) || resolution < MIN_RESOLUTION || resolution > MAX_RESOLUTION) {
+    stop(sprintf("Resolution must be between %d and %d", MIN_RESOLUTION, MAX_RESOLUTION))
+  }
+  TRUE
+}
+
+#' Validate aperture value
+#' @param aperture Integer aperture value
+#' @return TRUE if valid, otherwise throws error
+#' @noRd
+validate_aperture <- function(aperture) {
+  if (!is.numeric(aperture) || length(aperture) != 1) {
+    stop("Aperture must be a single numeric value")
+  }
+  aperture <- as.integer(aperture)
+  if (!aperture %in% VALID_APERTURES) {
+    stop(sprintf("Aperture must be one of: %s", paste(VALID_APERTURES, collapse = ", ")))
+  }
+  TRUE
+}

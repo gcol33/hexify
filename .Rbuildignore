@@ -2,3 +2,10 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^references$
+^GLOSSARY\.md$
+^REWRITE_PLAN\.md$
+^REFACTOR_PLAN\.md$
+^refactor_mit_safe\.md$
+^ref_polygons.*\.rds$
+^Rplots\.pdf$
+^CLAUDE\.md$

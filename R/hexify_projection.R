@@ -18,9 +18,9 @@
 #' Sets up the icosahedron state for ISEA projection. Uses standard ISEA3H
 #' orientation by default (vertex 0 at 11.25E, 58.28N).
 #'
-#' @param vert0_lon Vertex 0 longitude in degrees (default 11.25)
-#' @param vert0_lat Vertex 0 latitude in degrees (default 58.28252559)
-#' @param azimuth Azimuth rotation in degrees (default 0)
+#' @param vert0_lon Vertex 0 longitude in degrees (default ISEA_VERT0_LON_DEG)
+#' @param vert0_lat Vertex 0 latitude in degrees (default ISEA_VERT0_LAT_DEG)
+#' @param azimuth Azimuth rotation in degrees (default ISEA_AZIMUTH_DEG)
 #'
 #' @return Invisible NULL. Called for side effect.
 #'
@@ -35,9 +35,9 @@
 #'
 #' # Custom orientation
 #' hexify_build_icosa(vert0_lon = 0, vert0_lat = 90, azimuth = 0)
-hexify_build_icosa <- function(vert0_lon = 11.25,
-                                vert0_lat = 58.28252559,
-                                azimuth = 0) {
+hexify_build_icosa <- function(vert0_lon = ISEA_VERT0_LON_DEG,
+                                vert0_lat = ISEA_VERT0_LAT_DEG,
+                                azimuth = ISEA_AZIMUTH_DEG) {
   cpp_build_icosa(
     as.numeric(vert0_lon),
     as.numeric(vert0_lat),

@@ -15,3 +15,8 @@ R/.Rhistory
 GLOSSARY.md
 REWRITE_PLAN.md
 REFACTOR_PLAN.md
+refactor_mit_safe.md
+
+# Development artifacts
+ref_polygons*.rds
+Rplots.pdf
