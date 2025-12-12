@@ -245,3 +245,303 @@ test_that("all apertures have consistent coordinate pipeline", {
                 info = sprintf("aperture %d lat error", ap))
   }
 })
+
+# =============================================================================
+# INPUT VALIDATION
+# =============================================================================
+
+test_that("hexify_lonlat_to_quad_ij validates aperture", {
+  expect_error(
+    hexify_lonlat_to_quad_ij(lon = 0, lat = 0, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_lonlat_to_quad_ij validates resolution", {
+  expect_error(
+    hexify_lonlat_to_quad_ij(lon = 0, lat = 0, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+  expect_error(
+    hexify_lonlat_to_quad_ij(lon = 0, lat = 0, resolution = 31, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+test_that("hexify_quad_ij_to_cell validates aperture", {
+  expect_error(
+    hexify_quad_ij_to_cell(quad = 0, i = 1, j = 1, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_quad_ij_to_cell validates resolution", {
+  expect_error(
+    hexify_quad_ij_to_cell(quad = 0, i = 1, j = 1, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+test_that("hexify_quad_ij_to_xy validates aperture", {
+  expect_error(
+    hexify_quad_ij_to_xy(quad = 1, i = 10, j = 5, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_icosa_tri_to_quad_ij validates aperture", {
+  expect_error(
+    hexify_icosa_tri_to_quad_ij(
+      icosa_triangle_face = 0,
+      icosa_triangle_x = 0.5,
+      icosa_triangle_y = 0.5,
+      resolution = 5,
+      aperture = 5
+    ),
+    "3, 4, or 7"
+  )
+})
+
+# =============================================================================
+# CELL TO QUAD IJ
+# =============================================================================
+
+test_that("hexify_cell_to_quad_ij returns correct structure", {
+  hexify_build_icosa()
+
+  result <- hexify_cell_to_quad_ij(cell_id = 1000, resolution = 5, aperture = 3)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("quad" %in% names(result))
+  expect_true("i" %in% names(result))
+  expect_true("j" %in% names(result))
+})
+
+test_that("hexify_cell_to_quad_ij validates aperture", {
+  expect_error(
+    hexify_cell_to_quad_ij(cell_id = 100, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_cell_to_quad_ij validates resolution", {
+  expect_error(
+    hexify_cell_to_quad_ij(cell_id = 100, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+# =============================================================================
+# CELL TO ICOSA TRIANGLE
+# =============================================================================
+
+test_that("hexify_cell_to_icosa_tri returns correct structure", {
+  hexify_build_icosa()
+
+  result <- hexify_cell_to_icosa_tri(cell_id = 1000, resolution = 5, aperture = 3)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("icosa_triangle_face" %in% names(result))
+  expect_true("icosa_triangle_x" %in% names(result))
+  expect_true("icosa_triangle_y" %in% names(result))
+})
+
+test_that("hexify_cell_to_icosa_tri validates aperture", {
+  expect_error(
+    hexify_cell_to_icosa_tri(cell_id = 100, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_cell_to_icosa_tri validates resolution", {
+  expect_error(
+    hexify_cell_to_icosa_tri(cell_id = 100, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+test_that("hexify_quad_ij_to_icosa_tri validates aperture", {
+  expect_error(
+    hexify_quad_ij_to_icosa_tri(
+      quad = 1, i = 10, j = 5, resolution = 5, aperture = 5
+    ),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_quad_ij_to_icosa_tri validates resolution", {
+  expect_error(
+    hexify_quad_ij_to_icosa_tri(
+      quad = 1, i = 10, j = 5, resolution = -1, aperture = 3
+    ),
+    "between 0 and 30"
+  )
+})
+
+# =============================================================================
+# CELL TO QUAD XY (CONTINUOUS COORDINATES)
+# =============================================================================
+
+test_that("hexify_cell_to_quad_xy returns correct structure", {
+  hexify_build_icosa()
+
+  result <- hexify_cell_to_quad_xy(cell_id = 1000, resolution = 5, aperture = 3)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("quad" %in% names(result))
+  expect_true("quad_x" %in% names(result))
+  expect_true("quad_y" %in% names(result))
+})
+
+test_that("hexify_cell_to_quad_xy validates aperture", {
+  expect_error(
+    hexify_cell_to_quad_xy(cell_id = 100, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_cell_to_quad_xy validates resolution", {
+  expect_error(
+    hexify_cell_to_quad_xy(cell_id = 100, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+test_that("hexify_quad_xy_to_cell returns valid cell ID", {
+  hexify_build_icosa()
+
+  cell_id <- hexify_quad_xy_to_cell(
+    quad = 1, quad_x = 0.5, quad_y = 0.3,
+    resolution = 5, aperture = 3
+  )
+
+  expect_true(is.numeric(cell_id))
+  expect_true(cell_id > 0)
+})
+
+test_that("hexify_quad_xy_to_cell validates aperture", {
+  expect_error(
+    hexify_quad_xy_to_cell(
+      quad = 1, quad_x = 0.5, quad_y = 0.3, resolution = 5, aperture = 5
+    ),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_quad_xy_to_cell validates resolution", {
+  expect_error(
+    hexify_quad_xy_to_cell(
+      quad = 1, quad_x = 0.5, quad_y = 0.3, resolution = -1, aperture = 3
+    ),
+    "between 0 and 30"
+  )
+})
+
+test_that("quad_xy round-trip is consistent", {
+  hexify_build_icosa()
+
+  cell_id <- 1000
+
+  # cell -> quad_xy -> cell
+  result1 <- hexify_cell_to_quad_xy(cell_id = cell_id, resolution = 5, aperture = 3)
+  cell_id2 <- hexify_quad_xy_to_cell(
+    quad = result1$quad, quad_x = result1$quad_x, quad_y = result1$quad_y,
+    resolution = 5, aperture = 3
+  )
+
+  expect_equal(cell_id, cell_id2)
+})
+
+# =============================================================================
+# PLANE COORDINATE CONVERSIONS
+# =============================================================================
+
+test_that("hexify_icosa_tri_to_plane returns correct structure", {
+  hexify_build_icosa()
+
+  fwd <- hexify_forward(lon = 10, lat = 50)
+
+  result <- hexify_icosa_tri_to_plane(
+    icosa_triangle_face = fwd["face"],
+    icosa_triangle_x = fwd["icosa_triangle_x"],
+    icosa_triangle_y = fwd["icosa_triangle_y"]
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true("plane_x" %in% names(result))
+  expect_true("plane_y" %in% names(result))
+})
+
+test_that("hexify_cell_to_plane returns correct structure", {
+  hexify_build_icosa()
+
+  result <- hexify_cell_to_plane(cell_id = 1000, resolution = 5, aperture = 3)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("plane_x" %in% names(result))
+  expect_true("plane_y" %in% names(result))
+})
+
+test_that("hexify_cell_to_plane validates aperture", {
+  expect_error(
+    hexify_cell_to_plane(cell_id = 100, resolution = 5, aperture = 5),
+    "3, 4, or 7"
+  )
+})
+
+test_that("hexify_cell_to_plane validates resolution", {
+  expect_error(
+    hexify_cell_to_plane(cell_id = 100, resolution = -1, aperture = 3),
+    "between 0 and 30"
+  )
+})
+
+test_that("hexify_lonlat_to_plane returns correct structure", {
+  hexify_build_icosa()
+
+  result <- hexify_lonlat_to_plane(lon = 10, lat = 50)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("plane_x" %in% names(result))
+  expect_true("plane_y" %in% names(result))
+})
+
+test_that("hexify_lonlat_to_plane works for multiple points", {
+  hexify_build_icosa()
+
+  lons <- c(0, 45, -120, 180, -180)
+  lats <- c(0, 30, -45, 60, -60)
+
+  result <- hexify_lonlat_to_plane(lon = lons, lat = lats)
+
+  expect_equal(nrow(result), 5)
+  expect_true(all(is.finite(result$plane_x)))
+  expect_true(all(is.finite(result$plane_y)))
+})
+
+test_that("hexify_cell_to_plane handles multiple cells", {
+  hexify_build_icosa()
+
+  result <- hexify_cell_to_plane(
+    cell_id = c(100, 200, 300), resolution = 5, aperture = 3
+  )
+
+  expect_equal(nrow(result), 3)
+  expect_true(all(is.finite(result$plane_x)))
+  expect_true(all(is.finite(result$plane_y)))
+})
+
+# =============================================================================
+# CROSS-APERTURE PLANE TESTS
+# =============================================================================
+
+test_that("plane conversions work for all apertures", {
+  hexify_build_icosa()
+
+  for (ap in c(3, 4, 7)) {
+    # cell -> plane
+    plane <- hexify_cell_to_plane(cell_id = 100, resolution = 5, aperture = ap)
+    expect_true(is.finite(plane$plane_x))
+    expect_true(is.finite(plane$plane_y))
+  }
+})
