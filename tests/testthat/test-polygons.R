@@ -238,3 +238,132 @@ test_that("hex_corners_to_sf closes polygon correctly", {
 
   expect_equal(actual_xy, expected_xy, tolerance = 0)
 })
+
+test_that("hex_corners_to_sf validates input lengths", {
+  expect_error(
+    hex_corners_to_sf(c(1, 2, 3), c(1, 2, 3, 4, 5, 6)),
+    ""
+  )
+})
+
+# =============================================================================
+# ADDITIONAL INPUT VALIDATION
+# =============================================================================
+
+test_that("hexify_cell_to_sf validates hex_id is numeric", {
+  expect_error(
+    hexify_cell_to_sf("not_numeric", resolution = 10, aperture = 3),
+    "hex_id must be numeric"
+  )
+})
+
+test_that("hexify_cell_to_sf errors on empty input", {
+  expect_error(
+    hexify_cell_to_sf(numeric(0), resolution = 10, aperture = 3),
+    "No valid hex_id values"
+  )
+})
+
+test_that("hexify_cell_to_sf errors on all NA input", {
+  expect_error(
+    hexify_cell_to_sf(as.numeric(c()), resolution = 10, aperture = 3),
+    "No valid hex_id values"
+  )
+})
+
+# =============================================================================
+# HEXIFY_TO_SF
+# =============================================================================
+
+test_that("hexify_to_sf creates point geometry from hexify result", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    name = c("A", "B"),
+    hex_id = c(12847, 12532),
+    hex_cen_lon = c(10.5, 11.2),
+    hex_cen_lat = c(48.5, 49.1),
+    hex_area = c(863.94, 863.94),
+    hex_diag = c(44.67, 44.67)
+  )
+
+  result <- hexify_to_sf(df, geometry = "point")
+
+  expect_s3_class(result, "sf")
+  expect_equal(nrow(result), 2)
+  expect_true(all(sf::st_geometry_type(result) == "POINT"))
+})
+
+test_that("hexify_to_sf creates polygon geometry from hexify result", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    name = c("A", "B"),
+    hex_id = c(12847, 12532),
+    hex_cen_lon = c(10.5, 11.2),
+    hex_cen_lat = c(48.5, 49.1),
+    hex_area = c(863.94, 863.94),
+    hex_diag = c(44.67, 44.67)
+  )
+
+  result <- hexify_to_sf(df, geometry = "polygon")
+
+  expect_s3_class(result, "sf")
+  expect_true(all(sf::st_geometry_type(result) == "POLYGON"))
+})
+
+test_that("hexify_to_sf validates hex_id column", {
+  df <- data.frame(name = c("A", "B"), hex_area = c(863, 863))
+
+  expect_error(
+    hexify_to_sf(df),
+    "must contain 'hex_id' column"
+  )
+})
+
+test_that("hexify_to_sf validates hex_cen columns for point geometry", {
+  df <- data.frame(hex_id = c(12847, 12532), hex_area = c(863, 863))
+
+  expect_error(
+    hexify_to_sf(df, geometry = "point"),
+    "must contain 'hex_cen_lon' and 'hex_cen_lat'"
+  )
+})
+
+test_that("hexify_to_sf validates hex_area for polygon geometry", {
+  df <- data.frame(
+    hex_id = c(12847, 12532),
+    hex_cen_lon = c(10.5, 11.2),
+    hex_cen_lat = c(48.5, 49.1)
+  )
+
+  expect_error(
+    hexify_to_sf(df, geometry = "polygon"),
+    "must contain 'hex_area' column"
+  )
+})
+
+test_that("hexify_to_sf respects custom CRS", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    hex_id = c(12847),
+    hex_cen_lon = c(10.5),
+    hex_cen_lat = c(48.5),
+    hex_area = c(863.94)
+  )
+
+  result <- hexify_to_sf(df, geometry = "point", crs = 4269)
+
+  expect_equal(sf::st_crs(result)$epsg, 4269)
+})
+
+# =============================================================================
+# RESOLUTION FROM AREA HELPER
+# =============================================================================
+
+test_that(".resolution_from_area returns valid resolution", {
+  res <- hexify:::.resolution_from_area(1000, aperture = 3)
+  expect_true(is.numeric(res))
+  expect_true(res >= 0 && res <= 30)
+})
