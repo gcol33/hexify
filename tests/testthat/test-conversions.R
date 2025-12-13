@@ -546,3 +546,246 @@ test_that("plane conversions work for all apertures", {
   }
 })
 
+# =============================================================================
+# HIERARCHICAL INDEX FUNCTIONS
+# =============================================================================
+
+test_that("hexify_lonlat_to_h_index returns correct structure", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_lonlat_to_h_index(grid, lon = 0, lat = 45)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("h_index" %in% names(result))
+  expect_true("face" %in% names(result))
+  expect_type(result$h_index, "character")
+  expect_type(result$face, "integer")
+})
+
+test_that("hexify_lonlat_to_h_index handles multiple points", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+  lons <- c(0, 10, -5)
+  lats <- c(45, 30, -20)
+
+  result <- hexify_lonlat_to_h_index(grid, lon = lons, lat = lats)
+
+  expect_equal(nrow(result), 3)
+  expect_true(all(nchar(result$h_index) > 0))
+})
+
+test_that("hexify_lonlat_to_h_index handles NA values", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_lonlat_to_h_index(grid, lon = c(0, NA), lat = c(45, NA))
+
+  expect_equal(nrow(result), 2)
+  expect_true(is.na(result$h_index[2]))
+  expect_true(is.na(result$face[2]))
+})
+
+test_that("hexify_lonlat_to_h_index validates grid object", {
+  expect_error(
+    hexify_lonlat_to_h_index(list(x = 1), lon = 0, lat = 0),
+    "hexify_grid object"
+  )
+})
+
+test_that("hexify_lonlat_to_h_index validates input lengths", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  expect_error(
+    hexify_lonlat_to_h_index(grid, lon = c(0, 1), lat = 0),
+    "same length"
+  )
+})
+
+test_that("hexify_lonlat_to_h_index validates numeric input", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  expect_error(
+    hexify_lonlat_to_h_index(grid, lon = "a", lat = "b"),
+    "must be numeric"
+  )
+})
+
+test_that("hexify_lonlat_to_h_index warns on out-of-range coordinates", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  expect_warning(
+    hexify_lonlat_to_h_index(grid, lon = 200, lat = 45),
+    "outside valid range"
+  )
+
+  expect_warning(
+    hexify_lonlat_to_h_index(grid, lon = 0, lat = 100),
+    "outside valid range"
+  )
+})
+
+test_that("hexify_h_index_to_lonlat returns correct structure", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  # First get an index
+  h_result <- hexify_lonlat_to_h_index(grid, lon = 5, lat = 45)
+
+  # Then convert back
+  result <- hexify_h_index_to_lonlat(grid, h_result$h_index)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("lon" %in% names(result))
+  expect_true("lat" %in% names(result))
+  expect_type(result$lon, "double")
+  expect_type(result$lat, "double")
+})
+
+test_that("hexify_h_index_to_lonlat handles NA values", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  # Get a valid h_index first
+  valid_index <- hexify_lonlat_to_h_index(grid, lon = 5, lat = 45)$h_index
+
+  result <- hexify_h_index_to_lonlat(grid, c(valid_index, NA_character_))
+
+  expect_equal(nrow(result), 2)
+  expect_true(!is.na(result$lon[1]))
+  expect_true(is.na(result$lon[2]))
+  expect_true(is.na(result$lat[2]))
+})
+
+test_that("hexify_h_index_to_lonlat validates grid object", {
+  expect_error(
+    hexify_h_index_to_lonlat(list(x = 1), "0100000"),
+    "hexify_grid object"
+  )
+})
+
+test_that("hexify_h_index_to_lonlat validates character input", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  expect_error(
+    hexify_h_index_to_lonlat(grid, 12345),
+    "must be a character"
+  )
+})
+
+test_that("h_index round-trip is consistent", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+  lon <- 10
+  lat <- 45
+
+  # Forward
+  h_result <- hexify_lonlat_to_h_index(grid, lon = lon, lat = lat)
+
+  # Inverse
+  coords <- hexify_h_index_to_lonlat(grid, h_result$h_index)
+
+  # Should be close (within cell distance)
+  expect_true(abs(coords$lon - lon) < 5)
+  expect_true(abs(coords$lat - lat) < 5)
+})
+
+# =============================================================================
+# GRID-BASED WRAPPERS
+# =============================================================================
+
+test_that("hexify_grid_to_cell returns cell IDs", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_grid_to_cell(grid, lon = c(0, 10), lat = c(45, 50))
+
+  expect_type(result, "double")
+  expect_length(result, 2)
+  expect_true(all(result > 0))
+})
+
+test_that("hexify_grid_to_cell validates grid object", {
+  expect_error(
+    hexify_grid_to_cell(list(x = 1), lon = 0, lat = 0),
+    "hexify_grid object"
+  )
+})
+
+test_that("hexify_grid_cell_to_lonlat returns coordinates", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  # Get some cell IDs first
+  cell_ids <- hexify_grid_to_cell(grid, lon = c(0, 10), lat = c(45, 50))
+
+  # Convert back
+  result <- hexify_grid_cell_to_lonlat(grid, cell_ids)
+
+  expect_s3_class(result, "data.frame")
+  expect_true("lon_deg" %in% names(result))
+  expect_true("lat_deg" %in% names(result))
+  expect_equal(nrow(result), 2)
+})
+
+test_that("hexify_grid_cell_to_lonlat validates grid object", {
+  expect_error(
+    hexify_grid_cell_to_lonlat(list(x = 1), cell_id = 1000),
+    "hexify_grid object"
+  )
+})
+
+test_that("grid wrapper round-trip is consistent", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+  lon <- 5
+  lat <- 45
+
+  # Forward
+  cell_id <- hexify_grid_to_cell(grid, lon = lon, lat = lat)
+
+  # Inverse
+  coords <- hexify_grid_cell_to_lonlat(grid, cell_id)
+
+  # Should be close
+  expect_true(abs(coords$lon_deg - lon) < 5)
+  expect_true(abs(coords$lat_deg - lat) < 5)
+})
+
+# =============================================================================
+# ROUNDTRIP TEST FUNCTION
+# =============================================================================
+
+test_that("hexify_roundtrip_test returns correct structure", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_roundtrip_test(grid, lon = 5, lat = 45)
+
+  expect_type(result, "list")
+  expect_true("original" %in% names(result))
+  expect_true("h_index" %in% names(result))
+  expect_true("reconstructed" %in% names(result))
+  expect_true("error" %in% names(result))
+  expect_true("units" %in% names(result))
+})
+
+test_that("hexify_roundtrip_test reports error in km", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_roundtrip_test(grid, lon = 5, lat = 45, units = "km")
+
+  expect_equal(result$units, "km")
+  expect_true(is.numeric(result$error))
+  expect_true(result$error >= 0)
+})
+
+test_that("hexify_roundtrip_test reports error in degrees", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_roundtrip_test(grid, lon = 5, lat = 45, units = "degrees")
+
+  expect_equal(result$units, "degrees")
+  expect_true(is.numeric(result$error))
+  expect_true(result$error >= 0)
+})
+
+test_that("hexify_roundtrip_test error is reasonable", {
+  grid <- hexify_grid(area = 1000, aperture = 3)
+
+  result <- hexify_roundtrip_test(grid, lon = 5, lat = 45, units = "km")
+
+  # Error should be less than the cell diagonal (for ~1000 km2 area, diagonal ~ 35-40 km)
+  expect_true(result$error < 50)
+})
+

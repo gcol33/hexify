@@ -784,3 +784,77 @@ test_that("apply_continuous_scale works with Brewer palette", {
   result <- hexify:::apply_continuous_scale(p, "YlOrRd", "Value", "gray90")
   expect_s3_class(result, "ggplot")
 })
+
+test_that("apply_discrete_scale falls back to viridis for unknown palette", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  hex_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  hex_sf$category <- factor(c("A", "B"))
+
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = hex_sf, ggplot2::aes(fill = category))
+
+  # Use an unknown palette name that's not a Brewer palette
+  result <- hexify:::apply_discrete_scale(
+    p, "inferno", "Category", "gray90", 2
+  )
+  expect_s3_class(result, "ggplot")
+})
+
+test_that("apply_continuous_scale falls back to viridis for unknown palette", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  hex_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  hex_sf$value <- c(10, 20)
+
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = hex_sf, ggplot2::aes(fill = value))
+
+  # Use an unknown palette name
+  result <- hexify:::apply_continuous_scale(p, "cividis", "Value", "gray90")
+  expect_s3_class(result, "ggplot")
+})
+
+test_that("resolve_basemap handles world_hires without package", {
+  # Skip if rnaturalearth is installed - we want to test the error path
+  skip_if(requireNamespace("rnaturalearth", quietly = TRUE),
+          "rnaturalearth is installed, skipping error test")
+
+  expect_error(
+    hexify:::resolve_basemap("world_hires"),
+    "rnaturalearth"
+  )
+})
+
+test_that("resolve_basemap_with_raster handles sfc input", {
+  skip_if_not_installed("sf")
+
+  sfc <- sf::st_sfc(sf::st_point(c(0, 0)), crs = 4326)
+  result <- hexify:::resolve_basemap_with_raster(sfc)
+
+  expect_s3_class(result$sf, "sfc")
+  expect_null(result$raster)
+})
+
+test_that("hexify_heatmap handles data with NA CRS", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  df <- data.frame(
+    hex_id = c(12847, 12532),
+    hex_area = c(863.94, 863.94),
+    count = c(10, 20)
+  )
+
+  # Create sf object and remove CRS
+  hex_sf <- hexify_polygons(c(12847, 12532), resolution = 10, aperture = 3)
+  hex_sf$count <- c(10, 20)
+  sf::st_crs(hex_sf) <- NA
+
+  result <- hexify_heatmap(hex_sf, value = "count")
+  expect_s3_class(result, "ggplot")
+})
