@@ -4,14 +4,18 @@
 \alias{hexify_build_icosa}
 \title{Initialize icosahedron geometry}
 \usage{
-hexify_build_icosa(vert0_lon = 11.25, vert0_lat = 58.28252559, azimuth = 0)
+hexify_build_icosa(
+  vert0_lon = ISEA_VERT0_LON_DEG,
+  vert0_lat = ISEA_VERT0_LAT_DEG,
+  azimuth = ISEA_AZIMUTH_DEG
+)
 }
 \arguments{
-\item{vert0_lon}{Vertex 0 longitude in degrees (default 11.25)}
+\item{vert0_lon}{Vertex 0 longitude in degrees (default ISEA_VERT0_LON_DEG)}
 
-\item{vert0_lat}{Vertex 0 latitude in degrees (default 58.28252559)}
+\item{vert0_lat}{Vertex 0 latitude in degrees (default ISEA_VERT0_LAT_DEG)}
 
-\item{azimuth}{Azimuth rotation in degrees (default 0)}
+\item{azimuth}{Azimuth rotation in degrees (default ISEA_AZIMUTH_DEG)}
 }
 \value{
 Invisible NULL. Called for side effect.

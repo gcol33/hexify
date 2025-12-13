@@ -48,6 +48,11 @@ A hexify_grid object containing:
 \description{
 Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify grids.
+
+\lifecycle{deprecated}
+
+\code{hexify_construct()} was renamed to \code{hexify_grid()} for clarity.
+Use \code{hexify_grid()} instead.
 }
 \examples{
 \dontrun{
@@ -59,3 +64,4 @@ print(grid)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 }
 }
+\keyword{internal}
