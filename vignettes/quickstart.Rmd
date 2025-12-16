@@ -19,6 +19,33 @@ knitr::opts_chunk$set(
 library(hexify)
 ```
 
+## Spatial Analysis Done Right
+
+You want to do spatial statistics, and it involves binning points into grid cells.
+
+**The problem with rectangular grids**: Using a rectangular grid (like a standard lat-long grid) introduces distortions. At the equator, a 1 degree cell covers about 12,300 km2. Near the poles, the same 1 degree cell covers a tiny fraction of that area. This breaks any analysis that assumes equal sampling effort or comparable cell sizes.
+
+**The solution**: Discrete global grids partition Earths surface into cells of **equal area**, regardless of latitude. hexify implements the ISEA (Icosahedral Snyder Equal Area) projection, providing hexagonal cells that are all the same size from the equator to the Arctic.
+
+### Why Equal-Area Matters
+
+```{r equal-area-demo, message=FALSE}
+# Same-sized cells at different latitudes
+test_points <- data.frame(
+  location = c("Equator", "Mid-latitude", "Arctic"),
+  lon = c(0, 0, 0),
+  lat = c(0, 45, 70)
+)
+
+result <- hexify(test_points, lon = "lon", lat = "lat", area = 1000)
+
+# All cells have the same area, regardless of latitude
+result[, c("location", "lat", "hex_area")]
+```
+
+With hexify, a 1000 km2 cell at the equator is the same size as a 1000 km2 cell in Norway.
+
+
 ## Installation
 
 ```{r, eval = FALSE}
@@ -42,7 +69,7 @@ hexify assigns geographic coordinates to equal-area hexagonal grid cells using t
 
 Given a data frame with longitude/latitude columns, `hexify()` returns:
 
-- `hex_id`: Unique cell identifier (integer SEQNUM)
+- `hex_id`: Unique cell identifier (integer cell ID)
 - `hex_cen_lon`: Cell center longitude
 - `hex_cen_lat`: Cell center latitude
 - `hex_area`: Actual cell area in km²
@@ -152,18 +179,53 @@ result_mixed <- hexify(cities, lon = "lon", lat = "lat", area = 1000, aperture =
 result_mixed[, c("name", "hex_id", "hex_area")]
 ```
 
-## Resolution Reference (Aperture 3)
+## Resolution Reference (ISEA3H)
 
-| Resolution | Total Cells | Area (km²) | Diagonal (km) |
-|------------|-------------|------------|--------------|
-| 5 | 2,432 | 209,903 | 695 |
-| 6 | 7,292 | 69,968 | 401 |
-| 7 | 21,872 | 23,323 | 232 |
-| 8 | 65,612 | 7,774 | 134 |
-| 9 | 196,832 | 2,591 | 77 |
-| 10 | 590,492 | 864 | 45 |
-| 11 | 1,771,472 | 288 | 26 |
-| 12 | 5,314,412 | 96 | 15 |
+The following table shows the number of cells, their area, and spacing statistics for the ISEA3H grid type (aperture 3):
+
+| Res | Number of Cells | Cell Area (km2) | Mean Spacing (km) |
+|----:|----------------:|----------------:|------------------:|
+|   0 |              12 |  51,006,562.17  |                   |
+|   1 |              32 |  17,002,187.39  |         4,320.49  |
+|   2 |              92 |   5,667,395.80  |         2,539.69  |
+|   3 |             272 |   1,889,131.93  |         1,480.02  |
+|   4 |             812 |     629,710.64  |           855.42  |
+|   5 |           2,432 |     209,903.55  |           494.96  |
+|   6 |           7,292 |      69,967.85  |           285.65  |
+|   7 |          21,872 |      23,322.62  |           165.06  |
+|   8 |          65,612 |       7,774.21  |            95.26  |
+|   9 |         196,832 |       2,591.40  |            55.02  |
+|  10 |         590,492 |         863.80  |            31.76  |
+|  11 |       1,771,472 |         287.93  |            18.34  |
+|  12 |       5,314,412 |          95.98  |            10.59  |
+|  13 |      15,943,232 |          31.99  |             6.11  |
+|  14 |      47,829,692 |          10.66  |             3.53  |
+|  15 |     143,489,072 |           3.55  |             2.04  |
+
+## Caveats
+
+### Pentagon Cells
+
+At every resolution, the ISEA grid contains **12 pentagonal cells** which each have an area exactly 5/6 that of the hexagonal cells. In the standard orientation, these are located at:
+
+- North Pole (90N)
+- South Pole (90S)
+- 10 cells at latitudes +/-26.57 degrees spaced evenly around the globe
+
+For most analyses, this is not a concern:
+
+1. Pentagons are a tiny minority (12 out of millions of cells at high resolutions)
+2. They are positioned in predictable, often low-data locations
+3. The area difference (5/6) is small and can be corrected if needed
+
+### Multi-Scale Analysis
+
+In hexagonal grids, cells from one resolution level are only **partially contained** by cells of other levels (unlike square grids). This means direct hierarchical aggregation is not straightforward. For nested analyses, consider using the same resolution throughout or carefully handling partial overlaps.
+
+### Integer Limits
+
+Cell IDs are stored as integers. For resolutions above 15, cell IDs may exceed Rs integer limit (2^31-1). For very high resolutions, use the index-based functions that return string representations.
+
 
 ## dggridR Compatibility
 
@@ -229,7 +291,7 @@ library(sf)
 result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
 
 # Generate polygons (requires resolution and aperture)
-polys <- hex_polygons(result$hex_id, resolution = 8, aperture = 3)
+polys <- hexify_cell_to_sf(result$hex_id, resolution = 8, aperture = 3)
 polys
 ```
 
@@ -245,7 +307,7 @@ plot(st_geometry(polys), col = "lightblue", border = "darkblue",
 
 ```{r, eval = requireNamespace("sf", quietly = TRUE), fig.width=7, fig.height=5}
 # Generate a grid covering Western Europe
-europe_grid <- hex_grid_rect(
+europe_grid <- hexify_grid_rect(
   minlon = -5, maxlon = 20,
   minlat = 40, maxlat = 55,
   area = 10000
@@ -253,6 +315,46 @@ europe_grid <- hex_grid_rect(
 
 plot(st_geometry(europe_grid), border = "gray",
      main = "Hexagonal Grid over Western Europe")
+```
+
+
+### Visualization with ggplot2
+
+```{r ggplot-example, eval = requireNamespace("sf", quietly = TRUE) && requireNamespace("ggplot2", quietly = TRUE), fig.width=7, fig.height=5}
+library(ggplot2)
+library(sf)
+
+# Create sample data with values
+set.seed(42)
+sample_data <- data.frame(
+  lon = runif(100, -5, 20),
+  lat = runif(100, 40, 55),
+  value = rnorm(100, 50, 15)
+)
+
+# Assign to grid and aggregate
+gridded <- hexify(sample_data, lon = "lon", lat = "lat", area = 5000)
+cell_means <- aggregate(value ~ hex_id + hex_cen_lon + hex_cen_lat,
+                        data = gridded, FUN = mean)
+
+# Get grid info for polygons
+grid_info <- hexify_grid(area = 5000, aperture = 3)
+
+# Generate polygons for cells with data
+polys <- hexify_cell_to_sf(cell_means[["hex_id"]],
+                           resolution = grid_info[["resolution"]],
+                           aperture = 3)
+polys[["value"]] <- cell_means[["value"]]
+
+# Plot with ggplot2
+ggplot() +
+  geom_sf(data = polys, aes(fill = value), color = "white", linewidth = 0.3) +
+  scale_fill_viridis_c(option = "plasma", name = "Mean Value") +
+  labs(title = "Aggregated Values in Equal-Area Hexagonal Cells",
+       subtitle = "ISEA3H grid at ~5000 km2 resolution") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
 ```
 
 ## Function Reference
@@ -276,23 +378,23 @@ hexify(data, lon = "lon", lat = "lat", area = NULL, diagonal = NULL,
 
 **Returns**: Input data with added columns `hex_id`, `hex_cen_lon`, `hex_cen_lat`, `hex_area`, `hex_diag`.
 
-### hex_polygons()
+### hexify_cell_to_sf()
 ```r
-hex_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_cell_to_sf(hex_id, resolution, aperture = 3L, return_sf = TRUE)
 ```
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `hex_id` | Integer vector of cell IDs (SEQNUM) | *required* |
+| `hex_id` | Integer vector of cell IDs | *required* |
 | `resolution` | Grid resolution level | *required* |
 | `aperture` | Grid aperture: 3, 4, or 7 | `3L` |
 | `return_sf` | Return sf object (TRUE) or data frame (FALSE) | `TRUE` |
 
 **Returns**: sf object with POLYGON geometries, or data frame with vertex coordinates.
 
-### hex_grid_rect()
+### hexify_grid_rect()
 ```r
-hex_grid_rect(minlon, maxlon, minlat, maxlat, area, aperture = 3L)
+hexify_grid_rect(minlon, maxlon, minlat, maxlat, area, aperture = 3L)
 ```
 
 Generates a grid of hexagon polygons covering a rectangular region.

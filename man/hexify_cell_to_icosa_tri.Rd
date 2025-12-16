@@ -7,7 +7,7 @@
 hexify_cell_to_icosa_tri(cell_id, resolution, aperture = 3L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 
 \item{resolution}{Grid resolution level (0-30)}
 
@@ -20,12 +20,12 @@ Data frame with columns:
 \item{icosa_triangle_y}{Y coordinate on triangle face}
 }
 \description{
-Converts DGGRID-compatible cell IDs (SEQNUM) to icosahedral triangle
+Converts DGGRID-compatible cell IDs to icosahedral triangle
 coordinates (face, x, y). These are the coordinates produced by the
 Snyder ISEA forward projection.
 }
 \details{
-Equivalent to dggridR's dgSEQNUM_to_PROJTRI().
+Compatible with dggridR's dgSEQNUM_to_PROJTRI().
 }
 \examples{
 \dontrun{

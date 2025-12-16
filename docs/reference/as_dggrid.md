@@ -1,0 +1,68 @@
+# Convert hexify grid to dggridR-compatible grid object
+
+Creates a dggridR-compatible grid specification from a hexify_grid
+object. The resulting object can be used with dggridR functions that
+accept a dggs object.
+
+## Usage
+
+``` r
+as_dggrid(grid)
+```
+
+## Arguments
+
+- grid:
+
+  A hexify_grid object from hexify_grid()
+
+## Value
+
+A list with dggridR-compatible fields:
+
+- pole_lon_deg:
+
+  Longitude of grid pole (default 11.25)
+
+- pole_lat_deg:
+
+  Latitude of grid pole (default 58.28252559)
+
+- azimuth_deg:
+
+  Grid azimuth rotation (default 0)
+
+- aperture:
+
+  Grid aperture (3, 4, or 7)
+
+- res:
+
+  Resolution level
+
+- topology:
+
+  Grid topology ("HEXAGON")
+
+- projection:
+
+  Map projection ("ISEA")
+
+- precision:
+
+  Output decimal precision (default 7)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(hexify)
+library(dggridR)
+
+# Create hexify grid
+hgrid <- hexify_grid(area = 1000, aperture = 3)
+
+# Convert to dggridR format for use with dggridR functions
+dggs <- as_dggrid(hgrid)
+} # }
+```

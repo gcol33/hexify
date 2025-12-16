@@ -14,11 +14,11 @@ hexify_grid_to_cell(grid, lon, lat)
 \item{lat}{Numeric vector of latitudes in degrees}
 }
 \value{
-Numeric vector of cell IDs (1-based SEQNUM values)
+Numeric vector of cell IDs (1-based)
 }
 \description{
 Grid-based wrapper for \code{\link{hexify_lonlat_to_cell}}. Converts
-geographic coordinates to DGGRID-compatible cell IDs (SEQNUM) using
+geographic coordinates to DGGRID-compatible cell IDs using
 the resolution and aperture from a grid object.
 }
 \examples{

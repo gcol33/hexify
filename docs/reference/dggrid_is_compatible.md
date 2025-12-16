@@ -1,0 +1,42 @@
+# Validate dggridR grid compatibility with hexify
+
+Checks whether a dggridR grid object is compatible with hexify
+functions. Returns TRUE if compatible, or throws an error describing
+incompatibilities.
+
+## Usage
+
+``` r
+dggrid_is_compatible(dggs, strict = TRUE)
+```
+
+## Arguments
+
+- dggs:
+
+  A dggridR grid object
+
+- strict:
+
+  If TRUE (default), throw errors for incompatibilities. If FALSE,
+  return FALSE instead of throwing errors.
+
+## Value
+
+TRUE if compatible, FALSE if not compatible (when strict=FALSE)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(dggridR)
+
+# Compatible grid
+dggs <- dgconstruct(res = 5, aperture = 3, projection = "ISEA")
+dggrid_is_compatible(dggs)  # TRUE
+
+# Incompatible grid (FULLER projection)
+dggs2 <- dgconstruct(res = 5, projection = "FULLER")
+dggrid_is_compatible(dggs2, strict = FALSE)  # FALSE
+} # }
+```

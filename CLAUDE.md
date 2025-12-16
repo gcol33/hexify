@@ -57,7 +57,7 @@ lon/lat → Snyder forward → (face, tx, ty)   [Icosa Triangle]
 | Icosa Triangle | icosa_triangle_face (0-19), icosa_triangle_x, icosa_triangle_y | Triangle face + projected coords |
 | Quad XY | quad (0-11), quad_x, quad_y | Quad + continuous coordinates |
 | Quad IJ | quad (0-11), i, j | Quad + integer grid indices |
-| SEQNUM/Cell ID | single integer | Global cell ID (dggridR compatible) |
+| Cell ID | single integer | Global cell ID (dggridR compatible) |
 
 Triangle-to-Quad: 20 faces → 12 quads (pairs of triangles).
 

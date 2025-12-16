@@ -1,17 +1,17 @@
 # tests/testthat/test-cell-id.R
-# Tests for SEQNUM-based cell ID functions
+# Tests for cell ID functions
 #
 # Functions tested:
 # - hexify_lonlat_to_cell()
 # - hexify_cell_to_lonlat()
 # - hexify_cell_to_quad_ij()
 # - hexify_cell_to_icosa_tri()
-# - hexify_seqnum_to_cell()
+# - hexify_cell_id_to_quad_ij()
 # - hexify_grid_to_cell()
 # - hexify_grid_cell_to_lonlat()
 
 # =============================================================================
-# LONLAT TO CELL (SEQNUM)
+# LONLAT TO CELL (CELL ID)
 # =============================================================================
 
 test_that("lonlat_to_cell returns positive integers for aperture 3", {
@@ -205,21 +205,21 @@ test_that("cell_to_icosa_tri returns valid structure", {
 })
 
 # =============================================================================
-# SEQNUM TO CELL INFO
+# CELL ID TO QUAD IJ INFO
 # =============================================================================
 
-test_that("seqnum_to_cell returns valid cell info", {
-  seqnums <- c(1702, 1954, 100)
+test_that("cell_id_to_quad_ij returns valid cell info", {
+  cell_ids <- c(1702, 1954, 100)
 
-  info <- hexify_seqnum_to_cell(seqnums, resolution = 5, aperture = 3)
+  info <- hexify_cell_id_to_quad_ij(cell_ids, resolution = 5, aperture = 3)
 
   expect_true(is.data.frame(info))
-  expect_true("face" %in% names(info))
+  expect_true("quad" %in% names(info))
   expect_true("i" %in% names(info))
   expect_true("j" %in% names(info))
 
-  # Faces should be 0-19
-  expect_true(all(info$face >= 0 & info$face <= 19))
+  # Quads should be 0-11
+  expect_true(all(info$quad >= 0 & info$quad <= 11))
 
   # i, j should be non-negative
   expect_true(all(info$i >= 0))

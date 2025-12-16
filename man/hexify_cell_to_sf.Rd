@@ -10,7 +10,7 @@ hexify_cell_to_sf(hex_id, resolution, aperture = 3L, return_sf = TRUE)
 hexify_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
 }
 \arguments{
-\item{hex_id}{Integer vector of cell identifiers (SEQNUM values)}
+\item{hex_id}{Integer vector of cell identifiers}
 
 \item{resolution}{Grid resolution level}
 
@@ -31,9 +31,8 @@ If return_sf = FALSE: data frame with columns:
 \item{order}{Vertex order (1-7, 7 closes the polygon)}
 }
 \description{
-Creates polygon geometries for hexagonal grid cells from their SEQNUM
-identifiers. Returns an sf object by default, or a data frame for
-lightweight workflows.
+Creates polygon geometries for hexagonal grid cells from their cell IDs.
+Returns an sf object by default, or a data frame for lightweight workflows.
 }
 \details{
 This function uses a native C++ implementation that is significantly faster

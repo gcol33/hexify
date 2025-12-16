@@ -26,7 +26,7 @@ NULL
 #' @details
 #' Most users should use \code{\link{hexify_lonlat_to_cell}} or
 #' \code{\link{hexify_grid_to_cell}} which return DGGRID-compatible
-#' integer cell IDs (SEQNUM).
+#' integer cell IDs.
 #'
 #' This function returns hierarchical index strings useful for:
 #' - Understanding the cell's position in the hierarchy
@@ -122,7 +122,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
 #' @details
 #' Most users should use \code{\link{hexify_cell_to_lonlat}} or
 #' \code{\link{hexify_grid_cell_to_lonlat}} which work with DGGRID-compatible
-#' integer cell IDs (SEQNUM).
+#' integer cell IDs.
 #'
 #' @keywords internal
 #' @examples
@@ -186,20 +186,20 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 }
 
 # =============================================================================
-# GRID-BASED WRAPPERS FOR SEQNUM (DGGRID-COMPATIBLE CELL IDS)
+# GRID-BASED WRAPPERS FOR CELL IDs (DGGRID-COMPATIBLE)
 # =============================================================================
 
 #' Convert longitude/latitude to cell ID using a grid object
 #'
 #' Grid-based wrapper for \code{\link{hexify_lonlat_to_cell}}. Converts
-#' geographic coordinates to DGGRID-compatible cell IDs (SEQNUM) using
+#' geographic coordinates to DGGRID-compatible cell IDs using
 #' the resolution and aperture from a grid object.
 #'
 #' @param grid Grid specification from hexify_grid()
 #' @param lon Numeric vector of longitudes in degrees
 #' @param lat Numeric vector of latitudes in degrees
 #'
-#' @return Numeric vector of cell IDs (1-based SEQNUM values)
+#' @return Numeric vector of cell IDs (1-based)
 #'
 #' @seealso \code{\link{hexify_lonlat_to_cell}} for the direct-params version,
 #'   \code{\link{hexify_grid_cell_to_lonlat}} for the inverse operation
@@ -223,11 +223,11 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #' Convert cell ID to longitude/latitude using a grid object
 #'
 #' Grid-based wrapper for \code{\link{hexify_cell_to_lonlat}}. Converts
-#' DGGRID-compatible cell IDs (SEQNUM) back to cell center coordinates
+#' DGGRID-compatible cell IDs back to cell center coordinates
 #' using the resolution and aperture from a grid object.
 #'
 #' @param grid Grid specification from hexify_grid()
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #'
 #' @return Data frame with lon_deg and lat_deg columns
 #'
@@ -373,9 +373,9 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 # These functions expose the intermediate Quad IJ coordinate system used
 # internally by DGGS. The coordinate pipeline is:
 #
-#   lon/lat → Icosa Triangle (face, tx, ty) → Quad IJ (quad, i, j) → SEQNUM
+#   lon/lat → Icosa Triangle (face, tx, ty) → Quad IJ (quad, i, j) → Cell ID
 #
-# Most users should use the high-level hexify() function or SEQNUM-based
+# Most users should use the high-level hexify() function or cell ID-based
 # functions. These Quad IJ functions are useful for:
 # - Understanding the DGGS internals
 # - Debugging coordinate transformations
@@ -433,9 +433,9 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Quad IJ coordinates to cell ID (SEQNUM)
+#' Convert Quad IJ coordinates to cell ID
 #'
-#' Converts Quad IJ coordinates to a global cell identifier (SEQNUM).
+#' Converts Quad IJ coordinates to a global cell identifier.
 #' This is the final step in the coordinate pipeline.
 #'
 #' @param quad Quad number (0-11), integer or vector
@@ -444,12 +444,12 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
-#' @return Numeric vector of cell IDs (SEQNUM values)
+#' @return Numeric vector of cell IDs
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' # Convert Quad IJ to SEQNUM
+#' # Convert Quad IJ to cell ID
 #' cell_id <- hexify_quad_ij_to_cell(quad = 1, i = 100, j = 50,
 #'                                    resolution = 10, aperture = 3)
 #' print(cell_id)
@@ -632,18 +632,18 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 # CELL ID TO COORDINATE SYSTEM CONVERSIONS
 # =============================================================================
 #
-# These functions convert from Cell IDs (SEQNUM) back to intermediate
-# coordinate representations, matching dggridR's dgSEQNUM_to_* functions.
+# These functions convert from Cell IDs back to intermediate
+# coordinate representations, compatible with dggridR's conversion functions.
 # =============================================================================
 
 #' Convert Cell ID to Quad IJ coordinates
 #'
-#' Converts DGGRID-compatible cell IDs (SEQNUM) to Quad IJ coordinates.
+#' Converts DGGRID-compatible cell IDs to Quad IJ coordinates.
 #' This is the inverse of hexify_quad_ij_to_cell().
 #'
-#' Equivalent to dggridR's dgSEQNUM_to_Q2DI().
+#' Compatible with dggridR's dgSEQNUM_to_Q2DI().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
@@ -685,13 +685,13 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 
 #' Convert Cell ID to Icosa Triangle coordinates
 #'
-#' Converts DGGRID-compatible cell IDs (SEQNUM) to icosahedral triangle
+#' Converts DGGRID-compatible cell IDs to icosahedral triangle
 #' coordinates (face, x, y). These are the coordinates produced by the
 #' Snyder ISEA forward projection.
 #'
-#' Equivalent to dggridR's dgSEQNUM_to_PROJTRI().
+#' Compatible with dggridR's dgSEQNUM_to_PROJTRI().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
@@ -789,12 +789,12 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 
 #' Convert Cell ID to Quad XY coordinates
 #'
-#' Converts DGGRID-compatible cell IDs (SEQNUM) to Quad XY coordinates
+#' Converts DGGRID-compatible cell IDs to Quad XY coordinates
 #' (continuous quad space). This is the cell center in quad coordinates.
 #'
-#' Equivalent to dggridR's dgSEQNUM_to_Q2DD().
+#' Compatible with dggridR's dgSEQNUM_to_Q2DD().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
@@ -837,9 +837,9 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' Convert Quad XY coordinates to Cell ID
 #'
 #' Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible
-#' cell IDs (SEQNUM). The coordinates are quantized to the nearest cell.
+#' cell IDs. The coordinates are quantized to the nearest cell.
 #'
-#' Equivalent to dggridR's dgQ2DD_to_SEQNUM().
+#' Compatible with dggridR's dgQ2DD_to_SEQNUM().
 #'
 #' @param quad Quad number (0-11), integer or vector
 #' @param quad_x Continuous X coordinate in quad space
@@ -847,7 +847,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
-#' @return Numeric vector of cell IDs (SEQNUM values)
+#' @return Numeric vector of cell IDs
 #'
 #' @seealso \code{\link{hexify_cell_to_quad_xy}} for the inverse operation,
 #'   \code{\link{hexify_quad_ij_to_cell}} for integer grid coordinates
@@ -942,12 +942,12 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 
 #' Convert Cell ID to PLANE coordinates
 #'
-#' Converts DGGRID-compatible cell IDs (SEQNUM) directly to PLANE coordinates.
+#' Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 #' Returns the cell center in the unfolded icosahedron layout.
 #'
-#' Equivalent to dggridR's dgSEQNUM_to_PLANE().
+#' Compatible with dggridR's dgSEQNUM_to_PLANE().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'

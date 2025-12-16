@@ -1,0 +1,11 @@
+pandoc: 3.8.2.1
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  quickstart: quickstart.html
+  theory: theory.html
+  workflows: workflows.html
+last_built: 2025-12-16T11:33Z
+urls:
+  reference: https://gcol33.github.io/hexify/reference
+  article: https://gcol33.github.io/hexify/articles

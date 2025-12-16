@@ -175,10 +175,10 @@ hexify_compare_indices <- function(idx1, idx2) {
 }
 
 # =============================================================================
-# INTEGER SEQUENTIAL NUMBERS (SEQNUM)
+# INTEGER CELL IDs
 # =============================================================================
 
-#' Convert longitude/latitude to cell ID (SEQNUM)
+#' Convert longitude/latitude to cell ID
 #'
 #' Converts geographic coordinates to DGGRID-compatible cell identifiers.
 #' This is the primary function for geocoding points to grid cells.
@@ -188,10 +188,10 @@ hexify_compare_indices <- function(idx1, idx2) {
 #' @param resolution Grid resolution (integer >= 0)
 #' @param aperture Grid aperture (3, 4, or 7)
 #'
-#' @return Numeric vector of cell IDs (1-based SEQNUM values)
+#' @return Numeric vector of cell IDs (1-based)
 #'
 #' @details
-#' Returns DGGRID-compatible sequential numbers (SEQNUM). The cell ID
+#' Returns DGGRID-compatible cell identifiers. The cell ID
 #' uniquely identifies each hexagonal cell in the global grid.
 #'
 #' For a grid-object interface, use \code{\link{hexify_grid_to_cell}}.
@@ -210,12 +210,12 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
   cpp_lonlat_to_cell(lon, lat, resolution, aperture)
 }
 
-#' Convert cell ID (SEQNUM) to longitude/latitude
+#' Convert cell ID to longitude/latitude
 #'
 #' Converts cell identifiers back to cell center coordinates.
 #' This is the inverse of \code{\link{hexify_lonlat_to_cell}}.
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based SEQNUM values)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution (integer >= 0)
 #' @param aperture Grid aperture (3, 4, or 7)
 #'
@@ -234,24 +234,24 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   cpp_cell_to_lonlat(cell_id, resolution, aperture)
 }
 
-#' Get cell info from sequential number
+#' Get cell info from cell ID
 #'
-#' Converts sequential number to cell components (face, i, j).
+#' Converts cell ID to cell components (quad, i, j).
 #'
-#' @param seqnum Numeric vector of sequential numbers (1-based)
+#' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution (integer >= 0)
 #' @param aperture Grid aperture (3, 4, or 7)
 #'
-#' @return Data frame with face, i, j columns
+#' @return Data frame with quad, i, j columns
 #'
 #' @export
 #' @examples
-#' info <- hexify_seqnum_to_cell(1702, resolution = 5, aperture = 3)
-hexify_seqnum_to_cell <- function(seqnum, resolution, aperture) {
+#' info <- hexify_cell_to_quad_ij(1702, resolution = 5, aperture = 3)
+hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
-  validate_cell_id(seqnum, resolution, aperture)
-  result <- cpp_seqnum_to_cell_info(seqnum, resolution, aperture)
+  validate_cell_id(cell_id, resolution, aperture)
+  result <- cpp_cell_to_quad_ij(cell_id, resolution, aperture)
   as.data.frame(result)
 }
 

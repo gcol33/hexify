@@ -26,7 +26,7 @@ cell location in a Z-order (Morton code) format.
 \details{
 Most users should use \code{\link{hexify_lonlat_to_cell}} or
 \code{\link{hexify_grid_to_cell}} which return DGGRID-compatible
-integer cell IDs (SEQNUM).
+integer cell IDs.
 
 This function returns hierarchical index strings useful for:
 \itemize{

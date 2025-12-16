@@ -18,14 +18,14 @@ hexify_quad_xy_to_cell(quad, quad_x, quad_y, resolution, aperture = 3L)
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }
 \value{
-Numeric vector of cell IDs (SEQNUM values)
+Numeric vector of cell IDs
 }
 \description{
 Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible
-cell IDs (SEQNUM). The coordinates are quantized to the nearest cell.
+cell IDs. The coordinates are quantized to the nearest cell.
 }
 \details{
-Equivalent to dggridR's dgQ2DD_to_SEQNUM().
+Compatible with dggridR's dgQ2DD_to_SEQNUM().
 }
 \examples{
 \dontrun{

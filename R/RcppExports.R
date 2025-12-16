@@ -109,18 +109,6 @@ cpp_batch_test_roundtrip_ap7 <- function(tx_vec, ty_vec, resolution) {
     .Call(`_hexify_cpp_batch_test_roundtrip_ap7`, tx_vec, ty_vec, resolution)
 }
 
-cpp_lonlat_to_seqnum_face <- function(lon, lat, resolution, aperture) {
-    .Call(`_hexify_cpp_lonlat_to_seqnum_face`, lon, lat, resolution, aperture)
-}
-
-cpp_seqnum_to_lonlat_face <- function(seqnum, resolution, aperture) {
-    .Call(`_hexify_cpp_seqnum_to_lonlat_face`, seqnum, resolution, aperture)
-}
-
-cpp_seqnum_to_cell_info <- function(seqnum, resolution, aperture) {
-    .Call(`_hexify_cpp_seqnum_to_cell_info`, seqnum, resolution, aperture)
-}
-
 cpp_decode_z7 <- function(index_body, aperture) {
     .Call(`_hexify_cpp_decode_z7`, index_body, aperture)
 }

@@ -26,7 +26,7 @@
 //    - Variables: quad, i, j
 //    - quad: Quad number (0-11)
 //    - i, j: Integer cell indices within the quad at a given resolution
-//    - Cell IDs (SEQNUM) are derived from this
+//    - Cell IDs are derived from this
 //
 // ICOSA TRIANGLE TO QUAD MAPPING:
 // -------------------------------

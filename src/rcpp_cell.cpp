@@ -23,137 +23,6 @@
 
 using namespace Rcpp;
 
-// ============================================================================
-// Legacy Face-Based Cell Conversions (deprecated)
-// ============================================================================
-// These functions use face-based (triangle) coordinates, not quad-based
-// coordinates. They produce different cell IDs than the standard ISEA functions.
-// Kept for backward compatibility - prefer cpp_lonlat_to_cell.
-
-// [[Rcpp::export]]
-NumericVector cpp_lonlat_to_seqnum_face(NumericVector lon, NumericVector lat,
-                                        int resolution, int aperture) {
-  int n = lon.size();
-  if (lat.size() != n) {
-    stop("lon and lat must have same length");
-  }
-
-  NumericVector result(n);
-
-  for (int i = 0; i < n; i++) {
-    // Step 1: Project to icosahedron
-    auto fwd = hexify::snyder_forward(lon[i], lat[i]);
-
-    // Step 2: Quantify to hex cell
-    long long cell_i, cell_j;
-    if (aperture == 3) {
-      hexify::hex_quantize_ap3(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, cell_i, cell_j);
-    } else if (aperture == 4) {
-      hexify::hex_quantize_ap4(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, cell_i, cell_j);
-    } else if (aperture == 7) {
-      hexify::hex_quantize_ap7(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, cell_i, cell_j);
-    } else {
-      stop("Invalid aperture");
-    }
-
-    // Step 3: Convert to cell ID
-    uint64_t seqnum;
-    if (aperture == 3) {
-      seqnum = hexify::cell_to_seqnum_ap3(fwd.face, cell_i, cell_j, resolution);
-    } else if (aperture == 4) {
-      seqnum = hexify::cell_to_seqnum_ap4(fwd.face, cell_i, cell_j, resolution);
-    } else if (aperture == 7) {
-      seqnum = hexify::cell_to_seqnum_ap7(fwd.face, cell_i, cell_j, resolution);
-    }
-
-    // Convert uint64 to double (R uses double for large integers)
-    result[i] = static_cast<double>(seqnum);
-  }
-
-  return result;
-}
-
-// [[Rcpp::export]]
-DataFrame cpp_seqnum_to_lonlat_face(NumericVector seqnum, int resolution, int aperture) {
-  int n = seqnum.size();
-
-  NumericVector lon(n);
-  NumericVector lat(n);
-
-  for (int i = 0; i < n; i++) {
-    uint64_t seq = static_cast<uint64_t>(seqnum[i]);
-
-    // Step 1: Convert cell ID to (face, i, j)
-    int face;
-    long long cell_i, cell_j;
-
-    if (aperture == 3) {
-      hexify::seqnum_to_cell_ap3(seq, resolution, face, cell_i, cell_j);
-    } else if (aperture == 4) {
-      hexify::seqnum_to_cell_ap4(seq, resolution, face, cell_i, cell_j);
-    } else if (aperture == 7) {
-      hexify::seqnum_to_cell_ap7(seq, resolution, face, cell_i, cell_j);
-    } else {
-      stop("Invalid aperture");
-    }
-
-    // Step 2: Get cell center in face coordinates
-    double cx, cy;
-    if (aperture == 3) {
-      hexify::hex_center_ap3(cell_i, cell_j, resolution, cx, cy);
-    } else if (aperture == 4) {
-      hexify::hex_center_ap4(cell_i, cell_j, resolution, cx, cy);
-    } else if (aperture == 7) {
-      hexify::hex_center_ap7(cell_i, cell_j, resolution, cx, cy);
-    }
-
-    // Step 3: Project back to lon/lat
-    auto ll = hexify::face_xy_to_ll(cx, cy, face);
-    lon[i] = ll.first;
-    lat[i] = ll.second;
-  }
-
-  return DataFrame::create(
-    _["lon_deg"] = lon,
-    _["lat_deg"] = lat
-  );
-}
-
-// [[Rcpp::export]]
-List cpp_seqnum_to_cell_info(NumericVector seqnum, int resolution, int aperture) {
-  int n = seqnum.size();
-
-  IntegerVector faces(n);
-  NumericVector i_vals(n);
-  NumericVector j_vals(n);
-
-  for (int i = 0; i < n; i++) {
-    uint64_t seq = static_cast<uint64_t>(seqnum[i]);
-
-    int face;
-    long long cell_i, cell_j;
-
-    if (aperture == 3) {
-      hexify::seqnum_to_cell_ap3(seq, resolution, face, cell_i, cell_j);
-    } else if (aperture == 4) {
-      hexify::seqnum_to_cell_ap4(seq, resolution, face, cell_i, cell_j);
-    } else if (aperture == 7) {
-      hexify::seqnum_to_cell_ap7(seq, resolution, face, cell_i, cell_j);
-    } else {
-      stop("Invalid aperture");
-    }
-
-    faces[i] = face;
-    i_vals[i] = static_cast<double>(cell_i);
-    j_vals[i] = static_cast<double>(cell_j);
-  }
-
-  return List::create(
-    _["face"] = faces,
-    _["i"] = i_vals,
-    _["j"] = j_vals
-  );
-}
 
 // ============================================================================
 // Z7 Decoding
@@ -393,20 +262,20 @@ static uint64_t cell_index_2d_aligned(long long i, long long j, long long dim) {
 // Only 1/3 of cells valid - those where (i+j) % 3 == 0
 // The modulo arithmetic compacts the sparse grid into dense numbering
 static uint64_t cell_index_2d_offset_ap3(long long i, long long j, long long dim) {
-    uint64_t sNum = i * dim / 3;
+    uint64_t idx = i * dim / 3;
     switch (i % 3) {
-        case 0: sNum += j / 3; break;
-        case 1: sNum += (j - 2) / 3; break;
-        case 2: sNum += (j - 1) / 3; break;
+        case 0: idx += j / 3; break;
+        case 1: idx += (j - 2) / 3; break;
+        case 2: idx += (j - 1) / 3; break;
     }
-    return sNum;
+    return idx;
 }
 
 // Inverse: cell index to (i, j) for offset grid (aperture 3)
-static void ij_from_cell_index_offset_ap3(uint64_t sNum, long long dim,
+static void ij_from_cell_index_offset_ap3(uint64_t idx, long long dim,
                                       long long& i, long long& j) {
-    i = (sNum * 3) / dim;
-    j = (sNum * 3) % dim;
+    i = (idx * 3) / dim;
+    j = (idx * 3) % dim;
     switch (i % 3) {
         case 0: break;
         case 1: j += 2; break;
@@ -418,24 +287,24 @@ static void ij_from_cell_index_offset_ap3(uint64_t sNum, long long dim,
 // Only 1/7 of cells are valid - those satisfying the Class III pattern
 // The modulo-7 arithmetic compacts the sparse grid into dense numbering
 static uint64_t cell_index_2d_offset_ap7(long long i, long long j, long long dim) {
-    uint64_t sNum = static_cast<uint64_t>(i) * dim / 7;
+    uint64_t idx = static_cast<uint64_t>(i) * dim / 7;
     switch (i % 7) {
-        case 0: sNum += j / 7; break;
-        case 1: sNum += (j - 5) / 7; break;
-        case 2: sNum += (j - 3) / 7; break;
-        case 3: sNum += (j - 1) / 7; break;
-        case 4: sNum += (j - 6) / 7; break;
-        case 5: sNum += (j - 4) / 7; break;
-        case 6: sNum += (j - 2) / 7; break;
+        case 0: idx += j / 7; break;
+        case 1: idx += (j - 5) / 7; break;
+        case 2: idx += (j - 3) / 7; break;
+        case 3: idx += (j - 1) / 7; break;
+        case 4: idx += (j - 6) / 7; break;
+        case 5: idx += (j - 4) / 7; break;
+        case 6: idx += (j - 2) / 7; break;
     }
-    return sNum;
+    return idx;
 }
 
 // Inverse: cell index to (i, j) for offset grid (aperture 7)
-static void ij_from_cell_index_offset_ap7(uint64_t sNum, long long dim,
+static void ij_from_cell_index_offset_ap7(uint64_t idx, long long dim,
                                       long long& i, long long& j) {
-    i = (sNum * 7) / dim;
-    j = (sNum * 7) % dim;
+    i = (idx * 7) / dim;
+    j = (idx * 7) % dim;
     switch (i % 7) {
         case 0: break;
         case 1: j += 5; break;
@@ -578,8 +447,8 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
             bnd2D_seq = cell_index_2d_aligned(i, j, dim);
         }
 
-        uint64_t seqnum = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(seqnum);
+        uint64_t cid = offset + bnd2D_seq + 1;
+        result[k] = static_cast<double>(cid);
     }
 
     return result;
@@ -623,39 +492,39 @@ DataFrame cpp_cell_to_lonlat(NumericVector cell_id, int resolution,
     double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
 
         // Convert to 0-based
-        sNum--;
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             // First cell: quad 0, i=0, j=0
             quad = 0;
             i = 0;
             j = 0;
         } else {
             // Adjust for quad 0
-            sNum--;
+            idx--;
 
             // Determine quad
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             // Get i, j from remaining cell based on grid type
             if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else if (use_offset_ap7) {
                 // Decode to surrogate indices
-                ij_from_cell_index_offset_ap7(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
                 // Convert surrogate to substrate indices
                 i = static_cast<long long>(std::round(i * substrate_scale_ap7));
                 j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -722,30 +591,30 @@ DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
     double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
-        sNum--;  // Convert to 0-based
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;  // Convert to 0-based
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
                 i = static_cast<long long>(std::round(i * substrate_scale_ap7));
                 j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -799,30 +668,30 @@ DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
     double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
-        sNum--;
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
                 i = static_cast<long long>(std::round(i * substrate_scale_ap7));
                 j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -913,8 +782,8 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
             bnd2D_seq = cell_index_2d_aligned(i, j, dim);
         }
 
-        uint64_t seqnum = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(seqnum);
+        uint64_t cid = offset + bnd2D_seq + 1;
+        result[k] = static_cast<double>(cid);
     }
 
     return result;
@@ -957,30 +826,30 @@ DataFrame cpp_cell_to_icosa_tri(NumericVector cell_id, int resolution,
     double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
-        sNum--;
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
                 i = static_cast<long long>(std::round(i * substrate_scale_ap7));
                 j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -1145,29 +1014,29 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
     int out_idx = 0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
         double orig_cell_id = cell_id[k];
 
         // Convert cell to (quad, i, j)
-        sNum--;  // Convert to 0-based
+        idx--;  // Convert to 0-based
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -1274,26 +1143,26 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
     List result(n);
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
-        sNum--;
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -1483,8 +1352,8 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
             bnd2D_seq = cell_index_2d_aligned(i, j, dim);
         }
 
-        uint64_t seqnum = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(seqnum);
+        uint64_t cid = offset + bnd2D_seq + 1;
+        result[k] = static_cast<double>(cid);
     }
 
     return result;
@@ -1512,33 +1381,33 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
     bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
 
         // Convert to 0-based
-        sNum--;
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             // First cell: quad 0, i=0, j=0
             quad = 0;
             i = 0;
             j = 0;
         } else {
             // Adjust for quad 0
-            sNum--;
+            idx--;
 
             // Determine quad
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             // Get i, j from remaining cell index based on grid type
             if (use_offset) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 
@@ -1646,30 +1515,30 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
     double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        uint64_t sNum = static_cast<uint64_t>(cell_id[k]);
-        sNum--;
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;
 
         int quad;
         long long i, j;
 
-        if (sNum == 0) {
+        if (idx == 0) {
             quad = 0;
             i = 0;
             j = 0;
         } else {
-            sNum--;
-            quad = static_cast<int>(sNum / offsetPerQuad) + 1;
-            sNum -= (quad - 1) * offsetPerQuad;
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
 
             if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
             } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(sNum, dim, i, j);
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
                 i = static_cast<long long>(std::round(i * substrate_scale_ap7));
                 j = static_cast<long long>(std::round(j * substrate_scale_ap7));
             } else {
-                i = sNum / dim;
-                j = sNum % dim;
+                i = idx / dim;
+                j = idx % dim;
             }
         }
 

@@ -19,11 +19,11 @@
 #' @param resround How to round resolution: "nearest", "up", or "down"
 #'
 #' @return The input data with additional columns:
-#'   \item{hex_id}{Stable DGGS cell identifier (integer SEQNUM)}
-#'   \item{hex_cen_lon}{Longitude of cell center in degrees}
-#'   \item{hex_cen_lat}{Latitude of cell center in degrees}
-#'   \item{hex_area}{Actual cell area in km² (based on matched resolution)}
-#'   \item{hex_diag}{Actual cell long diagonal in km}
+#'   \item{cell_id}{Stable DGGS cell identifier (integer)}
+#'   \item{cell_cen_lon}{Longitude of cell center in degrees}
+#'   \item{cell_cen_lat}{Latitude of cell center in degrees}
+#'   \item{cell_area}{Actual cell area in km² (based on matched resolution)}
+#'   \item{cell_diag}{Actual cell long diagonal in km}
 #'
 #' @details
 #' For sf objects, coordinates are automatically extracted and transformed to
@@ -182,21 +182,21 @@ hexify <- function(data,
     }
 
     # Get cell assignments using mixed aperture function
-    seqnum <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec,
-                                       grid$resolution, mixed_aperture_level)
+    cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec,
+                                         grid$resolution, mixed_aperture_level)
 
     # Get cell centers
-    centers <- cpp_cell_to_lonlat_ap43(seqnum, grid$resolution, mixed_aperture_level)
+    centers <- cpp_cell_to_lonlat_ap43(cell_ids, grid$resolution, mixed_aperture_level)
 
     # Calculate actual cell count for mixed aperture
     # N = 10 * 4^mixed_level * 3^(res - mixed_level) + 2
     n_cells <- 10 * (4^mixed_aperture_level) * (3^(grid$resolution - mixed_aperture_level)) + 2
   } else {
-    # Get cell assignments as integer cell ID (dggridR-compatible)
-    seqnum <- cpp_lonlat_to_cell(lon_vec, lat_vec, grid$resolution, grid$aperture)
+    # Get cell assignments as integer cell ID
+    cell_ids <- cpp_lonlat_to_cell(lon_vec, lat_vec, grid$resolution, grid$aperture)
 
     # Get cell centers
-    centers <- cpp_cell_to_lonlat(seqnum, grid$resolution, grid$aperture)
+    centers <- cpp_cell_to_lonlat(cell_ids, grid$resolution, grid$aperture)
 
     # Calculate cell count: N = 10 * aperture^res + 2
     n_cells <- 10 * (grid$aperture^grid$resolution) + 2
@@ -208,13 +208,13 @@ hexify <- function(data,
   # Long diagonal = sqrt(2 * area / sqrt(3)) * sqrt(2) = sqrt(4 * area / sqrt(3))
   actual_spacing <- sqrt(actual_area * 2 / sqrt(3))
 
-  # Add columns to data (SEQNUM as numeric to handle high-resolution grids)
+  # Add columns to data (cell ID as numeric to handle high-resolution grids)
   # At resolution 20 with aperture 3: N = 10 * 3^20 + 2 ≈ 34 billion (exceeds R integer max)
-  data$hex_id <- seqnum
-  data$hex_cen_lon <- centers$lon_deg
-  data$hex_cen_lat <- centers$lat_deg
-  data$hex_area <- actual_area
-  data$hex_diag <- actual_spacing
+  data$cell_id <- cell_ids
+  data$cell_cen_lon <- centers$lon_deg
+  data$cell_cen_lat <- centers$lat_deg
+  data$cell_area <- actual_area
+  data$cell_diag <- actual_spacing
 
   return(data)
 }

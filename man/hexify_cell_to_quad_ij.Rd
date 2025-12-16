@@ -7,7 +7,7 @@
 hexify_cell_to_quad_ij(cell_id, resolution, aperture = 3L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 
 \item{resolution}{Grid resolution level (0-30)}
 
@@ -20,11 +20,11 @@ Data frame with columns:
 \item{j}{Integer cell index along second axis}
 }
 \description{
-Converts DGGRID-compatible cell IDs (SEQNUM) to Quad IJ coordinates.
+Converts DGGRID-compatible cell IDs to Quad IJ coordinates.
 This is the inverse of hexify_quad_ij_to_cell().
 }
 \details{
-Equivalent to dggridR's dgSEQNUM_to_Q2DI().
+Compatible with dggridR's dgSEQNUM_to_Q2DI().
 }
 \examples{
 \dontrun{

@@ -1,7 +1,7 @@
 # hexify_cell_to_sf.R
 # Cell ID to sf polygon conversion and grid generation
 #
-# This file provides efficient polygon generation from cell IDs (SEQNUM values),
+# This file provides efficient polygon generation from cell IDs,
 # with sf integration for modern spatial workflows.
 
 # =============================================================================
@@ -22,22 +22,21 @@
 
 #' Convert cell IDs to sf polygons
 #'
-#' Creates polygon geometries for hexagonal grid cells from their SEQNUM
-#' identifiers. Returns an sf object by default, or a data frame for
-#' lightweight workflows.
+#' Creates polygon geometries for hexagonal grid cells from their cell IDs.
+#' Returns an sf object by default, or a data frame for lightweight workflows.
 #'
-#' @param hex_id Integer vector of cell identifiers (SEQNUM values)
+#' @param cell_id Integer vector of cell identifiers
 #' @param resolution Grid resolution level
 #' @param aperture Grid aperture: 3, 4, or 7
 #' @param return_sf Logical. If TRUE (default), returns sf object with polygon
 #'   geometries. If FALSE, returns data frame with vertex coordinates.
 #'
 #' @return If return_sf = TRUE: sf object with columns:
-#'   \item{hex_id}{Cell identifier}
+#'   \item{cell_id}{Cell identifier}
 #'   \item{geometry}{POLYGON geometry (sfc_POLYGON)}
 #'
 #'   If return_sf = FALSE: data frame with columns:
-#'   \item{hex_id}{Cell identifier}
+#'   \item{cell_id}{Cell identifier}
 #'   \item{lon}{Vertex longitude}
 #'   \item{lat}{Vertex latitude}
 #'   \item{order}{Vertex order (1-7, 7 closes the polygon)}
@@ -56,18 +55,18 @@
 #' result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 #'
 #' # Get polygons as sf object
-#' polys <- hexify_cell_to_sf(result$hex_id, resolution = 10, aperture = 3)
+#' polys <- hexify_cell_to_sf(result$cell_id, resolution = 10, aperture = 3)
 #'
 #' # Plot with sf
 #' library(sf)
 #' plot(st_geometry(polys), col = "lightblue", border = "blue")
 #' }
-hexify_cell_to_sf <- function(hex_id, resolution, aperture = 3L,
+hexify_cell_to_sf <- function(cell_id, resolution, aperture = 3L,
                               return_sf = TRUE) {
 
   # Input validation
-  if (!is.numeric(hex_id)) {
-    stop("hex_id must be numeric (integer SEQNUM values)")
+  if (!is.numeric(cell_id)) {
+    stop("cell_id must be numeric (integer cell IDs)")
   }
   if (!aperture %in% c(3L, 4L, 7L)) {
     stop("aperture must be 3, 4, or 7")
@@ -77,9 +76,9 @@ hexify_cell_to_sf <- function(hex_id, resolution, aperture = 3L,
   }
 
   # Remove NA values and duplicates
-  hex_id <- unique(hex_id[!is.na(hex_id)])
-  if (length(hex_id) == 0) {
-    stop("No valid hex_id values provided")
+  cell_id <- unique(cell_id[!is.na(cell_id)])
+  if (length(cell_id) == 0) {
+    stop("No valid cell_id values provided")
   }
 
   aperture <- as.integer(aperture)
@@ -92,7 +91,7 @@ hexify_cell_to_sf <- function(hex_id, resolution, aperture = 3L,
     }
 
     # Use the list-based corner function for efficient sf construction
-    corners_list <- cpp_cell_to_corners(hex_id, resolution, aperture)
+    corners_list <- cpp_cell_to_corners(cell_id, resolution, aperture)
 
     # Convert each matrix to sf polygon
     polygons <- lapply(corners_list, function(coords) {
@@ -100,13 +99,13 @@ hexify_cell_to_sf <- function(hex_id, resolution, aperture = 3L,
     })
 
     sfc <- sf::st_sfc(polygons, crs = 4326)
-    sf::st_sf(hex_id = hex_id, geometry = sfc)
+    sf::st_sf(cell_id = cell_id, geometry = sfc)
 
   } else {
     # Return data frame format
-    result <- cpp_cell_to_polygon(hex_id, resolution, aperture)
-    names(result) <- c("hex_id", "lon", "lat", "order")
-    result$hex_id <- as.integer(result$hex_id)
+    result <- cpp_cell_to_polygon(cell_id, resolution, aperture)
+    names(result) <- c("cell_id", "lon", "lat", "order")
+    result$cell_id <- as.integer(result$cell_id)
     result
   }
 }
@@ -115,9 +114,9 @@ hexify_cell_to_sf <- function(hex_id, resolution, aperture = 3L,
 #'
 #' @rdname hexify_cell_to_sf
 #' @export
-hexify_polygons <- function(hex_id, resolution, aperture = 3L,
+hexify_polygons <- function(cell_id, resolution, aperture = 3L,
                             return_sf = TRUE) {
-  hexify_cell_to_sf(hex_id, resolution, aperture, return_sf)
+  hexify_cell_to_sf(cell_id, resolution, aperture, return_sf)
 }
 
 # =============================================================================

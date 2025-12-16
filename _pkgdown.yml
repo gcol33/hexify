@@ -1,0 +1,97 @@
+url: https://gcol33.github.io/hexify/
+
+template:
+  bootstrap: 5
+  bootswatch: sandstone
+  light-switch: true
+
+figures:
+  dev: svglite::svglite
+  fig.ext: svg
+  bg: "#F5F6F8"
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github, lightswitch]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/gcol33/hexify
+      aria-label: GitHub
+
+reference:
+  - title: Main Functions
+    contents:
+      - hexify
+      - hexify_assign
+  - title: Coordinate Conversions
+    contents:
+      - starts_with("hexify_lonlat")
+      - starts_with("hexify_cell")
+      - starts_with("hexify_quad")
+      - starts_with("hexify_grid")
+      - starts_with("hexify_h_index")
+      - starts_with("hexify_icosa")
+      - starts_with("hexify_index")
+      - hexify_forward
+      - hexify_forward_to_face
+      - hexify_inverse
+      - hexify_which_face
+  - title: Grid Construction
+    contents:
+      - hexify_build_icosa
+      - hexify_face_centers
+      - hexify_to_polygons
+      - hexify_to_sf
+      - hex_corners_to_sf
+  - title: Resolution & Area
+    contents:
+      - hexify_area_to_eff_res
+      - hexify_eff_res_to_area
+      - hexify_eff_res_to_resolution
+      - hexify_resolution_to_eff_res
+      - hexify_compare_indices
+      - hexify_compare_resolutions
+      - hexify_default_index_type
+      - hexify_is_valid_index_type
+      - hexify_print_resolutions
+      - hexify_projection_stats
+      - calculate_resolution_for_area
+  - title: Hierarchy Functions
+    contents:
+      - hexify_get_children
+      - hexify_get_parent
+      - hexify_get_precision
+      - hexify_get_resolution
+      - hexify_set_precision
+      - hexify_z7_canonical
+  - title: Grid Statistics
+    contents:
+      - dgearthstat
+      - starts_with("dg_closest")
+      - dgverify
+  - title: dggridR Compatibility
+    contents:
+      - starts_with("dggrid")
+      - as_dggrid
+      - from_dggrid
+  - title: Visualization
+    contents:
+      - plot_world
+      - hexify_map
+      - hexify_plot
+      - hexify_heatmap
+      - hexify_world
+  - title: Utilities
+    contents:
+      - hexify_roundtrip_test
+      - hexify_set_verbose
+      - index_to_cell_internal
+  - title: Internal
+    contents:
+      - hexify-package
+      - hexify-conversions
+      - hexify-grid
+      - hexify-stats
+      - starts_with("print.")

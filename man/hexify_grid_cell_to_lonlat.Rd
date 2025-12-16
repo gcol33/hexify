@@ -9,14 +9,14 @@ hexify_grid_cell_to_lonlat(grid, cell_id)
 \arguments{
 \item{grid}{Grid specification from hexify_grid()}
 
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 }
 \value{
 Data frame with lon_deg and lat_deg columns
 }
 \description{
 Grid-based wrapper for \code{\link{hexify_cell_to_lonlat}}. Converts
-DGGRID-compatible cell IDs (SEQNUM) back to cell center coordinates
+DGGRID-compatible cell IDs back to cell center coordinates
 using the resolution and aperture from a grid object.
 }
 \examples{

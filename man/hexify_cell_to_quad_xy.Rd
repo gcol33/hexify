@@ -7,7 +7,7 @@
 hexify_cell_to_quad_xy(cell_id, resolution, aperture = 3L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 
 \item{resolution}{Grid resolution level (0-30)}
 
@@ -20,11 +20,11 @@ Data frame with columns:
 \item{quad_y}{Continuous Y coordinate in quad space}
 }
 \description{
-Converts DGGRID-compatible cell IDs (SEQNUM) to Quad XY coordinates
+Converts DGGRID-compatible cell IDs to Quad XY coordinates
 (continuous quad space). This is the cell center in quad coordinates.
 }
 \details{
-Equivalent to dggridR's dgSEQNUM_to_Q2DD().
+Compatible with dggridR's dgSEQNUM_to_Q2DD().
 }
 \examples{
 \dontrun{

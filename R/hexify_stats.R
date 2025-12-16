@@ -10,12 +10,12 @@
 NULL
 
 #' Get grid statistics for Earth coverage
-#' 
+#'
 #' Calculates statistics about the hexagonal grid at the current resolution,
 #' including total number of cells, cell area, and cell spacing.
-#' 
+#'
 #' @param dggs Grid specification from hexify_grid()
-#' 
+#'
 #' @return List with components:
 #'   \item{area_km}{Total Earth surface area in km²}
 #'   \item{n_cells}{Total number of cells at this resolution}
@@ -23,18 +23,18 @@ NULL
 #'   \item{cell_spacing_km}{Average distance between cell centers in km}
 #'   \item{resolution}{Resolution level}
 #'   \item{aperture}{Grid aperture}
-#'   
+#'
 #' @export
 #' @examples
 #' \dontrun{
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' stats <- dgearthstat(grid)
-#' 
-#' print(sprintf("Resolution %d has %.0f cells", 
+#'
+#' print(sprintf("Resolution %d has %.0f cells",
 #'               stats$resolution, stats$n_cells))
-#' print(sprintf("Average cell area: %.2f km²", 
+#' print(sprintf("Average cell area: %.2f km²",
 #'               stats$cell_area_km2))
-#' print(sprintf("Average cell spacing: %.2f km", 
+#' print(sprintf("Average cell spacing: %.2f km",
 #'               stats$cell_spacing_km))
 #' }
 dgearthstat <- function(dggs) {
@@ -44,26 +44,23 @@ dgearthstat <- function(dggs) {
   }
 
   resolution <- get_grid_resolution(dggs)
-  
-  # Calculate number of cells at this resolution
-  # For aperture A at resolution R:
-  # - Number of cells = base_faces * A^R
-  # - Aperture 3,4: 20 base faces (icosahedron)
-  # - Aperture 7: 12 base faces (different topology)
-  base_faces <- if (dggs$aperture == 7) 12 else 20
-  n_cells <- base_faces * (dggs$aperture ^ resolution)
-  
+
+
+  # DGGRID cell count formula: N = 10 * aperture^res + 2
+  # This accounts for the 12 pentagon cells at icosahedron vertices
+  n_cells <- 10 * (dggs$aperture ^ resolution) + 2
+
   # Calculate cell area
   cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
 
   # Approximate cell spacing (distance between cell centers)
-  # For hexagons: spacing ≈ sqrt(area)
-  cell_spacing_km <- sqrt(cell_area_km2)
+  # For hexagons: spacing ≈ sqrt(2 * area / sqrt(3))
+  cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
 
   # Calculate characteristic length scale (CLS)
-  # CLS is a measure of cell size that accounts for shape
-  # For hexagons, CLS ≈ sqrt(area / (3 * sqrt(3) / 2))
-  cls_km <- sqrt(cell_area_km2 / (3 * sqrt(3) / 2))
+  # CLS is the diameter of a spherical cap with same area
+  # CLS = 2 * sqrt(area / pi)
+  cls_km <- 2 * sqrt(cell_area_km2 / pi)
 
   return(list(
     area_km = EARTH_SURFACE_KM2,
@@ -76,30 +73,7 @@ dgearthstat <- function(dggs) {
   ))
 }
 
-#' Get maximum cell index for a grid
-#' 
-#' Returns the total number of cells in the grid at the current resolution.
-#' This is useful for validating cell indices and understanding grid size.
-#' 
-#' @param dggs Grid specification from hexify_grid()
-#' 
-#' @return Number of cells (numeric)
-#' 
-#' @export
-#' @examples
-#' \dontrun{
-#' grid <- hexify_grid(area = 1000, aperture = 3)
-#' max_cells <- dgmaxcell(grid)
-#' print(sprintf("This grid has %.0f cells", max_cells))
-#' }
-dgmaxcell <- function(dggs) {
-  if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {
-    stop("dggs must be a hexify_grid object")
-  }
-  
-  stats <- dgearthstat(dggs)
-  return(stats$n_cells)
-}
+# NOTE: dgmaxcell() is defined in dggrid_compat.R for dggridR compatibility
 
 #' Find closest resolution for target cell area
 #' 

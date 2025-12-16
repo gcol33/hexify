@@ -41,8 +41,8 @@ observations <- data.frame(
   lat = runif(1000, 35, 60)
 )
 
-# Assign each observation to a grid cell
-observations$cell_id <- hexify_lonlat_to_index(
+# Assign each observation to a grid cell (vectorized)
+observations$cell_id <- hexify_lonlat_to_cell(
   observations$lon, observations$lat,
   resolution = 5, aperture = 3
 )
@@ -62,9 +62,9 @@ head(cell_counts)
 
 ```{r}
 # Add cell center coordinates
-cell_centers <- hexify_index_to_lonlat(cell_counts$cell_id, aperture = 3)
-cell_counts$center_lon <- cell_centers[, "lon"]
-cell_counts$center_lat <- cell_centers[, "lat"]
+cell_centers <- hexify_cell_to_lonlat(cell_counts$cell_id, resolution = 5, aperture = 3)
+cell_counts$center_lon <- cell_centers$lon_deg
+cell_counts$center_lat <- cell_centers$lat_deg
 
 head(cell_counts)
 ```
@@ -73,51 +73,46 @@ head(cell_counts)
 
 ### Problem
 
-You want to analyze data at multiple spatial scales without reprocessing.
+You want to analyze data at multiple spatial scales.
 
 ### Solution
 
-Use the hierarchical structure of the grid.
+Use different target areas to get different resolutions.
 
 ```{r}
-# Start with fine-resolution cells
-fine_cells <- unique(observations$cell_id)
+# Fine resolution (~100 km² cells)
+obs_fine <- hexify(observations, lon = "lon", lat = "lat", area = 100)
 
-# Get parent cells (coarser resolution)
-parent_cells <- vapply(fine_cells, function(idx) {
-  hexify_get_parent(idx, aperture = 3)
-}, character(1))
+# Coarse resolution (~10000 km² cells)
+obs_coarse <- hexify(observations, lon = "lon", lat = "lat", area = 10000)
 
-# Get resolution of each level
-fine_res <- hexify_get_resolution(fine_cells[1], aperture = 3)
-coarse_res <- hexify_get_resolution(parent_cells[1], aperture = 3)
-
-cat(sprintf("Fine resolution: %d (%d unique cells)\n",
-            fine_res, length(unique(fine_cells))))
-cat(sprintf("Coarse resolution: %d (%d unique cells)\n",
-            coarse_res, length(unique(parent_cells))))
+cat(sprintf("Fine resolution: %d unique cells (area: %.1f km²)\n",
+            length(unique(obs_fine$hex_id)), obs_fine$hex_area[1]))
+cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
+            length(unique(obs_coarse$hex_id)), obs_coarse$hex_area[1]))
 ```
 
-### Build hierarchy table
+### Aggregate at multiple scales
 
 ```{r}
-# Create parent-child relationship table
-hierarchy <- data.frame(
-  child = fine_cells,
-  parent = parent_cells
+# Species richness at fine scale
+richness_fine <- aggregate(
+  species ~ hex_id,
+  data = obs_fine,
+  FUN = function(x) length(unique(x))
 )
+names(richness_fine)[2] <- "n_species"
 
-# Aggregate counts to parent level
-parent_counts <- aggregate(
-  count ~ parent,
-  data = merge(
-    data.frame(child = observations$cell_id),
-    hierarchy
-  ) |> merge(cell_counts, by.x = "child", by.y = "cell_id"),
-  FUN = sum
+# Species richness at coarse scale
+richness_coarse <- aggregate(
+  species ~ hex_id,
+  data = obs_coarse,
+  FUN = function(x) length(unique(x))
 )
+names(richness_coarse)[2] <- "n_species"
 
-head(parent_counts)
+cat(sprintf("Fine scale: mean %.2f species per cell\n", mean(richness_fine$n_species)))
+cat(sprintf("Coarse scale: mean %.2f species per cell\n", mean(richness_coarse$n_species)))
 ```
 
 ## Workflow 3: Spatial Joins
@@ -148,17 +143,15 @@ cities <- data.frame(
           40.42, 50.08, 52.23, 47.50, 52.37)
 )
 
-# Assign both to the same grid
-resolution <- 4  # Coarse for joining disparate points
-
-stations$cell_id <- hexify_lonlat_to_index(
+# Assign both to the same grid (coarse for joining disparate points)
+stations$cell_id <- hexify_lonlat_to_cell(
   stations$lon, stations$lat,
-  resolution = resolution, aperture = 3
+  resolution = 4, aperture = 3
 )
 
-cities$cell_id <- hexify_lonlat_to_index(
+cities$cell_id <- hexify_lonlat_to_cell(
   cities$lon, cities$lat,
-  resolution = resolution, aperture = 3
+  resolution = 4, aperture = 3
 )
 
 # Join by cell_id
@@ -172,33 +165,22 @@ city_weather <- merge(
 city_weather
 ```
 
-## Workflow 4: Database Storage
+## Workflow 4: Using hexify() for Complete Workflows
 
 ### Problem
 
-You need to store cell assignments in a database and want compact integer IDs.
+You want a simple one-function approach that handles everything.
 
 ### Solution
 
-Use cell IDs (integer SEQNUM) instead of string indices.
+Use `hexify()` which returns all cell metadata in one call.
 
 ```{r}
-# Convert to integer cell ID (SEQNUM)
-observations$cell_id_int <- hexify_lonlat_to_cell(
-  observations$lon, observations$lat,
-  resolution = 5, aperture = 3
-)
+# Simple workflow with hexify()
+result <- hexify(observations, lon = "lon", lat = "lat", area = 1000)
 
-# Compare storage requirements
-cat("Index string length:", nchar(observations$cell_id[1]), "characters\n")
-cat("Cell ID:", observations$cell_id_int[1], "(integer)\n")
-
-# Round-trip verification
-coords <- hexify_cell_to_lonlat(
-  observations$cell_id_int[1:5],
-  resolution = 5, aperture = 3
-)
-print(coords)
+# Result includes all cell information
+head(result[, c("species", "lon", "lat", "hex_id", "hex_cen_lon", "hex_cen_lat", "hex_area")])
 ```
 
 ## Workflow 5: Choosing Resolution
@@ -248,24 +230,21 @@ You want to create sf polygons for visualization.
 
 ### Solution
 
-```{r eval=FALSE}
+```{r eval=requireNamespace("sf", quietly = TRUE)}
 library(sf)
 
-# Get unique cells
-unique_cells <- unique(observations$cell_id)
+# Hexify some data
+result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
 
-# Get cell boundaries (if implemented)
-# boundaries <- hexify_cell_to_boundary(grid, unique_cells)
+# Convert to sf points (fast)
+sf_points <- hexify_to_sf(result, geometry = "point")
 
-# Alternative: create point layer with cell centers
-cell_sf <- st_as_sf(
-  cell_counts,
-  coords = c("center_lon", "center_lat"),
-  crs = 4326
-)
+# Convert to sf polygons (for choropleth maps)
+sf_polys <- hexify_to_sf(result, geometry = "polygon")
 
-# Plot
-plot(cell_sf["count"], pch = 16, main = "Observation counts per cell")
+# Plot polygons
+plot(st_geometry(sf_polys), col = "lightblue", border = "darkblue",
+     main = "European Cities - Hexagonal Grid")
 ```
 
 ## Best Practices
@@ -278,14 +257,14 @@ plot(cell_sf["count"], pch = 16, main = "Observation counts per cell")
 
 ### 2. Store indices efficiently
 
-- Use string indices for interoperability
-- Use seqnum for database storage
-- Store resolution alongside indices
+- Use `hex_id` (integer) for database storage
+- Store resolution alongside cell IDs for later retrieval
 
-### 3. Use hierarchical structure
+### 3. Use hexify() for simple workflows
 
-- Pre-compute parent indices for multi-scale analysis
-- Navigate hierarchy rather than re-computing
+- Returns all metadata in one call
+- Handles sf objects automatically
+- Auto-calculates resolution from target area
 
 ### 4. Handle edge cases
 
@@ -294,20 +273,13 @@ plot(cell_sf["count"], pch = 16, main = "Observation counts per cell")
 - Date line (lon = ±180°) works correctly
 
 ```{r}
-# Example: handling NA values
+# Example: handling NA values with hexify()
 data_with_na <- data.frame(
-  lon = c(16.37, NA, 2.35),
-  lat = c(48.21, 48.86, NA)
+  lon = c(16.37, NA, 2.35, 13.40),
+  lat = c(48.21, 48.86, NA, 52.52)
 )
 
-# Filter before processing
-valid_rows <- complete.cases(data_with_na[, c("lon", "lat")])
-data_with_na$cell_id <- NA
-data_with_na$cell_id[valid_rows] <- hexify_lonlat_to_index(
-  data_with_na$lon[valid_rows],
-  data_with_na$lat[valid_rows],
-  resolution = 5, aperture = 3
-)
-
-print(data_with_na)
+# hexify handles NAs gracefully with a warning
+result <- hexify(data_with_na, lon = "lon", lat = "lat", area = 1000)
+print(result[, c("lon", "lat", "hex_id")])
 ```

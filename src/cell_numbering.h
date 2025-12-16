@@ -1,14 +1,18 @@
 // cell_numbering.h
 // Cell ID Assignment for ISEA Hexagonal Grids
 //
-// Converts between (face, i, j) grid coordinates and sequential cell IDs.
+// Converts between (quad, i, j) grid coordinates and sequential cell IDs.
 // Cell IDs provide a compact 1D representation of cells for storage/indexing.
 //
-// Formula: Total cells = 10 * aperture^resolution + 2
-// The "+2" accounts for the two pentagon cells at poles.
+// The cell ID scheme is a simple bijective mapping:
+//   cell_id = quad * cells_per_quad + local_index + 1
 //
-// References:
-// - Sahr et al. (2003) "Geodesic Discrete Global Grid Systems"
+// This is a standard approach for discrete global grids documented in:
+//   Sahr, K., White, D., & Kimerling, A.J. (2003). "Geodesic Discrete
+//   Global Grid Systems." Cartography and Geographic Information Science.
+//
+// Cell count formula: N = 10 * aperture^resolution + 2
+// The "+2" accounts for the two pentagon cells at poles.
 //
 // Copyright (c) 2024-2025 hexify authors. MIT License.
 
@@ -20,33 +24,73 @@
 namespace hexify {
 
 // ============================================================================
-// APERTURE 3
+// Unified API
 // ============================================================================
 
-// Convert (face, i, j, resolution) → cell ID
-uint64_t cell_to_seqnum_ap3(int face, long long i, long long j, int resolution);
+/**
+ * Convert (quad, i, j) coordinates to cell ID.
+ *
+ * @param quad       Quad index (0-11)
+ * @param i          Column index within quad
+ * @param j          Row index within quad
+ * @param aperture   Grid aperture (3, 4, or 7)
+ * @param resolution Grid resolution level
+ * @return           1-based cell ID
+ */
+uint64_t quad_ij_to_cell_id(int quad, long long i, long long j,
+                            int aperture, int resolution);
 
-// Convert cell ID → (face, i, j) at given resolution
-void seqnum_to_cell_ap3(uint64_t cell_id, int resolution,
-                        int& face, long long& i, long long& j);
+/**
+ * Convert cell ID to (quad, i, j) coordinates.
+ *
+ * @param cell_id    1-based cell ID
+ * @param aperture   Grid aperture (3, 4, or 7)
+ * @param resolution Grid resolution level
+ * @param[out] quad  Quad index (0-11)
+ * @param[out] i     Column index within quad
+ * @param[out] j     Row index within quad
+ */
+void cell_id_to_quad_ij(uint64_t cell_id, int aperture, int resolution,
+                        int& quad, long long& i, long long& j);
 
 // ============================================================================
-// APERTURE 4
+// Aperture-Specific Functions (for performance-critical code paths)
 // ============================================================================
 
-uint64_t cell_to_seqnum_ap4(int face, long long i, long long j, int resolution);
+// Aperture 3
+uint64_t quad_ij_to_cell_id_ap3(int quad, long long i, long long j, int resolution);
+void cell_id_to_quad_ij_ap3(uint64_t cell_id, int resolution,
+                            int& quad, long long& i, long long& j);
 
-void seqnum_to_cell_ap4(uint64_t cell_id, int resolution,
-                        int& face, long long& i, long long& j);
+// Aperture 4
+uint64_t quad_ij_to_cell_id_ap4(int quad, long long i, long long j, int resolution);
+void cell_id_to_quad_ij_ap4(uint64_t cell_id, int resolution,
+                            int& quad, long long& i, long long& j);
+
+// Aperture 7
+uint64_t quad_ij_to_cell_id_ap7(int quad, long long i, long long j, int resolution);
+void cell_id_to_quad_ij_ap7(uint64_t cell_id, int resolution,
+                            int& quad, long long& i, long long& j);
 
 // ============================================================================
-// APERTURE 7
+// Utility Functions
 // ============================================================================
 
-uint64_t cell_to_seqnum_ap7(int face, long long i, long long j, int resolution);
+/**
+ * Get total number of cells at given resolution and aperture.
+ * Formula: N = 10 * aperture^resolution + 2
+ */
+uint64_t total_cell_count(int aperture, int resolution);
 
-void seqnum_to_cell_ap7(uint64_t cell_id, int resolution,
-                        int& face, long long& i, long long& j);
+/**
+ * Get maximum valid cell ID at given resolution and aperture.
+ */
+uint64_t max_cell_id(int aperture, int resolution);
+
+/**
+ * Validate that a cell ID is within valid range.
+ */
+bool is_valid_cell_id(uint64_t cell_id, int aperture, int resolution);
 
 } // namespace hexify
 

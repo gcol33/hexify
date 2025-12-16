@@ -24,7 +24,7 @@ of hexify_lonlat_to_h_index().
 \details{
 Most users should use \code{\link{hexify_cell_to_lonlat}} or
 \code{\link{hexify_grid_cell_to_lonlat}} which work with DGGRID-compatible
-integer cell IDs (SEQNUM).
+integer cell IDs.
 }
 \examples{
 \dontrun{

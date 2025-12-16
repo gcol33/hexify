@@ -45,8 +45,8 @@ result
 ## Installation
 
 ```r
-# Install from GitHub
-remotes::install_github("gcol33/hexify")
+# install.packages("pak")
+pak::pak("gcol33/hexify")
 ```
 
 ## Usage

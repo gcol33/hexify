@@ -56,8 +56,8 @@ test_that("dgearthstat returns correct values for aperture 3", {
   # Check aperture matches
   expect_equal(stats$aperture, 3)
 
-  # n_cells should equal 20 * 3^resolution for aperture 3
-  expected_cells <- 20 * (3 ^ stats$resolution)
+  # n_cells should equal 10 * 3^resolution for aperture 3
+  expected_cells <- 10 * (3 ^ stats$resolution) + 2
   expect_equal(stats$n_cells, expected_cells)
 
   # Cell area = Earth surface / n_cells
@@ -84,16 +84,19 @@ test_that("dgearthstat validates input", {
 # MAX CELL
 # =============================================================================
 
-test_that("dgmaxcell returns total number of cells", {
+test_that("max_cell_id returns correct number of cells", {
   grid <- hexify_grid(area = 10000, aperture = 3)
-  max_cells <- dgmaxcell(grid)
+  max_cells <- max_cell_id(grid$resolution, grid$aperture)
 
   stats <- dgearthstat(grid)
   expect_equal(max_cells, stats$n_cells)
 })
 
-test_that("dgmaxcell validates input", {
-  expect_error(dgmaxcell("not a grid"), "hexify_grid")
+test_that("max_cell_id handles resolution 0", {
+  # Resolution 0 returns 20 (20 icosahedron faces)
+  expect_equal(max_cell_id(0, 3), 20)
+  expect_equal(max_cell_id(0, 4), 20)
+  expect_equal(max_cell_id(0, 7), 20)
 })
 
 # =============================================================================
@@ -192,7 +195,7 @@ test_that("dgearthstat handles aperture 7 differently", {
   stats <- dgearthstat(grid)
 
   # Aperture 7 uses 12 base faces
-  expected_cells <- 12 * (7 ^ stats$resolution)
+  expected_cells <- 10 * (7 ^ stats$resolution) + 2
   expect_equal(stats$n_cells, expected_cells)
 })
 
@@ -240,9 +243,9 @@ test_that("hexify_compare_resolutions works for different apertures", {
 })
 
 test_that("hexify_print_resolutions formats large cell counts", {
-  # Resolution 10 should have cells in millions
+  # Resolution 11+ should have cells in millions
   expect_output(
-    hexify_print_resolutions(aperture = 3, res_range = 8:10),
+    hexify_print_resolutions(aperture = 3, res_range = 11:12),
     "M"  # Million suffix
   )
 })

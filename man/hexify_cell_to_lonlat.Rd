@@ -2,12 +2,12 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_cell_to_lonlat}
 \alias{hexify_cell_to_lonlat}
-\title{Convert cell ID (SEQNUM) to longitude/latitude}
+\title{Convert cell ID to longitude/latitude}
 \usage{
 hexify_cell_to_lonlat(cell_id, resolution, aperture)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 
 \item{resolution}{Grid resolution (integer >= 0)}
 

@@ -35,7 +35,7 @@ before switching to aperture-3 (default NULL, auto-calculated as resolution/2)}
 }
 \value{
 The input data with additional columns:
-\item{hex_id}{Stable DGGS cell identifier (integer SEQNUM)}
+\item{hex_id}{Stable DGGS cell identifier (integer cell ID)}
 \item{hex_cen_lon}{Longitude of cell center in degrees}
 \item{hex_cen_lat}{Latitude of cell center in degrees}
 \item{hex_area}{Actual cell area in km² (based on matched resolution)}

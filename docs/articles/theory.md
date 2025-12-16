@@ -1,0 +1,236 @@
+# Mathematical Foundations
+
+## Overview
+
+hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete
+global grid system. This vignette explains the mathematical foundations.
+
+## The Icosahedral Projection
+
+### Why an Icosahedron?
+
+A regular icosahedron has 20 triangular faces, each with identical
+geometry. This makes it ideal for:
+
+1.  **Equal-area partitioning**: Each face covers approximately 1/20 of
+    Earth’s surface
+2.  **Low distortion**: Each triangular face can be projected with
+    minimal distortion
+3.  **Hierarchical subdivision**: Triangular faces subdivide naturally
+
+### The Snyder Projection
+
+The Snyder Equal Area projection maps points on the sphere to the
+icosahedron:
+
+1.  **Determine the face**: Find which of 20 icosahedral faces contains
+    the point
+2.  **Project to face plane**: Use the Snyder formulas to compute (x, y)
+    on the face
+3.  **Normalize coordinates**: Convert to (tx, ty) in range
+    approximately \[0, 1\]
+
+``` r
+
+library(hexify)
+
+# Project a point
+result <- hexify_forward(lon = 16.37, lat = 48.21)
+cat(sprintf("Face: %d, tx: %.4f, ty: %.4f\n",
+            result["face"], result["tx"], result["ty"]))
+#> Face: 2, tx: NA, ty: NA
+```
+
+### Icosahedron Orientation
+
+The default ISEA3H orientation places vertex 0 at: - Longitude: 11.25° -
+Latitude: 58.28252559°
+
+``` r
+
+# Get all face centers
+centers <- hexify_face_centers()
+head(centers, 5)
+#>          lon       lat
+#> 1 -1.3744468 1.2059325
+#> 2 -0.5890486 0.6154797
+#> 3  0.1963495 0.3648638
+#> 4  0.9817477 0.6154797
+#> 5  1.7671459 1.2059325
+```
+
+## Hexagonal Grid Generation
+
+### From Triangles to Hexagons
+
+Each triangular face is subdivided into hexagonal cells. The subdivision
+process:
+
+1.  Overlay a hexagonal lattice on each face
+2.  Assign each point to the nearest hexagon center
+3.  Index cells hierarchically
+
+### Aperture and Resolution
+
+**Aperture** determines how many child cells fit in one parent cell:
+
+- **Aperture 3**: Each parent contains 3 children (Class I/II
+  alternating)
+- **Aperture 4**: Each parent contains 4 children (Class I only)
+- **Aperture 7**: Each parent contains 7 children (Class III)
+
+**Resolution** is the number of subdivision levels. Total cells ≈ 20 ×
+aperture^resolution
+
+``` r
+
+# Cell count growth
+for (res in 0:5) {
+  cells_ap3 <- 20 * 3^res
+  cells_ap4 <- 20 * 4^res
+  cells_ap7 <- 20 * 7^res
+  cat(sprintf("Res %d: ap3=%d, ap4=%d, ap7=%d\n",
+              res, cells_ap3, cells_ap4, cells_ap7))
+}
+#> Res 0: ap3=20, ap4=20, ap7=20
+#> Res 1: ap3=60, ap4=80, ap7=140
+#> Res 2: ap3=180, ap4=320, ap7=980
+#> Res 3: ap3=540, ap4=1280, ap7=6860
+#> Res 4: ap3=1620, ap4=5120, ap7=48020
+#> Res 5: ap3=4860, ap4=20480, ap7=336140
+```
+
+### Class I vs Class II
+
+For aperture 3, the hexagon orientation alternates:
+
+- **Class I** (odd resolution): Hexagons have a flat top
+- **Class II** (even resolution): Hexagons are rotated 30°
+
+This affects the coordinate system but not the cell assignment.
+
+## Space-Filling Curves
+
+### Why Space-Filling Curves?
+
+Space-filling curves provide:
+
+1.  **Compact representation**: Cell identity as a single integer/string
+2.  **Hierarchical encoding**: Parent-child relationships from index
+    structure
+3.  **Spatial locality**: Nearby cells often have similar indices
+
+### Z3 Encoding (Aperture 3)
+
+For aperture 3, the Z3 curve encodes each resolution level as a base-3
+digit:
+
+    Index = FF D₁D₂...Dₙ
+    where:
+      FF = face number (00-19)
+      Dᵢ = digit 0, 1, or 2 (base 3)
+
+``` r
+
+# Z3 index structure
+idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
+cat("Index:", idx, "\n")
+#> Index: 0211101
+cat("Face:", substr(idx, 1, 2), "\n")
+#> Face: 02
+cat("Path:", substr(idx, 3, nchar(idx)), "\n")
+#> Path: 11101
+```
+
+### Z-Order Encoding (Aperture 4)
+
+For aperture 4, the Morton (Z-order) curve interleaves i and j
+coordinates:
+
+``` r
+
+# Z-order index
+idx4 <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 4)
+cat("Z-order index:", idx4, "\n")
+#> Z-order index: 0233232
+```
+
+### Z7 Encoding (Aperture 7)
+
+Aperture 7 uses a specialized encoding that handles the 19.1° rotation:
+
+``` r
+
+# Z7 index
+idx7 <- hexify_lonlat_to_index(16.37, 48.21, resolution = 3, aperture = 7)
+cat("Z7 index:", idx7, "\n")
+#> Z7 index: 02153
+```
+
+## Inverse Projection
+
+Converting cell coordinates back to lon/lat requires:
+
+1.  **Decode index**: Extract face and (i, j) coordinates
+2.  **Compute cell center**: Find center point in face coordinates
+3.  **Inverse Snyder**: Convert face (x, y) to geographic (lon, lat)
+
+``` r
+
+# Round-trip test
+original_lon <- 16.37
+original_lat <- 48.21
+
+idx <- hexify_lonlat_to_index(original_lon, original_lat,
+                               resolution = 10, aperture = 3)
+recovered <- hexify_index_to_lonlat(idx, aperture = 3)
+
+cat(sprintf("Original:  (%.4f, %.4f)\n", original_lon, original_lat))
+#> Original:  (16.3700, 48.2100)
+cat(sprintf("Recovered: (%.4f, %.4f)\n", recovered["lon"], recovered["lat"]))
+#> Recovered: (16.4204, 48.2877)
+cat(sprintf("Error: %.6f degrees\n",
+            sqrt((recovered["lon"] - original_lon)^2 +
+                 (recovered["lat"] - original_lat)^2)))
+#> Error: 0.092576 degrees
+```
+
+## Cell Properties
+
+### Equal Area
+
+A key property of ISEA grids: all cells have approximately equal area.
+
+``` r
+
+# Approximate cell area calculation
+earth_area_km2 <- 510072000
+resolution <- 10
+aperture <- 3
+
+total_cells <- 20 * aperture^resolution
+cell_area <- earth_area_km2 / total_cells
+
+cat(sprintf("Resolution %d, Aperture %d:\n", resolution, aperture))
+#> Resolution 10, Aperture 3:
+cat(sprintf("  Total cells: %.0f\n", total_cells))
+#>   Total cells: 1180980
+cat(sprintf("  Cell area: %.2f km²\n", cell_area))
+#>   Cell area: 431.91 km²
+```
+
+### Cell Shape
+
+Cells are approximately hexagonal, but:
+
+- Cells at face edges may be irregular
+- Cell shape varies slightly with latitude due to projection
+- Pentagon cells exist at icosahedron vertices (12 total)
+
+## References
+
+- Sahr, K., White, D., & Kimerling, A. J. (2003). Geodesic discrete
+  global grid systems.
+- Snyder, J. P. (1992). An equal-area map projection for polyhedral
+  globes.
+- DGGRID documentation: <https://github.com/sahrk/DGGRID>

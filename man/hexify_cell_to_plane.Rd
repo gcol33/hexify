@@ -7,7 +7,7 @@
 hexify_cell_to_plane(cell_id, resolution, aperture = 3L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based SEQNUM values)}
+\item{cell_id}{Numeric vector of cell IDs (1-based)}
 
 \item{resolution}{Grid resolution level (0-30)}
 
@@ -19,11 +19,11 @@ Data frame with columns:
 \item{plane_y}{Y coordinate in PLANE space (range ~0 to 1.73)}
 }
 \description{
-Converts DGGRID-compatible cell IDs (SEQNUM) directly to PLANE coordinates.
+Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 Returns the cell center in the unfolded icosahedron layout.
 }
 \details{
-Equivalent to dggridR's dgSEQNUM_to_PLANE().
+Compatible with dggridR's dgSEQNUM_to_PLANE().
 }
 \examples{
 \dontrun{

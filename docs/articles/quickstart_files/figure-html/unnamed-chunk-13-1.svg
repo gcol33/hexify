@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00'>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+      fill: #3E3F3A;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<defs>
+  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='360.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
+</g>
+<defs>
+  <clipPath id='cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng=='>
+    <rect x='59.04' y='59.04' width='414.72' height='227.52' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
+<rect class='legend-bg' x='59.04' y='59.04' width='414.72' height='227.52' style='stroke-width: 0.75; stroke: #F5F6F8; fill: #F5F6F8;' />
+</g>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
+<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='228.72px' lengthAdjust='spacingAndGlyphs'>European Cities - Hexagonal Grid</text>
+</g>
+<g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
+<path d='M 382.55 133.78 L 375.16 130.90 L 367.33 135.66 L 366.96 143.20 L 374.29 145.98 L 382.05 141.33 L 382.55 133.78 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 230.94 131.18 L 222.90 126.96 L 215.71 130.39 L 216.60 137.95 L 224.55 142.08 L 231.70 138.73 L 230.94 131.18 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 163.28 266.49 L 156.20 263.05 L 150.25 267.20 L 151.39 274.74 L 158.40 278.13 L 164.34 274.03 L 163.28 266.49 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 354.65 69.90 L 346.56 67.47 L 338.26 72.76 L 338.11 80.35 L 346.10 82.65 L 354.34 77.50 L 354.65 69.90 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 342.46 240.33 L 335.67 238.01 L 328.80 243.27 L 328.75 250.70 L 335.49 252.88 L 342.33 247.77 L 342.46 240.33 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+</g>
+</g>
+</svg>

@@ -20,3 +20,6 @@ refactor_mit_safe.md
 # Development artifacts
 ref_polygons*.rds
 Rplots.pdf
+nul
+/doc/
+/Meta/

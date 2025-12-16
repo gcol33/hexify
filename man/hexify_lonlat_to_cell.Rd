@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_lonlat_to_cell}
 \alias{hexify_lonlat_to_cell}
-\title{Convert longitude/latitude to cell ID (SEQNUM)}
+\title{Convert longitude/latitude to cell ID}
 \usage{
 hexify_lonlat_to_cell(lon, lat, resolution, aperture)
 }
@@ -16,14 +16,14 @@ hexify_lonlat_to_cell(lon, lat, resolution, aperture)
 \item{aperture}{Grid aperture (3, 4, or 7)}
 }
 \value{
-Numeric vector of cell IDs (1-based SEQNUM values)
+Numeric vector of cell IDs (1-based)
 }
 \description{
 Converts geographic coordinates to DGGRID-compatible cell identifiers.
 This is the primary function for geocoding points to grid cells.
 }
 \details{
-Returns DGGRID-compatible sequential numbers (SEQNUM). The cell ID
+Returns DGGRID-compatible cell identifiers. The cell ID
 uniquely identifies each hexagonal cell in the global grid.
 
 For a grid-object interface, use \code{\link{hexify_grid_to_cell}}.

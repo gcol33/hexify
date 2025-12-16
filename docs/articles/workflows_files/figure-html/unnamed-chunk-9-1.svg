@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00'>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+      fill: #3E3F3A;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<defs>
+  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='360.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
+</g>
+<defs>
+  <clipPath id='cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng=='>
+    <rect x='59.04' y='59.04' width='414.72' height='227.52' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
+<rect class='legend-bg' x='59.04' y='59.04' width='414.72' height='227.52' style='stroke-width: 0.75; stroke: #F5F6F8; fill: #F5F6F8;' />
+</g>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
+<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='228.72px' lengthAdjust='spacingAndGlyphs'>European Cities - Hexagonal Grid</text>
+</g>
+<g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
+<path d='M 182.74 98.04 L 181.65 90.73 L 173.18 86.81 L 165.93 90.25 L 167.21 97.55 L 175.55 101.42 L 182.74 98.04 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 226.75 71.86 L 218.32 67.47 L 210.60 70.53 L 211.45 77.83 L 219.77 82.14 L 227.36 79.24 L 226.75 71.86 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 136.79 266.83 L 129.95 263.50 L 124.19 267.52 L 125.30 274.84 L 132.08 278.13 L 137.81 274.15 L 136.79 266.83 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 202.22 135.52 L 194.45 131.43 L 187.49 134.76 L 188.35 142.09 L 196.04 146.10 L 202.95 142.85 L 202.22 135.52 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 321.84 76.05 L 314.02 73.69 L 305.99 78.82 L 305.85 86.19 L 313.57 88.43 L 321.54 83.42 L 321.84 76.05 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 328.19 107.96 L 320.70 105.49 L 312.95 110.47 L 312.75 117.81 L 320.17 120.16 L 327.86 115.31 L 328.19 107.96 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 348.82 138.05 L 341.67 135.25 L 334.11 139.87 L 333.75 147.19 L 340.84 149.88 L 348.34 145.37 L 348.82 138.05 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 310.06 241.45 L 303.49 239.19 L 296.84 244.30 L 296.80 251.51 L 303.32 253.63 L 309.93 248.67 L 310.06 241.45 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 384.46 146.10 L 377.55 142.85 L 369.92 147.01 L 369.28 154.34 L 376.14 157.51 L 383.70 153.43 L 384.46 146.10 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+<path d='M 401.21 76.15 L 392.60 80.11 L 391.53 87.41 L 398.86 90.73 L 407.33 86.81 L 408.61 79.54 L 401.21 76.15 Z' style='fill-rule: evenodd; fill: #ADD8E6; stroke-width: 0.75; stroke: #00008B;' />
+</g>
+</g>
+</svg>

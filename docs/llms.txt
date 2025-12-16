@@ -1,0 +1,385 @@
+# hexify
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
+**Fast Hexagonal Grid Assignment for Geographic Data**
+
+`hexify` assigns geographic points to equal-area hexagonal cells using
+the ISEA discrete global grid system. It produces output identical to
+`dggridR` but with a simpler, modern interface. Supports apertures 3, 4,
+7, and mixed 4/3.
+
+## Quick Start
+
+``` r
+
+library(hexify)
+
+# Any data.frame with coordinates
+df <- data.frame(
+  site = c("Vienna", "Paris", "Madrid"),
+  lon = c(16.37, 2.35, -3.70),
+  lat = c(48.21, 48.86, 40.42)
+)
+
+# Assign to ~1000 km² hexagonal cells
+result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
+result
+#>     site   lon   lat hex_id hex_cen_lon hex_cen_lat hex_area hex_diag
+#> 1 Vienna 16.37 48.21  12847    16.42035    48.26151   863.94    44.67
+#> 2  Paris  2.35 48.86  12532     2.31894    48.89826   863.94    44.67
+#> 3 Madrid -3.70 40.42  22178    -3.71892    40.38721   863.94    44.67
+```
+
+## Why hexify?
+
+- **Simple API**: One function
+  ([`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md))
+  for the common use case
+- **dggridR compatible**: Produces identical `hex_id` (SEQNUM) values
+- **Modern R**: Works with data.frames and sf objects
+- **Fast**: C++ implementation of ISEA Snyder projection
+
+## Features
+
+- **Point-to-cell assignment**: Given lon/lat, return cell ID and center
+- **Polygon generation**: Native C++ polygon generation (faster than
+  dggridR)
+- **Area or diagonal control**: Specify target cell area (km²) or
+  diagonal (km)
+- **sf integration**: Handles any CRS, auto-transforms to WGS84
+- **Multiple apertures**: ISEA3H, ISEA4H, ISEA7H, and ISEA43H grids
+  (apertures 3, 4, 7, and mixed 4/3)
+
+## Installation
+
+``` r
+
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
+## Usage
+
+### Basic: Data Frame
+
+``` r
+
+library(hexify)
+
+df <- data.frame(
+  lon = c(0, 10, 20),
+  lat = c(0, 45, -30)
+)
+
+# By area (km²)
+result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
+
+# By diagonal (long diagonal in km)
+result <- hexify(df, lon = "lon", lat = "lat", diagonal = 50)
+
+# Different apertures
+result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
+result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+
+# Mixed aperture (ISEA43H)
+result_mixed <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
+```
+
+### With sf Objects
+
+``` r
+
+library(sf)
+
+# Any CRS works - auto-transforms to WGS84
+pts <- st_as_sf(df, coords = c("lon", "lat"), crs = 4326)
+result <- hexify(pts, area = 1000)
+
+# sf class preserved
+class(result)
+#> [1] "sf"         "data.frame"
+```
+
+### Output Columns
+
+[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) adds
+five columns to your data:
+
+| Column        | Type    | Description                     |
+|---------------|---------|---------------------------------|
+| `hex_id`      | integer | Unique cell identifier (SEQNUM) |
+| `hex_cen_lon` | numeric | Cell center longitude           |
+| `hex_cen_lat` | numeric | Cell center latitude            |
+| `hex_area`    | numeric | Actual cell area in km²         |
+| `hex_diag`    | numeric | Actual cell diagonal in km      |
+
+## dggridR Compatibility
+
+hexify produces identical cell assignments to dggridR:
+
+``` r
+
+library(dggridR)
+library(hexify)
+
+# Same result from both packages
+dggs <- dggridR::dgconstruct(res = 10, aperture = 3)
+ref <- dggridR::dgGEO_to_SEQNUM(dggs, lon, lat)
+
+result <- hexify(df, lon = "lon", lat = "lat", area = 863)  # res 10
+all(result$hex_id == ref$seqnum)
+#> TRUE
+```
+
+## Aperture Options
+
+| Aperture | Grid Type | Cell Count Formula | Use Case |
+|----|----|----|----|
+| 3 | ISEA3H | 10 × 3^res + 2 | Default, compatible with dggridR |
+| 4 | ISEA4H | 10 × 4^res + 2 | Faster cell count growth |
+| 7 | ISEA7H | 10 × 7^res + 2 | Densest grid per resolution |
+| “4/3” | ISEA43H | 10 × 4^m × 3^(res-m) + 2 | Mixed aperture (m = mixed_aperture_level) |
+
+## Resolution Reference (Aperture 3)
+
+| Resolution | Cells     | Area (km²) | Diagonal (km) |
+|------------|-----------|------------|---------------|
+| 5          | 2,432     | 209,903    | 695           |
+| 6          | 7,292     | 69,968     | 401           |
+| 7          | 21,872    | 23,323     | 232           |
+| 8          | 65,612    | 7,774      | 134           |
+| 9          | 196,832   | 2,591      | 77            |
+| 10         | 590,492   | 864        | 45            |
+| 11         | 1,771,472 | 288        | 26            |
+| 12         | 5,314,412 | 96         | 15            |
+
+### Polygon Generation
+
+Generate hexagon polygons for visualization:
+
+``` r
+
+library(sf)
+
+# After running hexify(), get polygons for unique cells
+result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
+
+# Generate sf polygons
+polys <- hex_polygons(result$hex_id, resolution = 10, aperture = 3)
+plot(st_geometry(polys), col = "lightblue", border = "blue")
+
+# Or generate a grid over a region
+grid <- hex_grid_rect(
+  minlon = -10, maxlon = 20,
+  minlat = 35, maxlat = 60,
+  area = 5000
+)
+```
+
+## See Also
+
+- [dggridR](https://github.com/r-barnes/dggridR) - Full DGGRID
+  functionality
+- [DGGRID](https://github.com/sahrk/DGGRID) - Original C++
+  implementation
+
+## License
+
+MIT
+
+# Package index
+
+## Main Functions
+
+- [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) :
+  Assign hexagonal DGGS cell IDs to geographic points
+- [`hexify_assign()`](https://gcol33.github.io/hexify/reference/hexify_assign.md)
+  : Assign hex cells (ISEA3H, aperture 3) for lon/lat
+
+## Coordinate Conversions
+
+- [`hexify_lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_cell.md)
+  : Convert longitude/latitude to cell ID
+- [`hexify_lonlat_to_index()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_index.md)
+  : Convert longitude/latitude to index string
+- [`hexify_lonlat_to_plane()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_plane.md)
+  : Convert longitude/latitude to PLANE coordinates
+- [`hexify_lonlat_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_quad_ij.md)
+  : Convert longitude/latitude to Quad IJ coordinates
+- [`hexify_cell_id_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_cell_id_to_quad_ij.md)
+  : Get cell info from cell ID
+- [`hexify_cell_to_icosa_tri()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_icosa_tri.md)
+  : Convert Cell ID to Icosa Triangle coordinates
+- [`hexify_cell_to_index()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_index.md)
+  : Convert cell coordinates to index string
+- [`hexify_cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_lonlat.md)
+  : Convert cell ID to longitude/latitude
+- [`hexify_cell_to_plane()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_plane.md)
+  : Convert Cell ID to PLANE coordinates
+- [`hexify_cell_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_quad_ij.md)
+  : Convert Cell ID to Quad IJ coordinates
+- [`hexify_cell_to_quad_xy()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_quad_xy.md)
+  : Convert Cell ID to Quad XY coordinates
+- [`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md)
+  [`hexify_polygons()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md)
+  : Convert cell IDs to sf polygons
+- [`hexify_quad_ij_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_cell.md)
+  : Convert Quad IJ coordinates to cell ID
+- [`hexify_quad_ij_to_icosa_tri()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_icosa_tri.md)
+  : Convert Quad IJ to Icosa Triangle coordinates
+- [`hexify_quad_ij_to_xy()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_xy.md)
+  : Convert Quad IJ to Quad XY (continuous coordinates)
+- [`hexify_quad_xy_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_quad_xy_to_cell.md)
+  : Convert Quad XY coordinates to Cell ID
+- [`hexify_quad_xy_to_icosa_tri()`](https://gcol33.github.io/hexify/reference/hexify_quad_xy_to_icosa_tri.md)
+  : Convert Quad XY to Icosa Triangle coordinates
+- [`hexify_grid_cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.md)
+  : Convert cell ID to longitude/latitude using a grid object
+- [`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md)
+  : Generate a global grid of hexagon polygons
+- [`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md)
+  : Generate a rectangular grid of hexagon polygons
+- [`hexify_grid_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
+  : Convert longitude/latitude to cell ID using a grid object
+- [`hexify_icosa_tri_to_plane()`](https://gcol33.github.io/hexify/reference/hexify_icosa_tri_to_plane.md)
+  : Convert Icosa Triangle coordinates to PLANE coordinates
+- [`hexify_icosa_tri_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_icosa_tri_to_quad_ij.md)
+  : Convert Icosa Triangle to Quad IJ coordinates
+- [`hexify_icosa_tri_to_quad_xy()`](https://gcol33.github.io/hexify/reference/hexify_icosa_tri_to_quad_xy.md)
+  : Convert Icosa Triangle to Quad XY coordinates
+- [`hexify_index_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_index_to_cell.md)
+  : Convert index string to cell coordinates
+- [`hexify_index_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_index_to_lonlat.md)
+  : Convert index string to longitude/latitude
+- [`hexify_forward()`](https://gcol33.github.io/hexify/reference/hexify_forward.md)
+  : Forward Snyder projection
+- [`hexify_forward_to_face()`](https://gcol33.github.io/hexify/reference/hexify_forward_to_face.md)
+  : Forward projection to specific face
+- [`hexify_inverse()`](https://gcol33.github.io/hexify/reference/hexify_inverse.md)
+  : Inverse Snyder projection
+- [`hexify_which_face()`](https://gcol33.github.io/hexify/reference/hexify_which_face.md)
+  : Determine which face contains a point
+
+## Grid Construction
+
+- [`hexify_build_icosa()`](https://gcol33.github.io/hexify/reference/hexify_build_icosa.md)
+  : Initialize icosahedron geometry
+- [`hexify_face_centers()`](https://gcol33.github.io/hexify/reference/hexify_face_centers.md)
+  : Get icosahedron face centers
+- [`hexify_to_polygons()`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+  : Generate polygons directly from hexify result
+- [`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+  : Convert hexify result to sf object
+- [`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md)
+  : Build an sf POLYGON from six (lon, lat) corner pairs
+
+## Resolution & Area
+
+- [`hexify_area_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_area_to_eff_res.md)
+  : Convert area to effective resolution
+- [`hexify_eff_res_to_area()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_area.md)
+  : Convert effective resolution to area
+- [`hexify_eff_res_to_resolution()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_resolution.md)
+  : Convert effective resolution to index resolution
+- [`hexify_resolution_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_resolution_to_eff_res.md)
+  : Convert index resolution to effective resolution
+- [`hexify_compare_indices()`](https://gcol33.github.io/hexify/reference/hexify_compare_indices.md)
+  : Compare two indices
+- [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md)
+  : Compare grid resolutions
+- [`hexify_default_index_type()`](https://gcol33.github.io/hexify/reference/hexify_default_index_type.md)
+  : Get default index type for aperture
+- [`hexify_is_valid_index_type()`](https://gcol33.github.io/hexify/reference/hexify_is_valid_index_type.md)
+  : Check if index type is valid for aperture
+- [`hexify_print_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_print_resolutions.md)
+  : Print resolution comparison table
+- [`hexify_projection_stats()`](https://gcol33.github.io/hexify/reference/hexify_projection_stats.md)
+  : Get inverse projection statistics
+- [`calculate_resolution_for_area()`](https://gcol33.github.io/hexify/reference/calculate_resolution_for_area.md)
+  : Calculate resolution for target area
+
+## Hierarchy Functions
+
+- [`hexify_get_children()`](https://gcol33.github.io/hexify/reference/hexify_get_children.md)
+  : Get children indices
+- [`hexify_get_parent()`](https://gcol33.github.io/hexify/reference/hexify_get_parent.md)
+  : Get parent index
+- [`hexify_get_precision()`](https://gcol33.github.io/hexify/reference/hexify_get_precision.md)
+  : Get current precision settings
+- [`hexify_get_resolution()`](https://gcol33.github.io/hexify/reference/hexify_get_resolution.md)
+  : Get index resolution
+- [`hexify_set_precision()`](https://gcol33.github.io/hexify/reference/hexify_set_precision.md)
+  : Set inverse projection precision
+- [`hexify_z7_canonical()`](https://gcol33.github.io/hexify/reference/hexify_z7_canonical.md)
+  : Get canonical form of Z7 index
+
+## Grid Statistics
+
+- [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md)
+  : Get grid statistics for Earth coverage
+- [`dg_closest_res_to_area()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_area.md)
+  : Find closest resolution for target cell area
+- [`dg_closest_res_to_cls()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_cls.md)
+  : Find closest resolution for target CLS
+- [`dg_closest_res_to_spacing()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_spacing.md)
+  : Find closest resolution for target cell spacing
+- [`dgverify()`](https://gcol33.github.io/hexify/reference/dgverify.md)
+  : Verify grid object
+
+## dggridR Compatibility
+
+- [`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md)
+  : Create DGGRID 43H aperture sequence
+- [`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md)
+  : Validate dggridR grid compatibility with hexify
+- [`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md)
+  : Convert hexify grid to dggridR-compatible grid object
+- [`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
+  : Convert dggridR grid object to hexify_grid
+
+## Visualization
+
+- [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
+  : Quick world map plot
+- [`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md)
+  : Plot hexagonal grid cells with optional basemap
+- [`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
+  : Quick plot of hexify results
+- [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+  : Create a heatmap visualization of hexagonal grid cells
+- [`hexify_world`](https://gcol33.github.io/hexify/reference/hexify_world.md)
+  : Simplified World Map
+
+## Utilities
+
+- [`hexify_roundtrip_test()`](https://gcol33.github.io/hexify/reference/hexify_roundtrip_test.md)
+  : Round-trip accuracy test
+- [`hexify_set_verbose()`](https://gcol33.github.io/hexify/reference/hexify_set_verbose.md)
+  : Set verbose mode for inverse projection
+- [`index_to_cell_internal()`](https://gcol33.github.io/hexify/reference/index_to_cell_internal.md)
+  : Decode a cell index to face, i, j, and resolution
+
+## Internal
+
+- [`hexify-package`](https://gcol33.github.io/hexify/reference/hexify-package.md)
+  : hexify
+- [`hexify-conversions`](https://gcol33.github.io/hexify/reference/hexify-conversions.md)
+  : Coordinate Conversions
+- [`hexify-grid`](https://gcol33.github.io/hexify/reference/hexify-grid.md)
+  : Core Grid Construction
+- [`hexify-stats`](https://gcol33.github.io/hexify/reference/hexify-stats.md)
+  : Grid Statistics
+- [`print(`*`<hexify_grid>`*`)`](https://gcol33.github.io/hexify/reference/print.hexify_grid.md)
+  : Print method for hexify_grid objects
+
+# Articles
+
+### All vignettes
+
+- [Quick Start](https://gcol33.github.io/hexify/articles/quickstart.md):
+- [Mathematical
+  Foundations](https://gcol33.github.io/hexify/articles/theory.md):
+- [Practical
+  Workflows](https://gcol33.github.io/hexify/articles/workflows.md):

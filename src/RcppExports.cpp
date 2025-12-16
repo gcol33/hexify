@@ -369,46 +369,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_lonlat_to_seqnum_face
-NumericVector cpp_lonlat_to_seqnum_face(NumericVector lon, NumericVector lat, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_lonlat_to_seqnum_face(SEXP lonSEXP, SEXP latSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type lon(lonSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_seqnum_face(lon, lat, resolution, aperture));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_seqnum_to_lonlat_face
-DataFrame cpp_seqnum_to_lonlat_face(NumericVector seqnum, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_seqnum_to_lonlat_face(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_lonlat_face(seqnum, resolution, aperture));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_seqnum_to_cell_info
-List cpp_seqnum_to_cell_info(NumericVector seqnum, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_seqnum_to_cell_info(SEXP seqnumSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type seqnum(seqnumSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_seqnum_to_cell_info(seqnum, resolution, aperture));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_decode_z7
 DataFrame cpp_decode_z7(std::string index_body, int aperture);
 RcppExport SEXP _hexify_cpp_decode_z7(SEXP index_bodySEXP, SEXP apertureSEXP) {
@@ -1160,9 +1120,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_batch_test_roundtrip_ap3", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap3, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap4", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap4, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap7", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap7, 3},
-    {"_hexify_cpp_lonlat_to_seqnum_face", (DL_FUNC) &_hexify_cpp_lonlat_to_seqnum_face, 4},
-    {"_hexify_cpp_seqnum_to_lonlat_face", (DL_FUNC) &_hexify_cpp_seqnum_to_lonlat_face, 3},
-    {"_hexify_cpp_seqnum_to_cell_info", (DL_FUNC) &_hexify_cpp_seqnum_to_cell_info, 3},
     {"_hexify_cpp_decode_z7", (DL_FUNC) &_hexify_cpp_decode_z7, 2},
     {"_hexify_cpp_icosa_tri_to_quad_ij", (DL_FUNC) &_hexify_cpp_icosa_tri_to_quad_ij, 5},
     {"_hexify_cpp_icosa_tri_to_quad_xy", (DL_FUNC) &_hexify_cpp_icosa_tri_to_quad_xy, 3},

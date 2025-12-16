@@ -27,11 +27,11 @@ including total number of cells, cell area, and cell spacing.
 grid <- hexify_grid(area = 1000, aperture = 3)
 stats <- dgearthstat(grid)
 
-print(sprintf("Resolution \%d has \%.0f cells", 
+print(sprintf("Resolution \%d has \%.0f cells",
               stats$resolution, stats$n_cells))
-print(sprintf("Average cell area: \%.2f km²", 
+print(sprintf("Average cell area: \%.2f km²",
               stats$cell_area_km2))
-print(sprintf("Average cell spacing: \%.2f km", 
+print(sprintf("Average cell spacing: \%.2f km",
               stats$cell_spacing_km))
 }
 }

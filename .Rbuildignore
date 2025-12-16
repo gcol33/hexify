@@ -9,3 +9,6 @@
 ^ref_polygons.*\.rds$
 ^Rplots\.pdf$
 ^CLAUDE\.md$
+^nul$
+^doc$
+^Meta$

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_quad_ij_to_cell}
 \alias{hexify_quad_ij_to_cell}
-\title{Convert Quad IJ coordinates to cell ID (SEQNUM)}
+\title{Convert Quad IJ coordinates to cell ID}
 \usage{
 hexify_quad_ij_to_cell(quad, i, j, resolution, aperture = 3L)
 }
@@ -18,15 +18,15 @@ hexify_quad_ij_to_cell(quad, i, j, resolution, aperture = 3L)
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }
 \value{
-Numeric vector of cell IDs (SEQNUM values)
+Numeric vector of cell IDs
 }
 \description{
-Converts Quad IJ coordinates to a global cell identifier (SEQNUM).
+Converts Quad IJ coordinates to a global cell identifier.
 This is the final step in the coordinate pipeline.
 }
 \examples{
 \dontrun{
-# Convert Quad IJ to SEQNUM
+# Convert Quad IJ to cell ID
 cell_id <- hexify_quad_ij_to_cell(quad = 1, i = 100, j = 50,
                                    resolution = 10, aperture = 3)
 print(cell_id)
