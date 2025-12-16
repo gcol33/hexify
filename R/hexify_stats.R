@@ -24,6 +24,7 @@ NULL
 #'   \item{resolution}{Resolution level}
 #'   \item{aperture}{Grid aperture}
 #'
+#' @family grid statistics
 #' @export
 #' @examples
 #' \dontrun{
@@ -100,6 +101,7 @@ dgearthstat <- function(dggs) {
 #'                                metric = TRUE, show_info = TRUE)
 #' print(res)
 #' }
+#' @family grid statistics
 dg_closest_res_to_area <- function(dggs, area, round = "nearest",
                                    metric = TRUE, show_info = FALSE) {
   if (!metric) {
@@ -150,7 +152,8 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' @param show_info Print information about chosen resolution
 #' 
 #' @return Resolution level (integer)
-#' 
+#'
+#' @family grid statistics
 #' @export
 dg_closest_res_to_spacing <- function(dggs, spacing, round = "nearest",
                                       metric = TRUE, show_info = FALSE) {
@@ -178,7 +181,8 @@ dg_closest_res_to_spacing <- function(dggs, spacing, round = "nearest",
 #' @param show_info Print information about chosen resolution
 #' 
 #' @return Resolution level (integer)
-#' 
+#'
+#' @family grid statistics
 #' @export
 dg_closest_res_to_cls <- function(dggs, cls, round = "nearest",
                                   metric = TRUE, show_info = FALSE) {
@@ -205,7 +209,8 @@ dg_closest_res_to_cls <- function(dggs, cls, round = "nearest",
 #' 
 #' @return Data frame with columns: resolution, n_cells, cell_area_km2,
 #'   cell_spacing_km, cls_km
-#'   
+#'
+#' @family grid statistics
 #' @export
 #' @examples
 #' \dontrun{
@@ -255,7 +260,8 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
 #' @param res_range Range of resolutions to display
 #' 
 #' @return NULL (prints to console)
-#' 
+#'
+#' @family grid statistics
 #' @export
 hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
   comparison <- hexify_compare_resolutions(aperture, res_range)

@@ -27,3 +27,16 @@ Controls the accuracy/speed tradeoff for inverse Snyder projection.
 hexify_set_precision("high")
 hexify_set_precision(tol = 1e-12, max_iters = 100)
 }
+\seealso{
+Other projection: 
+\code{\link{hexify_build_icosa}()},
+\code{\link{hexify_face_centers}()},
+\code{\link{hexify_forward}()},
+\code{\link{hexify_forward_to_face}()},
+\code{\link{hexify_get_precision}()},
+\code{\link{hexify_inverse}()},
+\code{\link{hexify_projection_stats}()},
+\code{\link{hexify_set_verbose}()},
+\code{\link{hexify_which_face}()}
+}
+\concept{projection}

@@ -26,6 +26,20 @@ hexify_grid_global(area, aperture = 3L, resround = "nearest")
 
 sf object with hexagon polygons covering the globe
 
+## See also
+
+[`hexify_grid_rect`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md)
+for regional grids,
+[`hexify_to_polygons`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+for data-driven polygon generation
+
+Other sf conversion:
+[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
+[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md),
+[`hexify_to_polygons()`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md),
+[`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+
 ## Examples
 
 ``` r

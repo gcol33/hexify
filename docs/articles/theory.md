@@ -43,8 +43,15 @@ cat(sprintf("Face: %d, tx: %.4f, ty: %.4f\n",
 
 ### Icosahedron Orientation
 
-The default ISEA3H orientation places vertex 0 at: - Longitude: 11.25° -
-Latitude: 58.28252559°
+The icosahedron can be oriented arbitrarily on the globe. The default
+ISEA orientation places vertex 0 at: - Longitude: 45°/4 - Latitude:
+arctan(√5/2)
+
+This orientation was chosen by Sahr et al. (2003) to minimize distortion
+over land masses while placing the 12 pentagonal cells (which occur at
+icosahedron vertices) in oceanic or low-population areas. The specific
+vertex latitude arctan(√5/2) arises from the geometry of a regular
+icosahedron inscribed in a sphere.
 
 ``` r
 
@@ -74,40 +81,109 @@ process:
 
 **Aperture** determines how many child cells fit in one parent cell:
 
-- **Aperture 3**: Each parent contains 3 children (Class I/II
-  alternating)
-- **Aperture 4**: Each parent contains 4 children (Class I only)
-- **Aperture 7**: Each parent contains 7 children (Class III)
+| Aperture | Children per Parent | Class Pattern | Description |
+|----|----|----|----|
+| 3 | 3 | I/II alternating | Fine resolution control |
+| 4 | 4 | I only | Power-of-2 scaling |
+| 7 | 7 | III only | Fastest cell growth |
+| 4/3 | 4 then 3 | Mixed | Aperture 4 for first m levels, then 3 |
 
-**Resolution** is the number of subdivision levels. Total cells ≈ 20 ×
-aperture^resolution
+**Resolution** is the number of subdivision levels. Cell count formulas:
+
+| Aperture | Cell Count Formula       |
+|----------|--------------------------|
+| 3        | 10 × 3^res + 2           |
+| 4        | 10 × 4^res + 2           |
+| 7        | 10 × 7^res + 2           |
+| 4/3      | 10 × 4^m × 3^(res-m) + 2 |
 
 ``` r
 
-# Cell count growth
+# Cell count growth for all apertures
+cat("Resolution  Aperture 3    Aperture 4    Aperture 7\n")
+#> Resolution  Aperture 3    Aperture 4    Aperture 7
+cat("---------  ----------    ----------    ----------\n")
+#> ---------  ----------    ----------    ----------
 for (res in 0:5) {
-  cells_ap3 <- 20 * 3^res
-  cells_ap4 <- 20 * 4^res
-  cells_ap7 <- 20 * 7^res
-  cat(sprintf("Res %d: ap3=%d, ap4=%d, ap7=%d\n",
+  cells_ap3 <- 10 * 3^res + 2
+  cells_ap4 <- 10 * 4^res + 2
+  cells_ap7 <- 10 * 7^res + 2
+  cat(sprintf("    %d      %9d     %9d     %9d\n",
               res, cells_ap3, cells_ap4, cells_ap7))
 }
-#> Res 0: ap3=20, ap4=20, ap7=20
-#> Res 1: ap3=60, ap4=80, ap7=140
-#> Res 2: ap3=180, ap4=320, ap7=980
-#> Res 3: ap3=540, ap4=1280, ap7=6860
-#> Res 4: ap3=1620, ap4=5120, ap7=48020
-#> Res 5: ap3=4860, ap4=20480, ap7=336140
+#>     0             12            12            12
+#>     1             32            42            72
+#>     2             92           162           492
+#>     3            272           642          3432
+#>     4            812          2562         24012
+#>     5           2432         10242        168072
 ```
 
-### Class I vs Class II
+For **mixed aperture (4/3)**, the first `m` levels use aperture 4, then
+remaining levels use aperture 3:
 
-For aperture 3, the hexagon orientation alternates:
+``` r
 
-- **Class I** (odd resolution): Hexagons have a flat top
-- **Class II** (even resolution): Hexagons are rotated 30°
+# Mixed aperture example: m=2 means first 2 levels use aperture 4
+m <- 2
+cat("Mixed 4/3 (m=2): first 2 levels aperture 4, rest aperture 3\n")
+#> Mixed 4/3 (m=2): first 2 levels aperture 4, rest aperture 3
+for (res in 0:5) {
+  if (res <= m) {
+    cells <- 10 * 4^res + 2
+  } else {
+    cells <- 10 * 4^m * 3^(res - m) + 2
+  }
+  cat(sprintf("  Res %d: %d cells\n", res, cells))
+}
+#>   Res 0: 12 cells
+#>   Res 1: 42 cells
+#>   Res 2: 162 cells
+#>   Res 3: 482 cells
+#>   Res 4: 1442 cells
+#>   Res 5: 4322 cells
+```
 
-This affects the coordinate system but not the cell assignment.
+### Orientation Classes
+
+DGGRID defines three orientation classes based on how child cells align
+with parent cells during subdivision:
+
+- **Class I**: Child cell vertices align with parent cell vertices.
+  Hexagons have a “flat top” orientation.
+- **Class II**: Child cell centers align with parent cell vertices.
+  Hexagons are rotated 30° (“pointy top”).
+- **Class III**: Neither alignment—child cells are rotated relative to
+  parent cells (skewed grids).
+
+Each aperture produces a characteristic class pattern:
+
+| Aperture | Class Pattern | Description |
+|----|----|----|
+| 3 | I → II → I → II… | Alternates between Class I and II at each resolution |
+| 4 | I → I → I… | Always Class I (aligned subdivision) |
+| 7 | III → III → III… | Always Class III (arctan(√3/5) rotation per level) |
+| 4/3 | I → I → … → I/II | Class I for aperture-4 levels, then alternates |
+
+For **aperture 3**, odd resolutions (1, 3, 5, …) produce Class I grids
+with flat-top hexagons, while even resolutions (2, 4, 6, …) produce
+Class II grids with pointy-top hexagons.
+
+For **aperture 4**, the 2×2 subdivision preserves alignment, so all
+resolutions are Class I.
+
+For **aperture 7**, the subdivision involves a √7 scaling and
+arctan(√3/5) rotation, creating the characteristic Class III skewed
+pattern. This rotation accumulates: resolution 2 is rotated
+2×arctan(√3/5) from resolution 0, and so on.
+
+For **mixed aperture (4/3)**, the class pattern follows aperture 4
+(Class I) for the first `m` levels, then switches to aperture 3’s
+alternating I/II pattern for subsequent levels.
+
+The class affects hexagon orientation and the coordinate system
+internals, but not the fundamental cell assignment or equal-area
+property.
 
 ## Space-Filling Curves
 
@@ -120,15 +196,29 @@ Space-filling curves provide:
     structure
 3.  **Spatial locality**: Nearby cells often have similar indices
 
+Each aperture requires a different curve that matches its subdivision
+geometry.
+
 ### Z3 Encoding (Aperture 3)
 
-For aperture 3, the Z3 curve encodes each resolution level as a base-3
-digit:
+For aperture 3, the Z3 curve uses base-3 (ternary) encoding. Each
+resolution level adds one ternary digit representing which of the 3
+child cells contains the point.
 
     Index = FF D₁D₂...Dₙ
     where:
       FF = face number (00-19)
       Dᵢ = digit 0, 1, or 2 (base 3)
+
+The three child positions form a triangular arrangement within each
+parent cell. The digit values correspond to:
+
+- **0**: Center-bottom child
+- **1**: Upper-left child
+- **2**: Upper-right child
+
+This encoding preserves hierarchy: truncating the last digit gives the
+parent cell index.
 
 ``` r
 
@@ -140,12 +230,38 @@ cat("Face:", substr(idx, 1, 2), "\n")
 #> Face: 02
 cat("Path:", substr(idx, 3, nchar(idx)), "\n")
 #> Path: 11101
+
+# Parent is obtained by dropping the last digit
+parent_idx <- substr(idx, 1, nchar(idx) - 1)
+cat("Parent:", parent_idx, "\n")
+#> Parent: 021110
 ```
 
-### Z-Order Encoding (Aperture 4)
+### Z-Order (Morton) Encoding (Aperture 4)
 
-For aperture 4, the Morton (Z-order) curve interleaves i and j
-coordinates:
+For aperture 4, the Morton curve (Z-order curve) interleaves the bits of
+i and j grid coordinates. This classic space-filling curve maps a 2D
+grid to a 1D index while preserving locality.
+
+The 2×2 subdivision at each level creates 4 child cells arranged in a
+square:
+
+      +---+---+
+      | 2 | 3 |
+      +---+---+
+      | 0 | 1 |
+      +---+---+
+
+Each child position is encoded as 2 bits: the low bit is from i, the
+high bit is from j. For resolution r, the index uses 2r bits total.
+
+    For cell at grid position (i, j):
+      bit 0 = i₀, bit 1 = j₀   (resolution 1)
+      bit 2 = i₁, bit 3 = j₁   (resolution 2)
+      ...
+
+This interleaving creates the characteristic “Z” pattern that gives the
+curve its name.
 
 ``` r
 
@@ -153,11 +269,33 @@ coordinates:
 idx4 <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 4)
 cat("Z-order index:", idx4, "\n")
 #> Z-order index: 0233232
+
+# The index encodes (quad, i, j) implicitly
+coords <- hexify_index_to_cell(idx4, aperture = 4)
+cat("Decoded - Quad:", coords$quad, "i:", coords$i, "j:", coords$j, "\n")
+#> Decoded - Quad: i: 31 j: 26
 ```
 
 ### Z7 Encoding (Aperture 7)
 
-Aperture 7 uses a specialized encoding that handles the 19.1° rotation:
+Aperture 7 uses base-7 encoding with a twist: each subdivision involves
+both scaling (by √7) and rotation (by arctan(√3/5)). The 7 child cells
+form a hexagonal rosette pattern:
+
+          1
+        6   2
+          0
+        5   3
+          4
+
+The center cell (0) is surrounded by 6 peripheral cells (1-6) arranged
+in a hexagonal ring. Unlike apertures 3 and 4, the child cells are
+rotated relative to the parent, which is why aperture 7 produces Class
+III grids.
+
+The encoding uses Eisenstein integers (complex numbers of the form a +
+bω where ω = e^(2πi/3)) to handle the hexagonal geometry. Each digit 0-6
+represents a position in the rosette.
 
 ``` r
 
@@ -165,7 +303,40 @@ Aperture 7 uses a specialized encoding that handles the 19.1° rotation:
 idx7 <- hexify_lonlat_to_index(16.37, 48.21, resolution = 3, aperture = 7)
 cat("Z7 index:", idx7, "\n")
 #> Z7 index: 02153
+
+# Hierarchy still works - parent is obtained by dropping last digit
+parent7 <- substr(idx7, 1, nchar(idx7) - 1)
+cat("Parent:", parent7, "\n")
+#> Parent: 0215
 ```
+
+### Mixed Aperture (4/3) Encoding
+
+Mixed aperture grids combine the aperture 4 and aperture 3 encoding
+schemes. The first `m` resolution levels use Morton (Z-order) encoding,
+then subsequent levels use Z3 encoding.
+
+This hybrid approach provides: - Faster initial cell growth (aperture 4
+at coarse scales) - Finer resolution control (aperture 3 at fine
+scales) - dggridR compatibility with ISEA43H grids
+
+``` r
+
+# Mixed aperture index (via hexify() function)
+result <- hexify(data.frame(lon = 16.37, lat = 48.21),
+                 lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
+cat("Mixed 4/3 cell_id:", result$cell_id, "\n")
+```
+
+### Comparison of Encodings
+
+| Property | Z3 (Aperture 3) | Morton (Aperture 4) | Z7 (Aperture 7) | Mixed (4/3) |
+|----|----|----|----|----|
+| Base | 3 (ternary) | 4 (quaternary) | 7 | 4 then 3 |
+| Digits per level | 1 | 2 bits | 1 | Mixed |
+| Child arrangement | Triangle | Square | Hex rosette | Square → Triangle |
+| Rotation per level | 0° or 30° | 0° | arctan(√3/5) | Mixed |
+| Locality | Good | Excellent | Good | Good |
 
 ## Inverse Projection
 
@@ -177,22 +348,27 @@ Converting cell coordinates back to lon/lat requires:
 
 ``` r
 
-# Round-trip test
+# Round-trip test for all apertures
 original_lon <- 16.37
 original_lat <- 48.21
 
-idx <- hexify_lonlat_to_index(original_lon, original_lat,
-                               resolution = 10, aperture = 3)
-recovered <- hexify_index_to_lonlat(idx, aperture = 3)
+cat(sprintf("Original coordinates: (%.4f, %.4f)\n\n", original_lon, original_lat))
+#> Original coordinates: (16.3700, 48.2100)
 
-cat(sprintf("Original:  (%.4f, %.4f)\n", original_lon, original_lat))
-#> Original:  (16.3700, 48.2100)
-cat(sprintf("Recovered: (%.4f, %.4f)\n", recovered["lon"], recovered["lat"]))
-#> Recovered: (16.4204, 48.2877)
-cat(sprintf("Error: %.6f degrees\n",
-            sqrt((recovered["lon"] - original_lon)^2 +
-                 (recovered["lat"] - original_lat)^2)))
-#> Error: 0.092576 degrees
+for (ap in c(3, 4, 7)) {
+  # Use appropriate resolution for each aperture
+  res <- if (ap == 7) 6 else 10
+  idx <- hexify_lonlat_to_index(original_lon, original_lat,
+                                 resolution = res, aperture = ap)
+  recovered <- hexify_index_to_lonlat(idx, aperture = ap)
+  error <- sqrt((recovered["lon"] - original_lon)^2 +
+                (recovered["lat"] - original_lat)^2)
+  cat(sprintf("Aperture %d (res %2d): recovered (%.4f, %.4f), error: %.6f°\n",
+              ap, res, recovered["lon"], recovered["lat"], error))
+}
+#> Aperture 3 (res 10): recovered (16.4204, 48.2877), error: 0.092576°
+#> Aperture 4 (res 10): recovered (16.4177, 48.2119), error: 0.047712°
+#> Aperture 7 (res  6): recovered (-10.0330, 3.8584), error: 51.615693°
 ```
 
 ## Cell Properties
@@ -203,20 +379,21 @@ A key property of ISEA grids: all cells have approximately equal area.
 
 ``` r
 
-# Approximate cell area calculation
+# Compare cell areas across apertures at similar resolutions
 earth_area_km2 <- 510072000
-resolution <- 10
-aperture <- 3
 
-total_cells <- 20 * aperture^resolution
-cell_area <- earth_area_km2 / total_cells
+cat("Aperture comparison at ~1000 km² target:\n\n")
+#> Aperture comparison at ~1000 km² target:
+for (ap in c(3, 4, 7)) {
+  grid <- hexify_grid(area = 1000, aperture = ap)
+  cat(sprintf("Aperture %d: resolution %d → %.1f km² (%.0f cells)\n",
+              ap, grid$resolution, grid$area, grid$total_cells))
+}
 
-cat(sprintf("Resolution %d, Aperture %d:\n", resolution, aperture))
-#> Resolution 10, Aperture 3:
-cat(sprintf("  Total cells: %.0f\n", total_cells))
-#>   Total cells: 1180980
-cat(sprintf("  Cell area: %.2f km²\n", cell_area))
-#>   Cell area: 431.91 km²
+# Mixed aperture available via hexify() function, not hexify_grid()
+cat("\n(Mixed aperture 4/3 is available via hexify() with aperture = '4/3')\n")
+#> 
+#> (Mixed aperture 4/3 is available via hexify() with aperture = '4/3')
 ```
 
 ### Cell Shape

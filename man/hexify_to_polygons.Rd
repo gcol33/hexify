@@ -7,7 +7,7 @@
 hexify_to_polygons(data, aperture = 3L, return_sf = TRUE)
 }
 \arguments{
-\item{data}{Data frame returned by hexify() containing hex_id and hex_area}
+\item{data}{Data frame returned by hexify() containing cell_id and cell_area}
 
 \item{aperture}{Grid aperture (default 3)}
 
@@ -18,7 +18,7 @@ sf object or data frame with polygon geometries (see hexify_cell_to_sf)
 }
 \description{
 Convenience function that extracts resolution from a hexify result and
-generates polygons. Resolution is auto-detected from the hex_area column.
+generates polygons. Resolution is auto-detected from the cell_area column.
 }
 \examples{
 \dontrun{
@@ -34,3 +34,15 @@ polys <- hexify_to_polygons(result)
 plot(st_geometry(polys))
 }
 }
+\seealso{
+\code{\link{hexify_cell_to_sf}} for low-level polygon generation,
+\code{\link{hexify_to_sf}} for full hexify result conversion
+
+Other sf conversion: 
+\code{\link{hex_corners_to_sf}()},
+\code{\link{hexify_cell_to_sf}()},
+\code{\link{hexify_grid_global}()},
+\code{\link{hexify_grid_rect}()},
+\code{\link{hexify_to_sf}()}
+}
+\concept{sf conversion}

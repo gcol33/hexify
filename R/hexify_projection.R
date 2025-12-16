@@ -28,6 +28,7 @@
 #' The icosahedron is initialized lazily at the C++ level when first needed.
 #' Manual call is only required for non-standard orientations.
 #'
+#' @family projection
 #' @export
 #' @examples
 #' # Use standard ISEA3H orientation
@@ -52,6 +53,7 @@ hexify_build_icosa <- function(vert0_lon = ISEA_VERT0_LON_DEG,
 #'
 #' @return Data frame with 20 rows and columns lon, lat (degrees)
 #'
+#' @family projection
 #' @export
 #' @examples
 #' centers <- hexify_face_centers()
@@ -73,6 +75,7 @@ hexify_face_centers <- function() {
 #'
 #' @return Integer face index (0-19)
 #'
+#' @family projection
 #' @export
 #' @examples
 #' face <- hexify_which_face(16.37, 48.21)
@@ -94,6 +97,7 @@ hexify_which_face <- function(lon, lat) {
 #' tx and ty are normalized coordinates within the triangular face,
 #' typically in range [0, 1].
 #'
+#' @family projection
 #' @export
 #' @examples
 #' result <- hexify_forward(16.37, 48.21)
@@ -112,6 +116,7 @@ hexify_forward <- function(lon, lat) {
 #'
 #' @return Named numeric vector: c(icosa_triangle_x, icosa_triangle_y)
 #'
+#' @family projection
 #' @export
 hexify_forward_to_face <- function(face, lon, lat) {
   cpp_project_to_icosa_triangle(as.integer(face), as.numeric(lon), as.numeric(lat))
@@ -133,6 +138,7 @@ hexify_forward_to_face <- function(face, lon, lat) {
 #'
 #' @return Named numeric vector: c(lon_deg, lat_deg)
 #'
+#' @family projection
 #' @export
 #' @examples
 #' coords <- hexify_inverse(0.5, 0.3, face = 2)
@@ -155,6 +161,7 @@ hexify_inverse <- function(x, y, face, tol = NULL, max_iters = NULL) {
 #'
 #' @return Invisible NULL
 #'
+#' @family projection
 #' @export
 #' @examples
 #' hexify_set_precision("high")
@@ -170,6 +177,7 @@ hexify_set_precision <- function(mode = c("fast", "default", "high", "ultra"),
 #'
 #' @return List with tol and max_iters
 #'
+#' @family projection
 #' @export
 hexify_get_precision <- function() {
   cpp_snyder_inv_get_precision()
@@ -183,6 +191,7 @@ hexify_get_precision <- function() {
 #'
 #' @return Invisible NULL
 #'
+#' @family projection
 #' @export
 hexify_set_verbose <- function(verbose = TRUE) {
   cpp_snyder_inv_set_verbose(isTRUE(verbose))
@@ -197,6 +206,7 @@ hexify_set_verbose <- function(verbose = TRUE) {
 #'
 #' @return List with statistics (iterations, convergence info, etc.)
 #'
+#' @family projection
 #' @export
 hexify_projection_stats <- function(reset = TRUE) {
   cpp_snyder_inv_get_stats_and_reset()

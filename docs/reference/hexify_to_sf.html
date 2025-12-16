@@ -65,7 +65,7 @@ Can return either point geometries (cell centers) or polygon geometries
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Data frame returned by <code><a href="hexify.html">hexify()</a></code> containing
-hex_id, hex_cen_lon, hex_cen_lat columns</p></dd>
+cell_id, cell_cen_lon, cell_cen_lat columns</p></dd>
 
 
 <dt id="arg-geometry">geometry<a class="anchor" aria-label="anchor" href="#arg-geometry"></a></dt>
@@ -91,7 +91,7 @@ hex_id, hex_cen_lon, hex_cen_lat columns</p></dd>
     <p>This is the recommended way to convert hexify output to sf for spatial
 operations or plotting with ggplot2/tmap.</p>
 <p>For <code>geometry = "point"</code>: Creates point geometries at cell centers
-using hex_cen_lon and hex_cen_lat. Fast, suitable for large datasets.</p>
+using cell_cen_lon and cell_cen_lat. Fast, suitable for large datasets.</p>
 <p>For <code>geometry = "polygon"</code>: Creates polygon geometries for cell
 boundaries. Slower but useful for choropleth maps. Duplicate cells are
 automatically handled (each cell boundary appears once).</p>
@@ -99,7 +99,13 @@ automatically handled (each cell boundary appears once).</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="hexify.html">hexify</a></code> for the main function,
-<code><a href="hexify_to_polygons.html">hexify_to_polygons</a></code> for polygon-only conversion</p></div>
+<code><a href="hexify_to_polygons.html">hexify_to_polygons</a></code> for polygon-only conversion</p>
+<p>Other sf conversion:
+<code><a href="hex_corners_to_sf.html">hex_corners_to_sf()</a></code>,
+<code><a href="hexify_cell_to_sf.html">hexify_cell_to_sf()</a></code>,
+<code><a href="hexify_grid_global.html">hexify_grid_global()</a></code>,
+<code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code>,
+<code><a href="hexify_to_polygons.html">hexify_to_polygons()</a></code></p></div>
     </div>
 
     <div class="section level2">

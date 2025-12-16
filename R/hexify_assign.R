@@ -73,6 +73,8 @@ build_hex_polygon <- function(digits, face, match_dggrid_parity) {
 #' @param make_polygons logical; if TRUE, return an sf with hex polygons.
 #' @return data.frame with id, face, effective_res, center_lon, center_lat;
 #'         if make_polygons=TRUE, an sf with geometry column.
+#'
+#' @keywords internal
 #' @export
 hexify_assign <- function(lon, lat, effective_res,
                           match_dggrid_parity = TRUE,

@@ -42,3 +42,10 @@ hgrid <- from_dggrid(dggs)
 result <- hexify_grid_to_cell(hgrid, lon = 0, lat = 45)
 }
 }
+\seealso{
+Other dggridR compatibility: 
+\code{\link{as_dggrid}()},
+\code{\link{dggrid_43h_sequence}()},
+\code{\link{dggrid_is_compatible}()}
+}
+\concept{dggridR compatibility}

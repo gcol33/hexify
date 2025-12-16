@@ -19,3 +19,13 @@ sf object with one POLYGON geometry
 \description{
 Build an sf POLYGON from six (lon, lat) corner pairs
 }
+\seealso{
+Other sf conversion: 
+\code{\link{hexify_cell_to_sf}()},
+\code{\link{hexify_grid_global}()},
+\code{\link{hexify_grid_rect}()},
+\code{\link{hexify_to_polygons}()},
+\code{\link{hexify_to_sf}()}
+}
+\concept{sf conversion}
+\keyword{internal}

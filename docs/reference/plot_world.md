@@ -26,6 +26,13 @@ plot_world(fill = "gray95", border = "gray50", ...)
 
 NULL invisibly. Creates a plot as side effect.
 
+## See also
+
+Other visualization:
+[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
+[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
+[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
+
 ## Examples
 
 ``` r

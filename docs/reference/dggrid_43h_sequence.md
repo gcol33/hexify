@@ -23,6 +23,13 @@ dggrid_43h_sequence(num_ap4, num_ap3)
 
 Integer vector of aperture sequence
 
+## See also
+
+Other dggridR compatibility:
+[`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md),
+[`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md),
+[`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
+
 ## Examples
 
 ``` r

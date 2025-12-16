@@ -29,3 +29,15 @@ global_grid <- hexify_grid_global(area = 100000)
 plot(st_geometry(global_grid), border = "gray")
 }
 }
+\seealso{
+\code{\link{hexify_grid_rect}} for regional grids,
+\code{\link{hexify_to_polygons}} for data-driven polygon generation
+
+Other sf conversion: 
+\code{\link{hex_corners_to_sf}()},
+\code{\link{hexify_cell_to_sf}()},
+\code{\link{hexify_grid_rect}()},
+\code{\link{hexify_to_polygons}()},
+\code{\link{hexify_to_sf}()}
+}
+\concept{sf conversion}

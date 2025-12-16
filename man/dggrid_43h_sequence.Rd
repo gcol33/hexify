@@ -22,3 +22,11 @@ first num_ap4 resolutions use aperture 4, then aperture 3.
 # DGGRID 43H with 2 ap4 resolutions, then 3 ap3 resolutions
 seq <- dggrid_43h_sequence(2, 3)  # c(4, 4, 3, 3, 3)
 }
+\seealso{
+Other dggridR compatibility: 
+\code{\link{as_dggrid}()},
+\code{\link{dggrid_is_compatible}()},
+\code{\link{from_dggrid}()}
+}
+\concept{dggridR compatibility}
+\keyword{internal}

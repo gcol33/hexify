@@ -23,18 +23,18 @@ test_that("hexify works with data.frame and area parameter", {
   expect_true("lat" %in% names(result))
 
   # Hex columns added
-  expect_true("hex_id" %in% names(result))
-  expect_true("hex_cen_lon" %in% names(result))
-  expect_true("hex_cen_lat" %in% names(result))
+  expect_true("cell_id" %in% names(result))
+  expect_true("cell_cen_lon" %in% names(result))
+  expect_true("cell_cen_lat" %in% names(result))
 
   # Types
-  expect_type(result$hex_id, "double")
-  expect_type(result$hex_cen_lon, "double")
-  expect_type(result$hex_cen_lat, "double")
+  expect_type(result$cell_id, "double")
+  expect_type(result$cell_cen_lon, "double")
+  expect_type(result$cell_cen_lat, "double")
 
   # Valid coordinates
-  expect_true(all(result$hex_cen_lon >= -180 & result$hex_cen_lon <= 180))
-  expect_true(all(result$hex_cen_lat >= -90 & result$hex_cen_lat <= 90))
+  expect_true(all(result$cell_cen_lon >= -180 & result$cell_cen_lon <= 180))
+  expect_true(all(result$cell_cen_lat >= -90 & result$cell_cen_lat <= 90))
 
   # Row count preserved
   expect_equal(nrow(result), 3)
@@ -45,7 +45,7 @@ test_that("hexify works with diagonal parameter", {
 
   result <- hexify(df, lon = "lon", lat = "lat", diagonal = 50)
 
-  expect_true("hex_id" %in% names(result))
+  expect_true("cell_id" %in% names(result))
   expect_equal(nrow(result), 2)
 })
 
@@ -90,9 +90,9 @@ test_that("hexify works with sf objects", {
   result <- hexify(pts, area = 1000)
 
   expect_s3_class(result, "sf")
-  expect_true("hex_id" %in% names(result))
-  expect_true("hex_cen_lon" %in% names(result))
-  expect_true("hex_cen_lat" %in% names(result))
+  expect_true("cell_id" %in% names(result))
+  expect_true("cell_cen_lon" %in% names(result))
+  expect_true("cell_cen_lat" %in% names(result))
   expect_true("site" %in% names(result))
 })
 
@@ -105,9 +105,9 @@ test_that("hexify handles aperture 3 (ISEA3H)", {
 
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 3)
 
-  expect_true("hex_id" %in% names(result))
-  expect_type(result$hex_id, "double")
-  expect_true(result$hex_id > 0)
+  expect_true("cell_id" %in% names(result))
+  expect_type(result$cell_id, "double")
+  expect_true(result$cell_id > 0)
 })
 
 test_that("hexify handles aperture 4 (ISEA4H)", {
@@ -115,9 +115,9 @@ test_that("hexify handles aperture 4 (ISEA4H)", {
 
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
 
-  expect_true("hex_id" %in% names(result))
-  expect_type(result$hex_id, "double")
-  expect_true(result$hex_id > 0)
+  expect_true("cell_id" %in% names(result))
+  expect_type(result$cell_id, "double")
+  expect_true(result$cell_id > 0)
 })
 
 test_that("hexify handles aperture 7 (ISEA7H)", {
@@ -125,9 +125,9 @@ test_that("hexify handles aperture 7 (ISEA7H)", {
 
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
 
-  expect_true("hex_id" %in% names(result))
-  expect_type(result$hex_id, "double")
-  expect_true(result$hex_id > 0)
+  expect_true("cell_id" %in% names(result))
+  expect_type(result$cell_id, "double")
+  expect_true(result$cell_id > 0)
 })
 
 test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
@@ -136,14 +136,14 @@ test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
   # Test with string "4/3"
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
 
-  expect_true("hex_id" %in% names(result))
-  expect_type(result$hex_id, "double")
-  expect_true(result$hex_id > 0)
+  expect_true("cell_id" %in% names(result))
+  expect_type(result$cell_id, "double")
+  expect_true(result$cell_id > 0)
 
   # Test with explicit mixed_aperture_level
   result2 <- hexify(df, lon = "lon", lat = "lat", area = 1000,
                     aperture = "4/3", mixed_aperture_level = 4)
-  expect_true("hex_id" %in% names(result2))
+  expect_true("cell_id" %in% names(result2))
 })
 
 test_that("hexify rejects unsupported apertures with clear error", {
@@ -169,40 +169,40 @@ test_that("hexify rejects unsupported apertures with clear error", {
 # OUTPUT COLUMNS
 # =============================================================================
 
-test_that("hexify returns hex_area and hex_diag columns", {
+test_that("hexify returns cell_area and cell_diag columns", {
   df <- data.frame(lon = 0, lat = 45)
 
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 3)
 
-  expect_true("hex_area" %in% names(result))
-  expect_true("hex_diag" %in% names(result))
-  expect_type(result$hex_area, "double")
-  expect_type(result$hex_diag, "double")
+  expect_true("cell_area" %in% names(result))
+  expect_true("cell_diag" %in% names(result))
+  expect_type(result$cell_area, "double")
+  expect_type(result$cell_diag, "double")
 
   # Values should be reasonable
-  expect_true(result$hex_area > 100 && result$hex_area < 10000)
-  expect_true(result$hex_diag > 10 && result$hex_diag < 200)
+  expect_true(result$cell_area > 100 && result$cell_area < 10000)
+  expect_true(result$cell_diag > 10 && result$cell_diag < 200)
 })
 
-test_that("hexify hex_area and hex_diag are consistent across rows", {
+test_that("hexify cell_area and cell_diag are consistent across rows", {
   df <- data.frame(lon = c(0, 10, -5), lat = c(45, 30, -20))
 
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 3)
 
   # All rows should have same area/diag
-  expect_equal(length(unique(result$hex_area)), 1)
-  expect_equal(length(unique(result$hex_diag)), 1)
+  expect_equal(length(unique(result$cell_area)), 1)
+  expect_equal(length(unique(result$cell_diag)), 1)
 })
 
-test_that("hexify hex_area and hex_diag work for all apertures", {
+test_that("hexify cell_area and cell_diag work for all apertures", {
   df <- data.frame(lon = c(0, 10), lat = c(45, 30))
 
   for (ap in c(3, 4, 7)) {
     result <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = ap)
 
-    expect_true("hex_area" %in% names(result), info = sprintf("aperture %d", ap))
-    expect_true("hex_diag" %in% names(result), info = sprintf("aperture %d", ap))
-    expect_true(result$hex_diag[1] > 0)
+    expect_true("cell_area" %in% names(result), info = sprintf("aperture %d", ap))
+    expect_true("cell_diag" %in% names(result), info = sprintf("aperture %d", ap))
+    expect_true(result$cell_diag[1] > 0)
   }
 })
 
@@ -261,7 +261,7 @@ test_that("hexify with sf handles non-4326 CRS", {
   result <- hexify(pts_3857, area = 1000)
 
   expect_s3_class(result, "sf")
-  expect_true("hex_id" %in% names(result))
+  expect_true("cell_id" %in% names(result))
 })
 
 test_that("hexify with sf handles NA CRS", {
@@ -301,8 +301,8 @@ test_that("hexify mixed aperture produces different results with different level
   result_level4 <- hexify(df, lon = "lon", lat = "lat", area = 1000,
                           aperture = "4/3", mixed_aperture_level = 4)
 
-  expect_true(result_level2$hex_id != result_level4$hex_id ||
-              result_level2$hex_area != result_level4$hex_area)
+  expect_true(result_level2$cell_id != result_level4$cell_id ||
+              result_level2$cell_area != result_level4$cell_area)
 })
 
 # =============================================================================
@@ -319,9 +319,9 @@ test_that("hexify respects resround parameter", {
   result_nearest <- hexify(df, lon = "lon", lat = "lat", area = 1000,
                            aperture = 3, resround = "nearest")
 
-  expect_true("hex_area" %in% names(result_up))
-  expect_true("hex_area" %in% names(result_down))
-  expect_true("hex_area" %in% names(result_nearest))
+  expect_true("cell_area" %in% names(result_up))
+  expect_true("cell_area" %in% names(result_down))
+  expect_true("cell_area" %in% names(result_nearest))
 })
 
 # =============================================================================
@@ -333,7 +333,7 @@ test_that("hexify handles single point", {
   result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
   expect_equal(nrow(result), 1)
-  expect_true(is.finite(result$hex_id))
+  expect_true(is.finite(result$cell_id))
 })
 
 test_that("hexify handles poles", {
@@ -342,7 +342,7 @@ test_that("hexify handles poles", {
   result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
 
   expect_equal(nrow(result), 2)
-  expect_true(all(is.finite(result$hex_id)))
+  expect_true(all(is.finite(result$cell_id)))
 })
 
 test_that("hexify handles date line", {
@@ -354,7 +354,7 @@ test_that("hexify handles date line", {
   result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
 
   expect_equal(nrow(result), 4)
-  expect_true(all(is.finite(result$hex_id)))
+  expect_true(all(is.finite(result$cell_id)))
 })
 
 test_that("hexify handles many points", {
@@ -367,5 +367,5 @@ test_that("hexify handles many points", {
   result <- hexify(df, lon = "lon", lat = "lat", area = 10000)
 
   expect_equal(nrow(result), 100)
-  expect_true(all(is.finite(result$hex_id)))
+  expect_true(all(is.finite(result$cell_id)))
 })

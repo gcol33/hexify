@@ -45,3 +45,13 @@ hexify_plot(result, col = "lightblue", border = "darkblue")
 points(df$lon, df$lat, pch = 19, col = "red")
 }
 }
+\seealso{
+\code{\link{hexify_map}} for basemap support,
+\code{\link{hexify_heatmap}} for ggplot2-based heatmaps
+
+Other visualization: 
+\code{\link{hexify_heatmap}()},
+\code{\link{hexify_map}()},
+\code{\link{plot_world}()}
+}
+\concept{visualization}

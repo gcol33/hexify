@@ -201,6 +201,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 #'
 #' @return Numeric vector of cell IDs (1-based)
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_lonlat_to_cell}} for the direct-params version,
 #'   \code{\link{hexify_grid_cell_to_lonlat}} for the inverse operation
 #'
@@ -231,6 +232,7 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #'
 #' @return Data frame with lon_deg and lat_deg columns
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_lonlat}} for the direct-params version,
 #'   \code{\link{hexify_grid_to_cell}} for the forward operation
 #'
@@ -326,7 +328,8 @@ index_to_cell_internal <- function(index, aperture, index_type) {
 #'   \item{cell}{Cell index}
 #'   \item{reconstructed}{Reconstructed coordinates}
 #'   \item{error}{Distance between original and reconstructed}
-#'   
+#'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -408,6 +411,7 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 #' - Quads 6-10: Lower hemisphere rhombi
 #' - Quad 11: South polar region
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -446,6 +450,7 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #'
 #' @return Numeric vector of cell IDs
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -487,6 +492,7 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 #'   \item{quad_x}{Continuous X coordinate in quad space}
 #'   \item{quad_y}{Continuous Y coordinate in quad space}
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -524,6 +530,7 @@ hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
 #'   \item{quad_x}{Continuous X coordinate in quad space}
 #'   \item{quad_y}{Continuous Y coordinate in quad space}
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -564,6 +571,7 @@ hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
 #'   \item{i}{Integer cell index along first axis}
 #'   \item{j}{Integer cell index along second axis}
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -613,6 +621,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
 #'   \item{icosa_triangle_x}{X coordinate on triangle face}
 #'   \item{icosa_triangle_y}{Y coordinate on triangle face}
 #'
+#' @family coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -652,6 +661,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #'   \item{i}{Integer cell index along first axis}
 #'   \item{j}{Integer cell index along second axis}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_quad_ij_to_cell}} for the forward operation,
 #'   \code{\link{hexify_cell_to_icosa_tri}} for conversion to triangle coords
 #'
@@ -700,6 +710,7 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #'   \item{icosa_triangle_x}{X coordinate on triangle face}
 #'   \item{icosa_triangle_y}{Y coordinate on triangle face}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_quad_ij}} for conversion to Quad IJ,
 #'   \code{\link{hexify_cell_to_lonlat}} for conversion to lon/lat
 #'
@@ -750,6 +761,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #'   \item{icosa_triangle_x}{X coordinate on triangle face}
 #'   \item{icosa_triangle_y}{Y coordinate on triangle face}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_icosa_tri_to_quad_ij}} for the inverse,
 #'   \code{\link{hexify_cell_to_icosa_tri}} for conversion from cell ID
 #'
@@ -803,6 +815,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #'   \item{quad_x}{Continuous X coordinate in quad space}
 #'   \item{quad_y}{Continuous Y coordinate in quad space}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_quad_xy_to_cell}} for the inverse operation,
 #'   \code{\link{hexify_cell_to_quad_ij}} for integer grid coordinates
 #'
@@ -849,6 +862,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #'
 #' @return Numeric vector of cell IDs
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_quad_xy}} for the inverse operation,
 #'   \code{\link{hexify_quad_ij_to_cell}} for integer grid coordinates
 #'
@@ -915,6 +929,7 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #' faces 10-14 and 15-19 form the lower row. Adjacent faces share
 #' edges in this representation.
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_plane}} for direct cell ID conversion,
 #'   \code{\link{hexify_lonlat_to_plane}} for lon/lat to PLANE
 #'
@@ -955,6 +970,7 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #'   \item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5)}
 #'   \item{plane_y}{Y coordinate in PLANE space (range ~0 to 1.73)}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_icosa_tri_to_plane}} for triangle conversion,
 #'   \code{\link{hexify_lonlat_to_plane}} for lon/lat conversion
 #'
@@ -997,6 +1013,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #'   \item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5)}
 #'   \item{plane_y}{Y coordinate in PLANE space (range ~0 to 1.73)}
 #'
+#' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_plane}} for cell ID conversion,
 #'   \code{\link{hexify_icosa_tri_to_plane}} for triangle conversion
 #'

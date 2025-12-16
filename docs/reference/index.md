@@ -31,9 +31,6 @@
   : Convert Cell ID to Quad IJ coordinates
 - [`hexify_cell_to_quad_xy()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_quad_xy.md)
   : Convert Cell ID to Quad XY coordinates
-- [`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md)
-  [`hexify_polygons()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md)
-  : Convert cell IDs to sf polygons
 - [`hexify_quad_ij_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_cell.md)
   : Convert Quad IJ coordinates to cell ID
 - [`hexify_quad_ij_to_icosa_tri()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_icosa_tri.md)
@@ -139,8 +136,6 @@
 
 ## dggridR Compatibility
 
-- [`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md)
-  : Create DGGRID 43H aperture sequence
 - [`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md)
   : Validate dggridR grid compatibility with hexify
 - [`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md)

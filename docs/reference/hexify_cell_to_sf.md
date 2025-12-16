@@ -7,14 +7,14 @@ workflows.
 ## Usage
 
 ``` r
-hexify_cell_to_sf(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_cell_to_sf(cell_id, resolution, aperture = 3L, return_sf = TRUE)
 
-hexify_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_polygons(cell_id, resolution, aperture = 3L, return_sf = TRUE)
 ```
 
 ## Arguments
 
-- hex_id:
+- cell_id:
 
   Integer vector of cell identifiers
 
@@ -35,7 +35,7 @@ hexify_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
 
 If return_sf = TRUE: sf object with columns:
 
-- hex_id:
+- cell_id:
 
   Cell identifier
 
@@ -45,7 +45,7 @@ If return_sf = TRUE: sf object with columns:
 
 If return_sf = FALSE: data frame with columns:
 
-- hex_id:
+- cell_id:
 
   Cell identifier
 
@@ -67,6 +67,20 @@ This function uses a native C++ implementation that is significantly
 faster than dggridR's polygon generation, especially for large numbers
 of cells.
 
+## See also
+
+[`hexify_to_sf`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+for converting hexify() output,
+[`hexify_to_polygons`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+for auto-resolution polygon generation
+
+Other sf conversion:
+[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
+[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
+[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md),
+[`hexify_to_polygons()`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md),
+[`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+
 ## Examples
 
 ``` r
@@ -78,7 +92,7 @@ df <- data.frame(lon = c(0, 5, 10), lat = c(45, 46, 45))
 result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
 # Get polygons as sf object
-polys <- hexify_cell_to_sf(result$hex_id, resolution = 10, aperture = 3)
+polys <- hexify_cell_to_sf(result$cell_id, resolution = 10, aperture = 3)
 
 # Plot with sf
 library(sf)

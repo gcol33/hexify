@@ -88,10 +88,10 @@ obs_fine <- hexify(observations, lon = "lon", lat = "lat", area = 100)
 obs_coarse <- hexify(observations, lon = "lon", lat = "lat", area = 10000)
 
 cat(sprintf("Fine resolution: %d unique cells (area: %.1f km²)\n",
-            length(unique(obs_fine$hex_id)), obs_fine$hex_area[1]))
+            length(unique(obs_fine$cell_id)), obs_fine$cell_area[1]))
 #> Fine resolution: 996 unique cells (area: 96.0 km²)
 cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
-            length(unique(obs_coarse$hex_id)), obs_coarse$hex_area[1]))
+            length(unique(obs_coarse$cell_id)), obs_coarse$cell_area[1]))
 #> Coarse resolution: 649 unique cells (area: 7774.0 km²)
 ```
 
@@ -101,7 +101,7 @@ cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
 
 # Species richness at fine scale
 richness_fine <- aggregate(
-  species ~ hex_id,
+  species ~ cell_id,
   data = obs_fine,
   FUN = function(x) length(unique(x))
 )
@@ -109,7 +109,7 @@ names(richness_fine)[2] <- "n_species"
 
 # Species richness at coarse scale
 richness_coarse <- aggregate(
-  species ~ hex_id,
+  species ~ cell_id,
   data = obs_coarse,
   FUN = function(x) length(unique(x))
 )
@@ -200,14 +200,14 @@ which returns all cell metadata in one call.
 result <- hexify(observations, lon = "lon", lat = "lat", area = 1000)
 
 # Result includes all cell information
-head(result[, c("species", "lon", "lat", "hex_id", "hex_cen_lon", "hex_cen_lat", "hex_area")])
-#>     species       lon      lat hex_id hex_cen_lon hex_cen_lat hex_area
-#> 1 Species A 29.481211 56.14951 184668   29.607546    56.15000 863.7977
-#> 2 Species A  9.330428 56.40260 118578    9.394244    56.37970 863.7977
-#> 3 Species A -6.851941 46.28968  72401   -6.913549    46.35758 863.7977
-#> 4 Species A -4.621798 53.31213  65350   -4.541754    53.19360 863.7977
-#> 5 Species B 25.773424 51.89916 181006   25.992129    51.83198 863.7977
-#> 6 Species B 18.541863 53.73869 178342   18.792136    53.78309 863.7977
+head(result[, c("species", "lon", "lat", "cell_id", "cell_cen_lon", "cell_cen_lat", "cell_area")])
+#>     species       lon      lat cell_id cell_cen_lon cell_cen_lat cell_area
+#> 1 Species A 29.481211 56.14951  184668    29.607546     56.15000  863.7977
+#> 2 Species A  9.330428 56.40260  118578     9.394244     56.37970  863.7977
+#> 3 Species A -6.851941 46.28968   72401    -6.913549     46.35758  863.7977
+#> 4 Species A -4.621798 53.31213   65350    -4.541754     53.19360  863.7977
+#> 5 Species B 25.773424 51.89916  181006    25.992129     51.83198  863.7977
+#> 6 Species B 18.541863 53.73869  178342    18.792136     53.78309  863.7977
 ```
 
 ## Workflow 5: Choosing Resolution
@@ -249,14 +249,13 @@ cat(sprintf("For ~10000 km² cells: resolution %d (actual area: %.1f km²)\n",
 
 target_area <- 500  # km²
 
+# Compare aperture options
 for (ap in c(3, 4, 7)) {
   grid <- hexify_grid(area = target_area, aperture = ap)
-  cat(sprintf("Aperture %d: resolution %d, area %.1f km²\n",
-              ap, grid$resolution, grid$area))
+  cat(sprintf("Aperture %d: resolution %d, area %.1f km², %.0f cells\n",
+              ap, grid$resolution, grid$area, grid$total_cells))
 }
-#> Aperture 3: resolution 10, area 500.0 km²
-#> Aperture 4: resolution 8, area 500.0 km²
-#> Aperture 7: resolution 6, area 500.0 km²
+# Note: Mixed aperture "4/3" is available via hexify() but not hexify_grid()
 ```
 
 ## Workflow 6: Working with sf
@@ -292,13 +291,16 @@ plot(st_geometry(sf_polys), col = "lightblue", border = "darkblue",
 
 ### 1. Choose aperture based on use case
 
-- **Aperture 3**: Best for fine resolution control, ecological studies
-- **Aperture 4**: Good default, familiar power-of-2 scaling
-- **Aperture 7**: Fast resolution jumps, coarse regional analysis
+| Aperture | Best For | Trade-offs |
+|----|----|----|
+| 3 | Fine resolution control, ecological studies, dggridR compatibility | Slowest cell growth |
+| 4 | Power-of-2 scaling, GIS workflows | Moderate resolution steps |
+| 7 | Rapid cell count growth, coarse analysis | Largest resolution jumps |
+| 4/3 | Balance of 4’s fast start + 3’s fine control | More complex indexing |
 
 ### 2. Store indices efficiently
 
-- Use `hex_id` (integer) for database storage
+- Use `cell_id` (integer) for database storage
 - Store resolution alongside cell IDs for later retrieval
 
 ### 3. Use hexify() for simple workflows
@@ -325,10 +327,10 @@ data_with_na <- data.frame(
 result <- hexify(data_with_na, lon = "lon", lat = "lat", area = 1000)
 #> Warning in hexify(data_with_na, lon = "lon", lat = "lat", area = 1000): 2
 #> coordinate pairs contain NA values and will be skipped
-print(result[, c("lon", "lat", "hex_id")])
-#>     lon   lat hex_id
-#> 1 16.37 48.21 126594
-#> 2    NA 48.86    246
-#> 3  2.35    NA    246
-#> 4 13.40 52.52 122466
+print(result[, c("lon", "lat", "cell_id")])
+#>     lon   lat cell_id
+#> 1 16.37 48.21  126594
+#> 2    NA 48.86     246
+#> 3  2.35    NA     246
+#> 4 13.40 52.52  122466
 ```

@@ -11,6 +11,9 @@
 #' @param num_ap4 Number of aperture-4 resolutions
 #' @param num_ap3 Number of aperture-3 resolutions
 #' @return Integer vector of aperture sequence
+#'
+#' @family dggridR compatibility
+#' @keywords internal
 #' @export
 #' @examples
 #' # DGGRID 43H with 2 ap4 resolutions, then 3 ap3 resolutions

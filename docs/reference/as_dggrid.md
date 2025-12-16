@@ -52,6 +52,13 @@ A list with dggridR-compatible fields:
 
   Output decimal precision (default 7)
 
+## See also
+
+Other dggridR compatibility:
+[`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
+[`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md),
+[`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
+
 ## Examples
 
 ``` r

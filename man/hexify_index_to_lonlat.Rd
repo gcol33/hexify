@@ -26,3 +26,17 @@ Returns the cell center coordinates for a given index.
 \examples{
 coords <- hexify_index_to_lonlat("051223", aperture = 3)
 }
+\seealso{
+Other hierarchical index: 
+\code{\link{hexify_cell_to_index}()},
+\code{\link{hexify_compare_indices}()},
+\code{\link{hexify_default_index_type}()},
+\code{\link{hexify_get_children}()},
+\code{\link{hexify_get_parent}()},
+\code{\link{hexify_get_resolution}()},
+\code{\link{hexify_index_to_cell}()},
+\code{\link{hexify_is_valid_index_type}()},
+\code{\link{hexify_lonlat_to_index}()},
+\code{\link{hexify_z7_canonical}()}
+}
+\concept{hierarchical index}

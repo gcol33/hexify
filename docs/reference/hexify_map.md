@@ -29,8 +29,8 @@ hexify_map(
 
 - data:
 
-  Data frame from hexify() containing hex_id and hex_area columns, or an
-  sf object with hexagon polygons
+  Data frame from hexify() containing cell_id and cell_area columns, or
+  an sf object with hexagon polygons
 
 - basemap:
 
@@ -128,6 +128,18 @@ The function automatically:
 
   Pass a SpatRaster (terra) or RasterLayer (raster) for satellite
   imagery or other raster backgrounds. Requires terra or raster package.
+
+## See also
+
+[`hexify_plot`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
+for simple base R plots,
+[`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+for ggplot2-based heatmaps
+
+Other visualization:
+[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
+[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md),
+[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
 
 ## Examples
 

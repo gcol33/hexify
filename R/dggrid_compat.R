@@ -26,6 +26,7 @@
 #'   \item{projection}{Map projection ("ISEA")}
 #'   \item{precision}{Output decimal precision (default 7)}
 #'
+#' @family dggridR compatibility
 #' @export
 #' @examples
 #' \dontrun{
@@ -77,6 +78,7 @@ as_dggrid <- function(grid) {
 #' - Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 #' - Aperture must be 3, 4, or 7
 #'
+#' @family dggridR compatibility
 #' @export
 #' @examples
 #' \dontrun{
@@ -162,6 +164,7 @@ from_dggrid <- function(dggs) {
 #'
 #' @return TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 #'
+#' @family dggridR compatibility
 #' @export
 #' @examples
 #' \dontrun{

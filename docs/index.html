@@ -84,10 +84,10 @@
 <span><span class="co"># Assign to ~1000 km² hexagonal cells</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">result</span></span>
-<span><span class="co">#&gt;     site   lon   lat hex_id hex_cen_lon hex_cen_lat hex_area hex_diag</span></span>
-<span><span class="co">#&gt; 1 Vienna 16.37 48.21  12847    16.42035    48.26151   863.94    44.67</span></span>
-<span><span class="co">#&gt; 2  Paris  2.35 48.86  12532     2.31894    48.89826   863.94    44.67</span></span>
-<span><span class="co">#&gt; 3 Madrid -3.70 40.42  22178    -3.71892    40.38721   863.94    44.67</span></span></code></pre></div>
+<span><span class="co">#&gt;     site   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area cell_diag</span></span>
+<span><span class="co">#&gt; 1 Vienna 16.37 48.21   12847     16.42035     48.26151    863.94     31.58</span></span>
+<span><span class="co">#&gt; 2  Paris  2.35 48.86   12532      2.31894     48.89826    863.94     31.58</span></span>
+<span><span class="co">#&gt; 3 Madrid -3.70 40.42   22178     -3.71892     40.38721    863.94     31.58</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="why-hexify">Why hexify?<a class="anchor" aria-label="anchor" href="#why-hexify"></a>
@@ -96,7 +96,7 @@
 <li>
 <strong>Simple API</strong>: One function (<code><a href="reference/hexify.html">hexify()</a></code>) for the common use case</li>
 <li>
-<strong>dggridR compatible</strong>: Produces identical <code>hex_id</code> (SEQNUM) values</li>
+<strong>dggridR compatible</strong>: Produces identical <code>cell_id</code> (SEQNUM) values</li>
 <li>
 <strong>Modern R</strong>: Works with data.frames and sf objects</li>
 <li>
@@ -179,27 +179,27 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>hex_id</code></td>
+<td><code>cell_id</code></td>
 <td>integer</td>
 <td>Unique cell identifier (SEQNUM)</td>
 </tr>
 <tr>
-<td><code>hex_cen_lon</code></td>
+<td><code>cell_cen_lon</code></td>
 <td>numeric</td>
 <td>Cell center longitude</td>
 </tr>
 <tr>
-<td><code>hex_cen_lat</code></td>
+<td><code>cell_cen_lat</code></td>
 <td>numeric</td>
 <td>Cell center latitude</td>
 </tr>
 <tr>
-<td><code>hex_area</code></td>
+<td><code>cell_area</code></td>
 <td>numeric</td>
 <td>Actual cell area in km²</td>
 </tr>
 <tr>
-<td><code>hex_diag</code></td>
+<td><code>cell_diag</code></td>
 <td>numeric</td>
 <td>Actual cell diagonal in km</td>
 </tr>
@@ -220,7 +220,7 @@
 <span><span class="va">ref</span> <span class="op">&lt;-</span> <span class="fu">dggridR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/dggridR/man/dgGEO_to_SEQNUM.html" class="external-link">dgGEO_to_SEQNUM</a></span><span class="op">(</span><span class="va">dggs</span>, <span class="va">lon</span>, <span class="va">lat</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">863</span><span class="op">)</span>  <span class="co"># res 10</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">hex_id</span> <span class="op">==</span> <span class="va">ref</span><span class="op">$</span><span class="va">seqnum</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span> <span class="op">==</span> <span class="va">ref</span><span class="op">$</span><span class="va">seqnum</span><span class="op">)</span></span>
 <span><span class="co">#&gt; TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -279,21 +279,51 @@
 </tr></thead>
 <tbody>
 <tr>
+<td>0</td>
+<td>12</td>
+<td>42,506,000</td>
+<td>9,908</td>
+</tr>
+<tr>
+<td>1</td>
+<td>32</td>
+<td>15,939,750</td>
+<td>6,067</td>
+</tr>
+<tr>
+<td>2</td>
+<td>92</td>
+<td>5,544,261</td>
+<td>3,578</td>
+</tr>
+<tr>
+<td>3</td>
+<td>272</td>
+<td>1,875,265</td>
+<td>2,081</td>
+</tr>
+<tr>
+<td>4</td>
+<td>812</td>
+<td>628,167</td>
+<td>1,204</td>
+</tr>
+<tr>
 <td>5</td>
 <td>2,432</td>
-<td>209,903</td>
-<td>695</td>
+<td>209,734</td>
+<td>696</td>
 </tr>
 <tr>
 <td>6</td>
 <td>7,292</td>
-<td>69,968</td>
-<td>401</td>
+<td>69,950</td>
+<td>402</td>
 </tr>
 <tr>
 <td>7</td>
 <td>21,872</td>
-<td>23,323</td>
+<td>23,321</td>
 <td>232</td>
 </tr>
 <tr>
@@ -339,7 +369,7 @@
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate sf polygons</span></span>
-<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">hex_polygons</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">hex_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify_cell_to_sf.html">hexify_cell_to_sf</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">polys</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"lightblue"</span>, border <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Or generate a grid over a region</span></span>

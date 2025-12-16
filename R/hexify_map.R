@@ -94,12 +94,12 @@ apply_continuous_scale <- function(p, colors, legend_title, na_color) {
 prepare_hex_sf <- function(data, aperture) {
   if (inherits(data, "sf")) return(data)
 
-  if (!is.data.frame(data) || !"hex_id" %in% names(data)) {
+  if (!is.data.frame(data) || !"cell_id" %in% names(data)) {
     stop("data must be a data.frame from hexify() or an sf object")
   }
 
-  if (!"hex_area" %in% names(data)) {
-    stop("data must contain 'hex_area' column (output from hexify()). ",
+  if (!"cell_area" %in% names(data)) {
+    stop("data must contain 'cell_area' column (output from hexify()). ",
          "Use hexify_polygons() directly if you have pre-computed polygons.")
   }
 
@@ -107,11 +107,11 @@ prepare_hex_sf <- function(data, aperture) {
 
   # Join extra columns from original data
 
-  extra_cols <- setdiff(names(data), c("hex_id", "geometry"))
+  extra_cols <- setdiff(names(data), c("cell_id", "geometry"))
   if (length(extra_cols) > 0) {
-    cols <- c("hex_id", extra_cols)
-    data_unique <- data[!duplicated(data$hex_id), cols, drop = FALSE]
-    hex_sf <- merge(hex_sf, data_unique, by = "hex_id", all.x = TRUE)
+    cols <- c("cell_id", extra_cols)
+    data_unique <- data[!duplicated(data$cell_id), cols, drop = FALSE]
+    hex_sf <- merge(hex_sf, data_unique, by = "cell_id", all.x = TRUE)
   }
 
   hex_sf
@@ -221,12 +221,12 @@ build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
 prepare_hex_sf_simple <- function(data, aperture) {
   if (inherits(data, "sf")) return(data)
 
-  if (!is.data.frame(data) || !"hex_id" %in% names(data)) {
+  if (!is.data.frame(data) || !"cell_id" %in% names(data)) {
     stop("data must be a data.frame from hexify() or an sf object")
   }
 
-  if (!"hex_area" %in% names(data)) {
-    stop("data must contain 'hex_area' column (output from hexify()). ",
+  if (!"cell_area" %in% names(data)) {
+    stop("data must contain 'cell_area' column (output from hexify()). ",
          "Use hexify_polygons() directly if you have pre-computed polygons.")
   }
 
@@ -338,7 +338,7 @@ resolve_basemap_with_raster <- function(basemap) {
 #' Creates a map visualization of hexagonal grid cells. Supports the built-in
 #' world map or user-supplied basemaps (sf vectors or raster images).
 #'
-#' @param data Data frame from hexify() containing hex_id and hex_area columns,
+#' @param data Data frame from hexify() containing cell_id and cell_area columns,
 #'   or an sf object with hexagon polygons
 #' @param basemap Optional basemap. Can be:
 #'   \itemize{
@@ -388,6 +388,9 @@ resolve_basemap_with_raster <- function(basemap) {
 #'     raster package.}
 #' }
 #'
+#' @family visualization
+#' @seealso \code{\link{hexify_plot}} for simple base R plots,
+#'   \code{\link{hexify_heatmap}} for ggplot2-based heatmaps
 #' @export
 #' @examples
 #' \dontrun{
@@ -527,6 +530,7 @@ hexify_map <- function(data,
 #'
 #' @return NULL invisibly. Creates a plot as side effect.
 #'
+#' @family visualization
 #' @export
 #' @examples
 #' \dontrun{
@@ -550,7 +554,7 @@ plot_world <- function(fill = "gray95", border = "gray50", ...) {
 #' column. Supports continuous and discrete color scales, projection
 #' transformation, and customizable styling.
 #'
-#' @param data Data frame from hexify() containing hex_id and hex_area columns,
+#' @param data Data frame from hexify() containing cell_id and cell_area columns,
 #'   or an sf object with hexagon polygons. Must include a column for coloring.
 #' @param value Column name (as string) to use for fill color. If NULL and data
 #'   has a 'count' or 'n' column, that will be used.
@@ -620,6 +624,9 @@ plot_world <- function(fill = "gray95", border = "gray50", ...) {
 #'   \item{"+proj=moll"}{Mollweide (equal-area world maps)}
 #' }
 #'
+#' @family visualization
+#' @seealso \code{\link{hexify_map}} for base R plotting,
+#'   \code{\link{hexify_plot}} for simple plots
 #' @export
 #' @examples
 #' \dontrun{

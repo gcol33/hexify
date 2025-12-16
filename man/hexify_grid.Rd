@@ -49,8 +49,6 @@ A hexify_grid object containing:
 Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify grids.
 
-\lifecycle{deprecated}
-
 \code{hexify_construct()} was renamed to \code{hexify_grid()} for clarity.
 Use \code{hexify_grid()} instead.
 }
@@ -64,4 +62,12 @@ print(grid)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 }
 }
+\seealso{
+\code{\link{hexify}} for the main user function,
+\code{\link{hexify_grid_to_cell}} for coordinate conversion
+
+Other hexify main: 
+\code{\link{hexify}()}
+}
+\concept{hexify main}
 \keyword{internal}

@@ -5,12 +5,12 @@
 \alias{hexify_polygons}
 \title{Convert cell IDs to sf polygons}
 \usage{
-hexify_cell_to_sf(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_cell_to_sf(cell_id, resolution, aperture = 3L, return_sf = TRUE)
 
-hexify_polygons(hex_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_polygons(cell_id, resolution, aperture = 3L, return_sf = TRUE)
 }
 \arguments{
-\item{hex_id}{Integer vector of cell identifiers}
+\item{cell_id}{Integer vector of cell identifiers}
 
 \item{resolution}{Grid resolution level}
 
@@ -21,11 +21,11 @@ geometries. If FALSE, returns data frame with vertex coordinates.}
 }
 \value{
 If return_sf = TRUE: sf object with columns:
-\item{hex_id}{Cell identifier}
+\item{cell_id}{Cell identifier}
 \item{geometry}{POLYGON geometry (sfc_POLYGON)}
 
 If return_sf = FALSE: data frame with columns:
-\item{hex_id}{Cell identifier}
+\item{cell_id}{Cell identifier}
 \item{lon}{Vertex longitude}
 \item{lat}{Vertex latitude}
 \item{order}{Vertex order (1-7, 7 closes the polygon)}
@@ -47,10 +47,23 @@ df <- data.frame(lon = c(0, 5, 10), lat = c(45, 46, 45))
 result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
 # Get polygons as sf object
-polys <- hexify_cell_to_sf(result$hex_id, resolution = 10, aperture = 3)
+polys <- hexify_cell_to_sf(result$cell_id, resolution = 10, aperture = 3)
 
 # Plot with sf
 library(sf)
 plot(st_geometry(polys), col = "lightblue", border = "blue")
 }
 }
+\seealso{
+\code{\link{hexify_to_sf}} for converting hexify() output,
+\code{\link{hexify_to_polygons}} for auto-resolution polygon generation
+
+Other sf conversion: 
+\code{\link{hex_corners_to_sf}()},
+\code{\link{hexify_grid_global}()},
+\code{\link{hexify_grid_rect}()},
+\code{\link{hexify_to_polygons}()},
+\code{\link{hexify_to_sf}()}
+}
+\concept{sf conversion}
+\keyword{internal}

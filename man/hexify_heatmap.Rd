@@ -29,7 +29,7 @@ hexify_heatmap(
 )
 }
 \arguments{
-\item{data}{Data frame from hexify() containing hex_id and hex_area columns,
+\item{data}{Data frame from hexify() containing cell_id and cell_area columns,
 or an sf object with hexagon polygons. Must include a column for coloring.}
 
 \item{value}{Column name (as string) to use for fill color. If NULL and data
@@ -171,3 +171,13 @@ hexify_heatmap(result, value = "count", basemap = "world") +
   theme(legend.position = "bottom")
 }
 }
+\seealso{
+\code{\link{hexify_map}} for base R plotting,
+\code{\link{hexify_plot}} for simple plots
+
+Other visualization: 
+\code{\link{hexify_map}()},
+\code{\link{hexify_plot}()},
+\code{\link{plot_world}()}
+}
+\concept{visualization}

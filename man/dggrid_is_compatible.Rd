@@ -32,3 +32,10 @@ dggs2 <- dgconstruct(res = 5, projection = "FULLER")
 dggrid_is_compatible(dggs2, strict = FALSE)  # FALSE
 }
 }
+\seealso{
+Other dggridR compatibility: 
+\code{\link{as_dggrid}()},
+\code{\link{dggrid_43h_sequence}()},
+\code{\link{from_dggrid}()}
+}
+\concept{dggridR compatibility}

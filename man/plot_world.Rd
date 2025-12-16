@@ -28,3 +28,10 @@ plot_world()
 plot_world(fill = "lightblue", border = "darkblue")
 }
 }
+\seealso{
+Other visualization: 
+\code{\link{hexify_heatmap}()},
+\code{\link{hexify_map}()},
+\code{\link{hexify_plot}()}
+}
+\concept{visualization}

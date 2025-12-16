@@ -22,7 +22,7 @@ hexify_map(
 )
 }
 \arguments{
-\item{data}{Data frame from hexify() containing hex_id and hex_area columns,
+\item{data}{Data frame from hexify() containing cell_id and cell_area columns,
 or an sf object with hexagon polygons}
 
 \item{basemap}{Optional basemap. Can be:
@@ -125,3 +125,13 @@ hexify_map(result, basemap = "world",
            xlim = c(-10, 25), ylim = c(35, 55))
 }
 }
+\seealso{
+\code{\link{hexify_plot}} for simple base R plots,
+\code{\link{hexify_heatmap}} for ggplot2-based heatmaps
+
+Other visualization: 
+\code{\link{hexify_heatmap}()},
+\code{\link{hexify_plot}()},
+\code{\link{plot_world}()}
+}
+\concept{visualization}

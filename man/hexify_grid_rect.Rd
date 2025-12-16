@@ -44,3 +44,15 @@ grid <- hexify_grid_rect(
 plot(st_geometry(grid), border = "gray")
 }
 }
+\seealso{
+\code{\link{hexify_grid_global}} for global grids,
+\code{\link{hexify_to_polygons}} for data-driven polygon generation
+
+Other sf conversion: 
+\code{\link{hex_corners_to_sf}()},
+\code{\link{hexify_cell_to_sf}()},
+\code{\link{hexify_grid_global}()},
+\code{\link{hexify_to_polygons}()},
+\code{\link{hexify_to_sf}()}
+}
+\concept{sf conversion}

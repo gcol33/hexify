@@ -49,7 +49,7 @@
 <div class="section level2">
 <h2 id="project-overview">Project Overview<a class="anchor" aria-label="anchor" href="#project-overview"></a></h2>
 <p>hexify is a minimal R package for assigning geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. Produces output identical to dggridR with a simpler API. Supports apertures 3, 4, 7, and mixed 4/3.</p>
-<p><strong>Primary function:</strong> <code>hexify(df, lon, lat, area)</code> → returns input with <code>hex_id</code>, <code>hex_cen_lon</code>, <code>hex_cen_lat</code>, <code>hex_area</code>, <code>hex_diag</code> columns.</p>
+<p><strong>Primary function:</strong> <code>hexify(df, lon, lat, area)</code> → returns input with <code>cell_id</code>, <code>cell_cen_lon</code>, <code>cell_cen_lat</code>, <code>cell_area</code>, <code>cell_diag</code> columns.</p>
 </div>
 <div class="section level2">
 <h2 id="build--development-commands">Build &amp; Development Commands<a class="anchor" aria-label="anchor" href="#build--development-commands"></a></h2>
@@ -121,7 +121,7 @@
 </tr><tr><td>Quad IJ</td>
 <td>quad (0-11), i, j</td>
 <td>Quad + integer grid indices</td>
-</tr><tr><td>Cell ID</td>
+</tr><tr><td>SEQNUM/Cell ID</td>
 <td>single integer</td>
 <td>Global cell ID (dggridR compatible)</td>
 </tr></tbody></table><p>Triangle-to-Quad: 20 faces → 12 quads (pairs of triangles).</p>

@@ -36,8 +36,9 @@ hexify_heatmap(
 
 - data:
 
-  Data frame from hexify() containing hex_id and hex_area columns, or an
-  sf object with hexagon polygons. Must include a column for coloring.
+  Data frame from hexify() containing cell_id and cell_area columns, or
+  an sf object with hexagon polygons. Must include a column for
+  coloring.
 
 - value:
 
@@ -198,6 +199,18 @@ Common projections:
 - "+proj=moll":
 
   Mollweide (equal-area world maps)
+
+## See also
+
+[`hexify_map`](https://gcol33.github.io/hexify/reference/hexify_map.md)
+for base R plotting,
+[`hexify_plot`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
+for simple plots
+
+Other visualization:
+[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
+[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md),
+[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
 
 ## Examples
 

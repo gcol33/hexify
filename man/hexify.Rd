@@ -35,11 +35,11 @@ before switching to aperture-3 (default NULL, auto-calculated as resolution/2)}
 }
 \value{
 The input data with additional columns:
-\item{hex_id}{Stable DGGS cell identifier (integer cell ID)}
-\item{hex_cen_lon}{Longitude of cell center in degrees}
-\item{hex_cen_lat}{Latitude of cell center in degrees}
-\item{hex_area}{Actual cell area in km² (based on matched resolution)}
-\item{hex_diag}{Actual cell long diagonal in km}
+\item{cell_id}{Stable DGGS cell identifier (integer)}
+\item{cell_cen_lon}{Longitude of cell center in degrees}
+\item{cell_cen_lat}{Latitude of cell center in degrees}
+\item{cell_area}{Actual cell area in km² (based on matched resolution)}
+\item{cell_diag}{Actual cell long diagonal in km}
 }
 \description{
 Takes a data.frame or sf object with geographic coordinates and returns
@@ -95,3 +95,11 @@ result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
 result_mixed <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
 }
 }
+\seealso{
+\code{\link{hexify_grid}} for grid specification,
+\code{\link{hexify_to_sf}} for sf conversion
+
+Other hexify main: 
+\code{\link{hexify_grid}()}
+}
+\concept{hexify main}

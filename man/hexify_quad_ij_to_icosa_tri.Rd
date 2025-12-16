@@ -42,4 +42,26 @@ print(result)
 \seealso{
 \code{\link{hexify_icosa_tri_to_quad_ij}} for the inverse,
 \code{\link{hexify_cell_to_icosa_tri}} for conversion from cell ID
+
+Other coordinate conversion: 
+\code{\link{hexify_cell_id_to_quad_ij}()},
+\code{\link{hexify_cell_to_icosa_tri}()},
+\code{\link{hexify_cell_to_lonlat}()},
+\code{\link{hexify_cell_to_plane}()},
+\code{\link{hexify_cell_to_quad_ij}()},
+\code{\link{hexify_cell_to_quad_xy}()},
+\code{\link{hexify_grid_cell_to_lonlat}()},
+\code{\link{hexify_grid_to_cell}()},
+\code{\link{hexify_icosa_tri_to_plane}()},
+\code{\link{hexify_icosa_tri_to_quad_ij}()},
+\code{\link{hexify_icosa_tri_to_quad_xy}()},
+\code{\link{hexify_lonlat_to_cell}()},
+\code{\link{hexify_lonlat_to_plane}()},
+\code{\link{hexify_lonlat_to_quad_ij}()},
+\code{\link{hexify_quad_ij_to_cell}()},
+\code{\link{hexify_quad_ij_to_xy}()},
+\code{\link{hexify_quad_xy_to_cell}()},
+\code{\link{hexify_quad_xy_to_icosa_tri}()},
+\code{\link{hexify_roundtrip_test}()}
 }
+\concept{coordinate conversion}

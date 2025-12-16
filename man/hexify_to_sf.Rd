@@ -8,7 +8,7 @@ hexify_to_sf(data, geometry = c("point", "polygon"), aperture = 3L, crs = 4326)
 }
 \arguments{
 \item{data}{Data frame returned by \code{\link{hexify}()} containing
-hex_id, hex_cen_lon, hex_cen_lat columns}
+cell_id, cell_cen_lon, cell_cen_lat columns}
 
 \item{geometry}{Type of geometry: "point" for cell centers (default),
 "polygon" for cell boundaries}
@@ -34,7 +34,7 @@ This is the recommended way to convert hexify output to sf for spatial
 operations or plotting with ggplot2/tmap.
 
 For \code{geometry = "point"}: Creates point geometries at cell centers
-using hex_cen_lon and hex_cen_lat. Fast, suitable for large datasets.
+using cell_cen_lon and cell_cen_lat. Fast, suitable for large datasets.
 
 For \code{geometry = "polygon"}: Creates polygon geometries for cell
 boundaries. Slower but useful for choropleth maps. Duplicate cells are
@@ -74,4 +74,12 @@ ggplot(sf_polys) +
 \seealso{
 \code{\link{hexify}} for the main function,
 \code{\link{hexify_to_polygons}} for polygon-only conversion
+
+Other sf conversion: 
+\code{\link{hex_corners_to_sf}()},
+\code{\link{hexify_cell_to_sf}()},
+\code{\link{hexify_grid_global}()},
+\code{\link{hexify_grid_rect}()},
+\code{\link{hexify_to_polygons}()}
 }
+\concept{sf conversion}

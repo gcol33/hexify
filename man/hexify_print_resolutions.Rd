@@ -18,3 +18,16 @@ NULL (prints to console)
 Pretty-prints a comparison of grid resolutions with human-readable
 formatting.
 }
+\seealso{
+Other grid statistics: 
+\code{\link{dg_closest_res_to_area}()},
+\code{\link{dg_closest_res_to_cls}()},
+\code{\link{dg_closest_res_to_spacing}()},
+\code{\link{dgearthstat}()},
+\code{\link{hexify_area_to_eff_res}()},
+\code{\link{hexify_compare_resolutions}()},
+\code{\link{hexify_eff_res_to_area}()},
+\code{\link{hexify_eff_res_to_resolution}()},
+\code{\link{hexify_resolution_to_eff_res}()}
+}
+\concept{grid statistics}

@@ -82,8 +82,8 @@ test_that("generate_bin_labels handles infinite bounds", {
 test_that("resolve_value_column auto-detects count column", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$count <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, NULL)
@@ -93,8 +93,8 @@ test_that("resolve_value_column auto-detects count column", {
 test_that("resolve_value_column auto-detects n column", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$n <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, NULL)
@@ -104,8 +104,8 @@ test_that("resolve_value_column auto-detects n column", {
 test_that("resolve_value_column returns specified column", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, "value")
@@ -115,8 +115,8 @@ test_that("resolve_value_column returns specified column", {
 test_that("resolve_value_column errors on missing column", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
 
   expect_error(
     hexify:::resolve_value_column(hex_sf, "nonexistent"),
@@ -127,8 +127,8 @@ test_that("resolve_value_column errors on missing column", {
 test_that("resolve_value_column errors when no suitable column found", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
 
   expect_error(
     hexify:::resolve_value_column(hex_sf, NULL),
@@ -139,8 +139,8 @@ test_that("resolve_value_column errors when no suitable column found", {
 test_that("prepare_fill_column handles discrete data", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   result <- hexify:::prepare_fill_column(hex_sf, "category", NULL, NULL)
@@ -152,8 +152,8 @@ test_that("prepare_fill_column handles discrete data", {
 test_that("prepare_fill_column handles continuous data without breaks", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   result <- hexify:::prepare_fill_column(hex_sf, "value", NULL, NULL)
@@ -165,8 +165,8 @@ test_that("prepare_fill_column handles continuous data without breaks", {
 test_that("prepare_fill_column applies breaks to continuous data", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(5, 15)
 
   result <- hexify:::prepare_fill_column(
@@ -239,8 +239,8 @@ test_that("prepare_hex_sf_simple validates input", {
   )
 
   expect_error(
-    hexify:::prepare_hex_sf_simple(data.frame(hex_id = 1), aperture = 3),
-    "hex_area"
+    hexify:::prepare_hex_sf_simple(data.frame(cell_id = 1), aperture = 3),
+    "cell_area"
   )
 })
 
@@ -260,8 +260,8 @@ test_that("prepare_hex_sf validates input", {
   )
 
   expect_error(
-    hexify:::prepare_hex_sf(data.frame(hex_id = 1), aperture = 3),
-    "hex_area"
+    hexify:::prepare_hex_sf(data.frame(cell_id = 1), aperture = 3),
+    "cell_area"
   )
 })
 
@@ -278,8 +278,8 @@ test_that("prepare_hex_sf merges extra columns", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     extra_col = c("A", "B")
   )
 
@@ -317,8 +317,8 @@ test_that("hexify_map works with hexify output", {
 test_that("hexify_map works with sf polygon input", {
   skip_if_not_installed("sf")
 
-  hex_ids <- c(12847, 12532)
-  polys <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  polys <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
 
   expect_silent(hexify_map(polys))
 })
@@ -361,7 +361,7 @@ test_that("hexify_map respects xlim and ylim", {
 
 test_that("hexify_map validates input", {
   expect_error(hexify_map(data.frame(x = 1)), "data.frame from hexify")
-  expect_error(hexify_map(data.frame(hex_id = 1)), "hex_area")
+  expect_error(hexify_map(data.frame(cell_id = 1)), "cell_area")
   expect_error(hexify_map(list()), "data.frame from hexify")
 })
 
@@ -369,8 +369,8 @@ test_that("hexify_map rejects invalid basemap types", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94)
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94)
   )
 
   expect_error(hexify_map(df, basemap = 123), "basemap must be")
@@ -381,8 +381,8 @@ test_that("hexify_map custom colors work", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94)
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94)
   )
 
   expect_no_error(hexify_map(df,
@@ -398,8 +398,8 @@ test_that("hexify_map respects lwd parameters", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94)
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94)
   )
 
   expect_silent(hexify_map(df, lwd = 2))
@@ -426,8 +426,8 @@ test_that("hexify_heatmap requires ggplot2", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -440,8 +440,8 @@ test_that("hexify_heatmap auto-detects count column", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -454,8 +454,8 @@ test_that("hexify_heatmap auto-detects n column", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     n = c(10, 20)
   )
 
@@ -468,8 +468,8 @@ test_that("hexify_heatmap errors without value column", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94)
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94)
   )
 
   expect_error(hexify_heatmap(df), "No 'value' column specified")
@@ -480,8 +480,8 @@ test_that("hexify_heatmap works with basemap", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -494,8 +494,8 @@ test_that("hexify_heatmap works with breaks", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 200)
   )
 
@@ -510,8 +510,8 @@ test_that("hexify_heatmap works with custom colors", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -524,8 +524,8 @@ test_that("hexify_heatmap respects styling parameters", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -543,8 +543,8 @@ test_that("hexify_heatmap works with projection", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -560,8 +560,8 @@ test_that("hexify_heatmap validates input", {
   expect_error(hexify_heatmap(data.frame(x = 1)), "data must be")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -574,8 +574,8 @@ test_that("hexify_heatmap works with mask_outside", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -589,8 +589,8 @@ test_that("hexify_heatmap works with discrete factor column", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     category = factor(c("A", "B"))
   )
 
@@ -603,8 +603,8 @@ test_that("hexify_heatmap works with character column", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     type = c("type_A", "type_B"),
     stringsAsFactors = FALSE
   )
@@ -619,8 +619,8 @@ test_that("hexify_heatmap works with RColorBrewer palette", {
   skip_if_not_installed("RColorBrewer")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -634,8 +634,8 @@ test_that("hexify_heatmap works with RColorBrewer discrete scale", {
   skip_if_not_installed("RColorBrewer")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     category = factor(c("A", "B"))
   )
 
@@ -648,8 +648,8 @@ test_that("hexify_heatmap works with viridis option", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -662,8 +662,8 @@ test_that("hexify_heatmap auto-generates break labels", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 200)
   )
 
@@ -677,8 +677,8 @@ test_that("hexify_heatmap respects theme_void=FALSE", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -691,8 +691,8 @@ test_that("hexify_heatmap respects xlim and ylim", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 
@@ -709,8 +709,8 @@ test_that("apply_discrete_scale works with NULL colors", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -724,8 +724,8 @@ test_that("apply_discrete_scale works with manual colors", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -741,8 +741,8 @@ test_that("apply_continuous_scale works with NULL colors", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -756,8 +756,8 @@ test_that("apply_continuous_scale works with manual colors", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -774,8 +774,8 @@ test_that("apply_continuous_scale works with Brewer palette", {
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("RColorBrewer")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -789,8 +789,8 @@ test_that("apply_discrete_scale falls back to viridis for unknown palette", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -807,8 +807,8 @@ test_that("apply_continuous_scale falls back to viridis for unknown palette", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  hex_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(hex_ids, resolution = 10, aperture = 3)
+  cell_ids <- c(12847, 12532)
+  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -845,8 +845,8 @@ test_that("hexify_heatmap handles data with NA CRS", {
   skip_if_not_installed("ggplot2")
 
   df <- data.frame(
-    hex_id = c(12847, 12532),
-    hex_area = c(863.94, 863.94),
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
     count = c(10, 20)
   )
 

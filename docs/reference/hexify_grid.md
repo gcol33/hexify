@@ -4,8 +4,6 @@ Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify
 grids.
 
-deprecated
-
 `hexify_construct()` was renamed to `hexify_grid()` for clarity. Use
 `hexify_grid()` instead.
 
@@ -84,6 +82,16 @@ A hexify_grid object containing:
 - index_type:
 
   Index encoding type ("z3", "z7", or "zorder")
+
+## See also
+
+[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for the
+main user function,
+[`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
+for coordinate conversion
+
+Other hexify main:
+[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
 
 ## Examples
 

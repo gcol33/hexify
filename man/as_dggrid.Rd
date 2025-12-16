@@ -37,3 +37,10 @@ hgrid <- hexify_grid(area = 1000, aperture = 3)
 dggs <- as_dggrid(hgrid)
 }
 }
+\seealso{
+Other dggridR compatibility: 
+\code{\link{dggrid_43h_sequence}()},
+\code{\link{dggrid_is_compatible}()},
+\code{\link{from_dggrid}()}
+}
+\concept{dggridR compatibility}

@@ -105,19 +105,19 @@ before switching to aperture-3 (default NULL, auto-calculated as resolution/2)</
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The input data with additional columns:</p>
-<dl><dt>hex_id</dt>
-<dd><p>Stable DGGS cell identifier (integer cell ID)</p></dd>
+<dl><dt>cell_id</dt>
+<dd><p>Stable DGGS cell identifier (integer)</p></dd>
 
-<dt>hex_cen_lon</dt>
+<dt>cell_cen_lon</dt>
 <dd><p>Longitude of cell center in degrees</p></dd>
 
-<dt>hex_cen_lat</dt>
+<dt>cell_cen_lat</dt>
 <dd><p>Latitude of cell center in degrees</p></dd>
 
-<dt>hex_area</dt>
+<dt>cell_area</dt>
 <dd><p>Actual cell area in km² (based on matched resolution)</p></dd>
 
-<dt>hex_diag</dt>
+<dt>cell_diag</dt>
 <dd><p>Actual cell long diagonal in km</p></dd>
 
 </dl></div>
@@ -137,6 +137,13 @@ Cell count = 10 * 3^res + 2.</p></li>
 Uses aperture-4 for first <code>mixed_aperture_level</code> levels, then aperture-3.
 Cell count = 10 * 4^mixed_level * 3^(res - mixed_level) + 2.</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="hexify_grid.html">hexify_grid</a></code> for grid specification,
+<code><a href="hexify_to_sf.html">hexify_to_sf</a></code> for sf conversion</p>
+<p>Other hexify main:
+<code><a href="hexify_grid.html">hexify_grid()</a></code></p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

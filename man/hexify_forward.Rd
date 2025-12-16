@@ -26,3 +26,16 @@ typically in range \link{0, 1}.
 result <- hexify_forward(16.37, 48.21)
 # result["face"], result["icosa_triangle_x"], result["icosa_triangle_y"]
 }
+\seealso{
+Other projection: 
+\code{\link{hexify_build_icosa}()},
+\code{\link{hexify_face_centers}()},
+\code{\link{hexify_forward_to_face}()},
+\code{\link{hexify_get_precision}()},
+\code{\link{hexify_inverse}()},
+\code{\link{hexify_projection_stats}()},
+\code{\link{hexify_set_precision}()},
+\code{\link{hexify_set_verbose}()},
+\code{\link{hexify_which_face}()}
+}
+\concept{projection}

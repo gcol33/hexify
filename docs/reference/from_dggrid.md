@@ -32,6 +32,13 @@ The function validates that the dggridR grid uses compatible settings:
 
 - Aperture must be 3, 4, or 7
 
+## See also
+
+Other dggridR compatibility:
+[`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md),
+[`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
+[`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md)
+
 ## Examples
 
 ``` r

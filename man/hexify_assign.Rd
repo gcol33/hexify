@@ -29,3 +29,4 @@ if make_polygons=TRUE, an sf with geometry column.
 Forward -> quantize (Z3) -> center (face) -> inverse to lon/lat.
 Optionally return polygons (sf), in which case sf must be installed.
 }
+\keyword{internal}

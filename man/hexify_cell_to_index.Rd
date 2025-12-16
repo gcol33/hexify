@@ -44,3 +44,17 @@ Default index types by aperture:
 \examples{
 idx <- hexify_cell_to_index(5, 10, 15, resolution = 3, aperture = 3)
 }
+\seealso{
+Other hierarchical index: 
+\code{\link{hexify_compare_indices}()},
+\code{\link{hexify_default_index_type}()},
+\code{\link{hexify_get_children}()},
+\code{\link{hexify_get_parent}()},
+\code{\link{hexify_get_resolution}()},
+\code{\link{hexify_index_to_cell}()},
+\code{\link{hexify_index_to_lonlat}()},
+\code{\link{hexify_is_valid_index_type}()},
+\code{\link{hexify_lonlat_to_index}()},
+\code{\link{hexify_z7_canonical}()}
+}
+\concept{hierarchical index}

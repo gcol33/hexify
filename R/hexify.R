@@ -45,6 +45,9 @@
 #'   Uses aperture-4 for first `mixed_aperture_level` levels, then aperture-3.
 #'   Cell count = 10 * 4^mixed_level * 3^(res - mixed_level) + 2.
 #'
+#' @family hexify main
+#' @seealso \code{\link{hexify_grid}} for grid specification,
+#'   \code{\link{hexify_to_sf}} for sf conversion
 #' @export
 #' @examples
 #' \dontrun{

@@ -130,8 +130,14 @@ approximately [0, 1]</li>
 <div class="section level3">
 <h3 id="icosahedron-orientation">Icosahedron Orientation<a class="anchor" aria-label="anchor" href="#icosahedron-orientation"></a>
 </h3>
-<p>The default ISEA3H orientation places vertex 0 at: - Longitude:
-11.25° - Latitude: 58.28252559°</p>
+<p>The icosahedron can be oriented arbitrarily on the globe. The default
+ISEA orientation places vertex 0 at: - Longitude: 45°/4 - Latitude:
+arctan(√5/2)</p>
+<p>This orientation was chosen by Sahr et al. (2003) to minimize
+distortion over land masses while placing the 12 pentagonal cells (which
+occur at icosahedron vertices) in oceanic or low-population areas. The
+specific vertex latitude arctan(√5/2) arises from the geometry of a
+regular icosahedron inscribed in a sphere.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get all face centers</span></span>
 <span><span class="va">centers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_face_centers.html">hexify_face_centers</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -163,48 +169,173 @@ subdivision process:</p>
 </h3>
 <p><strong>Aperture</strong> determines how many child cells fit in one
 parent cell:</p>
-<ul>
-<li>
-<strong>Aperture 3</strong>: Each parent contains 3 children (Class
-I/II alternating)</li>
-<li>
-<strong>Aperture 4</strong>: Each parent contains 4 children (Class
-I only)</li>
-<li>
-<strong>Aperture 7</strong>: Each parent contains 7 children (Class
-III)</li>
-</ul>
-<p><strong>Resolution</strong> is the number of subdivision levels.
-Total cells ≈ 20 × aperture^resolution</p>
+<table class="table">
+<thead><tr class="header">
+<th>Aperture</th>
+<th>Children per Parent</th>
+<th>Class Pattern</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>3</td>
+<td>3</td>
+<td>I/II alternating</td>
+<td>Fine resolution control</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>4</td>
+<td>I only</td>
+<td>Power-of-2 scaling</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>7</td>
+<td>III only</td>
+<td>Fastest cell growth</td>
+</tr>
+<tr class="even">
+<td>4/3</td>
+<td>4 then 3</td>
+<td>Mixed</td>
+<td>Aperture 4 for first m levels, then 3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Resolution</strong> is the number of subdivision levels. Cell
+count formulas:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Aperture</th>
+<th>Cell Count Formula</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>3</td>
+<td>10 × 3^res + 2</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>10 × 4^res + 2</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>10 × 7^res + 2</td>
+</tr>
+<tr class="even">
+<td>4/3</td>
+<td>10 × 4^m × 3^(res-m) + 2</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Cell count growth</span></span>
+<code class="sourceCode R"><span><span class="co"># Cell count growth for all apertures</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Resolution  Aperture 3    Aperture 4    Aperture 7\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Resolution  Aperture 3    Aperture 4    Aperture 7</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"---------  ----------    ----------    ----------\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ---------  ----------    ----------    ----------</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">res</span> <span class="kw">in</span> <span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">cells_ap3</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">*</span> <span class="fl">3</span><span class="op">^</span><span class="va">res</span></span>
-<span>  <span class="va">cells_ap4</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">*</span> <span class="fl">4</span><span class="op">^</span><span class="va">res</span></span>
-<span>  <span class="va">cells_ap7</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">*</span> <span class="fl">7</span><span class="op">^</span><span class="va">res</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Res %d: ap3=%d, ap4=%d, ap7=%d\n"</span>,</span>
+<span>  <span class="va">cells_ap3</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">3</span><span class="op">^</span><span class="va">res</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="va">cells_ap4</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">4</span><span class="op">^</span><span class="va">res</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="va">cells_ap7</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">7</span><span class="op">^</span><span class="va">res</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"    %d      %9d     %9d     %9d\n"</span>,</span>
 <span>              <span class="va">res</span>, <span class="va">cells_ap3</span>, <span class="va">cells_ap4</span>, <span class="va">cells_ap7</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Res 0: ap3=20, ap4=20, ap7=20</span></span>
-<span><span class="co">#&gt; Res 1: ap3=60, ap4=80, ap7=140</span></span>
-<span><span class="co">#&gt; Res 2: ap3=180, ap4=320, ap7=980</span></span>
-<span><span class="co">#&gt; Res 3: ap3=540, ap4=1280, ap7=6860</span></span>
-<span><span class="co">#&gt; Res 4: ap3=1620, ap4=5120, ap7=48020</span></span>
-<span><span class="co">#&gt; Res 5: ap3=4860, ap4=20480, ap7=336140</span></span></code></pre></div>
+<span><span class="co">#&gt;     0             12            12            12</span></span>
+<span><span class="co">#&gt;     1             32            42            72</span></span>
+<span><span class="co">#&gt;     2             92           162           492</span></span>
+<span><span class="co">#&gt;     3            272           642          3432</span></span>
+<span><span class="co">#&gt;     4            812          2562         24012</span></span>
+<span><span class="co">#&gt;     5           2432         10242        168072</span></span></code></pre></div>
+<p>For <strong>mixed aperture (4/3)</strong>, the first <code>m</code>
+levels use aperture 4, then remaining levels use aperture 3:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Mixed aperture example: m=2 means first 2 levels use aperture 4</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mixed 4/3 (m=2): first 2 levels aperture 4, rest aperture 3\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Mixed 4/3 (m=2): first 2 levels aperture 4, rest aperture 3</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">res</span> <span class="kw">in</span> <span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">res</span> <span class="op">&lt;=</span> <span class="va">m</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">cells</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">4</span><span class="op">^</span><span class="va">res</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">cells</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="fl">4</span><span class="op">^</span><span class="va">m</span> <span class="op">*</span> <span class="fl">3</span><span class="op">^</span><span class="op">(</span><span class="va">res</span> <span class="op">-</span> <span class="va">m</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"  Res %d: %d cells\n"</span>, <span class="va">res</span>, <span class="va">cells</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt;   Res 0: 12 cells</span></span>
+<span><span class="co">#&gt;   Res 1: 42 cells</span></span>
+<span><span class="co">#&gt;   Res 2: 162 cells</span></span>
+<span><span class="co">#&gt;   Res 3: 482 cells</span></span>
+<span><span class="co">#&gt;   Res 4: 1442 cells</span></span>
+<span><span class="co">#&gt;   Res 5: 4322 cells</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="class-i-vs-class-ii">Class I vs Class II<a class="anchor" aria-label="anchor" href="#class-i-vs-class-ii"></a>
+<h3 id="orientation-classes">Orientation Classes<a class="anchor" aria-label="anchor" href="#orientation-classes"></a>
 </h3>
-<p>For aperture 3, the hexagon orientation alternates:</p>
+<p>DGGRID defines three orientation classes based on how child cells
+align with parent cells during subdivision:</p>
 <ul>
 <li>
-<strong>Class I</strong> (odd resolution): Hexagons have a flat
-top</li>
+<strong>Class I</strong>: Child cell vertices align with parent cell
+vertices. Hexagons have a “flat top” orientation.</li>
 <li>
-<strong>Class II</strong> (even resolution): Hexagons are rotated
-30°</li>
+<strong>Class II</strong>: Child cell centers align with parent cell
+vertices. Hexagons are rotated 30° (“pointy top”).</li>
+<li>
+<strong>Class III</strong>: Neither alignment—child cells are
+rotated relative to parent cells (skewed grids).</li>
 </ul>
-<p>This affects the coordinate system but not the cell assignment.</p>
+<p>Each aperture produces a characteristic class pattern:</p>
+<table class="table">
+<colgroup>
+<col width="26%">
+<col width="39%">
+<col width="34%">
+</colgroup>
+<thead><tr class="header">
+<th>Aperture</th>
+<th>Class Pattern</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>3</td>
+<td>I → II → I → II…</td>
+<td>Alternates between Class I and II at each resolution</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>I → I → I…</td>
+<td>Always Class I (aligned subdivision)</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>III → III → III…</td>
+<td>Always Class III (arctan(√3/5) rotation per level)</td>
+</tr>
+<tr class="even">
+<td>4/3</td>
+<td>I → I → … → I/II</td>
+<td>Class I for aperture-4 levels, then alternates</td>
+</tr>
+</tbody>
+</table>
+<p>For <strong>aperture 3</strong>, odd resolutions (1, 3, 5, …) produce
+Class I grids with flat-top hexagons, while even resolutions (2, 4, 6,
+…) produce Class II grids with pointy-top hexagons.</p>
+<p>For <strong>aperture 4</strong>, the 2×2 subdivision preserves
+alignment, so all resolutions are Class I.</p>
+<p>For <strong>aperture 7</strong>, the subdivision involves a √7
+scaling and arctan(√3/5) rotation, creating the characteristic Class III
+skewed pattern. This rotation accumulates: resolution 2 is rotated
+2×arctan(√3/5) from resolution 0, and so on.</p>
+<p>For <strong>mixed aperture (4/3)</strong>, the class pattern follows
+aperture 4 (Class I) for the first <code>m</code> levels, then switches
+to aperture 3’s alternating I/II pattern for subsequent levels.</p>
+<p>The class affects hexagon orientation and the coordinate system
+internals, but not the fundamental cell assignment or equal-area
+property.</p>
 </div>
 </div>
 <div class="section level2">
@@ -225,17 +356,32 @@ from index structure</li>
 <strong>Spatial locality</strong>: Nearby cells often have similar
 indices</li>
 </ol>
+<p>Each aperture requires a different curve that matches its subdivision
+geometry.</p>
 </div>
 <div class="section level3">
 <h3 id="z3-encoding-aperture-3">Z3 Encoding (Aperture 3)<a class="anchor" aria-label="anchor" href="#z3-encoding-aperture-3"></a>
 </h3>
-<p>For aperture 3, the Z3 curve encodes each resolution level as a
-base-3 digit:</p>
+<p>For aperture 3, the Z3 curve uses base-3 (ternary) encoding. Each
+resolution level adds one ternary digit representing which of the 3
+child cells contains the point.</p>
 <pre><code>Index = FF D₁D₂...Dₙ
 where:
   FF = face number (00-19)
   Dᵢ = digit 0, 1, or 2 (base 3)</code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>The three child positions form a triangular arrangement within each
+parent cell. The digit values correspond to:</p>
+<ul>
+<li>
+<strong>0</strong>: Center-bottom child</li>
+<li>
+<strong>1</strong>: Upper-left child</li>
+<li>
+<strong>2</strong>: Upper-right child</li>
+</ul>
+<p>This encoding preserves hierarchy: truncating the last digit gives
+the parent cell index.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Z3 index structure</span></span>
 <span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">48.21</span>, resolution <span class="op">=</span> <span class="fl">5</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Index:"</span>, <span class="va">idx</span>, <span class="st">"\n"</span><span class="op">)</span></span>
@@ -243,29 +389,145 @@ where:
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Face:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">idx</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Face: 02</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Path:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">idx</span>, <span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">idx</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Path: 11101</span></span></code></pre></div>
+<span><span class="co">#&gt; Path: 11101</span></span>
+<span></span>
+<span><span class="co"># Parent is obtained by dropping the last digit</span></span>
+<span><span class="va">parent_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">idx</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">idx</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Parent:"</span>, <span class="va">parent_idx</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Parent: 021110</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="z-order-encoding-aperture-4">Z-Order Encoding (Aperture 4)<a class="anchor" aria-label="anchor" href="#z-order-encoding-aperture-4"></a>
+<h3 id="z-order-morton-encoding-aperture-4">Z-Order (Morton) Encoding (Aperture 4)<a class="anchor" aria-label="anchor" href="#z-order-morton-encoding-aperture-4"></a>
 </h3>
-<p>For aperture 4, the Morton (Z-order) curve interleaves i and j
-coordinates:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>For aperture 4, the Morton curve (Z-order curve) interleaves the bits
+of i and j grid coordinates. This classic space-filling curve maps a 2D
+grid to a 1D index while preserving locality.</p>
+<p>The 2×2 subdivision at each level creates 4 child cells arranged in a
+square:</p>
+<pre><code>  +---+---+
+  | 2 | 3 |
+  +---+---+
+  | 0 | 1 |
+  +---+---+</code></pre>
+<p>Each child position is encoded as 2 bits: the low bit is from i, the
+high bit is from j. For resolution r, the index uses 2r bits total.</p>
+<pre><code>For cell at grid position (i, j):
+  bit 0 = i₀, bit 1 = j₀   (resolution 1)
+  bit 2 = i₁, bit 3 = j₁   (resolution 2)
+  ...</code></pre>
+<p>This interleaving creates the characteristic “Z” pattern that gives
+the curve its name.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Z-order index</span></span>
 <span><span class="va">idx4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">48.21</span>, resolution <span class="op">=</span> <span class="fl">5</span>, aperture <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Z-order index:"</span>, <span class="va">idx4</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Z-order index: 0233232</span></span></code></pre></div>
+<span><span class="co">#&gt; Z-order index: 0233232</span></span>
+<span></span>
+<span><span class="co"># The index encodes (quad, i, j) implicitly</span></span>
+<span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_index_to_cell.html">hexify_index_to_cell</a></span><span class="op">(</span><span class="va">idx4</span>, aperture <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Decoded - Quad:"</span>, <span class="va">coords</span><span class="op">$</span><span class="va">quad</span>, <span class="st">"i:"</span>, <span class="va">coords</span><span class="op">$</span><span class="va">i</span>, <span class="st">"j:"</span>, <span class="va">coords</span><span class="op">$</span><span class="va">j</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Decoded - Quad: i: 31 j: 26</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="z7-encoding-aperture-7">Z7 Encoding (Aperture 7)<a class="anchor" aria-label="anchor" href="#z7-encoding-aperture-7"></a>
 </h3>
-<p>Aperture 7 uses a specialized encoding that handles the 19.1°
-rotation:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Aperture 7 uses base-7 encoding with a twist: each subdivision
+involves both scaling (by √7) and rotation (by arctan(√3/5)). The 7
+child cells form a hexagonal rosette pattern:</p>
+<pre><code>      1
+    6   2
+      0
+    5   3
+      4</code></pre>
+<p>The center cell (0) is surrounded by 6 peripheral cells (1-6)
+arranged in a hexagonal ring. Unlike apertures 3 and 4, the child cells
+are rotated relative to the parent, which is why aperture 7 produces
+Class III grids.</p>
+<p>The encoding uses Eisenstein integers (complex numbers of the form a
++ bω where ω = e^(2πi/3)) to handle the hexagonal geometry. Each digit
+0-6 represents a position in the rosette.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Z7 index</span></span>
 <span><span class="va">idx7</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">48.21</span>, resolution <span class="op">=</span> <span class="fl">3</span>, aperture <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Z7 index:"</span>, <span class="va">idx7</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Z7 index: 02153</span></span></code></pre></div>
+<span><span class="co">#&gt; Z7 index: 02153</span></span>
+<span></span>
+<span><span class="co"># Hierarchy still works - parent is obtained by dropping last digit</span></span>
+<span><span class="va">parent7</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">idx7</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">idx7</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Parent:"</span>, <span class="va">parent7</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Parent: 0215</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="mixed-aperture-43-encoding">Mixed Aperture (4/3) Encoding<a class="anchor" aria-label="anchor" href="#mixed-aperture-43-encoding"></a>
+</h3>
+<p>Mixed aperture grids combine the aperture 4 and aperture 3 encoding
+schemes. The first <code>m</code> resolution levels use Morton (Z-order)
+encoding, then subsequent levels use Z3 encoding.</p>
+<p>This hybrid approach provides: - Faster initial cell growth (aperture
+4 at coarse scales) - Finer resolution control (aperture 3 at fine
+scales) - dggridR compatibility with ISEA43H grids</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Mixed aperture index (via hexify() function)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fl">16.37</span>, lat <span class="op">=</span> <span class="fl">48.21</span><span class="op">)</span>,</span>
+<span>                 lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="st">"4/3"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mixed 4/3 cell_id:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">cell_id</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="comparison-of-encodings">Comparison of Encodings<a class="anchor" aria-label="anchor" href="#comparison-of-encodings"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="12%">
+<col width="21%">
+<col width="26%">
+<col width="21%">
+<col width="16%">
+</colgroup>
+<thead><tr class="header">
+<th>Property</th>
+<th>Z3 (Aperture 3)</th>
+<th>Morton (Aperture 4)</th>
+<th>Z7 (Aperture 7)</th>
+<th>Mixed (4/3)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Base</td>
+<td>3 (ternary)</td>
+<td>4 (quaternary)</td>
+<td>7</td>
+<td>4 then 3</td>
+</tr>
+<tr class="even">
+<td>Digits per level</td>
+<td>1</td>
+<td>2 bits</td>
+<td>1</td>
+<td>Mixed</td>
+</tr>
+<tr class="odd">
+<td>Child arrangement</td>
+<td>Triangle</td>
+<td>Square</td>
+<td>Hex rosette</td>
+<td>Square → Triangle</td>
+</tr>
+<tr class="even">
+<td>Rotation per level</td>
+<td>0° or 30°</td>
+<td>0°</td>
+<td>arctan(√3/5)</td>
+<td>Mixed</td>
+</tr>
+<tr class="odd">
+<td>Locality</td>
+<td>Good</td>
+<td>Excellent</td>
+<td>Good</td>
+<td>Good</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
@@ -283,23 +545,28 @@ coordinates</li>
 <strong>Inverse Snyder</strong>: Convert face (x, y) to geographic
 (lon, lat)</li>
 </ol>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Round-trip test</span></span>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Round-trip test for all apertures</span></span>
 <span><span class="va">original_lon</span> <span class="op">&lt;-</span> <span class="fl">16.37</span></span>
 <span><span class="va">original_lat</span> <span class="op">&lt;-</span> <span class="fl">48.21</span></span>
 <span></span>
-<span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="va">original_lon</span>, <span class="va">original_lat</span>,</span>
-<span>                               resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">recovered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_index_to_lonlat.html">hexify_index_to_lonlat</a></span><span class="op">(</span><span class="va">idx</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original coordinates: (%.4f, %.4f)\n\n"</span>, <span class="va">original_lon</span>, <span class="va">original_lat</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Original coordinates: (16.3700, 48.2100)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original:  (%.4f, %.4f)\n"</span>, <span class="va">original_lon</span>, <span class="va">original_lat</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Original:  (16.3700, 48.2100)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Recovered: (%.4f, %.4f)\n"</span>, <span class="va">recovered</span><span class="op">[</span><span class="st">"lon"</span><span class="op">]</span>, <span class="va">recovered</span><span class="op">[</span><span class="st">"lat"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Recovered: (16.4204, 48.2877)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Error: %.6f degrees\n"</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="op">(</span><span class="va">recovered</span><span class="op">[</span><span class="st">"lon"</span><span class="op">]</span> <span class="op">-</span> <span class="va">original_lon</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span></span>
-<span>                 <span class="op">(</span><span class="va">recovered</span><span class="op">[</span><span class="st">"lat"</span><span class="op">]</span> <span class="op">-</span> <span class="va">original_lat</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error: 0.092576 degrees</span></span></code></pre></div>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">ap</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Use appropriate resolution for each aperture</span></span>
+<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">ap</span> <span class="op">==</span> <span class="fl">7</span><span class="op">)</span> <span class="fl">6</span> <span class="kw">else</span> <span class="fl">10</span></span>
+<span>  <span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="va">original_lon</span>, <span class="va">original_lat</span>,</span>
+<span>                                 resolution <span class="op">=</span> <span class="va">res</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
+<span>  <span class="va">recovered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_index_to_lonlat.html">hexify_index_to_lonlat</a></span><span class="op">(</span><span class="va">idx</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
+<span>  <span class="va">error</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="op">(</span><span class="va">recovered</span><span class="op">[</span><span class="st">"lon"</span><span class="op">]</span> <span class="op">-</span> <span class="va">original_lon</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span></span>
+<span>                <span class="op">(</span><span class="va">recovered</span><span class="op">[</span><span class="st">"lat"</span><span class="op">]</span> <span class="op">-</span> <span class="va">original_lat</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d (res %2d): recovered (%.4f, %.4f), error: %.6f°\n"</span>,</span>
+<span>              <span class="va">ap</span>, <span class="va">res</span>, <span class="va">recovered</span><span class="op">[</span><span class="st">"lon"</span><span class="op">]</span>, <span class="va">recovered</span><span class="op">[</span><span class="st">"lat"</span><span class="op">]</span>, <span class="va">error</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; Aperture 3 (res 10): recovered (16.4204, 48.2877), error: 0.092576°</span></span>
+<span><span class="co">#&gt; Aperture 4 (res 10): recovered (16.4177, 48.2119), error: 0.047712°</span></span>
+<span><span class="co">#&gt; Aperture 7 (res  6): recovered (-10.0330, 3.8584), error: 51.615693°</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cell-properties">Cell Properties<a class="anchor" aria-label="anchor" href="#cell-properties"></a>
@@ -309,21 +576,22 @@ coordinates</li>
 </h3>
 <p>A key property of ISEA grids: all cells have approximately equal
 area.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Approximate cell area calculation</span></span>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compare cell areas across apertures at similar resolutions</span></span>
 <span><span class="va">earth_area_km2</span> <span class="op">&lt;-</span> <span class="fl">510072000</span></span>
-<span><span class="va">resolution</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
-<span><span class="va">aperture</span> <span class="op">&lt;-</span> <span class="fl">3</span></span>
 <span></span>
-<span><span class="va">total_cells</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">*</span> <span class="va">aperture</span><span class="op">^</span><span class="va">resolution</span></span>
-<span><span class="va">cell_area</span> <span class="op">&lt;-</span> <span class="va">earth_area_km2</span> <span class="op">/</span> <span class="va">total_cells</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Aperture comparison at ~1000 km² target:\n\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Aperture comparison at ~1000 km² target:</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">ap</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d: resolution %d → %.1f km² (%.0f cells)\n"</span>,</span>
+<span>              <span class="va">ap</span>, <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">grid</span><span class="op">$</span><span class="va">area</span>, <span class="va">grid</span><span class="op">$</span><span class="va">total_cells</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Resolution %d, Aperture %d:\n"</span>, <span class="va">resolution</span>, <span class="va">aperture</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Resolution 10, Aperture 3:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"  Total cells: %.0f\n"</span>, <span class="va">total_cells</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Total cells: 1180980</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"  Cell area: %.2f km²\n"</span>, <span class="va">cell_area</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Cell area: 431.91 km²</span></span></code></pre></div>
+<span><span class="co"># Mixed aperture available via hexify() function, not hexify_grid()</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n(Mixed aperture 4/3 is available via hexify() with aperture = '4/3')\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; (Mixed aperture 4/3 is available via hexify() with aperture = '4/3')</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="cell-shape">Cell Shape<a class="anchor" aria-label="anchor" href="#cell-shape"></a>

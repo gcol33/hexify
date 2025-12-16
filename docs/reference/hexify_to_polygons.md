@@ -1,7 +1,7 @@
 # Generate polygons directly from hexify result
 
 Convenience function that extracts resolution from a hexify result and
-generates polygons. Resolution is auto-detected from the hex_area
+generates polygons. Resolution is auto-detected from the cell_area
 column.
 
 ## Usage
@@ -14,7 +14,7 @@ hexify_to_polygons(data, aperture = 3L, return_sf = TRUE)
 
 - data:
 
-  Data frame returned by hexify() containing hex_id and hex_area
+  Data frame returned by hexify() containing cell_id and cell_area
 
 - aperture:
 
@@ -27,6 +27,20 @@ hexify_to_polygons(data, aperture = 3L, return_sf = TRUE)
 ## Value
 
 sf object or data frame with polygon geometries (see hexify_cell_to_sf)
+
+## See also
+
+[`hexify_cell_to_sf`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md)
+for low-level polygon generation,
+[`hexify_to_sf`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+for full hexify result conversion
+
+Other sf conversion:
+[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
+[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
+[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md),
+[`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
 
 ## Examples
 

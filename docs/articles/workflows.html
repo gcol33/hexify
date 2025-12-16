@@ -166,10 +166,10 @@ them into equal-area cells for analysis or visualization.</p>
 <span><span class="va">obs_coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">observations</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Fine resolution: %d unique cells (area: %.1f km²)\n"</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">obs_fine</span><span class="op">$</span><span class="va">hex_id</span><span class="op">)</span><span class="op">)</span>, <span class="va">obs_fine</span><span class="op">$</span><span class="va">hex_area</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">obs_fine</span><span class="op">$</span><span class="va">cell_id</span><span class="op">)</span><span class="op">)</span>, <span class="va">obs_fine</span><span class="op">$</span><span class="va">cell_area</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Fine resolution: 996 unique cells (area: 96.0 km²)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Coarse resolution: %d unique cells (area: %.1f km²)\n"</span>,</span>
-<span>            <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">obs_coarse</span><span class="op">$</span><span class="va">hex_id</span><span class="op">)</span><span class="op">)</span>, <span class="va">obs_coarse</span><span class="op">$</span><span class="va">hex_area</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">obs_coarse</span><span class="op">$</span><span class="va">cell_id</span><span class="op">)</span><span class="op">)</span>, <span class="va">obs_coarse</span><span class="op">$</span><span class="va">cell_area</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Coarse resolution: 649 unique cells (area: 7774.0 km²)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -178,7 +178,7 @@ them into equal-area cells for analysis or visualization.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Species richness at fine scale</span></span>
 <span><span class="va">richness_fine</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span></span>
-<span>  <span class="va">species</span> <span class="op">~</span> <span class="va">hex_id</span>,</span>
+<span>  <span class="va">species</span> <span class="op">~</span> <span class="va">cell_id</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">obs_fine</span>,</span>
 <span>  FUN <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -186,7 +186,7 @@ them into equal-area cells for analysis or visualization.</p>
 <span></span>
 <span><span class="co"># Species richness at coarse scale</span></span>
 <span><span class="va">richness_coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span></span>
-<span>  <span class="va">species</span> <span class="op">~</span> <span class="va">hex_id</span>,</span>
+<span>  <span class="va">species</span> <span class="op">~</span> <span class="va">cell_id</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">obs_coarse</span>,</span>
 <span>  FUN <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -280,14 +280,14 @@ call.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">observations</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Result includes all cell information</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"hex_id"</span>, <span class="st">"hex_cen_lon"</span>, <span class="st">"hex_cen_lat"</span>, <span class="st">"hex_area"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     species       lon      lat hex_id hex_cen_lon hex_cen_lat hex_area</span></span>
-<span><span class="co">#&gt; 1 Species A 29.481211 56.14951 184668   29.607546    56.15000 863.7977</span></span>
-<span><span class="co">#&gt; 2 Species A  9.330428 56.40260 118578    9.394244    56.37970 863.7977</span></span>
-<span><span class="co">#&gt; 3 Species A -6.851941 46.28968  72401   -6.913549    46.35758 863.7977</span></span>
-<span><span class="co">#&gt; 4 Species A -4.621798 53.31213  65350   -4.541754    53.19360 863.7977</span></span>
-<span><span class="co">#&gt; 5 Species B 25.773424 51.89916 181006   25.992129    51.83198 863.7977</span></span>
-<span><span class="co">#&gt; 6 Species B 18.541863 53.73869 178342   18.792136    53.78309 863.7977</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"cell_id"</span>, <span class="st">"cell_cen_lon"</span>, <span class="st">"cell_cen_lat"</span>, <span class="st">"cell_area"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     species       lon      lat cell_id cell_cen_lon cell_cen_lat cell_area</span></span>
+<span><span class="co">#&gt; 1 Species A 29.481211 56.14951  184668    29.607546     56.15000  863.7977</span></span>
+<span><span class="co">#&gt; 2 Species A  9.330428 56.40260  118578     9.394244     56.37970  863.7977</span></span>
+<span><span class="co">#&gt; 3 Species A -6.851941 46.28968   72401    -6.913549     46.35758  863.7977</span></span>
+<span><span class="co">#&gt; 4 Species A -4.621798 53.31213   65350    -4.541754     53.19360  863.7977</span></span>
+<span><span class="co">#&gt; 5 Species B 25.773424 51.89916  181006    25.992129     51.83198  863.7977</span></span>
+<span><span class="co">#&gt; 6 Species B 18.541863 53.73869  178342    18.792136     53.78309  863.7977</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -328,14 +328,13 @@ resolution.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target_area</span> <span class="op">&lt;-</span> <span class="fl">500</span>  <span class="co"># km²</span></span>
 <span></span>
+<span><span class="co"># Compare aperture options</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">ap</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="va">target_area</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d: resolution %d, area %.1f km²\n"</span>,</span>
-<span>              <span class="va">ap</span>, <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">grid</span><span class="op">$</span><span class="va">area</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d: resolution %d, area %.1f km², %.0f cells\n"</span>,</span>
+<span>              <span class="va">ap</span>, <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">grid</span><span class="op">$</span><span class="va">area</span>, <span class="va">grid</span><span class="op">$</span><span class="va">total_cells</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Aperture 3: resolution 10, area 500.0 km²</span></span>
-<span><span class="co">#&gt; Aperture 4: resolution 8, area 500.0 km²</span></span>
-<span><span class="co">#&gt; Aperture 7: resolution 6, area 500.0 km²</span></span></code></pre></div>
+<span><span class="co"># Note: Mixed aperture "4/3" is available via hexify() but not hexify_grid()</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -436,23 +435,47 @@ resolution.</p>
 <div class="section level3">
 <h3 id="choose-aperture-based-on-use-case">1. Choose aperture based on use case<a class="anchor" aria-label="anchor" href="#choose-aperture-based-on-use-case"></a>
 </h3>
-<ul>
-<li>
-<strong>Aperture 3</strong>: Best for fine resolution control,
-ecological studies</li>
-<li>
-<strong>Aperture 4</strong>: Good default, familiar power-of-2
-scaling</li>
-<li>
-<strong>Aperture 7</strong>: Fast resolution jumps, coarse regional
-analysis</li>
-</ul>
+<table class="table">
+<colgroup>
+<col width="31%">
+<col width="31%">
+<col width="37%">
+</colgroup>
+<thead><tr class="header">
+<th>Aperture</th>
+<th>Best For</th>
+<th>Trade-offs</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>3</td>
+<td>Fine resolution control, ecological studies, dggridR
+compatibility</td>
+<td>Slowest cell growth</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Power-of-2 scaling, GIS workflows</td>
+<td>Moderate resolution steps</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Rapid cell count growth, coarse analysis</td>
+<td>Largest resolution jumps</td>
+</tr>
+<tr class="even">
+<td>4/3</td>
+<td>Balance of 4’s fast start + 3’s fine control</td>
+<td>More complex indexing</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
 <h3 id="store-indices-efficiently">2. Store indices efficiently<a class="anchor" aria-label="anchor" href="#store-indices-efficiently"></a>
 </h3>
 <ul>
-<li>Use <code>hex_id</code> (integer) for database storage</li>
+<li>Use <code>cell_id</code> (integer) for database storage</li>
 <li>Store resolution alongside cell IDs for later retrieval</li>
 </ul>
 </div>
@@ -484,12 +507,12 @@ analysis</li>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">data_with_na</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in hexify(data_with_na, lon = "lon", lat = "lat", area = 1000): 2</span></span>
 <span><span class="co">#&gt; coordinate pairs contain NA values and will be skipped</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"hex_id"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     lon   lat hex_id</span></span>
-<span><span class="co">#&gt; 1 16.37 48.21 126594</span></span>
-<span><span class="co">#&gt; 2    NA 48.86    246</span></span>
-<span><span class="co">#&gt; 3  2.35    NA    246</span></span>
-<span><span class="co">#&gt; 4 13.40 52.52 122466</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span>, <span class="st">"cell_id"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     lon   lat cell_id</span></span>
+<span><span class="co">#&gt; 1 16.37 48.21  126594</span></span>
+<span><span class="co">#&gt; 2    NA 48.86     246</span></span>
+<span><span class="co">#&gt; 3  2.35    NA     246</span></span>
+<span><span class="co">#&gt; 4 13.40 52.52  122466</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

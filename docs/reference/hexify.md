@@ -59,23 +59,23 @@ hexify(
 
 The input data with additional columns:
 
-- hex_id:
+- cell_id:
 
-  Stable DGGS cell identifier (integer cell ID)
+  Stable DGGS cell identifier (integer)
 
-- hex_cen_lon:
+- cell_cen_lon:
 
   Longitude of cell center in degrees
 
-- hex_cen_lat:
+- cell_cen_lat:
 
   Latitude of cell center in degrees
 
-- hex_area:
+- cell_area:
 
   Actual cell area in km² (based on matched resolution)
 
-- hex_diag:
+- cell_diag:
 
   Actual cell long diagonal in km
 
@@ -105,6 +105,16 @@ Supported apertures:
 - `aperture = "4/3"`: ISEA43H mixed aperture. Uses aperture-4 for first
   `mixed_aperture_level` levels, then aperture-3. Cell count = 10 \*
   4^mixed_level \* 3^(res - mixed_level) + 2.
+
+## See also
+
+[`hexify_grid`](https://gcol33.github.io/hexify/reference/hexify_grid.md)
+for grid specification,
+[`hexify_to_sf`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+for sf conversion
+
+Other hexify main:
+[`hexify_grid()`](https://gcol33.github.io/hexify/reference/hexify_grid.md)
 
 ## Examples
 

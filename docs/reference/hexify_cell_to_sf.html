@@ -53,16 +53,16 @@ Returns an sf object by default, or a data frame for lightweight workflows.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">hex_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">cell_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">hexify_polygons</span><span class="op">(</span><span class="va">hex_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">hexify_polygons</span><span class="op">(</span><span class="va">cell_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-hex-id">hex_id<a class="anchor" aria-label="anchor" href="#arg-hex-id"></a></dt>
+<dl><dt id="arg-cell-id">cell_id<a class="anchor" aria-label="anchor" href="#arg-cell-id"></a></dt>
 <dd><p>Integer vector of cell identifiers</p></dd>
 
 
@@ -82,7 +82,7 @@ geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If return_sf = TRUE: sf object with columns:</p>
-<dl><dt>hex_id</dt>
+<dl><dt>cell_id</dt>
 <dd><p>Cell identifier</p></dd>
 
 <dt>geometry</dt>
@@ -90,7 +90,7 @@ geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
 
 
 </dl><p>If return_sf = FALSE: data frame with columns:</p>
-<dl><dt>hex_id</dt>
+<dl><dt>cell_id</dt>
 <dd><p>Cell identifier</p></dd>
 
 <dt>lon</dt>
@@ -108,6 +108,17 @@ geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
     <p>This function uses a native C++ implementation that is significantly faster
 than dggridR's polygon generation, especially for large numbers of cells.</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="hexify_to_sf.html">hexify_to_sf</a></code> for converting hexify() output,
+<code><a href="hexify_to_polygons.html">hexify_to_polygons</a></code> for auto-resolution polygon generation</p>
+<p>Other sf conversion:
+<code><a href="hex_corners_to_sf.html">hex_corners_to_sf()</a></code>,
+<code><a href="hexify_grid_global.html">hexify_grid_global()</a></code>,
+<code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code>,
+<code><a href="hexify_to_polygons.html">hexify_to_polygons()</a></code>,
+<code><a href="hexify_to_sf.html">hexify_to_sf()</a></code></p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -119,7 +130,7 @@ than dggridR's polygon generation, especially for large numbers of cells.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get polygons as sf object</span></span>
-<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">hex_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot with sf</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>

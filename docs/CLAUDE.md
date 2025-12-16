@@ -11,7 +11,8 @@ Produces output identical to dggridR with a simpler API. Supports
 apertures 3, 4, 7, and mixed 4/3.
 
 **Primary function:** `hexify(df, lon, lat, area)` → returns input with
-`hex_id`, `hex_cen_lon`, `hex_cen_lat`, `hex_area`, `hex_diag` columns.
+`cell_id`, `cell_cen_lon`, `cell_cen_lat`, `cell_area`, `cell_diag`
+columns.
 
 ## Build & Development Commands
 
@@ -63,7 +64,7 @@ Rscript -e "Rcpp::compileAttributes()"                         # Rebuild C++ bin
 | Icosa Triangle | icosa_triangle_face (0-19), icosa_triangle_x, icosa_triangle_y | Triangle face + projected coords |
 | Quad XY | quad (0-11), quad_x, quad_y | Quad + continuous coordinates |
 | Quad IJ | quad (0-11), i, j | Quad + integer grid indices |
-| Cell ID | single integer | Global cell ID (dggridR compatible) |
+| SEQNUM/Cell ID | single integer | Global cell ID (dggridR compatible) |
 
 Triangle-to-Quad: 20 faces → 12 quads (pairs of triangles).
 

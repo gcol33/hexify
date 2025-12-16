@@ -55,6 +55,9 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #'   \item{projection}{Map projection ("ISEA")}
 #'   \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 #'
+#' @family hexify main
+#' @seealso \code{\link{hexify}} for the main user function,
+#'   \code{\link{hexify_grid_to_cell}} for coordinate conversion
 #' @export
 #' @examples
 #' \dontrun{
@@ -146,8 +149,6 @@ hexify_grid <- function(area,
 #' Backwards-compatible alias for hexify_grid
 #'
 #' @description
-#' \lifecycle{deprecated}
-#'
 #' `hexify_construct()` was renamed to `hexify_grid()` for clarity.
 #' Use `hexify_grid()` instead.
 #'

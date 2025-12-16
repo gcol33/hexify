@@ -26,4 +26,26 @@ coords <- hexify_cell_to_lonlat(1702, resolution = 5, aperture = 3)
 \seealso{
 \code{\link{hexify_lonlat_to_cell}} for the forward operation,
 \code{\link{hexify_grid_cell_to_lonlat}} for the grid-based wrapper
+
+Other coordinate conversion: 
+\code{\link{hexify_cell_id_to_quad_ij}()},
+\code{\link{hexify_cell_to_icosa_tri}()},
+\code{\link{hexify_cell_to_plane}()},
+\code{\link{hexify_cell_to_quad_ij}()},
+\code{\link{hexify_cell_to_quad_xy}()},
+\code{\link{hexify_grid_cell_to_lonlat}()},
+\code{\link{hexify_grid_to_cell}()},
+\code{\link{hexify_icosa_tri_to_plane}()},
+\code{\link{hexify_icosa_tri_to_quad_ij}()},
+\code{\link{hexify_icosa_tri_to_quad_xy}()},
+\code{\link{hexify_lonlat_to_cell}()},
+\code{\link{hexify_lonlat_to_plane}()},
+\code{\link{hexify_lonlat_to_quad_ij}()},
+\code{\link{hexify_quad_ij_to_cell}()},
+\code{\link{hexify_quad_ij_to_icosa_tri}()},
+\code{\link{hexify_quad_ij_to_xy}()},
+\code{\link{hexify_quad_xy_to_cell}()},
+\code{\link{hexify_quad_xy_to_icosa_tri}()},
+\code{\link{hexify_roundtrip_test}()}
 }
+\concept{coordinate conversion}
