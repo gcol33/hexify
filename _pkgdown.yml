@@ -21,10 +21,37 @@ navbar:
       aria-label: GitHub
 
 reference:
-  - title: Main Functions
+  - title: Core Classes
     contents:
+      - HexGrid-class
+      - HexData-class
+      - hex_grid
       - hexify
       - hexify_assign
+  - title: Class Methods
+    contents:
+      - grid
+      - cells
+      - n_cells
+      - as_sf
+      - as_tibble.HexData
+      - autoplot.HexData
+      - starts_with("plot,HexData")
+  - title: Grid Helpers
+    contents:
+      - lonlat_to_cell
+      - cell_to_lonlat
+      - cell_to_sf
+      - cell_to_index
+      - grid_rect
+      - grid_global
+      - get_parent
+      - get_children
+      - extract_grid
+      - is_hex_grid
+      - is_hex_data
+      - hexify_df
+      - new_hex_data
   - title: Coordinate Conversions
     contents:
       - starts_with("hexify_lonlat")

@@ -1,0 +1,150 @@
+# Create a Hexagonal Grid Specification
+
+Creates a HexGrid object that stores all parameters needed for hexagonal
+grid operations. Use this to define the grid once and pass it to all
+downstream functions.
+
+## Usage
+
+``` r
+hex_grid(
+  area_km2 = NULL,
+  resolution = NULL,
+  aperture = 3L,
+  topology = "H",
+  grid_system = "ISEA",
+  index_type = NULL,
+  resround = "nearest",
+  mixed_aperture_level = NULL,
+  crs_input = 4326L,
+  ...
+)
+```
+
+## Arguments
+
+- area_km2:
+
+  Target cell area in square kilometers. Mutually exclusive with
+  `resolution`.
+
+- resolution:
+
+  Grid resolution level (0-30). Mutually exclusive with `area_km2`.
+
+- aperture:
+
+  Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
+
+- topology:
+
+  Grid topology: "H" (default) or "HEXAGON".
+
+- grid_system:
+
+  Grid system: "ISEA" (default, only supported option).
+
+- index_type:
+
+  Index format: "integer" (default) or "character". Automatically set to
+  "character" for high resolutions to avoid overflow.
+
+- resround:
+
+  Resolution rounding when using `area_km2`: "nearest" (default), "up",
+  or "down".
+
+- mixed_aperture_level:
+
+  For aperture "4/3": number of aperture-4 levels before switching to
+  aperture-3. If NULL, defaults to resolution/2.
+
+- crs_input:
+
+  Input coordinate reference system (default 4326 = WGS84).
+
+- ...:
+
+  Additional metadata to store in the grid specification.
+
+## Value
+
+A HexGrid object containing the grid specification.
+
+## Details
+
+Exactly one of `area_km2` or `resolution` must be provided.
+
+When `area_km2` is provided, the resolution is calculated automatically
+using the cell count formula: N = 10 \* aperture^res + 2.
+
+The `index_type` parameter controls how cell IDs are stored:
+
+- "integer": Numeric cell IDs (faster, but overflow risk at high res)
+
+- "character": String indices (safer for high resolution grids)
+
+For resolutions above 15 (aperture 3) or 12 (aperture 4), the function
+automatically switches to "character" index type to prevent integer
+overflow.
+
+## One Grid, Many Datasets
+
+A HexGrid acts as a shared spatial reference system - like a CRS, but
+discrete and equal-area. Define the grid once, then attach multiple
+datasets without repeating parameters:
+
+
+    # Step 1: Define the grid once
+    grid <- hex_grid(area_km2 = 1000)
+
+    # Step 2: Attach multiple datasets to the same grid
+    birds <- hexify(bird_obs, lon = "longitude", lat = "latitude", grid = grid)
+    mammals <- hexify(mammal_obs, lon = "lon", lat = "lat", grid = grid)
+    climate <- hexify(weather_stations, lon = "x", lat = "y", grid = grid)
+
+    # No aperture, resolution, or area needed after step 1 - the grid
+    # travels with the data.
+
+    # Step 3: Work at the cell level
+    # Once hexified, lon/lat no longer matter - cell_id is the shared key
+    bird_counts <- aggregate(species ~ cell_id, data = as.data.frame(birds), length)
+    mammal_richness <- aggregate(species ~ cell_id, data = as.data.frame(mammals),
+                                 function(x) length(unique(x)))
+
+    # Join datasets by cell_id - guaranteed to align because same grid
+    combined <- merge(bird_counts, mammal_richness, by = "cell_id")
+
+    # Step 4: Visual confirmation
+    # All datasets produce identical grid overlays
+    plot(birds)   # See the grid
+    plot(mammals) # Same grid, different data
+
+## See also
+
+[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for
+assigning points to cells,
+[`HexGrid-class`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+for class documentation
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Create grid by target area
+grid <- hex_grid(area_km2 = 1000)
+print(grid)
+
+# Create grid by resolution
+grid <- hex_grid(resolution = 8, aperture = 3)
+
+# Create grid with different aperture
+grid4 <- hex_grid(area_km2 = 500, aperture = 4)
+
+# Create mixed aperture grid
+grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
+
+# Use grid in hexify
+result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
+} # }
+```

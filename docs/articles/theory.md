@@ -153,6 +153,11 @@ then quantize to grid cell indices based on the resolution.
 ``` r
 
 library(hexify)
+#> 
+#> Attaching package: 'hexify'
+#> The following object is masked from 'package:graphics':
+#> 
+#>     grid
 
 # Project a point through the pipeline
 result <- hexify_forward(lon = 16.37, lat = 48.21)

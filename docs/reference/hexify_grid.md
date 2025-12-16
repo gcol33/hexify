@@ -33,7 +33,7 @@ hexify_construct(
 
 - area:
 
-  Target cell area in km² (if metric=TRUE) or area code
+  Target cell area in km^2 (if metric=TRUE) or area code
 
 - topology:
 
@@ -41,7 +41,7 @@ hexify_construct(
 
 - metric:
 
-  Whether area is in metric units (km²)
+  Whether area is in metric units (km^2)
 
 - resround:
 
@@ -97,11 +97,11 @@ Other hexify main:
 
 ``` r
 if (FALSE) { # \dontrun{
-# Create a grid with ~1000 km² cells
+# Create a grid with ~1000 km^2 cells
 grid <- hexify_grid(area = 1000, aperture = 3)
 print(grid)
 
-# Create a finer resolution grid (~100 km² cells)
+# Create a finer resolution grid (~100 km^2 cells)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 } # }
 ```

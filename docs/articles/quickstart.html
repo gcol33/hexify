@@ -6071,14 +6071,14 @@ the equator to the Arctic.</p>
 <span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">45</span>, <span class="fl">70</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">test_points</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">test_points</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># All cells have the same area, regardless of latitude</span></span>
-<span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"location"</span>, <span class="st">"lat"</span>, <span class="st">"cell_area"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;       location lat cell_area</span></span>
-<span><span class="co">#&gt; 1      Equator   0  863.7977</span></span>
-<span><span class="co">#&gt; 2 Mid-latitude  45  863.7977</span></span>
-<span><span class="co">#&gt; 3       Arctic  70  863.7977</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"location"</span>, <span class="st">"lat"</span>, <span class="st">"cell_area_km2"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;       location lat cell_area_km2</span></span>
+<span><span class="co">#&gt; 1      Equator   0      863.7977</span></span>
+<span><span class="co">#&gt; 2 Mid-latitude  45      863.7977</span></span>
+<span><span class="co">#&gt; 3       Arctic  70      863.7977</span></span></code></pre></div>
 <p>With hexify, a 1000 km² cell at the equator is the same size as a
 1000 km² cell in Norway.</p>
 </div>
@@ -6105,9 +6105,9 @@ SEQNUM)</li>
 <code>cell_cen_lon</code>, <code>cell_cen_lat</code>: Cell center
 coordinates</li>
 <li>
-<code>cell_area</code>: Actual cell area in km²</li>
+<code>cell_area_km2</code>: Actual cell area in km²</li>
 <li>
-<code>cell_diag</code>: Cell diagonal in km</li>
+<code>cell_diag_km</code>: Cell diagonal in km</li>
 </ul>
 <p>Supports apertures 3, 4, 7, and mixed 4/3:</p>
 <table class="table">
@@ -6166,14 +6166,20 @@ coordinates</li>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Assign to ~1000 km² hexagonal cells</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
-<span><span class="co">#&gt;     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area cell_diag</span></span>
-<span><span class="co">#&gt; 1 Vienna 16.37 48.21  126594    16.420390     48.28766  863.7977  31.58208</span></span>
-<span><span class="co">#&gt; 2  Paris  2.35 48.86  118788     2.385556     48.96232  863.7977  31.58208</span></span>
-<span><span class="co">#&gt; 3 Madrid -3.70 40.42  118752    -3.582199     40.52264  863.7977  31.58208</span></span>
-<span><span class="co">#&gt; 4 Berlin 13.40 52.52  122466    13.448955     52.65189  863.7977  31.58208</span></span>
-<span><span class="co">#&gt; 5   Rome 12.50 41.90  127788    12.674254     41.87485  863.7977  31.58208</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2</span></span>
+<span><span class="co">#&gt; 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977</span></span>
+<span><span class="co">#&gt; 2  Paris  2.35 48.86  118788     2.385556     48.96232      863.7977</span></span>
+<span><span class="co">#&gt; 3 Madrid -3.70 40.42  118752    -3.582199     40.52264      863.7977</span></span>
+<span><span class="co">#&gt; 4 Berlin 13.40 52.52  122466    13.448955     52.65189      863.7977</span></span>
+<span><span class="co">#&gt; 5   Rome 12.50 41.90  127788    12.674254     41.87485      863.7977</span></span>
+<span><span class="co">#&gt;   cell_diag_km</span></span>
+<span><span class="co">#&gt; 1     31.58208</span></span>
+<span><span class="co">#&gt; 2     31.58208</span></span>
+<span><span class="co">#&gt; 3     31.58208</span></span>
+<span><span class="co">#&gt; 4     31.58208</span></span>
+<span><span class="co">#&gt; 5     31.58208</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="with-sf-objects">With sf Objects<a class="anchor" aria-label="anchor" href="#with-sf-objects"></a>
@@ -6185,9 +6191,11 @@ coordinates</li>
 <span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">cities</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># hexify handles CRS transformation automatically</span></span>
-<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">pts</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">pts</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result_sf</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "sf"         "data.frame"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "HexData"</span></span>
+<span><span class="co">#&gt; attr(,"package")</span></span>
+<span><span class="co">#&gt; [1] "hexify"</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -6234,7 +6242,8 @@ bird observation data across Europe and Africa.</p>
 </h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Assign each observation to a ~25,000 km² cell</span></span>
-<span><span class="va">birds_gridded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">25000</span><span class="op">)</span></span>
+<span><span class="va">birds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">25000</span><span class="op">)</span></span>
+<span><span class="va">birds_gridded</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">birds_hex</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Count observations per cell</span></span>
 <span><span class="va">obs_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span></span>
@@ -6266,14 +6275,14 @@ bird observation data across Europe and Africa.</p>
 <h4 id="generate-cell-polygons">Generate Cell Polygons<a class="anchor" aria-label="anchor" href="#generate-cell-polygons"></a>
 </h4>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get grid parameters</span></span>
-<span><span class="va">grid_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">25000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Get grid from HexData result</span></span>
+<span><span class="va">grid_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">birds_hex</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate polygons for cells with data</span></span>
 <span><span class="va">cell_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_cell_to_sf.html">hexify_cell_to_sf</a></span><span class="op">(</span></span>
 <span>  <span class="va">obs_counts</span><span class="op">$</span><span class="va">cell_id</span>,</span>
-<span>  resolution <span class="op">=</span> <span class="va">grid_info</span><span class="op">$</span><span class="va">resolution</span>,</span>
-<span>  aperture <span class="op">=</span> <span class="fl">3</span></span>
+<span>  resolution <span class="op">=</span> <span class="va">grid_info</span><span class="op">@</span><span class="va">resolution</span>,</span>
+<span>  aperture <span class="op">=</span> <span class="va">grid_info</span><span class="op">@</span><span class="va">aperture</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">cell_polys</span><span class="op">$</span><span class="va">n_observations</span> <span class="op">&lt;-</span> <span class="va">obs_counts</span><span class="op">$</span><span class="va">n_observations</span></span>
 <span><span class="va">cell_polys</span><span class="op">$</span><span class="va">n_species</span> <span class="op">&lt;-</span> <span class="va">obs_counts</span><span class="op">$</span><span class="va">n_species</span></span></code></pre></div>
@@ -6295,7 +6304,7 @@ bird observation data across Europe and Africa.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Bird Observations in Equal-Area Hexagonal Cells"</span>,</span>
 <span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"ISEA3H grid at resolution %d (~%.0f km² cells)"</span>,</span>
-<span>                       <span class="va">grid_info</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">grid_info</span><span class="op">$</span><span class="va">area</span><span class="op">)</span></span>
+<span>                       <span class="va">grid_info</span><span class="op">@</span><span class="va">resolution</span>, <span class="va">grid_info</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
@@ -10290,7 +10299,8 @@ cells:</p>
 <span><span class="va">sample_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="va">lon</span>, lat <span class="op">=</span> <span class="va">lat</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Assign to ~100,000 km² cells</span></span>
-<span><span class="va">sample_gridded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">sample_df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span>
+<span><span class="va">sample_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">sample_df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span>
+<span><span class="va">sample_gridded</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sample_hex</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get unique cells</span></span>
 <span><span class="va">unique_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">sample_gridded</span><span class="op">$</span><span class="va">cell_id</span><span class="op">)</span></span>
@@ -10303,11 +10313,11 @@ cells:</p>
 <p>For aperture 3, the maximum cell ID at resolution r is
 <code>10 × 3^r + 2</code>:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Grid parameters</span></span>
-<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">100000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">max_cell</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">3</span><span class="op">^</span><span class="va">grid</span><span class="op">$</span><span class="va">resolution</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
+<code class="sourceCode R"><span><span class="co"># Grid parameters - use hex_grid() for consistent grid specification</span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">100000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">max_cell</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">3</span><span class="op">^</span><span class="va">grid</span><span class="op">@</span><span class="va">resolution</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Resolution %d has %d total cells\n"</span>, <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">max_cell</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Resolution %d has %d total cells\n"</span>, <span class="va">grid</span><span class="op">@</span><span class="va">resolution</span>, <span class="va">max_cell</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Resolution 6 has 7292 total cells</span></span>
 <span></span>
 <span><span class="co"># Sample random cell IDs</span></span>
@@ -10316,7 +10326,7 @@ cells:</p>
 <span></span>
 <span><span class="co"># Get cell centers</span></span>
 <span><span class="va">cell_centers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_cell_to_lonlat.html">hexify_cell_to_lonlat</a></span><span class="op">(</span><span class="va">random_cells</span>,</span>
-<span>                                       resolution <span class="op">=</span> <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>,</span>
+<span>                                       resolution <span class="op">=</span> <span class="va">grid</span><span class="op">@</span><span class="va">resolution</span>,</span>
 <span>                                       aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cell_centers</span><span class="op">)</span></span>
@@ -10335,8 +10345,8 @@ cells:</p>
 <code class="sourceCode R"><span><span class="co"># Generate polygons for sampled cells</span></span>
 <span><span class="va">sample_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_cell_to_sf.html">hexify_cell_to_sf</a></span><span class="op">(</span></span>
 <span>  <span class="va">random_cells</span>,</span>
-<span>  resolution <span class="op">=</span> <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>,</span>
-<span>  aperture <span class="op">=</span> <span class="fl">3</span></span>
+<span>  resolution <span class="op">=</span> <span class="va">grid</span><span class="op">@</span><span class="va">resolution</span>,</span>
+<span>  aperture <span class="op">=</span> <span class="va">grid</span><span class="op">@</span><span class="va">aperture</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sample_polys_wrapped</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_wrap_dateline</a></span><span class="op">(</span></span>
@@ -10349,7 +10359,7 @@ cells:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">hexify_world</span>, fill <span class="op">=</span> <span class="st">"gray95"</span>, color <span class="op">=</span> <span class="st">"gray70"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">sample_polys_wrapped</span>, fill <span class="op">=</span> <span class="fu"><a href="https://scales.r-lib.org/reference/alpha.html" class="external-link">alpha</a></span><span class="op">(</span><span class="st">"forestgreen"</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>          color <span class="op">=</span> <span class="st">"darkgreen"</span>, linewidth <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Random Sample of %d Cells (~%.0f km² each)"</span>, <span class="va">N</span>, <span class="va">grid</span><span class="op">$</span><span class="va">area</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Random Sample of %d Cells (~%.0f km² each)"</span>, <span class="va">N</span>, <span class="va">grid</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, axis.ticks <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>

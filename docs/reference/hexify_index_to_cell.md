@@ -47,5 +47,5 @@ Other hierarchical index:
 ## Examples
 
 ``` r
-cell <- hexify_index_to_cell("051223", aperture = 3)
+cell <- hexify_index_to_cell("0012012", aperture = 3)
 ```

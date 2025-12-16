@@ -71,7 +71,7 @@ This is a helper function for grid construction.</p>
 
 
 <dt id="arg-area">area<a class="anchor" aria-label="anchor" href="#arg-area"></a></dt>
-<dd><p>Target cell area in km² (if metric=TRUE)</p></dd>
+<dd><p>Target cell area in km^2 (if metric=TRUE)</p></dd>
 
 
 <dt id="arg-round">round<a class="anchor" aria-label="anchor" href="#arg-round"></a></dt>
@@ -111,7 +111,7 @@ This is a helper function for grid construction.</p>
 <span><span class="va">temp_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>aperture <span class="op">=</span> <span class="fl">3</span>, topology <span class="op">=</span> <span class="st">"HEXAGON"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">temp_grid</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"hexify_grid"</span></span>
 <span></span>
-<span><span class="co"># Find resolution for 1000 km² cells</span></span>
+<span><span class="co"># Find resolution for 1000 km^2 cells</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">dg_closest_res_to_area</span><span class="op">(</span><span class="va">temp_grid</span>, area <span class="op">=</span> <span class="fl">1000</span>, </span>
 <span>                               metric <span class="op">=</span> <span class="cn">TRUE</span>, show_info <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>

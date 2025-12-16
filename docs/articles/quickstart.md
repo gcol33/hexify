@@ -29,14 +29,14 @@ test_points <- data.frame(
   lat = c(0, 45, 70)
 )
 
-result <- hexify(test_points, lon = "lon", lat = "lat", area = 1000)
+result <- hexify(test_points, lon = "lon", lat = "lat", area_km2 = 1000)
 
 # All cells have the same area, regardless of latitude
-result[, c("location", "lat", "cell_area")]
-#>       location lat cell_area
-#> 1      Equator   0  863.7977
-#> 2 Mid-latitude  45  863.7977
-#> 3       Arctic  70  863.7977
+as.data.frame(result)[, c("location", "lat", "cell_area_km2")]
+#>       location lat cell_area_km2
+#> 1      Equator   0      863.7977
+#> 2 Mid-latitude  45      863.7977
+#> 3       Arctic  70      863.7977
 ```
 
 With hexify, a 1000 km² cell at the equator is the same size as a 1000
@@ -61,8 +61,8 @@ returns:
 
 - `cell_id`: Unique cell identifier (DGGRID-compatible SEQNUM)
 - `cell_cen_lon`, `cell_cen_lat`: Cell center coordinates
-- `cell_area`: Actual cell area in km²
-- `cell_diag`: Cell diagonal in km
+- `cell_area_km2`: Actual cell area in km²
+- `cell_diag_km`: Cell diagonal in km
 
 Supports apertures 3, 4, 7, and mixed 4/3:
 
@@ -87,14 +87,20 @@ cities <- data.frame(
 )
 
 # Assign to ~1000 km² hexagonal cells
-result <- hexify(cities, lon = "lon", lat = "lat", area = 1000)
-result
-#>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area cell_diag
-#> 1 Vienna 16.37 48.21  126594    16.420390     48.28766  863.7977  31.58208
-#> 2  Paris  2.35 48.86  118788     2.385556     48.96232  863.7977  31.58208
-#> 3 Madrid -3.70 40.42  118752    -3.582199     40.52264  863.7977  31.58208
-#> 4 Berlin 13.40 52.52  122466    13.448955     52.65189  863.7977  31.58208
-#> 5   Rome 12.50 41.90  127788    12.674254     41.87485  863.7977  31.58208
+result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 1000)
+as.data.frame(result)
+#>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
+#> 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977
+#> 2  Paris  2.35 48.86  118788     2.385556     48.96232      863.7977
+#> 3 Madrid -3.70 40.42  118752    -3.582199     40.52264      863.7977
+#> 4 Berlin 13.40 52.52  122466    13.448955     52.65189      863.7977
+#> 5   Rome 12.50 41.90  127788    12.674254     41.87485      863.7977
+#>   cell_diag_km
+#> 1     31.58208
+#> 2     31.58208
+#> 3     31.58208
+#> 4     31.58208
+#> 5     31.58208
 ```
 
 #### With sf Objects
@@ -107,9 +113,11 @@ library(sf)
 pts <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 
 # hexify handles CRS transformation automatically
-result_sf <- hexify(pts, area = 1000)
+result_sf <- hexify(pts, area_km2 = 1000)
 class(result_sf)
-#> [1] "sf"         "data.frame"
+#> [1] "HexData"
+#> attr(,"package")
+#> [1] "hexify"
 ```
 
 ### Real-World Example: Species Occurrence Data
@@ -159,7 +167,8 @@ birds$lat <- pmax(-35, pmin(70, birds$lat))
 ``` r
 
 # Assign each observation to a ~25,000 km² cell
-birds_gridded <- hexify(birds, lon = "lon", lat = "lat", area = 25000)
+birds_hex <- hexify(birds, lon = "lon", lat = "lat", area_km2 = 25000)
+birds_gridded <- as.data.frame(birds_hex)
 
 # Count observations per cell
 obs_counts <- aggregate(
@@ -192,14 +201,14 @@ head(obs_counts)
 
 ``` r
 
-# Get grid parameters
-grid_info <- hexify_grid(area = 25000, aperture = 3)
+# Get grid from HexData result
+grid_info <- grid(birds_hex)
 
 # Generate polygons for cells with data
 cell_polys <- hexify_cell_to_sf(
   obs_counts$cell_id,
-  resolution = grid_info$resolution,
-  aperture = 3
+  resolution = grid_info@resolution,
+  aperture = grid_info@aperture
 )
 cell_polys$n_observations <- obs_counts$n_observations
 cell_polys$n_species <- obs_counts$n_species
@@ -222,7 +231,7 @@ ggplot() +
   labs(
     title = "Bird Observations in Equal-Area Hexagonal Cells",
     subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km² cells)",
-                       grid_info$resolution, grid_info$area)
+                       grid_info@resolution, grid_info@area_km2)
   ) +
   theme_minimal() +
   theme(
@@ -286,7 +295,8 @@ lat <- (phi * 180 / pi) - 90
 sample_df <- data.frame(lon = lon, lat = lat)
 
 # Assign to ~100,000 km² cells
-sample_gridded <- hexify(sample_df, lon = "lon", lat = "lat", area = 100000)
+sample_hex <- hexify(sample_df, lon = "lon", lat = "lat", area_km2 = 100000)
+sample_gridded <- as.data.frame(sample_hex)
 
 # Get unique cells
 unique_cells <- unique(sample_gridded$cell_id)
@@ -300,11 +310,11 @@ For aperture 3, the maximum cell ID at resolution r is `10 × 3^r + 2`:
 
 ``` r
 
-# Grid parameters
-grid <- hexify_grid(area = 100000, aperture = 3)
-max_cell <- 10 * (3^grid$resolution) + 2
+# Grid parameters - use hex_grid() for consistent grid specification
+grid <- hex_grid(area_km2 = 100000, aperture = 3)
+max_cell <- 10 * (3^grid@resolution) + 2
 
-cat(sprintf("Resolution %d has %d total cells\n", grid$resolution, max_cell))
+cat(sprintf("Resolution %d has %d total cells\n", grid@resolution, max_cell))
 #> Resolution 6 has 7292 total cells
 
 # Sample random cell IDs
@@ -313,7 +323,7 @@ random_cells <- sample(1:max_cell, N, replace = FALSE)
 
 # Get cell centers
 cell_centers <- hexify_cell_to_lonlat(random_cells,
-                                       resolution = grid$resolution,
+                                       resolution = grid@resolution,
                                        aperture = 3)
 
 head(cell_centers)
@@ -333,8 +343,8 @@ head(cell_centers)
 # Generate polygons for sampled cells
 sample_polys <- hexify_cell_to_sf(
   random_cells,
-  resolution = grid$resolution,
-  aperture = 3
+  resolution = grid@resolution,
+  aperture = grid@aperture
 )
 
 sample_polys_wrapped <- st_wrap_dateline(
@@ -347,7 +357,7 @@ ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
   geom_sf(data = sample_polys_wrapped, fill = alpha("forestgreen", 0.5),
           color = "darkgreen", linewidth = 0.4) +
-  labs(title = sprintf("Random Sample of %d Cells (~%.0f km² each)", N, grid$area)) +
+  labs(title = sprintf("Random Sample of %d Cells (~%.0f km² each)", N, grid@area_km2)) +
   theme_minimal() +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```

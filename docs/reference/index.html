@@ -43,7 +43,7 @@
     </div>
 
     <div class="section level2">
-      <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a></h2>
+      <h2 id="core-classes">Core Classes<a class="anchor" aria-label="anchor" href="#core-classes"></a></h2>
 
 
 
@@ -53,6 +53,27 @@
 
 
       <dl><dt>
+
+          <code><a href="HexGrid-class.html">`$`(<i>&lt;HexGrid&gt;</i>)</a></code> <code><a href="HexGrid-class.html">names(<i>&lt;HexGrid&gt;</i>)</a></code> <code><a href="HexGrid-class.html">show(<i>&lt;HexGrid&gt;</i>)</a></code> <code><a href="HexGrid-class.html">as.list(<i>&lt;HexGrid&gt;</i>)</a></code>
+
+        </dt>
+        <dd>HexGrid Class</dd>
+
+        <dt>
+
+          <code><a href="HexData-class.html">grid(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">n_cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">nrow(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">ncol(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">dim(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">names(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`$`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`$&lt;-`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[[&lt;-`(<i>&lt;HexData&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;missing&gt;</i>)</a></code> <code><a href="HexData-class.html">show(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">as.data.frame(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">as.list(<i>&lt;HexData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>HexData Class</dd>
+
+        <dt>
+
+          <code><a href="hex_grid.html">hex_grid()</a></code>
+
+        </dt>
+        <dd>Create a Hexagonal Grid Specification</dd>
+
+        <dt>
 
           <code><a href="hexify.html">hexify()</a></code>
 
@@ -65,6 +86,164 @@
 
         </dt>
         <dd>Assign hex cells (ISEA3H, aperture 3) for lon/lat</dd>
+      </dl></div><div class="section level2">
+      <h2 id="class-methods">Class Methods<a class="anchor" aria-label="anchor" href="#class-methods"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="grid.html">grid()</a></code>
+
+        </dt>
+        <dd>Get Grid Specification</dd>
+
+        <dt>
+
+          <code><a href="cells.html">cells()</a></code>
+
+        </dt>
+        <dd>Get Cell IDs</dd>
+
+        <dt>
+
+          <code><a href="n_cells.html">n_cells()</a></code>
+
+        </dt>
+        <dd>Get Number of Cells</dd>
+
+        <dt>
+
+          <code><a href="as_sf.html">as_sf()</a></code>
+
+        </dt>
+        <dd>Convert HexData to sf Object</dd>
+
+        <dt>
+
+          <code><a href="as_tibble.HexData.html">as_tibble.HexData()</a></code>
+
+        </dt>
+        <dd>Convert HexData to tibble</dd>
+
+        <dt>
+
+          <code><a href="autoplot.HexData.html">autoplot.HexData()</a></code>
+
+        </dt>
+        <dd>Create a ggplot2 visualization of HexData</dd>
+
+        <dt>
+
+          <code><a href="plot-HexData-missing-method.html">plot(<i>&lt;HexData&gt;</i>,<i>&lt;missing&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot HexData objects</dd>
+      </dl></div><div class="section level2">
+      <h2 id="grid-helpers">Grid Helpers<a class="anchor" aria-label="anchor" href="#grid-helpers"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lonlat_to_cell.html">lonlat_to_cell()</a></code>
+
+        </dt>
+        <dd>Convert longitude/latitude to cell ID</dd>
+
+        <dt>
+
+          <code><a href="cell_to_lonlat.html">cell_to_lonlat()</a></code>
+
+        </dt>
+        <dd>Convert cell ID to longitude/latitude</dd>
+
+        <dt>
+
+          <code><a href="cell_to_sf.html">cell_to_sf()</a></code>
+
+        </dt>
+        <dd>Convert cell IDs to sf polygons</dd>
+
+        <dt>
+
+          <code><a href="cell_to_index.html">cell_to_index()</a></code>
+
+        </dt>
+        <dd>Convert cell ID to hierarchical index string</dd>
+
+        <dt>
+
+          <code><a href="grid_rect.html">grid_rect()</a></code>
+
+        </dt>
+        <dd>Generate a rectangular grid of hexagons</dd>
+
+        <dt>
+
+          <code><a href="grid_global.html">grid_global()</a></code>
+
+        </dt>
+        <dd>Generate a global hexagon grid</dd>
+
+        <dt>
+
+          <code><a href="get_parent.html">get_parent()</a></code>
+
+        </dt>
+        <dd>Get parent cell</dd>
+
+        <dt>
+
+          <code><a href="get_children.html">get_children()</a></code>
+
+        </dt>
+        <dd>Get children cells</dd>
+
+        <dt>
+
+          <code><a href="extract_grid.html">extract_grid()</a></code>
+
+        </dt>
+        <dd>Extract grid from various objects</dd>
+
+        <dt>
+
+          <code><a href="is_hex_grid.html">is_hex_grid()</a></code>
+
+        </dt>
+        <dd>Check if object is HexGrid</dd>
+
+        <dt>
+
+          <code><a href="is_hex_data.html">is_hex_data()</a></code>
+
+        </dt>
+        <dd>Check if object is HexData</dd>
+
+        <dt>
+
+          <code><a href="hexify_df.html">hexify_df()</a></code>
+
+        </dt>
+        <dd>Extract plain data frame from hexify result</dd>
+
+        <dt>
+
+          <code><a href="new_hex_data.html">new_hex_data()</a></code>
+
+        </dt>
+        <dd>Create a HexData Object (Internal)</dd>
       </dl></div><div class="section level2">
       <h2 id="coordinate-conversions">Coordinate Conversions<a class="anchor" aria-label="anchor" href="#coordinate-conversions"></a></h2>
 

@@ -1,11 +1,80 @@
 # Package index
 
-## Main Functions
+## Core Classes
 
+- [`` `$`( ``*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+  [`names(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+  [`show(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+  [`as.list(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+  : HexGrid Class
+- [`grid(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`n_cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`nrow(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`ncol(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`dim(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`names(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`` `$`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`` `$<-`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`` `[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`` `[[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`` `[[<-`( ``*`<HexData>`*`,`*`<ANY>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`show(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`as.data.frame(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  [`as.list(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  : HexData Class
+- [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+  : Create a Hexagonal Grid Specification
 - [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) :
   Assign hexagonal DGGS cell IDs to geographic points
 - [`hexify_assign()`](https://gcol33.github.io/hexify/reference/hexify_assign.md)
   : Assign hex cells (ISEA3H, aperture 3) for lon/lat
+
+## Class Methods
+
+- [`grid()`](https://gcol33.github.io/hexify/reference/grid.md) : Get
+  Grid Specification
+- [`cells()`](https://gcol33.github.io/hexify/reference/cells.md) : Get
+  Cell IDs
+- [`n_cells()`](https://gcol33.github.io/hexify/reference/n_cells.md) :
+  Get Number of Cells
+- [`as_sf()`](https://gcol33.github.io/hexify/reference/as_sf.md) :
+  Convert HexData to sf Object
+- [`as_tibble.HexData()`](https://gcol33.github.io/hexify/reference/as_tibble.HexData.md)
+  : Convert HexData to tibble
+- [`autoplot.HexData()`](https://gcol33.github.io/hexify/reference/autoplot.HexData.md)
+  : Create a ggplot2 visualization of HexData
+- [`plot(`*`<HexData>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
+  : Plot HexData objects
+
+## Grid Helpers
+
+- [`lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md)
+  : Convert longitude/latitude to cell ID
+- [`cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)
+  : Convert cell ID to longitude/latitude
+- [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+  : Convert cell IDs to sf polygons
+- [`cell_to_index()`](https://gcol33.github.io/hexify/reference/cell_to_index.md)
+  : Convert cell ID to hierarchical index string
+- [`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+  : Generate a rectangular grid of hexagons
+- [`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md)
+  : Generate a global hexagon grid
+- [`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md)
+  : Get parent cell
+- [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)
+  : Get children cells
+- [`extract_grid()`](https://gcol33.github.io/hexify/reference/extract_grid.md)
+  : Extract grid from various objects
+- [`is_hex_grid()`](https://gcol33.github.io/hexify/reference/is_hex_grid.md)
+  : Check if object is HexGrid
+- [`is_hex_data()`](https://gcol33.github.io/hexify/reference/is_hex_data.md)
+  : Check if object is HexData
+- [`hexify_df()`](https://gcol33.github.io/hexify/reference/hexify_df.md)
+  : Extract plain data frame from hexify result
+- [`new_hex_data()`](https://gcol33.github.io/hexify/reference/new_hex_data.md)
+  : Create a HexData Object (Internal)
 
 ## Coordinate Conversions
 

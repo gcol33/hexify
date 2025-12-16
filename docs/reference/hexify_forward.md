@@ -26,7 +26,7 @@ Named numeric vector: c(face, tx, ty)
 ## Details
 
 tx and ty are normalized coordinates within the triangular face,
-typically in range 0, 1.
+typically in range \[0, 1\].
 
 ## See also
 

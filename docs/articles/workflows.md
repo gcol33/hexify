@@ -5,6 +5,175 @@
 This vignette demonstrates practical workflows for common spatial
 analysis tasks using hexify’s discrete global grid system.
 
+## One Grid, Many Datasets
+
+The most powerful pattern in hexify is defining a grid once and reusing
+it across multiple datasets. This ensures spatial consistency and
+eliminates parameter repetition.
+
+### The Problem
+
+You often have:
+
+- Several independent datasets (observations, sensors, surveys)
+- All in longitude/latitude coordinates
+- Collected at different times or from different sources
+
+You want to:
+
+- Put everything on one common global grid
+- Be sure the grids actually match
+- Combine results later without subtle errors
+
+### The Solution: Shared Grid Objects
+
+``` r
+
+library(hexify)
+#> 
+#> Attaching package: 'hexify'
+#> The following object is masked from 'package:graphics':
+#> 
+#>     grid
+
+# Step 1: Define the grid once
+# This is your shared spatial reference system - like a CRS, but discrete and equal-area
+grid <- hex_grid(area_km2 = 5000)
+print(grid)
+#> HexGrid Specification
+#> ---------------------
+#> Aperture:    3
+#> Resolution:  8
+#> Area:        5000.00 km^2
+#> Grid System: ISEA
+#> Topology:    H
+#> Index Type:  integer
+#> Total Cells: 65612
+
+# Step 2: Create multiple datasets with different structures
+set.seed(123)
+
+# Dataset 1: Bird observations (note different column names)
+bird_obs <- data.frame(
+  species = sample(c("Passer domesticus", "Turdus merula", "Parus major"), 200, replace = TRUE),
+  longitude = runif(200, -10, 30),
+  latitude = runif(200, 35, 60)
+)
+
+# Dataset 2: Mammal records
+mammal_obs <- data.frame(
+  species = sample(c("Vulpes vulpes", "Meles meles", "Sciurus vulgaris"), 150, replace = TRUE),
+  lon = runif(150, -10, 30),
+
+  lat = runif(150, 35, 60)
+)
+
+# Dataset 3: Climate stations
+climate_data <- data.frame(
+  station_id = paste0("WS", 1:50),
+  x = runif(50, -10, 30),
+  y = runif(50, 35, 60),
+  temp_c = rnorm(50, 12, 5)
+)
+
+# Step 3: Attach all datasets to the SAME grid
+# No aperture, resolution, or area parameters needed - the grid carries them
+birds <- hexify(bird_obs, lon = "longitude", lat = "latitude", grid = grid)
+mammals <- hexify(mammal_obs, lon = "lon", lat = "lat", grid = grid)
+climate <- hexify(climate_data, lon = "x", lat = "y", grid = grid)
+
+cat("Birds:  ", nrow(birds), "observations in", n_cells(birds), "cells\n")
+#> Birds:   200 observations in 182 cells
+cat("Mammals:", nrow(mammals), "observations in", n_cells(mammals), "cells\n")
+#> Mammals: 150 observations in 140 cells
+cat("Climate:", nrow(climate), "stations in", n_cells(climate), "cells\n")
+#> Climate: 50 stations in 49 cells
+```
+
+### Working at the Cell Level
+
+Once data are hexified, longitude/latitude no longer matter for
+analysis. The `cell_id` becomes the shared spatial key:
+
+``` r
+
+# Extract data frames for aggregation
+birds_df <- as.data.frame(birds)
+mammals_df <- as.data.frame(mammals)
+climate_df <- as.data.frame(climate)
+
+# Aggregate each dataset by cell
+bird_richness <- aggregate(
+  species ~ cell_id,
+  data = birds_df,
+  FUN = function(x) length(unique(x))
+)
+names(bird_richness)[2] <- "bird_species"
+
+mammal_richness <- aggregate(
+  species ~ cell_id,
+  data = mammals_df,
+  FUN = function(x) length(unique(x))
+)
+names(mammal_richness)[2] <- "mammal_species"
+
+mean_temp <- aggregate(
+  temp_c ~ cell_id,
+  data = climate_df,
+  FUN = mean
+)
+names(mean_temp)[2] <- "mean_temp"
+
+# Join datasets by cell_id - guaranteed to align because same grid
+combined <- merge(bird_richness, mammal_richness, by = "cell_id", all = TRUE)
+combined <- merge(combined, mean_temp, by = "cell_id", all = TRUE)
+
+head(combined)
+#>   cell_id bird_species mammal_species mean_temp
+#> 1      82            1             NA        NA
+#> 2     162            1             NA        NA
+#> 3     163            1             NA        NA
+#> 4     325           NA              1        NA
+#> 5     487            1             NA        NA
+#> 6    6637            1             NA        NA
+```
+
+### Visual Confirmation
+
+All datasets produce identical grid overlays when plotted:
+
+``` r
+
+par(mfrow = c(1, 2), mar = c(2, 2, 3, 1))
+
+# Both plots use the same grid automatically
+plot(birds, main = "Bird Observations", pch = 16, cex = 0.5)
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+#> Spherical geometry (s2) switched on
+plot(mammals, main = "Mammal Observations", pch = 16, cex = 0.5)
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+```
+
+![](workflows_files/figure-html/visual-confirmation-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+### Key Benefits
+
+1.  **No parameter repetition**: Define aperture, resolution, area once
+
+2.  **Guaranteed consistency**: All datasets share the exact same grid
+
+3.  **Error prevention**: Can’t accidentally mix incompatible grids
+
+4.  **Clean code**: The grid travels with the data
+
+------------------------------------------------------------------------
+
 ## Workflow 1: Point Aggregation
 
 ### Problem
@@ -82,16 +251,16 @@ Use different target areas to get different resolutions.
 ``` r
 
 # Fine resolution (~100 km² cells)
-obs_fine <- hexify(observations, lon = "lon", lat = "lat", area = 100)
+obs_fine <- as.data.frame(hexify(observations, lon = "lon", lat = "lat", area_km2 = 100))
 
 # Coarse resolution (~10000 km² cells)
-obs_coarse <- hexify(observations, lon = "lon", lat = "lat", area = 10000)
+obs_coarse <- as.data.frame(hexify(observations, lon = "lon", lat = "lat", area_km2 = 10000))
 
 cat(sprintf("Fine resolution: %d unique cells (area: %.1f km²)\n",
-            length(unique(obs_fine$cell_id)), obs_fine$cell_area[1]))
+            length(unique(obs_fine$cell_id)), obs_fine$cell_area_km2[1]))
 #> Fine resolution: 996 unique cells (area: 96.0 km²)
 cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
-            length(unique(obs_coarse$cell_id)), obs_coarse$cell_area[1]))
+            length(unique(obs_coarse$cell_id)), obs_coarse$cell_area_km2[1]))
 #> Coarse resolution: 649 unique cells (area: 7774.0 km²)
 ```
 
@@ -197,17 +366,17 @@ which returns all cell metadata in one call.
 ``` r
 
 # Simple workflow with hexify()
-result <- hexify(observations, lon = "lon", lat = "lat", area = 1000)
+result <- as.data.frame(hexify(observations, lon = "lon", lat = "lat", area_km2 = 1000))
 
 # Result includes all cell information
-head(result[, c("species", "lon", "lat", "cell_id", "cell_cen_lon", "cell_cen_lat", "cell_area")])
-#>     species       lon      lat cell_id cell_cen_lon cell_cen_lat cell_area
-#> 1 Species A 29.481211 56.14951  184668    29.607546     56.15000  863.7977
-#> 2 Species A  9.330428 56.40260  118578     9.394244     56.37970  863.7977
-#> 3 Species A -6.851941 46.28968   72401    -6.913549     46.35758  863.7977
-#> 4 Species A -4.621798 53.31213   65350    -4.541754     53.19360  863.7977
-#> 5 Species B 25.773424 51.89916  181006    25.992129     51.83198  863.7977
-#> 6 Species B 18.541863 53.73869  178342    18.792136     53.78309  863.7977
+head(result[, c("species", "lon", "lat", "cell_id", "cell_cen_lon", "cell_cen_lat", "cell_area_km2")])
+#>     species       lon      lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
+#> 1 Species A 29.481211 56.14951  184668    29.607546     56.15000      863.7977
+#> 2 Species A  9.330428 56.40260  118578     9.394244     56.37970      863.7977
+#> 3 Species A -6.851941 46.28968   72401    -6.913549     46.35758      863.7977
+#> 4 Species A -4.621798 53.31213   65350    -4.541754     53.19360      863.7977
+#> 5 Species B 25.773424 51.89916  181006    25.992129     51.83198      863.7977
+#> 6 Species B 18.541863 53.73869  178342    18.792136     53.78309      863.7977
 ```
 
 ## Workflow 5: Choosing Resolution
@@ -272,20 +441,21 @@ library(sf)
 #> Linking to GEOS 3.13.1, GDAL 3.11.0, PROJ 9.6.0; sf_use_s2() is TRUE
 
 # Hexify some data
-result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
+result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
+result_df <- as.data.frame(result)
 
 # Convert to sf points (fast)
-sf_points <- hexify_to_sf(result, geometry = "point")
+sf_points <- hexify_to_sf(result_df, geometry = "point")
 
 # Convert to sf polygons (for choropleth maps)
-sf_polys <- hexify_to_sf(result, geometry = "polygon")
+sf_polys <- hexify_to_sf(result_df, geometry = "polygon")
 
 # Plot polygons with basemap and city labels
 europe <- hexify_world[hexify_world$continent == "Europe", ]
 plot(st_geometry(europe), col = "ivory", border = "gray70",
      xlim = c(-10, 25), ylim = c(35, 58), main = "European Cities - Hexagonal Grid")
 plot(st_geometry(sf_polys), col = "steelblue", border = "darkblue", add = TRUE)
-text(result$lon, result$lat, result$city, cex = 0.7, pos = 3, font = 2)
+text(result_df$lon, result_df$lat, result_df$city, cex = 0.7, pos = 3, font = 2)
 ```
 
 ![](workflows_files/figure-html/unnamed-chunk-9-1.svg)
@@ -327,8 +497,8 @@ data_with_na <- data.frame(
 )
 
 # hexify handles NAs gracefully with a warning
-result <- hexify(data_with_na, lon = "lon", lat = "lat", area = 1000)
-#> Warning in hexify(data_with_na, lon = "lon", lat = "lat", area = 1000): 2
+result <- as.data.frame(hexify(data_with_na, lon = "lon", lat = "lat", area_km2 = 1000))
+#> Warning in hexify(data_with_na, lon = "lon", lat = "lat", area_km2 = 1000): 2
 #> coordinate pairs contain NA values and will be skipped
 print(result[, c("lon", "lat", "cell_id")])
 #>     lon   lat cell_id

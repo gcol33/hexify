@@ -22,7 +22,7 @@ List with components:
 
 - area_km:
 
-  Total Earth surface area in km²
+  Total Earth surface area in km^2
 
 - n_cells:
 
@@ -30,7 +30,7 @@ List with components:
 
 - cell_area_km2:
 
-  Average cell area in km²
+  Average cell area in km^2
 
 - cell_spacing_km:
 
@@ -66,7 +66,7 @@ stats <- dgearthstat(grid)
 
 print(sprintf("Resolution %d has %.0f cells",
               stats$resolution, stats$n_cells))
-print(sprintf("Average cell area: %.2f km²",
+print(sprintf("Average cell area: %.2f km^2",
               stats$cell_area_km2))
 print(sprintf("Average cell spacing: %.2f km",
               stats$cell_spacing_km))
