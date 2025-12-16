@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -361,11 +361,12 @@ resolution.</p>
 <span><span class="co"># Convert to sf polygons (for choropleth maps)</span></span>
 <span><span class="va">sf_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_to_sf.html">hexify_to_sf</a></span><span class="op">(</span><span class="va">result</span>, geometry <span class="op">=</span> <span class="st">"polygon"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Plot polygons with basemap</span></span>
+<span><span class="co"># Plot polygons with basemap and city labels</span></span>
 <span><span class="va">europe</span> <span class="op">&lt;-</span> <span class="va">hexify_world</span><span class="op">[</span><span class="va">hexify_world</span><span class="op">$</span><span class="va">continent</span> <span class="op">==</span> <span class="st">"Europe"</span>, <span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">europe</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"ivory"</span>, border <span class="op">=</span> <span class="st">"gray70"</span>,</span>
 <span>     xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">25</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">58</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"European Cities - Hexagonal Grid"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">sf_polys</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, border <span class="op">=</span> <span class="st">"darkblue"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">sf_polys</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, border <span class="op">=</span> <span class="st">"darkblue"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">lon</span>, <span class="va">result</span><span class="op">$</span><span class="va">lat</span>, <span class="va">result</span><span class="op">$</span><span class="va">city</span>, cex <span class="op">=</span> <span class="fl">0.7</span>, pos <span class="op">=</span> <span class="fl">3</span>, font <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -767,6 +768,16 @@ resolution.</p>
 <path d='M 301.60 214.64 L 297.76 213.32 L 293.89 216.31 L 293.86 220.53 L 297.66 221.77 L 301.52 218.87 L 301.60 214.64 Z' style='fill-rule: evenodd; fill: #4682B4; stroke-width: 0.75; stroke: #00008B;' />
 <path d='M 345.00 158.84 L 340.97 156.93 L 336.52 159.37 L 336.14 163.66 L 340.15 165.51 L 344.55 163.13 L 345.00 158.84 Z' style='fill-rule: evenodd; fill: #4682B4; stroke-width: 0.75; stroke: #00008B;' />
 <path d='M 354.77 117.90 L 349.75 120.21 L 349.12 124.48 L 353.40 126.43 L 358.34 124.13 L 359.09 119.88 L 354.77 117.90 Z' style='fill-rule: evenodd; fill: #4682B4; stroke-width: 0.75; stroke: #00008B;' />
+<text x='322.32' y='149.94' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='27.36px' lengthAdjust='spacingAndGlyphs'>Vienna</text>
+<text x='233.93' y='143.98' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='20.53px' lengthAdjust='spacingAndGlyphs'>Paris</text>
+<text x='218.36' y='119.71' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='30.75px' lengthAdjust='spacingAndGlyphs'>London</text>
+<text x='303.60' y='110.46' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='23.78px' lengthAdjust='spacingAndGlyphs'>Berlin</text>
+<text x='297.92' y='207.73' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='23.31px' lengthAdjust='spacingAndGlyphs'>Rome</text>
+<text x='195.78' y='221.29' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='27.50px' lengthAdjust='spacingAndGlyphs'>Madrid</text>
+<text x='310.03' y='132.81' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='28.45px' lengthAdjust='spacingAndGlyphs'>Prague</text>
+<text x='351.58' y='113.12' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='31.42px' lengthAdjust='spacingAndGlyphs'>Warsaw</text>
+<text x='339.16' y='156.44' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='38.25px' lengthAdjust='spacingAndGlyphs'>Budapest</text>
+<text x='250.01' y='111.83' text-anchor='middle' style='font-size: 8.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='46.17px' lengthAdjust='spacingAndGlyphs'>Amsterdam</text>
 </g>
 </g>
 </svg></div></p>

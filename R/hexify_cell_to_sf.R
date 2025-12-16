@@ -195,15 +195,19 @@ hexify_to_sf <- function(data, geometry = c("point", "polygon"),
 
   geometry <- match.arg(geometry)
 
-  # Validate input
-  if (!"cell_id" %in% names(data)) {
-    stop("data must contain 'cell_id' column (output from hexify())")
-  }
-
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
 
+  # Handle HexData objects
+  if (is_hex_data(data)) {
+    return(as_sf(data, geometry = geometry))
+  }
+
+  # Validate input
+  if (!"cell_id" %in% names(data)) {
+    stop("data must contain 'cell_id' column (output from hexify())")
+  }
 
   if (geometry == "point") {
     # Point geometry from cell centers
@@ -218,12 +222,17 @@ hexify_to_sf <- function(data, geometry = c("point", "polygon"),
 
   } else {
     # Polygon geometry from cell boundaries
-    if (!"cell_area" %in% names(data)) {
-      stop("data must contain 'cell_area' column for polygon geometry ",
+    # Handle both old (cell_area) and new (cell_area_km2) column names
+    area_col <- if ("cell_area_km2" %in% names(data)) {
+      "cell_area_km2"
+    } else if ("cell_area" %in% names(data)) {
+      "cell_area"
+    } else {
+      stop("data must contain 'cell_area' or 'cell_area_km2' column for polygon geometry ",
            "(output from hexify())")
     }
 
-    resolution <- .resolution_from_area(data$cell_area[1], aperture)
+    resolution <- .resolution_from_area(data[[area_col]][1], aperture)
 
     # Get unique cells for polygon generation
     unique_ids <- unique(data$cell_id)
@@ -273,16 +282,32 @@ hexify_to_sf <- function(data, geometry = c("point", "polygon"),
 #' plot(st_geometry(polys))
 #' }
 hexify_to_polygons <- function(data, aperture = 3L, return_sf = TRUE) {
+  # Handle HexData objects
+  if (is_hex_data(data)) {
+    g <- data@grid
+    return(hexify_cell_to_sf(
+      cell_id = unique(data@data$cell_id),
+      resolution = g@resolution,
+      aperture = g@aperture,
+      return_sf = return_sf
+    ))
+  }
 
   if (!"cell_id" %in% names(data)) {
     stop("data must contain 'cell_id' column (output from hexify())")
   }
-  if (!"cell_area" %in% names(data)) {
-    stop("data must contain 'cell_area' column (output from hexify()). ",
+
+  # Handle both old (cell_area) and new (cell_area_km2) column names
+  area_col <- if ("cell_area_km2" %in% names(data)) {
+    "cell_area_km2"
+  } else if ("cell_area" %in% names(data)) {
+    "cell_area"
+  } else {
+    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()). ",
          "Use hexify_polygons() directly if you know the resolution.")
   }
 
-  resolution <- .resolution_from_area(data$cell_area[1], aperture)
+  resolution <- .resolution_from_area(data[[area_col]][1], aperture)
 
   hexify_cell_to_sf(
     cell_id = unique(data$cell_id),
@@ -324,11 +349,19 @@ hexify_to_polygons <- function(data, aperture = 3L, return_sf = TRUE) {
 hexify_plot <- function(data, aperture = 3L, col = "lightgray",
                         border = "black", add = FALSE, ...) {
 
+  # Handle HexData objects
+  if (is_hex_data(data)) {
+    plot(data, grid_fill = col, grid_border = border, basemap = FALSE, ...)
+    return(invisible(NULL))
+  }
+
   if (!"cell_id" %in% names(data)) {
     stop("data must contain 'cell_id' column (output from hexify())")
   }
-  if (!"cell_area" %in% names(data)) {
-    stop("data must contain 'cell_area' column (output from hexify())")
+
+  # Handle both old (cell_area) and new (cell_area_km2) column names
+  if (!"cell_area" %in% names(data) && !"cell_area_km2" %in% names(data)) {
+    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify())")
   }
 
   # Get polygon coordinates
@@ -398,7 +431,7 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
   grid_pts <- expand.grid(lon = lons, lat = lats)
 
   # Assign to hexes and get polygons
-  result <- hexify(grid_pts, lon = "lon", lat = "lat", area = area,
+  result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
                    aperture = aperture, resround = resround)
 
   hexify_to_polygons(result, aperture = as.integer(aperture))
@@ -451,7 +484,7 @@ hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
   lats <- seq(-85, 85, by = spacing_deg)
   grid_pts <- expand.grid(lon = lons, lat = lats)
 
-  result <- hexify(grid_pts, lon = "lon", lat = "lat", area = area,
+  result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
                    aperture = aperture, resround = resround)
 
   hexify_to_polygons(result, aperture = as.integer(aperture))

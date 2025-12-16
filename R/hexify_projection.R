@@ -95,7 +95,7 @@ hexify_which_face <- function(lon, lat) {
 #'
 #' @details
 #' tx and ty are normalized coordinates within the triangular face,
-#' typically in range [0, 1].
+#' typically in range \[0, 1\].
 #'
 #' @family projection
 #' @export

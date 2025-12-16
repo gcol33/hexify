@@ -15,7 +15,7 @@ dg_closest_res_to_area(
 \arguments{
 \item{dggs}{Grid specification (aperture and topology must be set)}
 
-\item{area}{Target cell area in km² (if metric=TRUE)}
+\item{area}{Target cell area in km^2 (if metric=TRUE)}
 
 \item{round}{Rounding method ("nearest", "up", "down")}
 
@@ -36,7 +36,7 @@ This is a helper function for grid construction.
 temp_grid <- list(aperture = 3, topology = "HEXAGON")
 class(temp_grid) <- "hexify_grid"
 
-# Find resolution for 1000 km² cells
+# Find resolution for 1000 km^2 cells
 res <- dg_closest_res_to_area(temp_grid, area = 1000, 
                                metric = TRUE, show_info = TRUE)
 print(res)

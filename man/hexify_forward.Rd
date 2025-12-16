@@ -20,7 +20,7 @@ face index and planar coordinates (tx, ty).
 }
 \details{
 tx and ty are normalized coordinates within the triangular face,
-typically in range \link{0, 1}.
+typically in range [0, 1].
 }
 \examples{
 result <- hexify_forward(16.37, 48.21)

@@ -25,7 +25,7 @@ grid configuration. Useful for choosing appropriate resolution.
 comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:10)
 print(comparison)
 
-# Find resolution with cells ~1000 km²
+# Find resolution with cells ~1000 km^2
 subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
 }
 }

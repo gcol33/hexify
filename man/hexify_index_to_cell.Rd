@@ -24,7 +24,7 @@ List with face, i, j, and resolution
 Decodes a hierarchical index string back to cell coordinates.
 }
 \examples{
-cell <- hexify_index_to_cell("051223", aperture = 3)
+cell <- hexify_index_to_cell("0012012", aperture = 3)
 }
 \seealso{
 Other hierarchical index: 

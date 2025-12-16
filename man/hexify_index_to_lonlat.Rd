@@ -24,7 +24,7 @@ Named numeric vector with lon and lat in degrees
 Returns the cell center coordinates for a given index.
 }
 \examples{
-coords <- hexify_index_to_lonlat("051223", aperture = 3)
+coords <- hexify_index_to_lonlat("0012012", aperture = 3)
 }
 \seealso{
 Other hierarchical index: 

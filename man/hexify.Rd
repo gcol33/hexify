@@ -6,10 +6,12 @@
 \usage{
 hexify(
   data,
+  grid = NULL,
   lon = "lon",
   lat = "lat",
-  area = NULL,
+  area_km2 = NULL,
   diagonal = NULL,
+  resolution = NULL,
   aperture = 3L,
   mixed_aperture_level = NULL,
   resround = "nearest"
@@ -18,13 +20,19 @@ hexify(
 \arguments{
 \item{data}{A data.frame or sf object containing coordinates}
 
+\item{grid}{A HexGrid object from \code{hex_grid()}. If provided, overrides
+area_km2, resolution, and aperture parameters.}
+
 \item{lon}{Column name for longitude (ignored if data is sf)}
 
 \item{lat}{Column name for latitude (ignored if data is sf)}
 
-\item{area}{Target cell area in km² (mutually exclusive with diagonal)}
+\item{area_km2}{Target cell area in km² (mutually exclusive with diagonal).
+Alias: \code{area} for backwards compatibility.}
 
-\item{diagonal}{Target cell diagonal (long diagonal) in km (mutually exclusive with area)}
+\item{diagonal}{Target cell diagonal (long diagonal) in km}
+
+\item{resolution}{Grid resolution (0-30). Alternative to area_km2.}
 
 \item{aperture}{Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)}
 
@@ -34,41 +42,49 @@ before switching to aperture-3 (default NULL, auto-calculated as resolution/2)}
 \item{resround}{How to round resolution: "nearest", "up", or "down"}
 }
 \value{
-The input data with additional columns:
-\item{cell_id}{Stable DGGS cell identifier (integer)}
+A HexData object containing:
+\itemize{
+\item The input data with cell assignment columns
+\item The grid specification for downstream operations
+}
+
+Use \code{as.data.frame(result)} to extract a plain data.frame.
+Use \code{as_sf(result)} to convert to sf object.
+
+Added columns:
+\item{cell_id}{Stable DGGS cell identifier}
 \item{cell_cen_lon}{Longitude of cell center in degrees}
 \item{cell_cen_lat}{Latitude of cell center in degrees}
-\item{cell_area}{Actual cell area in km² (based on matched resolution)}
-\item{cell_diag}{Actual cell long diagonal in km}
+\item{cell_area_km2}{Actual cell area in km²}
+\item{cell_diag_km}{Actual cell long diagonal in km}
 }
 \description{
 Takes a data.frame or sf object with geographic coordinates and returns
-the same data with additional columns for hex cell ID and center coordinates.
+the data with additional columns for hex cell ID and center coordinates.
+By default returns a HexData object that stores the grid specification
+for use in downstream operations.
 }
 \details{
 For sf objects, coordinates are automatically extracted and transformed to
 WGS84 (EPSG:4326) if needed. The geometry column is preserved.
 
-Either \code{area} or \code{diagonal} must be provided, but not both:
-\itemize{
-\item \code{area}: Target cell area in square kilometers
-\item \code{diagonal}: Long diagonal of hexagon in kilometers
+Either \code{area_km2} (or \code{area}), \code{diagonal}, or \code{resolution}
+must be provided unless a \code{grid} object is supplied.
+
+The HexData return type (default) stores the grid specification so downstream
+functions like \code{plot()}, \code{hexify_cell_to_sf()}, etc. don't need
+grid parameters repeated.
+}
+\section{Grid Specification}{
+
+You can create a grid specification once and reuse it:
+\preformatted{
+grid <- hex_grid(area_km2 = 1000)
+result1 <- hexify(df1, grid = grid)
+result2 <- hexify(df2, grid = grid)
+}
 }
 
-The diagonal relates to area approximately as:
-area ≈ (3 * sqrt(3) / 2) * (diagonal / 2)² ≈ 0.6495 * diagonal²
-
-Supported apertures:
-\itemize{
-\item \code{aperture = 3}: ISEA3H (default, compatible with dggridR).
-Cell count = 10 * 3^res + 2.
-\item \code{aperture = 4}: ISEA4H. Cell count = 10 * 4^res + 2.
-\item \code{aperture = 7}: ISEA7H. Cell count = 10 * 7^res + 2.
-\item \code{aperture = "4/3"}: ISEA43H mixed aperture.
-Uses aperture-4 for first \code{mixed_aperture_level} levels, then aperture-3.
-Cell count = 10 * 4^mixed_level * 3^(res - mixed_level) + 2.
-}
-}
 \examples{
 \dontrun{
 # Simple data.frame
@@ -77,27 +93,35 @@ df <- data.frame(
   lon = c(16.37, 2.35, -3.70),
   lat = c(48.21, 48.86, 40.42)
 )
-result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
+
+# New recommended workflow: use grid object
+grid <- hex_grid(area_km2 = 1000)
+result <- hexify(df, grid = grid, lon = "lon", lat = "lat")
+print(result)  # Shows grid info
+plot(result)   # Plot with default styling
+
+# Direct area specification (grid created internally)
+result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+
+# Extract plain data.frame
+df_result <- as.data.frame(result)
 
 # With sf object (any CRS)
 library(sf)
 pts <- st_as_sf(df, coords = c("lon", "lat"), crs = 4326)
-result_sf <- hexify(pts, area = 1000)
-
-# Using diagonal instead of area
-result <- hexify(df, lon = "lon", lat = "lat", diagonal = 50)
+result_sf <- hexify(pts, area_km2 = 1000)
 
 # Different apertures
-result_ap4 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 4)
-result_ap7 <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = 7)
+result_ap4 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = 4)
 
 # Mixed aperture (ISEA43H)
-result_mixed <- hexify(df, lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
+result_mixed <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
 }
 }
 \seealso{
-\code{\link{hexify_grid}} for grid specification,
-\code{\link{hexify_to_sf}} for sf conversion
+\code{\link{hex_grid}} for grid specification,
+\code{\link{HexData-class}} for return object details,
+\code{\link{as_sf}} for converting to sf
 
 Other hexify main: 
 \code{\link{hexify_grid}()}

@@ -18,10 +18,11 @@ Suggests:
     raster,
     ggplot2,
     RColorBrewer,
-    rnaturalearth
+    rnaturalearth,
+    tibble
 VignetteBuilder: knitr
 LinkingTo: Rcpp
-Imports: sf, Rcpp
+Imports: sf, Rcpp, methods, rlang
 URL: https://gcol33.github.io/hexify/
 BugReports: https://github.com/gcol33/hexify/issues
 Config/testthat/edition: 3

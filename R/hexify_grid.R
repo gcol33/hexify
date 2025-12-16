@@ -40,9 +40,9 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #' Creates a discrete global grid system (DGGS) object with hexagonal cells
 #' at a specified resolution. This is the main constructor for hexify grids.
 #'
-#' @param area Target cell area in km² (if metric=TRUE) or area code
+#' @param area Target cell area in km^2 (if metric=TRUE) or area code
 #' @param topology Grid topology (only "HEXAGON" supported)
-#' @param metric Whether area is in metric units (km²)
+#' @param metric Whether area is in metric units (km^2)
 #' @param resround How to round resolution ("nearest", "up", "down")
 #' @param aperture Aperture sequence (3, 4, or 7)
 #' @param projection Projection type (only "ISEA" supported currently)
@@ -61,11 +61,11 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #' @export
 #' @examples
 #' \dontrun{
-#' # Create a grid with ~1000 km² cells
+#' # Create a grid with ~1000 km^2 cells
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' print(grid)
 #'
-#' # Create a finer resolution grid (~100 km² cells)
+#' # Create a finer resolution grid (~100 km^2 cells)
 #' fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 #' }
 hexify_grid <- function(area, 
@@ -230,7 +230,7 @@ print.hexify_grid <- function(x, ...) {
   cat("=========================\n")
   cat(sprintf("Aperture:   %d\n", x$aperture))
   cat(sprintf("Resolution: %d\n", x$resolution))
-  cat(sprintf("Area:       %.2f km²\n", x$area))
+  cat(sprintf("Area:       %.2f km^2\n", x$area))
   cat(sprintf("Topology:   %s\n", x$topology))
   cat(sprintf("Projection: %s\n", x$projection))
   cat(sprintf("Index Type: %s\n", x$index_type))

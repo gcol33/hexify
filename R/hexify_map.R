@@ -92,21 +92,38 @@ apply_continuous_scale <- function(p, colors, legend_title, na_color) {
 #' Convert hexify data to sf polygons
 #' @noRd
 prepare_hex_sf <- function(data, aperture) {
+  # Handle HexData objects
+  if (is_hex_data(data)) {
+    g <- data@grid
+    underlying_data <- data@data
+    unique_cells <- unique(underlying_data$cell_id)
+    hex_sf <- cell_to_sf(unique_cells, g)
+
+    # Join extra columns from original data
+    extra_cols <- setdiff(names(underlying_data), c("cell_id", "geometry"))
+    if (length(extra_cols) > 0) {
+      cols <- c("cell_id", extra_cols)
+      data_unique <- underlying_data[!duplicated(underlying_data$cell_id), cols, drop = FALSE]
+      hex_sf <- merge(hex_sf, data_unique, by = "cell_id", all.x = TRUE)
+    }
+    return(hex_sf)
+  }
+
   if (inherits(data, "sf")) return(data)
 
   if (!is.data.frame(data) || !"cell_id" %in% names(data)) {
     stop("data must be a data.frame from hexify() or an sf object")
   }
 
-  if (!"cell_area" %in% names(data)) {
-    stop("data must contain 'cell_area' column (output from hexify()). ",
+  # Handle both old (cell_area) and new (cell_area_km2) column names
+  if (!"cell_area" %in% names(data) && !"cell_area_km2" %in% names(data)) {
+    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()). ",
          "Use hexify_polygons() directly if you have pre-computed polygons.")
   }
 
   hex_sf <- hexify_to_polygons(data, aperture = aperture, return_sf = TRUE)
 
   # Join extra columns from original data
-
   extra_cols <- setdiff(names(data), c("cell_id", "geometry"))
   if (length(extra_cols) > 0) {
     cols <- c("cell_id", extra_cols)
@@ -219,14 +236,22 @@ build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
 #' Simple sf preparation for hexify_map (no extra column merging)
 #' @noRd
 prepare_hex_sf_simple <- function(data, aperture) {
+  # Handle HexData objects
+  if (is_hex_data(data)) {
+    g <- data@grid
+    unique_cells <- unique(data@data$cell_id)
+    return(cell_to_sf(unique_cells, g))
+  }
+
   if (inherits(data, "sf")) return(data)
 
   if (!is.data.frame(data) || !"cell_id" %in% names(data)) {
     stop("data must be a data.frame from hexify() or an sf object")
   }
 
-  if (!"cell_area" %in% names(data)) {
-    stop("data must contain 'cell_area' column (output from hexify()). ",
+  # Handle both old (cell_area) and new (cell_area_km2) column names
+  if (!"cell_area" %in% names(data) && !"cell_area_km2" %in% names(data)) {
+    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()). ",
          "Use hexify_polygons() directly if you have pre-computed polygons.")
   }
 

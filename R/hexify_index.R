@@ -59,7 +59,7 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
 #' @family hierarchical index
 #' @export
 #' @examples
-#' cell <- hexify_index_to_cell("051223", aperture = 3)
+#' cell <- hexify_index_to_cell("0012012", aperture = 3)
 hexify_index_to_cell <- function(index, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
@@ -102,7 +102,7 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
 #' @family hierarchical index
 #' @export
 #' @examples
-#' coords <- hexify_index_to_lonlat("051223", aperture = 3)
+#' coords <- hexify_index_to_lonlat("0012012", aperture = 3)
 hexify_index_to_lonlat <- function(index, aperture = 3L,
                                     index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)

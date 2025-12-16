@@ -156,7 +156,7 @@ test_that("hexify_to_polygons requires cell_area column", {
 
   expect_error(
     hexify_to_polygons(df),
-    "must contain 'cell_area' column"
+    "must contain 'cell_area'"
   )
 })
 
@@ -179,7 +179,7 @@ test_that("hexify_plot validates input", {
   df2 <- data.frame(cell_id = c(1, 2))
 
   expect_error(hexify_plot(df1), "must contain 'cell_id' column")
-  expect_error(hexify_plot(df2), "must contain 'cell_area' column")
+  expect_error(hexify_plot(df2), "must contain 'cell_area'")
 })
 
 # =============================================================================
@@ -339,7 +339,7 @@ test_that("hexify_to_sf validates cell_area for polygon geometry", {
 
   expect_error(
     hexify_to_sf(df, geometry = "polygon"),
-    "must contain 'cell_area' column"
+    "must contain 'cell_area'"
   )
 })
 

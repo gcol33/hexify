@@ -280,11 +280,12 @@ sf_points <- hexify_to_sf(result, geometry = "point")
 # Convert to sf polygons (for choropleth maps)
 sf_polys <- hexify_to_sf(result, geometry = "polygon")
 
-# Plot polygons with basemap
+# Plot polygons with basemap and city labels
 europe <- hexify_world[hexify_world$continent == "Europe", ]
 plot(st_geometry(europe), col = "ivory", border = "gray70",
      xlim = c(-10, 25), ylim = c(35, 58), main = "European Cities - Hexagonal Grid")
 plot(st_geometry(sf_polys), col = "steelblue", border = "darkblue", add = TRUE)
+text(result$lon, result$lat, result$city, cex = 0.7, pos = 3, font = 2)
 ```
 
 ![](workflows_files/figure-html/unnamed-chunk-9-1.svg)

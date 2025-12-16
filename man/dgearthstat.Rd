@@ -11,9 +11,9 @@ dgearthstat(dggs)
 }
 \value{
 List with components:
-\item{area_km}{Total Earth surface area in km²}
+\item{area_km}{Total Earth surface area in km^2}
 \item{n_cells}{Total number of cells at this resolution}
-\item{cell_area_km2}{Average cell area in km²}
+\item{cell_area_km2}{Average cell area in km^2}
 \item{cell_spacing_km}{Average distance between cell centers in km}
 \item{resolution}{Resolution level}
 \item{aperture}{Grid aperture}
@@ -29,7 +29,7 @@ stats <- dgearthstat(grid)
 
 print(sprintf("Resolution \%d has \%.0f cells",
               stats$resolution, stats$n_cells))
-print(sprintf("Average cell area: \%.2f km²",
+print(sprintf("Average cell area: \%.2f km^2",
               stats$cell_area_km2))
 print(sprintf("Average cell spacing: \%.2f km",
               stats$cell_spacing_km))

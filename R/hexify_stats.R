@@ -17,9 +17,9 @@ NULL
 #' @param dggs Grid specification from hexify_grid()
 #'
 #' @return List with components:
-#'   \item{area_km}{Total Earth surface area in km²}
+#'   \item{area_km}{Total Earth surface area in km^2}
 #'   \item{n_cells}{Total number of cells at this resolution}
-#'   \item{cell_area_km2}{Average cell area in km²}
+#'   \item{cell_area_km2}{Average cell area in km^2}
 #'   \item{cell_spacing_km}{Average distance between cell centers in km}
 #'   \item{resolution}{Resolution level}
 #'   \item{aperture}{Grid aperture}
@@ -33,7 +33,7 @@ NULL
 #'
 #' print(sprintf("Resolution %d has %.0f cells",
 #'               stats$resolution, stats$n_cells))
-#' print(sprintf("Average cell area: %.2f km²",
+#' print(sprintf("Average cell area: %.2f km^2",
 #'               stats$cell_area_km2))
 #' print(sprintf("Average cell spacing: %.2f km",
 #'               stats$cell_spacing_km))
@@ -55,7 +55,7 @@ dgearthstat <- function(dggs) {
   cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
 
   # Approximate cell spacing (distance between cell centers)
-  # For hexagons: spacing ≈ sqrt(2 * area / sqrt(3))
+  # For hexagons: spacing approx  sqrt(2 * area / sqrt(3))
   cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
 
   # Calculate characteristic length scale (CLS)
@@ -82,7 +82,7 @@ dgearthstat <- function(dggs) {
 #' This is a helper function for grid construction.
 #' 
 #' @param dggs Grid specification (aperture and topology must be set)
-#' @param area Target cell area in km² (if metric=TRUE)
+#' @param area Target cell area in km^2 (if metric=TRUE)
 #' @param round Rounding method ("nearest", "up", "down")
 #' @param metric Whether area is in metric units
 #' @param show_info Print information about chosen resolution
@@ -96,7 +96,7 @@ dgearthstat <- function(dggs) {
 #' temp_grid <- list(aperture = 3, topology = "HEXAGON")
 #' class(temp_grid) <- "hexify_grid"
 #' 
-#' # Find resolution for 1000 km² cells
+#' # Find resolution for 1000 km^2 cells
 #' res <- dg_closest_res_to_area(temp_grid, area = 1000, 
 #'                                metric = TRUE, show_info = TRUE)
 #' print(res)
@@ -132,7 +132,7 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
     stats <- dgearthstat(temp_grid)
     
     message(sprintf("Resolution %d:", resolution))
-    message(sprintf("  Cell area: %.2f km²", stats$cell_area_km2))
+    message(sprintf("  Cell area: %.2f km^2", stats$cell_area_km2))
     message(sprintf("  Cell spacing: %.2f km", stats$cell_spacing_km))
     message(sprintf("  Total cells: %.0f", stats$n_cells))
   }
@@ -162,7 +162,7 @@ dg_closest_res_to_spacing <- function(dggs, spacing, round = "nearest",
     spacing <- spacing * MI_TO_KM
   }
   
-  # Spacing ≈ sqrt(area), so area ≈ spacing²
+  # Spacing approx sqrt(area), so area approx spacing^2
   target_area <- spacing ^ 2
   
   return(dg_closest_res_to_area(dggs, target_area, round, 
@@ -192,7 +192,7 @@ dg_closest_res_to_cls <- function(dggs, cls, round = "nearest",
   }
   
   # For hexagons: CLS = sqrt(area / (3 * sqrt(3) / 2))
-  # So: area = CLS² * (3 * sqrt(3) / 2)
+  # So: area = CLS^2 * (3 * sqrt(3) / 2)
   target_area <- cls^2 * (3 * sqrt(3) / 2)
   
   return(dg_closest_res_to_area(dggs, target_area, round,
@@ -218,7 +218,7 @@ dg_closest_res_to_cls <- function(dggs, cls, round = "nearest",
 #' comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:10)
 #' print(comparison)
 #' 
-#' # Find resolution with cells ~1000 km²
+#' # Find resolution with cells ~1000 km^2
 #' subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
 #' }
 hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
@@ -269,7 +269,7 @@ hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
   cat(sprintf("\nGrid Resolution Comparison (Aperture %d)\n", aperture))
   cat(paste(rep("=", 70), collapse = ""), "\n")
   cat(sprintf("%-4s  %-12s  %-12s  %-12s  %-10s\n",
-              "Res", "# Cells", "Area (km²)", "Spacing (km)", "CLS (km)"))
+              "Res", "# Cells", "Area (km^2)", "Spacing (km)", "CLS (km)"))
   cat(paste(rep("-", 70), collapse = ""), "\n")
   
   for (i in seq_len(nrow(comparison))) {

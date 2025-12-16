@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
 </h1></div>
 <p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></p>
 <p><strong>Fast Hexagonal Grid Assignment for Geographic Data</strong></p>
-<p><code>hexify</code> assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. It produces output identical to <code>dggridR</code> but with a simpler, modern interface. Supports apertures 3, 4, 7, and mixed 4/3.</p>
+<p><code>hexify</code> assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. Specify your target cell area in km² and hexify handles the rest. Supports apertures 3, 4, 7, and mixed 4/3.</p>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
@@ -96,11 +96,11 @@
 <li>
 <strong>Simple API</strong>: One function (<code><a href="reference/hexify.html">hexify()</a></code>) for the common use case</li>
 <li>
-<strong>dggridR compatible</strong>: Produces identical <code>cell_id</code> (SEQNUM) values</li>
+<strong>Fast</strong>: C++ implementation of ISEA Snyder projection</li>
 <li>
 <strong>Modern R</strong>: Works with data.frames and sf objects</li>
 <li>
-<strong>Fast</strong>: C++ implementation of ISEA Snyder projection</li>
+<strong>dggridR compatible</strong>: Produces identical cell IDs for interoperability</li>
 </ul>
 </div>
 <div class="section level2">

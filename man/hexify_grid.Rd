@@ -24,11 +24,11 @@ hexify_construct(
 )
 }
 \arguments{
-\item{area}{Target cell area in km² (if metric=TRUE) or area code}
+\item{area}{Target cell area in km^2 (if metric=TRUE) or area code}
 
 \item{topology}{Grid topology (only "HEXAGON" supported)}
 
-\item{metric}{Whether area is in metric units (km²)}
+\item{metric}{Whether area is in metric units (km^2)}
 
 \item{resround}{How to round resolution ("nearest", "up", "down")}
 
@@ -54,11 +54,11 @@ Use \code{hexify_grid()} instead.
 }
 \examples{
 \dontrun{
-# Create a grid with ~1000 km² cells
+# Create a grid with ~1000 km^2 cells
 grid <- hexify_grid(area = 1000, aperture = 3)
 print(grid)
 
-# Create a finer resolution grid (~100 km² cells)
+# Create a finer resolution grid (~100 km^2 cells)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 }
 }
