@@ -1,0 +1,10 @@
+/* hexify-specific CSS patches */
+
+/* Fix: Target all rects with light background fill (#F5F6F8) in dark mode */
+/* pkgdown generates SVGs with bg already set to #F5F6F8 instead of #FFFFFF */
+[data-bs-theme="dark"] svg.inline-svg .svglite rect[style*="fill: #F5F6F8"],
+[data-bs-theme="dark"] svg.inline-svg .svglite rect[style*="fill: #f5f6f8"],
+[data-bs-theme="dark"] svg.inline-svg rect[style*="fill: #F5F6F8"],
+[data-bs-theme="dark"] svg.inline-svg rect[style*="fill: #f5f6f8"] {
+  fill: #343739 !important;
+}
