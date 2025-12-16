@@ -451,12 +451,12 @@ resolve_basemap_with_raster <- function(basemap) {
 #' }
 hexify_map <- function(data,
                     basemap = NULL,
-                    fill = "steelblue",
-                    border = "gray30",
+                    fill = "#E69F00",
+                    border = "#5D4E37",
                     lwd = 1,
                     alpha = 0.7,
-                    basemap_fill = "gray95",
-                    basemap_border = "gray70",
+                    basemap_fill = "gray90",
+                    basemap_border = "gray50",
                     basemap_lwd = 1,
                     aperture = 3L,
                     xlim = NULL,
@@ -565,7 +565,7 @@ hexify_map <- function(data,
 #' # Custom colors
 #' plot_world(fill = "lightblue", border = "darkblue")
 #' }
-plot_world <- function(fill = "gray95", border = "gray50", ...) {
+plot_world <- function(fill = "gray90", border = "gray50", ...) {
 
   plot(sf::st_geometry(hexify_world),
        col = fill, border = border, ...)
@@ -701,11 +701,11 @@ hexify_heatmap <- function(data,
                         colors = NULL,
                         breaks = NULL,
                         labels = NULL,
-                        hex_border = "gray30",
-                        hex_lwd = 0.2,
+                        hex_border = "#5D4E37",
+                        hex_lwd = 0.3,
                         hex_alpha = 0.7,
-                        basemap_fill = "white",
-                        basemap_border = "black",
+                        basemap_fill = "gray90",
+                        basemap_border = "gray50",
                         basemap_lwd = 0.5,
                         mask_outside = FALSE,
                         aperture = 3L,

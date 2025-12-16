@@ -346,8 +346,8 @@ hexify_to_polygons <- function(data, aperture = 3L, return_sf = TRUE) {
 #' hexify_plot(result, col = "lightblue", border = "darkblue")
 #' points(df$lon, df$lat, pch = 19, col = "red")
 #' }
-hexify_plot <- function(data, aperture = 3L, col = "lightgray",
-                        border = "black", add = FALSE, ...) {
+hexify_plot <- function(data, aperture = 3L, col = "#E69F00",
+                        border = "#5D4E37", add = FALSE, ...) {
 
   # Handle HexData objects
   if (is_hex_data(data)) {

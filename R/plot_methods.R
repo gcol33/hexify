@@ -21,13 +21,13 @@
 #'     \item \code{FALSE} or \code{NULL}: No basemap
 #'     \item sf object: Custom basemap
 #'   }
-#' @param basemap_fill Fill color for basemap (default "ivory")
+#' @param basemap_fill Fill color for basemap (default "gray90")
 #' @param basemap_border Border color for basemap (default "gray50")
 #' @param basemap_lwd Line width for basemap borders (default 0.5)
-#' @param grid_fill Fill color for grid cells (default "#3B9AB2" - teal)
-#' @param grid_border Border color for grid cells (default "#1A1A1A" - near-black)
+#' @param grid_fill Fill color for grid cells (default "#E69F00" - amber/orange)
+#' @param grid_border Border color for grid cells (default "#5D4E37" - dark brown)
 #' @param grid_lwd Line width for cell borders (default 0.8)
-#' @param grid_alpha Transparency for cell fill (0-1, default 0.6)
+#' @param grid_alpha Transparency for cell fill (0-1, default 0.7)
 #' @param fill Column name for fill mapping (optional)
 #' @param show_points Show original points on top of cells (default FALSE)
 #' @param point_size Size of points if shown (default 1)
@@ -69,13 +69,13 @@
 setMethod("plot", signature(x = "HexData", y = "missing"),
   function(x, y,
            basemap = TRUE,
-           basemap_fill = "ivory",
+           basemap_fill = "gray90",
            basemap_border = "gray50",
            basemap_lwd = 0.5,
-           grid_fill = "#3B9AB2",
-           grid_border = "#1A1A1A",
+           grid_fill = "#E69F00",
+           grid_border = "#5D4E37",
            grid_lwd = 0.8,
-           grid_alpha = 0.6,
+           grid_alpha = 0.7,
            fill = NULL,
            show_points = FALSE,
            point_size = 1,
@@ -272,12 +272,12 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 #' }
 autoplot.HexData <- function(object,
                               basemap = TRUE,
-                              basemap_fill = "ivory",
+                              basemap_fill = "gray90",
                               basemap_border = "gray50",
                               basemap_lwd = 0.3,
-                              grid_border = "#1A1A1A",
+                              grid_border = "#5D4E37",
                               grid_lwd = 0.4,
-                              grid_alpha = 0.6,
+                              grid_alpha = 0.7,
                               fill = NULL,
                               show_points = FALSE,
                               point_size = 1,
@@ -349,7 +349,7 @@ autoplot.HexData <- function(object,
   if (is.null(fill)) {
     p <- p + ggplot2::geom_sf(
       data = hex_sf,
-      fill = "#3B9AB2",
+      fill = "#E69F00",
       color = grid_border,
       linewidth = grid_lwd,
       alpha = grid_alpha
