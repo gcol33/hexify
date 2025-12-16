@@ -19,31 +19,405 @@ knitr::opts_chunk$set(
 ## Overview
 
 hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete global
-grid system. This vignette explains the mathematical foundations.
+grid system. This vignette explains the mathematical foundations with intuitive
+geometric illustrations.
 
-## The Icosahedral Projection
+## The Problem: Mapping a Sphere to a Plane
 
-### Why an Icosahedron?
+The fundamental challenge in cartography is mapping the curved surface of Earth
+onto a flat plane. Any such mapping must distort *something*—you cannot
+perfectly preserve both area and shape simultaneously. For ecological and
+statistical applications, **equal-area** projections are essential: we need
+grid cells of equal size regardless of location.
 
-A regular icosahedron has 20 triangular faces, each with identical geometry.
-This makes it ideal for:
+### Why Equal-Area Matters
 
-1. **Equal-area partitioning**: Each face covers approximately 1/20 of Earth's surface
-2. **Low distortion**: Each triangular face can be projected with minimal distortion
-3. **Hierarchical subdivision**: Triangular faces subdivide naturally
+Consider counting species in grid cells:
 
-### The Snyder Projection
+- If cells vary in area, counts aren't comparable
+- A cell twice as large will, on average, contain twice as many individuals
+- Standard lat/lon grids fail badly—cells near poles are tiny compared to equatorial cells
 
-The Snyder Equal Area projection maps points on the sphere to the icosahedron:
+The ISEA projection solves this by preserving area while minimizing shape distortion.
 
-1. **Determine the face**: Find which of 20 icosahedral faces contains the point
-2. **Project to face plane**: Use the Snyder formulas to compute (x, y) on the face
-3. **Normalize coordinates**: Convert to (tx, ty) in range approximately [0, 1]
+## The Lambert Azimuthal Equal-Area Projection
+
+Before understanding Snyder's projection, we need to understand its foundation:
+the **Lambert azimuthal equal-area projection**, developed by Johann Heinrich
+Lambert in 1772.
+
+### The Core Idea: Chord Distance
+
+The key insight is beautifully simple. Imagine a sphere with a flat plane
+tangent to it at point S (the "south pole" in polar aspect):
+
+```{r lambert-concept, echo=FALSE, fig.width=6, fig.height=5, fig.cap="Lambert projection: Points on the sphere are mapped to the plane using chord distance."}
+# Geometric illustration of Lambert azimuthal equal-area projection
+par(mar = c(1, 1, 2, 1), bg = "white")
+plot(NULL, xlim = c(-2.5, 2.5), ylim = c(-1.5, 2.5), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Lambert Azimuthal Equal-Area Projection")
+
+# Draw the sphere (circle)
+theta <- seq(0, 2*pi, length.out = 100)
+lines(cos(theta), sin(theta) + 1, lwd = 2)
+
+# Draw the tangent plane (horizontal line at bottom)
+lines(c(-2.5, 2.5), c(0, 0), lwd = 2)
+
+# Mark the tangent point S
+points(0, 0, pch = 19, cex = 1.5)
+text(0, -0.2, "S (tangent point)", cex = 0.9, pos = 1)
+
+# Mark the center of sphere
+points(0, 1, pch = 3, cex = 1)
+text(0.2, 1, "O", cex = 0.9)
+
+# Show several points on sphere and their projections
+angles <- c(30, 60, 90, 120) * pi/180  # angles from bottom
+colors <- c("#E63946", "#457B9D", "#2A9D8F", "#E9C46A")
+
+for (i in seq_along(angles)) {
+  ang <- angles[i]
+  # Point on sphere
+  px <- sin(ang)
+  py <- 1 - cos(ang)
+
+  # Chord distance from S to P
+  d <- sqrt(px^2 + py^2)
+
+  # Projected point on plane (at distance d from S)
+  proj_x <- d * sign(px)
+
+  # Draw the point on sphere
+  points(px, py, pch = 19, cex = 1.2, col = colors[i])
+
+  # Draw chord from S to P (dashed)
+  lines(c(0, px), c(0, py), lty = 2, col = colors[i], lwd = 1.5)
+
+  # Draw projection line down to plane
+  lines(c(px, proj_x), c(py, 0), lty = 3, col = colors[i], lwd = 1.5)
+
+  # Mark projected point
+  points(proj_x, 0, pch = 19, cex = 1.2, col = colors[i])
+
+  # Label
+  text(px + 0.15, py + 0.1, paste0("P", i), cex = 0.8, col = colors[i])
+  text(proj_x, -0.15, paste0("P'", i), cex = 0.8, col = colors[i], pos = 1)
+}
+
+# Add annotation
+text(-1.8, 2.2, "d = chord distance", cex = 0.85, adj = 0)
+text(-1.8, 1.9, "P' placed at distance d from S", cex = 0.85, adj = 0)
+
+# Legend for line types
+legend("topright",
+       legend = c("Chord (length = d)", "Projection to plane"),
+       lty = c(2, 3), lwd = 1.5, cex = 0.8, bty = "n")
+```
+
+**How it works:**
+
+1. Pick any point **P** on the sphere
+2. Measure the straight-line (chord) distance **d** from **S** to **P**
+3. Place the projected point **P'** on the plane at distance **d** from **S**,
+   in the same direction
+
+This simple rule—*use chord distance*—automatically preserves area! The
+mathematical magic is that the area element transforms correctly.
+
+### Why Does This Preserve Area?
+
+The chord distance formula for a point at angular distance φ from S is:
+
+$$d = 2R \sin\left(\frac{\phi}{2}\right)$$
+
+where R is the sphere's radius. This specific relationship ensures that a small
+patch of area dA on the sphere maps to an equal area dA on the plane.
+
+```{r lambert-area, echo=FALSE, fig.width=7, fig.height=4, fig.cap="Equal-area property: Concentric circles on the sphere map to circles on the plane with areas preserved."}
+par(mfrow = c(1, 2), mar = c(2, 2, 3, 1), bg = "white")
+
+# Left: sphere view (looking from above)
+plot(NULL, xlim = c(-1.3, 1.3), ylim = c(-1.3, 1.3), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Sphere (polar view)")
+
+# Draw concentric latitude circles
+for (lat in seq(15, 75, by = 15)) {
+  r <- cos(lat * pi/180)  # radius at this latitude
+  theta <- seq(0, 2*pi, length.out = 100)
+  lines(r * cos(theta), r * sin(theta),
+        col = gray(0.3 + lat/150), lwd = 1.5)
+}
+# Outer circle (equator)
+lines(cos(theta), sin(theta), lwd = 2)
+points(0, 0, pch = 19, cex = 1)
+text(0, 0.15, "Pole", cex = 0.8)
+
+# Color bands to show equal-area strips
+cols <- c("#264653", "#2A9D8F", "#E9C46A", "#F4A261", "#E76F51")
+for (i in 1:5) {
+  lat1 <- (i-1) * 15
+  lat2 <- i * 15
+  r1 <- cos(lat1 * pi/180)
+  r2 <- cos(lat2 * pi/180)
+  # Draw as polygon
+  theta_seq <- seq(0, 2*pi, length.out = 100)
+  polygon(c(r1*cos(theta_seq), rev(r2*cos(theta_seq))),
+          c(r1*sin(theta_seq), rev(r2*sin(theta_seq))),
+          col = adjustcolor(cols[i], 0.3), border = NA)
+}
+
+# Right: Lambert projection
+plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Lambert Projection")
+
+# Project the same latitude circles
+for (lat in seq(15, 75, by = 15)) {
+  # Lambert radius: d = 2*sin(colatitude/2) for unit sphere
+  colat <- (90 - lat) * pi/180
+  r_proj <- 2 * sin(colat/2)
+  theta <- seq(0, 2*pi, length.out = 100)
+  lines(r_proj * cos(theta), r_proj * sin(theta),
+        col = gray(0.3 + lat/150), lwd = 1.5)
+}
+# Equator projection
+r_eq <- 2 * sin(pi/4)  # 90° colatitude
+lines(r_eq * cos(theta), r_eq * sin(theta), lwd = 2)
+points(0, 0, pch = 19, cex = 1)
+text(0, 0.15, "Pole", cex = 0.8)
+
+# Same colored bands
+for (i in 1:5) {
+  lat1 <- (i-1) * 15
+  lat2 <- i * 15
+  colat1 <- (90 - lat1) * pi/180
+  colat2 <- (90 - lat2) * pi/180
+  r1 <- 2 * sin(colat1/2)
+  r2 <- 2 * sin(colat2/2)
+  theta_seq <- seq(0, 2*pi, length.out = 100)
+  polygon(c(r1*cos(theta_seq), rev(r2*cos(theta_seq))),
+          c(r1*sin(theta_seq), rev(r2*sin(theta_seq))),
+          col = adjustcolor(cols[i], 0.3), border = NA)
+}
+
+# Note about equal areas
+mtext("Each colored band has the same area in both views",
+      side = 1, line = 0, outer = TRUE, cex = 0.9)
+```
+
+The colored bands have equal area on the sphere. After Lambert projection,
+the shapes change (bands near the edge are stretched radially, compressed
+tangentially), but the *areas* remain equal.
+
+## From Lambert to Snyder: Projecting onto an Icosahedron
+
+Lambert's projection works for a single tangent plane. But what if we want to
+cover the entire globe with minimal distortion? Snyder's insight: use **20
+tangent planes**, one for each face of an icosahedron.
+
+### The Icosahedron Advantage
+
+```{r icosahedron-concept, echo=FALSE, fig.width=7, fig.height=4, fig.cap="An icosahedron inscribed in a sphere provides 20 nearly-flat triangular faces."}
+par(mfrow = c(1, 2), mar = c(1, 1, 3, 1), bg = "white")
+
+# Left: show concept of single face projection
+plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-0.5, 2), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Single Face Projection")
+
+# Draw sphere arc
+theta <- seq(-pi/3, pi/3, length.out = 50)
+lines(1.5*sin(theta), 1.5*cos(theta) + 0.3, lwd = 2, col = "gray50")
+
+# Draw triangular face
+tri_x <- c(-0.8, 0, 0.8, -0.8)
+tri_y <- c(0, 1.3, 0, 0)
+polygon(tri_x, tri_y, col = adjustcolor("#457B9D", 0.3), border = "#457B9D", lwd = 2)
+
+# Show center point
+points(0, 0.43, pch = 19, cex = 1)
+text(0.15, 0.43, "face center", cex = 0.8, adj = 0)
+
+# Arrow showing projection direction
+arrows(0, 1.7, 0, 1.4, length = 0.1, lwd = 2, col = "#E63946")
+text(0, 1.85, "project down", cex = 0.8)
+
+# Right: show 20 faces covering globe
+plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "20 Faces Cover the Globe")
+
+# Draw circle for globe
+theta <- seq(0, 2*pi, length.out = 100)
+lines(cos(theta), sin(theta), lwd = 2)
+
+# Draw simplified icosahedron view (front faces)
+# Pentagon in center
+pent_angles <- seq(pi/2, pi/2 + 2*pi, length.out = 6)
+pent_r <- 0.4
+pent_x <- pent_r * cos(pent_angles)
+pent_y <- pent_r * sin(pent_angles)
+
+# Draw triangular faces radiating from center
+outer_r <- 0.95
+for (i in 1:5) {
+  mid_ang <- (pent_angles[i] + pent_angles[i+1])/2
+  tri_x <- c(pent_x[i], pent_x[i+1], outer_r*cos(mid_ang), pent_x[i])
+  tri_y <- c(pent_y[i], pent_y[i+1], outer_r*sin(mid_ang), pent_y[i])
+  col_idx <- (i %% 3) + 1
+  cols <- c("#E63946", "#457B9D", "#2A9D8F")
+  polygon(tri_x, tri_y, col = adjustcolor(cols[col_idx], 0.4),
+          border = "gray30", lwd = 1)
+}
+
+# Central pentagon
+polygon(pent_x, pent_y, col = adjustcolor("#E9C46A", 0.5),
+        border = "gray30", lwd = 1)
+
+text(0, -1.3, "Each triangle ≈ 1/20 of Earth's surface", cex = 0.85)
+```
+
+Why an icosahedron?
+
+1. **20 identical faces**: Each triangular face covers ~1/20 of Earth (about 25.5 million km²)
+2. **Low distortion**: Because each face is small and nearly flat, projection distortion stays below 17.3°
+3. **Triangles subdivide naturally**: Each triangle can be recursively divided into smaller triangles
+
+### Snyder's Projection: Modified Lambert for Triangles
+
+Snyder adapted Lambert's method for projecting spherical triangles (the curved
+patches on the globe) to planar triangles (the flat icosahedron faces):
+
+```{r snyder-process, echo=FALSE, fig.width=7, fig.height=5, fig.cap="Snyder's projection maps curved spherical triangles to flat planar triangles while preserving area."}
+par(mar = c(1, 1, 2, 1), bg = "white")
+plot(NULL, xlim = c(-0.5, 10), ylim = c(-1, 5), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Snyder Equal-Area Projection Process")
+
+# Step 1: Spherical triangle (curved edges)
+# Draw as if looking at curved surface
+curve_pts <- function(x1, y1, x2, y2, bulge = 0.15) {
+  t <- seq(0, 1, length.out = 30)
+  mid_x <- (x1 + x2)/2
+  mid_y <- (y1 + y2)/2
+  # Perpendicular offset for bulge
+  dx <- x2 - x1
+  dy <- y2 - y1
+  len <- sqrt(dx^2 + dy^2)
+  nx <- -dy/len * bulge * len
+  ny <- dx/len * bulge * len
+
+  # Quadratic bezier-like curve
+  x <- (1-t)^2 * x1 + 2*(1-t)*t*(mid_x + nx) + t^2 * x2
+  y <- (1-t)^2 * y1 + 2*(1-t)*t*(mid_y + ny) + t^2 * y2
+  list(x = x, y = y)
+}
+
+# Spherical triangle vertices
+s_v <- list(c(0.5, 4), c(2.5, 4), c(1.5, 2))
+# Draw curved edges
+for (i in 1:3) {
+  j <- i %% 3 + 1
+  crv <- curve_pts(s_v[[i]][1], s_v[[i]][2], s_v[[j]][1], s_v[[j]][2], 0.12)
+  lines(crv$x, crv$y, lwd = 2, col = "#264653")
+}
+# Fill
+polygon(c(s_v[[1]][1], s_v[[2]][1], s_v[[3]][1]),
+        c(s_v[[1]][2], s_v[[2]][2], s_v[[3]][2]),
+        col = adjustcolor("#2A9D8F", 0.3), border = NA)
+points(1.5, 3.3, pch = 19, cex = 0.8)
+text(1.5, 3.5, "P", cex = 0.9)
+text(1.5, 1.5, "Spherical triangle\n(on globe)", cex = 0.85)
+
+# Arrow
+arrows(3, 3, 4, 3, length = 0.15, lwd = 2, col = "#E63946")
+text(3.5, 3.5, "Snyder\nprojection", cex = 0.8)
+
+# Step 2: Planar triangle (straight edges)
+p_v <- list(c(4.5, 4), c(6.5, 4), c(5.5, 2))
+polygon(c(p_v[[1]][1], p_v[[2]][1], p_v[[3]][1]),
+        c(p_v[[1]][2], p_v[[2]][2], p_v[[3]][2]),
+        col = adjustcolor("#457B9D", 0.3), border = "#264653", lwd = 2)
+points(5.5, 3.3, pch = 19, cex = 0.8)
+text(5.5, 3.5, "P'", cex = 0.9)
+text(5.5, 1.5, "Planar triangle\n(on icosahedron face)", cex = 0.85)
+
+# Arrow
+arrows(7, 3, 8, 3, length = 0.15, lwd = 2, col = "#E63946")
+text(7.5, 3.5, "Grid\noverlay", cex = 0.8)
+
+# Step 3: Hexagonal grid
+hex_center <- function(cx, cy, r) {
+  angles <- seq(0, 2*pi, length.out = 7) + pi/6
+  list(x = cx + r * cos(angles), y = cy + r * sin(angles))
+}
+
+# Draw triangle with hex grid
+p_v2 <- list(c(8.5, 4), c(10.5, 4), c(9.5, 2))
+polygon(c(p_v2[[1]][1], p_v2[[2]][1], p_v2[[3]][1]),
+        c(p_v2[[1]][2], p_v2[[2]][2], p_v2[[3]][2]),
+        col = adjustcolor("#E9C46A", 0.2), border = "#264653", lwd = 2)
+
+# Add small hexagons
+hex_size <- 0.25
+hex_positions <- list(
+  c(9.5, 3.2), c(9.2, 3.6), c(9.8, 3.6),
+  c(9.5, 2.8), c(9.2, 2.4), c(9.8, 2.4)
+)
+for (pos in hex_positions) {
+  hx <- hex_center(pos[1], pos[2], hex_size)
+  polygon(hx$x, hx$y, border = "#264653", lwd = 1,
+          col = adjustcolor("#F4A261", 0.3))
+}
+text(9.5, 1.5, "Hexagonal cells\n(equal area)", cex = 0.85)
+
+# Area preservation note
+rect(-0.3, -0.5, 10.3, 0.3, col = adjustcolor("#E8E8E8", 0.5), border = NA)
+text(5, -0.1, "Area is preserved at each step: A(sphere patch) = A(plane patch) = Σ A(cells)",
+     cex = 0.9, font = 3)
+```
+
+**The Snyder projection process:**
+
+1. **Subdivide each spherical face** into 6 smaller triangles (from center to vertices)
+2. **Apply modified Lambert** to each sub-triangle, preserving area
+3. **Reassemble** the planar triangles to form the flat icosahedron face
+
+The mathematical details involve computing intersection points of great circles
+and carefully chosen scaling factors, but the principle is the same as
+Lambert: preserve area by using the right distance relationship.
+
+## The Complete Projection Pipeline
+
+Now let's see how hexify implements this:
+
+### Step 1: Determine the Face
+
+For any point on Earth, first find which of the 20 icosahedral faces contains it.
+The algorithm computes the angular distance from the point to each face center
+and selects the closest face.
+
+### Step 2: Project to Face Coordinates
+
+Apply Snyder's equal-area formulas to compute (x, y) coordinates on the planar
+triangle. The formulas involve:
+
+- Computing the azimuth angle from face center to point
+- Computing the angular distance from face center
+- Applying the area-preserving transformation
+
+### Step 3: Normalize and Quantize
+
+Convert the (x, y) coordinates to normalized (tx, ty) in range [0, 1], then
+quantize to grid cell indices based on the resolution.
 
 ```{r}
 library(hexify)
 
-# Project a point
+# Project a point through the pipeline
 result <- hexify_forward(lon = 16.37, lat = 48.21)
 cat(sprintf("Face: %d, tx: %.4f, ty: %.4f\n",
             result["face"], result["tx"], result["ty"]))
@@ -68,15 +442,176 @@ head(centers, 5)
 
 ### From Triangles to Hexagons
 
-Each triangular face is subdivided into hexagonal cells. The subdivision process:
+Each triangular face is subdivided into hexagonal cells:
 
-1. Overlay a hexagonal lattice on each face
-2. Assign each point to the nearest hexagon center
-3. Index cells hierarchically
+```{r hexagon-subdivision, echo=FALSE, fig.width=7, fig.height=5, fig.cap="Hexagonal grid overlaid on a triangular face. Hexagons tile the plane efficiently with equal-area cells."}
+par(mar = c(1, 1, 2, 1), bg = "white")
+plot(NULL, xlim = c(-0.5, 8), ylim = c(-0.5, 6), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Hexagonal Subdivision of Triangle")
+
+# Helper function for hexagon vertices
+hex_vertices <- function(cx, cy, r, flat_top = TRUE) {
+  if (flat_top) {
+    angles <- seq(0, 2*pi, length.out = 7)
+  } else {
+    angles <- seq(pi/6, 2*pi + pi/6, length.out = 7)
+  }
+  list(x = cx + r * cos(angles), y = cy + r * sin(angles))
+}
+
+# Draw the triangle boundary
+tri_x <- c(0, 7, 3.5, 0)
+tri_y <- c(0, 0, 6, 0)
+polygon(tri_x, tri_y, border = "#264653", lwd = 3, col = NA)
+
+# Create hexagonal grid
+hex_r <- 0.5
+hex_h <- hex_r * sqrt(3)
+
+# Generate hex centers within triangle
+hex_centers <- list()
+for (row in 0:8) {
+  y <- row * hex_h * 0.75
+  offset <- if (row %% 2 == 0) 0 else hex_r * 0.75
+  for (col in 0:12) {
+    x <- col * hex_r * 1.5 + offset
+    # Check if center is inside triangle (with margin)
+    # Triangle vertices: (0,0), (7,0), (3.5,6)
+    # Use barycentric coordinates
+    denom <- (tri_y[2] - tri_y[3]) * (tri_x[1] - tri_x[3]) +
+             (tri_x[3] - tri_x[2]) * (tri_y[1] - tri_y[3])
+    a <- ((tri_y[2] - tri_y[3]) * (x - tri_x[3]) +
+          (tri_x[3] - tri_x[2]) * (y - tri_y[3])) / denom
+    b <- ((tri_y[3] - tri_y[1]) * (x - tri_x[3]) +
+          (tri_x[1] - tri_x[3]) * (y - tri_y[3])) / denom
+    c <- 1 - a - b
+    margin <- 0.08
+    if (a > margin && b > margin && c > margin) {
+      hex_centers[[length(hex_centers) + 1]] <- c(x, y)
+    }
+  }
+}
+
+# Draw hexagons with alternating colors
+colors <- c("#2A9D8F", "#E9C46A", "#F4A261")
+for (i in seq_along(hex_centers)) {
+  hx <- hex_vertices(hex_centers[[i]][1], hex_centers[[i]][2], hex_r * 0.95, flat_top = FALSE)
+  col_idx <- (i %% 3) + 1
+  polygon(hx$x, hx$y, col = adjustcolor(colors[col_idx], 0.4),
+          border = "#264653", lwd = 0.8)
+}
+
+# Mark a few cell centers
+set.seed(42)
+sample_idx <- sample(seq_along(hex_centers), min(5, length(hex_centers)))
+for (idx in sample_idx) {
+  points(hex_centers[[idx]][1], hex_centers[[idx]][2], pch = 19, cex = 0.6)
+}
+
+# Label
+text(3.5, -0.4, "Triangle face with hexagonal tessellation", cex = 0.9)
+
+# Annotation
+text(6.5, 5, "Each hexagon\n= equal area cell", cex = 0.8, adj = 0)
+```
+
+The hexagonal grid provides several advantages:
+
+1. **Uniform neighbors**: Each hexagon has exactly 6 neighbors (unlike squares with 8)
+2. **Isotropic**: Distance to all neighbors is equal
+3. **Efficient packing**: Hexagons cover the plane with minimal perimeter per area
 
 ### Aperture and Resolution
 
-**Aperture** determines how many child cells fit in one parent cell:
+**Aperture** determines how many child cells fit in one parent cell. This is
+the key parameter controlling grid resolution:
+
+```{r aperture-visual, echo=FALSE, fig.width=8, fig.height=4, fig.cap="Aperture controls how parent cells subdivide into children. Aperture 3 divides into 3 children, aperture 4 into 4, and aperture 7 into 7."}
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1), bg = "white")
+
+# Helper for hexagon
+hex_v <- function(cx, cy, r, flat_top = FALSE) {
+  offset <- if (flat_top) 0 else pi/6
+  angles <- seq(offset, 2*pi + offset, length.out = 7)
+  list(x = cx + r * cos(angles), y = cy + r * sin(angles))
+}
+
+# Aperture 3
+plot(NULL, xlim = c(-2, 2), ylim = c(-2, 2), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Aperture 3")
+
+# Parent hexagon (outline)
+h_parent <- hex_v(0, 0, 1.8, flat_top = TRUE)
+polygon(h_parent$x, h_parent$y, border = "#264653", lwd = 2, col = NA)
+
+# Three child hexagons (triangular arrangement)
+child_r <- 0.9
+child_dist <- 0.7
+child_angles <- c(pi/2, pi/2 + 2*pi/3, pi/2 + 4*pi/3)
+child_cols <- c("#E63946", "#457B9D", "#2A9D8F")
+for (i in 1:3) {
+  cx <- child_dist * cos(child_angles[i])
+  cy <- child_dist * sin(child_angles[i])
+  h <- hex_v(cx, cy, child_r, flat_top = TRUE)
+  polygon(h$x, h$y, col = adjustcolor(child_cols[i], 0.5),
+          border = "#264653", lwd = 1.5)
+  text(cx, cy, i, cex = 1.2, font = 2)
+}
+text(0, -1.9, "3 children per parent", cex = 0.85)
+
+# Aperture 4
+plot(NULL, xlim = c(-2, 2), ylim = c(-2, 2), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Aperture 4")
+
+# Parent hexagon
+h_parent <- hex_v(0, 0, 1.8, flat_top = TRUE)
+polygon(h_parent$x, h_parent$y, border = "#264653", lwd = 2, col = NA)
+
+# Four child hexagons (2x2 arrangement)
+child_r4 <- 0.75
+positions <- list(c(-0.5, 0.5), c(0.5, 0.5), c(-0.5, -0.5), c(0.5, -0.5))
+child_cols4 <- c("#E63946", "#457B9D", "#2A9D8F", "#E9C46A")
+for (i in 1:4) {
+  cx <- positions[[i]][1]
+  cy <- positions[[i]][2]
+  h <- hex_v(cx, cy, child_r4, flat_top = TRUE)
+  polygon(h$x, h$y, col = adjustcolor(child_cols4[i], 0.5),
+          border = "#264653", lwd = 1.5)
+  text(cx, cy, i, cex = 1.2, font = 2)
+}
+text(0, -1.9, "4 children per parent", cex = 0.85)
+
+# Aperture 7
+plot(NULL, xlim = c(-2, 2), ylim = c(-2, 2), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Aperture 7")
+
+# Parent hexagon
+h_parent <- hex_v(0, 0, 1.8, flat_top = TRUE)
+polygon(h_parent$x, h_parent$y, border = "#264653", lwd = 2, col = NA)
+
+# Seven child hexagons (rosette pattern: 1 center + 6 around)
+child_r7 <- 0.55
+# Center
+h <- hex_v(0, 0, child_r7, flat_top = TRUE)
+polygon(h$x, h$y, col = adjustcolor("#F4A261", 0.5),
+        border = "#264653", lwd = 1.5)
+text(0, 0, "1", cex = 1, font = 2)
+
+# Surrounding 6
+ring_r <- 0.85
+ring_cols <- c("#E63946", "#457B9D", "#2A9D8F", "#E9C46A", "#9B5DE5", "#00BBF9")
+for (i in 1:6) {
+  ang <- pi/2 + (i-1) * pi/3
+  cx <- ring_r * cos(ang)
+  cy <- ring_r * sin(ang)
+  h <- hex_v(cx, cy, child_r7, flat_top = TRUE)
+  polygon(h$x, h$y, col = adjustcolor(ring_cols[i], 0.5),
+          border = "#264653", lwd = 1.5)
+  text(cx, cy, i+1, cex = 1, font = 2)
+}
+text(0, -1.9, "7 children per parent", cex = 0.85)
+```
 
 | Aperture | Children per Parent | Class Pattern | Description |
 |----------|---------------------|---------------|-------------|
@@ -230,7 +765,7 @@ cat("Decoded - Quad:", coords$quad, "i:", coords$i, "j:", coords$j, "\n")
 
 ### Z7 Encoding (Aperture 7)
 
-Aperture 7 uses base-7 encoding with a twist: each subdivision involves both scaling (by √7) and rotation (by arctan(√3/5)). The 7 child cells form a hexagonal rosette pattern:
+Aperture 7 uses base-7 encoding with a twist: each subdivision involves both scaling by √7 and rotation by arctan(√3/5). The 7 child cells form a hexagonal rosette pattern:
 
 ```
       1

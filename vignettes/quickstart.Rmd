@@ -380,11 +380,10 @@ Clip a grid to any sf polygon boundary:
 # Get France boundary
 france <- hexify_world[hexify_world$name == "France", ]
 
-# Generate grid covering France's bounding box
-france_bbox <- st_bbox(france)
+# Generate grid covering mainland France (excluding overseas territories)
 france_grid <- hexify_grid_rect(
-  minlon = france_bbox["xmin"], maxlon = france_bbox["xmax"],
-  minlat = france_bbox["ymin"], maxlat = france_bbox["ymax"],
+  minlon = -5, maxlon = 10,
+  minlat = 41, maxlat = 52,
   area = 2000
 )
 
@@ -395,6 +394,7 @@ ggplot() +
   geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
   geom_sf(data = france_grid_clipped, fill = alpha("steelblue", 0.3),
           color = "steelblue", linewidth = 0.3) +
+  coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
   labs(title = "Hexagonal Grid Clipped to France (~2,000 km² cells)") +
   theme_minimal()
 ```

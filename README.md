@@ -4,7 +4,7 @@
 
 **Fast Hexagonal Grid Assignment for Geographic Data**
 
-`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. It produces output identical to `dggridR` but with a simpler, modern interface. Supports apertures 3, 4, 7, and mixed 4/3.
+`hexify` assigns geographic points to equal-area hexagonal cells using the ISEA discrete global grid system. Specify your target cell area in km² and hexify handles the rest. Supports apertures 3, 4, 7, and mixed 4/3.
 
 ## Quick Start
 
@@ -30,9 +30,9 @@ result
 ## Why hexify?
 
 - **Simple API**: One function (`hexify()`) for the common use case
-- **dggridR compatible**: Produces identical `cell_id` (SEQNUM) values
-- **Modern R**: Works with data.frames and sf objects
 - **Fast**: C++ implementation of ISEA Snyder projection
+- **Modern R**: Works with data.frames and sf objects
+- **dggridR compatible**: Produces identical cell IDs for interoperability
 
 ## Features
 

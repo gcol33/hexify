@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='288.00pt' viewBox='0 0 504.00 288.00'>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+      fill: #3E3F3A;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<defs>
+  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwyODguMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='288.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwyODguMDA=)'>
+</g>
+<defs>
+  <clipPath id='cpMC4wMHwyNTIuMDB8MC4wMHwyODguMDA='>
+    <rect x='0.00' y='0.00' width='252.00' height='288.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHwyNTIuMDB8MC4wMHwyODguMDA=)'>
+<text x='126.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='154.36px' lengthAdjust='spacingAndGlyphs'>Single Face Projection</text>
+</g>
+<defs>
+  <clipPath id='cpMTQuNDB8MjM3LjYwfDQzLjIwfDI3My42MA=='>
+    <rect x='14.40' y='43.20' width='223.20' height='230.40' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMTQuNDB8MjM3LjYwfDQzLjIwfDI3My42MA==)'>
+<polyline points='36.51,137.73 38.80,133.96 41.25,130.28 43.85,126.71 46.61,123.26 49.50,119.93 52.54,116.72 55.72,113.65 59.02,110.72 62.44,107.93 65.98,105.29 69.63,102.80 73.38,100.47 77.23,98.30 81.17,96.30 85.18,94.47 89.28,92.81 93.44,91.33 97.66,90.03 101.93,88.91 106.25,87.97 110.60,87.22 114.98,86.66 119.38,86.28 123.79,86.09 128.21,86.09 132.62,86.28 137.02,86.66 141.40,87.22 145.75,87.97 150.07,88.91 154.34,90.03 158.56,91.33 162.72,92.81 166.82,94.47 170.83,96.30 174.77,98.30 178.62,100.47 182.37,102.80 186.02,105.29 189.56,107.93 192.98,110.72 196.28,113.65 199.46,116.72 202.50,119.93 205.39,123.26 208.15,126.71 210.75,130.28 213.20,133.96 215.49,137.73 ' style='stroke-width: 1.50; stroke: #7F7F7F;' />
+<polygon points='70.89,210.07 126.00,120.51 181.11,210.07 70.89,210.07 ' style='stroke-width: 1.50; stroke: #457B9D; fill: #457B9D; fill-opacity: 0.30;' />
+<circle cx='126.00' cy='180.44' r='2.70' style='stroke-width: 0.75; fill: #000000;' />
+<text x='136.33' y='183.88' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='47.44px' lengthAdjust='spacingAndGlyphs'>face center</text>
+<line x1='126.00' y1='92.96' x2='126.00' y2='113.62' style='stroke-width: 1.50; stroke: #E63946;' />
+<polyline points='122.40,107.39 126.00,113.62 129.60,107.39 ' style='stroke-width: 1.50; stroke: #E63946;' />
+<text x='126.00' y='85.05' text-anchor='middle' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='54.34px' lengthAdjust='spacingAndGlyphs'>project down</text>
+</g>
+<defs>
+  <clipPath id='cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA='>
+    <rect x='266.40' y='43.20' width='223.20' height='230.40' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA=)'>
+</g>
+<defs>
+  <clipPath id='cpMjUyLjAwfDUwNC4wMHwwLjAwfDI4OC4wMA=='>
+    <rect x='252.00' y='0.00' width='252.00' height='288.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMjUyLjAwfDUwNC4wMHwwLjAwfDI4OC4wMA==)'>
+<text x='378.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='175.95px' lengthAdjust='spacingAndGlyphs'>20 Faces Cover the Globe</text>
+</g>
+<g clip-path='url(#cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA=)'>
+<polyline points='446.89,158.40 446.75,154.03 446.33,149.68 445.64,145.36 444.68,141.10 443.45,136.90 441.95,132.80 440.20,128.79 438.20,124.91 435.95,121.16 433.47,117.56 430.77,114.12 427.86,110.86 424.74,107.79 421.44,104.93 417.96,102.28 414.32,99.86 410.53,97.68 406.62,95.74 402.59,94.05 398.45,92.62 394.24,91.45 389.96,90.56 385.64,89.94 381.28,89.59 376.91,89.52 372.54,89.73 368.20,90.21 363.89,90.97 359.64,92.00 355.47,93.30 351.39,94.86 347.41,96.68 343.56,98.74 339.84,101.05 336.28,103.58 332.89,106.34 329.68,109.30 326.66,112.47 323.85,115.82 321.26,119.34 318.89,123.01 316.77,126.83 314.89,130.78 313.27,134.84 311.90,138.99 310.80,143.22 309.98,147.52 309.42,151.85 309.15,156.21 309.15,160.59 309.42,164.95 309.98,169.28 310.80,173.58 311.90,177.81 313.27,181.96 314.89,186.02 316.77,189.97 318.89,193.79 321.26,197.46 323.85,200.98 326.66,204.33 329.68,207.50 332.89,210.46 336.28,213.22 339.84,215.75 343.56,218.06 347.41,220.12 351.39,221.94 355.47,223.50 359.64,224.80 363.89,225.83 368.20,226.59 372.54,227.07 376.91,227.28 381.28,227.21 385.64,226.86 389.96,226.24 394.24,225.35 398.45,224.18 402.59,222.75 406.62,221.06 410.53,219.12 414.32,216.94 417.96,214.52 421.44,211.87 424.74,209.01 427.86,205.94 430.77,202.68 433.47,199.24 435.95,195.64 438.20,191.89 440.20,188.01 441.95,184.00 443.45,179.90 444.68,175.70 445.64,171.44 446.33,167.12 446.75,162.77 446.89,158.40 ' style='stroke-width: 1.50;' />
+<polygon points='378.00,130.84 351.79,149.88 339.53,105.45 378.00,130.84 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
+<polygon points='351.79,149.88 361.80,180.69 315.76,178.62 351.79,149.88 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
+<polygon points='361.80,180.69 394.20,180.69 378.00,223.84 361.80,180.69 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #E63946; fill-opacity: 0.40;' />
+<polygon points='394.20,180.69 404.21,149.88 440.24,178.62 394.20,180.69 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
+<polygon points='404.21,149.88 378.00,130.84 416.47,105.45 404.21,149.88 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
+<polygon points='378.00,130.84 351.79,149.88 361.80,180.69 394.20,180.69 404.21,149.88 378.00,130.84 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.50;' />
+<text x='378.00' y='250.59' text-anchor='middle' style='font-size: 10.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='172.39px' lengthAdjust='spacingAndGlyphs'>Each triangle ≈ 1/20 of Earth's surface</text>
+</g>
+</g>
+</svg>

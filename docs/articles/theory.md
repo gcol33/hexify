@@ -3,38 +3,158 @@
 ## Overview
 
 hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete
-global grid system. This vignette explains the mathematical foundations.
+global grid system. This vignette explains the mathematical foundations
+with intuitive geometric illustrations.
 
-## The Icosahedral Projection
+## The Problem: Mapping a Sphere to a Plane
 
-### Why an Icosahedron?
+The fundamental challenge in cartography is mapping the curved surface
+of Earth onto a flat plane. Any such mapping must distort
+*something*—you cannot perfectly preserve both area and shape
+simultaneously. For ecological and statistical applications,
+**equal-area** projections are essential: we need grid cells of equal
+size regardless of location.
 
-A regular icosahedron has 20 triangular faces, each with identical
-geometry. This makes it ideal for:
+### Why Equal-Area Matters
 
-1.  **Equal-area partitioning**: Each face covers approximately 1/20 of
-    Earth’s surface
-2.  **Low distortion**: Each triangular face can be projected with
-    minimal distortion
-3.  **Hierarchical subdivision**: Triangular faces subdivide naturally
+Consider counting species in grid cells:
 
-### The Snyder Projection
+- If cells vary in area, counts aren’t comparable
+- A cell twice as large will, on average, contain twice as many
+  individuals
+- Standard lat/lon grids fail badly—cells near poles are tiny compared
+  to equatorial cells
 
-The Snyder Equal Area projection maps points on the sphere to the
-icosahedron:
+The ISEA projection solves this by preserving area while minimizing
+shape distortion.
 
-1.  **Determine the face**: Find which of 20 icosahedral faces contains
-    the point
-2.  **Project to face plane**: Use the Snyder formulas to compute (x, y)
-    on the face
-3.  **Normalize coordinates**: Convert to (tx, ty) in range
-    approximately \[0, 1\]
+## The Lambert Azimuthal Equal-Area Projection
+
+Before understanding Snyder’s projection, we need to understand its
+foundation: the **Lambert azimuthal equal-area projection**, developed
+by Johann Heinrich Lambert in 1772.
+
+### The Core Idea: Chord Distance
+
+The key insight is beautifully simple. Imagine a sphere with a flat
+plane tangent to it at point S (the “south pole” in polar aspect):
+
+![Lambert projection: Points on the sphere are mapped to the plane using
+chord distance.](theory_files/figure-html/lambert-concept-1.svg)
+
+Lambert projection: Points on the sphere are mapped to the plane using
+chord distance.
+
+**How it works:**
+
+1.  Pick any point **P** on the sphere
+2.  Measure the straight-line (chord) distance **d** from **S** to **P**
+3.  Place the projected point **P’** on the plane at distance **d** from
+    **S**, in the same direction
+
+This simple rule—*use chord distance*—automatically preserves area! The
+mathematical magic is that the area element transforms correctly.
+
+### Why Does This Preserve Area?
+
+The chord distance formula for a point at angular distance φ from S is:
+
+``` math
+d = 2R \sin\left(\frac{\phi}{2}\right)
+```
+
+where R is the sphere’s radius. This specific relationship ensures that
+a small patch of area dA on the sphere maps to an equal area dA on the
+plane.
+
+![Equal-area property: Concentric circles on the sphere map to circles
+on the plane with areas
+preserved.](theory_files/figure-html/lambert-area-1.svg)
+
+Equal-area property: Concentric circles on the sphere map to circles on
+the plane with areas preserved.
+
+The colored bands have equal area on the sphere. After Lambert
+projection, the shapes change (bands near the edge are stretched
+radially, compressed tangentially), but the *areas* remain equal.
+
+## From Lambert to Snyder: Projecting onto an Icosahedron
+
+Lambert’s projection works for a single tangent plane. But what if we
+want to cover the entire globe with minimal distortion? Snyder’s
+insight: use **20 tangent planes**, one for each face of an icosahedron.
+
+### The Icosahedron Advantage
+
+![An icosahedron inscribed in a sphere provides 20 nearly-flat
+triangular faces.](theory_files/figure-html/icosahedron-concept-1.svg)
+
+An icosahedron inscribed in a sphere provides 20 nearly-flat triangular
+faces.
+
+Why an icosahedron?
+
+1.  **20 identical faces**: Each triangular face covers ~1/20 of Earth
+    (about 25.5 million km²)
+2.  **Low distortion**: Because each face is small and nearly flat,
+    projection distortion stays below 17.3°
+3.  **Triangles subdivide naturally**: Each triangle can be recursively
+    divided into smaller triangles
+
+### Snyder’s Projection: Modified Lambert for Triangles
+
+Snyder adapted Lambert’s method for projecting spherical triangles (the
+curved patches on the globe) to planar triangles (the flat icosahedron
+faces):
+
+![Snyder's projection maps curved spherical triangles to flat planar
+triangles while preserving
+area.](theory_files/figure-html/snyder-process-1.svg)
+
+Snyder’s projection maps curved spherical triangles to flat planar
+triangles while preserving area.
+
+**The Snyder projection process:**
+
+1.  **Subdivide each spherical face** into 6 smaller triangles (from
+    center to vertices)
+2.  **Apply modified Lambert** to each sub-triangle, preserving area
+3.  **Reassemble** the planar triangles to form the flat icosahedron
+    face
+
+The mathematical details involve computing intersection points of great
+circles and carefully chosen scaling factors, but the principle is the
+same as Lambert: preserve area by using the right distance relationship.
+
+## The Complete Projection Pipeline
+
+Now let’s see how hexify implements this:
+
+### Step 1: Determine the Face
+
+For any point on Earth, first find which of the 20 icosahedral faces
+contains it. The algorithm computes the angular distance from the point
+to each face center and selects the closest face.
+
+### Step 2: Project to Face Coordinates
+
+Apply Snyder’s equal-area formulas to compute (x, y) coordinates on the
+planar triangle. The formulas involve:
+
+- Computing the azimuth angle from face center to point
+- Computing the angular distance from face center
+- Applying the area-preserving transformation
+
+### Step 3: Normalize and Quantize
+
+Convert the (x, y) coordinates to normalized (tx, ty) in range \[0, 1\],
+then quantize to grid cell indices based on the resolution.
 
 ``` r
 
 library(hexify)
 
-# Project a point
+# Project a point through the pipeline
 result <- hexify_forward(lon = 16.37, lat = 48.21)
 cat(sprintf("Face: %d, tx: %.4f, ty: %.4f\n",
             result["face"], result["tx"], result["ty"]))
@@ -72,16 +192,34 @@ head(centers, 5)
 
 ### From Triangles to Hexagons
 
-Each triangular face is subdivided into hexagonal cells. The subdivision
-process:
+Each triangular face is subdivided into hexagonal cells:
 
-1.  Overlay a hexagonal lattice on each face
-2.  Assign each point to the nearest hexagon center
-3.  Index cells hierarchically
+![Hexagonal grid overlaid on a triangular face. Hexagons tile the plane
+efficiently with equal-area
+cells.](theory_files/figure-html/hexagon-subdivision-1.svg)
+
+Hexagonal grid overlaid on a triangular face. Hexagons tile the plane
+efficiently with equal-area cells.
+
+The hexagonal grid provides several advantages:
+
+1.  **Uniform neighbors**: Each hexagon has exactly 6 neighbors (unlike
+    squares with 8)
+2.  **Isotropic**: Distance to all neighbors is equal
+3.  **Efficient packing**: Hexagons cover the plane with minimal
+    perimeter per area
 
 ### Aperture and Resolution
 
-**Aperture** determines how many child cells fit in one parent cell:
+**Aperture** determines how many child cells fit in one parent cell.
+This is the key parameter controlling grid resolution:
+
+![Aperture controls how parent cells subdivide into children. Aperture 3
+divides into 3 children, aperture 4 into 4, and aperture 7 into
+7.](theory_files/figure-html/aperture-visual-1.svg)
+
+Aperture controls how parent cells subdivide into children. Aperture 3
+divides into 3 children, aperture 4 into 4, and aperture 7 into 7.
 
 | Aperture | Children per Parent | Class Pattern | Description |
 |----|----|----|----|
@@ -281,8 +419,8 @@ cat("Decoded - Quad:", coords$quad, "i:", coords$i, "j:", coords$j, "\n")
 ### Z7 Encoding (Aperture 7)
 
 Aperture 7 uses base-7 encoding with a twist: each subdivision involves
-both scaling (by √7) and rotation (by arctan(√3/5)). The 7 child cells
-form a hexagonal rosette pattern:
+both scaling by √7 and rotation by arctan(√3/5). The 7 child cells form
+a hexagonal rosette pattern:
 
           1
         6   2

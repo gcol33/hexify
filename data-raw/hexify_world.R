@@ -12,8 +12,8 @@ library(rnaturalearth)
 # Disable S2 for simplification (avoids edge crossing errors)
 sf_use_s2(FALSE)
 
-# Download Natural Earth 110m scale (smallest/simplest)
-world <- ne_countries(scale = 110, returnclass = "sf")
+# Download Natural Earth 50m scale (medium resolution - good balance)
+world <- ne_countries(scale = 50, returnclass = "sf")
 
 # Keep useful columns (identification, geography, economy)
 keep_cols <- c(
@@ -39,8 +39,8 @@ keep_cols <- c(
 )
 world <- world[, keep_cols]
 
-# Simplify geometry (tolerance in degrees, ~50km at equator)
-world <- st_simplify(world, dTolerance = 0.5, preserveTopology = TRUE)
+# Simplify geometry (tolerance in degrees, ~10km at equator)
+world <- st_simplify(world, dTolerance = 0.1, preserveTopology = TRUE)
 
 # Ensure valid geometries
 world <- st_make_valid(world)
