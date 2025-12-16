@@ -131,8 +131,11 @@ approximately [0, 1]</li>
 <h3 id="icosahedron-orientation">Icosahedron Orientation<a class="anchor" aria-label="anchor" href="#icosahedron-orientation"></a>
 </h3>
 <p>The icosahedron can be oriented arbitrarily on the globe. The default
-ISEA orientation places vertex 0 at: - Longitude: 45°/4 - Latitude:
-arctan(√5/2)</p>
+ISEA orientation places vertex 0 at:</p>
+<ul>
+<li>Longitude: 45°/4</li>
+<li>Latitude: arctan(√5/2)</li>
+</ul>
 <p>This orientation was chosen by Sahr et al. (2003) to minimize
 distortion over land masses while placing the 12 pentagonal cells (which
 occur at icosahedron vertices) in oceanic or low-population areas. The
@@ -463,9 +466,12 @@ Class III grids.</p>
 <p>Mixed aperture grids combine the aperture 4 and aperture 3 encoding
 schemes. The first <code>m</code> resolution levels use Morton (Z-order)
 encoding, then subsequent levels use Z3 encoding.</p>
-<p>This hybrid approach provides: - Faster initial cell growth (aperture
-4 at coarse scales) - Finer resolution control (aperture 3 at fine
-scales) - dggridR compatibility with ISEA43H grids</p>
+<p>This hybrid approach provides:</p>
+<ul>
+<li>Faster initial cell growth (aperture 4 at coarse scales)</li>
+<li>Finer resolution control (aperture 3 at fine scales)</li>
+<li>dggridR compatibility with ISEA43H grids</li>
+</ul>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Mixed aperture index (via hexify() function)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fl">16.37</span>, lat <span class="op">=</span> <span class="fl">48.21</span><span class="op">)</span>,</span>

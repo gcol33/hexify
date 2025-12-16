@@ -44,8 +44,10 @@ cat(sprintf("Face: %d, tx: %.4f, ty: %.4f\n",
 ### Icosahedron Orientation
 
 The icosahedron can be oriented arbitrarily on the globe. The default
-ISEA orientation places vertex 0 at: - Longitude: 45°/4 - Latitude:
-arctan(√5/2)
+ISEA orientation places vertex 0 at:
+
+- Longitude: 45°/4
+- Latitude: arctan(√5/2)
 
 This orientation was chosen by Sahr et al. (2003) to minimize distortion
 over land masses while placing the 12 pentagonal cells (which occur at
@@ -316,9 +318,11 @@ Mixed aperture grids combine the aperture 4 and aperture 3 encoding
 schemes. The first `m` resolution levels use Morton (Z-order) encoding,
 then subsequent levels use Z3 encoding.
 
-This hybrid approach provides: - Faster initial cell growth (aperture 4
-at coarse scales) - Finer resolution control (aperture 3 at fine
-scales) - dggridR compatibility with ISEA43H grids
+This hybrid approach provides:
+
+- Faster initial cell growth (aperture 4 at coarse scales)
+- Finer resolution control (aperture 3 at fine scales)
+- dggridR compatibility with ISEA43H grids
 
 ``` r
 
