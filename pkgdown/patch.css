@@ -8,3 +8,14 @@
 [data-bs-theme="dark"] svg.inline-svg rect[style*="fill: #f5f6f8"] {
   fill: #343739 !important;
 }
+
+/* Theme-aware map/country fills */
+/* Light mode: light blue-gray for good contrast with colored overlays */
+svg.inline-svg .map-fill {
+  fill: #D4E5F7 !important;  /* light steel blue */
+}
+
+/* Dark mode: darker blue-gray */
+[data-bs-theme="dark"] svg.inline-svg .map-fill {
+  fill: #3D4F5F !important;  /* dark slate blue */
+}
