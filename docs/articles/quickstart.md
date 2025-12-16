@@ -52,26 +52,37 @@ remotes::install_github("gcol33/hexify")
 
 **Required packages**: `sf` (for spatial operations)
 
-### What hexify Does
+### Core Concepts: HexGrid and HexData
 
-hexify assigns geographic coordinates to equal-area hexagonal grid
-cells. Given a data frame with longitude/latitude columns,
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
-returns:
+hexify uses two S4 classes to make spatial workflows clean and
+error-free:
 
-- `cell_id`: Unique cell identifier (DGGRID-compatible SEQNUM)
-- `cell_cen_lon`, `cell_cen_lat`: Cell center coordinates
-- `cell_area_km2`: Actual cell area in km²
-- `cell_diag_km`: Cell diagonal in km
+**`HexGrid`** — A grid specification that stores all parameters
+(aperture, resolution, area). Define once, reuse everywhere.
 
-Supports apertures 3, 4, 7, and mixed 4/3:
+**`HexData`** — Your data + the grid that was used. Carries the grid
+reference so downstream operations “just work.”
 
-| Aperture | Grid Type | Cell Count Formula | Use Case |
-|----|----|----|----|
-| 3 | ISEA3H | 10 × 3^res + 2 | Default, dggridR compatible, fine control |
-| 4 | ISEA4H | 10 × 4^res + 2 | Power-of-2 scaling |
-| 7 | ISEA7H | 10 × 7^res + 2 | Rapid cell growth |
-| “4/3” | ISEA43H | Mixed | Balance of fast start + fine control |
+#### HexGrid Slots
+
+| Slot             | Type      | Description                            |
+|------------------|-----------|----------------------------------------|
+| `aperture`       | integer   | Grid aperture (3, 4, or 7)             |
+| `resolution`     | integer   | Resolution level (0–30)                |
+| `area_km2`       | numeric   | Cell area in km²                       |
+| `grid_system`    | character | Projection system (“ISEA”)             |
+| `topology`       | character | Cell shape (“H” for hexagon)           |
+| `index_type`     | character | ID encoding (“integer” or “character”) |
+| `mixed_aperture` | logical   | Whether using 4/3 mixed aperture       |
+
+#### HexData Slots
+
+| Slot      | Type          | Description                     |
+|-----------|---------------|---------------------------------|
+| `data`    | data.frame/sf | Your data with cell assignments |
+| `grid`    | HexGrid       | The grid specification used     |
+| `mapping` | list          | Column name mappings (lon, lat) |
+| `kind`    | character     | Data type (“points” or “cells”) |
 
 ### Quick Start
 
@@ -88,6 +99,35 @@ cities <- data.frame(
 
 # Assign to ~1000 km² hexagonal cells
 result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 1000)
+
+# Result is a HexData object
+result
+#> HexData Object
+#> --------------
+#> Rows:    5
+#> Columns: 8
+#> Cells:   5 unique
+#> Kind:    points
+#> Type:    data.frame
+#> 
+#> Grid:
+#>   Aperture 3, Resolution 10 (~1000.0 km^2)
+#> 
+#> Columns: name, lon, lat, cell_id, cell_cen_lon, cell_cen_lat, cell_area_km2, cell_diag_km 
+#> 
+#> Data preview:
+#>  cell_id cell_cen_lon cell_cen_lat   name   lon
+#>   126594    16.420390     48.28766 Vienna 16.37
+#>   118788     2.385556     48.96232  Paris  2.35
+#>   118752    -3.582199     40.52264 Madrid -3.70
+#> ... with 2 more rows
+```
+
+#### Accessing HexData
+
+``` r
+
+# Extract the underlying data
 as.data.frame(result)
 #>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
 #> 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977
@@ -101,6 +141,60 @@ as.data.frame(result)
 #> 3     31.58208
 #> 4     31.58208
 #> 5     31.58208
+
+# Access columns directly
+result$cell_id
+#> [1] 126594 118788 118752 122466 127788
+
+# Get grid specification
+grid(result)
+#> HexGrid Specification
+#> ---------------------
+#> Aperture:    3
+#> Resolution:  10
+#> Area:        1000.00 km^2
+#> Grid System: ISEA
+#> Topology:    H
+#> Index Type:  integer
+#> Total Cells: 590492
+
+# Count unique cells
+n_cells(result)
+#> [1] 5
+```
+
+#### Define Grid Once, Reuse Everywhere
+
+The key workflow: create a `HexGrid` once, then apply it to multiple
+datasets.
+
+``` r
+
+# Define grid specification
+my_grid <- hex_grid(area_km2 = 5000, aperture = 3)
+my_grid
+#> HexGrid Specification
+#> ---------------------
+#> Aperture:    3
+#> Resolution:  8
+#> Area:        5000.00 km^2
+#> Grid System: ISEA
+#> Topology:    H
+#> Index Type:  integer
+#> Total Cells: 65612
+
+# Apply same grid to different datasets
+birds <- data.frame(lon = runif(100, -10, 30), lat = runif(100, 35, 60))
+mammals <- data.frame(x = runif(50, -10, 30), y = runif(50, 35, 60))
+
+birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = my_grid)
+mammals_hex <- hexify(mammals, lon = "x", lat = "y", grid = my_grid)
+
+# Both use identical grid - safe to combine
+cat("Birds:", n_cells(birds_hex), "cells\n")
+#> Birds: 94 cells
+cat("Mammals:", n_cells(mammals_hex), "cells\n")
+#> Mammals: 49 cells
 ```
 
 #### With sf Objects
@@ -119,6 +213,26 @@ class(result_sf)
 #> attr(,"package")
 #> [1] "hexify"
 ```
+
+### What hexify Returns
+
+Given a data frame with longitude/latitude columns,
+[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+returns a `HexData` object containing your original data plus:
+
+- `cell_id`: Unique cell identifier (DGGRID-compatible SEQNUM)
+- `cell_cen_lon`, `cell_cen_lat`: Cell center coordinates
+- `cell_area_km2`: Actual cell area in km²
+- `cell_diag_km`: Cell diagonal in km
+
+Supports apertures 3, 4, 7, and mixed 4/3:
+
+| Aperture | Grid Type | Cell Count Formula | Use Case |
+|----|----|----|----|
+| 3 | ISEA3H | 10 × 3^res + 2 | Default, dggridR compatible, fine control |
+| 4 | ISEA4H | 10 × 4^res + 2 | Power-of-2 scaling |
+| 7 | ISEA7H | 10 × 7^res + 2 | Rapid cell growth |
+| “4/3” | ISEA43H | Mixed | Balance of fast start + fine control |
 
 ### Real-World Example: Species Occurrence Data
 
@@ -679,12 +793,35 @@ all(result$cell_id == ref$seqnum)
 
 ### Function Reference
 
-#### Main Functions
+#### S4 Classes
+
+| Class     | Description                                     |
+|-----------|-------------------------------------------------|
+| `HexGrid` | Grid specification (aperture, resolution, area) |
+| `HexData` | Hexified data with grid reference               |
+
+#### Constructors
 
 | Function | Description |
 |----|----|
-| [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) | Assign points to grid cells (main entry point) |
-| [`hexify_grid()`](https://gcol33.github.io/hexify/reference/hexify_grid.md) | Create grid specification |
+| [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md) | Create a HexGrid specification |
+| [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) | Assign points to grid cells, returns HexData |
+
+#### HexData Methods
+
+| Method             | Description                   |
+|--------------------|-------------------------------|
+| `grid(x)`          | Extract HexGrid from HexData  |
+| `cells(x)`         | Get unique cell IDs           |
+| `n_cells(x)`       | Count unique cells            |
+| `as.data.frame(x)` | Extract underlying data frame |
+| `x$column`         | Access columns directly       |
+| `x[i, j]`          | Subset rows/columns           |
+
+#### Grid Generation
+
+| Function | Description |
+|----|----|
 | [`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md) | Generate grid polygons over rectangular region |
 | [`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md) | Generate global grid polygons |
 | [`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md) | Convert hexify result to sf points or polygons |

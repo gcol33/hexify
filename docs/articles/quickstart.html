@@ -6092,11 +6092,231 @@ the equator to the Arctic.</p>
 operations)</p>
 </div>
 <div class="section level3">
-<h3 id="what-hexify-does">What hexify Does<a class="anchor" aria-label="anchor" href="#what-hexify-does"></a>
+<h3 id="core-concepts-hexgrid-and-hexdata">Core Concepts: HexGrid and HexData<a class="anchor" aria-label="anchor" href="#core-concepts-hexgrid-and-hexdata"></a>
 </h3>
-<p>hexify assigns geographic coordinates to equal-area hexagonal grid
-cells. Given a data frame with longitude/latitude columns,
-<code><a href="../reference/hexify.html">hexify()</a></code> returns:</p>
+<p>hexify uses two S4 classes to make spatial workflows clean and
+error-free:</p>
+<p><strong><code>HexGrid</code></strong> — A grid specification that
+stores all parameters (aperture, resolution, area). Define once, reuse
+everywhere.</p>
+<p><strong><code>HexData</code></strong> — Your data + the grid that was
+used. Carries the grid reference so downstream operations “just
+work.”</p>
+<div class="section level4">
+<h4 id="hexgrid-slots">HexGrid Slots<a class="anchor" aria-label="anchor" href="#hexgrid-slots"></a>
+</h4>
+<table class="table">
+<thead><tr class="header">
+<th>Slot</th>
+<th>Type</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>aperture</code></td>
+<td>integer</td>
+<td>Grid aperture (3, 4, or 7)</td>
+</tr>
+<tr class="even">
+<td><code>resolution</code></td>
+<td>integer</td>
+<td>Resolution level (0–30)</td>
+</tr>
+<tr class="odd">
+<td><code>area_km2</code></td>
+<td>numeric</td>
+<td>Cell area in km²</td>
+</tr>
+<tr class="even">
+<td><code>grid_system</code></td>
+<td>character</td>
+<td>Projection system (“ISEA”)</td>
+</tr>
+<tr class="odd">
+<td><code>topology</code></td>
+<td>character</td>
+<td>Cell shape (“H” for hexagon)</td>
+</tr>
+<tr class="even">
+<td><code>index_type</code></td>
+<td>character</td>
+<td>ID encoding (“integer” or “character”)</td>
+</tr>
+<tr class="odd">
+<td><code>mixed_aperture</code></td>
+<td>logical</td>
+<td>Whether using 4/3 mixed aperture</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level4">
+<h4 id="hexdata-slots">HexData Slots<a class="anchor" aria-label="anchor" href="#hexdata-slots"></a>
+</h4>
+<table class="table">
+<thead><tr class="header">
+<th>Slot</th>
+<th>Type</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>data</code></td>
+<td>data.frame/sf</td>
+<td>Your data with cell assignments</td>
+</tr>
+<tr class="even">
+<td><code>grid</code></td>
+<td>HexGrid</td>
+<td>The grid specification used</td>
+</tr>
+<tr class="odd">
+<td><code>mapping</code></td>
+<td>list</td>
+<td>Column name mappings (lon, lat)</td>
+</tr>
+<tr class="even">
+<td><code>kind</code></td>
+<td>character</td>
+<td>Data type (“points” or “cells”)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level3">
+<h3 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h3>
+<div class="section level4">
+<h4 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+</h4>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Sample data: European cities</span></span>
+<span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Vienna"</span>, <span class="st">"Paris"</span>, <span class="st">"Madrid"</span>, <span class="st">"Berlin"</span>, <span class="st">"Rome"</span><span class="op">)</span>,</span>
+<span>  lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">2.35</span>, <span class="op">-</span><span class="fl">3.70</span>, <span class="fl">13.40</span>, <span class="fl">12.50</span><span class="op">)</span>,</span>
+<span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">48.21</span>, <span class="fl">48.86</span>, <span class="fl">40.42</span>, <span class="fl">52.52</span>, <span class="fl">41.90</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Assign to ~1000 km² hexagonal cells</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Result is a HexData object</span></span>
+<span><span class="va">result</span></span>
+<span><span class="co">#&gt; HexData Object</span></span>
+<span><span class="co">#&gt; --------------</span></span>
+<span><span class="co">#&gt; Rows:    5</span></span>
+<span><span class="co">#&gt; Columns: 8</span></span>
+<span><span class="co">#&gt; Cells:   5 unique</span></span>
+<span><span class="co">#&gt; Kind:    points</span></span>
+<span><span class="co">#&gt; Type:    data.frame</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Grid:</span></span>
+<span><span class="co">#&gt;   Aperture 3, Resolution 10 (~1000.0 km^2)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Columns: name, lon, lat, cell_id, cell_cen_lon, cell_cen_lat, cell_area_km2, cell_diag_km </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Data preview:</span></span>
+<span><span class="co">#&gt;  cell_id cell_cen_lon cell_cen_lat   name   lon</span></span>
+<span><span class="co">#&gt;   126594    16.420390     48.28766 Vienna 16.37</span></span>
+<span><span class="co">#&gt;   118788     2.385556     48.96232  Paris  2.35</span></span>
+<span><span class="co">#&gt;   118752    -3.582199     40.52264 Madrid -3.70</span></span>
+<span><span class="co">#&gt; ... with 2 more rows</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="accessing-hexdata">Accessing HexData<a class="anchor" aria-label="anchor" href="#accessing-hexdata"></a>
+</h4>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract the underlying data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2</span></span>
+<span><span class="co">#&gt; 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977</span></span>
+<span><span class="co">#&gt; 2  Paris  2.35 48.86  118788     2.385556     48.96232      863.7977</span></span>
+<span><span class="co">#&gt; 3 Madrid -3.70 40.42  118752    -3.582199     40.52264      863.7977</span></span>
+<span><span class="co">#&gt; 4 Berlin 13.40 52.52  122466    13.448955     52.65189      863.7977</span></span>
+<span><span class="co">#&gt; 5   Rome 12.50 41.90  127788    12.674254     41.87485      863.7977</span></span>
+<span><span class="co">#&gt;   cell_diag_km</span></span>
+<span><span class="co">#&gt; 1     31.58208</span></span>
+<span><span class="co">#&gt; 2     31.58208</span></span>
+<span><span class="co">#&gt; 3     31.58208</span></span>
+<span><span class="co">#&gt; 4     31.58208</span></span>
+<span><span class="co">#&gt; 5     31.58208</span></span>
+<span></span>
+<span><span class="co"># Access columns directly</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span></span>
+<span><span class="co">#&gt; [1] 126594 118788 118752 122466 127788</span></span>
+<span></span>
+<span><span class="co"># Get grid specification</span></span>
+<span><span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; HexGrid Specification</span></span>
+<span><span class="co">#&gt; ---------------------</span></span>
+<span><span class="co">#&gt; Aperture:    3</span></span>
+<span><span class="co">#&gt; Resolution:  10</span></span>
+<span><span class="co">#&gt; Area:        1000.00 km^2</span></span>
+<span><span class="co">#&gt; Grid System: ISEA</span></span>
+<span><span class="co">#&gt; Topology:    H</span></span>
+<span><span class="co">#&gt; Index Type:  integer</span></span>
+<span><span class="co">#&gt; Total Cells: 590492</span></span>
+<span></span>
+<span><span class="co"># Count unique cells</span></span>
+<span><span class="fu"><a href="../reference/n_cells.html">n_cells</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 5</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="define-grid-once-reuse-everywhere">Define Grid Once, Reuse Everywhere<a class="anchor" aria-label="anchor" href="#define-grid-once-reuse-everywhere"></a>
+</h4>
+<p>The key workflow: create a <code>HexGrid</code> once, then apply it
+to multiple datasets.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define grid specification</span></span>
+<span><span class="va">my_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">5000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">my_grid</span></span>
+<span><span class="co">#&gt; HexGrid Specification</span></span>
+<span><span class="co">#&gt; ---------------------</span></span>
+<span><span class="co">#&gt; Aperture:    3</span></span>
+<span><span class="co">#&gt; Resolution:  8</span></span>
+<span><span class="co">#&gt; Area:        5000.00 km^2</span></span>
+<span><span class="co">#&gt; Grid System: ISEA</span></span>
+<span><span class="co">#&gt; Topology:    H</span></span>
+<span><span class="co">#&gt; Index Type:  integer</span></span>
+<span><span class="co">#&gt; Total Cells: 65612</span></span>
+<span></span>
+<span><span class="co"># Apply same grid to different datasets</span></span>
+<span><span class="va">birds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">100</span>, <span class="op">-</span><span class="fl">10</span>, <span class="fl">30</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">35</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">mammals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">50</span>, <span class="op">-</span><span class="fl">10</span>, <span class="fl">30</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">35</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">birds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">my_grid</span><span class="op">)</span></span>
+<span><span class="va">mammals_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">mammals</span>, lon <span class="op">=</span> <span class="st">"x"</span>, lat <span class="op">=</span> <span class="st">"y"</span>, grid <span class="op">=</span> <span class="va">my_grid</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Both use identical grid - safe to combine</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Birds:"</span>, <span class="fu"><a href="../reference/n_cells.html">n_cells</a></span><span class="op">(</span><span class="va">birds_hex</span><span class="op">)</span>, <span class="st">"cells\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Birds: 94 cells</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mammals:"</span>, <span class="fu"><a href="../reference/n_cells.html">n_cells</a></span><span class="op">(</span><span class="va">mammals_hex</span><span class="op">)</span>, <span class="st">"cells\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Mammals: 49 cells</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="with-sf-objects">With sf Objects<a class="anchor" aria-label="anchor" href="#with-sf-objects"></a>
+</h4>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create sf object (any CRS works - hexify transforms automatically)</span></span>
+<span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">cities</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># hexify handles CRS transformation automatically</span></span>
+<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">pts</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result_sf</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "HexData"</span></span>
+<span><span class="co">#&gt; attr(,"package")</span></span>
+<span><span class="co">#&gt; [1] "hexify"</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="what-hexify-returns">What hexify Returns<a class="anchor" aria-label="anchor" href="#what-hexify-returns"></a>
+</h3>
+<p>Given a data frame with longitude/latitude columns,
+<code><a href="../reference/hexify.html">hexify()</a></code> returns a <code>HexData</code> object containing
+your original data plus:</p>
 <ul>
 <li>
 <code>cell_id</code>: Unique cell identifier (DGGRID-compatible
@@ -6152,59 +6372,12 @@ coordinates</li>
 </table>
 </div>
 <div class="section level3">
-<h3 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
-</h3>
-<div class="section level4">
-<h4 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
-</h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Sample data: European cities</span></span>
-<span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Vienna"</span>, <span class="st">"Paris"</span>, <span class="st">"Madrid"</span>, <span class="st">"Berlin"</span>, <span class="st">"Rome"</span><span class="op">)</span>,</span>
-<span>  lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">2.35</span>, <span class="op">-</span><span class="fl">3.70</span>, <span class="fl">13.40</span>, <span class="fl">12.50</span><span class="op">)</span>,</span>
-<span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">48.21</span>, <span class="fl">48.86</span>, <span class="fl">40.42</span>, <span class="fl">52.52</span>, <span class="fl">41.90</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Assign to ~1000 km² hexagonal cells</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2</span></span>
-<span><span class="co">#&gt; 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977</span></span>
-<span><span class="co">#&gt; 2  Paris  2.35 48.86  118788     2.385556     48.96232      863.7977</span></span>
-<span><span class="co">#&gt; 3 Madrid -3.70 40.42  118752    -3.582199     40.52264      863.7977</span></span>
-<span><span class="co">#&gt; 4 Berlin 13.40 52.52  122466    13.448955     52.65189      863.7977</span></span>
-<span><span class="co">#&gt; 5   Rome 12.50 41.90  127788    12.674254     41.87485      863.7977</span></span>
-<span><span class="co">#&gt;   cell_diag_km</span></span>
-<span><span class="co">#&gt; 1     31.58208</span></span>
-<span><span class="co">#&gt; 2     31.58208</span></span>
-<span><span class="co">#&gt; 3     31.58208</span></span>
-<span><span class="co">#&gt; 4     31.58208</span></span>
-<span><span class="co">#&gt; 5     31.58208</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="with-sf-objects">With sf Objects<a class="anchor" aria-label="anchor" href="#with-sf-objects"></a>
-</h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create sf object (any CRS works - hexify transforms automatically)</span></span>
-<span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">cities</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># hexify handles CRS transformation automatically</span></span>
-<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">pts</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result_sf</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "HexData"</span></span>
-<span><span class="co">#&gt; attr(,"package")</span></span>
-<span><span class="co">#&gt; [1] "hexify"</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level3">
 <h3 id="real-world-example-species-occurrence-data">Real-World Example: Species Occurrence Data<a class="anchor" aria-label="anchor" href="#real-world-example-species-occurrence-data"></a>
 </h3>
 <p>This example demonstrates the typical workflow: loading point data,
 assigning to grid cells, aggregating, and visualizing. We’ll simulate
 bird observation data across Europe and Africa.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simulate bird observation data</span></span>
@@ -6240,7 +6413,7 @@ bird observation data across Europe and Africa.</p>
 <div class="section level4">
 <h4 id="assign-points-to-grid-cells">Assign Points to Grid Cells<a class="anchor" aria-label="anchor" href="#assign-points-to-grid-cells"></a>
 </h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Assign each observation to a ~25,000 km² cell</span></span>
 <span><span class="va">birds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">25000</span><span class="op">)</span></span>
 <span><span class="va">birds_gridded</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">birds_hex</span><span class="op">)</span></span>
@@ -6274,7 +6447,7 @@ bird observation data across Europe and Africa.</p>
 <div class="section level4">
 <h4 id="generate-cell-polygons">Generate Cell Polygons<a class="anchor" aria-label="anchor" href="#generate-cell-polygons"></a>
 </h4>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get grid from HexData result</span></span>
 <span><span class="va">grid_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">birds_hex</span><span class="op">)</span></span>
 <span></span>
@@ -6290,7 +6463,7 @@ bird observation data across Europe and Africa.</p>
 <div class="section level4">
 <h4 id="visualize-results">Visualize Results<a class="anchor" aria-label="anchor" href="#visualize-results"></a>
 </h4>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Get relevant countries</span></span>
@@ -8283,7 +8456,7 @@ every cell has exactly the same area.</p>
 <div class="section level4">
 <h4 id="species-richness-map">Species Richness Map<a class="anchor" aria-label="anchor" href="#species-richness-map"></a>
 </h4>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">region</span>, fill <span class="op">=</span> <span class="st">"gray95"</span>, color <span class="op">=</span> <span class="st">"gray70"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">cell_polys</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">n_species</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
@@ -10285,7 +10458,7 @@ sampling.</p>
 </h4>
 <p>Generate uniformly distributed lat-lon points and retrieve their grid
 cells:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span></span>
 <span><span class="co"># Uniform points on sphere (see Wolfram MathWorld: Sphere Point Picking)</span></span>
@@ -10312,7 +10485,7 @@ cells:</p>
 </h4>
 <p>For aperture 3, the maximum cell ID at resolution r is
 <code>10 × 3^r + 2</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Grid parameters - use hex_grid() for consistent grid specification</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">100000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">max_cell</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">3</span><span class="op">^</span><span class="va">grid</span><span class="op">@</span><span class="va">resolution</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
@@ -10341,7 +10514,7 @@ cells:</p>
 <div class="section level4">
 <h4 id="visualize-random-sample">Visualize Random Sample<a class="anchor" aria-label="anchor" href="#visualize-random-sample"></a>
 </h4>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate polygons for sampled cells</span></span>
 <span><span class="va">sample_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_cell_to_sf.html">hexify_cell_to_sf</a></span><span class="op">(</span></span>
 <span>  <span class="va">random_cells</span>,</span>
@@ -12161,7 +12334,7 @@ cells:</p>
 <div class="section level4">
 <h4 id="grid-over-a-rectangular-region">Grid Over a Rectangular Region<a class="anchor" aria-label="anchor" href="#grid-over-a-rectangular-region"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate a grid covering Western Europe</span></span>
 <span><span class="va">europe_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid_rect.html">hexify_grid_rect</a></span><span class="op">(</span></span>
 <span>  minlon <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, maxlon <span class="op">=</span> <span class="fl">25</span>,</span>
@@ -13606,7 +13779,7 @@ cells:</p>
 <h4 id="grid-over-a-polygon-shapefile">Grid Over a Polygon (Shapefile)<a class="anchor" aria-label="anchor" href="#grid-over-a-polygon-shapefile"></a>
 </h4>
 <p>Clip a grid to any sf polygon boundary:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get France boundary</span></span>
 <span><span class="va">france</span> <span class="op">&lt;-</span> <span class="va">hexify_world</span><span class="op">[</span><span class="va">hexify_world</span><span class="op">$</span><span class="va">name</span> <span class="op">==</span> <span class="st">"France"</span>, <span class="op">]</span></span>
 <span></span>
@@ -14027,7 +14200,7 @@ cells:</p>
 </h3>
 <p>Use sf’s <code><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">st_write()</a></code> to export grids for use in GIS
 software:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate a grid</span></span>
@@ -14052,7 +14225,7 @@ queries.</p>
 <div class="section level4">
 <h4 id="parent-child-relationships">Parent-Child Relationships<a class="anchor" aria-label="anchor" href="#parent-child-relationships"></a>
 </h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get index for a location</span></span>
 <span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">48.21</span>, resolution <span class="op">=</span> <span class="fl">5</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Index at resolution 5:"</span>, <span class="va">idx</span>, <span class="st">"\n"</span><span class="op">)</span></span>
@@ -14073,7 +14246,7 @@ queries.</p>
 </h4>
 <p>The index encodes the hierarchical path from icosahedron face to
 cell:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_lonlat_to_index.html">hexify_lonlat_to_index</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">48.21</span>, resolution <span class="op">=</span> <span class="fl">5</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Full index:"</span>, <span class="va">idx</span>, <span class="st">"\n"</span><span class="op">)</span></span>
@@ -14088,7 +14261,7 @@ cell:</p>
 <div class="section level4">
 <h4 id="multi-scale-aggregation">Multi-Scale Aggregation<a class="anchor" aria-label="anchor" href="#multi-scale-aggregation"></a>
 </h4>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Sample data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -14121,7 +14294,7 @@ cell:</p>
 <p>At every resolution, the ISEA grid contains <strong>12 pentagonal
 cells</strong> with area 5/6 that of hexagons. These are located at the
 icosahedron vertices:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pentagon locations (icosahedron vertices in standard ISEA orientation)</span></span>
 <span><span class="va">pentagon_coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Pole"</span>, <span class="st">"Pole"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Vertex"</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -16007,7 +16180,7 @@ resolutions, use index strings via
 <div class="section level4">
 <h4 id="choosing-resolution-by-area">Choosing Resolution by Area<a class="anchor" aria-label="anchor" href="#choosing-resolution-by-area"></a>
 </h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find resolution for target areas</span></span>
 <span><span class="va">targets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">1000</span>, <span class="fl">10000</span>, <span class="fl">100000</span><span class="op">)</span></span>
 <span></span>
@@ -16028,7 +16201,7 @@ resolutions, use index strings via
 <div class="section level4">
 <h4 id="comparing-apertures">Comparing Apertures<a class="anchor" aria-label="anchor" href="#comparing-apertures"></a>
 </h4>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target</span> <span class="op">&lt;-</span> <span class="fl">1000</span>  <span class="co"># km²</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Target: ~%d km² cells\n\n"</span>, <span class="va">target</span><span class="op">)</span><span class="op">)</span></span>
@@ -16049,7 +16222,7 @@ resolutions, use index strings via
 <h3 id="dggridr-compatibility">dggridR Compatibility<a class="anchor" aria-label="anchor" href="#dggridr-compatibility"></a>
 </h3>
 <p>hexify produces identical cell assignments to dggridR:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/r-barnes/dggridR/" class="external-link">dggridR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gcol33.github.io/hexify/">hexify</a></span><span class="op">)</span></span>
 <span></span>
@@ -16068,7 +16241,83 @@ resolutions, use index strings via
 <h3 id="function-reference">Function Reference<a class="anchor" aria-label="anchor" href="#function-reference"></a>
 </h3>
 <div class="section level4">
-<h4 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
+<h4 id="s4-classes">S4 Classes<a class="anchor" aria-label="anchor" href="#s4-classes"></a>
+</h4>
+<table class="table">
+<thead><tr class="header">
+<th>Class</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>HexGrid</code></td>
+<td>Grid specification (aperture, resolution, area)</td>
+</tr>
+<tr class="even">
+<td><code>HexData</code></td>
+<td>Hexified data with grid reference</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level4">
+<h4 id="constructors">Constructors<a class="anchor" aria-label="anchor" href="#constructors"></a>
+</h4>
+<table class="table">
+<thead><tr class="header">
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/hex_grid.html">hex_grid()</a></code></td>
+<td>Create a HexGrid specification</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/hexify.html">hexify()</a></code></td>
+<td>Assign points to grid cells, returns HexData</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level4">
+<h4 id="hexdata-methods">HexData Methods<a class="anchor" aria-label="anchor" href="#hexdata-methods"></a>
+</h4>
+<table class="table">
+<thead><tr class="header">
+<th>Method</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>grid(x)</code></td>
+<td>Extract HexGrid from HexData</td>
+</tr>
+<tr class="even">
+<td><code>cells(x)</code></td>
+<td>Get unique cell IDs</td>
+</tr>
+<tr class="odd">
+<td><code>n_cells(x)</code></td>
+<td>Count unique cells</td>
+</tr>
+<tr class="even">
+<td><code>as.data.frame(x)</code></td>
+<td>Extract underlying data frame</td>
+</tr>
+<tr class="odd">
+<td><code>x$column</code></td>
+<td>Access columns directly</td>
+</tr>
+<tr class="even">
+<td><code>x[i, j]</code></td>
+<td>Subset rows/columns</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level4">
+<h4 id="grid-generation-1">Grid Generation<a class="anchor" aria-label="anchor" href="#grid-generation-1"></a>
 </h4>
 <table class="table">
 <colgroup>
@@ -16080,14 +16329,6 @@ resolutions, use index strings via
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td><code><a href="../reference/hexify.html">hexify()</a></code></td>
-<td>Assign points to grid cells (main entry point)</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/hexify_grid.html">hexify_grid()</a></code></td>
-<td>Create grid specification</td>
-</tr>
 <tr class="odd">
 <td><code><a href="../reference/hexify_grid_rect.html">hexify_grid_rect()</a></code></td>
 <td>Generate grid polygons over rectangular region</td>
@@ -16175,7 +16416,7 @@ common analysis tasks</li>
 <div class="section level3">
 <h3 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h3>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31 ucrt)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-w64-mingw32/x64</span></span>
