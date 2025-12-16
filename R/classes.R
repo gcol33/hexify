@@ -23,7 +23,7 @@ NULL
 #' parameters needed for grid operations so they don't need to be repeated
 #' in downstream function calls.
 #'
-#' @slot aperture Integer. Grid aperture (3, 4, or 7).
+#' @slot aperture Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.
 #' @slot resolution Integer. Grid resolution level (0-30).
 #' @slot area_km2 Numeric. Target cell area in square kilometers.
 #' @slot grid_system Character. Grid system identifier (default "ISEA").
@@ -31,8 +31,6 @@ NULL
 #' @slot index_type Character. Index encoding type ("integer" or "character").
 #' @slot crs_input Integer. Input coordinate reference system (default 4326).
 #' @slot crs_work Integer. Working CRS for internal operations.
-#' @slot mixed_aperture Logical. Whether mixed aperture (4/3) is used.
-#' @slot mixed_aperture_level Integer. Level at which aperture switches (for 4/3).
 #' @slot meta List. Additional metadata for future extensions.
 #'
 #' @param name Slot name for $ access
@@ -43,15 +41,17 @@ NULL
 #' Create HexGrid objects using the \code{\link{hex_grid}} constructor function.
 #' Do not use \code{new("HexGrid", ...)} directly.
 #'
+#' The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
+#' aperture grids that start with aperture 4 and switch to aperture 3.
+#'
 #' @seealso \code{\link{hex_grid}} for the constructor function,
 #'   \code{\link{HexData-class}} for hexified data objects
 #'
 #' @exportClass HexGrid
 setClass(
-
-"HexGrid",
+  "HexGrid",
   slots = c(
-    aperture = "integer",
+    aperture = "character",
     resolution = "integer",
     area_km2 = "numeric",
     grid_system = "character",
@@ -59,12 +59,10 @@ setClass(
     index_type = "character",
     crs_input = "integer",
     crs_work = "integer",
-    mixed_aperture = "logical",
-    mixed_aperture_level = "integer",
     meta = "list"
   ),
   prototype = list(
-    aperture = 3L,
+    aperture = "3",
     resolution = 0L,
     area_km2 = NA_real_,
     grid_system = "ISEA",
@@ -72,8 +70,6 @@ setClass(
     index_type = "integer",
     crs_input = 4326L,
     crs_work = 4326L,
-    mixed_aperture = FALSE,
-    mixed_aperture_level = NA_integer_,
     meta = list()
   )
 )
@@ -150,12 +146,12 @@ setClass(
 
 #' @noRd
 setValidity("HexGrid", function(object) {
+
   errors <- character()
 
-
   # Validate aperture
-  if (!object@aperture %in% c(3L, 4L, 7L)) {
-    errors <- c(errors, "aperture must be 3, 4, or 7")
+  if (!object@aperture %in% c("3", "4", "7", "4/3")) {
+    errors <- c(errors, "aperture must be '3', '4', '7', or '4/3'")
   }
 
   # Validate resolution
@@ -176,16 +172,6 @@ setValidity("HexGrid", function(object) {
   # Validate index_type
   if (!object@index_type %in% c("integer", "character")) {
     errors <- c(errors, "index_type must be 'integer' or 'character'")
-  }
-
-  # Validate mixed aperture settings
-  if (object@mixed_aperture) {
-    if (is.na(object@mixed_aperture_level)) {
-      errors <- c(errors, "mixed_aperture_level required when mixed_aperture is TRUE")
-    } else if (object@mixed_aperture_level < 0L ||
-               object@mixed_aperture_level > object@resolution) {
-      errors <- c(errors, "mixed_aperture_level must be between 0 and resolution")
-    }
   }
 
   if (length(errors) == 0) TRUE else errors
@@ -370,7 +356,7 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 setMethod("show", "HexGrid", function(object) {
   cat("HexGrid Specification\n")
   cat("---------------------\n")
-  cat(sprintf("Aperture:    %d\n", object@aperture))
+  cat(sprintf("Aperture:    %s\n", object@aperture))
   cat(sprintf("Resolution:  %d\n", object@resolution))
 
   if (!is.na(object@area_km2)) {
@@ -381,17 +367,14 @@ setMethod("show", "HexGrid", function(object) {
   cat(sprintf("Topology:    %s\n", object@topology))
   cat(sprintf("Index Type:  %s\n", object@index_type))
 
-  if (object@mixed_aperture) {
-    cat(sprintf("Mixed Aperture: 4/3 (switch at level %d)\n",
-                object@mixed_aperture_level))
-  }
-
-  # Calculate total cells
-  if (object@mixed_aperture) {
-    n_cells <- 10 * (4^object@mixed_aperture_level) *
-      (3^(object@resolution - object@mixed_aperture_level)) + 2
+  # Calculate total cells based on aperture
+  if (object@aperture == "4/3") {
+    # Mixed aperture: default to res/2 for level calculation
+    level <- as.integer(object@resolution / 2)
+    n_cells <- 10 * (4^level) * (3^(object@resolution - level)) + 2
   } else {
-    n_cells <- 10 * (object@aperture^object@resolution) + 2
+    ap <- as.integer(object@aperture)
+    n_cells <- 10 * (ap^object@resolution) + 2
   }
   cat(sprintf("Total Cells: %.0f\n", n_cells))
 
@@ -416,7 +399,7 @@ setMethod("show", "HexData", function(object) {
   }
 
   cat("\nGrid:\n")
-  cat(sprintf("  Aperture %d, Resolution %d",
+  cat(sprintf("  Aperture %s, Resolution %d",
               object@grid@aperture, object@grid@resolution))
   if (!is.na(object@grid@area_km2)) {
     cat(sprintf(" (~%.1f km^2)", object@grid@area_km2))
@@ -483,8 +466,6 @@ setMethod("as.list", "HexGrid", function(x, ...) {
     index_type = x@index_type,
     crs_input = x@crs_input,
     crs_work = x@crs_work,
-    mixed_aperture = x@mixed_aperture,
-    mixed_aperture_level = x@mixed_aperture_level,
     meta = x@meta
   )
 })
@@ -568,7 +549,7 @@ hexify_grid_to_HexGrid <- function(x) {
   }
 
   new("HexGrid",
-      aperture = as.integer(x$aperture),
+      aperture = as.character(x$aperture),
       resolution = as.integer(x$resolution),
       area_km2 = if (!is.null(x$area)) as.numeric(x$area) else NA_real_,
       grid_system = if (!is.null(x$projection)) x$projection else "ISEA",
@@ -576,8 +557,6 @@ hexify_grid_to_HexGrid <- function(x) {
       index_type = idx_type,
       crs_input = 4326L,
       crs_work = 4326L,
-      mixed_aperture = FALSE,
-      mixed_aperture_level = NA_integer_,
       meta = list(legacy = TRUE))
 }
 
@@ -589,19 +568,23 @@ hexify_grid_to_HexGrid <- function(x) {
 #' @return A hexify_grid object (S3)
 #' @keywords internal
 HexGrid_to_hexify_grid <- function(x) {
-  # Determine legacy index_type
-  legacy_index <- if (x@aperture == 3L) {
+  # Determine legacy index_type based on aperture
+  ap <- x@aperture
+  legacy_index <- if (ap == "3") {
     "z3"
-  } else if (x@aperture == 7L) {
+  } else if (ap == "7") {
     "z7"
   } else {
     "zorder"
   }
 
+  # Convert aperture to numeric for legacy
+  aperture_num <- if (ap == "4/3") 3L else as.integer(ap)
+
   grid <- list(
     area = x@area_km2,
     resolution = x@resolution,
-    aperture = x@aperture,
+    aperture = aperture_num,
     topology = "HEXAGON",
     projection = x@grid_system,
     metric = TRUE,
@@ -612,7 +595,7 @@ HexGrid_to_hexify_grid <- function(x) {
     pole_lon_deg = ISEA_VERT0_LON_DEG,
     pole_lat_deg = ISEA_VERT0_LAT_DEG,
     azimuth_deg = ISEA_AZIMUTH_DEG,
-    aperture_type = "SEQUENCE",
+    aperture_type = if (ap == "4/3") "MIXED43" else "SEQUENCE",
     res_spec = x@resolution,
     precision = 7
   )

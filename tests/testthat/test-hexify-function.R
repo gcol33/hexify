@@ -131,7 +131,7 @@ test_that("hexify handles aperture 3 (ISEA3H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, 3L)
+  expect_equal(grid(result)@aperture, "3")
 })
 
 test_that("hexify handles aperture 4 (ISEA4H)", {
@@ -143,7 +143,7 @@ test_that("hexify handles aperture 4 (ISEA4H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, 4L)
+  expect_equal(grid(result)@aperture, "4")
 })
 
 test_that("hexify handles aperture 7 (ISEA7H)", {
@@ -155,7 +155,7 @@ test_that("hexify handles aperture 7 (ISEA7H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, 7L)
+  expect_equal(grid(result)@aperture, "7")
 })
 
 test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
@@ -168,12 +168,7 @@ test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_true(grid(result)@mixed_aperture)
-
-  # Test with explicit mixed_aperture_level
-  result2 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000,
-                    aperture = "4/3", mixed_aperture_level = 4)
-  expect_true("cell_id" %in% names(result2))
+  expect_equal(grid(result)@aperture, "4/3")
 })
 
 test_that("hexify rejects unsupported apertures with clear error", {
@@ -181,17 +176,17 @@ test_that("hexify rejects unsupported apertures with clear error", {
 
   expect_error(
     hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = 5),
-    "Aperture must be 3, 4, or 7"
+    "Aperture must be 3, 4, 7"
   )
 
   expect_error(
     hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = 2),
-    "Aperture must be 3, 4, or 7"
+    "Aperture must be 3, 4, 7"
   )
 
   expect_error(
     hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "invalid"),
-    "Aperture must be 3, 4, 7, or '4/3'"
+    "Aperture must be 3, 4, 7"
   )
 })
 
@@ -314,26 +309,12 @@ test_that("hexify with sf handles NA CRS", {
 # MIXED APERTURE DETAILED
 # =============================================================================
 
-test_that("hexify mixed_aperture_level validation", {
+test_that("hexify works with mixed aperture 4/3", {
   df <- data.frame(lon = 0, lat = 45)
 
-  expect_error(
-    hexify(df, lon = "lon", lat = "lat", area_km2 = 1000,
-           aperture = "4/3", mixed_aperture_level = -1),
-    "mixed_aperture_level must be between"
-  )
-})
-
-test_that("hexify mixed aperture produces different results with different levels", {
-  df <- data.frame(lon = 0, lat = 45)
-
-  result_level2 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000,
-                          aperture = "4/3", mixed_aperture_level = 2)
-  result_level4 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000,
-                          aperture = "4/3", mixed_aperture_level = 4)
-
-  expect_true(result_level2$cell_id != result_level4$cell_id ||
-              result_level2$cell_area_km2 != result_level4$cell_area_km2)
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
+  expect_true("cell_id" %in% names(result))
+  expect_equal(grid(result)@aperture, "4/3")
 })
 
 # =============================================================================
@@ -460,7 +441,7 @@ test_that("hex_grid constructor works with area_km2", {
   grid <- hex_grid(area_km2 = 1000)
 
   expect_s4_class(grid, "HexGrid")
-  expect_equal(grid@aperture, 3L)
+  expect_equal(grid@aperture, "3")
   expect_true(grid@resolution >= 0)
   expect_true(grid@resolution <= 30)
 })
@@ -484,14 +465,13 @@ test_that("hex_grid supports different apertures", {
   grid4 <- hex_grid(area_km2 = 1000, aperture = 4)
   grid7 <- hex_grid(area_km2 = 1000, aperture = 7)
 
-  expect_equal(grid3@aperture, 3L)
-  expect_equal(grid4@aperture, 4L)
-  expect_equal(grid7@aperture, 7L)
+  expect_equal(grid3@aperture, "3")
+  expect_equal(grid4@aperture, "4")
+  expect_equal(grid7@aperture, "7")
 })
 
 test_that("hex_grid supports mixed aperture", {
   grid <- hex_grid(area_km2 = 1000, aperture = "4/3")
 
-  expect_true(grid@mixed_aperture)
-  expect_true(!is.na(grid@mixed_aperture_level))
+  expect_equal(grid@aperture, "4/3")
 })

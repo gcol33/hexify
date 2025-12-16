@@ -40,19 +40,20 @@
 lonlat_to_cell <- function(lon, lat, grid) {
   g <- extract_grid(grid)
 
-  if (g@mixed_aperture) {
+  if (g@aperture == "4/3") {
+    level <- as.integer(g@resolution / 2)
     cpp_lonlat_to_cell_ap43(
       as.numeric(lon),
       as.numeric(lat),
       g@resolution,
-      g@mixed_aperture_level
+      level
     )
   } else {
     cpp_lonlat_to_cell(
       as.numeric(lon),
       as.numeric(lat),
       g@resolution,
-      g@aperture
+      as.integer(g@aperture)
     )
   }
 }
@@ -78,17 +79,18 @@ lonlat_to_cell <- function(lon, lat, grid) {
 cell_to_lonlat <- function(cell_id, grid) {
   g <- extract_grid(grid)
 
-  if (g@mixed_aperture) {
+  if (g@aperture == "4/3") {
+    level <- as.integer(g@resolution / 2)
     cpp_cell_to_lonlat_ap43(
       as.numeric(cell_id),
       g@resolution,
-      g@mixed_aperture_level
+      level
     )
   } else {
     cpp_cell_to_lonlat(
       as.numeric(cell_id),
       g@resolution,
-      g@aperture
+      as.integer(g@aperture)
     )
   }
 }

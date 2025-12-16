@@ -20,8 +20,6 @@
 #' @param diagonal Target cell diagonal (long diagonal) in km
 #' @param resolution Grid resolution (0-30). Alternative to area_km2.
 #' @param aperture Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)
-#' @param mixed_aperture_level For mixed aperture "4/3": number of aperture-4 levels
-#'   before switching to aperture-3 (default NULL, auto-calculated as resolution/2)
 #' @param resround How to round resolution: "nearest", "up", or "down"
 #'
 #' @return A HexData object containing:
@@ -103,8 +101,7 @@ hexify <- function(data,
                    area_km2 = NULL,
                    diagonal = NULL,
                    resolution = NULL,
-                   aperture = 3L,
-                   mixed_aperture_level = NULL,
+                   aperture = 3,
                    resround = "nearest") {
 
   # -------------------------------------------------------------------------
@@ -114,15 +111,10 @@ hexify <- function(data,
     # Grid object provided - extract parameters
     if (is_hex_grid(grid)) {
       hex_grid_obj <- grid
-      aperture_num <- grid@aperture
-      is_mixed_aperture <- grid@mixed_aperture
-      mixed_aperture_level <- grid@mixed_aperture_level
       res <- grid@resolution
     } else if (inherits(grid, "hexify_grid")) {
       # Legacy S3 grid object
       hex_grid_obj <- hexify_grid_to_HexGrid(grid)
-      aperture_num <- grid$aperture
-      is_mixed_aperture <- FALSE
       res <- grid$resolution
     } else {
       stop("grid must be a HexGrid object from hex_grid() or legacy hexify_grid")
@@ -141,34 +133,14 @@ hexify <- function(data,
       area_km2 <- diagonal^2 * sqrt(3) / 2
     }
 
-    # Parse aperture
-    is_mixed_aperture <- FALSE
-    if (is.character(aperture)) {
-      if (aperture == "4/3") {
-        is_mixed_aperture <- TRUE
-        aperture_num <- 3L
-      } else {
-        stop("Aperture must be 3, 4, 7, or '4/3' (mixed aperture)")
-      }
-    } else {
-      aperture_num <- as.integer(aperture)
-      if (!aperture_num %in% c(3L, 4L, 7L)) {
-        stop("Aperture must be 3, 4, or 7")
-      }
-    }
-
-    # Create HexGrid object
+    # Create HexGrid object (hex_grid handles aperture parsing)
     hex_grid_obj <- hex_grid(
       area_km2 = area_km2,
       resolution = resolution,
-      aperture = if (is_mixed_aperture) "4/3" else aperture_num,
-      resround = resround,
-      mixed_aperture_level = mixed_aperture_level
+      aperture = aperture,
+      resround = resround
     )
     res <- hex_grid_obj@resolution
-    if (is_mixed_aperture) {
-      mixed_aperture_level <- hex_grid_obj@mixed_aperture_level
-    }
   }
 
   # -------------------------------------------------------------------------
@@ -225,11 +197,15 @@ hexify <- function(data,
   # -------------------------------------------------------------------------
   # Perform hexification
   # -------------------------------------------------------------------------
-  if (is_mixed_aperture) {
-    cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, mixed_aperture_level)
-    centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, mixed_aperture_level)
-    n_cells <- 10 * (4^mixed_aperture_level) * (3^(res - mixed_aperture_level)) + 2
+  aperture_str <- hex_grid_obj@aperture
+
+  if (aperture_str == "4/3") {
+    level <- as.integer(res / 2)
+    cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
+    centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)
+    n_cells <- 10 * (4^level) * (3^(res - level)) + 2
   } else {
+    aperture_num <- as.integer(aperture_str)
     cell_ids <- cpp_lonlat_to_cell(lon_vec, lat_vec, res, aperture_num)
     centers <- cpp_cell_to_lonlat(cell_ids, res, aperture_num)
     n_cells <- 10 * (aperture_num^res) + 2

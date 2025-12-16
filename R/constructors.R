@@ -25,8 +25,6 @@
 #'   Automatically set to "character" for high resolutions to avoid overflow.
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
-#' @param mixed_aperture_level For aperture "4/3": number of aperture-4 levels
-#'   before switching to aperture-3. If NULL, defaults to resolution/2.
 #' @param crs_input Input coordinate reference system (default 4326 = WGS84).
 #' @param ... Additional metadata to store in the grid specification.
 #'
@@ -104,32 +102,25 @@
 #' }
 hex_grid <- function(area_km2 = NULL,
                      resolution = NULL,
-                     aperture = 3L,
+                     aperture = 3,
                      topology = "H",
                      grid_system = "ISEA",
                      index_type = NULL,
                      resround = "nearest",
-                     mixed_aperture_level = NULL,
                      crs_input = 4326L,
                      ...) {
 
   # -------------------------------------------------------------------------
   # Parse aperture (handle "4/3" mixed aperture)
   # -------------------------------------------------------------------------
-  mixed_aperture <- FALSE
+  aperture_str <- as.character(aperture)
 
-  if (is.character(aperture)) {
-    if (aperture == "4/3") {
-      mixed_aperture <- TRUE
-      aperture_num <- 3L  # Base aperture for resolution calculation
-    } else {
-      stop("Aperture must be 3, 4, 7, or '4/3' for mixed aperture")
-    }
+  if (aperture_str == "4/3") {
+    aperture_num <- 3L  # Base aperture for resolution calculation
+  } else if (aperture_str %in% c("3", "4", "7")) {
+    aperture_num <- as.integer(aperture_str)
   } else {
-    aperture_num <- as.integer(aperture)
-    if (!aperture_num %in% c(3L, 4L, 7L)) {
-      stop("Aperture must be 3, 4, or 7")
-    }
+    stop("Aperture must be 3, 4, 7, or '4/3' for mixed aperture")
   }
 
   # -------------------------------------------------------------------------
@@ -174,30 +165,13 @@ hex_grid <- function(area_km2 = NULL,
     }
 
     # Calculate actual area for this resolution
-    if (mixed_aperture && !is.null(mixed_aperture_level)) {
-      n_cells <- 10 * (4^mixed_aperture_level) *
-        (3^(resolution - mixed_aperture_level)) + 2
+    if (aperture_str == "4/3") {
+      level <- as.integer(resolution / 2)
+      n_cells <- 10 * (4^level) * (3^(resolution - level)) + 2
     } else {
       n_cells <- 10 * (aperture_num^resolution) + 2
     }
     area_km2 <- EARTH_SURFACE_KM2 / n_cells
-  }
-
-  # -------------------------------------------------------------------------
-  # Handle mixed aperture level
-  # -------------------------------------------------------------------------
-  if (mixed_aperture) {
-    if (is.null(mixed_aperture_level)) {
-      mixed_aperture_level <- as.integer(resolution / 2)
-    } else {
-      mixed_aperture_level <- as.integer(mixed_aperture_level)
-    }
-
-    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
-      stop("mixed_aperture_level must be between 0 and resolution")
-    }
-  } else {
-    mixed_aperture_level <- NA_integer_
   }
 
   # -------------------------------------------------------------------------
@@ -246,7 +220,7 @@ hex_grid <- function(area_km2 = NULL,
   # Create and validate HexGrid object
   # -------------------------------------------------------------------------
   grid <- new("HexGrid",
-              aperture = aperture_num,
+              aperture = aperture_str,
               resolution = as.integer(resolution),
               area_km2 = as.numeric(area_km2),
               grid_system = grid_system,
@@ -254,8 +228,6 @@ hex_grid <- function(area_km2 = NULL,
               index_type = index_type,
               crs_input = as.integer(crs_input),
               crs_work = as.integer(crs_input),
-              mixed_aperture = mixed_aperture,
-              mixed_aperture_level = mixed_aperture_level,
               meta = extra_meta)
 
   # Validation happens automatically via setValidity

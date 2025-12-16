@@ -106,13 +106,10 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 
 | Slot | Type | Description |
 |------|------|-------------|
-| `aperture` | integer | Grid aperture (3, 4, or 7) |
+| `aperture` | character | Grid aperture ("3", "4", "7", or "4/3") |
 | `resolution` | integer | Resolution level (0–30) |
 | `area_km2` | numeric | Cell area in km² |
-| `grid_system` | character | Projection system ("ISEA") |
-| `topology` | character | Cell shape ("H" for hexagon) |
 | `index_type` | character | ID encoding ("integer" or "character") |
-| `mixed_aperture` | logical | Whether using 4/3 mixed aperture |
 
 ### HexData Slots
 
