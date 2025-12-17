@@ -244,13 +244,20 @@ svg.inline-svg .svglite polyline[style*="stroke: #ffffff"] {
 }
 
 /* Theme-aware map/country fills */
-/* Light mode: light blue-gray for good contrast with colored overlays */
-svg.inline-svg .map-fill {
-  fill: #D4E5F7 !important;  /* light steel blue */
+/* The build script removes inline fill from map paths and adds class='map-fill' */
+/* This allows CSS to control fill colors for both light and dark modes */
+
+/* Light mode: light steel blue for good contrast with colored overlays */
+svg.inline-svg .map-fill,
+svg.inline-svg path.map-fill {
+  fill: #D4E5F7;  /* light steel blue */
+  stroke: #7F7F7F;  /* gray border - preserve original */
 }
 
-/* Dark mode: darker blue-gray */
-[data-bs-theme="dark"] svg.inline-svg .map-fill {
-  fill: #3D4F5F !important;  /* dark slate blue */
+/* Dark mode: darker blue-gray for map polygons */
+[data-bs-theme="dark"] svg.inline-svg .map-fill,
+[data-bs-theme="dark"] svg.inline-svg path.map-fill {
+  fill: #3D4F5F;  /* dark slate blue */
+  stroke: #6A7A8A;  /* lighter gray-blue border */
 }
 
