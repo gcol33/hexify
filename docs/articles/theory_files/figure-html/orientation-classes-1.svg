@@ -42,7 +42,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHwxOTIuMDB8MC4wMHwyMTYuMDA=)'>
-<text x='96.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='74.36px' lengthAdjust='spacingAndGlyphs'>Class I (Flat-top)</text>
+<text x='96.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='88.72px' lengthAdjust='spacingAndGlyphs'>Class I (Flat-top, 0°)</text>
 </g>
 <defs>
   <clipPath id='cpOS41MHwxODIuNTB8MjguNTF8MjA2LjUw'>
@@ -53,7 +53,7 @@
 <polygon points='160.07,117.50 128.04,62.02 63.96,62.02 31.93,117.50 63.96,172.99 128.04,172.99 160.07,117.50 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
 <polyline points='160.07,117.50 128.04,62.02 ' style='stroke-width: 2.25; stroke: #E63946;' />
 <text x='96.00' y='188.05' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.42px' lengthAdjust='spacingAndGlyphs'>Aperture 4 (all res)</text>
-<text x='96.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='56.64px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (odd res)</text>
+<text x='96.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='59.81px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (even res)</text>
 </g>
 <defs>
   <clipPath id='cpMjAxLjUwfDM3NC41MHwyOC41MXwyMDYuNTA='>
@@ -68,12 +68,12 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMTkyLjAwfDM4NC4wMHwwLjAwfDIxNi4wMA==)'>
-<text x='288.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='89.14px' lengthAdjust='spacingAndGlyphs'>Class II (Pointy-top)</text>
+<text x='288.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='108.78px' lengthAdjust='spacingAndGlyphs'>Class II (Pointy-top, 30°)</text>
 </g>
 <g clip-path='url(#cpMjAxLjUwfDM3NC41MHwyOC41MXwyMDYuNTA=)'>
 <polygon points='343.49,85.47 288.00,53.43 232.51,85.47 232.51,149.54 288.00,181.58 343.49,149.54 343.49,85.47 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
 <circle cx='343.49' cy='85.47' r='2.67' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
-<text x='288.00' y='191.22' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='59.81px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (even res)</text>
+<text x='288.00' y='191.22' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='56.64px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (odd res)</text>
 </g>
 <defs>
   <clipPath id='cpMzkzLjUwfDU2Ni41MHwyOC41MXwyMDYuNTA='>
@@ -88,12 +88,12 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMzg0LjAwfDU3Ni4wMHwwLjAwfDIxNi4wMA==)'>
-<text x='480.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='80.23px' lengthAdjust='spacingAndGlyphs'>Class III (Skewed)</text>
+<text x='480.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='113.34px' lengthAdjust='spacingAndGlyphs'>Class III (Skewed, ~19.1°)</text>
 </g>
 <g clip-path='url(#cpMzkzLjUwfDU2Ni41MHwyOC41MXwyMDYuNTA=)'>
 <polygon points='544.07,117.50 512.04,62.02 447.96,62.02 415.93,117.50 447.96,172.99 512.04,172.99 544.07,117.50 ' style='stroke-width: 1.50; stroke: #7F7F7F; stroke-dasharray: 8.00,8.00;' />
-<polygon points='520.36,103.52 488.07,75.56 447.71,89.54 439.64,131.49 471.93,159.45 512.29,145.47 520.36,103.52 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
-<polyline points='506.70,117.50 506.69,117.04 506.68,116.57 506.66,116.10 506.63,115.63 506.59,115.16 506.55,114.70 506.50,114.23 506.43,113.77 506.36,113.30 506.29,112.84 506.20,112.38 506.11,111.92 506.00,111.47 505.89,111.01 505.78,110.56 505.65,110.11 505.52,109.66 505.38,109.21 505.23,108.77 ' style='stroke-width: 1.50; stroke: #E63946;' />
+<polygon points='515.74,94.11 477.61,74.86 441.87,98.25 444.26,140.90 482.39,160.15 518.13,136.76 515.74,94.11 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
+<polyline points='506.70,117.50 506.68,116.69 506.65,115.88 506.58,115.06 506.50,114.25 506.39,113.45 506.25,112.64 506.09,111.85 505.91,111.05 505.70,110.27 505.46,109.49 505.21,108.71 504.93,107.95 504.62,107.19 504.30,106.45 503.95,105.71 503.58,104.98 503.19,104.27 502.77,103.57 502.34,102.88 ' style='stroke-width: 1.50; stroke: #E63946;' />
 <text x='512.04' y='111.76' text-anchor='middle' style='font-size: 6.34px;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='14.84px' lengthAdjust='spacingAndGlyphs'>19.1°</text>
 <text x='480.00' y='188.05' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.42px' lengthAdjust='spacingAndGlyphs'>Aperture 7 (all res)</text>
 <text x='480.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='60.86px' lengthAdjust='spacingAndGlyphs'>Rotation accumulates</text>

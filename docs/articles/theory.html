@@ -92,22 +92,42 @@ aperture subdivision, and cell indexing.</p>
 regardless of location. Standard latitude-longitude grids fail badly: a
 1° cell at the equator covers ~12,300 km², while the same cell near the
 poles covers a tiny fraction of that.</p>
-<p>The ISEA projection solves this by: 1. Inscribing a regular
-icosahedron in the sphere 2. Projecting each spherical “cap” onto its
-corresponding flat triangular face using a modified Lambert equal-area
-projection 3. Overlaying a hexagonal grid on the resulting planar
-triangles</p>
+<p>The ISEA projection solves this by:</p>
+<ol style="list-style-type: decimal">
+<li>Inscribing a regular icosahedron in the sphere</li>
+<li>Projecting each spherical “cap” onto its corresponding flat
+triangular face using a modified Lambert equal-area projection</li>
+<li>Overlaying a hexagonal grid on the resulting planar triangles</li>
+</ol>
 </div>
 <div class="section level2">
 <h2 id="the-lambert-azimuthal-equal-area-projection">The Lambert Azimuthal Equal-Area Projection<a class="anchor" aria-label="anchor" href="#the-lambert-azimuthal-equal-area-projection"></a>
 </h2>
 <p>The foundation of Snyder’s projection is Lambert’s azimuthal
-equal-area projection, developed by Johann Heinrich Lambert in 1772.</p>
+equal-area projection. The projection maps a sphere of radius
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+to a tangent plane while preserving area (Snyder, 1987, p. 182).</p>
 <div class="section level3">
-<h3 id="geometric-definition">Geometric Definition<a class="anchor" aria-label="anchor" href="#geometric-definition"></a>
+<h3 id="definition">Definition<a class="anchor" aria-label="anchor" href="#definition"></a>
 </h3>
-<p>The key insight is elegantly simple. Consider a sphere with a plane
-tangent at point S:</p>
+<p>For a projection centered at point
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+with spherical coordinates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>ϕ</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\lambda_0, \phi_1)</annotation></semantics></math>,
+a point
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+at angular distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+from the center projects to distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>2</mn><mi>R</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\rho = 2R\sin(c/2)</annotation></semantics></math>
+from the origin on the plane. This chord distance equals the
+straight-line distance through 3D space from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>.</p>
+<p>The projection is <strong>not</strong> perspective-based; it is a
+synthetic mathematical construction designed to achieve equal-area and
+azimuthal properties simultaneously.</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='396.00pt' viewBox='0 0 504.00 396.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -170,7 +190,7 @@ tangent at point S:</p>
 <text x='271.03' y='242.51' text-anchor='middle' style='font-size: 13.20px; font-style: italic;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'>d</text>
 <text x='292.83' y='303.76' text-anchor='middle' style='font-size: 13.20px; font-style: italic;fill: #457B9D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'>d</text>
 <polyline points='252.00,221.53 253.18,221.51 254.36,221.45 255.53,221.34 256.70,221.19 257.87,221.00 259.02,220.77 260.17,220.50 261.31,220.18 262.43,219.82 263.54,219.43 264.64,218.99 265.72,218.51 266.78,218.00 267.82,217.45 268.84,216.86 269.84,216.23 270.82,215.57 271.77,214.87 272.70,214.14 273.59,213.38 274.46,212.58 275.31,211.76 276.12,210.90 276.90,210.01 277.64,209.10 278.36,208.16 279.04,207.20 279.68,206.21 280.29,205.20 ' style='stroke-width: 1.12; stroke: #7F7F7F;' />
-<text x='268.53' y='235.78' style='font-size: 12.00px;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.78px' lengthAdjust='spacingAndGlyphs'>φ</text>
+<text x='269.41' y='236.90' style='font-size: 12.00px;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.00px' lengthAdjust='spacingAndGlyphs'>c</text>
 <circle cx='332.43' cy='174.69' r='2.97' style='stroke-width: 0.75; stroke: #2A9D8F; fill: #2A9D8F;' />
 <text x='336.53' y='165.32' style='font-size: 10.80px;fill: #2A9D8F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.20px' lengthAdjust='spacingAndGlyphs'>P</text>
 <text x='343.73' y='167.28' style='font-size: 7.56px;fill: #2A9D8F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.20px' lengthAdjust='spacingAndGlyphs'>2</text>
@@ -186,24 +206,34 @@ tangent at point S:</p>
 </g>
 </svg></div>
 
-<p><strong>The Lambert projection rule:</strong> For any point P on the
-sphere, measure the straight-line distance d through 3D space from the
-tangent point S to P (the chord distance). Place the projected point P’
-on the plane at distance d from S, in the same azimuthal direction.</p>
 </div>
 <div class="section level3">
-<h3 id="why-chord-distance-preserves-area">Why Chord Distance Preserves Area<a class="anchor" aria-label="anchor" href="#why-chord-distance-preserves-area"></a>
+<h3 id="forward-formulas">Forward Formulas<a class="anchor" aria-label="anchor" href="#forward-formulas"></a>
 </h3>
 <p>For a point at angular distance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
-from S (measured along the sphere surface), the chord distance is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mn>2</mn><mi>R</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>ϕ</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">d = 2R \sin\left(\frac{\phi}{2}\right)</annotation></semantics></math></p>
-<p>This specific relationship ensures that a small area element
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">dA</annotation></semantics></math>
-on the sphere maps to an equal area
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">dA</annotation></semantics></math>
-on the plane. The area-preserving property arises because the Jacobian
-determinant of this transformation equals 1.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+from the projection center, the projected distance is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>2</mn><mi>R</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>c</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho = 2R \sin\left(\frac{c}{2}\right)</annotation></semantics></math></p>
+<p>For the oblique aspect centered at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>ϕ</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\lambda_0, \phi_1)</annotation></semantics></math>,
+the full formulas are (Snyder, 1987, eq. 24-2 to 24-4, p. 185):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>k</mi><mo>′</mo></msup><mo>=</mo><msqrt><mfrac><mn>2</mn><mrow><mn>1</mn><mo>+</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>+</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></msqrt></mrow><annotation encoding="application/x-tex">k' = \sqrt{\frac{2}{1 + \sin\phi_1\sin\phi + \cos\phi_1\cos\phi\cos(\lambda - \lambda_0)}}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>R</mi><mo>⋅</mo><msup><mi>k</mi><mo>′</mo></msup><mo>⋅</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>⋅</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x = R \cdot k' \cdot \cos\phi \cdot \sin(\lambda - \lambda_0)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>R</mi><mo>⋅</mo><msup><mi>k</mi><mo>′</mo></msup><mo>⋅</mo><mo stretchy="false" form="prefix">[</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>−</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">y = R \cdot k' \cdot [\cos\phi_1\sin\phi - \sin\phi_1\cos\phi\cos(\lambda - \lambda_0)]</annotation></semantics></math></p>
+</div>
+<div class="section level3">
+<h3 id="equal-area-proof">Equal-Area Proof<a class="anchor" aria-label="anchor" href="#equal-area-proof"></a>
+</h3>
+<p>The projection preserves area because the radial and tangential scale
+factors satisfy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>h</mi><mo>′</mo></msup><mo>⋅</mo><msup><mi>k</mi><mo>′</mo></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h' \cdot k' = 1</annotation></semantics></math>
+at every point. At angular distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+from center (Snyder, 1987, eq. 24-22, 24-23, p. 188):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>h</mi><mo>′</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>c</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><msup><mi>k</mi><mo>′</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">sec</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>c</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">h' = \cos\left(\frac{c}{2}\right), \quad k' = \sec\left(\frac{c}{2}\right)</annotation></semantics></math></p>
+<p>Therefore
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>h</mi><mo>′</mo></msup><mo>⋅</mo><msup><mi>k</mi><mo>′</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mrow><mi mathvariant="normal">sec</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h' \cdot k' = \cos(c/2) \cdot \sec(c/2) = 1</annotation></semantics></math>,
+confirming the equal-area property.</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -295,27 +325,74 @@ determinant of this transformation equals 1.</p>
 </svg></div>
 
 <p>Each colored band has equal area on the sphere. After Lambert
-projection, the shapes change (outer bands stretch radially, compress
-tangentially) but the areas remain equal. This is the defining property
-of an equal-area projection.</p>
-<p><strong>Reference:</strong> <a href="https://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html" class="external-link">Wolfram
-MathWorld: Lambert Azimuthal Equal-Area Projection</a></p>
+projection, shapes change (outer bands stretch radially, compress
+tangentially) but areas remain equal.</p>
+</div>
+<div class="section level3">
+<h3 id="inverse-formulas">Inverse Formulas<a class="anchor" aria-label="anchor" href="#inverse-formulas"></a>
+</h3>
+<p>The inverse mapping
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>,</mo><mi>ϕ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x, y) \to (\lambda, \phi)</annotation></semantics></math>
+recovers geographic coordinates from planar coordinates (Snyder, 1987,
+eq. 24-14 to 24-16, p. 187):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup></mrow></msqrt></mrow><annotation encoding="application/x-tex">\rho = \sqrt{x^2 + y^2}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mn>2</mn><mrow><mi mathvariant="normal">arcsin</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>ρ</mi><mrow><mn>2</mn><mi>R</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">c = 2\arcsin\left(\frac{\rho}{2R}\right)</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+is the angular distance from the projection center. Then:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><mrow><mi mathvariant="normal">arcsin</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi mathvariant="normal">cos</mi><mi>c</mi><mo>⋅</mo><mi mathvariant="normal">sin</mi><msub><mi>ϕ</mi><mn>1</mn></msub><mo>+</mo><mfrac><mrow><mi>y</mi><mo>⋅</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>c</mi><mo>⋅</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub></mrow><mi>ρ</mi></mfrac><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\phi = \arcsin\left[\cos c \cdot \sin\phi_1 + \frac{y \cdot \sin c \cdot \cos\phi_1}{\rho}\right]</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><msub><mi>λ</mi><mn>0</mn></msub><mo>+</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mrow><mi>x</mi><mo>⋅</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>c</mi></mrow><mrow><mi>ρ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>c</mi><mo>−</mo><mi>y</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>1</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>c</mi></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\lambda = \lambda_0 + \arctan\left[\frac{x \cdot \sin c}{\rho\cos\phi_1\cos c - y\sin\phi_1\sin c}\right]</annotation></semantics></math></p>
+<p>If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\rho = 0</annotation></semantics></math>,
+the point is at the projection center:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><msub><mi>ϕ</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\phi = \phi_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><msub><mi>λ</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">\lambda = \lambda_0</annotation></semantics></math>.</p>
+</div>
+<div class="section level3">
+<h3 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
+</h3>
+<p><strong>Antipode singularity:</strong> The point diametrically
+opposite the projection center (angular distance 180°) maps to infinity
+and must be excluded from the domain.</p>
+<p><strong>Shape distortion:</strong> While area is preserved exactly,
+shapes distort increasingly with distance from center. The maximum
+angular distortion
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math>
+at distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+is (Snyder, 1987, eq. 24-24, p. 188):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>ω</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mrow><msup><mi>k</mi><mo>′</mo></msup><msup><mi></mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mrow><msup><mi>k</mi><mo>′</mo></msup><msup><mi></mi><mn>2</mn></msup><mo>+</mo><mn>1</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">\sin\left(\frac{\omega}{2}\right) = \frac{k'^2 - 1}{k'^2 + 1}</annotation></semantics></math></p>
+<p>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mn>90</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">c = 90°</annotation></semantics></math>,
+distortion reaches
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>≈</mo><mn>70.5</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\omega \approx 70.5°</annotation></semantics></math>.
+ISEA grids limit this by using icosahedral faces subtending only ~72°
+from face center.</p>
+<p><strong>No conformality:</strong> No projection can be both
+equal-area and conformal (angle-preserving)—a fundamental constraint
+from differential geometry (Snyder, 1987, p. 16-18).</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="from-lambert-to-snyder-the-icosahedron">From Lambert to Snyder: The Icosahedron<a class="anchor" aria-label="anchor" href="#from-lambert-to-snyder-the-icosahedron"></a>
+<h2 id="the-icosahedron">The Icosahedron<a class="anchor" aria-label="anchor" href="#the-icosahedron"></a>
 </h2>
 <p>Lambert’s projection works for a single tangent plane covering at
 most a hemisphere. To cover the entire globe with minimal distortion,
-Snyder’s key insight was to use <strong>20 tangent planes</strong>—one
-for each face of a regular icosahedron.</p>
+Snyder used <strong>20 tangent planes</strong>—one for each face of a
+regular icosahedron (Snyder, 1992, p. 10).</p>
 <div class="section level3">
-<h3 id="the-icosahedron">The Icosahedron<a class="anchor" aria-label="anchor" href="#the-icosahedron"></a>
+<h3 id="geometry">Geometry<a class="anchor" aria-label="anchor" href="#geometry"></a>
 </h3>
-<p>A regular icosahedron has: - <strong>20 triangular faces</strong>
-(each covering ~1/20 of Earth’s surface ≈ 25.5 million km²) - <strong>12
-vertices</strong> (where 5 faces meet—these become pentagon cells) -
-<strong>30 edges</strong></p>
+<p>A regular icosahedron has:</p>
+<ul>
+<li>
+<strong>20 equilateral triangular faces</strong> (each covering
+~1/20 of Earth’s surface)</li>
+<li>
+<strong>12 vertices</strong> (where 5 faces meet—these become
+pentagon cells)</li>
+<li><strong>30 edges</strong></li>
+</ul>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -423,15 +500,67 @@ vertices</strong> (where 5 faces meet—these become pentagon cells) -
 </g>
 </svg></div>
 
-<p>Because each face subtends a relatively small solid angle (~1/20 of
-the sphere), projection distortion within each face is limited. The
-maximum angular distortion is bounded at approximately 17.3°.</p>
+</div>
+<div class="section level3">
+<h3 id="vertex-latitude-derivation">Vertex Latitude Derivation<a class="anchor" aria-label="anchor" href="#vertex-latitude-derivation"></a>
+</h3>
+<p>The 12 vertices are located at (Coxeter, 1973, p. 52-53):</p>
+<table class="table">
+<colgroup>
+<col width="31%">
+<col width="31%">
+<col width="37%">
+</colgroup>
+<thead><tr class="header">
+<th>Location</th>
+<th>Latitude</th>
+<th>Longitudes</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>North pole</td>
+<td>+90°</td>
+<td>0°</td>
+</tr>
+<tr class="even">
+<td>Upper ring</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>+</mi><mn>26.565</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">+\arctan(1/2) \approx +26.565°</annotation></semantics></math></td>
+<td>0°, 72°, 144°, 216°, 288°</td>
+</tr>
+<tr class="odd">
+<td>Lower ring</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>−</mi><mn>26.565</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">-\arctan(1/2) \approx -26.565°</annotation></semantics></math></td>
+<td>36°, 108°, 180°, 252°, 324°</td>
+</tr>
+<tr class="even">
+<td>South pole</td>
+<td>−90°</td>
+<td>0°</td>
+</tr>
+</tbody>
+</table>
+<p>The latitude
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\arctan(1/2)</annotation></semantics></math>
+arises from the golden ratio geometry. An icosahedron can be constructed
+from three mutually perpendicular golden rectangles
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><mi>φ</mi></mrow><annotation encoding="application/x-tex">1 \times \varphi</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mn>5</mn></msqrt><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\varphi = (1+\sqrt{5})/2</annotation></semantics></math>).
+The non-polar vertices have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>-coordinate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">1/s</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>+</mo><msup><mi>φ</mi><mn>2</mn></msup></mrow></msqrt></mrow><annotation encoding="application/x-tex">s = \sqrt{1 + \varphi^2}</annotation></semantics></math>,
+yielding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\tan\phi = 1/2</annotation></semantics></math>.</p>
 </div>
 <div class="section level3">
 <h3 id="standard-isea-orientation">Standard ISEA Orientation<a class="anchor" aria-label="anchor" href="#standard-isea-orientation"></a>
 </h3>
-<p>The icosahedron orientation is chosen to place vertices (pentagon
-cells) in oceanic or low-population areas:</p>
+<p>The default orientation places vertex 0 at longitude 11.25°, latitude
+58.28252559°, with azimuth 0°. This places icosahedron vertices
+(pentagon cells) predominantly over oceans (Sahr et al., 2003,
+p. 123).</p>
 <pre><code><span><span class="co">#&gt; Linking to GEOS 3.13.1, GDAL 3.11.0, PROJ 9.6.0; sf_use_s2() is TRUE</span></span>
 <span><span class="co">#&gt; Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not</span></span>
 <span><span class="co">#&gt; give correct results for longitude/latitude data</span></span></code></pre>
@@ -2168,74 +2297,94 @@ cells) in oceanic or low-population areas:</p>
 </g>
 </svg></div>
 
-<p><strong>Reference:</strong> <a href="https://www.researchgate.net/publication/246557072_ISEA_discrete_global_grids" class="external-link">Sahr,
-White &amp; Kimerling (2003). Geodesic discrete global grid
-systems.</a></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="snyders-projection-formulas">Snyder’s Projection Formulas<a class="anchor" aria-label="anchor" href="#snyders-projection-formulas"></a>
+<h2 id="snyders-isea-projection">Snyder’s ISEA Projection<a class="anchor" aria-label="anchor" href="#snyders-isea-projection"></a>
 </h2>
-<p>Snyder adapted Lambert’s approach for triangular faces. The
-projection involves:</p>
-<ol style="list-style-type: decimal">
-<li>Finding which face contains the point</li>
-<li>Computing spherical coordinates relative to the face center</li>
-<li>Applying transformation formulas that preserve area</li>
-</ol>
-<div class="section level3">
-<h3 id="the-forward-projection">The Forward Projection<a class="anchor" aria-label="anchor" href="#the-forward-projection"></a>
-</h3>
-<p>For a point P at geographic coordinates (lon, lat), relative to a
-face with center at (lon₀, lat₀):</p>
-<p><strong>Step 1:</strong> Compute angular distance z and azimuth Az
-from face center:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>+</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">z = \arccos(\sin\phi_0 \sin\phi + \cos\phi_0 \cos\phi \cos(\lambda - \lambda_0))</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>z</mi><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>−</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Az = \arctan\left(\frac{\cos\phi \sin(\lambda - \lambda_0)}{\cos\phi_0 \sin\phi - \sin\phi_0 \cos\phi \cos(\lambda - \lambda_0)}\right)</annotation></semantics></math></p>
-<p><strong>Step 2:</strong> Reduce azimuth to [0°, 120°) sector and
-apply Snyder’s transformation:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mi>z</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub></mrow><mrow><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>A</mi><mi>z</mi><mo>+</mo><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>A</mi><mi>z</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\delta_z = \arctan\left(\frac{\tan E_l}{\cos Az + \cot 30° \sin Az}\right)</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>A</mi><mi>z</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>G</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>A</mi><mi>z</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>G</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h = \arccos(\sin Az \sin G \cos E_l - \cos Az \cos G)</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>G</mi></msub><mo>=</mo><mi>A</mi><mi>z</mi><mo>+</mo><mi>G</mi><mo>+</mo><mi>h</mi><mo>−</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">A_G = Az + G + h - \pi</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><msup><mi>z</mi><mo>′</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><msub><mi>A</mi><mi>G</mi></msub></mrow><mrow><msubsup><mi>R</mi><mn>1</mn><mn>2</mn></msubsup><msup><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><mn>2</mn></msup><msub><mi>E</mi><mi>l</mi></msub><mo>−</mo><mn>2</mn><msub><mi>A</mi><mi>G</mi></msub><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">Az' = \arctan\left(\frac{2 A_G}{R_1^2 \tan^2 E_l - 2 A_G \cot 30°}\right)</annotation></semantics></math></p>
-<p><strong>Step 3:</strong> Compute radial distance:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub></mrow><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>A</mi><msup><mi>z</mi><mo>′</mo></msup><mo>+</mo><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>A</mi><msup><mi>z</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>δ</mi><mi>z</mi></msub><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">f = \frac{\tan E_l}{2(\cos Az' + \cot 30° \sin Az') \sin(\delta_z/2)}</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>2</mn><msub><mi>R</mi><mn>1</mn></msub><mi>f</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\rho = 2 R_1 f \sin(z/2)</annotation></semantics></math></p>
-<p><strong>Step 4:</strong> Convert to Cartesian:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>ρ</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>A</mi><msup><mi>z</mi><mo>′</mo></msup><mo>+</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mspace width="1.0em"></mspace><mi>y</mi><mo>=</mo><mi>ρ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>A</mi><msup><mi>z</mi><mo>′</mo></msup><mo>+</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x = \rho \sin Az' + x_0, \quad y = \rho \cos Az' + y_0</annotation></semantics></math></p>
-</div>
+<p>Snyder extended the Lambert projection to the icosahedron by
+introducing an azimuth-adjustment transformation that ensures seamless
+transitions between adjacent faces while maintaining the equal-area
+property (Snyder, 1992, p. 12).</p>
 <div class="section level3">
 <h3 id="key-constants">Key Constants<a class="anchor" aria-label="anchor" href="#key-constants"></a>
 </h3>
 <table class="table">
+<colgroup>
+<col width="30%">
+<col width="24%">
+<col width="21%">
+<col width="24%">
+</colgroup>
 <thead><tr class="header">
 <th>Constant</th>
+<th>Symbol</th>
 <th>Value</th>
-<th>Description</th>
+<th>Source</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td>Edge-to-center angle</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mi>l</mi></msub><annotation encoding="application/x-tex">E_l</annotation></semantics></math></td>
 <td>37.37736814°</td>
-<td>Face center to edge angular distance</td>
+<td>Snyder (1992, Table 1, p. 14)</td>
 </tr>
 <tr class="even">
-<td>G</td>
+<td>Geometric angle</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math></td>
 <td>36°</td>
-<td>Geometric angle (360°/10)</td>
+<td>360°/10 (icosahedral 5-fold symmetry)</td>
 </tr>
 <tr class="odd">
+<td>Scale factor</td>
 <td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mn>1</mn></msub><annotation encoding="application/x-tex">R_1</annotation></semantics></math></td>
 <td>0.9103832815</td>
-<td>Scaling factor for equal-area</td>
+<td>Snyder (1992, Table 1, p. 14)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Reference:</strong> <a href="https://www.researchgate.net/publication/296900899_Snyder_equal-area_map_projection_for_polyhedral_globes" class="external-link">Snyder
-(1992). An equal-area map projection for polyhedral globes.</a></p>
 </div>
 <div class="section level3">
-<h3 id="the-inverse-projection-newton-raphson-iteration">The Inverse Projection (Newton-Raphson Iteration)<a class="anchor" aria-label="anchor" href="#the-inverse-projection-newton-raphson-iteration"></a>
+<h3 id="forward-projection-steps">Forward Projection Steps<a class="anchor" aria-label="anchor" href="#forward-projection-steps"></a>
 </h3>
-<p>The inverse—converting planar coordinates back to geographic—cannot
-be solved analytically because the forward transformation involves
-transcendental functions. Instead, a Newton-Raphson iterative method is
-used.</p>
+<p>The complete algorithm comprises seven steps (Snyder, 1992,
+p. 13-15):</p>
+<p><strong>Step 1: Compute angular distance and azimuth</strong> from
+face center
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mn>0</mn></msub><mo>,</mo><msub><mi>ϕ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\lambda_0, \phi_0)</annotation></semantics></math>
+to point
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>,</mo><mi>ϕ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\lambda, \phi)</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>+</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">z = \arccos(\sin\phi_0 \sin\phi + \cos\phi_0 \cos\phi \cos(\lambda - \lambda_0))</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Az</mtext><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mo>−</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msub><mi>ϕ</mi><mn>0</mn></msub><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>ϕ</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo>−</mo><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Az} = \arctan2(\cos\phi \sin(\lambda - \lambda_0), \cos\phi_0 \sin\phi - \sin\phi_0 \cos\phi \cos(\lambda - \lambda_0))</annotation></semantics></math></p>
+<p><strong>Step 2: Reduce azimuth</strong> to [0°, 120°) by exploiting
+3-fold symmetry.</p>
+<p><strong>Step 3: Compute auxiliary angle</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mi>z</mi></msub><annotation encoding="application/x-tex">\delta_z</annotation></semantics></math>
+(Snyder, 1992, eq. 8, p. 14):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mi>z</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub></mrow><mrow><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext><mo>+</mo><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi><mo>⋅</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\delta_z = \arctan\left(\frac{\tan E_l}{\cos \text{Az} + \cot 30° \cdot \sin \text{Az}}\right)</annotation></semantics></math></p>
+<p><strong>Step 4: Compute auxiliary angle</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+(Snyder, 1992, eq. 9, p. 14):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>G</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>G</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)</annotation></semantics></math></p>
+<p><strong>Step 5: Compute adjusted azimuth</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mtext mathvariant="normal">Az</mtext><mo>′</mo></msup><annotation encoding="application/x-tex">\text{Az}'</annotation></semantics></math>
+(Snyder, 1992, eq. 10-11, p. 14):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>G</mi></msub><mo>=</mo><mtext mathvariant="normal">Az</mtext><mo>+</mo><mi>G</mi><mo>+</mo><mi>h</mi><mo>−</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">A_G = \text{Az} + G + h - \pi</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext mathvariant="normal">Az</mtext><mo>′</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><msub><mi>A</mi><mi>G</mi></msub></mrow><mrow><msubsup><mi>R</mi><mn>1</mn><mn>2</mn></msubsup><msup><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><mn>2</mn></msup><msub><mi>E</mi><mi>l</mi></msub><mo>−</mo><mn>2</mn><msub><mi>A</mi><mi>G</mi></msub><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Az}' = \arctan\left(\frac{2 A_G}{R_1^2 \tan^2 E_l - 2 A_G \cot 30°}\right)</annotation></semantics></math></p>
+<p><strong>Step 6: Compute radial distance</strong> (Snyder, 1992, eq.
+12-13, p. 14-15):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub></mrow><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msup><mtext mathvariant="normal">Az</mtext><mo>′</mo></msup><mo>+</mo><mrow><mi mathvariant="normal">cot</mi><mo>⁡</mo></mrow><mn>30</mn><mi>°</mi><mo>⋅</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><msup><mtext mathvariant="normal">Az</mtext><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>δ</mi><mi>z</mi></msub><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">f = \frac{\tan E_l}{2(\cos \text{Az}' + \cot 30° \cdot \sin \text{Az}') \sin(\delta_z / 2)}</annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>2</mn><msub><mi>R</mi><mn>1</mn></msub><mi>f</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\rho = 2 R_1 f \sin(z / 2)</annotation></semantics></math></p>
+<p><strong>Step 7: Convert to Cartesian</strong> with sector offset
+restored.</p>
+</div>
+<div class="section level3">
+<h3 id="the-inverse-projection">The Inverse Projection<a class="anchor" aria-label="anchor" href="#the-inverse-projection"></a>
+</h3>
+<p>The inverse projection cannot be solved analytically because the
+azimuth adjustment contains transcendental functions. A Newton-Raphson
+iteration finds the spherical azimuth Az from the planar azimuth
+Az’:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Az</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mtext mathvariant="normal">agh</mtext><mo>−</mo><mtext mathvariant="normal">Az</mtext><mo>−</mo><mi>G</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>π</mi><mo>−</mo><mi>h</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mi>G</mi><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mi>l</mi></msub><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">Az</mtext><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mi>G</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)</annotation></semantics></math>.</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -2348,21 +2497,51 @@ used.</p>
 </g>
 </svg></div>
 
-<p>The iteration solves for the azimuth Az given the planar coordinates.
-Starting from an initial estimate, each iteration refines:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><msub><mi>z</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>A</mi><msub><mi>z</mi><mi>n</mi></msub><mo>−</mo><mfrac><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><msub><mi>z</mi><mi>n</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msup><mi>f</mi><mo>′</mo></msup><mo stretchy="false" form="prefix">(</mo><mi>A</mi><msub><mi>z</mi><mi>n</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">Az_{n+1} = Az_n - \frac{f(Az_n)}{f'(Az_n)}</annotation></semantics></math></p>
-<p>Convergence typically occurs within 3-5 iterations to machine
-precision.</p>
-<p><strong>Reference:</strong> <a href="https://proj.org/en/stable/operations/projections/isea.html" class="external-link">PROJ
-Documentation: Icosahedral Snyder Equal Area</a></p>
+<p>The iteration exhibits <strong>quadratic convergence</strong>,
+typically reaching machine precision in 3-5 iterations. hexify provides
+four precision modes:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Mode</th>
+<th>Tolerance</th>
+<th>Typical Iterations</th>
+<th>Use Case</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>fast</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>10</mn></mrow></msup><annotation encoding="application/x-tex">10^{-10}</annotation></semantics></math></td>
+<td>3-4</td>
+<td>Interactive visualization</td>
+</tr>
+<tr class="even">
+<td>default</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>12</mn></mrow></msup><annotation encoding="application/x-tex">10^{-12}</annotation></semantics></math></td>
+<td>4-5</td>
+<td>General applications (~1 m accuracy)</td>
+</tr>
+<tr class="odd">
+<td>high</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>14</mn></mrow></msup><annotation encoding="application/x-tex">10^{-14}</annotation></semantics></math></td>
+<td>5-6</td>
+<td>High-precision geodesy</td>
+</tr>
+<tr class="even">
+<td>ultra</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>15</mn></mrow></msup><annotation encoding="application/x-tex">10^{-15}</annotation></semantics></math></td>
+<td>6-7</td>
+<td>Research</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
 <h2 id="aperture-and-resolution">Aperture and Resolution<a class="anchor" aria-label="anchor" href="#aperture-and-resolution"></a>
 </h2>
-<p><strong>Aperture</strong> determines how cells subdivide at each
-resolution level—it’s the ratio of parent cell area to child cell
-area.</p>
+<p><strong>Aperture</strong> defines how cells subdivide at each
+resolution level—it’s the ratio of parent cell area to child cell area
+(Sahr et al., 2003, p. 124).</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='648.00pt' height='252.00pt' viewBox='0 0 648.00 252.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -2408,7 +2587,7 @@ area.</p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHwyMTYuMDB8MC4wMHwyNTIuMDA=)'>
-<text x='108.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='149.88px' lengthAdjust='spacingAndGlyphs'>Aperture 3: Triangle arrangement</text>
+<text x='108.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='150.98px' lengthAdjust='spacingAndGlyphs'>Aperture 3: Triangle (30° rotation)</text>
 </g>
 <defs>
   <clipPath id='cpOS41MHwyMDYuNTB8MjguNTF8MjQyLjUw'>
@@ -2423,14 +2602,12 @@ area.</p>
 <text x='84.29' y='152.60' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.28px' lengthAdjust='spacingAndGlyphs'>2</text>
 <polygon points='165.28,129.80 131.71,110.42 98.14,129.80 98.14,168.56 131.71,187.94 165.28,168.56 165.28,129.80 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.50;' />
 <text x='131.71' y='152.54' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.28px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='74.06' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='41.06px' lengthAdjust='spacingAndGlyphs'>Cell count: 10</text>
-<text x='116.36' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
-<text x='121.53' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='125.27' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
-<text x='126.83' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.61px' lengthAdjust='spacingAndGlyphs'>e</text>
-<text x='129.44' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.36px' lengthAdjust='spacingAndGlyphs'>s</text>
-<text x='133.04' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
-<text x='138.21' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
+<text x='87.09' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='19.97px' lengthAdjust='spacingAndGlyphs'>N = 10</text>
+<text x='108.30' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
+<text x='113.47' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>3</text>
+<text x='117.20' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
+<text x='120.01' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
+<text x='125.18' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
 </g>
 <defs>
   <clipPath id='cpMjI1LjUwfDQyMi41MHwyOC41MXwyNDIuNTA='>
@@ -2445,7 +2622,7 @@ area.</p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpMjE2LjAwfDQzMi4wMHwwLjAwfDI1Mi4wMA==)'>
-<text x='324.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='145.67px' lengthAdjust='spacingAndGlyphs'>Aperture 4: Square arrangement</text>
+<text x='324.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='152.44px' lengthAdjust='spacingAndGlyphs'>Aperture 4: Rhombic (no rotation)</text>
 </g>
 <g clip-path='url(#cpMjI1LjUwfDQyMi41MHwyOC41MXwyNDIuNTA=)'>
 <polygon points='401.52,135.50 362.76,68.37 285.24,68.37 246.48,135.50 285.24,202.64 362.76,202.64 401.52,135.50 ' style='stroke-width: 1.50; stroke: #666666;' />
@@ -2457,14 +2634,12 @@ area.</p>
 <text x='303.48' y='159.38' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.28px' lengthAdjust='spacingAndGlyphs'>3</text>
 <polygon points='376.44,156.02 360.48,128.38 328.56,128.38 312.60,156.02 328.56,183.67 360.48,183.67 376.44,156.02 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.50;' />
 <text x='344.52' y='159.44' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.28px' lengthAdjust='spacingAndGlyphs'>4</text>
-<text x='290.06' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='41.06px' lengthAdjust='spacingAndGlyphs'>Cell count: 10</text>
-<text x='332.36' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
-<text x='337.53' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>4</text>
-<text x='341.27' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
-<text x='342.83' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.61px' lengthAdjust='spacingAndGlyphs'>e</text>
-<text x='345.44' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.36px' lengthAdjust='spacingAndGlyphs'>s</text>
-<text x='349.04' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
-<text x='354.21' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
+<text x='303.09' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='19.97px' lengthAdjust='spacingAndGlyphs'>N = 10</text>
+<text x='324.30' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
+<text x='329.47' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>4</text>
+<text x='333.20' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
+<text x='336.01' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
+<text x='341.18' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
 </g>
 <defs>
   <clipPath id='cpNDQxLjUwfDYzOC41MHwyOC41MXwyNDIuNTA='>
@@ -2479,7 +2654,7 @@ area.</p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpNDMyLjAwfDY0OC4wMHwwLjAwfDI1Mi4wMA==)'>
-<text x='540.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='148.28px' lengthAdjust='spacingAndGlyphs'>Aperture 7: Rosette arrangement</text>
+<text x='540.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='157.31px' lengthAdjust='spacingAndGlyphs'>Aperture 7: Rosette (19.1° rotation)</text>
 </g>
 <g clip-path='url(#cpNDQxLjUwfDYzOC41MHwyOC41MXwyNDIuNTA=)'>
 <polygon points='617.52,135.50 578.76,68.37 501.24,68.37 462.48,135.50 501.24,202.64 578.76,202.64 617.52,135.50 ' style='stroke-width: 1.50; stroke: #666666;' />
@@ -2497,46 +2672,64 @@ area.</p>
 <text x='572.38' y='156.72' text-anchor='middle' style='font-size: 7.13px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.97px' lengthAdjust='spacingAndGlyphs'>6</text>
 <polygon points='596.09,116.81 584.24,96.27 560.53,96.27 548.67,116.81 560.53,137.34 584.24,137.34 596.09,116.81 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #00BBF9; fill-opacity: 0.50;' />
 <text x='572.38' y='119.33' text-anchor='middle' style='font-size: 7.13px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.97px' lengthAdjust='spacingAndGlyphs'>7</text>
-<text x='506.06' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='41.06px' lengthAdjust='spacingAndGlyphs'>Cell count: 10</text>
-<text x='548.36' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
-<text x='553.53' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>7</text>
-<text x='557.27' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
-<text x='558.83' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.61px' lengthAdjust='spacingAndGlyphs'>e</text>
-<text x='561.44' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='2.36px' lengthAdjust='spacingAndGlyphs'>s</text>
-<text x='565.04' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
-<text x='570.21' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
+<text x='519.09' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='19.97px' lengthAdjust='spacingAndGlyphs'>N = 10</text>
+<text x='540.30' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>×</text>
+<text x='545.47' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>7</text>
+<text x='549.20' y='219.41' style='font-size: 4.71px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='1.56px' lengthAdjust='spacingAndGlyphs'>r</text>
+<text x='552.01' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.92px' lengthAdjust='spacingAndGlyphs'>+</text>
+<text x='557.18' y='222.73' style='font-size: 6.73px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.73px' lengthAdjust='spacingAndGlyphs'>2</text>
 </g>
 </g>
 </svg></div>
 
+<div class="section level3">
+<h3 id="aperture-properties">Aperture Properties<a class="anchor" aria-label="anchor" href="#aperture-properties"></a>
+</h3>
 <table class="table">
+<colgroup>
+<col width="14%">
+<col width="17%">
+<col width="20%">
+<col width="27%">
+<col width="19%">
+</colgroup>
 <thead><tr class="header">
 <th>Aperture</th>
-<th>Children/Parent</th>
 <th>Area Ratio</th>
-<th>Best For</th>
+<th>Linear Scale</th>
+<th>Rotation per Level</th>
+<th>Orientation</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td>3</td>
-<td>3</td>
-<td>3:1</td>
-<td>Fine resolution control, dggridR compatibility</td>
+<td>1:3</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mn>3</mn></msqrt><mo>≈</mo><mn>1.73</mn></mrow><annotation encoding="application/x-tex">\sqrt{3} \approx 1.73</annotation></semantics></math></td>
+<td>30°</td>
+<td>Alternates Class I/II</td>
 </tr>
 <tr class="even">
 <td>4</td>
-<td>4</td>
-<td>4:1</td>
-<td>Power-of-2 scaling, GIS workflows</td>
+<td>1:4</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2.0</mn><annotation encoding="application/x-tex">2.0</annotation></semantics></math></td>
+<td>0°</td>
+<td>Always Class I</td>
 </tr>
 <tr class="odd">
 <td>7</td>
-<td>7</td>
-<td>7:1</td>
-<td>Rapid cell growth, coarse analysis</td>
+<td>1:7</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mn>7</mn></msqrt><mo>≈</mo><mn>2.65</mn></mrow><annotation encoding="application/x-tex">\sqrt{7} \approx 2.65</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msqrt><mrow><mn>3</mn><mi>/</mi><mn>7</mn></mrow></msqrt><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>19.1</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\arctan(\sqrt{3/7}) \approx 19.1°</annotation></semantics></math></td>
+<td>Class III</td>
 </tr>
 </tbody>
 </table>
+<p>The aperture 7 rotation angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msqrt><mrow><mn>3</mn><mi>/</mi><mn>7</mn></mrow></msqrt><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\arctan(\sqrt{3/7})</annotation></semantics></math>
+arises from the geometric constraint that 7 hexagons in a rosette
+pattern (1 center + 6 ring) must maintain lattice consistency (DGGRID
+Manual, 2023).</p>
+</div>
 <div class="section level3">
 <h3 id="cell-count-growth">Cell Count Growth<a class="anchor" aria-label="anchor" href="#cell-count-growth"></a>
 </h3>
@@ -2564,14 +2757,11 @@ area.</p>
 <span><span class="co">#&gt;     6           7,292        40,962     1,176,492</span></span>
 <span><span class="co">#&gt;     7          21,872       163,842     8,235,432</span></span>
 <span><span class="co">#&gt;     8          65,612       655,362    57,648,012</span></span></code></pre></div>
-<p><strong>Reference:</strong> <a href="https://www.researchgate.net/publication/223763428_Location_coding_on_icosahedral_aperture_3_hexagon_discrete_global_grids" class="external-link">Location
-coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="orientation-classes">Orientation Classes<a class="anchor" aria-label="anchor" href="#orientation-classes"></a>
 </h2>
-<p>The aperture determines how child cells align with parent cells:</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='216.00pt' viewBox='0 0 576.00 216.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -2617,7 +2807,7 @@ coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHwxOTIuMDB8MC4wMHwyMTYuMDA=)'>
-<text x='96.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='74.36px' lengthAdjust='spacingAndGlyphs'>Class I (Flat-top)</text>
+<text x='96.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='88.72px' lengthAdjust='spacingAndGlyphs'>Class I (Flat-top, 0°)</text>
 </g>
 <defs>
   <clipPath id='cpOS41MHwxODIuNTB8MjguNTF8MjA2LjUw'>
@@ -2628,7 +2818,7 @@ coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
 <polygon points='160.07,117.50 128.04,62.02 63.96,62.02 31.93,117.50 63.96,172.99 128.04,172.99 160.07,117.50 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
 <polyline points='160.07,117.50 128.04,62.02 ' style='stroke-width: 2.25; stroke: #E63946;' />
 <text x='96.00' y='188.05' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.42px' lengthAdjust='spacingAndGlyphs'>Aperture 4 (all res)</text>
-<text x='96.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='56.64px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (odd res)</text>
+<text x='96.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='59.81px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (even res)</text>
 </g>
 <defs>
   <clipPath id='cpMjAxLjUwfDM3NC41MHwyOC41MXwyMDYuNTA='>
@@ -2643,12 +2833,12 @@ coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpMTkyLjAwfDM4NC4wMHwwLjAwfDIxNi4wMA==)'>
-<text x='288.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='89.14px' lengthAdjust='spacingAndGlyphs'>Class II (Pointy-top)</text>
+<text x='288.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='108.78px' lengthAdjust='spacingAndGlyphs'>Class II (Pointy-top, 30°)</text>
 </g>
 <g clip-path='url(#cpMjAxLjUwfDM3NC41MHwyOC41MXwyMDYuNTA=)'>
 <polygon points='343.49,85.47 288.00,53.43 232.51,85.47 232.51,149.54 288.00,181.58 343.49,149.54 343.49,85.47 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
 <circle cx='343.49' cy='85.47' r='2.67' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
-<text x='288.00' y='191.22' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='59.81px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (even res)</text>
+<text x='288.00' y='191.22' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='56.64px' lengthAdjust='spacingAndGlyphs'>Aperture 3 (odd res)</text>
 </g>
 <defs>
   <clipPath id='cpMzkzLjUwfDU2Ni41MHwyOC41MXwyMDYuNTA='>
@@ -2663,12 +2853,12 @@ coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
   </clipPath>
 </defs>
 <g clip-path='url(#cpMzg0LjAwfDU3Ni4wMHwwLjAwfDIxNi4wMA==)'>
-<text x='480.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='80.23px' lengthAdjust='spacingAndGlyphs'>Class III (Skewed)</text>
+<text x='480.00' y='17.65' text-anchor='middle' style='font-size: 9.50px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='113.34px' lengthAdjust='spacingAndGlyphs'>Class III (Skewed, ~19.1°)</text>
 </g>
 <g clip-path='url(#cpMzkzLjUwfDU2Ni41MHwyOC41MXwyMDYuNTA=)'>
 <polygon points='544.07,117.50 512.04,62.02 447.96,62.02 415.93,117.50 447.96,172.99 512.04,172.99 544.07,117.50 ' style='stroke-width: 1.50; stroke: #7F7F7F; stroke-dasharray: 8.00,8.00;' />
-<polygon points='520.36,103.52 488.07,75.56 447.71,89.54 439.64,131.49 471.93,159.45 512.29,145.47 520.36,103.52 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
-<polyline points='506.70,117.50 506.69,117.04 506.68,116.57 506.66,116.10 506.63,115.63 506.59,115.16 506.55,114.70 506.50,114.23 506.43,113.77 506.36,113.30 506.29,112.84 506.20,112.38 506.11,111.92 506.00,111.47 505.89,111.01 505.78,110.56 505.65,110.11 505.52,109.66 505.38,109.21 505.23,108.77 ' style='stroke-width: 1.50; stroke: #E63946;' />
+<polygon points='515.74,94.11 477.61,74.86 441.87,98.25 444.26,140.90 482.39,160.15 518.13,136.76 515.74,94.11 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
+<polyline points='506.70,117.50 506.68,116.69 506.65,115.88 506.58,115.06 506.50,114.25 506.39,113.45 506.25,112.64 506.09,111.85 505.91,111.05 505.70,110.27 505.46,109.49 505.21,108.71 504.93,107.95 504.62,107.19 504.30,106.45 503.95,105.71 503.58,104.98 503.19,104.27 502.77,103.57 502.34,102.88 ' style='stroke-width: 1.50; stroke: #E63946;' />
 <text x='512.04' y='111.76' text-anchor='middle' style='font-size: 6.34px;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='14.84px' lengthAdjust='spacingAndGlyphs'>19.1°</text>
 <text x='480.00' y='188.05' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.42px' lengthAdjust='spacingAndGlyphs'>Aperture 7 (all res)</text>
 <text x='480.00' y='195.65' text-anchor='middle' style='font-size: 6.34px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='60.86px' lengthAdjust='spacingAndGlyphs'>Rotation accumulates</text>
@@ -2677,15 +2867,30 @@ coding on icosahedral aperture 3 hexagon discrete global grids</a></p>
 </svg></div>
 
 <p>For <strong>aperture 3</strong>, orientation alternates between Class
-I and II at each resolution level. For <strong>aperture 7</strong>, each
-level adds a rotation of arctan(√3/5) ≈ 19.1°.</p>
+I (flat-top) and Class II (pointy-top) at each resolution. For
+<strong>aperture 7</strong>, each level adds a rotation of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msqrt><mrow><mn>3</mn><mi>/</mi><mn>7</mn></mrow></msqrt><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>19.1</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\arctan(\sqrt{3/7}) \approx 19.1°</annotation></semantics></math>
+(Sahr, 2008, p. 176).</p>
 </div>
 <div class="section level2">
 <h2 id="pentagon-cells">Pentagon Cells<a class="anchor" aria-label="anchor" href="#pentagon-cells"></a>
 </h2>
-<p>At every resolution, exactly <strong>12 cells are pentagons</strong>
-(not hexagons). These occur at the icosahedron vertices and have area
-exactly 5/6 that of hexagonal cells.</p>
+<p>Exactly <strong>12 cells are pentagons</strong> at every resolution.
+This is a topological necessity derived from Euler’s formula (Coxeter,
+1973, p. 10):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>−</mo><mi>E</mi><mo>+</mo><mi>F</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">V - E + F = 2</annotation></semantics></math></p>
+<p>For a tiling with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+hexagons and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+pentagons on a sphere: -
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mi>h</mi><mo>+</mo><mn>5</mn><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">V = (6h + 5p)/3</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mi>h</mi><mo>+</mo><mn>5</mn><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">E = (6h + 5p)/2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><mi>h</mi><mo>+</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">F = h + p</annotation></semantics></math></p>
+<p>Substituting into Euler’s formula and simplifying yields
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">p = 12</annotation></semantics></math>,
+independent of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>.</p>
 
 <div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
@@ -4397,6 +4602,11 @@ exactly 5/6 that of hexagonal cells.</p>
 </svg></div>
 
 <table class="table">
+<colgroup>
+<col width="31%">
+<col width="31%">
+<col width="37%">
+</colgroup>
 <thead><tr class="header">
 <th>Location</th>
 <th>Latitude</th>
@@ -4410,29 +4620,25 @@ exactly 5/6 that of hexagonal cells.</p>
 </tr>
 <tr class="even">
 <td>Upper ring</td>
-<td>26.57°</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>26.57</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\arctan(1/2) \approx 26.57°</annotation></semantics></math></td>
 <td>0°, 72°, 144°, 216°, 288°</td>
 </tr>
 <tr class="odd">
 <td>Lower ring</td>
-<td>-26.57°</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>−</mi><mn>26.57</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">-\arctan(1/2) \approx -26.57°</annotation></semantics></math></td>
 <td>36°, 108°, 180°, 252°, 324°</td>
 </tr>
 </tbody>
 </table>
-<p>The latitude 26.57° = arctan(1/2) arises from the geometry of a
-regular icosahedron.</p>
+<p>Pentagon area is exactly 5/6 of hexagonal cell area at the same
+resolution (Sahr et al., 2003, p. 125).</p>
 </div>
 <div class="section level2">
 <h2 id="coordinate-systems">Coordinate Systems<a class="anchor" aria-label="anchor" href="#coordinate-systems"></a>
 </h2>
-<p>hexify uses several coordinate systems internally:</p>
+<p>hexify uses a multi-stage coordinate pipeline (Sahr, 2008,
+p. 178):</p>
 <table class="table">
-<colgroup>
-<col width="24%">
-<col width="36%">
-<col width="39%">
-</colgroup>
 <thead><tr class="header">
 <th>System</th>
 <th>Components</th>
@@ -4447,34 +4653,51 @@ regular icosahedron.</p>
 <tr class="even">
 <td><strong>Icosa Triangle</strong></td>
 <td>face (0-19), tx, ty</td>
-<td>Triangle face + normalized coords [0,1]</td>
+<td>Snyder projection output</td>
 </tr>
 <tr class="odd">
-<td><strong>Quad IJ</strong></td>
-<td>quad (0-11), i, j</td>
-<td>Quad + integer grid indices</td>
+<td><strong>Quad XY</strong></td>
+<td>quad (0-11), qx, qy</td>
+<td>Paired-triangle coordinates</td>
 </tr>
 <tr class="even">
+<td><strong>Quad IJ</strong></td>
+<td>quad (0-11), i, j</td>
+<td>Quantized grid indices</td>
+</tr>
+<tr class="odd">
 <td><strong>SEQNUM</strong></td>
 <td>integer</td>
-<td>Global cell ID (1-based, dggridR compatible)</td>
+<td>Global cell ID (1-based)</td>
 </tr>
 </tbody>
 </table>
 <div class="section level3">
 <h3 id="triangle-to-quad">Triangle to Quad<a class="anchor" aria-label="anchor" href="#triangle-to-quad"></a>
 </h3>
-<p>The 20 triangular faces are paired into 12 “quads” (rhombi). Each
-quad combines two adjacent triangles sharing an edge, simplifying the
-grid indexing.</p>
+<p>The 20 triangular faces are paired into 12 “quads” (diamond-shaped
+regions). Each quad contains two adjacent triangular faces sharing an
+edge, simplifying grid indexing (DGGRID Manual, 2023).</p>
+</div>
+<div class="section level3">
+<h3 id="seqnum-assignment">SEQNUM Assignment<a class="anchor" aria-label="anchor" href="#seqnum-assignment"></a>
+</h3>
+<p>The SEQNUM provides a unique integer for each cell. The formula
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>10</mn><mo>×</mo><msup><mi>a</mi><mi>r</mi></msup><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">N(r) = 10 \times a^r + 2</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+is the aperture and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
+is the resolution. SEQNUMs are assigned to maintain compatibility with
+dggridR.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="round-trip-accuracy">Round-Trip Accuracy<a class="anchor" aria-label="anchor" href="#round-trip-accuracy"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Round-trip accuracy test</span></span>
-<span><span class="va">original_lon</span> <span class="op">&lt;-</span> <span class="fl">16.37</span></span>
+<code class="sourceCode R"><span><span class="va">original_lon</span> <span class="op">&lt;-</span> <span class="fl">16.37</span></span>
 <span><span class="va">original_lat</span> <span class="op">&lt;-</span> <span class="fl">48.21</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original: (%.4f, %.4f)\n\n"</span>, <span class="va">original_lon</span>, <span class="va">original_lat</span><span class="op">)</span><span class="op">)</span></span>
@@ -4514,15 +4737,15 @@ grid indexing.</p>
 </tr>
 <tr class="even">
 <td><strong>Bounded distortion</strong></td>
-<td>Max angular distortion ≈ 17.3° at face edges</td>
+<td>Max angular distortion ~17.3° at face edges</td>
 </tr>
 <tr class="odd">
 <td><strong>Uniform topology</strong></td>
 <td>Hexagons have 6 neighbors; pentagons have 5</td>
 </tr>
 <tr class="even">
-<td><strong>No perfect nesting</strong></td>
-<td>Cells at different resolutions partially overlap</td>
+<td><strong>12 pentagons</strong></td>
+<td>Topological necessity from Euler’s formula</td>
 </tr>
 </tbody>
 </table>
@@ -4531,18 +4754,20 @@ grid indexing.</p>
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li><p>Snyder, J. P. (1992). <a href="https://www.researchgate.net/publication/296900899_Snyder_equal-area_map_projection_for_polyhedral_globes" class="external-link">An
-equal-area map projection for polyhedral globes</a>.
-<em>Cartographica</em>, 29(1), 10-21.</p></li>
-<li><p>Sahr, K., White, D., &amp; Kimerling, A. J. (2003). <a href="https://www.researchgate.net/publication/246557072_ISEA_discrete_global_grids" class="external-link">Geodesic
-discrete global grid systems</a>. <em>Cartography and Geographic
-Information Science</em>, 30(2), 121-134.</p></li>
-<li><p><a href="https://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html" class="external-link">Wolfram
-MathWorld: Lambert Azimuthal Equal-Area Projection</a></p></li>
-<li><p><a href="https://proj.org/en/stable/operations/projections/isea.html" class="external-link">PROJ
-Documentation: Icosahedral Snyder Equal Area</a></p></li>
-<li><p><a href="https://github.com/sahrk/DGGRID" class="external-link">DGGRID software</a> by
-Kevin Sahr</p></li>
+<li><p>Coxeter, H.S.M. (1973). <em>Regular Polytopes</em> (3rd ed.).
+Dover Publications.</p></li>
+<li><p>DGGRID Manual (2023). <em>DGGRID Version 7.8 Documentation</em>.
+<a href="https://github.com/sahrk/DGGRID" class="external-link uri">https://github.com/sahrk/DGGRID</a></p></li>
+<li><p>Sahr, K. (2008). Location coding on icosahedral aperture 3
+hexagon discrete global grids. <em>Computers, Environment and Urban
+Systems</em>, 32(3), 174-187.</p></li>
+<li><p>Sahr, K., White, D., &amp; Kimerling, A.J. (2003). Geodesic
+Discrete Global Grid Systems. <em>Cartography and Geographic Information
+Science</em>, 30(2), 121-134.</p></li>
+<li><p>Snyder, J.P. (1987). <em>Map Projections: A Working Manual</em>.
+U.S. Geological Survey Professional Paper 1395.</p></li>
+<li><p>Snyder, J.P. (1992). An equal-area map projection for polyhedral
+globes. <em>Cartographica</em>, 29(1), 10-21.</p></li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
