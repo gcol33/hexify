@@ -36,6 +36,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Practical Workflows</a></li>
   </ul>
 </li>
@@ -223,7 +224,8 @@ analysis. The <code>cell_id</code> becomes the shared spatial key:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">birds</span>, main <span class="op">=</span> <span class="st">"Bird Observations"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mammals</span>, main <span class="op">=</span> <span class="st">"Mammal Observations"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
+
+<div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
 <defs>
@@ -1071,7 +1073,8 @@ analysis. The <code>cell_id</code> becomes the shared spatial key:</p>
 <path d='M 413.73 198.05 L 411.03 196.40 L 408.54 197.79 L 408.78 200.82 L 411.46 202.44 L 413.93 201.06 L 413.73 198.05 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 </g>
 </g>
-</svg></div></p>
+</svg></div>
+
 <pre><code><span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span></code></pre>
 </div>
 <div class="section level3">
@@ -1424,7 +1427,8 @@ resolution.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">coord_sf</a></span><span class="op">(</span>xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">25</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">58</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"European Cities - Hexagonal Grid"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
+
+<div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
 <defs>
@@ -1885,7 +1889,8 @@ resolution.</p>
 <text x='97.72' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='197.09px' lengthAdjust='spacingAndGlyphs'>European Cities - Hexagonal Grid</text>
 </g>
 </g>
-</svg></div></p>
+</svg></div>
+
 </div>
 </div>
 <div class="section level2">
@@ -1899,7 +1904,8 @@ needs.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simplest approach - just plot the HexData</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="st">"Base R Plot"</span><span class="op">)</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
+
+<div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
 <defs>
@@ -2061,7 +2067,8 @@ needs.</p>
 <path d='M 217.19 93.83 L 224.99 103.53 L 238.19 104.78 L 244.12 96.18 L 236.65 86.05 L 222.85 85.02 L 217.19 93.83 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 </g>
 </g>
-</svg></div></p>
+</svg></div>
+
 <pre><code><span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span></code></pre>
 </div>
 <div class="section level3">
@@ -2073,7 +2080,8 @@ needs.</p>
 <span><span class="co"># Returns a ggplot object you can customize</span></span>
 <span><span class="fu"><a href="../reference/hexify_ggplot.html">hexify_ggplot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, title <span class="op">=</span> <span class="st">"ggplot2 hexify_ggplot"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
+
+<div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
 <defs>
@@ -3803,7 +3811,8 @@ needs.</p>
 <text x='53.55' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='124.56px' lengthAdjust='spacingAndGlyphs'>ggplot2 hexify_ggplot</text>
 </g>
 </g>
-</svg></div></p>
+</svg></div>
+
 </div>
 <div class="section level3">
 <h3 id="heatmaps-for-aggregated-data">Heatmaps for Aggregated Data<a class="anchor" aria-label="anchor" href="#heatmaps-for-aggregated-data"></a>
@@ -3827,7 +3836,8 @@ needs.</p>
 <span>  xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">15</span>, <span class="fl">30</span><span class="op">)</span>,</span>
 <span>  ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">60</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
+
+<div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
 <defs>
@@ -5527,7 +5537,8 @@ needs.</p>
 <text x='23.30' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='68.14px' lengthAdjust='spacingAndGlyphs'>City Counts</text>
 </g>
 </g>
-</svg></div></p>
+</svg></div>
+
 </div>
 </div>
 <div class="section level2">

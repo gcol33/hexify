@@ -3,6 +3,7 @@
 <url><loc>https://gcol33.github.io/hexify/articles/index.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/quickstart.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/theory.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/articles/visualization.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/workflows.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/authors.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/CLAUDE.html</loc></url>
@@ -103,7 +104,6 @@
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_map.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_plot.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_polygons.html</loc></url>
-<url><loc>https://gcol33.github.io/hexify/reference/hexify_print_resolutions.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_projection_stats.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_cell.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_icosa_tri.html</loc></url>
