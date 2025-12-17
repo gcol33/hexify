@@ -37,27 +37,31 @@ svg.inline-svg {
 
 /* Mobile: match code block full-width behavior */
 /* Code blocks use negative margins to expand on mobile - plots should too */
-/* Use :has() to target the parent <p> that contains an SVG/img */
+/* Note: <p><div> is invalid HTML - browser auto-closes <p>, so .svg-container becomes a sibling */
+/* Target .svg-container directly since it is no longer inside <p> after browser parsing */
 @media (max-width: 575.98px) {
-  /* Target the p element wrapping standalone SVGs/imgs to expand full width */
+  /* Target p wrapping standalone SVGs/imgs, and svg-container directly */
   p:has(> svg.inline-svg),
-  p:has(> img.r-plt) {
+  p:has(> img.r-plt),
+  .svg-container {
     margin-left: calc(var(--bs-gutter-x, 1.5rem) * -.5) !important;
     margin-right: calc(var(--bs-gutter-x, 1.5rem) * -.5) !important;
     width: calc(100% + var(--bs-gutter-x, 1.5rem)) !important;
     max-width: none !important;
   }
-  /* SVGs/imgs inside the expanded p */
+  /* SVGs/imgs - rectangular borders on mobile */
   p > svg.inline-svg,
-  p > img.r-plt {
+  p > img.r-plt,
+  .svg-container > svg.inline-svg {
     border-radius: 0 !important;
     border: 1px solid #DFD7CA !important;
     width: 100% !important;
     max-width: none !important;
   }
-  /* Dark mode mobile border - must use full border shorthand to override */
+  /* Dark mode mobile border */
   [data-bs-theme="dark"] p > svg.inline-svg,
-  [data-bs-theme="dark"] p > img.r-plt {
+  [data-bs-theme="dark"] p > img.r-plt,
+  [data-bs-theme="dark"] .svg-container > svg.inline-svg {
     border: 1px solid #495057 !important;
   }
   /* Figure elements */
@@ -259,5 +263,48 @@ svg.inline-svg path.map-fill {
 [data-bs-theme="dark"] svg.inline-svg path.map-fill {
   fill: #3D4F5F;  /* dark slate blue */
   stroke: #6A7A8A;  /* lighter gray-blue border */
+}
+
+/* World map paths with stroke: #CCCCCC (rnaturalearth/rnaturalearthdata style) */
+/* These paths have fill:none from CSS defaults, making them transparent */
+/* Add explicit fills for consistency between light and dark modes */
+svg.inline-svg path[style*="stroke: #CCCCCC"] {
+  fill: #D4E5F7 !important;  /* light steel blue - same as .map-fill */
+  stroke: #AAAAAA !important;  /* slightly darker border */
+}
+
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #CCCCCC"] {
+  fill: #3D4F5F !important;  /* dark slate blue - same as .map-fill */
+  stroke: #6A7A8A !important;  /* lighter border for dark mode */
+}
+
+/* Preserve custom stroke colors in dark mode */
+/* The base extra.css overwrites all .svglite path strokes with !important */
+/* These rules restore the original colors for hex grids and other custom elements */
+
+/* Cover image hex grid colors (green, orange, blue) */
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #1B9E77"] {
+  stroke: #1B9E77 !important;  /* green - preserve */
+}
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #D95F02"] {
+  stroke: #D95F02 !important;  /* orange - preserve */
+}
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #7570B3"] {
+  stroke: #7570B3 !important;  /* blue/purple - preserve */
+}
+
+/* Steel blue hex grid outlines */
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #4682B4"] {
+  stroke: #4682B4 !important;  /* steel blue - preserve */
+}
+
+/* Dark blue hexagon strokes (#00008B) - used in filled hex grids */
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #00008B"] {
+  stroke: #00008B !important;  /* dark blue - preserve */
+}
+
+/* Orange hex cells with brown border */
+[data-bs-theme="dark"] svg.inline-svg path[style*="stroke: #5D4E37"] {
+  stroke: #5D4E37 !important;  /* brown - preserve */
 }
 

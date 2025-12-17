@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8' ?>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='288.00pt' viewBox='0 0 504.00 288.00'>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00'>
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -30,58 +30,76 @@
 </defs>
 <rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
 <defs>
-  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwyODguMDA='>
-    <rect x='0.00' y='0.00' width='504.00' height='288.00' />
+  <clipPath id='cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA='>
+    <rect x='0.00' y='0.00' width='576.00' height='288.00' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwyODguMDA=)'>
+<g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA=)'>
 </g>
 <defs>
-  <clipPath id='cpMC4wMHwyNTIuMDB8MC4wMHwyODguMDA='>
-    <rect x='0.00' y='0.00' width='252.00' height='288.00' />
+  <clipPath id='cpMC4wMHwyODguMDB8MC4wMHwyODguMDA='>
+    <rect x='0.00' y='0.00' width='288.00' height='288.00' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMC4wMHwyNTIuMDB8MC4wMHwyODguMDA=)'>
-<text x='126.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='154.36px' lengthAdjust='spacingAndGlyphs'>Single Face Projection</text>
+<g clip-path='url(#cpMC4wMHwyODguMDB8MC4wMHwyODguMDA=)'>
+<text x='144.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='221.55px' lengthAdjust='spacingAndGlyphs'>Icosahedron inscribed in sphere</text>
 </g>
 <defs>
-  <clipPath id='cpMTQuNDB8MjM3LjYwfDQzLjIwfDI3My42MA=='>
-    <rect x='14.40' y='43.20' width='223.20' height='230.40' />
+  <clipPath id='cpMTQuNDB8MjczLjYwfDQzLjIwfDI3My42MA=='>
+    <rect x='14.40' y='43.20' width='259.20' height='230.40' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMTQuNDB8MjM3LjYwfDQzLjIwfDI3My42MA==)'>
-<polyline points='36.51,137.73 38.80,133.96 41.25,130.28 43.85,126.71 46.61,123.26 49.50,119.93 52.54,116.72 55.72,113.65 59.02,110.72 62.44,107.93 65.98,105.29 69.63,102.80 73.38,100.47 77.23,98.30 81.17,96.30 85.18,94.47 89.28,92.81 93.44,91.33 97.66,90.03 101.93,88.91 106.25,87.97 110.60,87.22 114.98,86.66 119.38,86.28 123.79,86.09 128.21,86.09 132.62,86.28 137.02,86.66 141.40,87.22 145.75,87.97 150.07,88.91 154.34,90.03 158.56,91.33 162.72,92.81 166.82,94.47 170.83,96.30 174.77,98.30 178.62,100.47 182.37,102.80 186.02,105.29 189.56,107.93 192.98,110.72 196.28,113.65 199.46,116.72 202.50,119.93 205.39,123.26 208.15,126.71 210.75,130.28 213.20,133.96 215.49,137.73 ' style='stroke-width: 1.50; stroke: #7F7F7F;' />
-<polygon points='70.89,210.07 126.00,120.51 181.11,210.07 70.89,210.07 ' style='stroke-width: 1.50; stroke: #457B9D; fill: #457B9D; fill-opacity: 0.30;' />
-<circle cx='126.00' cy='180.44' r='2.70' style='stroke-width: 0.75; fill: #000000;' />
-<text x='136.33' y='183.88' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='47.44px' lengthAdjust='spacingAndGlyphs'>face center</text>
-<line x1='126.00' y1='92.96' x2='126.00' y2='113.62' style='stroke-width: 1.50; stroke: #E63946;' />
-<polyline points='122.40,107.39 126.00,113.62 129.60,107.39 ' style='stroke-width: 1.50; stroke: #E63946;' />
-<text x='126.00' y='85.05' text-anchor='middle' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='54.34px' lengthAdjust='spacingAndGlyphs'>project down</text>
+<g clip-path='url(#cpMTQuNDB8MjczLjYwfDQzLjIwfDI3My42MA==)'>
+<polyline points='215.11,158.40 214.97,153.89 214.54,149.40 213.83,144.94 212.83,140.54 211.56,136.21 210.02,131.97 208.21,127.84 206.14,123.83 203.82,119.95 201.26,116.24 198.47,112.69 195.47,109.33 192.25,106.16 188.84,103.21 185.25,100.47 181.49,97.98 177.58,95.72 173.54,93.72 169.38,91.97 165.11,90.50 160.77,89.29 156.35,88.37 151.88,87.73 147.38,87.37 142.87,87.30 138.36,87.51 133.88,88.01 129.44,88.80 125.05,89.86 120.74,91.20 116.53,92.81 112.42,94.68 108.44,96.82 104.61,99.20 100.93,101.81 97.43,104.66 94.12,107.72 91.00,110.99 88.10,114.44 85.43,118.08 82.99,121.87 80.79,125.82 78.85,129.89 77.18,134.08 75.77,138.37 74.64,142.73 73.78,147.16 73.21,151.64 72.92,156.14 72.92,160.66 73.21,165.16 73.78,169.64 74.64,174.07 75.77,178.43 77.18,182.72 78.85,186.91 80.79,190.98 82.99,194.93 85.43,198.72 88.10,202.36 91.00,205.81 94.12,209.08 97.43,212.14 100.93,214.99 104.61,217.60 108.44,219.98 112.42,222.12 116.53,223.99 120.74,225.60 125.05,226.94 129.44,228.00 133.88,228.79 138.36,229.29 142.87,229.50 147.38,229.43 151.88,229.07 156.35,228.43 160.77,227.51 165.11,226.30 169.38,224.83 173.54,223.08 177.58,221.08 181.49,218.82 185.25,216.33 188.84,213.59 192.25,210.64 195.47,207.47 198.47,204.11 201.26,200.56 203.82,196.85 206.14,192.97 208.21,188.96 210.02,184.83 211.56,180.59 212.83,176.26 213.83,171.86 214.54,167.40 214.97,162.91 215.11,158.40 ' style='stroke-width: 1.50; stroke: #B3B3B3;' />
+<polygon points='144.00,131.38 118.30,150.05 104.29,103.75 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #E63946; fill-opacity: 0.40;' />
+<polygon points='118.30,150.05 128.12,180.26 79.75,179.28 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
+<polygon points='128.12,180.26 159.88,180.26 144.00,225.96 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
+<polygon points='159.88,180.26 169.70,150.05 208.25,179.28 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
+<polygon points='169.70,150.05 144.00,131.38 183.71,103.75 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #F4A261; fill-opacity: 0.40;' />
+<polygon points='144.00,131.38 118.30,150.05 128.12,180.26 159.88,180.26 169.70,150.05 ' style='stroke-width: 1.12; stroke: #4D4D4D; fill: #CCCCCC; fill-opacity: 0.30;' />
+<circle cx='144.00' cy='158.40' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='144.00' cy='131.38' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='118.30' cy='150.05' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='128.12' cy='180.26' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='159.88' cy='180.26' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='169.70' cy='150.05' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='104.29' cy='103.75' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='79.75' cy='179.28' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='144.00' cy='225.96' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='208.25' cy='179.28' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<circle cx='183.71' cy='103.75' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
+<text x='144.00' y='253.48' text-anchor='middle' style='font-size: 10.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='160.62px' lengthAdjust='spacingAndGlyphs'>Each triangular face = 1/20 of Earth</text>
 </g>
 <defs>
-  <clipPath id='cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA='>
-    <rect x='266.40' y='43.20' width='223.20' height='230.40' />
+  <clipPath id='cpMzAyLjQwfDU2MS42MHw0My4yMHwyNzMuNjA='>
+    <rect x='302.40' y='43.20' width='259.20' height='230.40' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA=)'>
+<g clip-path='url(#cpMzAyLjQwfDU2MS42MHw0My4yMHwyNzMuNjA=)'>
 </g>
 <defs>
-  <clipPath id='cpMjUyLjAwfDUwNC4wMHwwLjAwfDI4OC4wMA=='>
-    <rect x='252.00' y='0.00' width='252.00' height='288.00' />
+  <clipPath id='cpMjg4LjAwfDU3Ni4wMHwwLjAwfDI4OC4wMA=='>
+    <rect x='288.00' y='0.00' width='288.00' height='288.00' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMjUyLjAwfDUwNC4wMHwwLjAwfDI4OC4wMA==)'>
-<text x='378.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='175.95px' lengthAdjust='spacingAndGlyphs'>20 Faces Cover the Globe</text>
+<g clip-path='url(#cpMjg4LjAwfDU3Ni4wMHwwLjAwfDI4OC4wMA==)'>
+<text x='432.00' y='26.75' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='150.36px' lengthAdjust='spacingAndGlyphs'>Projection to one face</text>
 </g>
-<g clip-path='url(#cpMjY2LjQwfDQ4OS42MHw0My4yMHwyNzMuNjA=)'>
-<polyline points='446.89,158.40 446.75,154.03 446.33,149.68 445.64,145.36 444.68,141.10 443.45,136.90 441.95,132.80 440.20,128.79 438.20,124.91 435.95,121.16 433.47,117.56 430.77,114.12 427.86,110.86 424.74,107.79 421.44,104.93 417.96,102.28 414.32,99.86 410.53,97.68 406.62,95.74 402.59,94.05 398.45,92.62 394.24,91.45 389.96,90.56 385.64,89.94 381.28,89.59 376.91,89.52 372.54,89.73 368.20,90.21 363.89,90.97 359.64,92.00 355.47,93.30 351.39,94.86 347.41,96.68 343.56,98.74 339.84,101.05 336.28,103.58 332.89,106.34 329.68,109.30 326.66,112.47 323.85,115.82 321.26,119.34 318.89,123.01 316.77,126.83 314.89,130.78 313.27,134.84 311.90,138.99 310.80,143.22 309.98,147.52 309.42,151.85 309.15,156.21 309.15,160.59 309.42,164.95 309.98,169.28 310.80,173.58 311.90,177.81 313.27,181.96 314.89,186.02 316.77,189.97 318.89,193.79 321.26,197.46 323.85,200.98 326.66,204.33 329.68,207.50 332.89,210.46 336.28,213.22 339.84,215.75 343.56,218.06 347.41,220.12 351.39,221.94 355.47,223.50 359.64,224.80 363.89,225.83 368.20,226.59 372.54,227.07 376.91,227.28 381.28,227.21 385.64,226.86 389.96,226.24 394.24,225.35 398.45,224.18 402.59,222.75 406.62,221.06 410.53,219.12 414.32,216.94 417.96,214.52 421.44,211.87 424.74,209.01 427.86,205.94 430.77,202.68 433.47,199.24 435.95,195.64 438.20,191.89 440.20,188.01 441.95,184.00 443.45,179.90 444.68,175.70 445.64,171.44 446.33,167.12 446.75,162.77 446.89,158.40 ' style='stroke-width: 1.50;' />
-<polygon points='378.00,130.84 351.79,149.88 339.53,105.45 378.00,130.84 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
-<polygon points='351.79,149.88 361.80,180.69 315.76,178.62 351.79,149.88 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
-<polygon points='361.80,180.69 394.20,180.69 378.00,223.84 361.80,180.69 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #E63946; fill-opacity: 0.40;' />
-<polygon points='394.20,180.69 404.21,149.88 440.24,178.62 394.20,180.69 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
-<polygon points='404.21,149.88 378.00,130.84 416.47,105.45 404.21,149.88 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
-<polygon points='378.00,130.84 351.79,149.88 361.80,180.69 394.20,180.69 404.21,149.88 378.00,130.84 ' style='stroke-width: 0.75; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.50;' />
-<text x='378.00' y='250.59' text-anchor='middle' style='font-size: 10.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='172.39px' lengthAdjust='spacingAndGlyphs'>Each triangle ≈ 1/20 of Earth's surface</text>
+<g clip-path='url(#cpMzAyLjQwfDU2MS42MHw0My4yMHwyNzMuNjA=)'>
+<polyline points='341.93,126.40 344.24,122.60 346.70,118.90 349.32,115.31 352.09,111.83 355.01,108.48 358.07,105.25 361.26,102.16 364.58,99.21 368.03,96.40 371.59,93.74 375.26,91.24 379.04,88.89 382.91,86.71 386.88,84.70 390.92,82.86 395.04,81.19 399.23,79.70 403.48,78.39 407.78,77.26 412.12,76.32 416.50,75.56 420.91,74.99 425.34,74.61 429.78,74.42 434.22,74.42 438.66,74.61 443.09,74.99 447.50,75.56 451.88,76.32 456.22,77.26 460.52,78.39 464.77,79.70 468.96,81.19 473.08,82.86 477.12,84.70 481.09,86.71 484.96,88.89 488.74,91.24 492.41,93.74 495.97,96.40 499.42,99.21 502.74,102.16 505.93,105.25 508.99,108.48 511.91,111.83 514.68,115.31 517.30,118.90 519.76,122.60 522.07,126.40 ' style='stroke-width: 1.50; stroke: #7F7F7F;' />
+<polygon points='360.00,218.40 432.00,98.40 504.00,218.40 360.00,218.40 ' style='stroke-width: 1.50; stroke: #264653; fill: #457B9D; fill-opacity: 0.30;' />
+<circle cx='432.00' cy='178.40' r='3.24' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
+<text x='452.00' y='181.84' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='47.44px' lengthAdjust='spacingAndGlyphs'>face center</text>
+<circle cx='400.00' cy='130.40' r='2.16' style='stroke-width: 0.75; stroke: #2A9D8F; fill: #2A9D8F;' />
+<line x1='400.00' y1='138.40' x2='409.60' y2='186.40' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<polyline points='405.80,182.07 409.60,186.40 411.45,180.94 ' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<circle cx='456.00' cy='146.40' r='2.16' style='stroke-width: 0.75; stroke: #2A9D8F; fill: #2A9D8F;' />
+<line x1='456.00' y1='154.40' x2='448.80' y2='186.40' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<polyline points='447.09,180.90 448.80,186.40 452.70,182.17 ' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<circle cx='440.00' cy='114.40' r='2.16' style='stroke-width: 0.75; stroke: #2A9D8F; fill: #2A9D8F;' />
+<line x1='440.00' y1='122.40' x2='437.60' y2='186.40' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<polyline points='434.91,181.31 437.60,186.40 440.66,181.52 ' style='stroke-width: 1.12; stroke: #2A9D8F;' />
+<text x='432.00' y='249.04' text-anchor='middle' style='font-size: 10.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='178.50px' lengthAdjust='spacingAndGlyphs'>Lambert projection applied to each face</text>
 </g>
 </g>
 </svg>
