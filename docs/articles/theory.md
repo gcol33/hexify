@@ -25,31 +25,38 @@ The ISEA projection solves this by:
 ## The Lambert Azimuthal Equal-Area Projection
 
 The foundation of Snyder’s projection is Lambert’s azimuthal equal-area
-projection. The projection maps a sphere of radius $`R`$ to a tangent
-plane while preserving area (Snyder, 1987, p. 182).
+projection, developed by Johann Heinrich Lambert in 1772. The projection
+maps a sphere of radius $`R`$ to a tangent plane while **preserving area
+exactly** (Snyder, 1987, p. 182).
 
 ### Definition
 
-For a projection centered at point $`S`$ with spherical coordinates
-$`(\lambda_0, \phi_1)`$, a point $`P`$ at angular distance $`c`$ from
-the center projects to distance $`\rho = 2R\sin(c/2)`$ from the origin
-on the plane. This chord distance equals the straight-line distance
-through 3D space from $`S`$ to $`P`$.
+The Lambert azimuthal equal-area projection is defined by a mathematical
+constraint, not a geometric construction. For a projection centered at
+point $`S`$:
 
-The projection is **not** perspective-based; it is a synthetic
-mathematical construction designed to achieve equal-area and azimuthal
-properties simultaneously.
+- **Azimuthal property:** The direction (azimuth) from $`S`$ to any
+  point $`P`$ on the sphere equals the direction from the origin to
+  $`P'`$ on the plane
+- **Equal-area property:** Any region on the sphere maps to a region of
+  identical area on the plane
 
-![](theory_files/figure-html/lambert-geometry-1.svg)
-
-### Forward Formulas
-
-For a point at angular distance $`c`$ from the projection center, the
-projected distance is:
+These two constraints uniquely determine the radial distance formula.
+For a point $`P`$ at angular distance $`c`$ from the center (measured
+along the sphere surface), the projected distance from the origin is:
 
 ``` math
 \rho = 2R \sin\left(\frac{c}{2}\right)
 ```
+
+This is **not** a perspective projection and has no simple geometric
+interpretation like “chord distance” or “ray intersection.” The formula
+is derived analytically from the equal-area constraint (Snyder, 1987,
+p. 182-185).
+
+![](theory_files/figure-html/lambert-geometry-1.svg)
+
+### Forward Formulas
 
 For the oblique aspect centered at $`(\lambda_0, \phi_1)`$, the full
 formulas are (Snyder, 1987, eq. 24-2 to 24-4, p. 185):
