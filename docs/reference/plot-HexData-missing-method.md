@@ -138,18 +138,18 @@ if (FALSE) { # \dontrun{
 df <- data.frame(lon = runif(100, -10, 10), lat = runif(100, 40, 50))
 result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
-# Basic plot
+# Basic plot (basemap shown by default)
 plot(result)
 
-# With world basemap
-plot(result, basemap = TRUE)
+# Without basemap
+plot(result, basemap = FALSE)
 
 # Custom styling
-plot(result, basemap = TRUE,
+plot(result,
      grid_fill = "lightblue", grid_border = "darkblue",
      basemap_fill = "ivory")
 
 # Show original points
-plot(result, basemap = TRUE, show_points = TRUE)
+plot(result, show_points = TRUE)
 } # }
 ```

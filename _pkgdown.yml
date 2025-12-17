@@ -54,6 +54,7 @@ reference:
   - title: Visualization
     desc: Plotting and mapping functions
     contents:
+      - plot_grid
       - hexify_ggplot
       - hexify_heatmap
       - plot_world

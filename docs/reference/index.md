@@ -72,6 +72,8 @@ Functions for creating hexagonal grids over regions
 
 Plotting and mapping functions
 
+- [`plot_grid()`](https://gcol33.github.io/hexify/reference/plot_grid.md)
+  : Plot hexagonal grid clipped to a polygon boundary
 - [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
   : Create a ggplot2 visualization of HexData
 - [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)

@@ -239,12 +239,13 @@ hexify provides multiple ways to visualize your gridded data.
 #### Quick Plot with Base R
 
 The simplest approach uses the built-in
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method (basemap
+is shown by default):
 
 ``` r
 
-# Basic plot with world basemap
-plot(result, basemap = TRUE, main = "European Cities")
+# Basic plot with world basemap (default)
+plot(result, main = "European Cities")
 ```
 
 ![](quickstart_files/figure-html/plot-basic-1.svg)
@@ -257,7 +258,6 @@ plot(result, basemap = TRUE, main = "European Cities")
 
 # Custom colors and styling
 plot(result,
-     basemap = TRUE,
      grid_fill = "steelblue",
      grid_border = "darkblue",
      grid_alpha = 0.6,
@@ -276,7 +276,6 @@ plot(result,
 
 # Show original points overlaid on cells
 plot(result,
-     basemap = TRUE,
      show_points = TRUE,
      point_color = "red",
      point_size = 1.5,
@@ -297,8 +296,8 @@ returns a ggplot object:
 
 library(ggplot2)
 
-# Basic ggplot
-hexify_ggplot(result, basemap = TRUE, title = "European Cities")
+# Basic ggplot (basemap shown by default)
+hexify_ggplot(result, title = "European Cities")
 ```
 
 ![](quickstart_files/figure-html/ggplot-basic-1.svg)
