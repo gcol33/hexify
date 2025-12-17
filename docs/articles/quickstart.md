@@ -270,19 +270,38 @@ plot(result,
 
     #> Spherical geometry (s2) switched on
 
-#### Show Original Points
+#### Show Jittered Points
+
+Points are automatically jittered within their hexagon cells to prevent
+overlap, with size auto-scaled based on density:
 
 ``` r
 
-# Show original points overlaid on cells
+# Show jittered points (auto-sized based on density)
 plot(result,
      show_points = TRUE,
      point_color = "red",
-     point_size = 1.5,
-     main = "Cities with Cell Overlay")
+     main = "Cities with Jittered Points")
 ```
 
 ![](quickstart_files/figure-html/plot-points-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+Point size can be controlled with presets (“tiny”, “small”, “normal”,
+“large”, “very large”) or numeric values:
+
+``` r
+
+# Control point size with presets
+plot(result,
+     show_points = TRUE,
+     point_size = "large",
+     point_color = "darkblue",
+     main = "Large Points")
+```
+
+![](quickstart_files/figure-html/plot-points-sized-1.svg)
 
     #> Spherical geometry (s2) switched on
 

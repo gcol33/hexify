@@ -51,53 +51,6 @@ plus cell assignments from the hexification process."></head><body>
 plus cell assignments from the hexification process.</p>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="grid_info.html">grid_info</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="cells.html">cells</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="n_cells.html">n_cells</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="va">x</span><span class="op">$</span><span class="va">name</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="va">x</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="va">value</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="va">x</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span>, <span class="va">...</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="va">x</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData,ANY,missing'</span></span>
-<span><span class="va">x</span><span class="op">[[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">value</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/methods/show.html" class="external-link">show</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span>, row.names <span class="op">=</span> <span class="cn">NULL</span>, optional <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
-    </div>
 
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -106,25 +59,6 @@ is preserved in the <code>data</code> slot, while cell assignments are stored
 separately in <code>cell_id</code> and <code>cell_center</code>.</p>
 <p>Use <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> to get a combined data frame with cell columns.</p>
     </div>
-    <div class="section level2">
-    <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
-
-<ul><li><p><code>grid_info(HexData)</code>: Extract grid specification</p></li>
-<li><p><code>cells(HexData)</code>: Extract unique cell IDs</p></li>
-<li><p><code>n_cells(HexData)</code>: Count unique cells</p></li>
-<li><p><code>nrow(HexData)</code>: Get number of rows</p></li>
-<li><p><code>ncol(HexData)</code>: Get number of columns (includes virtual cell columns)</p></li>
-<li><p><code>dim(HexData)</code>: Get dimensions</p></li>
-<li><p><code>names(HexData)</code>: Get column names (includes virtual cell columns)</p></li>
-<li><p><code>$</code>: Access columns via $ (includes virtual cell columns)</p></li>
-<li><p><code>`$`(HexData) &lt;- value</code>: Set columns via $&lt;-</p></li>
-<li><p><code>[</code>: Subset rows/columns</p></li>
-<li><p><code>[[</code>: Subset single column (includes virtual cell columns)</p></li>
-<li><p><code>`[[`(x = HexData, i = ANY, j = missing) &lt;- value</code>: Set single column</p></li>
-<li><p><code>show(HexData)</code>: Print summary</p></li>
-<li><p><code>as.data.frame(HexData)</code>: Convert to data.frame (includes cell columns)</p></li>
-<li><p><code>as.list(HexData)</code>: Convert to list</p></li>
-</ul></div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>
 

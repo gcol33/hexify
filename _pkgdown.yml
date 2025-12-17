@@ -21,14 +21,18 @@ navbar:
       aria-label: GitHub
 
 reference:
-  - title: Core Classes
-    desc: S4 classes for grid specification and hexified data
+  - title: Core Functions
+    desc: Main functions for creating grids and hexifying data
     contents:
-      - HexGridInfo-class
-      - HexData-class
       - hex_grid
       - hexify
       - hexify_assign
+
+  - title: S4 Classes
+    desc: S4 class documentation (HexGridInfo and HexData)
+    contents:
+      - HexGridInfo-class
+      - HexData-class
 
   - title: HexData Methods
     desc: Methods for working with HexData objects
@@ -140,4 +144,6 @@ reference:
       - hexify-conversions
       - hexify-grid
       - hexify-stats
+      - HexGridInfo-methods
+      - HexData-methods
       - starts_with("plot,HexData")

@@ -218,15 +218,33 @@ plot(result,
      main = "Custom Styling")
 ```
 
-### Show Original Points
+### Show Jittered Points
+
+Points are automatically jittered within their hexagon cells, with size
+scaled based on density. The presets control how much of the densest
+hexagon is covered by points:
+
+- `"tiny"` (~10% coverage)
+- `"small"` (~25% coverage)
+- `"normal"` / `"auto"` (~50% coverage)
+- `"large"` (~70% coverage)
+- `"very large"` (~90% coverage)
 
 ```{r plot-points, fig.width=7, fig.height=5}
-# Show original points overlaid on cells
+# Show jittered points with default sizing
 plot(result,
      show_points = TRUE,
      point_color = "red",
-     point_size = 1.5,
-     main = "Cities with Cell Overlay")
+     main = "Cities with Jittered Points")
+```
+
+```{r plot-points-sized, fig.width=7, fig.height=5}
+# Smaller points for less visual clutter
+plot(result,
+     show_points = TRUE,
+     point_size = "small",
+     point_color = "darkblue",
+     main = "Small Points (~25% coverage)")
 ```
 
 ### ggplot2 with hexify_ggplot()

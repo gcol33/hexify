@@ -21,7 +21,7 @@ plot(
   grid_alpha = 0.7,
   fill = NULL,
   show_points = FALSE,
-  point_size = 1,
+  point_size = "auto",
   point_color = "red",
   crop = TRUE,
   crop_expand = 0.1,
@@ -90,11 +90,15 @@ plot(
 
 - show_points:
 
-  Show original points on top of cells (default FALSE)
+  Show original points on top of cells (default FALSE). Points are
+  jittered within their assigned hexagon to prevent overlap.
 
 - point_size:
 
-  Size of points if shown (default 1)
+  Size of points. Can be a number or a preset string: "tiny", "small",
+  "normal", "large", "very large". When set to "auto" (default when
+  show_points = TRUE), size is calculated based on cell density to
+  minimize overlap.
 
 - point_color:
 
@@ -149,7 +153,11 @@ plot(result,
      grid_fill = "lightblue", grid_border = "darkblue",
      basemap_fill = "ivory")
 
-# Show original points
+# Show jittered points (auto-sized based on density)
 plot(result, show_points = TRUE)
+
+# Control point size with presets
+plot(result, show_points = TRUE, point_size = "small")
+plot(result, show_points = TRUE, point_size = "large")
 } # }
 ```

@@ -43,9 +43,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="core-classes">Core Classes<a class="anchor" aria-label="anchor" href="#core-classes"></a></h2>
+      <h2 id="core-functions">Core Functions<a class="anchor" aria-label="anchor" href="#core-functions"></a></h2>
 
-      <div class="section-desc"><p>S4 classes for grid specification and hexified data</p></div>
+      <div class="section-desc"><p>Main functions for creating grids and hexifying data</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -53,20 +53,6 @@
 
 
       <dl><dt>
-
-          <code><a href="HexGridInfo-class.html">`$`(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-class.html">names(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-class.html">show(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-class.html">as.list(<i>&lt;HexGridInfo&gt;</i>)</a></code>
-
-        </dt>
-        <dd>HexGridInfo Class</dd>
-
-        <dt>
-
-          <code><a href="HexData-class.html">grid_info(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">n_cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">nrow(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">ncol(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">dim(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">names(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`$`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`$&lt;-`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">`[[&lt;-`(<i>&lt;HexData&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;missing&gt;</i>)</a></code> <code><a href="HexData-class.html">show(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">as.data.frame(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-class.html">as.list(<i>&lt;HexData&gt;</i>)</a></code>
-
-        </dt>
-        <dd>HexData Class</dd>
-
-        <dt>
 
           <code><a href="hex_grid.html">hex_grid()</a></code>
 
@@ -86,6 +72,29 @@
 
         </dt>
         <dd>Assign hex cells (ISEA3H, aperture 3) for lon/lat</dd>
+      </dl></div><div class="section level2">
+      <h2 id="s-classes">S4 Classes<a class="anchor" aria-label="anchor" href="#s-classes"></a></h2>
+
+      <div class="section-desc"><p>S4 class documentation (HexGridInfo and HexData)</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="HexGridInfo-class.html">HexGridInfo-class</a></code>
+
+        </dt>
+        <dd>HexGridInfo Class</dd>
+
+        <dt>
+
+          <code><a href="HexData-class.html">HexData-class</a></code>
+
+        </dt>
+        <dd>HexData Class</dd>
       </dl></div><div class="section level2">
       <h2 id="hexdata-methods">HexData Methods<a class="anchor" aria-label="anchor" href="#hexdata-methods"></a></h2>
 
@@ -619,6 +628,20 @@
 
         </dt>
         <dd>Grid Statistics</dd>
+
+        <dt>
+
+          <code><a href="HexGridInfo-methods.html">`$`(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-methods.html">names(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-methods.html">show(<i>&lt;HexGridInfo&gt;</i>)</a></code> <code><a href="HexGridInfo-methods.html">as.list(<i>&lt;HexGridInfo&gt;</i>)</a></code>
+
+        </dt>
+        <dd>HexGridInfo S4 Methods</dd>
+
+        <dt>
+
+          <code><a href="HexData-methods.html">grid_info(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">n_cells(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">nrow(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">ncol(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">dim(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">names(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">`$`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">`$&lt;-`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">`[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">`[[`(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">`[[&lt;-`(<i>&lt;HexData&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;missing&gt;</i>)</a></code> <code><a href="HexData-methods.html">show(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">as.data.frame(<i>&lt;HexData&gt;</i>)</a></code> <code><a href="HexData-methods.html">as.list(<i>&lt;HexData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>HexData S4 Methods</dd>
 
         <dt>
 

@@ -18,7 +18,7 @@
   grid_alpha = 0.7,
   fill = NULL,
   show_points = FALSE,
-  point_size = 1,
+  point_size = "auto",
   point_color = "red",
   crop = TRUE,
   crop_expand = 0.1,
@@ -57,9 +57,13 @@ temporarily disables S2 spherical geometry to avoid edge-crossing errors.}
 
 \item{fill}{Column name for fill mapping (optional)}
 
-\item{show_points}{Show original points on top of cells (default FALSE)}
+\item{show_points}{Show original points on top of cells (default FALSE).
+Points are jittered within their assigned hexagon to prevent overlap.}
 
-\item{point_size}{Size of points if shown (default 1)}
+\item{point_size}{Size of points. Can be a number or a preset string:
+"tiny", "small", "normal", "large", "very large". When set to "auto"
+(default when show_points = TRUE), size is calculated based on cell
+density to minimize overlap.}
 
 \item{point_color}{Color of points (default "red")}
 
@@ -99,8 +103,12 @@ plot(result,
      grid_fill = "lightblue", grid_border = "darkblue",
      basemap_fill = "ivory")
 
-# Show original points
+# Show jittered points (auto-sized based on density)
 plot(result, show_points = TRUE)
+
+# Control point size with presets
+plot(result, show_points = TRUE, point_size = "small")
+plot(result, show_points = TRUE, point_size = "large")
 }
 }
 \seealso{

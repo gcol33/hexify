@@ -3,28 +3,6 @@
 An S4 class representing a hexagonal grid specification. Stores all
 parameters needed for grid operations.
 
-## Usage
-
-``` r
-# S4 method for class 'HexGridInfo'
-x$name
-
-# S4 method for class 'HexGridInfo'
-names(x)
-
-# S4 method for class 'HexGridInfo'
-show(object)
-
-# S4 method for class 'HexGridInfo'
-as.list(x, ...)
-```
-
-## Arguments
-
-- x:
-
-  HexGridInfo object
-
 ## Details
 
 Create HexGridInfo objects using the
@@ -33,16 +11,6 @@ constructor function. Do not use `new("HexGridInfo", ...)` directly.
 
 The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.
-
-## Functions
-
-- `$`: Get aperture value
-
-- `names(HexGridInfo)`: Get slot names
-
-- `show(HexGridInfo)`: Print summary
-
-- `as.list(HexGridInfo)`: Convert to list
 
 ## Slots
 

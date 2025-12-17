@@ -3,23 +3,7 @@
 \docType{class}
 \name{HexGridInfo-class}
 \alias{HexGridInfo-class}
-\alias{$,HexGridInfo-method}
-\alias{names,HexGridInfo-method}
-\alias{show,HexGridInfo-method}
-\alias{as.list,HexGridInfo-method}
 \title{HexGridInfo Class}
-\usage{
-\S4method{$}{HexGridInfo}(x, name)
-
-\S4method{names}{HexGridInfo}(x)
-
-\S4method{show}{HexGridInfo}(object)
-
-\S4method{as.list}{HexGridInfo}(x, ...)
-}
-\arguments{
-\item{x}{HexGridInfo object}
-}
 \description{
 An S4 class representing a hexagonal grid specification. Stores all
 parameters needed for grid operations.
@@ -31,17 +15,6 @@ Do not use \code{new("HexGridInfo", ...)} directly.
 The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.
 }
-\section{Functions}{
-\itemize{
-\item \code{$}: Get aperture value
-
-\item \code{names(HexGridInfo)}: Get slot names
-
-\item \code{show(HexGridInfo)}: Print summary
-
-\item \code{as.list(HexGridInfo)}: Convert to list
-
-}}
 \section{Slots}{
 
 \describe{

@@ -197,37 +197,25 @@ MIT
 
 # Package index
 
-## Core Classes
+## Core Functions
 
-S4 classes for grid specification and hexified data
+Main functions for creating grids and hexifying data
 
-- [`` `$`( ``*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
-  [`names(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
-  [`show(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
-  [`as.list(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
-  : HexGridInfo Class
-- [`grid_info(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`n_cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`nrow(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`ncol(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`dim(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`names(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`` `$`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`` `$<-`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`` `[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`` `[[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`` `[[<-`( ``*`<HexData>`*`,`*`<ANY>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`show(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`as.data.frame(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  [`as.list(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
-  : HexData Class
 - [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
   : Create a Hexagonal Grid Specification
 - [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) :
   Assign hexagonal DGGS cell IDs to geographic points
 - [`hexify_assign()`](https://gcol33.github.io/hexify/reference/hexify_assign.md)
   : Assign hex cells (ISEA3H, aperture 3) for lon/lat
+
+## S4 Classes
+
+S4 class documentation (HexGridInfo and HexData)
+
+- [`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+  : HexGridInfo Class
+- [`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+  : HexData Class
 
 ## HexData Methods
 
@@ -407,6 +395,27 @@ Internal documentation topics
   : Core Grid Construction
 - [`hexify-stats`](https://gcol33.github.io/hexify/reference/hexify-stats.md)
   : Grid Statistics
+- [`` `$`( ``*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-methods.md)
+  [`names(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-methods.md)
+  [`show(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-methods.md)
+  [`as.list(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-methods.md)
+  : HexGridInfo S4 Methods
+- [`grid_info(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`n_cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`nrow(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`ncol(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`dim(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`names(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`` `$`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`` `$<-`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`` `[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`` `[[`( ``*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`` `[[<-`( ``*`<HexData>`*`,`*`<ANY>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`show(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`as.data.frame(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  [`as.list(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
+  : HexData S4 Methods
 - [`plot(`*`<HexData>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
   : Plot HexData objects
 

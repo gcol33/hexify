@@ -3,53 +3,7 @@
 \docType{class}
 \name{HexData-class}
 \alias{HexData-class}
-\alias{grid_info,HexData-method}
-\alias{cells,HexData-method}
-\alias{n_cells,HexData-method}
-\alias{nrow,HexData-method}
-\alias{ncol,HexData-method}
-\alias{dim,HexData-method}
-\alias{names,HexData-method}
-\alias{$,HexData-method}
-\alias{$<-,HexData-method}
-\alias{[,HexData-method}
-\alias{[[,HexData-method}
-\alias{[[<-,HexData,ANY,missing-method}
-\alias{show,HexData-method}
-\alias{as.data.frame,HexData-method}
-\alias{as.list,HexData-method}
 \title{HexData Class}
-\usage{
-\S4method{grid_info}{HexData}(x)
-
-\S4method{cells}{HexData}(x)
-
-\S4method{n_cells}{HexData}(x)
-
-\S4method{nrow}{HexData}(x)
-
-\S4method{ncol}{HexData}(x)
-
-\S4method{dim}{HexData}(x)
-
-\S4method{names}{HexData}(x)
-
-\S4method{$}{HexData}(x, name)
-
-\S4method{$}{HexData}(x, name) <- value
-
-\S4method{[}{HexData}(x, i, j, ..., drop = FALSE)
-
-\S4method{[[}{HexData}(x, i)
-
-\S4method{[[}{HexData,ANY,missing}(x, i, j) <- value
-
-\S4method{show}{HexData}(object)
-
-\S4method{as.data.frame}{HexData}(x, row.names = NULL, optional = FALSE, ...)
-
-\S4method{as.list}{HexData}(x, ...)
-}
 \description{
 An S4 class representing hexified data. Contains the original user data
 plus cell assignments from the hexification process.
@@ -61,39 +15,6 @@ separately in \code{cell_id} and \code{cell_center}.
 
 Use \code{as.data.frame()} to get a combined data frame with cell columns.
 }
-\section{Functions}{
-\itemize{
-\item \code{grid_info(HexData)}: Extract grid specification
-
-\item \code{cells(HexData)}: Extract unique cell IDs
-
-\item \code{n_cells(HexData)}: Count unique cells
-
-\item \code{nrow(HexData)}: Get number of rows
-
-\item \code{ncol(HexData)}: Get number of columns (includes virtual cell columns)
-
-\item \code{dim(HexData)}: Get dimensions
-
-\item \code{names(HexData)}: Get column names (includes virtual cell columns)
-
-\item \code{$}: Access columns via $ (includes virtual cell columns)
-
-\item \code{`$`(HexData) <- value}: Set columns via $<-
-
-\item \code{[}: Subset rows/columns
-
-\item \code{[[}: Subset single column (includes virtual cell columns)
-
-\item \code{`[[`(x = HexData, i = ANY, j = missing) <- value}: Set single column
-
-\item \code{show(HexData)}: Print summary
-
-\item \code{as.data.frame(HexData)}: Convert to data.frame (includes cell columns)
-
-\item \code{as.list(HexData)}: Convert to list
-
-}}
 \section{Slots}{
 
 \describe{

@@ -51,29 +51,7 @@ parameters needed for grid operations."></head><body>
 parameters needed for grid operations.</p>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
-<span><span class="va">x</span><span class="op">$</span><span class="va">name</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/methods/show.html" class="external-link">show</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
-    </div>
 
-    <div class="section level2">
-    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-
-
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>HexGridInfo object</p></dd>
-
-</dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Create HexGridInfo objects using the <code><a href="hex_grid.html">hex_grid</a></code> constructor function.
@@ -81,14 +59,6 @@ Do not use <code>new("HexGridInfo", ...)</code> directly.</p>
 <p>The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.</p>
     </div>
-    <div class="section level2">
-    <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
-
-<ul><li><p><code>$</code>: Get aperture value</p></li>
-<li><p><code>names(HexGridInfo)</code>: Get slot names</p></li>
-<li><p><code>show(HexGridInfo)</code>: Print summary</p></li>
-<li><p><code>as.list(HexGridInfo)</code>: Convert to list</p></li>
-</ul></div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>
 

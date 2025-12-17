@@ -208,14 +208,27 @@ setGeneric("n_cells", function(x) standardGeneric("n_cells"))
 # ACCESSORS FOR HexGridInfo
 # =============================================================================
 
-#' @describeIn HexGridInfo-class Get aperture value
+#' HexGridInfo S4 Methods
+#'
+#' S4 methods for HexGridInfo objects. These provide standard R operations
+#' like `$`, `names()`, `show()`, and `as.list()`.
+#'
+#' @name HexGridInfo-methods
 #' @param x HexGridInfo object
+#' @param name Slot name
+#' @param object HexGridInfo object (for show)
+#' @param ... Additional arguments
+#' @keywords internal
+NULL
+
+#' @rdname HexGridInfo-methods
 #' @export
 setMethod("$", "HexGridInfo", function(x, name) {
   slot(x, name)
 })
 
-#' @describeIn HexGridInfo-class Get slot names
+#' @rdname HexGridInfo-methods
+#' @keywords internal
 #' @export
 setMethod("names", "HexGridInfo", function(x) {
   slotNames(x)
@@ -225,49 +238,74 @@ setMethod("names", "HexGridInfo", function(x) {
 # ACCESSORS FOR HexData
 # =============================================================================
 
-#' @describeIn HexData-class Extract grid specification
+#' HexData S4 Methods
+#'
+#' S4 methods for HexData objects. These provide standard R operations
+#' for accessing data, subsetting, and conversion.
+#'
+#' @name HexData-methods
+#' @param x HexData object
+#' @param name Column name
+#' @param object HexData object (for show)
+#' @param i,j Row/column indices
+#' @param value Replacement value
+#' @param drop Logical, whether to drop dimensions
+#' @param row.names Optional row names
+#' @param optional Logical (ignored)
+#' @param ... Additional arguments
+#' @keywords internal
+NULL
+
+#' @rdname HexData-methods
 #' @export
 setMethod("grid_info", "HexData", function(x) {
   x@grid
 })
 
-#' @describeIn HexData-class Extract unique cell IDs
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("cells", "HexData", function(x) {
   unique(x@cell_id)
 })
 
-#' @describeIn HexData-class Count unique cells
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("n_cells", "HexData", function(x) {
   length(unique(x@cell_id))
 })
 
-#' @describeIn HexData-class Get number of rows
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("nrow", "HexData", function(x) {
   nrow(x@data)
 })
 
-#' @describeIn HexData-class Get number of columns (includes virtual cell columns)
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("ncol", "HexData", function(x) {
   ncol(x@data) + 5L  # +5 for cell_id, cell_cen_lon, cell_cen_lat, cell_area_km2, cell_diag_km
 })
 
-#' @describeIn HexData-class Get dimensions
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("dim", "HexData", function(x) {
   dim(x@data)
 })
 
-#' @describeIn HexData-class Get column names (includes virtual cell columns)
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("names", "HexData", function(x) {
   c(names(x@data), "cell_id", "cell_cen_lon", "cell_cen_lat", "cell_area_km2", "cell_diag_km")
 })
 
-#' @describeIn HexData-class Access columns via $ (includes virtual cell columns)
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("$", "HexData", function(x, name) {
   # Virtual cell columns
@@ -290,14 +328,16 @@ setMethod("$", "HexData", function(x, name) {
   x@data[[name]]
 })
 
-#' @describeIn HexData-class Set columns via $<-
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("$<-", "HexData", function(x, name, value) {
   x@data[[name]] <- value
   x
 })
 
-#' @describeIn HexData-class Subset rows/columns
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("[", c("HexData", "ANY", "ANY"), function(x, i, j, ..., drop = FALSE) {
   # Create new HexData with subsetted data
@@ -325,7 +365,8 @@ setMethod("[", c("HexData", "ANY", "ANY"), function(x, i, j, ..., drop = FALSE) 
   }
 })
 
-#' @describeIn HexData-class Subset single column (includes virtual cell columns)
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("[[", c("HexData", "ANY"), function(x, i) {
   # Virtual cell columns by name
@@ -339,7 +380,8 @@ setMethod("[[", c("HexData", "ANY"), function(x, i) {
   x@data[[i]]
 })
 
-#' @describeIn HexData-class Set single column
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value) {
   x@data[[i]] <- value
@@ -350,7 +392,8 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 # SHOW / PRINT METHODS
 # =============================================================================
 
-#' @describeIn HexGridInfo-class Print summary
+#' @rdname HexGridInfo-methods
+#' @keywords internal
 #' @export
 setMethod("show", "HexGridInfo", function(object) {
   cat("HexGridInfo Specification\n")
@@ -381,7 +424,8 @@ setMethod("show", "HexGridInfo", function(object) {
   invisible(object)
 })
 
-#' @describeIn HexData-class Print summary
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("show", "HexData", function(object) {
   cat("HexData Object\n")
@@ -437,7 +481,8 @@ setMethod("show", "HexData", function(object) {
 # COERCION METHODS
 # =============================================================================
 
-#' @describeIn HexData-class Convert to data.frame (includes cell columns)
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
                                                 optional = FALSE, ...) {
@@ -459,7 +504,8 @@ setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
   df
 })
 
-#' @describeIn HexGridInfo-class Convert to list
+#' @rdname HexGridInfo-methods
+#' @keywords internal
 #' @export
 setMethod("as.list", "HexGridInfo", function(x, ...) {
   list(
@@ -471,7 +517,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
   )
 })
 
-#' @describeIn HexData-class Convert to list
+#' @rdname HexData-methods
+#' @keywords internal
 #' @export
 setMethod("as.list", "HexData", function(x, ...) {
   list(
