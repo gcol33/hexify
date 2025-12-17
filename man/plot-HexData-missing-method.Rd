@@ -8,6 +8,7 @@
   x,
   y,
   basemap = TRUE,
+  clip_basemap = TRUE,
   basemap_fill = "gray90",
   basemap_border = "gray50",
   basemap_lwd = 0.5,
@@ -36,6 +37,9 @@
 \item \code{FALSE} or \code{NULL}: No basemap
 \item sf object: Custom basemap
 }}
+
+\item{clip_basemap}{Clip basemap to data extent (default TRUE). Clipping
+temporarily disables S2 spherical geometry to avoid edge-crossing errors.}
 
 \item{basemap_fill}{Fill color for basemap (default "gray90")}
 

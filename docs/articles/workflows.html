@@ -221,14 +221,8 @@ analysis. The <code>cell_id</code> becomes the shared spatial key:</p>
 <span></span>
 <span><span class="co"># Both plots use the same grid automatically</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">birds</span>, main <span class="op">=</span> <span class="st">"Bird Observations"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span>
 <span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mammals</span>, main <span class="op">=</span> <span class="st">"Mammal Observations"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mammals</span>, main <span class="op">=</span> <span class="st">"Mammal Observations"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -1904,10 +1898,7 @@ needs.</p>
 </h3>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simplest approach - just plot the HexData</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="st">"Base R Plot"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="st">"Base R Plot"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>

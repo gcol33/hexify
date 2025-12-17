@@ -11,6 +11,7 @@ plot(
   x,
   y,
   basemap = TRUE,
+  clip_basemap = TRUE,
   basemap_fill = "gray90",
   basemap_border = "gray50",
   basemap_lwd = 0.5,
@@ -49,6 +50,11 @@ plot(
   - `FALSE` or `NULL`: No basemap
 
   - sf object: Custom basemap
+
+- clip_basemap:
+
+  Clip basemap to data extent (default TRUE). Clipping temporarily
+  disables S2 spherical geometry to avoid edge-crossing errors.
 
 - basemap_fill:
 

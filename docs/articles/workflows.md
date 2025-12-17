@@ -147,14 +147,8 @@ par(mfrow = c(1, 2), mar = c(2, 2, 3, 1))
 
 # Both plots use the same grid automatically
 plot(birds, main = "Bird Observations", basemap = TRUE)
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 #> Spherical geometry (s2) switched on
 plot(mammals, main = "Mammal Observations", basemap = TRUE)
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 ```
 
 ![](workflows_files/figure-html/visual-confirmation-1.svg)
@@ -512,9 +506,6 @@ hexify provides multiple visualization approaches for different needs.
 
 # Simplest approach - just plot the HexData
 plot(result, basemap = TRUE, main = "Base R Plot")
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 ```
 
 ![](workflows_files/figure-html/viz-base-1.svg)

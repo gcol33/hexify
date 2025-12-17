@@ -2,7 +2,7 @@
 # Tests for visualization functions
 #
 # Functions tested:
-# - hexify_map()
+# - plot() method for HexData
 # - hexify_heatmap()
 # - plot_world()
 # - Internal helper functions
@@ -290,7 +290,7 @@ test_that("prepare_hex_sf merges extra columns", {
 })
 
 # =============================================================================
-# HEXIFY_MAP
+# HEXIFY_WORLD DATA
 # =============================================================================
 
 test_that("hexify_world data is available and valid", {
@@ -300,111 +300,6 @@ test_that("hexify_world data is available and valid", {
   expect_true("name" %in% names(hexify_world))
   expect_true("continent" %in% names(hexify_world))
   expect_equal(sf::st_crs(hexify_world)$epsg, 4326)
-})
-
-test_that("hexify_map works with hexify output", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    lon = c(0, 5, 10),
-    lat = c(45, 46, 45)
-  )
-  result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
-
-  expect_silent(hexify_map(result))
-})
-
-test_that("hexify_map works with sf polygon input", {
-  skip_if_not_installed("sf")
-
-  cell_ids <- c(12847, 12532)
-  polys <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
-
-  expect_silent(hexify_map(polys))
-})
-
-test_that("hexify_map works with built-in world basemap", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    lon = c(0, 5, 10),
-    lat = c(45, 46, 45)
-  )
-  result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
-
-  expect_no_error(hexify_map(result, basemap = "world"))
-})
-
-test_that("hexify_map works with custom sf basemap", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    lon = c(0, 5, 10),
-    lat = c(45, 46, 45)
-  )
-  result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
-
-  expect_no_error(hexify_map(result, basemap = hexify_world))
-})
-
-test_that("hexify_map respects xlim and ylim", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    lon = c(0, 5, 10),
-    lat = c(45, 46, 45)
-  )
-  result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
-
-  expect_silent(hexify_map(result, xlim = c(-5, 15), ylim = c(40, 50)))
-})
-
-test_that("hexify_map validates input", {
-
-  expect_error(hexify_map(data.frame(x = 1)), "HexData object or an sf object")
-  expect_error(hexify_map(data.frame(cell_id = 1)), "cell_area")
-  expect_error(hexify_map(list()), "HexData object or an sf object")
-})
-
-test_that("hexify_map rejects invalid basemap types", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94)
-  )
-
-  expect_error(hexify_map(df, basemap = 123), "basemap must be")
-  expect_error(hexify_map(df, basemap = "invalid"), "basemap must be")
-})
-
-test_that("hexify_map custom colors work", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94)
-  )
-
-  expect_no_error(hexify_map(df,
-                              fill = "red",
-                              border = "darkred",
-                              alpha = 0.5,
-                              basemap = "world",
-                              basemap_fill = "ivory",
-                              basemap_border = "gray"))
-})
-
-test_that("hexify_map respects lwd parameters", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94)
-  )
-
-  expect_silent(hexify_map(df, lwd = 2))
-  expect_no_error(hexify_map(df, basemap = "world", lwd = 0.5, basemap_lwd = 2))
 })
 
 # =============================================================================

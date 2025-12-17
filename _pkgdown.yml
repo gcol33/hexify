@@ -46,6 +46,7 @@ reference:
     contents:
       - grid_rect
       - grid_global
+      - grid_clip
       - cell_to_sf
       - lonlat_to_cell
       - cell_to_lonlat
@@ -54,7 +55,6 @@ reference:
     desc: Plotting and mapping functions
     contents:
       - hexify_ggplot
-      - hexify_map
       - hexify_heatmap
       - plot_world
       - hexify_world

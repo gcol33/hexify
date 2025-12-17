@@ -278,21 +278,6 @@ hexify_heatmap(
 )
 ```
 
-### Simple Map with hexify_map()
-
-For quick base R visualization:
-
-```{r hexify-map, fig.width=7, fig.height=5}
-# Quick map visualization
-hexify_map(
-  result,
-  basemap = "world",
-  fill = "steelblue",
-  border = "darkblue",
-  main = "European Cities Grid"
-)
-```
-
 ### World Map Helper
 
 ```{r plot-world, fig.width=7, fig.height=4}
@@ -714,7 +699,6 @@ all(result@cell_id == ref$seqnum)
 |----------|-------------|
 | `plot()` | Base R plot method for HexData |
 | `hexify_ggplot()` | ggplot2 plotting for HexData |
-| `hexify_map()` | Quick map visualization |
 | `hexify_heatmap()` | ggplot2 choropleth heatmap |
 | `plot_world()` | Quick world map |
 

@@ -256,6 +256,8 @@ Functions for creating hexagonal grids over regions
   : Generate a rectangular grid of hexagons
 - [`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md)
   : Generate a global hexagon grid
+- [`grid_clip()`](https://gcol33.github.io/hexify/reference/grid_clip.md)
+  : Clip hexagon grid to polygon boundary
 - [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
   : Convert cell IDs to sf polygons
 - [`lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md)
@@ -269,8 +271,6 @@ Plotting and mapping functions
 
 - [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
   : Create a ggplot2 visualization of HexData
-- [`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md)
-  : Plot hexagonal grid cells with optional basemap
 - [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
   : Create a heatmap visualization of hexagonal grid cells
 - [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)

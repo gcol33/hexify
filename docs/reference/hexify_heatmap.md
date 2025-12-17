@@ -155,10 +155,8 @@ A ggplot2 object that can be further customized or saved.
 ## Details
 
 This function provides publication-quality heatmap visualizations of
-hexagonal grids using ggplot2. Unlike
-[`hexify_map`](https://gcol33.github.io/hexify/reference/hexify_map.md),
-it returns a ggplot object that can be further customized with standard
-ggplot2 functions.
+hexagonal grids using ggplot2. Unlike `hexify_map`, it returns a ggplot
+object that can be further customized with standard ggplot2 functions.
 
 ## Color Scales
 
@@ -202,13 +200,11 @@ Common projections:
 
 ## See also
 
-[`hexify_map`](https://gcol33.github.io/hexify/reference/hexify_map.md)
-for base R plotting,
+`hexify_map` for base R plotting,
 [`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
 to generate polygons manually
 
 Other visualization:
-[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
 [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
 
 ## Examples

@@ -176,7 +176,6 @@ hexify_heatmap(result, value = "count", basemap = "world") +
 \code{\link{cell_to_sf}} to generate polygons manually
 
 Other visualization: 
-\code{\link{hexify_map}()},
 \code{\link{plot_world}()}
 }
 \concept{visualization}

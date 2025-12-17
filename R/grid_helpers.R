@@ -281,6 +281,110 @@ grid_global <- function(grid) {
   cell_to_sf(unique_cells, g)
 }
 
+#' Clip hexagon grid to polygon boundary
+#'
+#' Creates hexagon polygons clipped to a given polygon boundary. This is useful
+#' for generating grids that conform to country borders, study areas, or other
+#' irregular boundaries.
+#'
+#' @param boundary An sf/sfc polygon to clip to. Can be a country boundary,
+#'   study area, or any polygon geometry.
+#' @param grid A HexGridInfo object specifying the grid parameters
+#' @param crop If TRUE (default), cells are cropped to the boundary. If FALSE,
+#'   only cells whose centroids fall within the boundary are kept (no cropping).
+#'
+#' @return sf object with hexagon polygons clipped to the boundary
+#'
+#' @details
+#' The function first generates a rectangular grid covering the bounding box
+#' of the input polygon, then clips or filters cells to the boundary.
+#'
+#' When \code{crop = TRUE}, hexagons are geometrically intersected with the
+#' boundary, which may produce partial hexagons at the edges. When
+#' \code{crop = FALSE}, only complete hexagons whose centroids fall within
+#' the boundary are returned.
+#'
+#' @seealso \code{\link{grid_rect}} for rectangular grids,
+#'   \code{\link{grid_global}} for global grids
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' # Get France boundary from built-in world map
+#' france <- hexify_world[hexify_world$name == "France", ]
+#'
+#' # Create grid clipped to France
+#' grid <- hex_grid(area_km2 = 2000)
+#' france_grid <- grid_clip(france, grid)
+#'
+#' # Plot result
+#' library(ggplot2)
+#' ggplot() +
+#'   geom_sf(data = france, fill = "gray95") +
+#'   geom_sf(data = france_grid, fill = alpha("steelblue", 0.3),
+#'           color = "steelblue") +
+#'   theme_minimal()
+#'
+#' # Keep only complete hexagons (no cropping)
+#' france_grid_complete <- grid_clip(france, grid, crop = FALSE)
+#' }
+grid_clip <- function(boundary, grid, crop = TRUE) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("Package 'sf' is required")
+  }
+
+  # Validate boundary
+  if (!inherits(boundary, c("sf", "sfc"))) {
+    stop("boundary must be an sf or sfc object")
+  }
+
+  g <- extract_grid(grid)
+
+  # Get bounding box of boundary
+  bbox <- sf::st_bbox(boundary)
+
+  # Disable S2 for all spatial operations (spherical geometry can cause issues)
+  s2_state <- sf::sf_use_s2()
+  sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+
+  # Generate rectangular grid covering the boundary
+  rect_grid <- grid_rect(bbox, g)
+  rect_grid <- sf::st_make_valid(rect_grid)
+
+  # Get boundary geometry and ensure it's valid
+  boundary_geom <- sf::st_geometry(boundary)
+  boundary_geom <- sf::st_make_valid(boundary_geom)
+  if (inherits(boundary, "sf") || length(boundary_geom) > 1) {
+    boundary_geom <- sf::st_union(boundary_geom)
+    boundary_geom <- sf::st_make_valid(boundary_geom)
+  }
+
+  if (crop) {
+    # Crop hexagons to boundary
+    result <- tryCatch({
+      suppressWarnings(sf::st_intersection(rect_grid, boundary_geom))
+    }, error = function(e) {
+      # If intersection fails, try with buffered geometries
+      boundary_buf <- sf::st_buffer(boundary_geom, 0)
+      rect_buf <- sf::st_buffer(rect_grid, 0)
+      suppressWarnings(sf::st_intersection(rect_buf, boundary_buf))
+    })
+    # Keep only polygon geometries (filter out points/lines from edge cases)
+    geom_types <- sf::st_geometry_type(result)
+    result <- result[geom_types %in% c("POLYGON", "MULTIPOLYGON"), ]
+  } else {
+    # Filter to hexagons whose centroids fall within boundary
+    centroids <- suppressWarnings(sf::st_centroid(rect_grid))
+    within <- suppressWarnings(
+      sf::st_within(centroids, boundary_geom, sparse = FALSE)
+    )
+    result <- rect_grid[apply(within, 1, any), ]
+  }
+
+  result
+}
+
 # =============================================================================
 # HIERARCHICAL INDEX HELPERS
 # =============================================================================

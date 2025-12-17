@@ -245,9 +245,6 @@ The simplest approach uses the built-in
 
 # Basic plot with world basemap
 plot(result, basemap = TRUE, main = "European Cities")
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 ```
 
 ![](quickstart_files/figure-html/plot-basic-1.svg)
@@ -267,9 +264,6 @@ plot(result,
      basemap_fill = "ivory",
      basemap_border = "gray50",
      main = "Custom Styling")
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 ```
 
 ![](quickstart_files/figure-html/plot-custom-1.svg)
@@ -287,9 +281,6 @@ plot(result,
      point_color = "red",
      point_size = 1.5,
      main = "Cities with Cell Overlay")
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 ```
 
 ![](quickstart_files/figure-html/plot-points-1.svg)
@@ -350,29 +341,6 @@ hexify_heatmap(
 ```
 
 ![](quickstart_files/figure-html/heatmap-demo-1.svg)
-
-#### Simple Map with hexify_map()
-
-For quick base R visualization:
-
-``` r
-
-# Quick map visualization
-hexify_map(
-  result,
-  basemap = "world",
-  fill = "steelblue",
-  border = "darkblue",
-  main = "European Cities Grid"
-)
-#> Spherical geometry (s2) switched off
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
-```
-
-![](quickstart_files/figure-html/hexify-map-1.svg)
-
-    #> Spherical geometry (s2) switched on
 
 #### World Map Helper
 
@@ -868,7 +836,6 @@ all(result@cell_id == ref$seqnum)
 |----|----|
 | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Base R plot method for HexData |
 | [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md) | ggplot2 plotting for HexData |
-| [`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md) | Quick map visualization |
 | [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md) | ggplot2 choropleth heatmap |
 | [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md) | Quick world map |
 

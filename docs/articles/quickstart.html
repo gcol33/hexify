@@ -6437,10 +6437,7 @@ it to multiple datasets.</p>
 method:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Basic plot with world basemap</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="st">"European Cities"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="st">"European Cities"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -6587,10 +6584,7 @@ method:</p>
 <span>     grid_alpha <span class="op">=</span> <span class="fl">0.6</span>,</span>
 <span>     basemap_fill <span class="op">=</span> <span class="st">"ivory"</span>,</span>
 <span>     basemap_border <span class="op">=</span> <span class="st">"gray50"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Custom Styling"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
+<span>     main <span class="op">=</span> <span class="st">"Custom Styling"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -6735,10 +6729,7 @@ method:</p>
 <span>     show_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>     point_color <span class="op">=</span> <span class="st">"red"</span>,</span>
 <span>     point_size <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Cities with Cell Overlay"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
+<span>     main <span class="op">=</span> <span class="st">"Cities with Cell Overlay"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -10705,159 +10696,9 @@ object:</p>
 </svg></div></p>
 </div>
 <div class="section level4">
-<h4 id="simple-map-with-hexify_map">Simple Map with hexify_map()<a class="anchor" aria-label="anchor" href="#simple-map-with-hexify_map"></a>
-</h4>
-<p>For quick base R visualization:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Quick map visualization</span></span>
-<span><span class="fu"><a href="../reference/hexify_map.html">hexify_map</a></span><span class="op">(</span></span>
-<span>  <span class="va">result</span>,</span>
-<span>  basemap <span class="op">=</span> <span class="st">"world"</span>,</span>
-<span>  fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
-<span>  border <span class="op">=</span> <span class="st">"darkblue"</span>,</span>
-<span>  main <span class="op">=</span> <span class="st">"European Cities Grid"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Spherical geometry (s2) switched off</span></span>
-<span><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they</span></span>
-<span><span class="co">#&gt; are planar</span></span></code></pre></div>
-<p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
-<g class='svglite'>
-<defs>
-  <style type='text/css'><![CDATA[
-    /* theme-aware-processed */
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
-      fill: none;
-      stroke: #3E3F3A;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-miterlimit: 10.00;
-    }
-    .svglite > g > rect {
-      fill: none;
-      stroke: #3E3F3A;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-miterlimit: 10.00;
-    }
-    .svglite text {
-      white-space: pre;
-      fill: #3E3F3A;
-    }
-    .svglite g.glyphgroup path {
-      fill: inherit;
-      stroke: none;
-    }
-  ]]></style>
-</defs>
-<rect width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
-<defs>
-  <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA='>
-    <rect x='0.00' y='0.00' width='504.00' height='360.00' />
-  </clipPath>
-</defs>
-<g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<line x1='114.79' y1='286.56' x2='394.22' y2='286.56' style='stroke-width: 0.75;' />
-<line x1='114.79' y1='286.56' x2='114.79' y2='293.76' style='stroke-width: 0.75;' />
-<line x1='207.93' y1='286.56' x2='207.93' y2='293.76' style='stroke-width: 0.75;' />
-<line x1='301.08' y1='286.56' x2='301.08' y2='293.76' style='stroke-width: 0.75;' />
-<line x1='394.22' y1='286.56' x2='394.22' y2='293.76' style='stroke-width: 0.75;' />
-<text x='114.79' y='312.48' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='17.34px' lengthAdjust='spacingAndGlyphs'>-10</text>
-<text x='207.93' y='312.48' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.67px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='301.08' y='312.48' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='394.22' y='312.48' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>20</text>
-<line x1='59.04' y1='255.03' x2='59.04' y2='120.66' style='stroke-width: 0.75;' />
-<line x1='59.04' y1='255.03' x2='51.84' y2='255.03' style='stroke-width: 0.75;' />
-<line x1='59.04' y1='187.85' x2='51.84' y2='187.85' style='stroke-width: 0.75;' />
-<line x1='59.04' y1='120.66' x2='51.84' y2='120.66' style='stroke-width: 0.75;' />
-<text transform='translate(41.76,255.03) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>40</text>
-<text transform='translate(41.76,187.85) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>45</text>
-<text transform='translate(41.76,120.66) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>50</text>
-<polygon points='59.04,286.56 473.76,286.56 473.76,59.04 59.04,59.04 ' style='stroke-width: 0.75;' />
-<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='143.14px' lengthAdjust='spacingAndGlyphs'>European Cities Grid</text>
-<text x='266.40' y='341.28' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.70px' lengthAdjust='spacingAndGlyphs'>Longitude</text>
-<text transform='translate(12.96,172.80) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='42.69px' lengthAdjust='spacingAndGlyphs'>Latitude</text>
-</g>
-<defs>
-  <clipPath id='cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng=='>
-    <rect x='59.04' y='59.04' width='414.72' height='227.52' />
-  </clipPath>
-</defs>
-<g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
-<path class='map-fill' d='M 323.72 229.53 L 323.69 229.49 L 323.79 229.42 L 323.72 229.53 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 189.21 131.67 L 187.11 131.72 L 187.25 130.52 L 189.21 131.67 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 184.21 128.33 L 183.29 127.80 L 184.25 127.29 L 184.21 128.33 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 195.71 110.26 L 198.01 111.38 L 196.28 112.74 L 193.37 111.71 L 195.71 110.26 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 167.20 78.54 L 165.39 75.15 L 170.22 76.24 L 167.20 78.54 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 169.73 81.48 L 164.31 82.95 L 168.17 78.40 L 172.87 76.21 L 179.08 76.85 L 179.39 74.61 L 180.75 76.24 L 182.32 76.18 L 179.39 73.45 L 180.62 67.47 L 206.48 67.47 L 209.01 72.16 L 205.42 70.44 L 201.79 70.62 L 205.20 71.04 L 210.46 75.84 L 211.25 78.19 L 208.36 81.61 L 210.54 82.92 L 213.14 80.79 L 219.77 81.36 L 224.17 86.01 L 222.76 92.17 L 219.41 94.17 L 219.80 95.86 L 214.94 97.42 L 216.23 99.54 L 211.89 100.96 L 221.11 102.34 L 220.95 104.77 L 216.88 108.22 L 209.84 110.40 L 194.74 108.61 L 195.50 109.63 L 189.02 110.91 L 188.97 112.55 L 180.00 111.03 L 176.22 112.16 L 173.66 117.43 L 168.86 115.37 L 160.26 120.14 L 155.26 119.62 L 168.92 104.69 L 178.72 104.46 L 185.27 97.27 L 174.75 101.66 L 168.49 99.57 L 169.83 98.35 L 167.08 97.26 L 162.27 98.80 L 158.92 95.39 L 169.28 89.40 L 170.86 86.50 L 169.73 81.48 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 297.59 154.69 L 296.31 160.13 L 302.32 162.97 L 305.31 162.32 L 305.09 167.02 L 301.89 166.35 L 302.27 171.21 L 300.51 169.55 L 296.69 170.29 L 294.60 167.75 L 291.33 176.69 L 290.07 173.37 L 286.72 171.10 L 286.38 168.41 L 280.47 175.46 L 273.65 175.70 L 271.01 172.19 L 270.88 168.82 L 267.81 168.62 L 263.55 172.38 L 265.32 166.20 L 273.63 154.39 L 286.68 152.96 L 287.78 150.55 L 297.59 154.69 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 221.03 272.89 L 220.99 272.35 L 221.31 271.59 L 222.78 272.88 L 221.03 272.89 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 222.96 267.30 L 219.33 269.76 L 220.49 267.39 L 222.96 267.30 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 236.55 264.42 L 230.01 260.78 L 237.35 255.43 L 237.23 257.85 L 240.18 259.09 L 236.55 264.42 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 238.19 228.91 L 227.33 237.73 L 217.55 240.76 L 214.59 243.98 L 216.23 245.33 L 213.49 246.78 L 204.89 261.49 L 206.02 267.63 L 209.81 271.71 L 203.08 277.65 L 202.90 278.13 L 150.25 278.13 L 150.25 206.40 L 153.48 206.05 L 165.80 209.13 L 174.36 207.74 L 179.57 209.73 L 191.22 209.25 L 194.79 211.49 L 194.63 214.23 L 207.55 218.90 L 213.82 218.89 L 214.42 216.80 L 220.50 218.88 L 221.43 222.28 L 237.85 222.36 L 238.19 228.91 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 243.95 255.59 L 243.83 254.19 L 247.29 254.60 L 247.93 257.16 L 243.95 255.59 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 382.34 150.39 L 372.19 150.09 L 367.08 147.00 L 365.02 142.33 L 367.54 136.23 L 373.34 135.60 L 381.15 127.49 L 382.55 127.83 L 382.55 149.42 L 382.34 150.39 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 353.57 171.71 L 353.72 176.26 L 350.23 178.00 L 349.90 181.91 L 345.72 181.42 L 343.63 179.01 L 341.78 181.38 L 334.75 181.44 L 337.17 179.58 L 333.56 174.58 L 334.91 172.03 L 332.54 170.89 L 335.54 167.42 L 343.46 169.04 L 346.65 166.27 L 356.57 165.30 L 357.83 162.81 L 359.60 162.89 L 361.77 167.69 L 353.57 171.71 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 323.68 202.71 L 323.40 202.16 L 324.40 201.42 L 323.68 202.71 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 380.83 122.28 L 372.12 119.09 L 372.82 116.53 L 365.16 114.92 L 366.18 117.47 L 362.92 119.28 L 358.92 114.96 L 360.87 112.95 L 359.59 111.85 L 357.03 112.44 L 347.59 107.03 L 345.87 109.11 L 347.80 103.82 L 343.94 96.03 L 345.34 92.68 L 343.50 88.95 L 344.10 86.68 L 339.53 81.98 L 342.16 77.67 L 340.75 70.54 L 343.77 71.75 L 343.54 69.28 L 340.18 67.99 L 341.73 67.47 L 382.55 67.47 L 382.55 125.23 L 380.83 122.28 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 239.14 102.14 L 247.30 102.03 L 244.28 104.43 L 239.91 103.92 L 239.14 102.14 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 243.23 97.19 L 245.89 98.50 L 242.39 97.68 L 243.23 97.19 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 253.45 77.88 L 252.52 80.35 L 251.80 79.86 L 253.45 77.88 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 241.34 101.12 L 240.06 99.95 L 247.74 100.88 L 245.24 99.21 L 246.89 99.02 L 244.70 96.33 L 249.69 89.63 L 252.35 81.13 L 262.64 75.30 L 271.42 74.42 L 274.97 76.55 L 273.44 85.03 L 270.26 86.66 L 273.15 88.15 L 273.32 90.21 L 270.57 92.70 L 270.73 94.98 L 263.34 96.43 L 265.67 101.17 L 265.03 105.24 L 262.49 106.81 L 264.27 108.50 L 263.76 110.57 L 260.46 109.32 L 261.92 105.16 L 256.50 103.47 L 254.79 100.92 L 248.67 102.44 L 245.25 101.26 L 241.34 101.12 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 254.76 76.18 L 253.79 77.19 L 253.65 77.04 L 254.76 76.18 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 257.54 75.16 L 256.28 75.08 L 259.93 74.46 L 257.54 75.16 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 261.32 74.40 L 260.60 74.08 L 262.67 73.96 L 261.32 74.40 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 266.53 73.42 L 265.62 73.94 L 265.30 73.84 L 266.53 73.42 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 270.66 72.52 L 269.80 72.56 L 271.28 71.94 L 270.66 72.52 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 379.67 221.13 L 380.68 219.54 L 379.88 214.75 L 382.55 211.31 L 382.55 224.13 L 379.67 221.13 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 276.65 204.89 L 276.81 204.44 L 277.22 204.64 L 276.65 204.89 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 268.36 123.37 L 267.03 128.01 L 261.86 126.86 L 262.71 125.43 L 261.44 121.74 L 263.60 118.41 L 268.36 123.37 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 296.31 160.13 L 296.68 157.33 L 297.45 159.53 L 296.31 160.13 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 286.37 268.89 L 285.79 267.14 L 285.86 266.91 L 286.37 268.89 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 286.34 265.71 L 287.55 257.19 L 286.25 256.15 L 286.84 251.10 L 284.22 246.28 L 284.54 242.76 L 287.77 243.61 L 293.89 238.14 L 299.26 248.32 L 297.75 251.43 L 297.00 266.24 L 292.29 265.26 L 291.45 268.96 L 288.49 269.46 L 286.34 265.71 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 337.10 245.51 L 337.13 244.80 L 337.98 245.10 L 337.10 245.51 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 284.80 241.67 L 284.36 241.63 L 285.43 239.96 L 284.80 241.67 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 301.89 166.35 L 305.09 167.02 L 305.29 162.78 L 310.33 163.97 L 312.67 161.30 L 321.28 159.87 L 323.32 164.97 L 335.54 167.42 L 332.54 170.89 L 334.91 172.03 L 333.56 174.58 L 337.17 179.58 L 330.94 177.48 L 322.26 181.85 L 321.81 184.60 L 324.58 188.28 L 322.02 191.57 L 323.40 198.27 L 334.27 207.04 L 338.43 218.89 L 343.37 224.88 L 349.22 229.04 L 358.50 229.55 L 356.04 234.71 L 375.17 246.23 L 379.88 252.06 L 379.26 256.33 L 376.32 255.88 L 374.33 251.27 L 365.61 248.88 L 361.82 258.43 L 367.34 263.36 L 367.90 268.50 L 362.71 271.16 L 362.04 276.41 L 360.80 278.13 L 354.37 278.13 L 358.92 269.26 L 354.10 255.17 L 347.19 251.82 L 345.47 246.05 L 341.50 246.99 L 342.62 245.24 L 338.75 244.12 L 335.85 238.43 L 329.85 238.32 L 316.33 224.29 L 311.35 222.56 L 311.95 220.97 L 305.87 215.16 L 303.37 203.27 L 301.52 201.01 L 289.58 195.61 L 282.49 202.94 L 277.73 204.41 L 279.07 199.07 L 272.20 196.77 L 273.07 190.17 L 269.73 186.93 L 274.50 182.72 L 271.19 177.89 L 273.33 175.41 L 280.47 175.46 L 286.38 168.41 L 286.72 171.10 L 291.98 176.48 L 294.60 167.75 L 296.69 170.29 L 300.51 169.55 L 301.83 171.34 L 301.89 166.35 ZM 323.79 229.42 L 323.69 229.49 L 323.72 229.53 L 323.79 229.42 ZM 324.40 201.42 L 323.40 202.16 L 323.68 202.71 L 324.40 201.42 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 304.98 218.57 L 302.10 217.61 L 304.42 217.11 L 304.98 218.57 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 151.79 81.32 L 150.25 84.30 L 150.25 74.27 L 151.79 81.32 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 379.66 177.53 L 375.26 177.49 L 369.17 174.46 L 361.77 167.69 L 359.60 162.89 L 357.83 162.81 L 361.19 160.88 L 361.09 155.60 L 363.26 153.77 L 360.89 151.91 L 366.90 151.46 L 367.65 147.45 L 373.37 150.62 L 382.34 150.39 L 382.55 149.42 L 382.55 176.11 L 379.66 177.53 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 283.70 134.45 L 270.67 131.94 L 267.03 128.01 L 268.36 123.37 L 264.83 119.39 L 266.99 114.59 L 262.49 106.81 L 265.03 105.24 L 265.67 101.17 L 263.34 96.43 L 270.73 94.98 L 270.57 92.70 L 273.32 90.21 L 273.15 88.15 L 270.26 86.66 L 273.26 85.27 L 274.81 80.80 L 274.97 76.55 L 273.63 75.29 L 275.06 71.55 L 282.53 71.06 L 283.46 74.06 L 285.56 72.20 L 287.06 75.05 L 288.21 68.59 L 293.68 68.84 L 297.21 72.28 L 299.06 72.89 L 294.67 68.80 L 291.56 67.90 L 291.49 67.47 L 312.90 67.47 L 314.11 67.65 L 314.40 67.47 L 336.62 67.47 L 337.08 68.88 L 340.75 70.54 L 342.16 77.67 L 339.53 81.98 L 344.10 86.68 L 343.50 88.95 L 345.34 92.68 L 343.94 96.03 L 345.08 100.18 L 347.05 101.37 L 347.31 105.94 L 345.47 109.66 L 341.31 106.71 L 341.77 108.58 L 328.49 115.20 L 324.82 115.37 L 322.29 118.22 L 320.54 117.05 L 324.47 122.06 L 323.34 124.16 L 325.59 127.90 L 336.19 136.57 L 336.33 139.64 L 333.55 139.71 L 332.51 142.68 L 326.79 146.09 L 329.52 152.17 L 329.15 154.55 L 321.65 151.32 L 310.78 155.69 L 305.17 153.56 L 302.78 157.22 L 300.81 154.18 L 287.78 150.55 L 286.45 153.01 L 278.40 152.82 L 278.88 145.43 L 283.70 134.45 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 340.30 67.57 L 337.64 68.53 L 337.35 67.47 L 340.15 67.47 L 340.30 67.57 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 290.04 219.99 L 294.68 218.57 L 295.15 214.49 L 296.89 226.41 L 293.50 236.42 L 289.97 233.69 L 290.71 232.18 L 288.24 229.09 L 287.72 223.35 L 290.04 219.99 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 195.96 174.37 L 196.63 176.87 L 195.00 173.73 L 195.96 174.37 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 273.33 175.41 L 271.19 177.89 L 274.56 182.46 L 269.73 186.93 L 273.07 190.17 L 272.20 196.77 L 279.07 199.07 L 277.73 204.41 L 264.90 213.75 L 255.06 208.75 L 251.82 209.70 L 244.36 207.15 L 236.36 215.86 L 237.85 222.36 L 226.87 223.41 L 223.86 220.04 L 215.05 216.90 L 213.82 218.89 L 207.55 218.90 L 194.33 214.03 L 194.79 211.49 L 191.22 209.25 L 194.10 207.14 L 196.33 193.76 L 197.90 192.01 L 196.33 192.32 L 197.86 180.69 L 200.24 182.73 L 201.50 186.59 L 202.82 187.84 L 200.57 181.56 L 196.79 178.24 L 198.32 177.89 L 197.26 170.22 L 191.29 167.49 L 188.75 163.52 L 189.13 160.46 L 187.47 158.78 L 191.70 158.07 L 184.62 156.78 L 185.32 154.64 L 181.97 152.56 L 167.77 149.91 L 164.35 147.00 L 167.61 145.25 L 165.30 143.64 L 168.43 143.45 L 163.57 141.48 L 165.73 139.20 L 177.83 136.23 L 182.86 140.32 L 195.11 138.76 L 193.35 136.71 L 193.19 131.38 L 190.64 124.91 L 196.21 124.95 L 197.33 128.88 L 206.41 130.11 L 211.82 128.07 L 209.14 127.26 L 209.67 124.65 L 219.53 120.68 L 222.77 117.27 L 223.51 108.76 L 231.45 105.91 L 233.64 110.57 L 236.87 110.18 L 242.30 116.54 L 246.82 117.35 L 246.83 121.19 L 250.27 121.19 L 252.82 118.60 L 253.27 123.50 L 259.23 127.23 L 266.08 127.45 L 270.67 131.94 L 283.70 134.45 L 278.88 145.43 L 278.87 153.01 L 272.84 154.88 L 273.14 156.64 L 268.07 161.66 L 263.54 171.52 L 265.68 171.81 L 267.81 168.62 L 271.05 168.94 L 271.01 172.19 L 273.33 175.41 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 377.09 130.64 L 373.34 135.60 L 367.54 136.23 L 365.84 139.49 L 362.03 136.83 L 357.50 137.39 L 347.59 134.08 L 344.77 139.48 L 340.10 139.76 L 326.05 128.52 L 323.34 124.16 L 324.47 122.06 L 320.54 116.60 L 322.29 118.22 L 324.82 115.37 L 341.77 108.58 L 340.97 106.82 L 345.07 109.71 L 347.59 107.03 L 357.03 112.44 L 360.32 112.31 L 358.92 114.96 L 362.92 119.28 L 366.18 117.47 L 365.16 114.92 L 372.82 116.53 L 372.12 119.09 L 380.83 122.28 L 382.55 125.67 L 382.55 127.66 L 377.09 130.64 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 351.72 202.63 L 350.16 201.14 L 351.11 201.63 L 351.72 202.63 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 347.21 199.71 L 348.91 202.53 L 346.39 199.03 L 347.21 199.71 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 349.80 200.45 L 349.95 200.92 L 348.26 199.16 L 349.80 200.45 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 346.84 194.75 L 345.24 191.91 L 349.88 196.58 L 346.84 194.75 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 345.36 189.93 L 346.31 191.68 L 344.49 190.54 L 345.36 189.93 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 341.24 189.18 L 341.42 185.63 L 342.69 188.25 L 342.88 192.41 L 341.24 189.18 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 343.65 184.83 L 345.88 188.15 L 344.73 188.44 L 342.41 186.52 L 343.65 184.83 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 373.75 216.03 L 380.41 222.34 L 366.70 214.52 L 373.75 216.03 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 370.30 217.40 L 373.21 218.75 L 369.48 217.54 L 370.30 217.40 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 367.15 215.20 L 368.03 215.84 L 364.89 216.12 L 363.02 214.77 L 367.15 215.20 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 363.29 213.07 L 360.47 211.85 L 361.82 211.64 L 368.08 213.03 L 363.29 213.07 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 365.26 210.49 L 362.81 211.12 L 360.90 210.46 L 365.26 210.49 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 359.95 167.22 L 373.80 177.22 L 378.93 177.73 L 382.55 176.02 L 382.55 187.67 L 381.76 186.80 L 365.52 184.13 L 359.70 187.73 L 354.99 185.44 L 354.51 190.99 L 357.93 194.28 L 359.76 199.61 L 368.83 208.73 L 371.73 215.55 L 365.37 209.45 L 356.83 207.74 L 349.38 198.97 L 348.79 197.83 L 352.04 197.63 L 347.47 193.18 L 346.29 186.76 L 343.46 183.84 L 341.25 183.31 L 337.04 190.03 L 334.88 186.39 L 334.40 180.90 L 341.78 181.38 L 343.63 179.01 L 345.72 181.42 L 350.81 181.57 L 350.23 178.00 L 353.72 176.26 L 353.32 172.10 L 359.08 169.40 L 359.95 167.22 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 379.73 215.14 L 380.68 219.54 L 379.66 220.64 L 371.73 215.55 L 368.83 208.73 L 359.76 199.61 L 357.93 194.28 L 354.51 190.99 L 355.31 185.12 L 359.70 187.73 L 365.52 184.13 L 382.55 188.13 L 382.55 211.36 L 379.73 215.14 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 254.79 100.92 L 256.50 103.47 L 262.21 105.53 L 260.46 109.32 L 266.02 112.64 L 267.21 116.41 L 261.44 121.74 L 262.10 126.65 L 259.23 127.23 L 253.27 123.50 L 252.82 118.60 L 250.27 121.19 L 246.58 121.04 L 246.82 117.35 L 242.30 116.54 L 236.87 110.18 L 233.64 110.57 L 231.45 105.91 L 239.14 102.14 L 239.91 103.92 L 244.28 104.43 L 247.30 102.03 L 254.79 100.92 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 297.59 154.69 L 296.64 153.93 L 298.74 153.24 L 302.78 157.22 L 305.17 153.56 L 310.78 155.69 L 321.65 151.32 L 329.15 154.55 L 327.29 145.37 L 332.51 142.68 L 333.55 139.71 L 335.76 140.24 L 336.61 137.23 L 338.79 139.44 L 344.77 139.48 L 347.59 134.08 L 365.19 138.08 L 365.02 142.33 L 367.65 147.45 L 366.90 151.46 L 360.89 151.91 L 363.26 153.77 L 361.09 155.60 L 361.26 160.67 L 356.57 165.30 L 346.65 166.27 L 343.46 169.04 L 324.17 165.37 L 321.14 161.84 L 321.28 159.87 L 312.67 161.30 L 309.71 164.07 L 304.33 161.17 L 302.32 162.97 L 297.17 160.20 L 297.59 154.69 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path class='map-fill' d='M 221.43 222.28 L 221.11 220.79 L 222.54 219.63 L 223.82 221.39 L 221.43 222.28 Z' style='fill-rule: evenodd;  stroke-width: 0.75; stroke: #7F7F7F;' />
-<path d='M 363.19 140.29 L 357.03 137.88 L 350.51 141.85 L 350.20 148.13 L 356.31 150.45 L 362.78 146.57 L 363.19 140.29 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.70; stroke-width: 0.75; stroke: #00008B;' />
-<path d='M 236.85 138.11 L 230.15 134.60 L 224.16 137.46 L 224.90 143.76 L 231.53 147.20 L 237.48 144.41 L 236.85 138.11 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.70; stroke-width: 0.75; stroke: #00008B;' />
-<path d='M 180.47 250.87 L 174.57 248.01 L 169.61 251.47 L 170.56 257.75 L 176.40 260.58 L 181.35 257.16 L 180.47 250.87 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.70; stroke-width: 0.75; stroke: #00008B;' />
-<path d='M 339.94 87.05 L 333.20 85.02 L 326.28 89.43 L 326.16 95.76 L 332.82 97.68 L 339.69 93.38 L 339.94 87.05 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.70; stroke-width: 0.75; stroke: #00008B;' />
-<path d='M 329.79 229.08 L 324.12 227.14 L 318.40 231.53 L 318.36 237.72 L 323.98 239.53 L 329.68 235.28 L 329.79 229.08 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.70; stroke-width: 0.75; stroke: #00008B;' />
-</g>
-</g>
-</svg></div></p>
-<pre><code><span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span></code></pre>
-</div>
-<div class="section level4">
 <h4 id="world-map-helper">World Map Helper<a class="anchor" aria-label="anchor" href="#world-map-helper"></a>
 </h4>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Quick world map</span></span>
 <span><span class="fu"><a href="../reference/plot_world.html">plot_world</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"lightgray"</span>, border <span class="op">=</span> <span class="st">"gray50"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
@@ -12536,7 +12377,7 @@ object:</p>
 <div class="section level4">
 <h4 id="grid-over-a-rectangular-region">Grid Over a Rectangular Region<a class="anchor" aria-label="anchor" href="#grid-over-a-rectangular-region"></a>
 </h4>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create grid specification</span></span>
@@ -13990,7 +13831,7 @@ object:</p>
 <h4 id="grid-over-a-polygon-shapefile">Grid Over a Polygon (Shapefile)<a class="anchor" aria-label="anchor" href="#grid-over-a-polygon-shapefile"></a>
 </h4>
 <p>Clip a grid to any sf polygon boundary:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get France boundary</span></span>
 <span><span class="va">france</span> <span class="op">&lt;-</span> <span class="va">hexify_world</span><span class="op">[</span><span class="va">hexify_world</span><span class="op">$</span><span class="va">name</span> <span class="op">==</span> <span class="st">"France"</span>, <span class="op">]</span></span>
 <span></span>
@@ -14405,7 +14246,7 @@ object:</p>
 <div class="section level4">
 <h4 id="global-grid">Global Grid<a class="anchor" aria-label="anchor" href="#global-grid"></a>
 </h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Coarse global grid (be careful with fine grids - many cells!)</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">500000</span><span class="op">)</span></span>
 <span><span class="va">global_hexes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_global.html">grid_global</a></span><span class="op">(</span><span class="va">grid</span><span class="op">)</span></span>
@@ -16921,7 +16762,7 @@ object:</p>
 </h3>
 <p>This example demonstrates the typical workflow: loading point data,
 assigning to grid cells, aggregating, and visualizing.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simulate bird observation data</span></span>
@@ -16956,7 +16797,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="assign-points-to-grid-cells">Assign Points to Grid Cells<a class="anchor" aria-label="anchor" href="#assign-points-to-grid-cells"></a>
 </h4>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create grid and assign observations</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">25000</span><span class="op">)</span></span>
 <span><span class="va">birds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
@@ -16994,7 +16835,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="generate-cell-polygons-and-visualize">Generate Cell Polygons and Visualize<a class="anchor" aria-label="anchor" href="#generate-cell-polygons-and-visualize"></a>
 </h4>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate polygons for cells with data</span></span>
@@ -18988,7 +18829,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="species-richness-map">Species Richness Map<a class="anchor" aria-label="anchor" href="#species-richness-map"></a>
 </h4>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">region</span>, fill <span class="op">=</span> <span class="st">"gray95"</span>, color <span class="op">=</span> <span class="st">"gray70"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">cell_polys</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">n_species</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
@@ -20988,7 +20829,7 @@ sampling.</p>
 <div class="section level4">
 <h4 id="sample-cell-ids-directly">Sample Cell IDs Directly<a class="anchor" aria-label="anchor" href="#sample-cell-ids-directly"></a>
 </h4>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Grid parameters</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">100000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">max_cell</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">3</span><span class="op">^</span><span class="va">grid</span><span class="op">@</span><span class="va">resolution</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
@@ -21014,7 +20855,7 @@ sampling.</p>
 <div class="section level4">
 <h4 id="visualize-random-sample">Visualize Random Sample<a class="anchor" aria-label="anchor" href="#visualize-random-sample"></a>
 </h4>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate polygons for sampled cells</span></span>
 <span><span class="va">sample_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell_to_sf.html">cell_to_sf</a></span><span class="op">(</span><span class="va">random_cells</span>, <span class="va">grid</span><span class="op">)</span></span>
 <span></span>
@@ -22827,7 +22668,7 @@ sampling.</p>
 </h3>
 <p>Use sf’s <code><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">st_write()</a></code> to export grids for use in GIS
 software:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate a grid</span></span>
@@ -22849,7 +22690,7 @@ software:</p>
 <p>At every resolution, the ISEA grid contains <strong>12 pentagonal
 cells</strong> with area 5/6 that of hexagons. These are located at the
 icosahedron vertices:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pentagon locations (icosahedron vertices in standard ISEA orientation)</span></span>
 <span><span class="va">pentagon_coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Pole"</span>, <span class="st">"Pole"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Vertex"</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -24724,7 +24565,7 @@ numeric types for very high resolutions.</p>
 <div class="section level4">
 <h4 id="choosing-resolution-by-area">Choosing Resolution by Area<a class="anchor" aria-label="anchor" href="#choosing-resolution-by-area"></a>
 </h4>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find resolution for target areas</span></span>
 <span><span class="va">targets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">1000</span>, <span class="fl">10000</span>, <span class="fl">100000</span><span class="op">)</span></span>
 <span></span>
@@ -24745,7 +24586,7 @@ numeric types for very high resolutions.</p>
 <div class="section level4">
 <h4 id="comparing-apertures">Comparing Apertures<a class="anchor" aria-label="anchor" href="#comparing-apertures"></a>
 </h4>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target</span> <span class="op">&lt;-</span> <span class="fl">1000</span>  <span class="co"># km2</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Target: ~%d km2 cells\n\n"</span>, <span class="va">target</span><span class="op">)</span><span class="op">)</span></span>
@@ -24766,7 +24607,7 @@ numeric types for very high resolutions.</p>
 <h3 id="dggridr-compatibility">dggridR Compatibility<a class="anchor" aria-label="anchor" href="#dggridr-compatibility"></a>
 </h3>
 <p>hexify produces identical cell assignments to dggridR:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/r-barnes/dggridR/" class="external-link">dggridR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gcol33.github.io/hexify/">hexify</a></span><span class="op">)</span></span>
 <span></span>
@@ -24927,14 +24768,10 @@ numeric types for very high resolutions.</p>
 <td>ggplot2 plotting for HexData</td>
 </tr>
 <tr class="odd">
-<td><code><a href="../reference/hexify_map.html">hexify_map()</a></code></td>
-<td>Quick map visualization</td>
-</tr>
-<tr class="even">
 <td><code><a href="../reference/hexify_heatmap.html">hexify_heatmap()</a></code></td>
 <td>ggplot2 choropleth heatmap</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/plot_world.html">plot_world()</a></code></td>
 <td>Quick world map</td>
 </tr>
@@ -24977,7 +24814,7 @@ common analysis tasks</li>
 <div class="section level3">
 <h3 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h3>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31 ucrt)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-w64-mingw32/x64</span></span>

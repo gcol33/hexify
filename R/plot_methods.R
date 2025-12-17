@@ -146,25 +146,32 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 
     # Draw basemap
     if (!is.null(basemap_sf)) {
-      # Disable S2 for clipping
-      s2_state <- sf::sf_use_s2()
-      sf::sf_use_s2(FALSE)
-      on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+      if (clip_basemap) {
+        # Disable S2 for clipping to avoid spherical geometry edge-crossing errors
+        s2_state <- sf::sf_use_s2()
+        suppressMessages(sf::sf_use_s2(FALSE))
+        on.exit(sf::sf_use_s2(s2_state), add = TRUE)
 
-      # Clip basemap to extent
-      clip_box <- sf::st_bbox(c(xmin = unname(xlim[1]),
-                                 xmax = unname(xlim[2]),
-                                 ymin = unname(ylim[1]),
-                                 ymax = unname(ylim[2])),
-                               crs = 4326)
-      clip_poly <- sf::st_as_sfc(clip_box)
+        # Clip basemap to extent
+        clip_box <- sf::st_bbox(c(xmin = unname(xlim[1]),
+                                   xmax = unname(xlim[2]),
+                                   ymin = unname(ylim[1]),
+                                   ymax = unname(ylim[2])),
+                                 crs = 4326)
+        clip_poly <- sf::st_as_sfc(clip_box)
 
-      basemap_clipped <- suppressWarnings(
-        sf::st_intersection(sf::st_make_valid(basemap_sf), clip_poly)
-      )
+        basemap_clipped <- suppressMessages(suppressWarnings(
+          sf::st_intersection(sf::st_make_valid(basemap_sf), clip_poly)
+        ))
 
-      if (nrow(basemap_clipped) > 0) {
-        plot(sf::st_geometry(basemap_clipped),
+        if (nrow(basemap_clipped) > 0) {
+          plot(sf::st_geometry(basemap_clipped),
+               col = basemap_fill, border = basemap_border,
+               lwd = basemap_lwd, add = TRUE)
+        }
+      } else {
+        # No clipping - draw full basemap
+        plot(sf::st_geometry(basemap_sf),
              col = basemap_fill, border = basemap_border,
              lwd = basemap_lwd, add = TRUE)
       }
