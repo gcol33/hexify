@@ -220,15 +220,14 @@ plot(result,
 
 ### Show Jittered Points
 
-Points are automatically jittered within their hexagon cells, with size
-scaled based on density. The presets control how much of the densest
-hexagon is covered by points:
+Points are automatically jittered within their hexagon cells. The size
+presets define what fraction of a hex cell a single point covers:
 
-- `"tiny"` (~10% coverage)
-- `"small"` (~25% coverage)
-- `"normal"` / `"auto"` (~50% coverage)
-- `"large"` (~70% coverage)
-- `"very large"` (~90% coverage)
+- `"tiny"` (~2% of cell)
+- `"small"` (~5% of cell)
+- `"normal"` / `"auto"` (~10% of cell)
+- `"large"` (~20% of cell)
+- `"very large"` (~35% of cell)
 
 ```{r plot-points, fig.width=7, fig.height=5}
 # Show jittered points with default sizing

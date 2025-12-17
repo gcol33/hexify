@@ -162,12 +162,6 @@ test_that("hexify_compare_resolutions values are monotonic", {
   expect_true(all(diff(comparison$cell_area_km2) < 0))
 })
 
-test_that("hexify_print_resolutions outputs to console", {
-  expect_output(
-    hexify_print_resolutions(aperture = 3, res_range = 0:3),
-    "Grid Resolution Comparison"
-  )
-})
 
 # =============================================================================
 # ADDITIONAL COVERAGE FOR HEXIFY_STATS
@@ -204,18 +198,18 @@ test_that("hexify_compare_resolutions works for different apertures", {
   expect_equal(nrow(comp_ap7), 4)
 })
 
-test_that("hexify_print_resolutions formats large cell counts", {
+test_that("hexify_compare_resolutions formats large cell counts", {
   # Resolution 11+ should have cells in millions
   expect_output(
-    hexify_print_resolutions(aperture = 3, res_range = 11:12),
+    hexify_compare_resolutions(aperture = 3, res_range = 11:12, print = TRUE),
     "M"  # Million suffix
   )
 })
 
-test_that("hexify_print_resolutions formats thousand cell counts", {
+test_that("hexify_compare_resolutions formats thousand cell counts", {
   # Resolution 3-5 should have cells in thousands
   expect_output(
-    hexify_print_resolutions(aperture = 3, res_range = 3:5),
+    hexify_compare_resolutions(aperture = 3, res_range = 3:5, print = TRUE),
     "K"  # Thousand suffix
   )
 })

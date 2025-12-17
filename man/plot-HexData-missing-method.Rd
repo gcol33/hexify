@@ -58,12 +58,15 @@ temporarily disables S2 spherical geometry to avoid edge-crossing errors.}
 \item{fill}{Column name for fill mapping (optional)}
 
 \item{show_points}{Show original points on top of cells (default FALSE).
-Points are jittered within their assigned hexagon to prevent overlap.}
+Points are jittered within their assigned hexagon.}
 
-\item{point_size}{Size of points. Can be a number or a preset string:
-"tiny", "small", "normal", "large", "very large". When set to "auto"
-(default when show_points = TRUE), size is calculated based on cell
-density to minimize overlap.}
+\item{point_size}{Size of points. Can be:
+\itemize{
+\item A number (direct cex value)
+\item A preset defining what fraction of a hex cell one point covers:
+"tiny" (~2\\%), "small" (~5\\%), "normal"/"auto" (~10\\%),
+"large" (~20\\%), "very large" (~35\\%)
+}}
 
 \item{point_color}{Color of points (default "red")}
 

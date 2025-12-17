@@ -6721,10 +6721,23 @@ it to multiple datasets.</p>
 <div class="section level4">
 <h4 id="show-jittered-points">Show Jittered Points<a class="anchor" aria-label="anchor" href="#show-jittered-points"></a>
 </h4>
-<p>Points are automatically jittered within their hexagon cells to
-prevent overlap, with size auto-scaled based on density:</p>
+<p>Points are automatically jittered within their hexagon cells. The
+size presets define what fraction of a hex cell a single point
+covers:</p>
+<ul>
+<li>
+<code>"tiny"</code> (~2% of cell)</li>
+<li>
+<code>"small"</code> (~5% of cell)</li>
+<li>
+<code>"normal"</code> / <code>"auto"</code> (~10% of cell)</li>
+<li>
+<code>"large"</code> (~20% of cell)</li>
+<li>
+<code>"very large"</code> (~35% of cell)</li>
+</ul>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Show jittered points (auto-sized based on density)</span></span>
+<code class="sourceCode R"><span><span class="co"># Show jittered points with default sizing</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>,</span>
 <span>     show_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>     point_color <span class="op">=</span> <span class="st">"red"</span>,</span>
@@ -6858,24 +6871,22 @@ prevent overlap, with size auto-scaled based on density:</p>
 <path d='M 180.47 250.87 L 174.57 248.01 L 169.61 251.47 L 170.56 257.75 L 176.40 260.58 L 181.35 257.16 L 180.47 250.87 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 <path d='M 339.94 87.05 L 333.20 85.02 L 326.28 89.43 L 326.16 95.76 L 332.82 97.68 L 339.69 93.38 L 339.94 87.05 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 <path d='M 329.79 229.08 L 324.12 227.14 L 318.40 231.53 L 318.36 237.72 L 323.98 239.53 L 329.68 235.28 L 329.79 229.08 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
-<circle cx='355.26' cy='144.64' r='2.70' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
-<circle cx='232.55' cy='141.17' r='2.70' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
-<circle cx='178.75' cy='251.43' r='2.70' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
-<circle cx='332.39' cy='91.48' r='2.70' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
-<circle cx='322.41' cy='229.60' r='2.70' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
+<circle cx='355.26' cy='144.64' r='1.53' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
+<circle cx='232.55' cy='141.17' r='1.53' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
+<circle cx='178.75' cy='251.43' r='1.53' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
+<circle cx='332.39' cy='91.48' r='1.53' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
+<circle cx='322.41' cy='229.60' r='1.53' style='stroke-width: 0.75; stroke: #FF0000; fill: #FF0000;' />
 </g>
 </g>
 </svg></div></p>
 <pre><code><span><span class="co">#&gt; Spherical geometry (s2) switched on</span></span></code></pre>
-<p>Point size can be controlled with presets (“tiny”, “small”, “normal”,
-“large”, “very large”) or numeric values:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Control point size with presets</span></span>
+<code class="sourceCode R"><span><span class="co"># Smaller points for less visual clutter</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span>,</span>
 <span>     show_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>     point_size <span class="op">=</span> <span class="st">"large"</span>,</span>
+<span>     point_size <span class="op">=</span> <span class="st">"small"</span>,</span>
 <span>     point_color <span class="op">=</span> <span class="st">"darkblue"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Large Points"</span><span class="op">)</span></span></code></pre></div>
+<span>     main <span class="op">=</span> <span class="st">"Small Points (~25% coverage)"</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
 <g class='svglite'>
@@ -6930,7 +6941,7 @@ prevent overlap, with size auto-scaled based on density:</p>
 <text transform='translate(41.76,187.85) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>45</text>
 <text transform='translate(41.76,120.66) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='13.34px' lengthAdjust='spacingAndGlyphs'>50</text>
 <polygon points='59.04,286.56 473.76,286.56 473.76,59.04 59.04,59.04 ' style='stroke-width: 0.75;' />
-<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='87.17px' lengthAdjust='spacingAndGlyphs'>Large Points</text>
+<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='204.36px' lengthAdjust='spacingAndGlyphs'>Small Points (~25% coverage)</text>
 <text x='266.40' y='341.28' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='52.70px' lengthAdjust='spacingAndGlyphs'>Longitude</text>
 <text transform='translate(12.96,172.80) rotate(-90)' text-anchor='middle' style='font-size: 12.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='42.69px' lengthAdjust='spacingAndGlyphs'>Latitude</text>
 </g>
@@ -7005,11 +7016,11 @@ prevent overlap, with size auto-scaled based on density:</p>
 <path d='M 180.47 250.87 L 174.57 248.01 L 169.61 251.47 L 170.56 257.75 L 176.40 260.58 L 181.35 257.16 L 180.47 250.87 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 <path d='M 339.94 87.05 L 333.20 85.02 L 326.28 89.43 L 326.16 95.76 L 332.82 97.68 L 339.69 93.38 L 339.94 87.05 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
 <path d='M 329.79 229.08 L 324.12 227.14 L 318.40 231.53 L 318.36 237.72 L 323.98 239.53 L 329.68 235.28 L 329.79 229.08 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.60; stroke: #5D4E37;' />
-<circle cx='352.11' cy='141.63' r='3.24' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
-<circle cx='228.88' cy='136.42' r='3.24' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
-<circle cx='179.42' cy='257.61' r='3.24' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
-<circle cx='337.93' cy='93.96' r='3.24' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
-<circle cx='325.41' cy='236.00' r='3.24' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
+<circle cx='352.11' cy='141.63' r='1.09' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
+<circle cx='228.88' cy='136.42' r='1.09' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
+<circle cx='179.42' cy='257.61' r='1.09' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
+<circle cx='337.93' cy='93.96' r='1.09' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
+<circle cx='325.41' cy='236.00' r='1.09' style='stroke-width: 0.75; stroke: #00008B; fill: #00008B;' />
 </g>
 </g>
 </svg></div></p>

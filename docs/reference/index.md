@@ -79,8 +79,6 @@ Resolution comparison and grid statistics
   : Get grid statistics for Earth coverage
 - [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md)
   : Compare grid resolutions
-- [`hexify_print_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_print_resolutions.md)
-  **\[deprecated\]** : Print resolution comparison table
 - [`dgverify()`](https://gcol33.github.io/hexify/reference/dgverify.md)
   : Verify grid object
 

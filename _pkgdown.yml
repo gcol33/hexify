@@ -69,7 +69,6 @@ reference:
     contents:
       - dgearthstat
       - hexify_compare_resolutions
-      - hexify_print_resolutions
       - dgverify
 
   - title: dggridR Compatibility

@@ -8,108 +8,84 @@
 # POINT SIZE AND JITTERING HELPERS
 # =============================================================================
 
-#' Calculate point size for target coverage of hexagon
+#' Calculate point size based on hexagon size
 #'
-#' Calculates the cex value so that points in the densest cell would
-#' cover approximately a target fraction of the hexagon area.
-#' Points may overlap when there are many in a cell.
+#' Calculates the cex value so that a single point covers a target
+#' fraction of a hexagon cell. Points may overlap when multiple
+#' points are in a cell.
 #'
 #' @param size Size specification: numeric (direct cex), or preset name
-#' @param cell_ids Vector of cell IDs (one per point)
 #' @param hex_sf sf object with cell polygons
 #' @param xlim,ylim Plot limits (for coordinate-to-inches conversion)
 #' @return Numeric cex value
 #' @noRd
-resolve_point_size <- function(size, cell_ids, hex_sf, xlim, ylim) {
-  # Coverage targets for presets (fraction of hex area filled by points)
-  # With overlap allowed, this is approximate total ink coverage
-  coverage_targets <- c(
-    "tiny" = 0.10,
-    "small" = 0.25,
-    "normal" = 0.50,
-    "large" = 0.70,
-    "very large" = 0.90
-  )
+resolve_point_size <- function(size, hex_sf, xlim, ylim) {
+ # Coverage targets: fraction of hex area covered by ONE point
+ coverage_targets <- c(
+   "tiny" = 0.02,
+   "small" = 0.05,
+   "normal" = 0.10,
+   "large" = 0.20,
+   "very large" = 0.35
+ )
 
-  # If numeric, return directly
-  if (is.numeric(size)) {
-    return(size)
-  }
+ # If numeric, return directly
+ if (is.numeric(size)) {
+   return(size)
+ }
 
-  # Resolve preset name to coverage target
-  size_lower <- tolower(size)
+ # Resolve preset name
+ size_lower <- tolower(size)
+ if (size_lower == "verylarge") size_lower <- "very large"
+ if (size_lower == "auto") size_lower <- "normal"
 
-  # Handle "verylarge" without space
-  if (size_lower == "verylarge") size_lower <- "very large"
+ if (!size_lower %in% names(coverage_targets)) {
+   warning("Unknown point_size '", size, "', using 'normal'")
+   size_lower <- "normal"
+ }
 
-  # "auto" defaults to "normal"
-  if (size_lower == "auto") size_lower <- "normal"
+ target_coverage <- coverage_targets[[size_lower]]
 
-  if (!size_lower %in% names(coverage_targets)) {
-    warning("Unknown point_size '", size, "', using 'normal'")
-    size_lower <- "normal"
-  }
+ # Get a representative hexagon (first one)
+ hex_poly <- hex_sf[1, ]
 
-  target_coverage <- coverage_targets[[size_lower]]
+ # Get hexagon bounding box in coordinate units
+ hex_bbox <- sf::st_bbox(hex_poly)
+ hex_width <- hex_bbox["xmax"] - hex_bbox["xmin"]
+ hex_height <- hex_bbox["ymax"] - hex_bbox["ymin"]
 
-  # Calculate max density
-  counts <- table(cell_ids)
-  max_n <- max(counts)
+ # Approximate hexagon area (regular hexagon ~0.866 of bounding box)
+ hex_area_approx <- hex_width * hex_height * 0.866
 
-  if (max_n == 0) return(0.5)
+ # Target area for one point
+ point_area <- hex_area_approx * target_coverage
 
-  # Get a representative hexagon (use the densest one)
-  densest_cell <- as.numeric(names(counts)[which.max(counts)])
-  poly_idx <- which(hex_sf$cell_id == densest_cell)
+ # Point radius in coordinate units
+ point_radius_coord <- sqrt(point_area / pi)
 
-  if (length(poly_idx) == 0) return(0.5)
+ # Convert to plot units
+ plot_width <- xlim[2] - xlim[1]
+ plot_height <- ylim[2] - ylim[1]
 
-  hex_poly <- hex_sf[poly_idx, ]
+ # Get device dimensions in inches
+ dev_size <- grDevices::dev.size("in")
+ if (any(dev_size == 0)) dev_size <- c(7, 5)
 
-  # Get hexagon bounding box in coordinate units
-  hex_bbox <- sf::st_bbox(hex_poly)
-  hex_width <- hex_bbox["xmax"] - hex_bbox["xmin"]
-  hex_height <- hex_bbox["ymax"] - hex_bbox["ymin"]
+ # cex=1 gives approximately 0.2 inches diameter
+ base_point_diameter_in <- 0.2
 
-  # Approximate hexagon area as fraction of bounding box
-  # Regular hexagon is ~0.866 of bounding box area
-  hex_area_approx <- hex_width * hex_height * 0.866
+ # Convert coordinate radius to inches
+ x_scale <- dev_size[1] / plot_width
+ y_scale <- dev_size[2] / plot_height
+ avg_scale <- (x_scale + y_scale) / 2
 
-  # Target total point area (all points together, overlap allowed)
-  target_point_area <- hex_area_approx * target_coverage
+ point_diameter_in <- 2 * point_radius_coord * avg_scale
 
-  # Area per point
-  area_per_point <- target_point_area / max_n
+ # Calculate cex
+ cex <- point_diameter_in / base_point_diameter_in
 
-  # Point radius in coordinate units
-  point_radius_coord <- sqrt(area_per_point / pi)
-
-  # Convert to plot units
-  plot_width <- xlim[2] - xlim[1]
-  plot_height <- ylim[2] - ylim[1]
-
-  # Get device dimensions in inches
-  dev_size <- grDevices::dev.size("in")
-  if (any(dev_size == 0)) dev_size <- c(7, 5)
-
-  # cex=1 gives a symbol of about 0.2 inches diameter
-
-  base_point_diameter_in <- 0.2
-
-  # Convert coordinate radius to inches
-  x_scale <- dev_size[1] / plot_width
-  y_scale <- dev_size[2] / plot_height
-  avg_scale <- (x_scale + y_scale) / 2
-
-  point_diameter_in <- 2 * point_radius_coord * avg_scale
-
-  # Calculate cex
-  cex <- point_diameter_in / base_point_diameter_in
-
-  # Clamp to reasonable range
-  cex <- max(0.1, min(5, cex))
-
-  cex
+ # Clamp to reasonable range
+ max(0.1, min(5, cex))
 }
 
 #' Jitter points within their assigned hexagon cells
@@ -211,11 +187,10 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 #' @param point_size Size of points. Can be:
 #'   \itemize{
 #'     \item A number (direct cex value)
-#'     \item A preset: "tiny" (~10\% coverage), "small" (~25\%),
-#'       "normal"/"auto" (~50\%), "large" (~70\%), "very large" (~90\%)
+#'     \item A preset defining what fraction of a hex cell one point covers:
+#'       "tiny" (~2\%), "small" (~5\%), "normal"/"auto" (~10\%),
+#'       "large" (~20\%), "very large" (~35\%)
 #'   }
-#'   Coverage refers to the approximate fraction of the densest hexagon
-#'   that will be filled by points.
 #' @param point_color Color of points (default "red")
 #' @param crop Crop to data extent (default TRUE)
 #' @param crop_expand Expansion factor for crop (default 0.1)
@@ -398,8 +373,8 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 
     # Draw points if requested
     if (show_points) {
-      # Resolve point size based on coverage target and density
-      cex <- resolve_point_size(point_size, x@cell_id, hex_sf, xlim, ylim)
+      # Resolve point size based on hex cell size
+      cex <- resolve_point_size(point_size, hex_sf, xlim, ylim)
 
       # Jitter points within their hexagon
       jittered <- jitter_points_in_cells(x@cell_id, hex_sf)

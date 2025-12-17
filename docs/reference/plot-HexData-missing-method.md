@@ -91,14 +91,16 @@ plot(
 - show_points:
 
   Show original points on top of cells (default FALSE). Points are
-  jittered within their assigned hexagon to prevent overlap.
+  jittered within their assigned hexagon.
 
 - point_size:
 
-  Size of points. Can be a number or a preset string: "tiny", "small",
-  "normal", "large", "very large". When set to "auto" (default when
-  show_points = TRUE), size is calculated based on cell density to
-  minimize overlap.
+  Size of points. Can be:
+
+  - A number (direct cex value)
+
+  - A preset defining what fraction of a hex cell one point covers:
+    "tiny" (~2\\ "large" (~20\\
 
 - point_color:
 

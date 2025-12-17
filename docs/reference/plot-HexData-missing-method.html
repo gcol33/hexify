@@ -135,14 +135,15 @@ temporarily disables S2 spherical geometry to avoid edge-crossing errors.</p></d
 
 <dt id="arg-show-points">show_points<a class="anchor" aria-label="anchor" href="#arg-show-points"></a></dt>
 <dd><p>Show original points on top of cells (default FALSE).
-Points are jittered within their assigned hexagon to prevent overlap.</p></dd>
+Points are jittered within their assigned hexagon.</p></dd>
 
 
 <dt id="arg-point-size">point_size<a class="anchor" aria-label="anchor" href="#arg-point-size"></a></dt>
-<dd><p>Size of points. Can be a number or a preset string:
-"tiny", "small", "normal", "large", "very large". When set to "auto"
-(default when show_points = TRUE), size is calculated based on cell
-density to minimize overlap.</p></dd>
+<dd><p>Size of points. Can be:</p><ul><li><p>A number (direct cex value)</p></li>
+<li><p>A preset defining what fraction of a hex cell one point covers:
+"tiny" (~2\<!-- %), "small" (~5\\%), "normal"/"auto" (~10\\%), -->
+"large" (~20\<!-- %), "very large" (~35\\%) --></p></li>
+</ul></dd>
 
 
 <dt id="arg-point-color">point_color<a class="anchor" aria-label="anchor" href="#arg-point-color"></a></dt>

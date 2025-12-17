@@ -239,21 +239,3 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
   cat(paste(rep("=", 70), collapse = ""), "\n\n")
 }
 
-#' Print resolution comparison table
-#'
-#' @description
-#' `r lifecycle::badge("deprecated")`
-#'
-#' Use `hexify_compare_resolutions(print = TRUE)` instead.
-#'
-#' @param aperture Grid aperture (3, 4, or 7)
-#' @param res_range Range of resolutions to display
-#'
-#' @return Invisibly returns the comparison data frame
-#'
-#' @family grid statistics
-#' @keywords internal
-#' @export
-hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
-  hexify_compare_resolutions(aperture, res_range, print = TRUE)
-}

@@ -272,12 +272,18 @@ plot(result,
 
 #### Show Jittered Points
 
-Points are automatically jittered within their hexagon cells to prevent
-overlap, with size auto-scaled based on density:
+Points are automatically jittered within their hexagon cells. The size
+presets define what fraction of a hex cell a single point covers:
+
+- `"tiny"` (~2% of cell)
+- `"small"` (~5% of cell)
+- `"normal"` / `"auto"` (~10% of cell)
+- `"large"` (~20% of cell)
+- `"very large"` (~35% of cell)
 
 ``` r
 
-# Show jittered points (auto-sized based on density)
+# Show jittered points with default sizing
 plot(result,
      show_points = TRUE,
      point_color = "red",
@@ -288,17 +294,14 @@ plot(result,
 
     #> Spherical geometry (s2) switched on
 
-Point size can be controlled with presets (“tiny”, “small”, “normal”,
-“large”, “very large”) or numeric values:
-
 ``` r
 
-# Control point size with presets
+# Smaller points for less visual clutter
 plot(result,
      show_points = TRUE,
-     point_size = "large",
+     point_size = "small",
      point_color = "darkblue",
-     main = "Large Points")
+     main = "Small Points (~25% coverage)")
 ```
 
 ![](quickstart_files/figure-html/plot-points-sized-1.svg)

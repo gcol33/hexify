@@ -22,8 +22,7 @@ Other grid statistics:
 \code{\link{hexify_area_to_eff_res}()},
 \code{\link{hexify_compare_resolutions}()},
 \code{\link{hexify_eff_res_to_area}()},
-\code{\link{hexify_eff_res_to_resolution}()},
-\code{\link{hexify_print_resolutions}()}
+\code{\link{hexify_eff_res_to_resolution}()}
 }
 \concept{grid statistics}
 \keyword{internal}
