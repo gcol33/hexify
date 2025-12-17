@@ -11,7 +11,7 @@
 #' in separate slots.
 #'
 #' @param data A data.frame or sf object containing coordinates
-#' @param grid A HexGrid object from \code{hex_grid()}. If provided, overrides
+#' @param grid A HexGridInfo object from \code{hex_grid()}. If provided, overrides
 #'   area_km2, resolution, and aperture parameters.
 #' @param lon Column name for longitude (ignored if data is sf)
 #' @param lat Column name for latitude (ignored if data is sf)
@@ -24,7 +24,7 @@
 #' @return A HexData object containing:
 #'   \itemize{
 #'     \item \code{data}: The original input data (unchanged)
-#'     \item \code{grid}: The HexGrid specification
+#'     \item \code{grid}: The HexGridInfo specification
 #'     \item \code{cell_id}: Numeric vector of cell IDs for each row
 #'     \item \code{cell_center}: Matrix of cell center coordinates (lon, lat)
 #'   }
@@ -109,9 +109,9 @@ hexify <- function(data,
       hex_grid_obj <- grid
     } else if (inherits(grid, "hexify_grid")) {
       # Legacy S3 grid object
-      hex_grid_obj <- hexify_grid_to_HexGrid(grid)
+      hex_grid_obj <- hexify_grid_to_HexGridInfo(grid)
     } else {
-      stop("grid must be a HexGrid object from hex_grid() or legacy hexify_grid")
+      stop("grid must be a HexGridInfo object from hex_grid() or legacy hexify_grid")
     }
   } else {
     # Build grid from parameters
@@ -127,7 +127,7 @@ hexify <- function(data,
       area_km2 <- diagonal^2 * sqrt(3) / 2
     }
 
-    # Create HexGrid object (hex_grid handles aperture parsing)
+    # Create HexGridInfo object (hex_grid handles aperture parsing)
     hex_grid_obj <- hex_grid(
       area_km2 = area_km2,
       resolution = resolution,

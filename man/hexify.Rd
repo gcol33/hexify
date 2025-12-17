@@ -19,7 +19,7 @@ hexify(
 \arguments{
 \item{data}{A data.frame or sf object containing coordinates}
 
-\item{grid}{A HexGrid object from \code{hex_grid()}. If provided, overrides
+\item{grid}{A HexGridInfo object from \code{hex_grid()}. If provided, overrides
 area_km2, resolution, and aperture parameters.}
 
 \item{lon}{Column name for longitude (ignored if data is sf)}
@@ -40,7 +40,7 @@ area_km2, resolution, and aperture parameters.}
 A HexData object containing:
 \itemize{
 \item \code{data}: The original input data (unchanged)
-\item \code{grid}: The HexGrid specification
+\item \code{grid}: The HexGridInfo specification
 \item \code{cell_id}: Numeric vector of cell IDs for each row
 \item \code{cell_center}: Matrix of cell center coordinates (lon, lat)
 }

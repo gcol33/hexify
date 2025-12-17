@@ -36,8 +36,8 @@ library(hexify)
 # This is your shared spatial reference system - like a CRS, but discrete and equal-area
 grid <- hex_grid(area_km2 = 5000)
 print(grid)
-#> HexGrid Specification
-#> ---------------------
+#> HexGridInfo Specification
+#> -------------------------
 #> Aperture:    3
 #> Resolution:  8
 #> Area:        7773.97 km^2
@@ -381,9 +381,9 @@ grid <- hex_grid(area_km2 = 1000)
 result <- hexify(observations, lon = "lon", lat = "lat", grid = grid)
 
 # Access grid info
-cat("Resolution:", grid(result)@resolution, "\n")
+cat("Resolution:", grid_info(result)@resolution, "\n")
 #> Resolution: 10
-cat("Cell area:", grid(result)@area_km2, "km2\n")
+cat("Cell area:", grid_info(result)@area_km2, "km2\n")
 #> Cell area: 863.7977 km2
 
 # Access cell information
@@ -623,7 +623,7 @@ cat("Cell IDs:", result@cell_id, "\n")
 |----|----|
 | Create grid specification | `hex_grid(area_km2 = ...)` |
 | Assign points to cells | `hexify(df, lon, lat, grid)` |
-| Get grid from HexData | `grid(result)` |
+| Get grid from HexData | `grid_info(result)` |
 | Get unique cell IDs | `cells(result)` |
 | Count cells | `n_cells(result)` |
 | Extract data frame | `as.data.frame(result)` |

@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{is_hex_grid}
 \alias{is_hex_grid}
-\title{Check if object is HexGrid}
+\title{Check if object is HexGridInfo}
 \usage{
 is_hex_grid(x)
 }
@@ -13,5 +13,5 @@ is_hex_grid(x)
 Logical
 }
 \description{
-Check if object is HexGrid
+Check if object is HexGridInfo
 }

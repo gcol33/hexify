@@ -24,7 +24,7 @@ reference:
   - title: Core Classes
     desc: S4 classes for grid specification and hexified data
     contents:
-      - HexGrid-class
+      - HexGridInfo-class
       - HexData-class
       - hex_grid
       - hexify
@@ -33,7 +33,7 @@ reference:
   - title: HexData Methods
     desc: Methods for working with HexData objects
     contents:
-      - grid
+      - grid_info
       - cells
       - n_cells
       - as_sf

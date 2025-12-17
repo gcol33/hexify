@@ -6192,13 +6192,13 @@ as a 1000 km squared cell in Norway.</p>
 operations)</p>
 </div>
 <div class="section level3">
-<h3 id="core-concepts-hexgrid-and-hexdata">Core Concepts: HexGrid and HexData<a class="anchor" aria-label="anchor" href="#core-concepts-hexgrid-and-hexdata"></a>
+<h3 id="core-concepts-hexgridinfo-and-hexdata">Core Concepts: HexGridInfo and HexData<a class="anchor" aria-label="anchor" href="#core-concepts-hexgridinfo-and-hexdata"></a>
 </h3>
 <p>hexify uses two S4 classes to make spatial workflows clean and
 error-free:</p>
 <ul>
 <li>
-<strong><code>HexGrid</code></strong>: A grid specification that
+<strong><code>HexGridInfo</code></strong>: A grid specification that
 stores all parameters (aperture, resolution, area). Define once, reuse
 everywhere.</li>
 <li>
@@ -6207,7 +6207,7 @@ used. Carries the grid reference so downstream operations “just
 work.”</li>
 </ul>
 <div class="section level4">
-<h4 id="hexgrid-slots">HexGrid Slots<a class="anchor" aria-label="anchor" href="#hexgrid-slots"></a>
+<h4 id="hexgridinfo-slots">HexGridInfo Slots<a class="anchor" aria-label="anchor" href="#hexgridinfo-slots"></a>
 </h4>
 <table class="table">
 <thead><tr class="header">
@@ -6261,7 +6261,7 @@ work.”</li>
 </tr>
 <tr class="even">
 <td><code>grid</code></td>
-<td>HexGrid</td>
+<td>HexGridInfo</td>
 <td>The grid specification used</td>
 </tr>
 <tr class="odd">
@@ -6295,8 +6295,8 @@ work.”</li>
 <span><span class="co"># Create a grid specification</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="va">grid</span></span>
-<span><span class="co">#&gt; HexGrid Specification</span></span>
-<span><span class="co">#&gt; ---------------------</span></span>
+<span><span class="co">#&gt; HexGridInfo Specification</span></span>
+<span><span class="co">#&gt; -------------------------</span></span>
 <span><span class="co">#&gt; Aperture:    3</span></span>
 <span><span class="co">#&gt; Resolution:  8</span></span>
 <span><span class="co">#&gt; Area:        7773.97 km^2</span></span>
@@ -6331,9 +6331,9 @@ work.”</li>
 </h4>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get the grid specification</span></span>
-<span><span class="fu"><a href="../reference/grid.html">grid</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; HexGrid Specification</span></span>
-<span><span class="co">#&gt; ---------------------</span></span>
+<span><span class="fu"><a href="../reference/grid_info.html">grid_info</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; HexGridInfo Specification</span></span>
+<span><span class="co">#&gt; -------------------------</span></span>
 <span><span class="co">#&gt; Aperture:    3</span></span>
 <span><span class="co">#&gt; Resolution:  8</span></span>
 <span><span class="co">#&gt; Area:        7773.97 km^2</span></span>
@@ -6380,14 +6380,14 @@ work.”</li>
 <div class="section level4">
 <h4 id="define-grid-once-reuse-everywhere">Define Grid Once, Reuse Everywhere<a class="anchor" aria-label="anchor" href="#define-grid-once-reuse-everywhere"></a>
 </h4>
-<p>The key workflow: create a <code>HexGrid</code> once, then apply it
-to multiple datasets.</p>
+<p>The key workflow: create a <code>HexGridInfo</code> once, then apply
+it to multiple datasets.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define grid specification</span></span>
 <span><span class="va">my_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">5000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">my_grid</span></span>
-<span><span class="co">#&gt; HexGrid Specification</span></span>
-<span><span class="co">#&gt; ---------------------</span></span>
+<span><span class="co">#&gt; HexGridInfo Specification</span></span>
+<span><span class="co">#&gt; -------------------------</span></span>
 <span><span class="co">#&gt; Aperture:    3</span></span>
 <span><span class="co">#&gt; Resolution:  8</span></span>
 <span><span class="co">#&gt; Area:        7773.97 km^2</span></span>
@@ -24795,7 +24795,7 @@ numeric types for very high resolutions.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>HexGrid</code></td>
+<td><code>HexGridInfo</code></td>
 <td>Grid specification (aperture, resolution, area)</td>
 </tr>
 <tr class="even">
@@ -24816,7 +24816,7 @@ numeric types for very high resolutions.</p>
 <tbody>
 <tr class="odd">
 <td><code><a href="../reference/hex_grid.html">hex_grid()</a></code></td>
-<td>Create a HexGrid specification</td>
+<td>Create a HexGridInfo specification</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/hexify.html">hexify()</a></code></td>
@@ -24835,8 +24835,8 @@ numeric types for very high resolutions.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>grid(x)</code></td>
-<td>Extract HexGrid from HexData</td>
+<td><code>grid_info(x)</code></td>
+<td>Extract HexGridInfo from HexData</td>
 </tr>
 <tr class="even">
 <td><code>cells(x)</code></td>

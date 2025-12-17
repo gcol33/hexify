@@ -29,7 +29,7 @@ hexify(
 
 - grid:
 
-  A HexGrid object from
+  A HexGridInfo object from
   [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md).
   If provided, overrides area_km2, resolution, and aperture parameters.
 
@@ -67,7 +67,7 @@ A HexData object containing:
 
 - `data`: The original input data (unchanged)
 
-- `grid`: The HexGrid specification
+- `grid`: The HexGridInfo specification
 
 - `cell_id`: Numeric vector of cell IDs for each row
 

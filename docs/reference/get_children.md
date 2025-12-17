@@ -16,7 +16,7 @@ get_children(cell_id, grid, levels = 1L)
 
 - grid:
 
-  A HexGrid or HexData object
+  A HexGridInfo or HexData object
 
 - levels:
 

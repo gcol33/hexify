@@ -12,10 +12,10 @@ extract_grid(x, allow_null = FALSE)
 \item{allow_null}{If TRUE, return NULL when x is NULL}
 }
 \value{
-HexGrid object
+HexGridInfo object
 }
 \description{
-Internal function to extract a HexGrid from different input types.
-Accepts HexGrid, HexData, or legacy hexify_grid objects.
+Internal function to extract a HexGridInfo from different input types.
+Accepts HexGridInfo, HexData, or legacy hexify_grid objects.
 }
 \keyword{internal}

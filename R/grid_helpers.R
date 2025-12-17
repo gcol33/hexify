@@ -1,5 +1,5 @@
 # grid_helpers.R
-# Helper functions that accept HexGrid or HexData objects
+# Helper functions that accept HexGridInfo or HexData objects
 #
 # These functions wrap the low-level coordinate conversion functions
 # to accept grid specifications, eliminating the need to repeat
@@ -15,12 +15,12 @@
 #'
 #' @param lon Numeric vector of longitudes in degrees
 #' @param lat Numeric vector of latitudes in degrees
-#' @param grid A HexGrid or HexData object, or legacy hexify_grid
+#' @param grid A HexGridInfo or HexData object, or legacy hexify_grid
 #'
 #' @return Numeric vector of cell IDs
 #'
 #' @details
-#' This function accepts either a HexGrid object from \code{hex_grid()} or
+#' This function accepts either a HexGridInfo object from \code{hex_grid()} or
 #' a HexData object from \code{hexify()}. If a HexData object is provided,
 #' its grid specification is extracted automatically.
 #'
@@ -63,7 +63,7 @@ lonlat_to_cell <- function(lon, lat, grid) {
 #' Converts DGGS cell IDs back to geographic coordinates (cell centers).
 #'
 #' @param cell_id Numeric vector of cell IDs
-#' @param grid A HexGrid or HexData object
+#' @param grid A HexGridInfo or HexData object
 #'
 #' @return Data frame with lon_deg and lat_deg columns
 #'
@@ -101,7 +101,7 @@ cell_to_lonlat <- function(cell_id, grid) {
 #'
 #' @param cell_id Numeric vector of cell IDs. If NULL and x is HexData,
 #'   uses cells from x.
-#' @param grid A HexGrid or HexData object. If HexData and cell_id is NULL,
+#' @param grid A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 #'   polygons are generated for all cells in the data.
 #'
 #' @return sf object with cell_id and geometry columns
@@ -177,7 +177,7 @@ cell_to_sf <- function(cell_id = NULL, grid) {
 #' Creates hexagon polygons covering a rectangular geographic region.
 #'
 #' @param bbox Bounding box as c(xmin, ymin, xmax, ymax), or an sf/sfc object
-#' @param grid A HexGrid object specifying the grid parameters
+#' @param grid A HexGridInfo object specifying the grid parameters
 #'
 #' @return sf object with hexagon polygons
 #'
@@ -226,7 +226,7 @@ grid_rect <- function(bbox, grid) {
 #'
 #' Creates hexagon polygons covering the entire Earth.
 #'
-#' @param grid A HexGrid object specifying the grid parameters
+#' @param grid A HexGridInfo object specifying the grid parameters
 #'
 #' @return sf object with hexagon polygons
 #'
@@ -291,7 +291,7 @@ grid_global <- function(grid) {
 #' Most users don't need this - use cell IDs directly.
 #'
 #' @param cell_id Numeric vector of cell IDs
-#' @param grid A HexGrid or HexData object
+#' @param grid A HexGridInfo or HexData object
 #'
 #' @return Character vector of hierarchical index strings
 #'
@@ -321,7 +321,7 @@ cell_to_index <- function(cell_id, grid) {
 #' Returns the parent cell at a coarser resolution.
 #'
 #' @param cell_id Numeric vector of cell IDs
-#' @param grid A HexGrid or HexData object
+#' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels up (default 1)
 #'
 #' @return Numeric vector of parent cell IDs
@@ -370,7 +370,7 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 #' Returns the child cells at a finer resolution.
 #'
 #' @param cell_id Numeric vector of cell IDs
-#' @param grid A HexGrid or HexData object
+#' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels down (default 1)
 #'
 #' @return List of numeric vectors containing child cell IDs

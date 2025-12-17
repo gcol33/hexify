@@ -9,7 +9,7 @@ cell_to_lonlat(cell_id, grid)
 \arguments{
 \item{cell_id}{Numeric vector of cell IDs}
 
-\item{grid}{A HexGrid or HexData object}
+\item{grid}{A HexGridInfo or HexData object}
 }
 \value{
 Data frame with lon_deg and lat_deg columns

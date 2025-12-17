@@ -17,7 +17,7 @@ cell_to_index(cell_id, grid)
 
 - grid:
 
-  A HexGrid or HexData object
+  A HexGridInfo or HexData object
 
 ## Value
 

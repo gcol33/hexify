@@ -1,5 +1,5 @@
 # classes.R
-# S4 class definitions for HexGrid and HexData
+# S4 class definitions for HexGridInfo and HexData
 #
 # This file defines the core S4 classes that provide stateful return objects
 # for the hexify package, enabling cleaner workflows without repeated parameters.
@@ -10,14 +10,14 @@
 NULL
 
 # =============================================================================
-# S4 CLASS: HexGrid
+# S4 CLASS: HexGridInfo
 # =============================================================================
 #
-# HexGrid stores grid specification parameters (aperture, resolution, etc.)
+# HexGridInfo stores grid specification parameters (aperture, resolution, etc.)
 # so downstream functions don't need them repeated.
 # =============================================================================
 
-#' HexGrid Class
+#' HexGridInfo Class
 #'
 #' An S4 class representing a hexagonal grid specification. Stores all
 #' parameters needed for grid operations.
@@ -29,8 +29,8 @@ NULL
 #' @slot crs Integer. Coordinate reference system (default 4326 = WGS84).
 #'
 #' @details
-#' Create HexGrid objects using the \code{\link{hex_grid}} constructor function.
-#' Do not use \code{new("HexGrid", ...)} directly.
+#' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
+#' Do not use \code{new("HexGridInfo", ...)} directly.
 #'
 #' The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 #' aperture grids that start with aperture 4 and switch to aperture 3.
@@ -38,9 +38,9 @@ NULL
 #' @seealso \code{\link{hex_grid}} for the constructor function,
 #'   \code{\link{HexData-class}} for hexified data objects
 #'
-#' @exportClass HexGrid
+#' @exportClass HexGridInfo
 setClass(
-  "HexGrid",
+  "HexGridInfo",
   slots = c(
     aperture = "character",
     resolution = "integer",
@@ -71,7 +71,7 @@ setClass(
 #' plus cell assignments from the hexification process.
 #'
 #' @slot data Data frame or sf object. The original user data (untouched).
-#' @slot grid HexGrid object. The grid specification used.
+#' @slot grid HexGridInfo object. The grid specification used.
 #' @slot cell_id Numeric vector. Cell IDs for each row of data.
 #' @slot cell_center Matrix. Two-column matrix (lon, lat) of cell centers.
 #'
@@ -83,20 +83,20 @@ setClass(
 #' Use \code{as.data.frame()} to get a combined data frame with cell columns.
 #'
 #' @seealso \code{\link{hexify}} for creating HexData objects,
-#'   \code{\link{HexGrid-class}} for grid specifications
+#'   \code{\link{HexGridInfo-class}} for grid specifications
 #'
 #' @exportClass HexData
 setClass(
   "HexData",
   slots = c(
     data = "ANY",  # data.frame or sf
-    grid = "HexGrid",
+    grid = "HexGridInfo",
     cell_id = "numeric",
     cell_center = "matrix"
   ),
   prototype = list(
     data = data.frame(),
-    grid = new("HexGrid"),
+    grid = new("HexGridInfo"),
     cell_id = numeric(0),
     cell_center = matrix(numeric(0), ncol = 2, dimnames = list(NULL, c("lon", "lat")))
   )
@@ -107,7 +107,7 @@ setClass(
 # =============================================================================
 
 #' @noRd
-setValidity("HexGrid", function(object) {
+setValidity("HexGridInfo", function(object) {
 
   errors <- character()
 
@@ -174,15 +174,15 @@ setValidity("HexData", function(object) {
 #' Extract the grid specification from a HexData object.
 #'
 #' @param x A HexData object
-#' @return A HexGrid object
+#' @return A HexGridInfo object
 #'
 #' @export
 #' @examples
 #' \dontrun{
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-#' grid_spec <- grid(result)
+#' grid_spec <- grid_info(result)
 #' }
-setGeneric("grid", function(x) standardGeneric("grid"))
+setGeneric("grid_info", function(x) standardGeneric("grid_info"))
 
 #' Get Cell IDs
 #'
@@ -205,19 +205,19 @@ setGeneric("cells", function(x) standardGeneric("cells"))
 setGeneric("n_cells", function(x) standardGeneric("n_cells"))
 
 # =============================================================================
-# ACCESSORS FOR HexGrid
+# ACCESSORS FOR HexGridInfo
 # =============================================================================
 
-#' @describeIn HexGrid-class Get aperture value
-#' @param x HexGrid object
+#' @describeIn HexGridInfo-class Get aperture value
+#' @param x HexGridInfo object
 #' @export
-setMethod("$", "HexGrid", function(x, name) {
+setMethod("$", "HexGridInfo", function(x, name) {
   slot(x, name)
 })
 
-#' @describeIn HexGrid-class Get slot names
+#' @describeIn HexGridInfo-class Get slot names
 #' @export
-setMethod("names", "HexGrid", function(x) {
+setMethod("names", "HexGridInfo", function(x) {
   slotNames(x)
 })
 
@@ -227,7 +227,7 @@ setMethod("names", "HexGrid", function(x) {
 
 #' @describeIn HexData-class Extract grid specification
 #' @export
-setMethod("grid", "HexData", function(x) {
+setMethod("grid_info", "HexData", function(x) {
   x@grid
 })
 
@@ -350,11 +350,11 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 # SHOW / PRINT METHODS
 # =============================================================================
 
-#' @describeIn HexGrid-class Print summary
+#' @describeIn HexGridInfo-class Print summary
 #' @export
-setMethod("show", "HexGrid", function(object) {
-  cat("HexGrid Specification\n")
-  cat("---------------------\n")
+setMethod("show", "HexGridInfo", function(object) {
+  cat("HexGridInfo Specification\n")
+  cat("-------------------------\n")
   cat(sprintf("Aperture:    %s\n", object@aperture))
   cat(sprintf("Resolution:  %d\n", object@resolution))
 
@@ -459,9 +459,9 @@ setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
   df
 })
 
-#' @describeIn HexGrid-class Convert to list
+#' @describeIn HexGridInfo-class Convert to list
 #' @export
-setMethod("as.list", "HexGrid", function(x, ...) {
+setMethod("as.list", "HexGridInfo", function(x, ...) {
   list(
     aperture = x@aperture,
     resolution = x@resolution,
@@ -486,13 +486,13 @@ setMethod("as.list", "HexData", function(x, ...) {
 # HELPER FUNCTIONS FOR CLASS CONSTRUCTION
 # =============================================================================
 
-#' Check if object is HexGrid
+#' Check if object is HexGridInfo
 #'
 #' @param x Object to check
 #' @return Logical
 #' @export
 is_hex_grid <- function(x) {
-  inherits(x, "HexGrid")
+  inherits(x, "HexGridInfo")
 }
 
 #' Check if object is HexData
@@ -506,12 +506,12 @@ is_hex_data <- function(x) {
 
 #' Extract grid from various objects
 #'
-#' Internal function to extract a HexGrid from different input types.
-#' Accepts HexGrid, HexData, or legacy hexify_grid objects.
+#' Internal function to extract a HexGridInfo from different input types.
+#' Accepts HexGridInfo, HexData, or legacy hexify_grid objects.
 #'
 #' @param x Object containing grid info
 #' @param allow_null If TRUE, return NULL when x is NULL
-#' @return HexGrid object
+#' @return HexGridInfo object
 #' @keywords internal
 extract_grid <- function(x, allow_null = FALSE) {
   if (is.null(x)) {
@@ -529,22 +529,22 @@ extract_grid <- function(x, allow_null = FALSE) {
 
   # Handle legacy hexify_grid objects (S3 class)
   if (inherits(x, "hexify_grid")) {
-    return(hexify_grid_to_HexGrid(x))
+    return(hexify_grid_to_HexGridInfo(x))
   }
 
   stop("Cannot extract grid from object of class ", class(x)[1])
 }
 
-#' Convert legacy hexify_grid to HexGrid
+#' Convert legacy hexify_grid to HexGridInfo
 #'
 #' @param x A hexify_grid object (S3)
-#' @return A HexGrid object (S4)
+#' @return A HexGridInfo object (S4)
 #' @keywords internal
-hexify_grid_to_HexGrid <- function(x) {
+hexify_grid_to_HexGridInfo <- function(x) {
   area <- if (!is.null(x$area)) as.numeric(x$area) else NA_real_
   diagonal <- if (!is.na(area)) sqrt(area * 2 / sqrt(3)) else NA_real_
 
-  new("HexGrid",
+  new("HexGridInfo",
       aperture = as.character(x$aperture),
       resolution = as.integer(x$resolution),
       area_km2 = area,
@@ -552,14 +552,14 @@ hexify_grid_to_HexGrid <- function(x) {
       crs = 4326L)
 }
 
-#' Convert HexGrid to legacy hexify_grid
+#' Convert HexGridInfo to legacy hexify_grid
 #'
 #' For backwards compatibility with existing functions.
 #'
-#' @param x A HexGrid object (S4)
+#' @param x A HexGridInfo object (S4)
 #' @return A hexify_grid object (S3)
 #' @keywords internal
-HexGrid_to_hexify_grid <- function(x) {
+HexGridInfo_to_hexify_grid <- function(x) {
   # Determine legacy index_type based on aperture
   ap <- x@aperture
   legacy_index <- if (ap == "3") {

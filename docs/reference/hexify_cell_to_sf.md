@@ -37,7 +37,7 @@ hexify_cell_to_sf(
 
 - grid:
 
-  Optional HexGrid object. If provided, resolution and aperture are
+  Optional HexGridInfo object. If provided, resolution and aperture are
   extracted from it.
 
 ## Value

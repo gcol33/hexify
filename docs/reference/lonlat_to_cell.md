@@ -21,7 +21,7 @@ lonlat_to_cell(lon, lat, grid)
 
 - grid:
 
-  A HexGrid or HexData object, or legacy hexify_grid
+  A HexGridInfo or HexData object, or legacy hexify_grid
 
 ## Value
 
@@ -29,7 +29,7 @@ Numeric vector of cell IDs
 
 ## Details
 
-This function accepts either a HexGrid object from
+This function accepts either a HexGridInfo object from
 [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md) or
 a HexData object from
 [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md). If a

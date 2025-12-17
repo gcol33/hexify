@@ -10,7 +10,7 @@ cell_to_sf(cell_id = NULL, grid)
 \item{cell_id}{Numeric vector of cell IDs. If NULL and x is HexData,
 uses cells from x.}
 
-\item{grid}{A HexGrid or HexData object. If HexData and cell_id is NULL,
+\item{grid}{A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 polygons are generated for all cells in the data.}
 }
 \value{

@@ -327,8 +327,8 @@ grid <- hex_grid(area_km2 = 1000)
 result <- hexify(observations, lon = "lon", lat = "lat", grid = grid)
 
 # Access grid info
-cat("Resolution:", grid(result)@resolution, "\n")
-cat("Cell area:", grid(result)@area_km2, "km2\n")
+cat("Resolution:", grid_info(result)@resolution, "\n")
+cat("Cell area:", grid_info(result)@area_km2, "km2\n")
 
 # Access cell information
 cat("Unique cells:", n_cells(result), "\n")
@@ -523,7 +523,7 @@ cat("Cell IDs:", result@cell_id, "\n")
 |------|----------|
 | Create grid specification | `hex_grid(area_km2 = ...)` |
 | Assign points to cells | `hexify(df, lon, lat, grid)` |
-| Get grid from HexData | `grid(result)` |
+| Get grid from HexData | `grid_info(result)` |
 | Get unique cell IDs | `cells(result)` |
 | Count cells | `n_cells(result)` |
 | Extract data frame | `as.data.frame(result)` |

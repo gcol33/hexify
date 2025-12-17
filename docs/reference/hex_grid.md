@@ -1,8 +1,8 @@
 # Create a Hexagonal Grid Specification
 
-Creates a HexGrid object that stores all parameters needed for hexagonal
-grid operations. Use this to define the grid once and pass it to all
-downstream functions.
+Creates a HexGridInfo object that stores all parameters needed for
+hexagonal grid operations. Use this to define the grid once and pass it
+to all downstream functions.
 
 ## Usage
 
@@ -42,7 +42,7 @@ hex_grid(
 
 ## Value
 
-A HexGrid object containing the grid specification.
+A HexGridInfo object containing the grid specification.
 
 ## Details
 
@@ -53,8 +53,8 @@ using the cell count formula: N = 10 \* aperture^res + 2.
 
 ## One Grid, Many Datasets
 
-A HexGrid acts as a shared spatial reference system - like a CRS, but
-discrete and equal-area. Define the grid once, then attach multiple
+A HexGridInfo acts as a shared spatial reference system - like a CRS,
+but discrete and equal-area. Define the grid once, then attach multiple
 datasets without repeating parameters:
 
 
@@ -87,7 +87,7 @@ datasets without repeating parameters:
 
 [`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for
 assigning points to cells,
-[`HexGrid-class`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+[`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
 for class documentation
 
 ## Examples

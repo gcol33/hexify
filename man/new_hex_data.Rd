@@ -9,7 +9,7 @@ new_hex_data(data, grid, cell_id, cell_center)
 \arguments{
 \item{data}{Data frame or sf object (original user data, untouched)}
 
-\item{grid}{HexGrid object}
+\item{grid}{HexGridInfo object}
 
 \item{cell_id}{Numeric vector of cell IDs for each row}
 

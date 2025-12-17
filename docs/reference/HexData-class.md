@@ -7,7 +7,7 @@ plus cell assignments from the hexification process.
 
 ``` r
 # S4 method for class 'HexData'
-grid(x)
+grid_info(x)
 
 # S4 method for class 'HexData'
 cells(x)
@@ -64,7 +64,7 @@ get a combined data frame with cell columns.
 
 ## Functions
 
-- `grid(HexData)`: Extract grid specification
+- `grid_info(HexData)`: Extract grid specification
 
 - `cells(HexData)`: Extract unique cell IDs
 
@@ -104,7 +104,7 @@ get a combined data frame with cell columns.
 
 - `grid`:
 
-  HexGrid object. The grid specification used.
+  HexGridInfo object. The grid specification used.
 
 - `cell_id`:
 
@@ -118,5 +118,5 @@ get a combined data frame with cell columns.
 
 [`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for
 creating HexData objects,
-[`HexGrid-class`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
+[`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
 for grid specifications

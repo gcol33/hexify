@@ -21,6 +21,8 @@
 #'     \item \code{FALSE} or \code{NULL}: No basemap
 #'     \item sf object: Custom basemap
 #'   }
+#' @param clip_basemap Clip basemap to data extent (default TRUE). Clipping
+#'   temporarily disables S2 spherical geometry to avoid edge-crossing errors.
 #' @param basemap_fill Fill color for basemap (default "gray90")
 #' @param basemap_border Border color for basemap (default "gray50")
 #' @param basemap_lwd Line width for basemap borders (default 0.5)
@@ -69,6 +71,7 @@
 setMethod("plot", signature(x = "HexData", y = "missing"),
   function(x, y,
            basemap = TRUE,
+           clip_basemap = TRUE,
            basemap_fill = "gray90",
            basemap_border = "gray50",
            basemap_lwd = 0.5,

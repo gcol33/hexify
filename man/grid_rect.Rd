@@ -9,7 +9,7 @@ grid_rect(bbox, grid)
 \arguments{
 \item{bbox}{Bounding box as c(xmin, ymin, xmax, ymax), or an sf/sfc object}
 
-\item{grid}{A HexGrid object specifying the grid parameters}
+\item{grid}{A HexGridInfo object specifying the grid parameters}
 }
 \value{
 sf object with hexagon polygons

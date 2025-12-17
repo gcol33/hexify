@@ -81,7 +81,7 @@ in separate slots.</p>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
-<dd><p>A HexGrid object from <code><a href="hex_grid.html">hex_grid()</a></code>. If provided, overrides
+<dd><p>A HexGridInfo object from <code><a href="hex_grid.html">hex_grid()</a></code>. If provided, overrides
 area_km2, resolution, and aperture parameters.</p></dd>
 
 
@@ -116,7 +116,7 @@ area_km2, resolution, and aperture parameters.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A HexData object containing:</p><ul><li><p><code>data</code>: The original input data (unchanged)</p></li>
-<li><p><code>grid</code>: The HexGrid specification</p></li>
+<li><p><code>grid</code>: The HexGridInfo specification</p></li>
 <li><p><code>cell_id</code>: Numeric vector of cell IDs for each row</p></li>
 <li><p><code>cell_center</code>: Matrix of cell center coordinates (lon, lat)</p></li>
 </ul><p>Use <code>as.data.frame(result)</code> to extract the original data.

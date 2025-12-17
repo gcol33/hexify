@@ -9,7 +9,7 @@ get_parent(cell_id, grid, levels = 1L)
 \arguments{
 \item{cell_id}{Numeric vector of cell IDs}
 
-\item{grid}{A HexGrid or HexData object}
+\item{grid}{A HexGridInfo or HexData object}
 
 \item{levels}{Number of levels up (default 1)}
 }

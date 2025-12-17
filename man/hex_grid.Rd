@@ -27,10 +27,10 @@ with \code{resolution}.}
 \item{crs}{Coordinate reference system EPSG code (default 4326 = WGS84).}
 }
 \value{
-A HexGrid object containing the grid specification.
+A HexGridInfo object containing the grid specification.
 }
 \description{
-Creates a HexGrid object that stores all parameters needed for hexagonal
+Creates a HexGridInfo object that stores all parameters needed for hexagonal
 grid operations. Use this to define the grid once and pass it to all
 downstream functions.
 }
@@ -43,7 +43,7 @@ using the cell count formula: N = 10 * aperture^res + 2.
 \section{One Grid, Many Datasets}{
 
 
-A HexGrid acts as a shared spatial reference system - like a CRS, but
+A HexGridInfo acts as a shared spatial reference system - like a CRS, but
 discrete and equal-area. Define the grid once, then attach multiple
 datasets without repeating parameters:
 
@@ -96,5 +96,5 @@ result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
 }
 \seealso{
 \code{\link{hexify}} for assigning points to cells,
-\code{\link{HexGrid-class}} for class documentation
+\code{\link{HexGridInfo-class}} for class documentation
 }

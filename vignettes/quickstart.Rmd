@@ -88,14 +88,14 @@ remotes::install_github("gcol33/hexify")
 
 **Required packages**: `sf` (for spatial operations)
 
-## Core Concepts: HexGrid and HexData
+## Core Concepts: HexGridInfo and HexData
 
 hexify uses two S4 classes to make spatial workflows clean and error-free:
 
-- **`HexGrid`**: A grid specification that stores all parameters (aperture, resolution, area). Define once, reuse everywhere.
+- **`HexGridInfo`**: A grid specification that stores all parameters (aperture, resolution, area). Define once, reuse everywhere.
 - **`HexData`**: Your data + the grid that was used. Carries the grid reference so downstream operations "just work."
 
-### HexGrid Slots
+### HexGridInfo Slots
 
 | Slot | Type | Description |
 |------|------|-------------|
@@ -110,7 +110,7 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 | Slot | Type | Description |
 |------|------|-------------|
 | `data` | data.frame/sf | Your original data (unchanged) |
-| `grid` | HexGrid | The grid specification used |
+| `grid` | HexGridInfo | The grid specification used |
 | `cell_id` | numeric | Cell ID for each row |
 | `cell_center` | matrix | Cell center coordinates (lon, lat) |
 
@@ -139,7 +139,7 @@ result
 
 ```{r hexdata-access}
 # Get the grid specification
-grid(result)
+grid_info(result)
 
 # Get unique cell IDs
 cells(result)
@@ -159,7 +159,7 @@ head(as.data.frame(result))
 
 ### Define Grid Once, Reuse Everywhere
 
-The key workflow: create a `HexGrid` once, then apply it to multiple datasets.
+The key workflow: create a `HexGridInfo` once, then apply it to multiple datasets.
 
 ```{r grid-reuse}
 # Define grid specification
@@ -671,21 +671,21 @@ all(result@cell_id == ref$seqnum)
 
 | Class | Description |
 |-------|-------------|
-| `HexGrid` | Grid specification (aperture, resolution, area) |
+| `HexGridInfo` | Grid specification (aperture, resolution, area) |
 | `HexData` | Hexified data with grid reference |
 
 ### Constructors
 
 | Function | Description |
 |----------|-------------|
-| `hex_grid()` | Create a HexGrid specification |
+| `hex_grid()` | Create a HexGridInfo specification |
 | `hexify()` | Assign points to grid cells, returns HexData |
 
 ### HexData Methods
 
 | Method | Description |
 |--------|-------------|
-| `grid(x)` | Extract HexGrid from HexData |
+| `grid_info(x)` | Extract HexGridInfo from HexData |
 | `cells(x)` | Get unique cell IDs |
 | `n_cells(x)` | Count unique cells |
 | `as.data.frame(x)` | Extract underlying data frame |

@@ -54,7 +54,7 @@ plus cell assignments from the hexification process.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'HexData'</span></span>
-<span><span class="fu"><a href="grid.html">grid</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="grid_info.html">grid_info</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'HexData'</span></span>
 <span><span class="fu"><a href="cells.html">cells</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -109,7 +109,7 @@ separately in <code>cell_id</code> and <code>cell_center</code>.</p>
     <div class="section level2">
     <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
 
-<ul><li><p><code>grid(HexData)</code>: Extract grid specification</p></li>
+<ul><li><p><code>grid_info(HexData)</code>: Extract grid specification</p></li>
 <li><p><code>cells(HexData)</code>: Extract unique cell IDs</p></li>
 <li><p><code>n_cells(HexData)</code>: Count unique cells</p></li>
 <li><p><code>nrow(HexData)</code>: Get number of rows</p></li>
@@ -134,7 +134,7 @@ separately in <code>cell_id</code> and <code>cell_center</code>.</p>
 
 
 <dt><code>grid</code></dt>
-<dd><p>HexGrid object. The grid specification used.</p></dd>
+<dd><p>HexGridInfo object. The grid specification used.</p></dd>
 
 
 <dt><code>cell_id</code></dt>
@@ -149,7 +149,7 @@ separately in <code>cell_id</code> and <code>cell_center</code>.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="hexify.html">hexify</a></code> for creating HexData objects,
-<code><a href="HexGrid-class.html">HexGrid-class</a></code> for grid specifications</p></div>
+<code><a href="HexGridInfo-class.html">HexGridInfo-class</a></code> for grid specifications</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -1,16 +1,16 @@
 # constructors.R
-# Constructor functions for HexGrid and HexData S4 classes
+# Constructor functions for HexGridInfo and HexData S4 classes
 #
 # These functions provide user-friendly interfaces for creating
 # grid specifications and hexified data objects.
 
 # =============================================================================
-# HexGrid CONSTRUCTOR
+# HexGridInfo CONSTRUCTOR
 # =============================================================================
 
 #' Create a Hexagonal Grid Specification
 #'
-#' Creates a HexGrid object that stores all parameters needed for hexagonal
+#' Creates a HexGridInfo object that stores all parameters needed for hexagonal
 #' grid operations. Use this to define the grid once and pass it to all
 #' downstream functions.
 #'
@@ -23,7 +23,7 @@
 #'   "nearest" (default), "up", or "down".
 #' @param crs Coordinate reference system EPSG code (default 4326 = WGS84).
 #'
-#' @return A HexGrid object containing the grid specification.
+#' @return A HexGridInfo object containing the grid specification.
 #'
 #' @details
 #' Exactly one of \code{area_km2} or \code{resolution} must be provided.
@@ -32,11 +32,11 @@
 #' using the cell count formula: N = 10 * aperture^res + 2.
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
-#'   \code{\link{HexGrid-class}} for class documentation
+#'   \code{\link{HexGridInfo-class}} for class documentation
 #'
 #' @section One Grid, Many Datasets:
 #'
-#' A HexGrid acts as a shared spatial reference system - like a CRS, but
+#' A HexGridInfo acts as a shared spatial reference system - like a CRS, but
 #' discrete and equal-area. Define the grid once, then attach multiple
 #' datasets without repeating parameters:
 #'
@@ -165,9 +165,9 @@ hex_grid <- function(area_km2 = NULL,
   cpp_build_icosa()
 
   # -------------------------------------------------------------------------
-  # Create and validate HexGrid object
+  # Create and validate HexGridInfo object
   # -------------------------------------------------------------------------
-  grid <- new("HexGrid",
+  grid <- new("HexGridInfo",
               aperture = aperture_str,
               resolution = as.integer(resolution),
               area_km2 = as.numeric(actual_area),
@@ -188,7 +188,7 @@ hex_grid <- function(area_km2 = NULL,
 #' instead.
 #'
 #' @param data Data frame or sf object (original user data, untouched)
-#' @param grid HexGrid object
+#' @param grid HexGridInfo object
 #' @param cell_id Numeric vector of cell IDs for each row
 #' @param cell_center Matrix with columns lon, lat for cell centers
 #'
@@ -205,7 +205,7 @@ new_hex_data <- function(data,
   }
 
   if (!is_hex_grid(grid)) {
-    stop("grid must be a HexGrid object")
+    stop("grid must be a HexGridInfo object")
   }
 
   # Ensure cell_center is a matrix with correct column names

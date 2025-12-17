@@ -3,7 +3,7 @@
 \docType{class}
 \name{HexData-class}
 \alias{HexData-class}
-\alias{grid,HexData-method}
+\alias{grid_info,HexData-method}
 \alias{cells,HexData-method}
 \alias{n_cells,HexData-method}
 \alias{nrow,HexData-method}
@@ -20,7 +20,7 @@
 \alias{as.list,HexData-method}
 \title{HexData Class}
 \usage{
-\S4method{grid}{HexData}(x)
+\S4method{grid_info}{HexData}(x)
 
 \S4method{cells}{HexData}(x)
 
@@ -63,7 +63,7 @@ Use \code{as.data.frame()} to get a combined data frame with cell columns.
 }
 \section{Functions}{
 \itemize{
-\item \code{grid(HexData)}: Extract grid specification
+\item \code{grid_info(HexData)}: Extract grid specification
 
 \item \code{cells(HexData)}: Extract unique cell IDs
 
@@ -99,7 +99,7 @@ Use \code{as.data.frame()} to get a combined data frame with cell columns.
 \describe{
 \item{\code{data}}{Data frame or sf object. The original user data (untouched).}
 
-\item{\code{grid}}{HexGrid object. The grid specification used.}
+\item{\code{grid}}{HexGridInfo object. The grid specification used.}
 
 \item{\code{cell_id}}{Numeric vector. Cell IDs for each row of data.}
 
@@ -108,5 +108,5 @@ Use \code{as.data.frame()} to get a combined data frame with cell columns.
 
 \seealso{
 \code{\link{hexify}} for creating HexData objects,
-\code{\link{HexGrid-class}} for grid specifications
+\code{\link{HexGridInfo-class}} for grid specifications
 }

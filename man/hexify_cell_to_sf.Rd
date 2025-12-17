@@ -22,7 +22,7 @@ hexify_cell_to_sf(
 \item{return_sf}{Logical. If TRUE (default), returns sf object with polygon
 geometries. If FALSE, returns data frame with vertex coordinates.}
 
-\item{grid}{Optional HexGrid object. If provided, resolution and aperture
+\item{grid}{Optional HexGridInfo object. If provided, resolution and aperture
 are extracted from it.}
 }
 \value{

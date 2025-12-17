@@ -1,6 +1,6 @@
-# Check if object is HexGrid
+# Check if object is HexGridInfo
 
-Check if object is HexGrid
+Check if object is HexGridInfo
 
 ## Usage
 

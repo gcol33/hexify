@@ -11,7 +11,7 @@ lonlat_to_cell(lon, lat, grid)
 
 \item{lat}{Numeric vector of latitudes in degrees}
 
-\item{grid}{A HexGrid or HexData object, or legacy hexify_grid}
+\item{grid}{A HexGridInfo or HexData object, or legacy hexify_grid}
 }
 \value{
 Numeric vector of cell IDs
@@ -20,7 +20,7 @@ Numeric vector of cell IDs
 Converts geographic coordinates to DGGS cell IDs using a grid specification.
 }
 \details{
-This function accepts either a HexGrid object from \code{hex_grid()} or
+This function accepts either a HexGridInfo object from \code{hex_grid()} or
 a HexData object from \code{hexify()}. If a HexData object is provided,
 its grid specification is extracted automatically.
 }

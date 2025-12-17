@@ -30,7 +30,7 @@
 #' @param aperture Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.
 #' @param return_sf Logical. If TRUE (default), returns sf object with polygon
 #'   geometries. If FALSE, returns data frame with vertex coordinates.
-#' @param grid Optional HexGrid object. If provided, resolution and aperture
+#' @param grid Optional HexGridInfo object. If provided, resolution and aperture
 #'   are extracted from it.
 #'
 #' @return If return_sf = TRUE: sf object with columns:

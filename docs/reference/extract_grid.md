@@ -1,7 +1,7 @@
 # Extract grid from various objects
 
-Internal function to extract a HexGrid from different input types.
-Accepts HexGrid, HexData, or legacy hexify_grid objects.
+Internal function to extract a HexGridInfo from different input types.
+Accepts HexGridInfo, HexData, or legacy hexify_grid objects.
 
 ## Usage
 
@@ -21,4 +21,4 @@ extract_grid(x, allow_null = FALSE)
 
 ## Value
 
-HexGrid object
+HexGridInfo object

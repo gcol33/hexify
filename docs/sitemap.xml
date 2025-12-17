@@ -13,6 +13,8 @@
 <url><loc>https://gcol33.github.io/hexify/news/index.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/refactor_mit_safe.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/REFACTOR_PLAN.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/$,HexGrid-method.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/as.list,HexGrid-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/as_dggrid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/as_sf.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/as_tibble.HexData.html</loc></url>
@@ -33,11 +35,15 @@
 <url><loc>https://gcol33.github.io/hexify/reference/from_dggrid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/get_children.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/get_parent.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/grid,HexData-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid_global.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/grid_info.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid_rect.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexData-class.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexGrid-class.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/HexGridInfo-class.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/HexGridInfo_to_hexify_grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexGrid_to_hexify_grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify-conversions.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify-grid.html</loc></url>
@@ -76,6 +82,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_rect.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_to_HexGrid.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_to_HexGridInfo.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_heatmap.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_h_index_to_lonlat.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_icosa_tri_to_plane.html</loc></url>
@@ -116,11 +123,13 @@
 <url><loc>https://gcol33.github.io/hexify/reference/is_hex_data.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/is_hex_grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/lonlat_to_cell.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/names,HexGrid-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/new_hex_data.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/n_cells.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/plot_world.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/print.hexify_grid.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/show,HexGrid-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/REWRITE_PLAN.html</loc></url>
 </urlset>
 

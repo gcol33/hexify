@@ -62,7 +62,7 @@ test_that("hexify works with grid parameter", {
   result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
 
   expect_s4_class(result, "HexData")
-  expect_identical(grid(result), grid)
+  expect_identical(grid_info(result), grid)
 })
 
 # =============================================================================
@@ -127,7 +127,7 @@ test_that("hexify handles aperture 3 (ISEA3H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, "3")
+  expect_equal(grid_info(result)@aperture, "3")
 })
 
 test_that("hexify handles aperture 4 (ISEA4H)", {
@@ -139,7 +139,7 @@ test_that("hexify handles aperture 4 (ISEA4H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, "4")
+  expect_equal(grid_info(result)@aperture, "4")
 })
 
 test_that("hexify handles aperture 7 (ISEA7H)", {
@@ -151,7 +151,7 @@ test_that("hexify handles aperture 7 (ISEA7H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, "7")
+  expect_equal(grid_info(result)@aperture, "7")
 })
 
 test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
@@ -164,7 +164,7 @@ test_that("hexify handles mixed aperture 4/3 (ISEA43H)", {
   expect_true("cell_id" %in% names(result))
   expect_type(result$cell_id, "double")
   expect_true(result$cell_id > 0)
-  expect_equal(grid(result)@aperture, "4/3")
+  expect_equal(grid_info(result)@aperture, "4/3")
 })
 
 test_that("hexify rejects unsupported apertures with clear error", {
@@ -310,7 +310,7 @@ test_that("hexify works with mixed aperture 4/3", {
 
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
   expect_true("cell_id" %in% names(result))
-  expect_equal(grid(result)@aperture, "4/3")
+  expect_equal(grid_info(result)@aperture, "4/3")
 })
 
 # =============================================================================
@@ -387,8 +387,8 @@ test_that("HexData accessors work correctly", {
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
   # grid() accessor
-  g <- grid(result)
-  expect_s4_class(g, "HexGrid")
+  g <- grid_info(result)
+  expect_s4_class(g, "HexGridInfo")
 
   # cells() accessor
   c <- cells(result)
@@ -436,7 +436,7 @@ test_that("as.data.frame works on HexData", {
 test_that("hex_grid constructor works with area_km2", {
   grid <- hex_grid(area_km2 = 1000)
 
-  expect_s4_class(grid, "HexGrid")
+  expect_s4_class(grid, "HexGridInfo")
   expect_equal(grid@aperture, "3")
   expect_true(grid@resolution >= 0)
   expect_true(grid@resolution <= 30)
@@ -445,7 +445,7 @@ test_that("hex_grid constructor works with area_km2", {
 test_that("hex_grid constructor works with resolution", {
   grid <- hex_grid(resolution = 8)
 
-  expect_s4_class(grid, "HexGrid")
+  expect_s4_class(grid, "HexGridInfo")
   expect_equal(grid@resolution, 8L)
 })
 

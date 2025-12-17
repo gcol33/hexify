@@ -18,7 +18,7 @@ new_hex_data(data, grid, cell_id, cell_center)
 
 - grid:
 
-  HexGrid object
+  HexGridInfo object
 
 - cell_id:
 

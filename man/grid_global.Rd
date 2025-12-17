@@ -7,7 +7,7 @@
 grid_global(grid)
 }
 \arguments{
-\item{grid}{A HexGrid object specifying the grid parameters}
+\item{grid}{A HexGridInfo object specifying the grid parameters}
 }
 \value{
 sf object with hexagon polygons

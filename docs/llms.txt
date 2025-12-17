@@ -201,12 +201,12 @@ MIT
 
 S4 classes for grid specification and hexified data
 
-- [`` `$`( ``*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
-  [`names(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
-  [`show(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
-  [`as.list(`*`<HexGrid>`*`)`](https://gcol33.github.io/hexify/reference/HexGrid-class.md)
-  : HexGrid Class
-- [`grid(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+- [`` `$`( ``*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+  [`names(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+  [`show(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+  [`as.list(`*`<HexGridInfo>`*`)`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+  : HexGridInfo Class
+- [`grid_info(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
   [`cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
   [`n_cells(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
   [`nrow(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-class.md)
@@ -233,8 +233,8 @@ S4 classes for grid specification and hexified data
 
 Methods for working with HexData objects
 
-- [`grid()`](https://gcol33.github.io/hexify/reference/grid.md) : Get
-  Grid Specification
+- [`grid_info()`](https://gcol33.github.io/hexify/reference/grid_info.md)
+  : Get Grid Specification
 - [`cells()`](https://gcol33.github.io/hexify/reference/cells.md) : Get
   Cell IDs
 - [`n_cells()`](https://gcol33.github.io/hexify/reference/n_cells.md) :
@@ -244,7 +244,7 @@ Methods for working with HexData objects
 - [`as_tibble.HexData()`](https://gcol33.github.io/hexify/reference/as_tibble.HexData.md)
   : Convert HexData to tibble
 - [`is_hex_grid()`](https://gcol33.github.io/hexify/reference/is_hex_grid.md)
-  : Check if object is HexGrid
+  : Check if object is HexGridInfo
 - [`is_hex_data()`](https://gcol33.github.io/hexify/reference/is_hex_data.md)
   : Check if object is HexData
 

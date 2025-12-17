@@ -17,8 +17,8 @@ cell_to_sf(cell_id = NULL, grid)
 
 - grid:
 
-  A HexGrid or HexData object. If HexData and cell_id is NULL, polygons
-  are generated for all cells in the data.
+  A HexGridInfo or HexData object. If HexData and cell_id is NULL,
+  polygons are generated for all cells in the data.
 
 ## Value
 

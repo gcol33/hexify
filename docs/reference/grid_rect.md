@@ -16,7 +16,7 @@ grid_rect(bbox, grid)
 
 - grid:
 
-  A HexGrid object specifying the grid parameters
+  A HexGridInfo object specifying the grid parameters
 
 ## Value
 
