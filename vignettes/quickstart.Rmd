@@ -54,13 +54,11 @@ ggplot() +
 
 You want to do spatial statistics, and it involves binning points into grid cells.
 
-**The problem with rectangular grids**: A rectangular lat-lon grid introduces severe distortions. At the equator, a 1 degree cell covers ~12,300 km squared. Near the poles, the same 1 degree cell covers a tiny fraction of that area. This breaks any analysis that assumes equal sampling effort or comparable cell sizes.
+**The problem with rectangular grids**: A rectangular lat-lon grid introduces severe distortions. At the equator, a 1° cell covers ~12,300 km². Near the poles, the same 1° cell covers a tiny fraction of that area. This breaks any analysis that assumes equal sampling effort or comparable cell sizes.
 
 **The solution**: Discrete global grids partition Earth's surface into cells of **equal area**, regardless of latitude. hexify implements the ISEA (Icosahedral Snyder Equal Area) projection, providing hexagonal cells that are all the same size from the equator to the Arctic.
 
-## Quick Start
-
-### Basic Usage
+## Basic Usage
 
 ```{r basic-usage}
 # Sample data: European cities
@@ -201,7 +199,7 @@ ggplot() +
   coord_sf(xlim = c(-30, 60), ylim = c(-35, 70)) +
   labs(
     title = "Bird Observations in Equal-Area Hexagonal Cells",
-    subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km2 cells)",
+    subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km² cells)",
                        grid@resolution, grid@area_km2)
   ) +
   theme_minimal() +
@@ -232,68 +230,7 @@ ggplot() +
   )
 ```
 
-## Grid Generation
-
-### Grid Over a Rectangular Region
-
-```{r grid-rect, fig.width=7, fig.height=5, message=FALSE}
-# Create grid specification
-grid <- hex_grid(area_km2 = 5000)
-
-# Generate hexagons over Western Europe
-europe_hexes <- grid_rect(c(-10, 35, 25, 60), grid)
-
-# Get European countries for context
-europe <- hexify_world[hexify_world$continent == "Europe", ]
-
-ggplot() +
-  geom_sf(data = europe, fill = "gray95", color = "gray60") +
-  geom_sf(data = europe_hexes, fill = NA, color = "steelblue", linewidth = 0.4) +
-  coord_sf(xlim = c(-10, 25), ylim = c(35, 60)) +
-  labs(title = sprintf("Hexagonal Grid (~%.0f km2 cells)", grid@area_km2)) +
-  theme_minimal()
-```
-
-### Grid Over a Polygon (Shapefile)
-
-Clip a grid to any sf polygon boundary:
-
-```{r grid-polygon, fig.width=6, fig.height=6, message=FALSE}
-# Get France boundary
-france <- hexify_world[hexify_world$name == "France", ]
-
-# Generate grid covering mainland France
-grid <- hex_grid(area_km2 = 2000)
-france_grid <- grid_rect(c(-5, 41, 10, 52), grid)
-
-# Clip grid to France boundary
-france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
-
-ggplot() +
-  geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
-  geom_sf(data = france_grid_clipped, fill = alpha("steelblue", 0.3),
-          color = "steelblue", linewidth = 0.3) +
-  coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
-  labs(title = sprintf("Hexagonal Grid Clipped to France (~%.0f km2 cells)", grid@area_km2)) +
-  theme_minimal()
-```
-
-### Global Grid
-
-```{r grid-global, fig.width=8, fig.height=4, message=FALSE, warning=FALSE}
-# Coarse global grid (be careful with fine grids - many cells!)
-grid <- hex_grid(area_km2 = 500000)
-global_hexes <- grid_global(grid)
-
-ggplot() +
-  geom_sf(data = hexify_world, fill = "gray90", color = "gray70", linewidth = 0.2) +
-  geom_sf(data = global_hexes, fill = NA, color = "darkgreen", linewidth = 0.3) +
-  labs(title = sprintf("Global Hexagonal Grid (~%.0f km2 cells)", grid@area_km2)) +
-  theme_minimal() +
-  theme(axis.text = element_blank(), axis.ticks = element_blank())
-```
-
-## Core Concepts: HexGridInfo and HexData
+## Core Concepts
 
 hexify uses two S4 classes to make spatial workflows clean and error-free:
 
@@ -306,7 +243,7 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 |------|------|-------------|
 | `aperture` | character | Grid aperture ("3", "4", "7", or "4/3") |
 | `resolution` | integer | Resolution level (0-30) |
-| `area_km2` | numeric | Cell area in km squared |
+| `area_km2` | numeric | Cell area in km² |
 | `diagonal_km` | numeric | Cell diagonal in km |
 | `crs` | integer | Coordinate reference system (EPSG code) |
 
@@ -318,96 +255,6 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 | `grid` | HexGridInfo | The grid specification used |
 | `cell_id` | numeric | Cell ID for each row |
 | `cell_center` | matrix | Cell center coordinates (lon, lat) |
-
-### Define Grid Once, Reuse Everywhere
-
-The key workflow: create a `HexGridInfo` once, then apply it to multiple datasets.
-
-```{r grid-reuse}
-# Define grid specification
-my_grid <- hex_grid(area_km2 = 5000, aperture = 3)
-my_grid
-
-# Apply same grid to different datasets
-set.seed(123)
-birds <- data.frame(lon = runif(100, -10, 30), lat = runif(100, 35, 60))
-mammals <- data.frame(x = runif(50, -10, 30), y = runif(50, 35, 60))
-
-birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = my_grid)
-mammals_hex <- hexify(mammals, lon = "x", lat = "y", grid = my_grid)
-
-# Both use identical grid - safe to combine
-cat("Birds:", n_cells(birds_hex), "cells\n")
-cat("Mammals:", n_cells(mammals_hex), "cells\n")
-```
-
-## Resolution Reference
-
-### ISEA3H (Aperture 3)
-
-```{r resolution-table, echo=FALSE}
-comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:15)
-comparison$n_cells_fmt <- ifelse(
-  comparison$n_cells > 1e6,
-  sprintf("%.1fM", comparison$n_cells / 1e6),
-  ifelse(comparison$n_cells > 1e3,
-         sprintf("%.1fK", comparison$n_cells / 1e3),
-         as.character(comparison$n_cells))
-)
-knitr::kable(
-  comparison[, c("resolution", "n_cells_fmt", "cell_area_km2", "cell_spacing_km")],
-  col.names = c("Resolution", "# Cells", "Cell Area (km2)", "Spacing (km)"),
-  digits = 1
-)
-```
-
-### Choosing Resolution by Area
-
-```{r resolution-choice}
-# Find resolution for target areas
-targets <- c(100, 1000, 10000, 100000)
-
-cat("Target Area -> Actual Resolution & Area\n")
-cat("--------------------------------------\n")
-for (target in targets) {
-  grid <- hex_grid(area_km2 = target, aperture = 3)
-  cat(sprintf("%7.0f km2 -> res %2d = %9.1f km2\n",
-              target, grid@resolution, grid@area_km2))
-}
-```
-
-### Comparing Apertures
-
-```{r aperture-comparison}
-target <- 1000  # km2
-
-cat(sprintf("Target: ~%d km2 cells\n\n", target))
-for (ap in c(3, 4, 7)) {
-  grid <- hex_grid(area_km2 = target, aperture = ap)
-  n_cells <- 10 * (ap^grid@resolution) + 2
-  cat(sprintf("Aperture %d: res %2d -> %8.1f km2 (%s cells)\n",
-              ap, grid@resolution, grid@area_km2,
-              format(n_cells, big.mark = ",")))
-}
-```
-
-## Export to External Formats
-
-Use sf's `st_write()` to export grids for use in GIS software:
-
-```{r export-formats, eval=FALSE}
-library(sf)
-
-# Generate a grid
-grid <- hex_grid(area_km2 = 10000)
-europe <- grid_rect(c(-10, 35, 25, 60), grid)
-
-# Export to various formats
-st_write(europe, "europe_grid.gpkg", layer = "hexgrid")     # GeoPackage
-st_write(europe, "europe_grid.shp")                         # Shapefile
-st_write(europe, "europe_grid.geojson")                     # GeoJSON
-st_write(europe, "europe_grid.kml", layer = "hexgrid")      # KML (Google Earth)
-```
 
 ## Caveats
 
@@ -423,79 +270,14 @@ For most analyses, pentagons are not a concern:
 
 ### Multi-Scale Analysis
 
-Hexagonal grids do **not** nest perfectly - cells at one resolution partially overlap cells at other resolutions. For hierarchical analysis, use grid-based aggregation rather than spatial containment.
+Hexagonal grids do **not** nest perfectly—cells at one resolution partially overlap cells at other resolutions. For hierarchical analysis, use grid-based aggregation rather than spatial containment.
 
 ### Integer Limits
 
 Cell IDs are stored as integers. For resolutions above 15 (aperture 3), cell IDs may exceed R's integer limit (2^31-1). Use appropriate numeric types for very high resolutions.
 
-## Function Reference
-
-### S4 Classes
-
-| Class | Description |
-|-------|-------------|
-| `HexGridInfo` | Grid specification (aperture, resolution, area) |
-| `HexData` | Hexified data with grid reference |
-
-### Constructors
-
-| Function | Description |
-|----------|-------------|
-| `hex_grid()` | Create a HexGridInfo specification |
-| `hexify()` | Assign points to grid cells, returns HexData |
-
-### HexData Methods
-
-| Method | Description |
-|--------|-------------|
-| `grid_info(x)` | Extract HexGridInfo from HexData |
-| `cells(x)` | Get unique cell IDs |
-| `n_cells(x)` | Count unique cells |
-| `as.data.frame(x)` | Extract underlying data frame |
-| `x$column` | Access columns directly |
-| `x[i, j]` | Subset rows/columns |
-
-### Grid Generation
-
-| Function | Description |
-|----------|-------------|
-| `grid_rect()` | Generate grid polygons over rectangular region |
-| `grid_global()` | Generate global grid polygons |
-| `cell_to_sf()` | Generate polygons from cell IDs |
-| `as_sf()` | Convert HexData to sf object |
-
-### Coordinate Conversion
-
-| Function | Description |
-|----------|-------------|
-| `lonlat_to_cell()` | lon/lat -> cell ID |
-| `cell_to_lonlat()` | cell ID -> cell center lon/lat |
-
-### Visualization
-
-| Function | Description |
-|----------|-------------|
-| `plot()` | Base R plot method for HexData |
-| `hexify_ggplot()` | ggplot2 plotting for HexData |
-| `hexify_heatmap()` | ggplot2 choropleth heatmap |
-| `plot_world()` | Quick world map |
-
-### Grid Statistics
-
-| Function | Description |
-|----------|-------------|
-| `hexify_compare_resolutions()` | Compare resolution levels |
-| `dgearthstat()` | Get grid statistics |
-
 ## See Also
 
-- `vignette("visualization")` - Detailed visualization options and customization
-- `vignette("theory")` - Mathematical foundations (projection, apertures, space-filling curves)
-- `vignette("workflows")` - Detailed workflow examples for common analysis tasks
-
-## Session Info
-
-```{r session-info}
-sessionInfo()
-```
+- `vignette("visualization")` - Plotting options: `plot()`, `hexify_ggplot()`, `hexify_heatmap()`
+- `vignette("workflows")` - Grid generation, multi-resolution analysis, spatial joins, choosing resolution
+- `vignette("theory")` - Mathematical foundations (ISEA projection, apertures, space-filling curves)
