@@ -1,9 +1,9 @@
 # Assign hexagonal DGGS cell IDs to geographic points
 
 Takes a data.frame or sf object with geographic coordinates and returns
-the data with additional columns for hex cell ID and center coordinates.
-By default returns a HexData object that stores the grid specification
-for use in downstream operations.
+a HexData object that stores the original data plus cell assignments.
+The original data is preserved unchanged; cell IDs and centers are
+stored in separate slots.
 
 ## Usage
 
@@ -16,8 +16,7 @@ hexify(
   area_km2 = NULL,
   diagonal = NULL,
   resolution = NULL,
-  aperture = 3L,
-  mixed_aperture_level = NULL,
+  aperture = 3,
   resround = "nearest"
 )
 ```
@@ -44,8 +43,7 @@ hexify(
 
 - area_km2:
 
-  Target cell area in km² (mutually exclusive with diagonal). Alias:
-  `area` for backwards compatibility.
+  Target cell area in km² (mutually exclusive with diagonal).
 
 - diagonal:
 
@@ -59,11 +57,6 @@ hexify(
 
   Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)
 
-- mixed_aperture_level:
-
-  For mixed aperture "4/3": number of aperture-4 levels before switching
-  to aperture-3 (default NULL, auto-calculated as resolution/2)
-
 - resround:
 
   How to round resolution: "nearest", "up", or "down"
@@ -72,34 +65,17 @@ hexify(
 
 A HexData object containing:
 
-- The input data with cell assignment columns
+- `data`: The original input data (unchanged)
 
-- The grid specification for downstream operations
+- `grid`: The HexGrid specification
 
-Use `as.data.frame(result)` to extract a plain data.frame. Use
-`as_sf(result)` to convert to sf object.
+- `cell_id`: Numeric vector of cell IDs for each row
 
-Added columns:
+- `cell_center`: Matrix of cell center coordinates (lon, lat)
 
-- cell_id:
-
-  Stable DGGS cell identifier
-
-- cell_cen_lon:
-
-  Longitude of cell center in degrees
-
-- cell_cen_lat:
-
-  Latitude of cell center in degrees
-
-- cell_area_km2:
-
-  Actual cell area in km²
-
-- cell_diag_km:
-
-  Actual cell long diagonal in km
+Use `as.data.frame(result)` to extract the original data. Use
+`cells(result)` to get unique cell IDs. Use `result@cell_id` to get all
+cell IDs. Use `result@cell_center` to get cell center coordinates.
 
 ## Details
 

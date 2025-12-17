@@ -45,7 +45,7 @@
     <div class="section level2">
       <h2 id="core-classes">Core Classes<a class="anchor" aria-label="anchor" href="#core-classes"></a></h2>
 
-
+      <div class="section-desc"><p>S4 classes for grid specification and hexified data</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -87,9 +87,9 @@
         </dt>
         <dd>Assign hex cells (ISEA3H, aperture 3) for lon/lat</dd>
       </dl></div><div class="section level2">
-      <h2 id="class-methods">Class Methods<a class="anchor" aria-label="anchor" href="#class-methods"></a></h2>
+      <h2 id="hexdata-methods">HexData Methods<a class="anchor" aria-label="anchor" href="#hexdata-methods"></a></h2>
 
-
+      <div class="section-desc"><p>Methods for working with HexData objects</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -133,21 +133,21 @@
 
         <dt>
 
-          <code><a href="autoplot.HexData.html">autoplot.HexData()</a></code>
+          <code><a href="is_hex_grid.html">is_hex_grid()</a></code>
 
         </dt>
-        <dd>Create a ggplot2 visualization of HexData</dd>
+        <dd>Check if object is HexGrid</dd>
 
         <dt>
 
-          <code><a href="plot-HexData-missing-method.html">plot(<i>&lt;HexData&gt;</i>,<i>&lt;missing&gt;</i>)</a></code>
+          <code><a href="is_hex_data.html">is_hex_data()</a></code>
 
         </dt>
-        <dd>Plot HexData objects</dd>
+        <dd>Check if object is HexData</dd>
       </dl></div><div class="section level2">
-      <h2 id="grid-helpers">Grid Helpers<a class="anchor" aria-label="anchor" href="#grid-helpers"></a></h2>
+      <h2 id="grid-generation">Grid Generation<a class="anchor" aria-label="anchor" href="#grid-generation"></a></h2>
 
-
+      <div class="section-desc"><p>Functions for creating hexagonal grids over regions</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -155,34 +155,6 @@
 
 
       <dl><dt>
-
-          <code><a href="lonlat_to_cell.html">lonlat_to_cell()</a></code>
-
-        </dt>
-        <dd>Convert longitude/latitude to cell ID</dd>
-
-        <dt>
-
-          <code><a href="cell_to_lonlat.html">cell_to_lonlat()</a></code>
-
-        </dt>
-        <dd>Convert cell ID to longitude/latitude</dd>
-
-        <dt>
-
-          <code><a href="cell_to_sf.html">cell_to_sf()</a></code>
-
-        </dt>
-        <dd>Convert cell IDs to sf polygons</dd>
-
-        <dt>
-
-          <code><a href="cell_to_index.html">cell_to_index()</a></code>
-
-        </dt>
-        <dd>Convert cell ID to hierarchical index string</dd>
-
-        <dt>
 
           <code><a href="grid_rect.html">grid_rect()</a></code>
 
@@ -198,56 +170,28 @@
 
         <dt>
 
-          <code><a href="get_parent.html">get_parent()</a></code>
+          <code><a href="cell_to_sf.html">cell_to_sf()</a></code>
 
         </dt>
-        <dd>Get parent cell</dd>
+        <dd>Convert cell IDs to sf polygons</dd>
 
         <dt>
 
-          <code><a href="get_children.html">get_children()</a></code>
+          <code><a href="lonlat_to_cell.html">lonlat_to_cell()</a></code>
 
         </dt>
-        <dd>Get children cells</dd>
+        <dd>Convert longitude/latitude to cell ID</dd>
 
         <dt>
 
-          <code><a href="extract_grid.html">extract_grid()</a></code>
+          <code><a href="cell_to_lonlat.html">cell_to_lonlat()</a></code>
 
         </dt>
-        <dd>Extract grid from various objects</dd>
-
-        <dt>
-
-          <code><a href="is_hex_grid.html">is_hex_grid()</a></code>
-
-        </dt>
-        <dd>Check if object is HexGrid</dd>
-
-        <dt>
-
-          <code><a href="is_hex_data.html">is_hex_data()</a></code>
-
-        </dt>
-        <dd>Check if object is HexData</dd>
-
-        <dt>
-
-          <code><a href="hexify_df.html">hexify_df()</a></code>
-
-        </dt>
-        <dd>Extract plain data frame from hexify result</dd>
-
-        <dt>
-
-          <code><a href="new_hex_data.html">new_hex_data()</a></code>
-
-        </dt>
-        <dd>Create a HexData Object (Internal)</dd>
+        <dd>Convert cell ID to longitude/latitude</dd>
       </dl></div><div class="section level2">
-      <h2 id="coordinate-conversions">Coordinate Conversions<a class="anchor" aria-label="anchor" href="#coordinate-conversions"></a></h2>
+      <h2 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a></h2>
 
-
+      <div class="section-desc"><p>Plotting and mapping functions</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -256,180 +200,130 @@
 
       <dl><dt>
 
-          <code><a href="hexify_lonlat_to_cell.html">hexify_lonlat_to_cell()</a></code>
+          <code><a href="hexify_ggplot.html">hexify_ggplot()</a></code>
 
         </dt>
-        <dd>Convert longitude/latitude to cell ID</dd>
+        <dd>Create a ggplot2 visualization of HexData</dd>
 
         <dt>
 
-          <code><a href="hexify_lonlat_to_index.html">hexify_lonlat_to_index()</a></code>
+          <code><a href="hexify_map.html">hexify_map()</a></code>
 
         </dt>
-        <dd>Convert longitude/latitude to index string</dd>
+        <dd>Plot hexagonal grid cells with optional basemap</dd>
 
         <dt>
 
-          <code><a href="hexify_lonlat_to_plane.html">hexify_lonlat_to_plane()</a></code>
+          <code><a href="hexify_heatmap.html">hexify_heatmap()</a></code>
 
         </dt>
-        <dd>Convert longitude/latitude to PLANE coordinates</dd>
+        <dd>Create a heatmap visualization of hexagonal grid cells</dd>
 
         <dt>
 
-          <code><a href="hexify_lonlat_to_quad_ij.html">hexify_lonlat_to_quad_ij()</a></code>
+          <code><a href="plot_world.html">plot_world()</a></code>
 
         </dt>
-        <dd>Convert longitude/latitude to Quad IJ coordinates</dd>
+        <dd>Quick world map plot</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_id_to_quad_ij.html">hexify_cell_id_to_quad_ij()</a></code>
+          <code><a href="hexify_world.html">hexify_world</a></code>
 
         </dt>
-        <dd>Get cell info from cell ID</dd>
+        <dd>Simplified World Map</dd>
+      </dl></div><div class="section level2">
+      <h2 id="grid-statistics">Grid Statistics<a class="anchor" aria-label="anchor" href="#grid-statistics"></a></h2>
+
+      <div class="section-desc"><p>Resolution comparison and grid statistics</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="dgearthstat.html">dgearthstat()</a></code>
+
+        </dt>
+        <dd>Get grid statistics for Earth coverage</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_icosa_tri.html">hexify_cell_to_icosa_tri()</a></code>
+          <code><a href="hexify_compare_resolutions.html">hexify_compare_resolutions()</a></code>
 
         </dt>
-        <dd>Convert Cell ID to Icosa Triangle coordinates</dd>
+        <dd>Compare grid resolutions</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_index.html">hexify_cell_to_index()</a></code>
-
+          <code><a href="hexify_print_resolutions.html">hexify_print_resolutions()</a></code>
+          <span class="badge lifecycle lifecycle-deprecated">deprecated</span>
         </dt>
-        <dd>Convert cell coordinates to index string</dd>
+        <dd>Print resolution comparison table</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_lonlat.html">hexify_cell_to_lonlat()</a></code>
+          <code><a href="dgverify.html">dgverify()</a></code>
 
         </dt>
-        <dd>Convert cell ID to longitude/latitude</dd>
+        <dd>Verify grid object</dd>
+      </dl></div><div class="section level2">
+      <h2 id="dggridr-compatibility">dggridR Compatibility<a class="anchor" aria-label="anchor" href="#dggridr-compatibility"></a></h2>
+
+      <div class="section-desc"><p>Functions for interoperability with dggridR package</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="as_dggrid.html">as_dggrid()</a></code>
+
+        </dt>
+        <dd>Convert hexify grid to dggridR-compatible grid object</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_plane.html">hexify_cell_to_plane()</a></code>
+          <code><a href="from_dggrid.html">from_dggrid()</a></code>
 
         </dt>
-        <dd>Convert Cell ID to PLANE coordinates</dd>
+        <dd>Convert dggridR grid object to hexify_grid</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_quad_ij.html">hexify_cell_to_quad_ij()</a></code>
+          <code><a href="dggrid_is_compatible.html">dggrid_is_compatible()</a></code>
 
         </dt>
-        <dd>Convert Cell ID to Quad IJ coordinates</dd>
+        <dd>Validate dggridR grid compatibility with hexify</dd>
 
         <dt>
 
-          <code><a href="hexify_cell_to_quad_xy.html">hexify_cell_to_quad_xy()</a></code>
+          <code><a href="dggrid_43h_sequence.html">dggrid_43h_sequence()</a></code>
 
         </dt>
-        <dd>Convert Cell ID to Quad XY coordinates</dd>
+        <dd>Create DGGRID 43H aperture sequence</dd>
 
         <dt>
 
-          <code><a href="hexify_quad_ij_to_cell.html">hexify_quad_ij_to_cell()</a></code>
+          <code><a href="hexify_grid.html">hexify_grid()</a></code>
 
         </dt>
-        <dd>Convert Quad IJ coordinates to cell ID</dd>
+        <dd>Create a hexagonal grid specification</dd>
+      </dl></div><div class="section level2">
+      <h2 id="low-level-coordinate-conversions">Low-Level Coordinate Conversions<a class="anchor" aria-label="anchor" href="#low-level-coordinate-conversions"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Internal coordinate transformation functions</p></div>
 
-          <code><a href="hexify_quad_ij_to_icosa_tri.html">hexify_quad_ij_to_icosa_tri()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Convert Quad IJ to Icosa Triangle coordinates</dd>
 
-        <dt>
 
-          <code><a href="hexify_quad_ij_to_xy.html">hexify_quad_ij_to_xy()</a></code>
 
-        </dt>
-        <dd>Convert Quad IJ to Quad XY (continuous coordinates)</dd>
-
-        <dt>
-
-          <code><a href="hexify_quad_xy_to_cell.html">hexify_quad_xy_to_cell()</a></code>
-
-        </dt>
-        <dd>Convert Quad XY coordinates to Cell ID</dd>
-
-        <dt>
-
-          <code><a href="hexify_quad_xy_to_icosa_tri.html">hexify_quad_xy_to_icosa_tri()</a></code>
-
-        </dt>
-        <dd>Convert Quad XY to Icosa Triangle coordinates</dd>
-
-        <dt>
-
-          <code><a href="hexify_grid_cell_to_lonlat.html">hexify_grid_cell_to_lonlat()</a></code>
-
-        </dt>
-        <dd>Convert cell ID to longitude/latitude using a grid object</dd>
-
-        <dt>
-
-          <code><a href="hexify_grid_global.html">hexify_grid_global()</a></code>
-
-        </dt>
-        <dd>Generate a global grid of hexagon polygons</dd>
-
-        <dt>
-
-          <code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code>
-
-        </dt>
-        <dd>Generate a rectangular grid of hexagon polygons</dd>
-
-        <dt>
-
-          <code><a href="hexify_grid_to_cell.html">hexify_grid_to_cell()</a></code>
-
-        </dt>
-        <dd>Convert longitude/latitude to cell ID using a grid object</dd>
-
-        <dt>
-
-          <code><a href="hexify_icosa_tri_to_plane.html">hexify_icosa_tri_to_plane()</a></code>
-
-        </dt>
-        <dd>Convert Icosa Triangle coordinates to PLANE coordinates</dd>
-
-        <dt>
-
-          <code><a href="hexify_icosa_tri_to_quad_ij.html">hexify_icosa_tri_to_quad_ij()</a></code>
-
-        </dt>
-        <dd>Convert Icosa Triangle to Quad IJ coordinates</dd>
-
-        <dt>
-
-          <code><a href="hexify_icosa_tri_to_quad_xy.html">hexify_icosa_tri_to_quad_xy()</a></code>
-
-        </dt>
-        <dd>Convert Icosa Triangle to Quad XY coordinates</dd>
-
-        <dt>
-
-          <code><a href="hexify_index_to_cell.html">hexify_index_to_cell()</a></code>
-
-        </dt>
-        <dd>Convert index string to cell coordinates</dd>
-
-        <dt>
-
-          <code><a href="hexify_index_to_lonlat.html">hexify_index_to_lonlat()</a></code>
-
-        </dt>
-        <dd>Convert index string to longitude/latitude</dd>
-
-        <dt>
+      <dl><dt>
 
           <code><a href="hexify_forward.html">hexify_forward()</a></code>
 
@@ -457,9 +351,9 @@
         </dt>
         <dd>Determine which face contains a point</dd>
       </dl></div><div class="section level2">
-      <h2 id="grid-construction">Grid Construction<a class="anchor" aria-label="anchor" href="#grid-construction"></a></h2>
+      <h2 id="low-level-grid-functions">Low-Level Grid Functions<a class="anchor" aria-label="anchor" href="#low-level-grid-functions"></a></h2>
 
-
+      <div class="section-desc"><p>Internal grid construction and projection functions</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -482,17 +376,31 @@
 
         <dt>
 
-          <code><a href="hexify_to_polygons.html">hexify_to_polygons()</a></code>
+          <code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code>
 
         </dt>
-        <dd>Generate polygons directly from hexify result</dd>
+        <dd>Generate a rectangular grid of hexagon polygons</dd>
 
         <dt>
 
-          <code><a href="hexify_to_sf.html">hexify_to_sf()</a></code>
+          <code><a href="hexify_grid_global.html">hexify_grid_global()</a></code>
 
         </dt>
-        <dd>Convert hexify result to sf object</dd>
+        <dd>Generate a global grid of hexagon polygons</dd>
+
+        <dt>
+
+          <code><a href="hexify_grid_to_cell.html">hexify_grid_to_cell()</a></code>
+
+        </dt>
+        <dd>Convert longitude/latitude to cell ID using a grid object</dd>
+
+        <dt>
+
+          <code><a href="hexify_grid_cell_to_lonlat.html">hexify_grid_cell_to_lonlat()</a></code>
+
+        </dt>
+        <dd>Convert cell ID to longitude/latitude using a grid object</dd>
 
         <dt>
 
@@ -500,10 +408,17 @@
 
         </dt>
         <dd>Build an sf POLYGON from six (lon, lat) corner pairs</dd>
+
+        <dt>
+
+          <code><a href="hexify_projection_stats.html">hexify_projection_stats()</a></code>
+
+        </dt>
+        <dd>Get inverse projection statistics</dd>
       </dl></div><div class="section level2">
-      <h2 id="resolution-area">Resolution &amp; Area<a class="anchor" aria-label="anchor" href="#resolution-area"></a></h2>
+      <h2 id="resolution-index-utilities">Resolution &amp; Index Utilities<a class="anchor" aria-label="anchor" href="#resolution-index-utilities"></a></h2>
 
-
+      <div class="section-desc"><p>Internal resolution and index functions</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -511,6 +426,13 @@
 
 
       <dl><dt>
+
+          <code><a href="dg_closest_res_to_area.html">dg_closest_res_to_area()</a></code>
+
+        </dt>
+        <dd>Find closest resolution for target cell area</dd>
+
+        <dt>
 
           <code><a href="hexify_area_to_eff_res.html">hexify_area_to_eff_res()</a></code>
 
@@ -547,13 +469,6 @@
 
         <dt>
 
-          <code><a href="hexify_compare_resolutions.html">hexify_compare_resolutions()</a></code>
-
-        </dt>
-        <dd>Compare grid resolutions</dd>
-
-        <dt>
-
           <code><a href="hexify_default_index_type.html">hexify_default_index_type()</a></code>
 
         </dt>
@@ -565,31 +480,10 @@
 
         </dt>
         <dd>Check if index type is valid for aperture</dd>
-
-        <dt>
-
-          <code><a href="hexify_print_resolutions.html">hexify_print_resolutions()</a></code>
-
-        </dt>
-        <dd>Print resolution comparison table</dd>
-
-        <dt>
-
-          <code><a href="hexify_projection_stats.html">hexify_projection_stats()</a></code>
-
-        </dt>
-        <dd>Get inverse projection statistics</dd>
-
-        <dt>
-
-          <code><a href="calculate_resolution_for_area.html">calculate_resolution_for_area()</a></code>
-
-        </dt>
-        <dd>Calculate resolution for target area</dd>
       </dl></div><div class="section level2">
       <h2 id="hierarchy-functions">Hierarchy Functions<a class="anchor" aria-label="anchor" href="#hierarchy-functions"></a></h2>
 
-
+      <div class="section-desc"><p>Parent-child cell navigation</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -597,6 +491,27 @@
 
 
       <dl><dt>
+
+          <code><a href="get_parent.html">get_parent()</a></code>
+
+        </dt>
+        <dd>Get parent cell</dd>
+
+        <dt>
+
+          <code><a href="get_children.html">get_children()</a></code>
+
+        </dt>
+        <dd>Get children cells</dd>
+
+        <dt>
+
+          <code><a href="cell_to_index.html">cell_to_index()</a></code>
+
+        </dt>
+        <dd>Convert cell ID to hierarchical index string</dd>
+
+        <dt>
 
           <code><a href="hexify_get_children.html">hexify_get_children()</a></code>
 
@@ -638,127 +553,9 @@
         </dt>
         <dd>Get canonical form of Z7 index</dd>
       </dl></div><div class="section level2">
-      <h2 id="grid-statistics">Grid Statistics<a class="anchor" aria-label="anchor" href="#grid-statistics"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="dgearthstat.html">dgearthstat()</a></code>
-
-        </dt>
-        <dd>Get grid statistics for Earth coverage</dd>
-
-        <dt>
-
-          <code><a href="dg_closest_res_to_area.html">dg_closest_res_to_area()</a></code>
-
-        </dt>
-        <dd>Find closest resolution for target cell area</dd>
-
-        <dt>
-
-          <code><a href="dg_closest_res_to_cls.html">dg_closest_res_to_cls()</a></code>
-
-        </dt>
-        <dd>Find closest resolution for target CLS</dd>
-
-        <dt>
-
-          <code><a href="dg_closest_res_to_spacing.html">dg_closest_res_to_spacing()</a></code>
-
-        </dt>
-        <dd>Find closest resolution for target cell spacing</dd>
-
-        <dt>
-
-          <code><a href="dgverify.html">dgverify()</a></code>
-
-        </dt>
-        <dd>Verify grid object</dd>
-      </dl></div><div class="section level2">
-      <h2 id="dggridr-compatibility">dggridR Compatibility<a class="anchor" aria-label="anchor" href="#dggridr-compatibility"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="dggrid_is_compatible.html">dggrid_is_compatible()</a></code>
-
-        </dt>
-        <dd>Validate dggridR grid compatibility with hexify</dd>
-
-        <dt>
-
-          <code><a href="as_dggrid.html">as_dggrid()</a></code>
-
-        </dt>
-        <dd>Convert hexify grid to dggridR-compatible grid object</dd>
-
-        <dt>
-
-          <code><a href="from_dggrid.html">from_dggrid()</a></code>
-
-        </dt>
-        <dd>Convert dggridR grid object to hexify_grid</dd>
-      </dl></div><div class="section level2">
-      <h2 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="plot_world.html">plot_world()</a></code>
-
-        </dt>
-        <dd>Quick world map plot</dd>
-
-        <dt>
-
-          <code><a href="hexify_map.html">hexify_map()</a></code>
-
-        </dt>
-        <dd>Plot hexagonal grid cells with optional basemap</dd>
-
-        <dt>
-
-          <code><a href="hexify_plot.html">hexify_plot()</a></code>
-
-        </dt>
-        <dd>Quick plot of hexify results</dd>
-
-        <dt>
-
-          <code><a href="hexify_heatmap.html">hexify_heatmap()</a></code>
-
-        </dt>
-        <dd>Create a heatmap visualization of hexagonal grid cells</dd>
-
-        <dt>
-
-          <code><a href="hexify_world.html">hexify_world</a></code>
-
-        </dt>
-        <dd>Simplified World Map</dd>
-      </dl></div><div class="section level2">
       <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
 
-
+      <div class="section-desc"><p>Testing and debugging functions</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -778,17 +575,10 @@
 
         </dt>
         <dd>Set verbose mode for inverse projection</dd>
-
-        <dt>
-
-          <code><a href="index_to_cell_internal.html">index_to_cell_internal()</a></code>
-
-        </dt>
-        <dd>Decode a cell index to face, i, j, and resolution</dd>
       </dl></div><div class="section level2">
       <h2 id="internal">Internal<a class="anchor" aria-label="anchor" href="#internal"></a></h2>
 
-
+      <div class="section-desc"><p>Internal documentation topics</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -825,10 +615,10 @@
 
         <dt>
 
-          <code><a href="print.hexify_grid.html">print(<i>&lt;hexify_grid&gt;</i>)</a></code>
+          <code><a href="plot-HexData-missing-method.html">plot(<i>&lt;HexData&gt;</i>,<i>&lt;missing&gt;</i>)</a></code>
 
         </dt>
-        <dd>Print method for hexify_grid objects</dd>
+        <dd>Plot HexData objects</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

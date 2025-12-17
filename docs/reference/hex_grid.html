@@ -59,14 +59,9 @@ downstream functions.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hex_grid</span><span class="op">(</span></span>
 <span>  area_km2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  aperture <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  topology <span class="op">=</span> <span class="st">"H"</span>,</span>
-<span>  grid_system <span class="op">=</span> <span class="st">"ISEA"</span>,</span>
-<span>  index_type <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  aperture <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  resround <span class="op">=</span> <span class="st">"nearest"</span>,</span>
-<span>  mixed_aperture_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  crs_input <span class="op">=</span> <span class="fl">4326L</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  crs <span class="op">=</span> <span class="fl">4326L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,35 +83,13 @@ with <code>resolution</code>.</p></dd>
 <dd><p>Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.</p></dd>
 
 
-<dt id="arg-topology">topology<a class="anchor" aria-label="anchor" href="#arg-topology"></a></dt>
-<dd><p>Grid topology: "H" (default) or "HEXAGON".</p></dd>
-
-
-<dt id="arg-grid-system">grid_system<a class="anchor" aria-label="anchor" href="#arg-grid-system"></a></dt>
-<dd><p>Grid system: "ISEA" (default, only supported option).</p></dd>
-
-
-<dt id="arg-index-type">index_type<a class="anchor" aria-label="anchor" href="#arg-index-type"></a></dt>
-<dd><p>Index format: "integer" (default) or "character".
-Automatically set to "character" for high resolutions to avoid overflow.</p></dd>
-
-
 <dt id="arg-resround">resround<a class="anchor" aria-label="anchor" href="#arg-resround"></a></dt>
 <dd><p>Resolution rounding when using <code>area_km2</code>:
 "nearest" (default), "up", or "down".</p></dd>
 
 
-<dt id="arg-mixed-aperture-level">mixed_aperture_level<a class="anchor" aria-label="anchor" href="#arg-mixed-aperture-level"></a></dt>
-<dd><p>For aperture "4/3": number of aperture-4 levels
-before switching to aperture-3. If NULL, defaults to resolution/2.</p></dd>
-
-
-<dt id="arg-crs-input">crs_input<a class="anchor" aria-label="anchor" href="#arg-crs-input"></a></dt>
-<dd><p>Input coordinate reference system (default 4326 = WGS84).</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional metadata to store in the grid specification.</p></dd>
+<dt id="arg-crs">crs<a class="anchor" aria-label="anchor" href="#arg-crs"></a></dt>
+<dd><p>Coordinate reference system EPSG code (default 4326 = WGS84).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -128,10 +101,6 @@ before switching to aperture-3. If NULL, defaults to resolution/2.</p></dd>
     <p>Exactly one of <code>area_km2</code> or <code>resolution</code> must be provided.</p>
 <p>When <code>area_km2</code> is provided, the resolution is calculated automatically
 using the cell count formula: N = 10 * aperture^res + 2.</p>
-<p>The <code>index_type</code> parameter controls how cell IDs are stored:</p><ul><li><p>"integer": Numeric cell IDs (faster, but overflow risk at high res)</p></li>
-<li><p>"character": String indices (safer for high resolution grids)</p></li>
-</ul><p>For resolutions above 15 (aperture 3) or 12 (aperture 4), the function
-automatically switches to "character" index type to prevent integer overflow.</p>
     </div>
     <div class="section level2">
     <h2 id="one-grid-many-datasets">One Grid, Many Datasets<a class="anchor" aria-label="anchor" href="#one-grid-many-datasets"></a></h2>

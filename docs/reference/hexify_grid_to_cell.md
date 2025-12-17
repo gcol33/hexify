@@ -31,8 +31,8 @@ Numeric vector of cell IDs (1-based)
 
 ## See also
 
-[`hexify_lonlat_to_cell`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_cell.md)
-for the direct-params version,
+[`lonlat_to_cell`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md)
+for the recommended S4 interface,
 [`hexify_grid_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.md)
 for the inverse operation
 

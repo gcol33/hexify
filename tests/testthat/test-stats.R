@@ -136,23 +136,6 @@ test_that("dg_closest_res_to_area supports show_info", {
   )
 })
 
-test_that("dg_closest_res_to_spacing works", {
-  grid <- list(aperture = 3, topology = "HEXAGON")
-  class(grid) <- c("hexify_grid", "dggs", "list")
-
-  res <- dg_closest_res_to_spacing(grid, spacing = 50)
-  expect_type(res, "double")
-  expect_gte(res, 0)
-})
-
-test_that("dg_closest_res_to_cls works", {
-  grid <- list(aperture = 3, topology = "HEXAGON")
-  class(grid) <- c("hexify_grid", "dggs", "list")
-
-  res <- dg_closest_res_to_cls(grid, cls = 30)
-  expect_type(res, "double")
-  expect_gte(res, 0)
-})
 
 # =============================================================================
 # RESOLUTION COMPARISON
@@ -210,27 +193,6 @@ test_that("dg_closest_res_to_area handles non-metric input", {
   expect_gte(res, 0)
 })
 
-test_that("dg_closest_res_to_spacing handles non-metric input", {
-  grid <- list(aperture = 3, topology = "HEXAGON")
-  class(grid) <- c("hexify_grid", "dggs", "list")
-
-  # Miles input
-  res <- dg_closest_res_to_spacing(grid, spacing = 30, metric = FALSE)
-
-  expect_type(res, "double")
-  expect_gte(res, 0)
-})
-
-test_that("dg_closest_res_to_cls handles non-metric input", {
-  grid <- list(aperture = 3, topology = "HEXAGON")
-  class(grid) <- c("hexify_grid", "dggs", "list")
-
-  # Miles input
-  res <- dg_closest_res_to_cls(grid, cls = 20, metric = FALSE)
-
-  expect_type(res, "double")
-  expect_gte(res, 0)
-})
 
 test_that("hexify_compare_resolutions works for different apertures", {
   comp_ap3 <- hexify_compare_resolutions(aperture = 3, res_range = 0:3)

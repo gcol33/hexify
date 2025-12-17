@@ -26,3 +26,4 @@ child_cells <- lonlat_to_cell(c(0, 10), c(45, 50), grid)
 parent_cells <- get_parent(child_cells, grid)
 }
 }
+\keyword{internal}

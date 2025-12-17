@@ -64,3 +64,4 @@ Other coordinate conversion:
 \code{\link{hexify_roundtrip_test}()}
 }
 \concept{coordinate conversion}
+\keyword{internal}

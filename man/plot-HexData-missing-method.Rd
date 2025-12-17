@@ -8,13 +8,13 @@
   x,
   y,
   basemap = TRUE,
-  basemap_fill = "ivory",
+  basemap_fill = "gray90",
   basemap_border = "gray50",
   basemap_lwd = 0.5,
-  grid_fill = "#3B9AB2",
-  grid_border = "#1A1A1A",
+  grid_fill = "#E69F00",
+  grid_border = "#5D4E37",
   grid_lwd = 0.8,
-  grid_alpha = 0.6,
+  grid_alpha = 0.7,
   fill = NULL,
   show_points = FALSE,
   point_size = 1,
@@ -37,19 +37,19 @@
 \item sf object: Custom basemap
 }}
 
-\item{basemap_fill}{Fill color for basemap (default "ivory")}
+\item{basemap_fill}{Fill color for basemap (default "gray90")}
 
 \item{basemap_border}{Border color for basemap (default "gray50")}
 
 \item{basemap_lwd}{Line width for basemap borders (default 0.5)}
 
-\item{grid_fill}{Fill color for grid cells (default "#3B9AB2" - teal)}
+\item{grid_fill}{Fill color for grid cells (default "#E69F00" - amber/orange)}
 
-\item{grid_border}{Border color for grid cells (default "#1A1A1A" - near-black)}
+\item{grid_border}{Border color for grid cells (default "#5D4E37" - dark brown)}
 
 \item{grid_lwd}{Line width for cell borders (default 0.8)}
 
-\item{grid_alpha}{Transparency for cell fill (0-1, default 0.6)}
+\item{grid_alpha}{Transparency for cell fill (0-1, default 0.7)}
 
 \item{fill}{Column name for fill mapping (optional)}
 
@@ -100,5 +100,5 @@ plot(result, basemap = TRUE, show_points = TRUE)
 }
 }
 \seealso{
-\code{\link{autoplot.HexData}} for ggplot2 plotting
+\code{\link{hexify_ggplot}} for ggplot2 plotting
 }

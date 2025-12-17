@@ -38,3 +38,4 @@ Other hierarchical index:
 \code{\link{hexify_lonlat_to_index}()}
 }
 \concept{hierarchical index}
+\keyword{internal}

@@ -17,15 +17,14 @@ hex_corners_to_sf(lon, lat, crs = 4326)
 sf object with one POLYGON geometry
 }
 \description{
-Build an sf POLYGON from six (lon, lat) corner pairs
+Low-level helper to create a single hexagon polygon from corner coordinates.
+Most users should use \code{\link{cell_to_sf}} instead.
 }
 \seealso{
 Other sf conversion: 
 \code{\link{hexify_cell_to_sf}()},
 \code{\link{hexify_grid_global}()},
-\code{\link{hexify_grid_rect}()},
-\code{\link{hexify_to_polygons}()},
-\code{\link{hexify_to_sf}()}
+\code{\link{hexify_grid_rect}()}
 }
 \concept{sf conversion}
 \keyword{internal}

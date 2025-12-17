@@ -15,5 +15,7 @@ cell_to_index(cell_id, grid)
 Character vector of hierarchical index strings
 }
 \description{
-Convert cell ID to hierarchical index string
+Advanced function for working with hierarchical index strings.
+Most users don't need this - use cell IDs directly.
 }
+\keyword{internal}

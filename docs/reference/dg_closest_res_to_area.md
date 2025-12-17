@@ -1,7 +1,10 @@
 # Find closest resolution for target cell area
 
 Finds the grid resolution that produces cells closest to the target
-area. This is a helper function for grid construction.
+area. This is primarily used internally by
+[`hexify_grid`](https://gcol33.github.io/hexify/reference/hexify_grid.md)
+and [`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md).
+Most users should use those functions directly.
 
 ## Usage
 
@@ -44,8 +47,6 @@ Resolution level (integer)
 ## See also
 
 Other grid statistics:
-[`dg_closest_res_to_cls()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_cls.md),
-[`dg_closest_res_to_spacing()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_spacing.md),
 [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md),
 [`hexify_area_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_area_to_eff_res.md),
 [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md),

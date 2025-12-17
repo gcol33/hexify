@@ -26,10 +26,12 @@
 #' Returns an sf object by default, or a data frame for lightweight workflows.
 #'
 #' @param cell_id Integer vector of cell identifiers
-#' @param resolution Grid resolution level
-#' @param aperture Grid aperture: 3, 4, or 7
+#' @param resolution Grid resolution level. Can be omitted if grid is provided.
+#' @param aperture Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.
 #' @param return_sf Logical. If TRUE (default), returns sf object with polygon
 #'   geometries. If FALSE, returns data frame with vertex coordinates.
+#' @param grid Optional HexGrid object. If provided, resolution and aperture
+#'   are extracted from it.
 #'
 #' @return If return_sf = TRUE: sf object with columns:
 #'   \item{cell_id}{Cell identifier}
@@ -45,9 +47,11 @@
 #' This function uses a native C++ implementation that is significantly faster
 #' than dggridR's polygon generation, especially for large numbers of cells.
 #'
+#' For the recommended S4 interface, use \code{\link{cell_to_sf}} instead.
+#'
 #' @family sf conversion
-#' @seealso \code{\link{hexify_to_sf}} for converting hexify() output,
-#'   \code{\link{hexify_to_polygons}} for auto-resolution polygon generation
+#' @seealso \code{\link{cell_to_sf}} for the recommended S4 interface
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -57,19 +61,32 @@
 #' df <- data.frame(lon = c(0, 5, 10), lat = c(45, 46, 45))
 #' result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 #'
-#' # Get polygons as sf object
-#' polys <- hexify_cell_to_sf(result$cell_id, resolution = 10, aperture = 3)
+#' # Get polygons as sf object (using HexData)
+#' polys <- cell_to_sf(grid = result)
+#'
+#' # Or with explicit parameters
+#' polys <- hexify_cell_to_sf(result@cell_id, resolution = 10, aperture = 3)
 #'
 #' # Plot with sf
 #' library(sf)
 #' plot(st_geometry(polys), col = "lightblue", border = "blue")
 #' }
-hexify_cell_to_sf <- function(cell_id, resolution, aperture = 3L,
-                              return_sf = TRUE) {
+hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
+                              return_sf = TRUE, grid = NULL) {
+
+  # Extract from grid if provided
+  if (!is.null(grid)) {
+    g <- extract_grid(grid)
+    resolution <- g@resolution
+    aperture <- as.integer(g@aperture)
+  }
 
   # Input validation
   if (!is.numeric(cell_id)) {
     stop("cell_id must be numeric (integer cell IDs)")
+  }
+  if (is.null(resolution) || is.null(aperture)) {
+    stop("resolution and aperture must be provided, or supply a grid object")
   }
   if (!aperture %in% c(3L, 4L, 7L)) {
     stop("aperture must be 3, 4, or 7")
@@ -113,275 +130,6 @@ hexify_cell_to_sf <- function(cell_id, resolution, aperture = 3L,
   }
 }
 
-#' Backwards-compatible alias for hexify_cell_to_sf
-#'
-#' @rdname hexify_cell_to_sf
-#' @keywords internal
-#' @export
-hexify_polygons <- function(cell_id, resolution, aperture = 3L,
-                            return_sf = TRUE) {
-  hexify_cell_to_sf(cell_id, resolution, aperture, return_sf)
-}
-
-# =============================================================================
-# HEXIFY RESULT TO SF CONVERSION
-# =============================================================================
-
-#' Convert hexify result to sf object
-#'
-#' Converts the output of \code{\link{hexify}()} to an sf spatial object.
-#' Can return either point geometries (cell centers) or polygon geometries
-#' (cell boundaries).
-#'
-#' @param data Data frame returned by \code{\link{hexify}()} containing
-#'   cell_id, cell_cen_lon, cell_cen_lat columns
-#' @param geometry Type of geometry: "point" for cell centers (default),
-#'   "polygon" for cell boundaries
-#' @param aperture Grid aperture: 3, 4, or 7. Only needed for polygon geometry.
-#' @param crs Coordinate reference system (default 4326 = WGS84)
-#'
-#' @return sf object with:
-#'   - All original columns from data
-#'   - geometry column (sfc_POINT or sfc_POLYGON)
-#'
-#' @details
-#' This is the recommended way to convert hexify output to sf for spatial
-#' operations or plotting with ggplot2/tmap.
-#'
-#' For \code{geometry = "point"}: Creates point geometries at cell centers
-#' using cell_cen_lon and cell_cen_lat. Fast, suitable for large datasets.
-#'
-#' For \code{geometry = "polygon"}: Creates polygon geometries for cell
-#' boundaries. Slower but useful for choropleth maps. Duplicate cells are
-#' automatically handled (each cell boundary appears once).
-#'
-#' @family sf conversion
-#' @seealso \code{\link{hexify}} for the main function,
-#'   \code{\link{hexify_to_polygons}} for polygon-only conversion
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' library(hexify)
-#' library(sf)
-#'
-#' # Create sample data
-#' df <- data.frame(
-#'   site = c("Paris", "Vienna", "Madrid"),
-#'   lon = c(2.35, 16.37, -3.70),
-#'   lat = c(48.86, 48.21, 40.42),
-#'   value = c(100, 200, 150)
-#' )
-#'
-#' # Hexify the data
-#' result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
-#'
-#' # Convert to sf points (cell centers)
-#' sf_points <- hexify_to_sf(result)
-#' plot(sf_points["value"])
-#'
-#' # Convert to sf polygons (cell boundaries)
-#' sf_polys <- hexify_to_sf(result, geometry = "polygon")
-#' plot(sf_polys["value"])
-#'
-#' # Use with ggplot2
-#' library(ggplot2)
-#' ggplot(sf_polys) +
-#'   geom_sf(aes(fill = value)) +
-#'   theme_minimal()
-#' }
-hexify_to_sf <- function(data, geometry = c("point", "polygon"),
-                         aperture = 3L, crs = 4326) {
-
-  geometry <- match.arg(geometry)
-
-  if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("Package 'sf' is required. Install with: install.packages('sf')")
-  }
-
-  # Handle HexData objects
-  if (is_hex_data(data)) {
-    return(as_sf(data, geometry = geometry))
-  }
-
-  # Validate input
-  if (!"cell_id" %in% names(data)) {
-    stop("data must contain 'cell_id' column (output from hexify())")
-  }
-
-  if (geometry == "point") {
-    # Point geometry from cell centers
-    if (!"cell_cen_lon" %in% names(data) || !"cell_cen_lat" %in% names(data)) {
-      stop("data must contain 'cell_cen_lon' and 'cell_cen_lat' columns ",
-           "(output from hexify())")
-    }
-
-    sf::st_as_sf(data,
-                 coords = c("cell_cen_lon", "cell_cen_lat"),
-                 crs = crs)
-
-  } else {
-    # Polygon geometry from cell boundaries
-    # Handle both old (cell_area) and new (cell_area_km2) column names
-    area_col <- if ("cell_area_km2" %in% names(data)) {
-      "cell_area_km2"
-    } else if ("cell_area" %in% names(data)) {
-      "cell_area"
-    } else {
-      stop("data must contain 'cell_area' or 'cell_area_km2' column for polygon geometry ",
-           "(output from hexify())")
-    }
-
-    resolution <- .resolution_from_area(data[[area_col]][1], aperture)
-
-    # Get unique cells for polygon generation
-    unique_ids <- unique(data$cell_id)
-    polys_sf <- hexify_cell_to_sf(unique_ids, resolution,
-                                   as.integer(aperture), return_sf = TRUE)
-
-    # Merge original data attributes with polygons
-    # Keep all rows from data, join polygon geometry by cell_id
-    data_no_geom <- data
-    result <- merge(polys_sf, data_no_geom, by = "cell_id", all.y = TRUE)
-
-    # Ensure sf class is preserved
-    sf::st_as_sf(result)
-  }
-}
-
-# =============================================================================
-# CONVENIENCE FUNCTIONS
-# =============================================================================
-
-#' Generate polygons directly from hexify result
-#'
-#' Convenience function that extracts resolution from a hexify result and
-#' generates polygons. Resolution is auto-detected from the cell_area column.
-#'
-#' @param data Data frame returned by hexify() containing cell_id and cell_area
-#' @param aperture Grid aperture (default 3)
-#' @param return_sf Logical. If TRUE (default), returns sf object
-#'
-#' @return sf object or data frame with polygon geometries (see hexify_cell_to_sf)
-#'
-#' @family sf conversion
-#' @seealso \code{\link{hexify_cell_to_sf}} for low-level polygon generation,
-#'   \code{\link{hexify_to_sf}} for full hexify result conversion
-#' @export
-#' @examples
-#' \dontrun{
-#' library(hexify)
-#' library(sf)
-#'
-#' # Simple workflow: hexify then get polygons
-#' df <- data.frame(lon = runif(100, -10, 10), lat = runif(100, 40, 50))
-#' result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
-#'
-#' # Get polygons - resolution auto-detected
-#' polys <- hexify_to_polygons(result)
-#' plot(st_geometry(polys))
-#' }
-hexify_to_polygons <- function(data, aperture = 3L, return_sf = TRUE) {
-  # Handle HexData objects
-  if (is_hex_data(data)) {
-    g <- data@grid
-    return(hexify_cell_to_sf(
-      cell_id = unique(data@data$cell_id),
-      resolution = g@resolution,
-      aperture = g@aperture,
-      return_sf = return_sf
-    ))
-  }
-
-  if (!"cell_id" %in% names(data)) {
-    stop("data must contain 'cell_id' column (output from hexify())")
-  }
-
-  # Handle both old (cell_area) and new (cell_area_km2) column names
-  area_col <- if ("cell_area_km2" %in% names(data)) {
-    "cell_area_km2"
-  } else if ("cell_area" %in% names(data)) {
-    "cell_area"
-  } else {
-    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()). ",
-         "Use hexify_polygons() directly if you know the resolution.")
-  }
-
-  resolution <- .resolution_from_area(data[[area_col]][1], aperture)
-
-  hexify_cell_to_sf(
-    cell_id = unique(data$cell_id),
-    resolution = resolution,
-    aperture = as.integer(aperture),
-    return_sf = return_sf
-  )
-}
-
-#' Quick plot of hexify results
-#'
-#' Simple plotting function for hexify output using base R graphics.
-#' For ggplot2/tmap, use hexify_to_polygons() instead.
-#'
-#' @param data Data frame returned by hexify()
-#' @param aperture Grid aperture (default 3)
-#' @param col Fill color for hexagons
-#' @param border Border color for hexagons
-#' @param add If TRUE, add to existing plot
-#' @param ... Additional arguments passed to polygon()
-#'
-#' @return NULL (invisibly). Creates a plot as side effect.
-#'
-#' @family visualization
-#' @seealso \code{\link{hexify_map}} for basemap support,
-#'   \code{\link{hexify_heatmap}} for ggplot2-based heatmaps
-#' @export
-#' @examples
-#' \dontrun{
-#' library(hexify)
-#'
-#' df <- data.frame(lon = c(16.37, 2.35, -3.70), lat = c(48.21, 48.86, 40.42))
-#' result <- hexify(df, lon = "lon", lat = "lat", area = 5000)
-#'
-#' # Quick plot
-#' hexify_plot(result, col = "lightblue", border = "darkblue")
-#' points(df$lon, df$lat, pch = 19, col = "red")
-#' }
-hexify_plot <- function(data, aperture = 3L, col = "#E69F00",
-                        border = "#5D4E37", add = FALSE, ...) {
-
-  # Handle HexData objects
-  if (is_hex_data(data)) {
-    plot(data, grid_fill = col, grid_border = border, basemap = FALSE, ...)
-    return(invisible(NULL))
-  }
-
-  if (!"cell_id" %in% names(data)) {
-    stop("data must contain 'cell_id' column (output from hexify())")
-  }
-
-  # Handle both old (cell_area) and new (cell_area_km2) column names
-  if (!"cell_area" %in% names(data) && !"cell_area_km2" %in% names(data)) {
-    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify())")
-  }
-
-  # Get polygon coordinates
-  polys_df <- hexify_to_polygons(data, aperture = aperture, return_sf = FALSE)
-  unique_ids <- unique(polys_df$cell_id)
-
-  if (!add) {
-    plot(range(polys_df$lon), range(polys_df$lat), type = "n",
-         xlab = "Longitude", ylab = "Latitude",
-         asp = 1 / cos(mean(polys_df$lat) * pi / 180))
-  }
-
-  for (id in unique_ids) {
-    idx <- polys_df$cell_id == id
-    polygon(polys_df$lon[idx], polys_df$lat[idx],
-            col = col, border = border, ...)
-  }
-
-  invisible(NULL)
-}
 
 # =============================================================================
 # GRID GENERATION
@@ -400,8 +148,9 @@ hexify_plot <- function(data, aperture = 3L, col = "#E69F00",
 #' @return sf object with hexagon polygons covering the specified region
 #'
 #' @family sf conversion
-#' @seealso \code{\link{hexify_grid_global}} for global grids,
-#'   \code{\link{hexify_to_polygons}} for data-driven polygon generation
+#' @seealso \code{\link{grid_rect}} for the recommended S4 interface,
+#'   \code{\link{hexify_grid_global}} for global grids
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -434,7 +183,7 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
   result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
                    aperture = aperture, resround = resround)
 
-  hexify_to_polygons(result, aperture = as.integer(aperture))
+  cell_to_sf(grid = result)
 }
 
 #' Generate a global grid of hexagon polygons
@@ -448,8 +197,9 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 #' @return sf object with hexagon polygons covering the globe
 #'
 #' @family sf conversion
-#' @seealso \code{\link{hexify_grid_rect}} for regional grids,
-#'   \code{\link{hexify_to_polygons}} for data-driven polygon generation
+#' @seealso \code{\link{grid_global}} for the recommended S4 interface,
+#'   \code{\link{hexify_grid_rect}} for regional grids
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -487,7 +237,7 @@ hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
   result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
                    aperture = aperture, resround = resround)
 
-  hexify_to_polygons(result, aperture = as.integer(aperture))
+  cell_to_sf(grid = result)
 }
 
 # =============================================================================
@@ -495,6 +245,9 @@ hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
 # =============================================================================
 
 #' Build an sf POLYGON from six (lon, lat) corner pairs
+#'
+#' Low-level helper to create a single hexagon polygon from corner coordinates.
+#' Most users should use \code{\link{cell_to_sf}} instead.
 #'
 #' @param lon numeric vector of length 6 (longitude)
 #' @param lat numeric vector of length 6 (latitude)

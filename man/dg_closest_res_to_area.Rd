@@ -28,7 +28,8 @@ Resolution level (integer)
 }
 \description{
 Finds the grid resolution that produces cells closest to the target area.
-This is a helper function for grid construction.
+This is primarily used internally by \code{\link{hexify_grid}} and
+\code{\link{hex_grid}}. Most users should use those functions directly.
 }
 \examples{
 \dontrun{
@@ -44,8 +45,6 @@ print(res)
 }
 \seealso{
 Other grid statistics: 
-\code{\link{dg_closest_res_to_cls}()},
-\code{\link{dg_closest_res_to_spacing}()},
 \code{\link{dgearthstat}()},
 \code{\link{hexify_area_to_eff_res}()},
 \code{\link{hexify_compare_resolutions}()},
@@ -55,3 +54,4 @@ Other grid statistics:
 \code{\link{hexify_resolution_to_eff_res}()}
 }
 \concept{grid statistics}
+\keyword{internal}

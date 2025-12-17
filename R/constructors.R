@@ -19,14 +19,9 @@
 #' @param resolution Grid resolution level (0-30). Mutually exclusive with
 #'   \code{area_km2}.
 #' @param aperture Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
-#' @param topology Grid topology: "H" (default) or "HEXAGON".
-#' @param grid_system Grid system: "ISEA" (default, only supported option).
-#' @param index_type Index format: "integer" (default) or "character".
-#'   Automatically set to "character" for high resolutions to avoid overflow.
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
-#' @param crs_input Input coordinate reference system (default 4326 = WGS84).
-#' @param ... Additional metadata to store in the grid specification.
+#' @param crs Coordinate reference system EPSG code (default 4326 = WGS84).
 #'
 #' @return A HexGrid object containing the grid specification.
 #'
@@ -35,15 +30,6 @@
 #'
 #' When \code{area_km2} is provided, the resolution is calculated automatically
 #' using the cell count formula: N = 10 * aperture^res + 2.
-#'
-#' The \code{index_type} parameter controls how cell IDs are stored:
-#' \itemize{
-#'   \item "integer": Numeric cell IDs (faster, but overflow risk at high res)
-#'   \item "character": String indices (safer for high resolution grids)
-#' }
-#'
-#' For resolutions above 15 (aperture 3) or 12 (aperture 4), the function
-#' automatically switches to "character" index type to prevent integer overflow.
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
 #'   \code{\link{HexGrid-class}} for class documentation
@@ -103,12 +89,8 @@
 hex_grid <- function(area_km2 = NULL,
                      resolution = NULL,
                      aperture = 3,
-                     topology = "H",
-                     grid_system = "ISEA",
-                     index_type = NULL,
                      resround = "nearest",
-                     crs_input = 4326L,
-                     ...) {
+                     crs = 4326L) {
 
   # -------------------------------------------------------------------------
   # Parse aperture (handle "4/3" mixed aperture)
@@ -163,53 +145,19 @@ hex_grid <- function(area_km2 = NULL,
       stop(sprintf("Resolution must be between %d and %d",
                    MIN_RESOLUTION, MAX_RESOLUTION))
     }
-
-    # Calculate actual area for this resolution
-    if (aperture_str == "4/3") {
-      level <- as.integer(resolution / 2)
-      n_cells <- 10 * (4^level) * (3^(resolution - level)) + 2
-    } else {
-      n_cells <- 10 * (aperture_num^resolution) + 2
-    }
-    area_km2 <- EARTH_SURFACE_KM2 / n_cells
   }
 
   # -------------------------------------------------------------------------
-  # Determine index_type (auto-select for high resolution)
+  # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
-  if (is.null(index_type)) {
-    # Check for potential integer overflow
-    # R integers max out at 2^31 - 1 ≈ 2.1 billion
-    # Aperture 3: 10 * 3^15 ≈ 143 million (safe), 3^16 ≈ 430 million (safe),
-    #             3^19 ≈ 11.6 billion (overflow)
-    # Aperture 4: 10 * 4^15 ≈ 10.7 billion (overflow at 15)
-
-    max_safe_res <- if (aperture_num == 3L) 18L
-                    else if (aperture_num == 4L) 14L
-                    else 11L  # aperture 7
-
-    index_type <- if (resolution > max_safe_res) "character" else "integer"
+  if (aperture_str == "4/3") {
+    level <- as.integer(resolution / 2)
+    n_cells <- 10 * (4^level) * (3^(resolution - level)) + 2
+  } else {
+    n_cells <- 10 * (aperture_num^resolution) + 2
   }
-
-  if (!index_type %in% c("integer", "character")) {
-    stop("index_type must be 'integer' or 'character'")
-  }
-
-  # -------------------------------------------------------------------------
-  # Validate other parameters
-  # -------------------------------------------------------------------------
-  if (!topology %in% c("H", "HEXAGON")) {
-    stop("topology must be 'H' or 'HEXAGON'")
-  }
-
-  if (grid_system != "ISEA") {
-    stop("Only 'ISEA' grid_system is currently supported")
-  }
-
-  # -------------------------------------------------------------------------
-  # Collect additional metadata
-  # -------------------------------------------------------------------------
-  extra_meta <- list(...)
+  actual_area <- EARTH_SURFACE_KM2 / n_cells
+  actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
 
   # -------------------------------------------------------------------------
   # Initialize icosahedron (required for C++ functions)
@@ -222,13 +170,9 @@ hex_grid <- function(area_km2 = NULL,
   grid <- new("HexGrid",
               aperture = aperture_str,
               resolution = as.integer(resolution),
-              area_km2 = as.numeric(area_km2),
-              grid_system = grid_system,
-              topology = topology,
-              index_type = index_type,
-              crs_input = as.integer(crs_input),
-              crs_work = as.integer(crs_input),
-              meta = extra_meta)
+              area_km2 = as.numeric(actual_area),
+              diagonal_km = as.numeric(actual_diagonal),
+              crs = as.integer(crs))
 
   # Validation happens automatically via setValidity
   grid
@@ -243,19 +187,17 @@ hex_grid <- function(area_km2 = NULL,
 #' Internal constructor for HexData objects. Users should use \code{hexify()}
 #' instead.
 #'
-#' @param data Data frame or sf object with cell assignments
+#' @param data Data frame or sf object (original user data, untouched)
 #' @param grid HexGrid object
-#' @param mapping List of column name mappings
-#' @param kind Type of data: "points", "cells", or "unknown"
-#' @param meta Additional metadata
+#' @param cell_id Numeric vector of cell IDs for each row
+#' @param cell_center Matrix with columns lon, lat for cell centers
 #'
 #' @return A HexData object
 #' @keywords internal
 new_hex_data <- function(data,
                          grid,
-                         mapping = list(),
-                         kind = "unknown",
-                         meta = list()) {
+                         cell_id,
+                         cell_center) {
 
   # Validate inputs
   if (!inherits(data, "data.frame") && !inherits(data, "sf")) {
@@ -266,16 +208,19 @@ new_hex_data <- function(data,
     stop("grid must be a HexGrid object")
   }
 
-  if (!kind %in% c("points", "cells", "unknown")) {
-    stop("kind must be 'points', 'cells', or 'unknown'")
+  # Ensure cell_center is a matrix with correct column names
+  if (!is.matrix(cell_center)) {
+    cell_center <- as.matrix(cell_center)
+  }
+  if (is.null(colnames(cell_center))) {
+    colnames(cell_center) <- c("lon", "lat")
   }
 
   new("HexData",
       data = data,
       grid = grid,
-      mapping = mapping,
-      kind = kind,
-      meta = meta)
+      cell_id = as.numeric(cell_id),
+      cell_center = cell_center)
 }
 
 # =============================================================================
@@ -357,18 +302,22 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
   }
 
   if (geometry == "point") {
-    # Point geometry from cell centers
-    if (!"cell_cen_lon" %in% names(data) || !"cell_cen_lat" %in% names(data)) {
-      stop("Data must contain 'cell_cen_lon' and 'cell_cen_lat' columns")
-    }
-
-    sf::st_as_sf(data,
-                 coords = c("cell_cen_lon", "cell_cen_lat"),
-                 crs = grid@crs_input)
+    # Point geometry from cell centers (stored in cell_center slot)
+    df_with_coords <- cbind(
+      data,
+      cell_id = x@cell_id,
+      cell_cen_lon = x@cell_center[, "lon"],
+      cell_cen_lat = x@cell_center[, "lat"]
+    )
+    sf::st_as_sf(
+      df_with_coords,
+      coords = c("cell_cen_lon", "cell_cen_lat"),
+      crs = grid@crs
+    )
 
   } else {
     # Polygon geometry from cell boundaries
-    unique_ids <- unique(data$cell_id)
+    unique_ids <- unique(x@cell_id)
 
     # Generate polygons
     polys_sf <- hexify_cell_to_sf(
@@ -378,8 +327,11 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
       return_sf = TRUE
     )
 
+    # Add cell_id to data for merge
+    data_with_id <- cbind(data, cell_id = x@cell_id)
+
     # Merge with original data
-    result <- merge(polys_sf, data, by = "cell_id", all.y = TRUE)
+    result <- merge(polys_sf, data_with_id, by = "cell_id", all.y = TRUE)
     sf::st_as_sf(result)
   }
 }

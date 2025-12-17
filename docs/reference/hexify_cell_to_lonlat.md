@@ -30,10 +30,10 @@ Data frame with lon_deg and lat_deg columns
 
 ## See also
 
+[`cell_to_lonlat`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)
+for the recommended S4 interface,
 [`hexify_lonlat_to_cell`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_cell.md)
-for the forward operation,
-[`hexify_grid_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.md)
-for the grid-based wrapper
+for the forward operation
 
 Other coordinate conversion:
 [`hexify_cell_id_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_cell_id_to_quad_ij.md),

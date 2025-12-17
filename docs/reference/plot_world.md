@@ -5,7 +5,7 @@ Simple wrapper to plot the built-in world map.
 ## Usage
 
 ``` r
-plot_world(fill = "gray95", border = "gray50", ...)
+plot_world(fill = "gray90", border = "gray50", ...)
 ```
 
 ## Arguments
@@ -30,8 +30,7 @@ NULL invisibly. Creates a plot as side effect.
 
 Other visualization:
 [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
-[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
-[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
+[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md)
 
 ## Examples
 

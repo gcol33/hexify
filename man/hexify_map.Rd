@@ -7,12 +7,12 @@
 hexify_map(
   data,
   basemap = NULL,
-  fill = "steelblue",
-  border = "gray30",
+  fill = "#E69F00",
+  border = "#5D4E37",
   lwd = 1,
   alpha = 0.7,
-  basemap_fill = "gray95",
-  basemap_border = "gray70",
+  basemap_fill = "gray90",
+  basemap_border = "gray50",
   basemap_lwd = 1,
   aperture = 3L,
   xlim = NULL,
@@ -67,7 +67,7 @@ world map or user-supplied basemaps (sf vectors or raster images).
 \details{
 This function provides a simple way to visualize hexagonal grids with
 geographic context. For more sophisticated visualizations, use
-\code{\link{hexify_to_polygons}} to get an sf object and plot with ggplot2,
+\code{\link{cell_to_sf}} to get an sf object and plot with ggplot2,
 tmap, or other mapping packages.
 
 The function automatically:
@@ -126,12 +126,11 @@ hexify_map(result, basemap = "world",
 }
 }
 \seealso{
-\code{\link{hexify_plot}} for simple base R plots,
-\code{\link{hexify_heatmap}} for ggplot2-based heatmaps
+\code{\link{hexify_heatmap}} for ggplot2-based heatmaps,
+\code{\link{cell_to_sf}} to generate polygons manually
 
 Other visualization: 
 \code{\link{hexify_heatmap}()},
-\code{\link{hexify_plot}()},
 \code{\link{plot_world}()}
 }
 \concept{visualization}

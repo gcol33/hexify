@@ -11,13 +11,13 @@ plot(
   x,
   y,
   basemap = TRUE,
-  basemap_fill = "ivory",
+  basemap_fill = "gray90",
   basemap_border = "gray50",
   basemap_lwd = 0.5,
-  grid_fill = "#3B9AB2",
-  grid_border = "#1A1A1A",
+  grid_fill = "#E69F00",
+  grid_border = "#5D4E37",
   grid_lwd = 0.8,
-  grid_alpha = 0.6,
+  grid_alpha = 0.7,
   fill = NULL,
   show_points = FALSE,
   point_size = 1,
@@ -52,7 +52,7 @@ plot(
 
 - basemap_fill:
 
-  Fill color for basemap (default "ivory")
+  Fill color for basemap (default "gray90")
 
 - basemap_border:
 
@@ -64,11 +64,11 @@ plot(
 
 - grid_fill:
 
-  Fill color for grid cells (default "#3B9AB2" - teal)
+  Fill color for grid cells (default "#E69F00" - amber/orange)
 
 - grid_border:
 
-  Border color for grid cells (default "#1A1A1A" - near-black)
+  Border color for grid cells (default "#5D4E37" - dark brown)
 
 - grid_lwd:
 
@@ -76,7 +76,7 @@ plot(
 
 - grid_alpha:
 
-  Transparency for cell fill (0-1, default 0.6)
+  Transparency for cell fill (0-1, default 0.7)
 
 - fill:
 
@@ -122,7 +122,7 @@ minimize memory usage.
 
 ## See also
 
-[`autoplot.HexData`](https://gcol33.github.io/hexify/reference/autoplot.HexData.md)
+[`hexify_ggplot`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
 for ggplot2 plotting
 
 ## Examples

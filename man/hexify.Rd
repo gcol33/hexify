@@ -12,8 +12,7 @@ hexify(
   area_km2 = NULL,
   diagonal = NULL,
   resolution = NULL,
-  aperture = 3L,
-  mixed_aperture_level = NULL,
+  aperture = 3,
   resround = "nearest"
 )
 }
@@ -27,8 +26,7 @@ area_km2, resolution, and aperture parameters.}
 
 \item{lat}{Column name for latitude (ignored if data is sf)}
 
-\item{area_km2}{Target cell area in km² (mutually exclusive with diagonal).
-Alias: \code{area} for backwards compatibility.}
+\item{area_km2}{Target cell area in km² (mutually exclusive with diagonal).}
 
 \item{diagonal}{Target cell diagonal (long diagonal) in km}
 
@@ -36,33 +34,27 @@ Alias: \code{area} for backwards compatibility.}
 
 \item{aperture}{Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)}
 
-\item{mixed_aperture_level}{For mixed aperture "4/3": number of aperture-4 levels
-before switching to aperture-3 (default NULL, auto-calculated as resolution/2)}
-
 \item{resround}{How to round resolution: "nearest", "up", or "down"}
 }
 \value{
 A HexData object containing:
 \itemize{
-\item The input data with cell assignment columns
-\item The grid specification for downstream operations
+\item \code{data}: The original input data (unchanged)
+\item \code{grid}: The HexGrid specification
+\item \code{cell_id}: Numeric vector of cell IDs for each row
+\item \code{cell_center}: Matrix of cell center coordinates (lon, lat)
 }
 
-Use \code{as.data.frame(result)} to extract a plain data.frame.
-Use \code{as_sf(result)} to convert to sf object.
-
-Added columns:
-\item{cell_id}{Stable DGGS cell identifier}
-\item{cell_cen_lon}{Longitude of cell center in degrees}
-\item{cell_cen_lat}{Latitude of cell center in degrees}
-\item{cell_area_km2}{Actual cell area in km²}
-\item{cell_diag_km}{Actual cell long diagonal in km}
+Use \code{as.data.frame(result)} to extract the original data.
+Use \code{cells(result)} to get unique cell IDs.
+Use \code{result@cell_id} to get all cell IDs.
+Use \code{result@cell_center} to get cell center coordinates.
 }
 \description{
 Takes a data.frame or sf object with geographic coordinates and returns
-the data with additional columns for hex cell ID and center coordinates.
-By default returns a HexData object that stores the grid specification
-for use in downstream operations.
+a HexData object that stores the original data plus cell assignments.
+The original data is preserved unchanged; cell IDs and centers are stored
+in separate slots.
 }
 \details{
 For sf objects, coordinates are automatically extracted and transformed to

@@ -53,7 +53,7 @@ grid configuration. Useful for choosing appropriate resolution.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_compare_resolutions</span><span class="op">(</span>aperture <span class="op">=</span> <span class="fl">3</span>, res_range <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">15</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_compare_resolutions</span><span class="op">(</span>aperture <span class="op">=</span> <span class="fl">3</span>, res_range <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">15</span>, print <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,18 +67,22 @@ grid configuration. Useful for choosing appropriate resolution.</p>
 <dt id="arg-res-range">res_range<a class="anchor" aria-label="anchor" href="#arg-res-range"></a></dt>
 <dd><p>Range of resolutions to compare (e.g., 1:10)</p></dd>
 
+
+<dt id="arg-print">print<a class="anchor" aria-label="anchor" href="#arg-print"></a></dt>
+<dd><p>If TRUE, prints a formatted table to console. If FALSE (default),
+returns a data frame.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Data frame with columns: resolution, n_cells, cell_area_km2,
-cell_spacing_km, cls_km</p>
+    <p>If print=FALSE: data frame with columns resolution, n_cells,
+cell_area_km2, cell_spacing_km, cls_km.
+If print=TRUE: invisibly returns the data frame after printing.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other grid statistics:
 <code><a href="dg_closest_res_to_area.html">dg_closest_res_to_area()</a></code>,
-<code><a href="dg_closest_res_to_cls.html">dg_closest_res_to_cls()</a></code>,
-<code><a href="dg_closest_res_to_spacing.html">dg_closest_res_to_spacing()</a></code>,
 <code><a href="dgearthstat.html">dgearthstat()</a></code>,
 <code><a href="hexify_area_to_eff_res.html">hexify_area_to_eff_res()</a></code>,
 <code><a href="hexify_eff_res_to_area.html">hexify_eff_res_to_area()</a></code>,
@@ -90,9 +94,12 @@ cell_spacing_km, cls_km</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span>
-<span><span class="co"># Compare resolutions 0-10 for aperture 3</span></span>
+<span><span class="co"># Get data frame of resolutions 0-10 for aperture 3</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu">hexify_compare_resolutions</span><span class="op">(</span>aperture <span class="op">=</span> <span class="fl">3</span>, res_range <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Print formatted table directly</span></span>
+<span><span class="fu">hexify_compare_resolutions</span><span class="op">(</span>aperture <span class="op">=</span> <span class="fl">3</span>, res_range <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">10</span>, print <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Find resolution with cells ~1000 km^2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">comparison</span>, <span class="va">cell_area_km2</span> <span class="op">&gt;</span> <span class="fl">900</span> <span class="op">&amp;</span> <span class="va">cell_area_km2</span> <span class="op">&lt;</span> <span class="fl">1100</span><span class="op">)</span></span>

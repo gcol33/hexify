@@ -10,12 +10,12 @@ images).
 hexify_map(
   data,
   basemap = NULL,
-  fill = "steelblue",
-  border = "gray30",
+  fill = "#E69F00",
+  border = "#5D4E37",
   lwd = 1,
   alpha = 0.7,
-  basemap_fill = "gray95",
-  basemap_border = "gray70",
+  basemap_fill = "gray90",
+  basemap_border = "gray50",
   basemap_lwd = 1,
   aperture = 3L,
   xlim = NULL,
@@ -100,7 +100,7 @@ NULL invisibly. Creates a plot as side effect.
 
 This function provides a simple way to visualize hexagonal grids with
 geographic context. For more sophisticated visualizations, use
-[`hexify_to_polygons`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
 to get an sf object and plot with ggplot2, tmap, or other mapping
 packages.
 
@@ -131,14 +131,13 @@ The function automatically:
 
 ## See also
 
-[`hexify_plot`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
-for simple base R plots,
 [`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
-for ggplot2-based heatmaps
+for ggplot2-based heatmaps,
+[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+to generate polygons manually
 
 Other visualization:
 [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
-[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md),
 [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
 
 ## Examples

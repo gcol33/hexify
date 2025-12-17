@@ -19,21 +19,17 @@
 }
 \arguments{
 \item{x}{HexGrid object}
-
-\item{name}{Slot name for $ access}
-
-\item{object}{A HexGrid object (for show method)}
-
-\item{...}{Additional arguments (ignored)}
 }
 \description{
 An S4 class representing a hexagonal grid specification. Stores all
-parameters needed for grid operations so they don't need to be repeated
-in downstream function calls.
+parameters needed for grid operations.
 }
 \details{
 Create HexGrid objects using the \code{\link{hex_grid}} constructor function.
 Do not use \code{new("HexGrid", ...)} directly.
+
+The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
+aperture grids that start with aperture 4 and switch to aperture 3.
 }
 \section{Functions}{
 \itemize{
@@ -49,27 +45,15 @@ Do not use \code{new("HexGrid", ...)} directly.
 \section{Slots}{
 
 \describe{
-\item{\code{aperture}}{Integer. Grid aperture (3, 4, or 7).}
+\item{\code{aperture}}{Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.}
 
 \item{\code{resolution}}{Integer. Grid resolution level (0-30).}
 
-\item{\code{area_km2}}{Numeric. Target cell area in square kilometers.}
+\item{\code{area_km2}}{Numeric. Cell area in square kilometers.}
 
-\item{\code{grid_system}}{Character. Grid system identifier (default "ISEA").}
+\item{\code{diagonal_km}}{Numeric. Cell diagonal (long diagonal) in kilometers.}
 
-\item{\code{topology}}{Character. Grid topology (default "H" for hexagon).}
-
-\item{\code{index_type}}{Character. Index encoding type ("integer" or "character").}
-
-\item{\code{crs_input}}{Integer. Input coordinate reference system (default 4326).}
-
-\item{\code{crs_work}}{Integer. Working CRS for internal operations.}
-
-\item{\code{mixed_aperture}}{Logical. Whether mixed aperture (4/3) is used.}
-
-\item{\code{mixed_aperture_level}}{Integer. Level at which aperture switches (for 4/3).}
-
-\item{\code{meta}}{List. Additional metadata for future extensions.}
+\item{\code{crs}}{Integer. Coordinate reference system (default 4326 = WGS84).}
 }}
 
 \seealso{

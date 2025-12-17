@@ -6,9 +6,9 @@
 #' Assign hexagonal DGGS cell IDs to geographic points
 #'
 #' Takes a data.frame or sf object with geographic coordinates and returns
-#' the data with additional columns for hex cell ID and center coordinates.
-#' By default returns a HexData object that stores the grid specification
-#' for use in downstream operations.
+#' a HexData object that stores the original data plus cell assignments.
+#' The original data is preserved unchanged; cell IDs and centers are stored
+#' in separate slots.
 #'
 #' @param data A data.frame or sf object containing coordinates
 #' @param grid A HexGrid object from \code{hex_grid()}. If provided, overrides
@@ -16,7 +16,6 @@
 #' @param lon Column name for longitude (ignored if data is sf)
 #' @param lat Column name for latitude (ignored if data is sf)
 #' @param area_km2 Target cell area in km² (mutually exclusive with diagonal).
-#'   Alias: \code{area} for backwards compatibility.
 #' @param diagonal Target cell diagonal (long diagonal) in km
 #' @param resolution Grid resolution (0-30). Alternative to area_km2.
 #' @param aperture Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)
@@ -24,19 +23,16 @@
 #'
 #' @return A HexData object containing:
 #'   \itemize{
-#'     \item The input data with cell assignment columns
-#'     \item The grid specification for downstream operations
+#'     \item \code{data}: The original input data (unchanged)
+#'     \item \code{grid}: The HexGrid specification
+#'     \item \code{cell_id}: Numeric vector of cell IDs for each row
+#'     \item \code{cell_center}: Matrix of cell center coordinates (lon, lat)
 #'   }
 #'
-#'   Use \code{as.data.frame(result)} to extract a plain data.frame.
-#'   Use \code{as_sf(result)} to convert to sf object.
-#'
-#'   Added columns:
-#'   \item{cell_id}{Stable DGGS cell identifier}
-#'   \item{cell_cen_lon}{Longitude of cell center in degrees}
-#'   \item{cell_cen_lat}{Latitude of cell center in degrees}
-#'   \item{cell_area_km2}{Actual cell area in km²}
-#'   \item{cell_diag_km}{Actual cell long diagonal in km}
+#'   Use \code{as.data.frame(result)} to extract the original data.
+#'   Use \code{cells(result)} to get unique cell IDs.
+#'   Use \code{result@@cell_id} to get all cell IDs.
+#'   Use \code{result@@cell_center} to get cell center coordinates.
 #'
 #' @details
 #' For sf objects, coordinates are automatically extracted and transformed to
@@ -111,11 +107,9 @@ hexify <- function(data,
     # Grid object provided - extract parameters
     if (is_hex_grid(grid)) {
       hex_grid_obj <- grid
-      res <- grid@resolution
     } else if (inherits(grid, "hexify_grid")) {
       # Legacy S3 grid object
       hex_grid_obj <- hexify_grid_to_HexGrid(grid)
-      res <- grid$resolution
     } else {
       stop("grid must be a HexGrid object from hex_grid() or legacy hexify_grid")
     }
@@ -140,7 +134,6 @@ hexify <- function(data,
       aperture = aperture,
       resround = resround
     )
-    res <- hex_grid_obj@resolution
   }
 
   # -------------------------------------------------------------------------
@@ -198,63 +191,33 @@ hexify <- function(data,
   # Perform hexification
   # -------------------------------------------------------------------------
   aperture_str <- hex_grid_obj@aperture
+  res <- hex_grid_obj@resolution
 
   if (aperture_str == "4/3") {
     level <- as.integer(res / 2)
     cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
     centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)
-    n_cells <- 10 * (4^level) * (3^(res - level)) + 2
   } else {
     aperture_num <- as.integer(aperture_str)
     cell_ids <- cpp_lonlat_to_cell(lon_vec, lat_vec, res, aperture_num)
     centers <- cpp_cell_to_lonlat(cell_ids, res, aperture_num)
-    n_cells <- 10 * (aperture_num^res) + 2
   }
 
-  actual_area <- EARTH_SURFACE_KM2 / n_cells
-  actual_spacing <- sqrt(actual_area * 2 / sqrt(3))
+  # Build cell center matrix
+  cell_center <- matrix(
+    c(centers$lon_deg, centers$lat_deg),
+    ncol = 2,
+    dimnames = list(NULL, c("lon", "lat"))
+  )
 
   # -------------------------------------------------------------------------
-  # Add columns to data
-  # -------------------------------------------------------------------------
-  data$cell_id <- cell_ids
-  data$cell_cen_lon <- centers$lon_deg
-  data$cell_cen_lat <- centers$lat_deg
-  data$cell_area_km2 <- actual_area
-  data$cell_diag_km <- actual_spacing
-
-  # -------------------------------------------------------------------------
-  # Return HexData object
+  # Return HexData object (original data unchanged)
   # -------------------------------------------------------------------------
   new_hex_data(
     data = data,
     grid = hex_grid_obj,
-    mapping = mapping,
-    kind = "points",
-    meta = list()
+    cell_id = cell_ids,
+    cell_center = cell_center
   )
 }
 
-#' Extract plain data frame from hexify result
-#'
-#' Convenience function to get a plain data.frame from hexify() result.
-#' Alias for \code{as.data.frame()}.
-#'
-#' @param x Result from \code{hexify()}
-#' @return A data.frame
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-#' df_plain <- hexify_df(result)
-#' }
-hexify_df <- function(x) {
-  if (is_hex_data(x)) {
-    as.data.frame(x)
-  } else if (inherits(x, "sf")) {
-    as.data.frame(sf::st_drop_geometry(x))
-  } else {
-    as.data.frame(x)
-  }
-}

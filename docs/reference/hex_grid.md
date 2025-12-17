@@ -10,14 +10,9 @@ downstream functions.
 hex_grid(
   area_km2 = NULL,
   resolution = NULL,
-  aperture = 3L,
-  topology = "H",
-  grid_system = "ISEA",
-  index_type = NULL,
+  aperture = 3,
   resround = "nearest",
-  mixed_aperture_level = NULL,
-  crs_input = 4326L,
-  ...
+  crs = 4326L
 )
 ```
 
@@ -36,36 +31,14 @@ hex_grid(
 
   Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 
-- topology:
-
-  Grid topology: "H" (default) or "HEXAGON".
-
-- grid_system:
-
-  Grid system: "ISEA" (default, only supported option).
-
-- index_type:
-
-  Index format: "integer" (default) or "character". Automatically set to
-  "character" for high resolutions to avoid overflow.
-
 - resround:
 
   Resolution rounding when using `area_km2`: "nearest" (default), "up",
   or "down".
 
-- mixed_aperture_level:
+- crs:
 
-  For aperture "4/3": number of aperture-4 levels before switching to
-  aperture-3. If NULL, defaults to resolution/2.
-
-- crs_input:
-
-  Input coordinate reference system (default 4326 = WGS84).
-
-- ...:
-
-  Additional metadata to store in the grid specification.
+  Coordinate reference system EPSG code (default 4326 = WGS84).
 
 ## Value
 
@@ -77,16 +50,6 @@ Exactly one of `area_km2` or `resolution` must be provided.
 
 When `area_km2` is provided, the resolution is calculated automatically
 using the cell count formula: N = 10 \* aperture^res + 2.
-
-The `index_type` parameter controls how cell IDs are stored:
-
-- "integer": Numeric cell IDs (faster, but overflow risk at high res)
-
-- "character": String indices (safer for high resolution grids)
-
-For resolutions above 15 (aperture 3) or 12 (aperture 4), the function
-automatically switches to "character" index type to prevent integer
-overflow.
 
 ## One Grid, Many Datasets
 

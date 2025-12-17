@@ -12,17 +12,16 @@ hexify_print_resolutions(aperture = 3, res_range = 0:10)
 \item{res_range}{Range of resolutions to display}
 }
 \value{
-NULL (prints to console)
+Invisibly returns the comparison data frame
 }
 \description{
-Pretty-prints a comparison of grid resolutions with human-readable
-formatting.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+Use \code{hexify_compare_resolutions(print = TRUE)} instead.
 }
 \seealso{
 Other grid statistics: 
 \code{\link{dg_closest_res_to_area}()},
-\code{\link{dg_closest_res_to_cls}()},
-\code{\link{dg_closest_res_to_spacing}()},
 \code{\link{dgearthstat}()},
 \code{\link{hexify_area_to_eff_res}()},
 \code{\link{hexify_compare_resolutions}()},
@@ -31,3 +30,4 @@ Other grid statistics:
 \code{\link{hexify_resolution_to_eff_res}()}
 }
 \concept{grid statistics}
+\keyword{internal}

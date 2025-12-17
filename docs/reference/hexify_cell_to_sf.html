@@ -53,9 +53,13 @@ Returns an sf object by default, or a data frame for lightweight workflows.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">cell_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">hexify_polygons</span><span class="op">(</span><span class="va">cell_id</span>, <span class="va">resolution</span>, aperture <span class="op">=</span> <span class="fl">3L</span>, return_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_cell_to_sf</span><span class="op">(</span></span>
+<span>  <span class="va">cell_id</span>,</span>
+<span>  resolution <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  aperture <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return_sf <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  grid <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,16 +71,21 @@ Returns an sf object by default, or a data frame for lightweight workflows.</p>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
-<dd><p>Grid resolution level</p></dd>
+<dd><p>Grid resolution level. Can be omitted if grid is provided.</p></dd>
 
 
 <dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>
-<dd><p>Grid aperture: 3, 4, or 7</p></dd>
+<dd><p>Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.</p></dd>
 
 
 <dt id="arg-return-sf">return_sf<a class="anchor" aria-label="anchor" href="#arg-return-sf"></a></dt>
 <dd><p>Logical. If TRUE (default), returns sf object with polygon
 geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
+
+
+<dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
+<dd><p>Optional HexGrid object. If provided, resolution and aperture
+are extracted from it.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -107,17 +116,15 @@ geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function uses a native C++ implementation that is significantly faster
 than dggridR's polygon generation, especially for large numbers of cells.</p>
+<p>For the recommended S4 interface, use <code><a href="cell_to_sf.html">cell_to_sf</a></code> instead.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="hexify_to_sf.html">hexify_to_sf</a></code> for converting hexify() output,
-<code><a href="hexify_to_polygons.html">hexify_to_polygons</a></code> for auto-resolution polygon generation</p>
+    <div class="dont-index"><p><code><a href="cell_to_sf.html">cell_to_sf</a></code> for the recommended S4 interface</p>
 <p>Other sf conversion:
 <code><a href="hex_corners_to_sf.html">hex_corners_to_sf()</a></code>,
 <code><a href="hexify_grid_global.html">hexify_grid_global()</a></code>,
-<code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code>,
-<code><a href="hexify_to_polygons.html">hexify_to_polygons()</a></code>,
-<code><a href="hexify_to_sf.html">hexify_to_sf()</a></code></p></div>
+<code><a href="hexify_grid_rect.html">hexify_grid_rect()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -129,8 +136,11 @@ than dggridR's polygon generation, especially for large numbers of cells.</p>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">46</span>, <span class="fl">45</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Get polygons as sf object</span></span>
-<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co"># Get polygons as sf object (using HexData)</span></span>
+<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="cell_to_sf.html">cell_to_sf</a></span><span class="op">(</span>grid <span class="op">=</span> <span class="va">result</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or with explicit parameters</span></span>
+<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">hexify_cell_to_sf</span><span class="op">(</span><span class="va">result</span><span class="op">@</span><span class="va">cell_id</span>, resolution <span class="op">=</span> <span class="fl">10</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot with sf</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>

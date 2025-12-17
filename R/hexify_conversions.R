@@ -202,9 +202,10 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 #' @return Numeric vector of cell IDs (1-based)
 #'
 #' @family coordinate conversion
-#' @seealso \code{\link{hexify_lonlat_to_cell}} for the direct-params version,
+#' @seealso \code{\link{lonlat_to_cell}} for the recommended S4 interface,
 #'   \code{\link{hexify_grid_cell_to_lonlat}} for the inverse operation
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -233,9 +234,10 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #' @return Data frame with lon_deg and lat_deg columns
 #'
 #' @family coordinate conversion
-#' @seealso \code{\link{hexify_cell_to_lonlat}} for the direct-params version,
+#' @seealso \code{\link{cell_to_lonlat}} for the recommended S4 interface,
 #'   \code{\link{hexify_grid_to_cell}} for the forward operation
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -412,6 +414,7 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 #' - Quad 11: South polar region
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -451,6 +454,7 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #' @return Numeric vector of cell IDs
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -493,6 +497,7 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 #'   \item{quad_y}{Continuous Y coordinate in quad space}
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -531,6 +536,7 @@ hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
 #'   \item{quad_y}{Continuous Y coordinate in quad space}
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -572,6 +578,7 @@ hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
 #'   \item{j}{Integer cell index along second axis}
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -622,6 +629,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
 #'   \item{icosa_triangle_y}{Y coordinate on triangle face}
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -665,6 +673,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #' @seealso \code{\link{hexify_quad_ij_to_cell}} for the forward operation,
 #'   \code{\link{hexify_cell_to_icosa_tri}} for conversion to triangle coords
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -714,6 +723,7 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #' @seealso \code{\link{hexify_cell_to_quad_ij}} for conversion to Quad IJ,
 #'   \code{\link{hexify_cell_to_lonlat}} for conversion to lon/lat
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -765,6 +775,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #' @seealso \code{\link{hexify_icosa_tri_to_quad_ij}} for the inverse,
 #'   \code{\link{hexify_cell_to_icosa_tri}} for conversion from cell ID
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -819,6 +830,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #' @seealso \code{\link{hexify_quad_xy_to_cell}} for the inverse operation,
 #'   \code{\link{hexify_cell_to_quad_ij}} for integer grid coordinates
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -866,6 +878,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' @seealso \code{\link{hexify_cell_to_quad_xy}} for the inverse operation,
 #'   \code{\link{hexify_quad_ij_to_cell}} for integer grid coordinates
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -933,6 +946,7 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #' @seealso \code{\link{hexify_cell_to_plane}} for direct cell ID conversion,
 #'   \code{\link{hexify_lonlat_to_plane}} for lon/lat to PLANE
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -974,6 +988,7 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #' @seealso \code{\link{hexify_icosa_tri_to_plane}} for triangle conversion,
 #'   \code{\link{hexify_lonlat_to_plane}} for lon/lat conversion
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -1017,6 +1032,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' @seealso \code{\link{hexify_cell_to_plane}} for cell ID conversion,
 #'   \code{\link{hexify_icosa_tri_to_plane}} for triangle conversion
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{

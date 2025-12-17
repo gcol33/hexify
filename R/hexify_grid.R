@@ -146,24 +146,6 @@ hexify_grid <- function(area,
   return(grid)
 }
 
-#' Backwards-compatible alias for hexify_grid
-#'
-#' @description
-#' `hexify_construct()` was renamed to `hexify_grid()` for clarity.
-#' Use `hexify_grid()` instead.
-#'
-#' @rdname hexify_grid
-#' @keywords internal
-#' @export
-hexify_construct <- function(area,
-                             topology = "HEXAGON",
-                             metric = TRUE,
-                             resround = "nearest",
-                             aperture = 3,
-                             projection = "ISEA") {
-  .Deprecated("hexify_grid")
-  hexify_grid(area, topology, metric, resround, aperture, projection)
-}
 
 #' Verify grid object
 #'
@@ -217,27 +199,3 @@ dgverify <- function(dggs) {
   invisible(TRUE)
 }
 
-#' Print method for hexify_grid objects
-#' 
-#' @param x A hexify_grid object
-#' @param ... Additional arguments (unused)
-#' @return The grid object (invisibly)
-#' 
-#' @export
-#' @method print hexify_grid
-print.hexify_grid <- function(x, ...) {
-  cat("Hexify Grid Specification\n")
-  cat("=========================\n")
-  cat(sprintf("Aperture:   %d\n", x$aperture))
-  cat(sprintf("Resolution: %d\n", x$resolution))
-  cat(sprintf("Area:       %.2f km^2\n", x$area))
-  cat(sprintf("Topology:   %s\n", x$topology))
-  cat(sprintf("Projection: %s\n", x$projection))
-  cat(sprintf("Index Type: %s\n", x$index_type))
-  
-  # Calculate cell count using ISEA3H formula: N = 10 * aperture^res + 2
-  n_cells <- 10 * (x$aperture ^ x$resolution) + 2
-  cat(sprintf("Total Cells: %.0f\n", n_cells))
-  
-  invisible(x)
-}

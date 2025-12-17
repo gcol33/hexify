@@ -4,7 +4,7 @@
 \alias{plot_world}
 \title{Quick world map plot}
 \usage{
-plot_world(fill = "gray95", border = "gray50", ...)
+plot_world(fill = "gray90", border = "gray50", ...)
 }
 \arguments{
 \item{fill}{Fill color for countries}
@@ -31,7 +31,6 @@ plot_world(fill = "lightblue", border = "darkblue")
 \seealso{
 Other visualization: 
 \code{\link{hexify_heatmap}()},
-\code{\link{hexify_map}()},
-\code{\link{hexify_plot}()}
+\code{\link{hexify_map}()}
 }
 \concept{visualization}

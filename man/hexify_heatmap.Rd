@@ -12,11 +12,11 @@ hexify_heatmap(
   colors = NULL,
   breaks = NULL,
   labels = NULL,
-  hex_border = "gray30",
-  hex_lwd = 0.2,
+  hex_border = "#5D4E37",
+  hex_lwd = 0.3,
   hex_alpha = 0.7,
-  basemap_fill = "white",
-  basemap_border = "black",
+  basemap_fill = "gray90",
+  basemap_border = "gray50",
   basemap_lwd = 0.5,
   mask_outside = FALSE,
   aperture = 3L,
@@ -173,11 +173,10 @@ hexify_heatmap(result, value = "count", basemap = "world") +
 }
 \seealso{
 \code{\link{hexify_map}} for base R plotting,
-\code{\link{hexify_plot}} for simple plots
+\code{\link{cell_to_sf}} to generate polygons manually
 
 Other visualization: 
 \code{\link{hexify_map}()},
-\code{\link{hexify_plot}()},
 \code{\link{plot_world}()}
 }
 \concept{visualization}

@@ -7,30 +7,26 @@ instead.
 ## Usage
 
 ``` r
-new_hex_data(data, grid, mapping = list(), kind = "unknown", meta = list())
+new_hex_data(data, grid, cell_id, cell_center)
 ```
 
 ## Arguments
 
 - data:
 
-  Data frame or sf object with cell assignments
+  Data frame or sf object (original user data, untouched)
 
 - grid:
 
   HexGrid object
 
-- mapping:
+- cell_id:
 
-  List of column name mappings
+  Numeric vector of cell IDs for each row
 
-- kind:
+- cell_center:
 
-  Type of data: "points", "cells", or "unknown"
-
-- meta:
-
-  Additional metadata
+  Matrix with columns lon, lat for cell centers
 
 ## Value
 

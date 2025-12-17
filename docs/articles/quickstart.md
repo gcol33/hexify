@@ -8,10 +8,10 @@ You want to do spatial statistics, and it involves binning points into
 grid cells.
 
 **The problem with rectangular grids**: A rectangular lat-lon grid
-introduces severe distortions. At the equator, a 1° cell covers ~12,300
-km². Near the poles, the same 1° cell covers a tiny fraction of that
-area. This breaks any analysis that assumes equal sampling effort or
-comparable cell sizes.
+introduces severe distortions. At the equator, a 1 degree cell covers
+~12,300 km squared. Near the poles, the same 1 degree cell covers a tiny
+fraction of that area. This breaks any analysis that assumes equal
+sampling effort or comparable cell sizes.
 
 **The solution**: Discrete global grids partition Earth’s surface into
 cells of **equal area**, regardless of latitude. hexify implements the
@@ -29,18 +29,18 @@ test_points <- data.frame(
   lat = c(0, 45, 70)
 )
 
-result <- hexify(test_points, lon = "lon", lat = "lat", area_km2 = 1000)
+grid <- hex_grid(area_km2 = 1000)
+result <- hexify(test_points, lon = "lon", lat = "lat", grid = grid)
 
 # All cells have the same area, regardless of latitude
-as.data.frame(result)[, c("location", "lat", "cell_area_km2")]
-#>       location lat cell_area_km2
-#> 1      Equator   0      863.7977
-#> 2 Mid-latitude  45      863.7977
-#> 3       Arctic  70      863.7977
+cat(sprintf("Grid area: %.1f km2\n", grid@area_km2))
+#> Grid area: 863.8 km2
+cat(sprintf("Points assigned to %d unique cells\n", n_cells(result)))
+#> Points assigned to 3 unique cells
 ```
 
-With hexify, a 1000 km² cell at the equator is the same size as a 1000
-km² cell in Norway.
+With hexify, a 1000 km squared cell at the equator is the same size as a
+1000 km squared cell in Norway.
 
 ### Installation
 
@@ -64,24 +64,22 @@ error-free:
 
 #### HexGrid Slots
 
-| Slot             | Type      | Description                            |
-|------------------|-----------|----------------------------------------|
-| `aperture`       | integer   | Grid aperture (3, 4, or 7)             |
-| `resolution`     | integer   | Resolution level (0–30)                |
-| `area_km2`       | numeric   | Cell area in km²                       |
-| `grid_system`    | character | Projection system (“ISEA”)             |
-| `topology`       | character | Cell shape (“H” for hexagon)           |
-| `index_type`     | character | ID encoding (“integer” or “character”) |
-| `mixed_aperture` | logical   | Whether using 4/3 mixed aperture       |
+| Slot          | Type      | Description                             |
+|---------------|-----------|-----------------------------------------|
+| `aperture`    | character | Grid aperture (“3”, “4”, “7”, or “4/3”) |
+| `resolution`  | integer   | Resolution level (0-30)                 |
+| `area_km2`    | numeric   | Cell area in km squared                 |
+| `diagonal_km` | numeric   | Cell diagonal in km                     |
+| `crs`         | integer   | Coordinate reference system (EPSG code) |
 
 #### HexData Slots
 
-| Slot      | Type          | Description                     |
-|-----------|---------------|---------------------------------|
-| `data`    | data.frame/sf | Your data with cell assignments |
-| `grid`    | HexGrid       | The grid specification used     |
-| `mapping` | list          | Column name mappings (lon, lat) |
-| `kind`    | character     | Data type (“points” or “cells”) |
+| Slot          | Type          | Description                        |
+|---------------|---------------|------------------------------------|
+| `data`        | data.frame/sf | Your original data (unchanged)     |
+| `grid`        | HexGrid       | The grid specification used        |
+| `cell_id`     | numeric       | Cell ID for each row               |
+| `cell_center` | matrix        | Cell center coordinates (lon, lat) |
 
 ### Quick Start
 
@@ -96,29 +94,38 @@ cities <- data.frame(
   lat = c(48.21, 48.86, 40.42, 52.52, 41.90)
 )
 
-# Assign to ~1000 km² hexagonal cells
-result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 1000)
+# Create a grid specification
+grid <- hex_grid(area_km2 = 10000)
+grid
+#> HexGrid Specification
+#> ---------------------
+#> Aperture:    3
+#> Resolution:  8
+#> Area:        7773.97 km^2
+#> Diagonal:    94.74 km
+#> CRS:         EPSG:4326
+#> Total Cells: 65612
 
-# Result is a HexData object
+# Assign cities to hexagonal cells
+result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
 result
 #> HexData Object
 #> --------------
 #> Rows:    5
-#> Columns: 8
+#> Columns: 3
 #> Cells:   5 unique
-#> Kind:    points
 #> Type:    data.frame
 #> 
 #> Grid:
-#>   Aperture 3, Resolution 10 (~1000.0 km^2)
+#>   Aperture 3, Resolution 8 (~7774.0 km^2)
 #> 
-#> Columns: name, lon, lat, cell_id, cell_cen_lon, cell_cen_lat, cell_area_km2, cell_diag_km 
+#> Columns: name, lon, lat 
 #> 
-#> Data preview:
-#>  cell_id cell_cen_lon cell_cen_lat   name   lon
-#>   126594    16.420390     48.28766 Vienna 16.37
-#>   118788     2.385556     48.96232  Paris  2.35
-#>   118752    -3.582199     40.52264 Madrid -3.70
+#> Data preview (with cell assignments):
+#>    name   lon   lat cell_id
+#>  Vienna 16.37 48.21   14092
+#>   Paris  2.35 48.86   13272
+#>  Madrid -3.70 40.42   13260
 #> ... with 2 more rows
 ```
 
@@ -126,40 +133,52 @@ result
 
 ``` r
 
-# Extract the underlying data
-as.data.frame(result)
-#>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
-#> 1 Vienna 16.37 48.21  126594    16.420390     48.28766      863.7977
-#> 2  Paris  2.35 48.86  118788     2.385556     48.96232      863.7977
-#> 3 Madrid -3.70 40.42  118752    -3.582199     40.52264      863.7977
-#> 4 Berlin 13.40 52.52  122466    13.448955     52.65189      863.7977
-#> 5   Rome 12.50 41.90  127788    12.674254     41.87485      863.7977
-#>   cell_diag_km
-#> 1     31.58208
-#> 2     31.58208
-#> 3     31.58208
-#> 4     31.58208
-#> 5     31.58208
-
-# Access columns directly
-result$cell_id
-#> [1] 126594 118788 118752 122466 127788
-
-# Get grid specification
+# Get the grid specification
 grid(result)
 #> HexGrid Specification
 #> ---------------------
 #> Aperture:    3
-#> Resolution:  10
-#> Area:        1000.00 km^2
-#> Grid System: ISEA
-#> Topology:    H
-#> Index Type:  integer
-#> Total Cells: 590492
+#> Resolution:  8
+#> Area:        7773.97 km^2
+#> Diagonal:    94.74 km
+#> CRS:         EPSG:4326
+#> Total Cells: 65612
+
+# Get unique cell IDs
+cells(result)
+#> [1] 14092 13272 13260 13688 14247
 
 # Count unique cells
 n_cells(result)
 #> [1] 5
+
+# Access all cell IDs (one per row)
+result@cell_id
+#> [1] 14092 13272 13260 13688 14247
+
+# Access cell centers
+head(result@cell_center)
+#>            lon      lat
+#> [1,] 15.968349 48.25028
+#> [2,]  2.460284 48.49334
+#> [3,] -3.482737 40.05509
+#> [4,] 13.428088 52.18073
+#> [5,] 12.466432 41.61442
+
+# Extract original data as data.frame
+head(as.data.frame(result))
+#>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
+#> 1 Vienna 16.37 48.21   14092    15.968349     48.25028      7773.969
+#> 2  Paris  2.35 48.86   13272     2.460284     48.49334      7773.969
+#> 3 Madrid -3.70 40.42   13260    -3.482737     40.05509      7773.969
+#> 4 Berlin 13.40 52.52   13688    13.428088     52.18073      7773.969
+#> 5   Rome 12.50 41.90   14247    12.466432     41.61442      7773.969
+#>   cell_diag_km
+#> 1     94.74495
+#> 2     94.74495
+#> 3     94.74495
+#> 4     94.74495
+#> 5     94.74495
 ```
 
 #### Define Grid Once, Reuse Everywhere
@@ -176,13 +195,13 @@ my_grid
 #> ---------------------
 #> Aperture:    3
 #> Resolution:  8
-#> Area:        5000.00 km^2
-#> Grid System: ISEA
-#> Topology:    H
-#> Index Type:  integer
+#> Area:        7773.97 km^2
+#> Diagonal:    94.74 km
+#> CRS:         EPSG:4326
 #> Total Cells: 65612
 
 # Apply same grid to different datasets
+set.seed(123)
 birds <- data.frame(lon = runif(100, -10, 30), lat = runif(100, 35, 60))
 mammals <- data.frame(x = runif(50, -10, 30), y = runif(50, 35, 60))
 
@@ -191,9 +210,9 @@ mammals_hex <- hexify(mammals, lon = "x", lat = "y", grid = my_grid)
 
 # Both use identical grid - safe to combine
 cat("Birds:", n_cells(birds_hex), "cells\n")
-#> Birds: 94 cells
+#> Birds: 96 cells
 cat("Mammals:", n_cells(mammals_hex), "cells\n")
-#> Mammals: 49 cells
+#> Mammals: 50 cells
 ```
 
 #### With sf Objects
@@ -206,38 +225,243 @@ library(sf)
 pts <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 
 # hexify handles CRS transformation automatically
-result_sf <- hexify(pts, area_km2 = 1000)
+result_sf <- hexify(pts, area_km2 = 10000)
 class(result_sf)
 #> [1] "HexData"
 #> attr(,"package")
 #> [1] "hexify"
 ```
 
-### What hexify Returns
+### Visualization
 
-Given a data frame with longitude/latitude columns,
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
-returns a `HexData` object containing your original data plus:
+hexify provides multiple ways to visualize your gridded data.
 
-- `cell_id`: Unique cell identifier (DGGRID-compatible SEQNUM)
-- `cell_cen_lon`, `cell_cen_lat`: Cell center coordinates
-- `cell_area_km2`: Actual cell area in km²
-- `cell_diag_km`: Cell diagonal in km
+#### Quick Plot with Base R
 
-Supports apertures 3, 4, 7, and mixed 4/3:
+The simplest approach uses the built-in
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
 
-| Aperture | Grid Type | Cell Count Formula | Use Case |
-|----|----|----|----|
-| 3 | ISEA3H | 10 × 3^res + 2 | Default, dggridR compatible, fine control |
-| 4 | ISEA4H | 10 × 4^res + 2 | Power-of-2 scaling |
-| 7 | ISEA7H | 10 × 7^res + 2 | Rapid cell growth |
-| “4/3” | ISEA43H | Mixed | Balance of fast start + fine control |
+``` r
+
+# Basic plot with world basemap
+plot(result, basemap = TRUE, main = "European Cities")
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+```
+
+![](quickstart_files/figure-html/plot-basic-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+#### Customize Plot Appearance
+
+``` r
+
+# Custom colors and styling
+plot(result,
+     basemap = TRUE,
+     grid_fill = "steelblue",
+     grid_border = "darkblue",
+     grid_alpha = 0.6,
+     basemap_fill = "ivory",
+     basemap_border = "gray50",
+     main = "Custom Styling")
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+```
+
+![](quickstart_files/figure-html/plot-custom-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+#### Show Original Points
+
+``` r
+
+# Show original points overlaid on cells
+plot(result,
+     basemap = TRUE,
+     show_points = TRUE,
+     point_color = "red",
+     point_size = 1.5,
+     main = "Cities with Cell Overlay")
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+```
+
+![](quickstart_files/figure-html/plot-points-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+#### ggplot2 with hexify_ggplot()
+
+For ggplot2 users,
+[`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
+returns a ggplot object:
+
+``` r
+
+library(ggplot2)
+
+# Basic ggplot
+hexify_ggplot(result, basemap = TRUE, title = "European Cities")
+```
+
+![](quickstart_files/figure-html/ggplot-basic-1.svg)
+
+#### Heatmaps with hexify_heatmap()
+
+For choropleth-style visualizations with aggregated data:
+
+``` r
+
+# Simulate observation data
+set.seed(42)
+n_obs <- 500
+obs_data <- data.frame(
+  lon = c(rnorm(300, 10, 8), rnorm(200, 0, 10)),
+  lat = c(rnorm(300, 48, 5), rnorm(200, 52, 6)),
+  count = rpois(n_obs, lambda = 50)
+)
+
+# Hexify and aggregate
+grid <- hex_grid(area_km2 = 5000)
+obs_hex <- hexify(obs_data, lon = "lon", lat = "lat", grid = grid)
+
+# Aggregate counts per cell
+obs_df <- as.data.frame(obs_hex)
+obs_df$cell_id <- obs_hex@cell_id
+cell_totals <- aggregate(count ~ cell_id, data = obs_df, FUN = sum)
+
+# Create heatmap
+hexify_heatmap(
+  obs_hex,
+  value = "count",
+  basemap = "world",
+  colors = "YlOrRd",
+  title = "Observation Counts",
+  legend_title = "Count",
+  xlim = c(-20, 35),
+  ylim = c(35, 65)
+)
+```
+
+![](quickstart_files/figure-html/heatmap-demo-1.svg)
+
+#### Simple Map with hexify_map()
+
+For quick base R visualization:
+
+``` r
+
+# Quick map visualization
+hexify_map(
+  result,
+  basemap = "world",
+  fill = "steelblue",
+  border = "darkblue",
+  main = "European Cities Grid"
+)
+#> Spherical geometry (s2) switched off
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
+```
+
+![](quickstart_files/figure-html/hexify-map-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+#### World Map Helper
+
+``` r
+
+# Quick world map
+plot_world(fill = "lightgray", border = "gray50")
+```
+
+![](quickstart_files/figure-html/plot-world-1.svg)
+
+### Grid Generation
+
+#### Grid Over a Rectangular Region
+
+``` r
+
+library(sf)
+
+# Create grid specification
+grid <- hex_grid(area_km2 = 5000)
+
+# Generate hexagons over Western Europe
+europe_hexes <- grid_rect(c(-10, 35, 25, 60), grid)
+
+# Get European countries for context
+europe <- hexify_world[hexify_world$continent == "Europe", ]
+
+ggplot() +
+  geom_sf(data = europe, fill = "gray95", color = "gray60") +
+  geom_sf(data = europe_hexes, fill = NA, color = "steelblue", linewidth = 0.4) +
+  coord_sf(xlim = c(-10, 25), ylim = c(35, 60)) +
+  labs(title = sprintf("Hexagonal Grid (~%.0f km2 cells)", grid@area_km2)) +
+  theme_minimal()
+```
+
+![](quickstart_files/figure-html/grid-rect-1.svg)
+
+#### Grid Over a Polygon (Shapefile)
+
+Clip a grid to any sf polygon boundary:
+
+``` r
+
+# Get France boundary
+france <- hexify_world[hexify_world$name == "France", ]
+
+# Generate grid covering mainland France
+grid <- hex_grid(area_km2 = 2000)
+france_grid <- grid_rect(c(-5, 41, 10, 52), grid)
+
+# Clip grid to France boundary
+france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
+
+ggplot() +
+  geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
+  geom_sf(data = france_grid_clipped, fill = alpha("steelblue", 0.3),
+          color = "steelblue", linewidth = 0.3) +
+  coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
+  labs(title = sprintf("Hexagonal Grid Clipped to France (~%.0f km2 cells)", grid@area_km2)) +
+  theme_minimal()
+```
+
+![](quickstart_files/figure-html/grid-polygon-1.svg)
+
+#### Global Grid
+
+``` r
+
+# Coarse global grid (be careful with fine grids - many cells!)
+grid <- hex_grid(area_km2 = 500000)
+global_hexes <- grid_global(grid)
+
+ggplot() +
+  geom_sf(data = hexify_world, fill = "gray90", color = "gray70", linewidth = 0.2) +
+  geom_sf(data = global_hexes, fill = NA, color = "darkgreen", linewidth = 0.3) +
+  labs(title = sprintf("Global Hexagonal Grid (~%.0f km2 cells)", grid@area_km2)) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
+```
+
+![](quickstart_files/figure-html/grid-global-1.svg)
 
 ### Real-World Example: Species Occurrence Data
 
 This example demonstrates the typical workflow: loading point data,
-assigning to grid cells, aggregating, and visualizing. We’ll simulate
-bird observation data across Europe and Africa.
+assigning to grid cells, aggregating, and visualizing.
 
 ``` r
 
@@ -248,7 +472,6 @@ set.seed(123)
 n_obs <- 3000
 
 # Generate observations with realistic spatial clustering
-# More observations in temperate regions, fewer in deserts/arctic
 birds <- data.frame(
   lon = c(
     rnorm(800, mean = 10, sd = 15),    # Western Europe
@@ -279,17 +502,21 @@ birds$lat <- pmax(-35, pmin(70, birds$lat))
 
 ``` r
 
-# Assign each observation to a ~25,000 km² cell
-birds_hex <- hexify(birds, lon = "lon", lat = "lat", area_km2 = 25000)
+# Create grid and assign observations
+grid <- hex_grid(area_km2 = 25000)
+birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = grid)
+
+# Extract data with cell IDs
 birds_gridded <- as.data.frame(birds_hex)
+birds_gridded$cell_id <- birds_hex@cell_id
 
 # Count observations per cell
 obs_counts <- aggregate(
-  species ~ cell_id + cell_cen_lon + cell_cen_lat,
+  species ~ cell_id,
   data = birds_gridded,
   FUN = length
 )
-names(obs_counts)[4] <- "n_observations"
+names(obs_counts)[2] <- "n_observations"
 
 # Species richness per cell
 richness <- aggregate(
@@ -301,37 +528,24 @@ names(richness)[2] <- "n_species"
 
 obs_counts <- merge(obs_counts, richness, by = "cell_id")
 head(obs_counts)
-#>   cell_id cell_cen_lon cell_cen_lat n_observations n_species
-#> 1       1    11.250000     58.28253              5         4
-#> 2      24    11.249999     69.72907              2         1
-#> 3      27    11.250000     62.79923              2         2
-#> 4      28    11.250000     60.52960              3         2
-#> 5      52     9.220405     66.23521              2         2
-#> 6      53     9.371184     63.94426              2         1
+#>   cell_id n_observations n_species
+#> 1       1              5         4
+#> 2      24              2         1
+#> 3      27              2         2
+#> 4      28              3         2
+#> 5      52              2         2
+#> 6      53              2         1
 ```
 
-#### Generate Cell Polygons
-
-``` r
-
-# Get grid from HexData result
-grid_info <- grid(birds_hex)
-
-# Generate polygons for cells with data
-cell_polys <- hexify_cell_to_sf(
-  obs_counts$cell_id,
-  resolution = grid_info@resolution,
-  aperture = grid_info@aperture
-)
-cell_polys$n_observations <- obs_counts$n_observations
-cell_polys$n_species <- obs_counts$n_species
-```
-
-#### Visualize Results
+#### Generate Cell Polygons and Visualize
 
 ``` r
 
 library(ggplot2)
+
+# Generate polygons for cells with data
+cell_polys <- cell_to_sf(obs_counts$cell_id, grid)
+cell_polys <- merge(cell_polys, obs_counts, by = "cell_id")
 
 # Get relevant countries
 region <- hexify_world[hexify_world$continent %in% c("Europe", "Africa"), ]
@@ -343,8 +557,8 @@ ggplot() +
   coord_sf(xlim = c(-30, 60), ylim = c(-35, 70)) +
   labs(
     title = "Bird Observations in Equal-Area Hexagonal Cells",
-    subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km² cells)",
-                       grid_info@resolution, grid_info@area_km2)
+    subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km2 cells)",
+                       grid@resolution, grid@area_km2)
   ) +
   theme_minimal() +
   theme(
@@ -355,10 +569,6 @@ ggplot() +
 ```
 
 ![](quickstart_files/figure-html/bird-plot-1.svg)
-
-Notice how the hexagons appear different sizes on the flat map—that’s
-the projection distortion, not the actual cell sizes. On the sphere,
-every cell has exactly the same area.
 
 #### Species Richness Map
 
@@ -385,45 +595,14 @@ ggplot() +
 
 ### Random Sampling Earth
 
-Discrete global grids provide two elegant methods for uniform spatial
+Discrete global grids provide elegant methods for uniform spatial
 sampling.
 
-#### Method 1: Sample Points, Get Cells
-
-Generate uniformly distributed lat-lon points and retrieve their grid
-cells:
+#### Sample Cell IDs Directly
 
 ``` r
 
-N <- 100
-
-# Uniform points on sphere (see Wolfram MathWorld: Sphere Point Picking)
-u <- runif(N)
-v <- runif(N)
-theta <- 2 * pi * u
-phi <- acos(2 * v - 1)
-lon <- (theta * 180 / pi) - 180
-lat <- (phi * 180 / pi) - 90
-
-sample_df <- data.frame(lon = lon, lat = lat)
-
-# Assign to ~100,000 km² cells
-sample_hex <- hexify(sample_df, lon = "lon", lat = "lat", area_km2 = 100000)
-sample_gridded <- as.data.frame(sample_hex)
-
-# Get unique cells
-unique_cells <- unique(sample_gridded$cell_id)
-cat(sprintf("Sampled %d unique cells from %d points\n", length(unique_cells), N))
-#> Sampled 98 unique cells from 100 points
-```
-
-#### Method 2: Sample Cell IDs Directly
-
-For aperture 3, the maximum cell ID at resolution r is `10 × 3^r + 2`:
-
-``` r
-
-# Grid parameters - use hex_grid() for consistent grid specification
+# Grid parameters
 grid <- hex_grid(area_km2 = 100000, aperture = 3)
 max_cell <- 10 * (3^grid@resolution) + 2
 
@@ -435,18 +614,15 @@ N <- 100
 random_cells <- sample(1:max_cell, N, replace = FALSE)
 
 # Get cell centers
-cell_centers <- hexify_cell_to_lonlat(random_cells,
-                                       resolution = grid@resolution,
-                                       aperture = 3)
-
+cell_centers <- cell_to_lonlat(random_cells, grid)
 head(cell_centers)
 #>      lon_deg   lat_deg
-#> 1 -120.65036 -77.26569
-#> 2   53.74422 -10.67964
-#> 3  -31.24422 -10.67964
-#> 4   36.23497  19.83993
-#> 5  168.53882  11.48149
-#> 6 -137.25812  59.57223
+#> 1  -93.03627  61.58562
+#> 2 -124.72708 -14.62883
+#> 3  -83.73510  15.58019
+#> 4   15.82634 -54.53941
+#> 5  -47.97388 -48.09197
+#> 6  142.34535  56.81987
 ```
 
 #### Visualize Random Sample
@@ -454,11 +630,7 @@ head(cell_centers)
 ``` r
 
 # Generate polygons for sampled cells
-sample_polys <- hexify_cell_to_sf(
-  random_cells,
-  resolution = grid@resolution,
-  aperture = grid@aperture
-)
+sample_polys <- cell_to_sf(random_cells, grid)
 
 sample_polys_wrapped <- st_wrap_dateline(
   sample_polys,
@@ -470,70 +642,12 @@ ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
   geom_sf(data = sample_polys_wrapped, fill = alpha("forestgreen", 0.5),
           color = "darkgreen", linewidth = 0.4) +
-  labs(title = sprintf("Random Sample of %d Cells (~%.0f km² each)", N, grid@area_km2)) +
+  labs(title = sprintf("Random Sample of %d Cells (~%.0f km2 each)", N, grid@area_km2)) +
   theme_minimal() +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
 ![](quickstart_files/figure-html/random-sample-plot-1.svg)
-
-### Grid Generation
-
-#### Grid Over a Rectangular Region
-
-``` r
-
-# Generate a grid covering Western Europe
-europe_grid <- hexify_grid_rect(
-  minlon = -10, maxlon = 25,
-  minlat = 35, maxlat = 60,
-  area = 5000
-)
-
-# Get European countries for context
-europe <- hexify_world[hexify_world$continent == "Europe", ]
-
-ggplot() +
-  geom_sf(data = europe, fill = "gray95", color = "gray60") +
-  geom_sf(data = europe_grid, fill = NA, color = "steelblue", linewidth = 0.4) +
-  coord_sf(xlim = c(-10, 25), ylim = c(35, 60)) +
-  labs(title = "Hexagonal Grid over Western Europe (~5,000 km² cells)") +
-  theme_minimal()
-```
-
-![](quickstart_files/figure-html/grid-rect-1.svg)
-
-#### Grid Over a Polygon (Shapefile)
-
-Clip a grid to any sf polygon boundary:
-
-``` r
-
-# Get France boundary
-france <- hexify_world[hexify_world$name == "France", ]
-
-# Generate grid covering mainland France (excluding overseas territories)
-france_grid <- hexify_grid_rect(
-  minlon = -5, maxlon = 10,
-  minlat = 41, maxlat = 52,
-  area = 2000
-)
-
-# Clip grid to France boundary
-france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
-
-ggplot() +
-  geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
-  geom_sf(data = france_grid_clipped, fill = alpha("steelblue", 0.3),
-          color = "steelblue", linewidth = 0.3) +
-  coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
-  labs(title = "Hexagonal Grid Clipped to France (~2,000 km² cells)") +
-  theme_minimal()
-```
-
-![](quickstart_files/figure-html/grid-polygon-1.svg)
 
 ### Export to External Formats
 
@@ -546,88 +660,14 @@ to export grids for use in GIS software:
 library(sf)
 
 # Generate a grid
-grid <- hexify_grid_rect(
-  minlon = -10, maxlon = 25,
-  minlat = 35, maxlat = 60,
-  area = 10000
-)
+grid <- hex_grid(area_km2 = 10000)
+europe <- grid_rect(c(-10, 35, 25, 60), grid)
 
 # Export to various formats
-st_write(grid, "europe_grid.gpkg", layer = "hexgrid")     # GeoPackage
-st_write(grid, "europe_grid.shp")                         # Shapefile
-st_write(grid, "europe_grid.geojson")                     # GeoJSON
-st_write(grid, "europe_grid.kml", layer = "hexgrid")      # KML (Google Earth)
-```
-
-### Hierarchical Indexing
-
-hexify supports hierarchical cell indices with parent-child
-relationships. This enables multi-scale analysis and efficient spatial
-queries.
-
-#### Parent-Child Relationships
-
-``` r
-
-# Get index for a location
-idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
-cat("Index at resolution 5:", idx, "\n")
-#> Index at resolution 5: 0211101
-
-# Get parent (coarser resolution)
-parent_idx <- hexify_get_parent(idx, aperture = 3)
-cat("Parent (resolution 4):", parent_idx, "\n")
-#> Parent (resolution 4): 021110
-
-# Get children (finer resolution)
-children <- hexify_get_children(idx, aperture = 3)
-cat("Children (resolution 6):", paste(children, collapse = ", "), "\n")
-#> Children (resolution 6): 02101000, 02101022, 02101021
-```
-
-#### Index Structure
-
-The index encodes the hierarchical path from icosahedron face to cell:
-
-``` r
-
-idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
-
-cat("Full index:", idx, "\n")
-#> Full index: 0211101
-cat("Face (first 2 digits):", substr(idx, 1, 2), "\n")
-#> Face (first 2 digits): 02
-cat("Path (remaining digits):", substr(idx, 3, nchar(idx)), "\n")
-#> Path (remaining digits): 11101
-cat("Resolution:", hexify_get_resolution(idx, aperture = 3), "\n")
-#> Resolution: 5
-```
-
-#### Multi-Scale Aggregation
-
-``` r
-
-# Sample data
-set.seed(42)
-obs <- data.frame(
-  lon = runif(500, 10, 20),
-  lat = runif(500, 45, 55),
-  value = rnorm(500, 100, 20)
-)
-
-# Aggregate at multiple scales
-scales <- c(500, 2000, 10000)  # km²
-
-for (area in scales) {
-  gridded <- hexify(obs, lon = "lon", lat = "lat", area = area)
-  n_cells <- length(unique(gridded$cell_id))
-  mean_per_cell <- nrow(obs) / n_cells
-  cat(sprintf("Area %6.0f km²: %3d cells, %.1f obs/cell\n",
-              area, n_cells, mean_per_cell))
-}
-#> Area    500 km²: 389 cells, 1.3 obs/cell
-#> Area   2000 km²: 254 cells, 2.0 obs/cell
-#> Area  10000 km²: 113 cells, 4.4 obs/cell
+st_write(europe, "europe_grid.gpkg", layer = "hexgrid")     # GeoPackage
+st_write(europe, "europe_grid.shp")                         # Shapefile
+st_write(europe, "europe_grid.geojson")                     # GeoJSON
+st_write(europe, "europe_grid.kml", layer = "hexgrid")      # KML (Google Earth)
 ```
 
 ### Caveats
@@ -648,20 +688,10 @@ pentagon_coords <- data.frame(
 )
 
 # Assign to grid and get polygons
-grid_info <- hexify_grid(area = 500000, aperture = 3)
-pentagon_coords$cell_id <- hexify_lonlat_to_cell(
-  pentagon_coords$lon, pentagon_coords$lat,
-  resolution = grid_info$resolution, aperture = 3
-)
-#> Warning in validate_lon(lon): Some longitude values are outside valid range
-#> [-180, 180]
+grid <- hex_grid(area_km2 = 500000)
+pentagon_cells <- lonlat_to_cell(pentagon_coords$lon, pentagon_coords$lat, grid)
 
-pentagon_polys <- hexify_cell_to_sf(
-  pentagon_coords$cell_id,
-  resolution = grid_info$resolution,
-  aperture = 3
-)
-
+pentagon_polys <- cell_to_sf(pentagon_cells, grid)
 pentagon_polys_wrapped <- st_wrap_dateline(
   pentagon_polys,
   options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
@@ -692,40 +722,38 @@ For most analyses, pentagons are not a concern:
 
 #### Multi-Scale Analysis
 
-Hexagonal grids do **not** nest perfectly—cells at one resolution
+Hexagonal grids do **not** nest perfectly - cells at one resolution
 partially overlap cells at other resolutions. For hierarchical analysis,
-use the index-based parent/child functions rather than spatial
-containment.
+use grid-based aggregation rather than spatial containment.
 
 #### Integer Limits
 
 Cell IDs are stored as integers. For resolutions above 15 (aperture 3),
-cell IDs may exceed R’s integer limit (2^31-1). For very high
-resolutions, use index strings via
-[`hexify_lonlat_to_index()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_index.md).
+cell IDs may exceed R’s integer limit (2^31-1). Use appropriate numeric
+types for very high resolutions.
 
 ### Resolution Reference
 
 #### ISEA3H (Aperture 3)
 
-| Res | Number of Cells | Cell Area (km²) | Mean Spacing (km) |
-|----:|----------------:|----------------:|------------------:|
-|   0 |              12 |   51,006,562.17 |                   |
-|   1 |              32 |   17,002,187.39 |          4,320.49 |
-|   2 |              92 |    5,667,395.80 |          2,539.69 |
-|   3 |             272 |    1,889,131.93 |          1,480.02 |
-|   4 |             812 |      629,710.64 |            855.42 |
-|   5 |           2,432 |      209,903.55 |            494.96 |
-|   6 |           7,292 |       69,967.85 |            285.65 |
-|   7 |          21,872 |       23,322.62 |            165.06 |
-|   8 |          65,612 |        7,774.21 |             95.26 |
-|   9 |         196,832 |        2,591.40 |             55.02 |
-|  10 |         590,492 |          863.80 |             31.76 |
-|  11 |       1,771,472 |          287.93 |             18.34 |
-|  12 |       5,314,412 |           95.98 |             10.59 |
-|  13 |      15,943,232 |           31.99 |              6.11 |
-|  14 |      47,829,692 |           10.66 |              3.53 |
-|  15 |     143,489,072 |            3.55 |              2.04 |
+| Resolution | \# Cells | Cell Area (km2) | Spacing (km) |
+|-----------:|:---------|----------------:|-------------:|
+|          0 | 12       |      42505468.5 |       7005.8 |
+|          1 | 32       |      15939550.7 |       4290.2 |
+|          2 | 92       |       5544191.5 |       2530.2 |
+|          3 | 272      |       1875241.3 |       1471.5 |
+|          4 | 812      |        628159.6 |        851.7 |
+|          5 | 2.4K     |        209730.9 |        492.1 |
+|          6 | 7.3K     |         69948.7 |        284.2 |
+|          7 | 21.9K    |         23320.5 |        164.1 |
+|          8 | 65.6K    |          7774.0 |         94.7 |
+|          9 | 196.8K   |          2591.4 |         54.7 |
+|         10 | 590.5K   |           863.8 |         31.6 |
+|         11 | 1.8M     |           287.9 |         18.2 |
+|         12 | 5.3M     |            96.0 |         10.5 |
+|         13 | 15.9M    |            32.0 |          6.1 |
+|         14 | 47.8M    |            10.7 |          3.5 |
+|         15 | 143.5M   |             3.6 |          2.0 |
 
 #### Choosing Resolution by Area
 
@@ -734,39 +762,39 @@ resolutions, use index strings via
 # Find resolution for target areas
 targets <- c(100, 1000, 10000, 100000)
 
-cat("Target Area → Actual Resolution & Area\n")
-#> Target Area → Actual Resolution & Area
+cat("Target Area -> Actual Resolution & Area\n")
+#> Target Area -> Actual Resolution & Area
 cat("--------------------------------------\n")
 #> --------------------------------------
 for (target in targets) {
-  grid <- hexify_grid(area = target, aperture = 3)
-  cat(sprintf("%7.0f km² → res %2d = %9.1f km²\n",
-              target, grid$resolution, grid$area))
+  grid <- hex_grid(area_km2 = target, aperture = 3)
+  cat(sprintf("%7.0f km2 -> res %2d = %9.1f km2\n",
+              target, grid@resolution, grid@area_km2))
 }
-#>     100 km² → res 12 =     100.0 km²
-#>    1000 km² → res 10 =    1000.0 km²
-#>   10000 km² → res  8 =   10000.0 km²
-#>  100000 km² → res  6 =  100000.0 km²
+#>     100 km2 -> res 12 =      96.0 km2
+#>    1000 km2 -> res 10 =     863.8 km2
+#>   10000 km2 -> res  8 =    7774.0 km2
+#>  100000 km2 -> res  6 =   69948.7 km2
 ```
 
 #### Comparing Apertures
 
 ``` r
 
-target <- 1000  # km²
+target <- 1000  # km2
 
-cat(sprintf("Target: ~%d km² cells\n\n", target))
-#> Target: ~1000 km² cells
+cat(sprintf("Target: ~%d km2 cells\n\n", target))
+#> Target: ~1000 km2 cells
 for (ap in c(3, 4, 7)) {
-  grid <- hexify_grid(area = target, aperture = ap)
-  n_cells <- 10 * (ap^grid$resolution) + 2
-  cat(sprintf("Aperture %d: res %2d → %8.1f km² (%s cells)\n",
-              ap, grid$resolution, grid$area,
+  grid <- hex_grid(area_km2 = target, aperture = ap)
+  n_cells <- 10 * (ap^grid@resolution) + 2
+  cat(sprintf("Aperture %d: res %2d -> %8.1f km2 (%s cells)\n",
+              ap, grid@resolution, grid@area_km2,
               format(n_cells, big.mark = ",")))
 }
-#> Aperture 3: res 10 →   1000.0 km² (590,492 cells)
-#> Aperture 4: res  8 →   1000.0 km² (655,362 cells)
-#> Aperture 7: res  6 →   1000.0 km² (1,176,492 cells)
+#> Aperture 3: res 10 ->    863.8 km2 (590,492 cells)
+#> Aperture 4: res  8 ->    778.3 km2 (655,362 cells)
+#> Aperture 7: res  6 ->    433.5 km2 (1,176,492 cells)
 ```
 
 ### dggridR Compatibility
@@ -782,11 +810,12 @@ library(hexify)
 dggs <- dggridR::dgconstruct(res = 10, aperture = 3)
 ref <- dggridR::dgGEO_to_SEQNUM(dggs, cities$lon, cities$lat)
 
-# hexify result (res 10 ≈ 864 km²)
-result <- hexify(cities, lon = "lon", lat = "lat", area = 864)
+# hexify result (res 10 = 864 km2)
+grid <- hex_grid(resolution = 10, aperture = 3)
+result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
 
 # Verify identical
-all(result$cell_id == ref$seqnum)
+all(result@cell_id == ref$seqnum)
 #> TRUE
 ```
 
@@ -821,35 +850,41 @@ all(result$cell_id == ref$seqnum)
 
 | Function | Description |
 |----|----|
-| [`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md) | Generate grid polygons over rectangular region |
-| [`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md) | Generate global grid polygons |
-| [`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md) | Convert hexify result to sf points or polygons |
-| [`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md) | Generate polygons from cell IDs |
+| [`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md) | Generate grid polygons over rectangular region |
+| [`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md) | Generate global grid polygons |
+| [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md) | Generate polygons from cell IDs |
+| [`as_sf()`](https://gcol33.github.io/hexify/reference/as_sf.md) | Convert HexData to sf object |
 
 #### Coordinate Conversion
 
 | Function | Description |
 |----|----|
-| [`hexify_lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_cell.md) | lon/lat → cell ID |
-| [`hexify_cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_lonlat.md) | cell ID → cell center lon/lat |
-| [`hexify_lonlat_to_index()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_index.md) | lon/lat → hierarchical index string |
-| [`hexify_index_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_index_to_lonlat.md) | index string → cell center lon/lat |
+| [`lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md) | lon/lat -\> cell ID |
+| [`cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md) | cell ID -\> cell center lon/lat |
 
-#### Hierarchical Operations
+#### Visualization
 
 | Function | Description |
 |----|----|
-| [`hexify_get_parent()`](https://gcol33.github.io/hexify/reference/hexify_get_parent.md) | Get parent cell (coarser resolution) |
-| [`hexify_get_children()`](https://gcol33.github.io/hexify/reference/hexify_get_children.md) | Get child cells (finer resolution) |
-| [`hexify_get_resolution()`](https://gcol33.github.io/hexify/reference/hexify_get_resolution.md) | Get resolution level from index |
+| [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Base R plot method for HexData |
+| [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md) | ggplot2 plotting for HexData |
+| [`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md) | Quick map visualization |
+| [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md) | ggplot2 choropleth heatmap |
+| [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md) | Quick world map |
+
+#### Grid Statistics
+
+| Function | Description |
+|----|----|
+| [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md) | Compare resolution levels |
+| [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md) | Get grid statistics |
 
 ### See Also
 
-- [`vignette("theory")`](https://gcol33.github.io/hexify/articles/theory.md)
-  — Mathematical foundations (projection, apertures, space-filling
-  curves)
-- [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md)
-  — Detailed workflow examples for common analysis tasks
+- [`vignette("theory")`](https://gcol33.github.io/hexify/articles/theory.md) -
+  Mathematical foundations (projection, apertures, space-filling curves)
+- [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
+  Detailed workflow examples for common analysis tasks
 
 ### Session Info
 

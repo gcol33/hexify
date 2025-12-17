@@ -34,6 +34,7 @@
 #' - Aperture 7: Z7 (hierarchical with Class III handling)
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 #' @examples
 #' idx <- hexify_cell_to_index(5, 10, 15, resolution = 3, aperture = 3)
@@ -57,6 +58,7 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
 #' @return List with face, i, j, and resolution
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 #' @examples
 #' cell <- hexify_index_to_cell("0012012", aperture = 3)
@@ -79,6 +81,7 @@ hexify_index_to_cell <- function(index, aperture = 3L,
 #' @return Index string
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 #' @examples
 #' idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
@@ -100,6 +103,7 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
 #' @return Named numeric vector with lon and lat in degrees
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 #' @examples
 #' coords <- hexify_index_to_lonlat("0012012", aperture = 3)
@@ -124,6 +128,7 @@ hexify_index_to_lonlat <- function(index, aperture = 3L,
 #' @return Parent index string
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_get_parent <- function(index, aperture = 3L,
                                index_type = c("auto", "z3", "z7", "zorder")) {
@@ -142,6 +147,7 @@ hexify_get_parent <- function(index, aperture = 3L,
 #' @return Character vector of child indices
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_get_children <- function(index, aperture = 3L,
                                  index_type = c("auto", "z3", "z7", "zorder")) {
@@ -160,6 +166,7 @@ hexify_get_children <- function(index, aperture = 3L,
 #' @return Integer resolution level
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_get_resolution <- function(index, aperture = 3L,
                                    index_type = c("auto", "z3", "z7", "zorder")) {
@@ -177,6 +184,7 @@ hexify_get_resolution <- function(index, aperture = 3L,
 #' @return Integer: -1 if idx1 < idx2, 0 if equal, 1 if idx1 > idx2
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_compare_indices <- function(idx1, idx2) {
   cpp_compare_indices(as.character(idx1), as.character(idx2))
@@ -202,12 +210,13 @@ hexify_compare_indices <- function(idx1, idx2) {
 #' Returns DGGRID-compatible cell identifiers. The cell ID
 #' uniquely identifies each hexagonal cell in the global grid.
 #'
-#' For a grid-object interface, use \code{\link{hexify_grid_to_cell}}.
+#' For a grid-object interface, use \code{\link{lonlat_to_cell}}.
 #'
 #' @family coordinate conversion
-#' @seealso \code{\link{hexify_cell_to_lonlat}} for the inverse operation,
-#'   \code{\link{hexify_grid_to_cell}} for the grid-based wrapper
+#' @seealso \code{\link{lonlat_to_cell}} for the recommended S4 interface,
+#'   \code{\link{hexify_cell_to_lonlat}} for the inverse operation
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' cell_id <- hexify_lonlat_to_cell(0, 45, resolution = 5, aperture = 3)
@@ -231,9 +240,10 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
 #' @return Data frame with lon_deg and lat_deg columns
 #'
 #' @family coordinate conversion
-#' @seealso \code{\link{hexify_lonlat_to_cell}} for the forward operation,
-#'   \code{\link{hexify_grid_cell_to_lonlat}} for the grid-based wrapper
+#' @seealso \code{\link{cell_to_lonlat}} for the recommended S4 interface,
+#'   \code{\link{hexify_lonlat_to_cell}} for the forward operation
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' coords <- hexify_cell_to_lonlat(1702, resolution = 5, aperture = 3)
@@ -255,6 +265,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 #' @return Data frame with quad, i, j columns
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' info <- hexify_cell_to_quad_ij(1702, resolution = 5, aperture = 3)
@@ -282,6 +293,7 @@ hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
 #' @return Canonical form (lexicographically smallest in cycle)
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 #' @examples
 #' # These all return the same canonical form
@@ -303,6 +315,7 @@ hexify_z7_canonical <- function(index, max_iterations = 128L) {
 #' @return Logical: TRUE if valid combination
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_is_valid_index_type <- function(aperture,
                                         index_type = c("auto", "z3", "z7", "zorder")) {
@@ -322,6 +335,7 @@ hexify_is_valid_index_type <- function(aperture,
 #' @return String: "z3", "z7", or "zorder"
 #'
 #' @family hierarchical index
+#' @keywords internal
 #' @export
 hexify_default_index_type <- function(aperture) {
   cpp_get_default_index_type(as.integer(aperture))
@@ -341,6 +355,7 @@ hexify_default_index_type <- function(aperture) {
 #' @return Area in km^2
 #'
 #' @family grid statistics
+#' @keywords internal
 #' @export
 hexify_eff_res_to_area <- function(eff_res) {
   ISEA3H_RES10_AREA_KM2 * (3^(10 - eff_res))
@@ -355,6 +370,7 @@ hexify_eff_res_to_area <- function(eff_res) {
 #' @return Effective resolution (may be fractional)
 #'
 #' @family grid statistics
+#' @keywords internal
 #' @export
 hexify_area_to_eff_res <- function(area_km2) {
   10 - log(area_km2 / ISEA3H_RES10_AREA_KM2) / log(3)
@@ -369,6 +385,7 @@ hexify_area_to_eff_res <- function(area_km2) {
 #' @return Index resolution (integer)
 #'
 #' @family grid statistics
+#' @keywords internal
 #' @export
 hexify_eff_res_to_resolution <- function(eff_res) {
 
@@ -382,6 +399,7 @@ hexify_eff_res_to_resolution <- function(eff_res) {
 #' @return Effective resolution
 #'
 #' @family grid statistics
+#' @keywords internal
 #' @export
 hexify_resolution_to_eff_res <- function(resolution) {
   (resolution + 1) / 2

@@ -50,36 +50,16 @@
 
 \S4method{as.list}{HexData}(x, ...)
 }
-\arguments{
-\item{x}{A HexData object}
-
-\item{name}{Column name for $ access}
-
-\item{value}{Value to assign}
-
-\item{i}{Row indices or logical vector for subsetting}
-
-\item{j}{Column indices, names, or logical vector for subsetting}
-
-\item{...}{Additional arguments passed to underlying methods}
-
-\item{drop}{Whether to drop dimensions when subsetting (default FALSE)}
-
-\item{object}{A HexData object (for show/as.data.frame methods)}
-
-\item{row.names}{Row names for as.data.frame conversion}
-
-\item{optional}{Logical; if TRUE, row.names may be omitted}
-}
 \description{
-An S4 class representing hexified data. Wraps the user's data with a
-reference to the grid specification used, enabling downstream operations
-without repeated parameter specification.
+An S4 class representing hexified data. Contains the original user data
+plus cell assignments from the hexification process.
 }
 \details{
-HexData objects are created by \code{\link{hexify}} and can be used with
-standard R functions. Use \code{as.data.frame()} to extract the underlying
-data as a plain data frame.
+HexData objects are created by \code{\link{hexify}}. The original data
+is preserved in the \code{data} slot, while cell assignments are stored
+separately in \code{cell_id} and \code{cell_center}.
+
+Use \code{as.data.frame()} to get a combined data frame with cell columns.
 }
 \section{Functions}{
 \itemize{
@@ -91,25 +71,25 @@ data as a plain data frame.
 
 \item \code{nrow(HexData)}: Get number of rows
 
-\item \code{ncol(HexData)}: Get number of columns
+\item \code{ncol(HexData)}: Get number of columns (includes virtual cell columns)
 
 \item \code{dim(HexData)}: Get dimensions
 
-\item \code{names(HexData)}: Get column names
+\item \code{names(HexData)}: Get column names (includes virtual cell columns)
 
-\item \code{$}: Access columns via $
+\item \code{$}: Access columns via $ (includes virtual cell columns)
 
 \item \code{`$`(HexData) <- value}: Set columns via $<-
 
 \item \code{[}: Subset rows/columns
 
-\item \code{[[}: Subset single column
+\item \code{[[}: Subset single column (includes virtual cell columns)
 
 \item \code{`[[`(x = HexData, i = ANY, j = missing) <- value}: Set single column
 
 \item \code{show(HexData)}: Print summary
 
-\item \code{as.data.frame(HexData)}: Convert to data.frame
+\item \code{as.data.frame(HexData)}: Convert to data.frame (includes cell columns)
 
 \item \code{as.list(HexData)}: Convert to list
 
@@ -117,26 +97,14 @@ data as a plain data frame.
 \section{Slots}{
 
 \describe{
-\item{\code{data}}{Data frame or sf object. The underlying data with cell assignments.}
+\item{\code{data}}{Data frame or sf object. The original user data (untouched).}
 
-\item{\code{grid}}{HexGrid object. The grid specification used for hexification.}
+\item{\code{grid}}{HexGrid object. The grid specification used.}
 
-\item{\code{mapping}}{List. Column name mappings (lon, lat, geometry columns used).}
+\item{\code{cell_id}}{Numeric vector. Cell IDs for each row of data.}
 
-\item{\code{kind}}{Character. Data type: "points", "cells", or "unknown".}
-
-\item{\code{meta}}{List. Additional metadata (e.g., cached polygons).}
+\item{\code{cell_center}}{Matrix. Two-column matrix (lon, lat) of cell centers.}
 }}
-
-\section{Compatibility}{
-
-HexData objects preserve the structure of the underlying data:
-\itemize{
-\item If input was data.frame, output data slot is data.frame
-\item If input was sf, output data slot is sf (geometry preserved)
-\item Subsetting operations work transparently via \code{[} method
-}
-}
 
 \seealso{
 \code{\link{hexify}} for creating HexData objects,

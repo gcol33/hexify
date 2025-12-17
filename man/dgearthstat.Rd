@@ -38,8 +38,6 @@ print(sprintf("Average cell spacing: \%.2f km",
 \seealso{
 Other grid statistics: 
 \code{\link{dg_closest_res_to_area}()},
-\code{\link{dg_closest_res_to_cls}()},
-\code{\link{dg_closest_res_to_spacing}()},
 \code{\link{hexify_area_to_eff_res}()},
 \code{\link{hexify_compare_resolutions}()},
 \code{\link{hexify_eff_res_to_area}()},

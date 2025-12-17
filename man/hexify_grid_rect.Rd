@@ -45,14 +45,13 @@ plot(st_geometry(grid), border = "gray")
 }
 }
 \seealso{
-\code{\link{hexify_grid_global}} for global grids,
-\code{\link{hexify_to_polygons}} for data-driven polygon generation
+\code{\link{grid_rect}} for the recommended S4 interface,
+\code{\link{hexify_grid_global}} for global grids
 
 Other sf conversion: 
 \code{\link{hex_corners_to_sf}()},
 \code{\link{hexify_cell_to_sf}()},
-\code{\link{hexify_grid_global}()},
-\code{\link{hexify_to_polygons}()},
-\code{\link{hexify_to_sf}()}
+\code{\link{hexify_grid_global}()}
 }
 \concept{sf conversion}
+\keyword{internal}

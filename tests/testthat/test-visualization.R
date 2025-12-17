@@ -83,7 +83,7 @@ test_that("resolve_value_column auto-detects count column", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$count <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, NULL)
@@ -94,7 +94,7 @@ test_that("resolve_value_column auto-detects n column", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$n <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, NULL)
@@ -105,7 +105,7 @@ test_that("resolve_value_column returns specified column", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   col <- hexify:::resolve_value_column(hex_sf, "value")
@@ -116,7 +116,7 @@ test_that("resolve_value_column errors on missing column", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
 
   expect_error(
     hexify:::resolve_value_column(hex_sf, "nonexistent"),
@@ -128,7 +128,7 @@ test_that("resolve_value_column errors when no suitable column found", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
 
   expect_error(
     hexify:::resolve_value_column(hex_sf, NULL),
@@ -140,7 +140,7 @@ test_that("prepare_fill_column handles discrete data", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   result <- hexify:::prepare_fill_column(hex_sf, "category", NULL, NULL)
@@ -153,7 +153,7 @@ test_that("prepare_fill_column handles continuous data without breaks", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   result <- hexify:::prepare_fill_column(hex_sf, "value", NULL, NULL)
@@ -166,7 +166,7 @@ test_that("prepare_fill_column applies breaks to continuous data", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(5, 15)
 
   result <- hexify:::prepare_fill_column(
@@ -235,7 +235,7 @@ test_that("resolve_basemap_with_raster errors on invalid input", {
 test_that("prepare_hex_sf_simple validates input", {
   expect_error(
     hexify:::prepare_hex_sf_simple(data.frame(x = 1), aperture = 3),
-    "data.frame from hexify"
+    "HexData object or an sf object"
   )
 
   expect_error(
@@ -247,7 +247,7 @@ test_that("prepare_hex_sf_simple validates input", {
 test_that("prepare_hex_sf_simple passes through sf objects", {
   skip_if_not_installed("sf")
 
-  hex_sf <- hexify_polygons(c(12847), resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(c(12847), resolution = 10, aperture = 3)
   result <- hexify:::prepare_hex_sf_simple(hex_sf, aperture = 3)
 
   expect_s3_class(result, "sf")
@@ -256,7 +256,7 @@ test_that("prepare_hex_sf_simple passes through sf objects", {
 test_that("prepare_hex_sf validates input", {
   expect_error(
     hexify:::prepare_hex_sf(data.frame(x = 1), aperture = 3),
-    "data.frame from hexify"
+    "HexData object or an sf object"
   )
 
   expect_error(
@@ -268,7 +268,7 @@ test_that("prepare_hex_sf validates input", {
 test_that("prepare_hex_sf passes through sf objects", {
   skip_if_not_installed("sf")
 
-  hex_sf <- hexify_polygons(c(12847), resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(c(12847), resolution = 10, aperture = 3)
   result <- hexify:::prepare_hex_sf(hex_sf, aperture = 3)
 
   expect_s3_class(result, "sf")
@@ -318,7 +318,7 @@ test_that("hexify_map works with sf polygon input", {
   skip_if_not_installed("sf")
 
   cell_ids <- c(12847, 12532)
-  polys <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  polys <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
 
   expect_silent(hexify_map(polys))
 })
@@ -360,9 +360,10 @@ test_that("hexify_map respects xlim and ylim", {
 })
 
 test_that("hexify_map validates input", {
-  expect_error(hexify_map(data.frame(x = 1)), "data.frame from hexify")
+
+  expect_error(hexify_map(data.frame(x = 1)), "HexData object or an sf object")
   expect_error(hexify_map(data.frame(cell_id = 1)), "cell_area")
-  expect_error(hexify_map(list()), "data.frame from hexify")
+  expect_error(hexify_map(list()), "HexData object or an sf object")
 })
 
 test_that("hexify_map rejects invalid basemap types", {
@@ -710,7 +711,7 @@ test_that("apply_discrete_scale works with NULL colors", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -725,7 +726,7 @@ test_that("apply_discrete_scale works with manual colors", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -742,7 +743,7 @@ test_that("apply_continuous_scale works with NULL colors", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -757,7 +758,7 @@ test_that("apply_continuous_scale works with manual colors", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -775,7 +776,7 @@ test_that("apply_continuous_scale works with Brewer palette", {
   skip_if_not_installed("RColorBrewer")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -790,7 +791,7 @@ test_that("apply_discrete_scale falls back to viridis for unknown palette", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$category <- factor(c("A", "B"))
 
   p <- ggplot2::ggplot() +
@@ -808,7 +809,7 @@ test_that("apply_continuous_scale falls back to viridis for unknown palette", {
   skip_if_not_installed("ggplot2")
 
   cell_ids <- c(12847, 12532)
-  hex_sf <- hexify_polygons(cell_ids, resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
   hex_sf$value <- c(10, 20)
 
   p <- ggplot2::ggplot() +
@@ -844,14 +845,8 @@ test_that("hexify_heatmap handles data with NA CRS", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94),
-    count = c(10, 20)
-  )
-
   # Create sf object and remove CRS
-  hex_sf <- hexify_polygons(c(12847, 12532), resolution = 10, aperture = 3)
+  hex_sf <- hexify_cell_to_sf(c(12847, 12532), resolution = 10, aperture = 3)
   hex_sf$count <- c(10, 20)
   sf::st_crs(hex_sf) <- NA
 

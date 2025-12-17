@@ -77,18 +77,20 @@ dgearthstat <- function(dggs) {
 # NOTE: dgmaxcell() is defined in dggrid_compat.R for dggridR compatibility
 
 #' Find closest resolution for target cell area
-#' 
+#'
 #' Finds the grid resolution that produces cells closest to the target area.
-#' This is a helper function for grid construction.
-#' 
+#' This is primarily used internally by \code{\link{hexify_grid}} and
+#' \code{\link{hex_grid}}. Most users should use those functions directly.
+#'
 #' @param dggs Grid specification (aperture and topology must be set)
 #' @param area Target cell area in km^2 (if metric=TRUE)
 #' @param round Rounding method ("nearest", "up", "down")
 #' @param metric Whether area is in metric units
 #' @param show_info Print information about chosen resolution
-#' 
+#'
 #' @return Resolution level (integer)
-#' 
+#'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -140,88 +142,37 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
   return(resolution)
 }
 
-#' Find closest resolution for target cell spacing
-#' 
-#' Finds the grid resolution that produces cells with spacing (distance
-#' between centers) closest to the target spacing.
-#' 
-#' @param dggs Grid specification (aperture and topology must be set)
-#' @param spacing Target cell spacing in km (if metric=TRUE)
-#' @param round Rounding method ("nearest", "up", "down")
-#' @param metric Whether spacing is in metric units
-#' @param show_info Print information about chosen resolution
-#' 
-#' @return Resolution level (integer)
-#'
-#' @family grid statistics
-#' @export
-dg_closest_res_to_spacing <- function(dggs, spacing, round = "nearest",
-                                      metric = TRUE, show_info = FALSE) {
-  if (!metric) {
-    # Convert from miles to km
-    spacing <- spacing * MI_TO_KM
-  }
-  
-  # Spacing approx sqrt(area), so area approx spacing^2
-  target_area <- spacing ^ 2
-  
-  return(dg_closest_res_to_area(dggs, target_area, round, 
-                                metric = TRUE, show_info))
-}
-
-#' Find closest resolution for target CLS
-#' 
-#' Finds the grid resolution that produces cells with characteristic length
-#' scale (CLS) closest to the target CLS.
-#' 
-#' @param dggs Grid specification (aperture and topology must be set)
-#' @param cls Target CLS in km (if metric=TRUE)
-#' @param round Rounding method ("nearest", "up", "down")
-#' @param metric Whether CLS is in metric units
-#' @param show_info Print information about chosen resolution
-#' 
-#' @return Resolution level (integer)
-#'
-#' @family grid statistics
-#' @export
-dg_closest_res_to_cls <- function(dggs, cls, round = "nearest",
-                                  metric = TRUE, show_info = FALSE) {
-  if (!metric) {
-    # Convert from miles to km
-    cls <- cls * MI_TO_KM
-  }
-  
-  # For hexagons: CLS = sqrt(area / (3 * sqrt(3) / 2))
-  # So: area = CLS^2 * (3 * sqrt(3) / 2)
-  target_area <- cls^2 * (3 * sqrt(3) / 2)
-  
-  return(dg_closest_res_to_area(dggs, target_area, round,
-                                metric = TRUE, show_info))
-}
 
 #' Compare grid resolutions
-#' 
+#'
 #' Generates a table comparing different resolution levels for a given
 #' grid configuration. Useful for choosing appropriate resolution.
-#' 
+#'
 #' @param aperture Grid aperture (3, 4, or 7)
 #' @param res_range Range of resolutions to compare (e.g., 1:10)
-#' 
-#' @return Data frame with columns: resolution, n_cells, cell_area_km2,
-#'   cell_spacing_km, cls_km
+#' @param print If TRUE, prints a formatted table to console. If FALSE (default),
+#'   returns a data frame.
+#'
+#' @return If print=FALSE: data frame with columns resolution, n_cells,
+#'   cell_area_km2, cell_spacing_km, cls_km.
+#'   If print=TRUE: invisibly returns the data frame after printing.
 #'
 #' @family grid statistics
 #' @export
 #' @examples
 #' \dontrun{
-#' # Compare resolutions 0-10 for aperture 3
+#' # Get data frame of resolutions 0-10 for aperture 3
 #' comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:10)
 #' print(comparison)
-#' 
+#'
+#' # Print formatted table directly
+#' hexify_compare_resolutions(aperture = 3, res_range = 0:10, print = TRUE)
+#'
 #' # Find resolution with cells ~1000 km^2
 #' subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
 #' }
-hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
+hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
+                                       print = FALSE) {
   # Create temporary grid
   temp_grid <- list(
     aperture = aperture,
@@ -229,13 +180,13 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
     projection = "ISEA"
   )
   class(temp_grid) <- c("hexify_grid", "dggs", "list")
-  
+
   # Calculate stats for each resolution
   results <- lapply(res_range, function(res) {
     temp_grid$resolution <- res
     temp_grid$res <- res
     stats <- dgearthstat(temp_grid)
-    
+
     data.frame(
       resolution = res,
       n_cells = stats$n_cells,
@@ -244,37 +195,30 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15) {
       cls_km = stats$cls_km
     )
   })
-  
+
   # Combine into data frame
   result_df <- do.call(rbind, results)
-  
+
+  if (print) {
+    .print_resolution_table(result_df, aperture)
+    return(invisible(result_df))
+  }
+
   return(result_df)
 }
 
-#' Print resolution comparison table
-#' 
-#' Pretty-prints a comparison of grid resolutions with human-readable
-#' formatting.
-#' 
-#' @param aperture Grid aperture (3, 4, or 7)
-#' @param res_range Range of resolutions to display
-#' 
-#' @return NULL (prints to console)
-#'
-#' @family grid statistics
-#' @export
-hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
-  comparison <- hexify_compare_resolutions(aperture, res_range)
-  
+#' Print formatted resolution table
+#' @noRd
+.print_resolution_table <- function(comparison, aperture) {
   cat(sprintf("\nGrid Resolution Comparison (Aperture %d)\n", aperture))
   cat(paste(rep("=", 70), collapse = ""), "\n")
   cat(sprintf("%-4s  %-12s  %-12s  %-12s  %-10s\n",
               "Res", "# Cells", "Area (km^2)", "Spacing (km)", "CLS (km)"))
   cat(paste(rep("-", 70), collapse = ""), "\n")
-  
+
   for (i in seq_len(nrow(comparison))) {
     row <- comparison[i, ]
-    
+
     # Format numbers nicely
     n_cells_str <- if (row$n_cells > 1e6) {
       sprintf("%.1fM", row$n_cells / 1e6)
@@ -283,7 +227,7 @@ hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
     } else {
       sprintf("%.0f", row$n_cells)
     }
-    
+
     cat(sprintf("%-4d  %-12s  %-12.1f  %-12.1f  %-10.1f\n",
                 row$resolution,
                 n_cells_str,
@@ -291,8 +235,25 @@ hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
                 row$cell_spacing_km,
                 row$cls_km))
   }
-  
+
   cat(paste(rep("=", 70), collapse = ""), "\n\n")
-  
-  invisible(NULL)
+}
+
+#' Print resolution comparison table
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
+#' Use `hexify_compare_resolutions(print = TRUE)` instead.
+#'
+#' @param aperture Grid aperture (3, 4, or 7)
+#' @param res_range Range of resolutions to display
+#'
+#' @return Invisibly returns the comparison data frame
+#'
+#' @family grid statistics
+#' @keywords internal
+#' @export
+hexify_print_resolutions <- function(aperture = 3, res_range = 0:10) {
+  hexify_compare_resolutions(aperture, res_range, print = TRUE)
 }

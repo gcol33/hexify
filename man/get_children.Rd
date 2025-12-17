@@ -19,3 +19,4 @@ List of numeric vectors containing child cell IDs
 \description{
 Returns the child cells at a finer resolution.
 }
+\keyword{internal}

@@ -1,8 +1,7 @@
 # HexGrid Class
 
 An S4 class representing a hexagonal grid specification. Stores all
-parameters needed for grid operations so they don't need to be repeated
-in downstream function calls.
+parameters needed for grid operations.
 
 ## Usage
 
@@ -26,23 +25,14 @@ as.list(x, ...)
 
   HexGrid object
 
-- name:
-
-  Slot name for \$ access
-
-- object:
-
-  A HexGrid object (for show method)
-
-- ...:
-
-  Additional arguments (ignored)
-
 ## Details
 
 Create HexGrid objects using the
 [`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md)
 constructor function. Do not use `new("HexGrid", ...)` directly.
+
+The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
+aperture grids that start with aperture 4 and switch to aperture 3.
 
 ## Functions
 
@@ -58,7 +48,7 @@ constructor function. Do not use `new("HexGrid", ...)` directly.
 
 - `aperture`:
 
-  Integer. Grid aperture (3, 4, or 7).
+  Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.
 
 - `resolution`:
 
@@ -66,39 +56,15 @@ constructor function. Do not use `new("HexGrid", ...)` directly.
 
 - `area_km2`:
 
-  Numeric. Target cell area in square kilometers.
+  Numeric. Cell area in square kilometers.
 
-- `grid_system`:
+- `diagonal_km`:
 
-  Character. Grid system identifier (default "ISEA").
+  Numeric. Cell diagonal (long diagonal) in kilometers.
 
-- `topology`:
+- `crs`:
 
-  Character. Grid topology (default "H" for hexagon).
-
-- `index_type`:
-
-  Character. Index encoding type ("integer" or "character").
-
-- `crs_input`:
-
-  Integer. Input coordinate reference system (default 4326).
-
-- `crs_work`:
-
-  Integer. Working CRS for internal operations.
-
-- `mixed_aperture`:
-
-  Logical. Whether mixed aperture (4/3) is used.
-
-- `mixed_aperture_level`:
-
-  Integer. Level at which aperture switches (for 4/3).
-
-- `meta`:
-
-  List. Additional metadata for future extensions.
+  Integer. Coordinate reference system (default 4326 = WGS84).
 
 ## See also
 

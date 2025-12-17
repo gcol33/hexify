@@ -2,19 +2,9 @@
 % Please edit documentation in R/hexify_grid.R
 \name{hexify_grid}
 \alias{hexify_grid}
-\alias{hexify_construct}
 \title{Create a hexagonal grid specification}
 \usage{
 hexify_grid(
-  area,
-  topology = "HEXAGON",
-  metric = TRUE,
-  resround = "nearest",
-  aperture = 3,
-  projection = "ISEA"
-)
-
-hexify_construct(
   area,
   topology = "HEXAGON",
   metric = TRUE,
@@ -48,9 +38,6 @@ A hexify_grid object containing:
 \description{
 Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify grids.
-
-\code{hexify_construct()} was renamed to \code{hexify_grid()} for clarity.
-Use \code{hexify_grid()} instead.
 }
 \examples{
 \dontrun{
@@ -70,4 +57,3 @@ Other hexify main:
 \code{\link{hexify}()}
 }
 \concept{hexify main}
-\keyword{internal}

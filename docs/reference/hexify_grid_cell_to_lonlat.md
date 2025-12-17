@@ -27,8 +27,8 @@ Data frame with lon_deg and lat_deg columns
 
 ## See also
 
-[`hexify_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_cell_to_lonlat.md)
-for the direct-params version,
+[`cell_to_lonlat`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)
+for the recommended S4 interface,
 [`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
 for the forward operation
 

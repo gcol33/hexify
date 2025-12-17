@@ -2,48 +2,47 @@
 # Tests for polygon generation functions
 #
 # Functions tested:
-# - hexify_polygons() / hexify_cell_to_sf()
-# - hexify_to_polygons()
-# - hexify_plot()
+# - hexify_cell_to_sf()
+# - cell_to_sf()
 # - hexify_grid_rect()
 # - hexify_grid_global()
 # - hex_corners_to_sf()
 
 # =============================================================================
-# HEXIFY_POLYGONS / HEXIFY_CELL_TO_SF
+# HEXIFY_CELL_TO_SF
 # =============================================================================
 
-test_that("hexify_polygons returns data frame with return_sf=FALSE", {
+test_that("hexify_cell_to_sf returns data frame with return_sf=FALSE", {
   hex_ids <- c(12847, 12532, 22178)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("cell_id", "lon", "lat", "order") %in% names(result)))
 })
 
-test_that("hexify_polygons returns 7 vertices per cell (closed polygon)", {
+test_that("hexify_cell_to_sf returns 7 vertices per cell (closed polygon)", {
   hex_ids <- c(12847, 12532, 22178)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_equal(nrow(result), length(hex_ids) * 7)
   expect_equal(unique(result$order), 1:7)
 })
 
-test_that("hexify_polygons returns valid coordinates", {
+test_that("hexify_cell_to_sf returns valid coordinates", {
   hex_ids <- c(12847, 12532)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_true(all(result$lon >= -180 & result$lon <= 180))
   expect_true(all(result$lat >= -90 & result$lat <= 90))
 })
 
-test_that("hexify_polygons produces closed polygons", {
+test_that("hexify_cell_to_sf produces closed polygons", {
   hex_ids <- c(12847)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   first_vertex <- result[result$order == 1, c("lon", "lat")]
   last_vertex <- result[result$order == 7, c("lon", "lat")]
@@ -52,12 +51,12 @@ test_that("hexify_polygons produces closed polygons", {
   expect_equal(first_vertex$lat, last_vertex$lat)
 })
 
-test_that("hexify_polygons returns sf object with return_sf=TRUE", {
+test_that("hexify_cell_to_sf returns sf object with return_sf=TRUE", {
   skip_if_not_installed("sf")
 
   hex_ids <- c(12847, 12532, 22178)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = TRUE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = TRUE)
 
   expect_s3_class(result, "sf")
   expect_true("cell_id" %in% names(result))
@@ -68,118 +67,87 @@ test_that("hexify_polygons returns sf object with return_sf=TRUE", {
   expect_true(all(geom_types == "POLYGON"))
 })
 
-test_that("hexify_polygons removes duplicates", {
+test_that("hexify_cell_to_sf removes duplicates", {
   hex_ids <- c(12847, 12847, 12532)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_equal(length(unique(result$cell_id)), 2)
   expect_equal(nrow(result), 2 * 7)
 })
 
-test_that("hexify_polygons handles NA values", {
+test_that("hexify_cell_to_sf handles NA values", {
   hex_ids <- c(12847, NA, 12532)
 
-  result <- hexify_polygons(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_equal(length(unique(result$cell_id)), 2)
 })
 
-test_that("hexify_polygons validates aperture", {
+test_that("hexify_cell_to_sf validates aperture", {
   expect_error(
-    hexify_polygons(c(12847), resolution = 10, aperture = 5),
+    hexify_cell_to_sf(c(12847), resolution = 10, aperture = 5),
     "aperture must be 3, 4, or 7"
   )
 })
 
-test_that("hexify_polygons validates resolution", {
+test_that("hexify_cell_to_sf validates resolution", {
   expect_error(
-    hexify_polygons(c(12847), resolution = -1, aperture = 3),
+    hexify_cell_to_sf(c(12847), resolution = -1, aperture = 3),
     "resolution must be between 0 and 30"
   )
 
   expect_error(
-    hexify_polygons(c(12847), resolution = 31, aperture = 3),
+    hexify_cell_to_sf(c(12847), resolution = 31, aperture = 3),
     "resolution must be between 0 and 30"
   )
 })
 
-test_that("hexify_polygons works with aperture 4", {
+test_that("hexify_cell_to_sf works with aperture 4", {
   hex_ids <- c(100, 200, 300)
 
-  result <- hexify_polygons(hex_ids, resolution = 8, aperture = 4, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 8, aperture = 4, return_sf = FALSE)
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 3 * 7)
 })
 
-test_that("hexify_polygons works with aperture 7", {
+test_that("hexify_cell_to_sf works with aperture 7", {
   hex_ids <- c(100, 200, 300)
 
-  result <- hexify_polygons(hex_ids, resolution = 5, aperture = 7, return_sf = FALSE)
+  result <- hexify_cell_to_sf(hex_ids, resolution = 5, aperture = 7, return_sf = FALSE)
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 3 * 7)
 })
 
 # =============================================================================
-# HEXIFY_TO_POLYGONS
+# CELL_TO_SF (grid helper)
 # =============================================================================
 
-test_that("hexify_to_polygons auto-detects resolution from cell_area", {
+test_that("cell_to_sf works with HexGrid object", {
   skip_if_not_installed("sf")
 
-  df <- data.frame(
-    name = c("A", "B"),
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94),
-    cell_diag = c(44.67, 44.67)
-  )
+  grid <- hex_grid(area_km2 = 1000)
+  hex_ids <- c(12847, 12532, 22178)
 
-  result <- hexify_to_polygons(df, aperture = 3)
+  result <- cell_to_sf(hex_ids, grid)
 
   expect_s3_class(result, "sf")
-  expect_equal(nrow(result), 2)
+  expect_equal(nrow(result), 3)
 })
 
-test_that("hexify_to_polygons requires cell_id column", {
-  df <- data.frame(name = c("A", "B"), cell_area = c(863, 863))
+test_that("cell_to_sf works with HexData object (extracts unique cells)", {
+  skip_if_not_installed("sf")
 
-  expect_error(
-    hexify_to_polygons(df),
-    "must contain 'cell_id' column"
-  )
-})
+  df <- data.frame(lon = c(0, 5, 10), lat = c(45, 46, 47))
+  hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 5000)
 
-test_that("hexify_to_polygons requires cell_area column", {
-  df <- data.frame(cell_id = c(12847, 12532))
+  # When called with HexData and no cell_id, it uses the cells from data
+  result <- cell_to_sf(grid = hex_data)
 
-  expect_error(
-    hexify_to_polygons(df),
-    "must contain 'cell_area'"
-  )
-})
-
-# =============================================================================
-# HEXIFY_PLOT
-# =============================================================================
-
-test_that("hexify_plot creates plot without error", {
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94),
-    cell_diag = c(44.67, 44.67)
-  )
-
-  expect_silent(hexify_plot(df, col = "lightblue"))
-})
-
-test_that("hexify_plot validates input", {
-  df1 <- data.frame(name = c("A", "B"))
-  df2 <- data.frame(cell_id = c(1, 2))
-
-  expect_error(hexify_plot(df1), "must contain 'cell_id' column")
-  expect_error(hexify_plot(df2), "must contain 'cell_area'")
+  expect_s3_class(result, "sf")
+  expect_true(nrow(result) >= 1)
 })
 
 # =============================================================================
@@ -272,90 +240,40 @@ test_that("hexify_cell_to_sf errors on all NA input", {
 })
 
 # =============================================================================
-# HEXIFY_TO_SF
+# AS_SF METHOD
 # =============================================================================
 
-test_that("hexify_to_sf creates point geometry from hexify result", {
+test_that("as_sf creates point geometry from HexData object", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
     name = c("A", "B"),
-    cell_id = c(12847, 12532),
-    cell_cen_lon = c(10.5, 11.2),
-    cell_cen_lat = c(48.5, 49.1),
-    cell_area = c(863.94, 863.94),
-    cell_diag = c(44.67, 44.67)
+    lon = c(10.5, 11.2),
+    lat = c(48.5, 49.1)
   )
 
-  result <- hexify_to_sf(df, geometry = "point")
+  hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+  result <- as_sf(hex_data, geometry = "point")
 
   expect_s3_class(result, "sf")
   expect_equal(nrow(result), 2)
   expect_true(all(sf::st_geometry_type(result) == "POINT"))
 })
 
-test_that("hexify_to_sf creates polygon geometry from hexify result", {
+test_that("as_sf creates polygon geometry from HexData object", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
     name = c("A", "B"),
-    cell_id = c(12847, 12532),
-    cell_cen_lon = c(10.5, 11.2),
-    cell_cen_lat = c(48.5, 49.1),
-    cell_area = c(863.94, 863.94),
-    cell_diag = c(44.67, 44.67)
+    lon = c(10.5, 11.2),
+    lat = c(48.5, 49.1)
   )
 
-  result <- hexify_to_sf(df, geometry = "polygon")
+  hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+  result <- as_sf(hex_data, geometry = "polygon")
 
   expect_s3_class(result, "sf")
   expect_true(all(sf::st_geometry_type(result) == "POLYGON"))
-})
-
-test_that("hexify_to_sf validates cell_id column", {
-  df <- data.frame(name = c("A", "B"), cell_area = c(863, 863))
-
-  expect_error(
-    hexify_to_sf(df),
-    "must contain 'cell_id' column"
-  )
-})
-
-test_that("hexify_to_sf validates cell_cen columns for point geometry", {
-  df <- data.frame(cell_id = c(12847, 12532), cell_area = c(863, 863))
-
-  expect_error(
-    hexify_to_sf(df, geometry = "point"),
-    "must contain 'cell_cen_lon' and 'cell_cen_lat'"
-  )
-})
-
-test_that("hexify_to_sf validates cell_area for polygon geometry", {
-  df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_cen_lon = c(10.5, 11.2),
-    cell_cen_lat = c(48.5, 49.1)
-  )
-
-  expect_error(
-    hexify_to_sf(df, geometry = "polygon"),
-    "must contain 'cell_area'"
-  )
-})
-
-test_that("hexify_to_sf respects custom CRS", {
-  skip_if_not_installed("sf")
-
-  df <- data.frame(
-    cell_id = c(12847),
-    cell_cen_lon = c(10.5),
-    cell_cen_lat = c(48.5),
-    cell_area = c(863.94)
-  )
-
-  result <- hexify_to_sf(df, geometry = "point", crs = 4269)
-
-  expect_equal(sf::st_crs(result)$epsg, 4269)
 })
 
 # =============================================================================
@@ -429,37 +347,6 @@ test_that("hexify_grid_global warns on small area", {
 })
 
 # =============================================================================
-# HEXIFY_PLOT
-# =============================================================================
-
-test_that("hexify_plot works with different apertures", {
-  df <- data.frame(
-    cell_id = c(100, 200),
-    cell_area = c(1000, 1000)
-  )
-
-  # Test aperture parameter
-  expect_silent(hexify_plot(df, aperture = 3, col = "lightblue"))
-})
-
-test_that("hexify_plot add=TRUE works", {
-  df <- data.frame(
-    cell_id = c(100, 200),
-    cell_area = c(1000, 1000)
-  )
-
-  # First create a plot
-  expect_silent(hexify_plot(df, col = "lightblue"))
-
-  # Then add to it
-  df2 <- data.frame(
-    cell_id = c(300),
-    cell_area = c(1000)
-  )
-  expect_silent(hexify_plot(df2, add = TRUE, col = "red"))
-})
-
-# =============================================================================
 # EDGE CASES FOR HEXIFY_CELL_TO_SF
 # =============================================================================
 
@@ -503,55 +390,53 @@ test_that("hexify_cell_to_sf with return_sf=FALSE produces correct structure", {
 })
 
 # =============================================================================
-# HEXIFY_TO_SF ADDITIONAL TESTS
+# AS_SF ADDITIONAL TESTS
 # =============================================================================
 
-test_that("hexify_to_sf preserves all columns", {
+test_that("as_sf preserves all columns", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
     name = c("A", "B"),
-    cell_id = c(12847, 12532),
-    cell_cen_lon = c(10.5, 11.2),
-    cell_cen_lat = c(48.5, 49.1),
-    cell_area = c(863.94, 863.94),
+    lon = c(10.5, 11.2),
+    lat = c(48.5, 49.1),
     custom_col = c("x", "y")
   )
 
-  result <- hexify_to_sf(df, geometry = "point")
+  hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+  result <- as_sf(hex_data, geometry = "point")
 
   expect_true("name" %in% names(result))
   expect_true("custom_col" %in% names(result))
 })
 
-test_that("hexify_to_sf polygon geometry preserves attributes", {
+test_that("as_sf polygon geometry preserves attributes", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
-    cell_id = c(12847, 12532),
-    cell_area = c(863.94, 863.94),
+    lon = c(10.5, 11.2),
+    lat = c(48.5, 49.1),
     value = c(100, 200)
   )
 
-  result <- hexify_to_sf(df, geometry = "polygon")
+  hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+  result <- as_sf(hex_data, geometry = "polygon")
 
   expect_s3_class(result, "sf")
   expect_true("value" %in% names(result))
 })
 
 # =============================================================================
-# HEXIFY_TO_POLYGONS ADDITIONAL TESTS
+# CELL_TO_SF DEDUPLICATION
 # =============================================================================
 
-test_that("hexify_to_polygons deduplicates cell_ids", {
+test_that("cell_to_sf deduplicates cell_ids", {
   skip_if_not_installed("sf")
 
-  df <- data.frame(
-    cell_id = c(12847, 12847, 12532),  # duplicate
-    cell_area = c(863.94, 863.94, 863.94)
-  )
+  grid <- hex_grid(area_km2 = 1000)
+  hex_ids <- c(12847, 12847, 12532)  # duplicate
 
-  result <- hexify_to_polygons(df, aperture = 3, return_sf = TRUE)
+  result <- cell_to_sf(hex_ids, grid)
 
   expect_s3_class(result, "sf")
   expect_equal(nrow(result), 2)  # Should deduplicate

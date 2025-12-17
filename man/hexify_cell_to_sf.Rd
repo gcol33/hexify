@@ -2,22 +2,28 @@
 % Please edit documentation in R/hexify_cell_to_sf.R
 \name{hexify_cell_to_sf}
 \alias{hexify_cell_to_sf}
-\alias{hexify_polygons}
 \title{Convert cell IDs to sf polygons}
 \usage{
-hexify_cell_to_sf(cell_id, resolution, aperture = 3L, return_sf = TRUE)
-
-hexify_polygons(cell_id, resolution, aperture = 3L, return_sf = TRUE)
+hexify_cell_to_sf(
+  cell_id,
+  resolution = NULL,
+  aperture = NULL,
+  return_sf = TRUE,
+  grid = NULL
+)
 }
 \arguments{
 \item{cell_id}{Integer vector of cell identifiers}
 
-\item{resolution}{Grid resolution level}
+\item{resolution}{Grid resolution level. Can be omitted if grid is provided.}
 
-\item{aperture}{Grid aperture: 3, 4, or 7}
+\item{aperture}{Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.}
 
 \item{return_sf}{Logical. If TRUE (default), returns sf object with polygon
 geometries. If FALSE, returns data frame with vertex coordinates.}
+
+\item{grid}{Optional HexGrid object. If provided, resolution and aperture
+are extracted from it.}
 }
 \value{
 If return_sf = TRUE: sf object with columns:
@@ -37,6 +43,8 @@ Returns an sf object by default, or a data frame for lightweight workflows.
 \details{
 This function uses a native C++ implementation that is significantly faster
 than dggridR's polygon generation, especially for large numbers of cells.
+
+For the recommended S4 interface, use \code{\link{cell_to_sf}} instead.
 }
 \examples{
 \dontrun{
@@ -46,8 +54,11 @@ library(hexify)
 df <- data.frame(lon = c(0, 5, 10), lat = c(45, 46, 45))
 result <- hexify(df, lon = "lon", lat = "lat", area = 1000)
 
-# Get polygons as sf object
-polys <- hexify_cell_to_sf(result$cell_id, resolution = 10, aperture = 3)
+# Get polygons as sf object (using HexData)
+polys <- cell_to_sf(grid = result)
+
+# Or with explicit parameters
+polys <- hexify_cell_to_sf(result@cell_id, resolution = 10, aperture = 3)
 
 # Plot with sf
 library(sf)
@@ -55,15 +66,12 @@ plot(st_geometry(polys), col = "lightblue", border = "blue")
 }
 }
 \seealso{
-\code{\link{hexify_to_sf}} for converting hexify() output,
-\code{\link{hexify_to_polygons}} for auto-resolution polygon generation
+\code{\link{cell_to_sf}} for the recommended S4 interface
 
 Other sf conversion: 
 \code{\link{hex_corners_to_sf}()},
 \code{\link{hexify_grid_global}()},
-\code{\link{hexify_grid_rect}()},
-\code{\link{hexify_to_polygons}()},
-\code{\link{hexify_to_sf}()}
+\code{\link{hexify_grid_rect}()}
 }
 \concept{sf conversion}
 \keyword{internal}

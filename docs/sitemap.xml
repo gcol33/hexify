@@ -57,6 +57,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_compare_indices.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/hexify_construct.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_default_index_type.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_df.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_eff_res_to_area.html</loc></url>
@@ -68,6 +69,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_get_parent.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_get_precision.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_get_resolution.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/hexify_ggplot.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_grid_global.html</loc></url>
@@ -90,6 +92,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_lonlat_to_quad_ij.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_map.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_plot.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/hexify_polygons.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_print_resolutions.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_projection_stats.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_cell.html</loc></url>

@@ -4,18 +4,16 @@
 \alias{new_hex_data}
 \title{Create a HexData Object (Internal)}
 \usage{
-new_hex_data(data, grid, mapping = list(), kind = "unknown", meta = list())
+new_hex_data(data, grid, cell_id, cell_center)
 }
 \arguments{
-\item{data}{Data frame or sf object with cell assignments}
+\item{data}{Data frame or sf object (original user data, untouched)}
 
 \item{grid}{HexGrid object}
 
-\item{mapping}{List of column name mappings}
+\item{cell_id}{Numeric vector of cell IDs for each row}
 
-\item{kind}{Type of data: "points", "cells", or "unknown"}
-
-\item{meta}{Additional metadata}
+\item{cell_center}{Matrix with columns lon, lat for cell centers}
 }
 \value{
 A HexData object

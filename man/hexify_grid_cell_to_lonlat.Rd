@@ -27,7 +27,7 @@ coords <- hexify_grid_cell_to_lonlat(grid, cell_ids)
 }
 }
 \seealso{
-\code{\link{hexify_cell_to_lonlat}} for the direct-params version,
+\code{\link{cell_to_lonlat}} for the recommended S4 interface,
 \code{\link{hexify_grid_to_cell}} for the forward operation
 
 Other coordinate conversion: 
@@ -52,3 +52,4 @@ Other coordinate conversion:
 \code{\link{hexify_roundtrip_test}()}
 }
 \concept{coordinate conversion}
+\keyword{internal}

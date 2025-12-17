@@ -469,10 +469,11 @@ This hybrid approach provides:
 
 ``` r
 
-# Mixed aperture index (via hexify() function)
+# Mixed aperture index (via hex_grid() with aperture = "4/3")
+grid <- hex_grid(area_km2 = 1000, aperture = "4/3")
 result <- hexify(data.frame(lon = 16.37, lat = 48.21),
-                 lon = "lon", lat = "lat", area = 1000, aperture = "4/3")
-cat("Mixed 4/3 cell_id:", result$cell_id, "\n")
+                 lon = "lon", lat = "lat", grid = grid)
+cat("Mixed 4/3 cell_id:", result@cell_id, "\n")
 ```
 
 ### Comparison of Encodings
@@ -529,18 +530,22 @@ A key property of ISEA grids: all cells have approximately equal area.
 # Compare cell areas across apertures at similar resolutions
 earth_area_km2 <- 510072000
 
-cat("Aperture comparison at ~1000 km² target:\n\n")
-#> Aperture comparison at ~1000 km² target:
+cat("Aperture comparison at ~1000 km2 target:\n\n")
+#> Aperture comparison at ~1000 km2 target:
 for (ap in c(3, 4, 7)) {
-  grid <- hexify_grid(area = 1000, aperture = ap)
-  cat(sprintf("Aperture %d: resolution %d → %.1f km² (%.0f cells)\n",
-              ap, grid$resolution, grid$area, grid$total_cells))
+  grid <- hex_grid(area_km2 = 1000, aperture = ap)
+  n_cells <- 10 * (ap^grid@resolution) + 2
+  cat(sprintf("Aperture %d: resolution %d -> %.1f km2 (%.0f cells)\n",
+              ap, grid@resolution, grid@area_km2, n_cells))
 }
+#> Aperture 3: resolution 10 -> 863.8 km2 (590492 cells)
+#> Aperture 4: resolution 8 -> 778.3 km2 (655362 cells)
+#> Aperture 7: resolution 6 -> 433.5 km2 (1176492 cells)
 
-# Mixed aperture available via hexify() function, not hexify_grid()
-cat("\n(Mixed aperture 4/3 is available via hexify() with aperture = '4/3')\n")
+# Mixed aperture
+cat("\n(Mixed aperture 4/3 is also available via hex_grid(aperture = '4/3'))\n")
 #> 
-#> (Mixed aperture 4/3 is available via hexify() with aperture = '4/3')
+#> (Mixed aperture 4/3 is also available via hex_grid(aperture = '4/3'))
 ```
 
 ### Cell Shape

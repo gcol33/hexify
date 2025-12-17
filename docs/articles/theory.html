@@ -1176,10 +1176,11 @@ encoding, then subsequent levels use Z3 encoding.</p>
 <li>dggridR compatibility with ISEA43H grids</li>
 </ul>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Mixed aperture index (via hexify() function)</span></span>
+<code class="sourceCode R"><span><span class="co"># Mixed aperture index (via hex_grid() with aperture = "4/3")</span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="st">"4/3"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fl">16.37</span>, lat <span class="op">=</span> <span class="fl">48.21</span><span class="op">)</span>,</span>
-<span>                 lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="st">"4/3"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mixed 4/3 cell_id:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">cell_id</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<span>                 lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mixed 4/3 cell_id:"</span>, <span class="va">result</span><span class="op">@</span><span class="va">cell_id</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="comparison-of-encodings">Comparison of Encodings<a class="anchor" aria-label="anchor" href="#comparison-of-encodings"></a>
@@ -1289,18 +1290,22 @@ area.</p>
 <code class="sourceCode R"><span><span class="co"># Compare cell areas across apertures at similar resolutions</span></span>
 <span><span class="va">earth_area_km2</span> <span class="op">&lt;-</span> <span class="fl">510072000</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Aperture comparison at ~1000 km² target:\n\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Aperture comparison at ~1000 km² target:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Aperture comparison at ~1000 km2 target:\n\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Aperture comparison at ~1000 km2 target:</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">ap</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d: resolution %d → %.1f km² (%.0f cells)\n"</span>,</span>
-<span>              <span class="va">ap</span>, <span class="va">grid</span><span class="op">$</span><span class="va">resolution</span>, <span class="va">grid</span><span class="op">$</span><span class="va">area</span>, <span class="va">grid</span><span class="op">$</span><span class="va">total_cells</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="va">ap</span><span class="op">)</span></span>
+<span>  <span class="va">n_cells</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="va">ap</span><span class="op">^</span><span class="va">grid</span><span class="op">@</span><span class="va">resolution</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Aperture %d: resolution %d -&gt; %.1f km2 (%.0f cells)\n"</span>,</span>
+<span>              <span class="va">ap</span>, <span class="va">grid</span><span class="op">@</span><span class="va">resolution</span>, <span class="va">grid</span><span class="op">@</span><span class="va">area_km2</span>, <span class="va">n_cells</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
+<span><span class="co">#&gt; Aperture 3: resolution 10 -&gt; 863.8 km2 (590492 cells)</span></span>
+<span><span class="co">#&gt; Aperture 4: resolution 8 -&gt; 778.3 km2 (655362 cells)</span></span>
+<span><span class="co">#&gt; Aperture 7: resolution 6 -&gt; 433.5 km2 (1176492 cells)</span></span>
 <span></span>
-<span><span class="co"># Mixed aperture available via hexify() function, not hexify_grid()</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n(Mixed aperture 4/3 is available via hexify() with aperture = '4/3')\n"</span><span class="op">)</span></span>
+<span><span class="co"># Mixed aperture</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n(Mixed aperture 4/3 is also available via hex_grid(aperture = '4/3'))\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; (Mixed aperture 4/3 is available via hexify() with aperture = '4/3')</span></span></code></pre></div>
+<span><span class="co">#&gt; (Mixed aperture 4/3 is also available via hex_grid(aperture = '4/3'))</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="cell-shape">Cell Shape<a class="anchor" aria-label="anchor" href="#cell-shape"></a>

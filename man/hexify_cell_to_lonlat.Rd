@@ -24,8 +24,8 @@ This is the inverse of \code{\link{hexify_lonlat_to_cell}}.
 coords <- hexify_cell_to_lonlat(1702, resolution = 5, aperture = 3)
 }
 \seealso{
-\code{\link{hexify_lonlat_to_cell}} for the forward operation,
-\code{\link{hexify_grid_cell_to_lonlat}} for the grid-based wrapper
+\code{\link{cell_to_lonlat}} for the recommended S4 interface,
+\code{\link{hexify_lonlat_to_cell}} for the forward operation
 
 Other coordinate conversion: 
 \code{\link{hexify_cell_id_to_quad_ij}()},
@@ -49,3 +49,4 @@ Other coordinate conversion:
 \code{\link{hexify_roundtrip_test}()}
 }
 \concept{coordinate conversion}
+\keyword{internal}

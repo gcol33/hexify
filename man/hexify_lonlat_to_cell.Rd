@@ -26,14 +26,14 @@ This is the primary function for geocoding points to grid cells.
 Returns DGGRID-compatible cell identifiers. The cell ID
 uniquely identifies each hexagonal cell in the global grid.
 
-For a grid-object interface, use \code{\link{hexify_grid_to_cell}}.
+For a grid-object interface, use \code{\link{lonlat_to_cell}}.
 }
 \examples{
 cell_id <- hexify_lonlat_to_cell(0, 45, resolution = 5, aperture = 3)
 }
 \seealso{
-\code{\link{hexify_cell_to_lonlat}} for the inverse operation,
-\code{\link{hexify_grid_to_cell}} for the grid-based wrapper
+\code{\link{lonlat_to_cell}} for the recommended S4 interface,
+\code{\link{hexify_cell_to_lonlat}} for the inverse operation
 
 Other coordinate conversion: 
 \code{\link{hexify_cell_id_to_quad_ij}()},
@@ -57,3 +57,4 @@ Other coordinate conversion:
 \code{\link{hexify_roundtrip_test}()}
 }
 \concept{coordinate conversion}
+\keyword{internal}

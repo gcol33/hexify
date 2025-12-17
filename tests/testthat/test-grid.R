@@ -96,27 +96,6 @@ test_that("hexify_grid includes dggridR-compatible fields", {
 })
 
 # =============================================================================
-# DEPRECATED CONSTRUCT FUNCTION
-# =============================================================================
-
-test_that("hexify_construct warns about deprecation", {
-  expect_warning(
-    hexify_construct(area = 1000, aperture = 3),
-    "deprecated"
-  )
-})
-
-test_that("hexify_construct returns equivalent grid", {
-  suppressWarnings({
-    grid_old <- hexify_construct(area = 1000, aperture = 3)
-  })
-  grid_new <- hexify_grid(area = 1000, aperture = 3)
-
-  expect_equal(grid_old$aperture, grid_new$aperture)
-  expect_equal(grid_old$resolution, grid_new$resolution)
-})
-
-# =============================================================================
 # GRID VERIFICATION
 # =============================================================================
 
@@ -156,23 +135,16 @@ test_that("dgverify warns on non-ISEA projection", {
 })
 
 # =============================================================================
-# PRINT METHOD
+# PRINT METHOD (uses default list printing now)
 # =============================================================================
 
-test_that("print.hexify_grid outputs to console", {
+test_that("print outputs grid information", {
   grid <- hexify_grid(area = 1000, aperture = 3)
 
-  expect_output(print(grid), "Hexify Grid Specification")
-  expect_output(print(grid), "Aperture")
-  expect_output(print(grid), "Resolution")
-  expect_output(print(grid), "Total Cells")
-})
-
-test_that("print.hexify_grid returns grid invisibly", {
-  grid <- hexify_grid(area = 1000, aperture = 3)
-  result <- capture.output(returned <- print(grid))
-
-  expect_identical(returned, grid)
+  # Default list print shows fields
+  expect_output(print(grid), "area")
+  expect_output(print(grid), "resolution")
+  expect_output(print(grid), "aperture")
 })
 
 # =============================================================================

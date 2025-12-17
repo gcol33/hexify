@@ -4,22 +4,10 @@ Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify
 grids.
 
-`hexify_construct()` was renamed to `hexify_grid()` for clarity. Use
-`hexify_grid()` instead.
-
 ## Usage
 
 ``` r
 hexify_grid(
-  area,
-  topology = "HEXAGON",
-  metric = TRUE,
-  resround = "nearest",
-  aperture = 3,
-  projection = "ISEA"
-)
-
-hexify_construct(
   area,
   topology = "HEXAGON",
   metric = TRUE,

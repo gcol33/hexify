@@ -37,3 +37,4 @@ Other hierarchical index:
 \code{\link{hexify_z7_canonical}()}
 }
 \concept{hierarchical index}
+\keyword{internal}

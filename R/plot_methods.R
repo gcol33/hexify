@@ -44,7 +44,7 @@
 #' the data and plots them. Polygons are computed on demand, not stored,
 #' to minimize memory usage.
 #'
-#' @seealso \code{\link{autoplot.HexData}} for ggplot2 plotting
+#' @seealso \code{\link{hexify_ggplot}} for ggplot2 plotting
 #'
 #' @export
 #' @examples
@@ -93,7 +93,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
     g <- x@grid
 
     # Generate cell polygons
-    unique_cells <- unique(x@data$cell_id)
+    unique_cells <- unique(x@cell_id)
     hex_sf <- cell_to_sf(unique_cells, g)
 
     # If fill column specified, merge data
@@ -101,8 +101,10 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
       if (!fill %in% names(x@data)) {
         stop(sprintf("Column '%s' not found in data", fill))
       }
+      # Create data frame with cell_id for merging
+      data_with_id <- cbind(x@data, cell_id = x@cell_id)
       # Aggregate by cell if needed (take first value)
-      agg_data <- x@data[!duplicated(x@data$cell_id), c("cell_id", fill)]
+      agg_data <- data_with_id[!duplicated(data_with_id$cell_id), c("cell_id", fill)]
       hex_sf <- merge(hex_sf, agg_data, by = "cell_id", all.x = TRUE)
     }
 
@@ -198,17 +200,16 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
          lwd = grid_lwd, add = TRUE)
 
     # Draw points if requested
-    if (show_points && x@kind == "points") {
-      if ("cell_cen_lon" %in% names(x@data) && "cell_cen_lat" %in% names(x@data)) {
-        # Use original coordinates if available in mapping
-        if (!is.null(x@mapping$lon) && !is.null(x@mapping$lat)) {
-          points(x@data[[x@mapping$lon]], x@data[[x@mapping$lat]],
-                 pch = 19, cex = point_size, col = point_color)
-        } else if (inherits(x@data, "sf")) {
-          coords <- sf::st_coordinates(x@data)
-          points(coords[, 1], coords[, 2],
-                 pch = 19, cex = point_size, col = point_color)
-        }
+    if (show_points) {
+      # Try to get coordinates from sf geometry or cell centers
+      if (inherits(x@data, "sf")) {
+        coords <- sf::st_coordinates(x@data)
+        points(coords[, 1], coords[, 2],
+               pch = 19, cex = point_size, col = point_color)
+      } else {
+        # Use cell centers as fallback
+        points(x@cell_center[, "lon"], x@cell_center[, "lat"],
+               pch = 19, cex = point_size, col = point_color)
       }
     }
 
@@ -217,7 +218,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 )
 
 # =============================================================================
-# GGPLOT2 AUTOPLOT METHOD
+# GGPLOT2 PLOTTING FUNCTION
 # =============================================================================
 
 #' Create a ggplot2 visualization of HexData
@@ -225,7 +226,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 #' Generates a ggplot2 object for HexData, supporting fill mapping,
 #' basemaps, and advanced customization.
 #'
-#' @param object A HexData object from \code{hexify()}
+#' @param x A HexData object from \code{hexify()}
 #' @param basemap Basemap specification (see \code{plot.HexData})
 #' @param basemap_fill Fill color for basemap
 #' @param basemap_border Border color for basemap
@@ -258,19 +259,19 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #'
 #' # Basic plot
-#' autoplot(result)
+#' hexify_ggplot(result)
 #'
 #' # With fill mapping
 #' result$data$count <- sample(1:100, nrow(result$data))
-#' autoplot(result, fill = "count") +
+#' hexify_ggplot(result, fill = "count") +
 #'   scale_fill_viridis_c()
 #'
 #' # Customize
-#' autoplot(result, basemap = TRUE) +
+#' hexify_ggplot(result, basemap = TRUE) +
 #'   theme_minimal() +
 #'   labs(title = "Hexified Data")
 #' }
-autoplot.HexData <- function(object,
+hexify_ggplot <- function(x,
                               basemap = TRUE,
                               basemap_fill = "gray90",
                               basemap_border = "gray50",
@@ -289,24 +290,26 @@ autoplot.HexData <- function(object,
                               ...) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required for autoplot()")
+    stop("Package 'ggplot2' is required for hexify_ggplot()")
   }
   if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("Package 'sf' is required for autoplot()")
+    stop("Package 'sf' is required for hexify_ggplot()")
   }
 
-  g <- object@grid
+  g <- x@grid
 
   # Generate cell polygons
-  unique_cells <- unique(object@data$cell_id)
+  unique_cells <- unique(x@cell_id)
   hex_sf <- cell_to_sf(unique_cells, g)
 
   # Merge fill column if specified
   if (!is.null(fill)) {
-    if (!fill %in% names(object@data)) {
+    if (!fill %in% names(x@data)) {
       stop(sprintf("Column '%s' not found in data", fill))
     }
-    agg_data <- object@data[!duplicated(object@data$cell_id), c("cell_id", fill)]
+    # Create data frame with cell_id for merging
+    data_with_id <- cbind(x@data, cell_id = x@cell_id)
+    agg_data <- data_with_id[!duplicated(data_with_id$cell_id), c("cell_id", fill)]
     hex_sf <- merge(hex_sf, agg_data, by = "cell_id", all.x = TRUE)
   }
 
@@ -372,17 +375,18 @@ autoplot.HexData <- function(object,
   }
 
   # Add points if requested
-  if (show_points && object@kind == "points") {
-    if (inherits(object@data, "sf")) {
+  if (show_points) {
+    if (inherits(x@data, "sf")) {
       p <- p + ggplot2::geom_sf(
-        data = object@data,
+        data = x@data,
         color = point_color,
         size = point_size
       )
-    } else if (!is.null(object@mapping$lon) && !is.null(object@mapping$lat)) {
+    } else {
+      # Use cell centers
       pts_df <- data.frame(
-        lon = object@data[[object@mapping$lon]],
-        lat = object@data[[object@mapping$lat]]
+        lon = x@cell_center[, "lon"],
+        lat = x@cell_center[, "lat"]
       )
       p <- p + ggplot2::geom_point(
         data = pts_df,

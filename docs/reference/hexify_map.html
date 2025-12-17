@@ -56,12 +56,12 @@ world map or user-supplied basemaps (sf vectors or raster images).</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hexify_map</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
 <span>  basemap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
-<span>  border <span class="op">=</span> <span class="st">"gray30"</span>,</span>
+<span>  fill <span class="op">=</span> <span class="st">"#E69F00"</span>,</span>
+<span>  border <span class="op">=</span> <span class="st">"#5D4E37"</span>,</span>
 <span>  lwd <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  basemap_fill <span class="op">=</span> <span class="st">"gray95"</span>,</span>
-<span>  basemap_border <span class="op">=</span> <span class="st">"gray70"</span>,</span>
+<span>  basemap_fill <span class="op">=</span> <span class="st">"gray90"</span>,</span>
+<span>  basemap_border <span class="op">=</span> <span class="st">"gray50"</span>,</span>
 <span>  basemap_lwd <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  aperture <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -144,7 +144,7 @@ or an sf object with hexagon polygons</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function provides a simple way to visualize hexagonal grids with
 geographic context. For more sophisticated visualizations, use
-<code><a href="hexify_to_polygons.html">hexify_to_polygons</a></code> to get an sf object and plot with ggplot2,
+<code><a href="cell_to_sf.html">cell_to_sf</a></code> to get an sf object and plot with ggplot2,
 tmap, or other mapping packages.</p>
 <p>The function automatically:</p><ul><li><p>Converts hexify() output to polygons if needed</p></li>
 <li><p>Adjusts aspect ratio for latitude</p></li>
@@ -172,11 +172,10 @@ raster package.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="hexify_plot.html">hexify_plot</a></code> for simple base R plots,
-<code><a href="hexify_heatmap.html">hexify_heatmap</a></code> for ggplot2-based heatmaps</p>
+    <div class="dont-index"><p><code><a href="hexify_heatmap.html">hexify_heatmap</a></code> for ggplot2-based heatmaps,
+<code><a href="cell_to_sf.html">cell_to_sf</a></code> to generate polygons manually</p>
 <p>Other visualization:
 <code><a href="hexify_heatmap.html">hexify_heatmap()</a></code>,
-<code><a href="hexify_plot.html">hexify_plot()</a></code>,
 <code><a href="plot_world.html">plot_world()</a></code></p></div>
     </div>
 

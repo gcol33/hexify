@@ -22,103 +22,121 @@ navbar:
 
 reference:
   - title: Core Classes
+    desc: S4 classes for grid specification and hexified data
     contents:
       - HexGrid-class
       - HexData-class
       - hex_grid
       - hexify
       - hexify_assign
-  - title: Class Methods
+
+  - title: HexData Methods
+    desc: Methods for working with HexData objects
     contents:
       - grid
       - cells
       - n_cells
       - as_sf
       - as_tibble.HexData
-      - autoplot.HexData
-      - starts_with("plot,HexData")
-  - title: Grid Helpers
-    contents:
-      - lonlat_to_cell
-      - cell_to_lonlat
-      - cell_to_sf
-      - cell_to_index
-      - grid_rect
-      - grid_global
-      - get_parent
-      - get_children
-      - extract_grid
       - is_hex_grid
       - is_hex_data
-      - hexify_df
-      - new_hex_data
-  - title: Coordinate Conversions
+
+  - title: Grid Generation
+    desc: Functions for creating hexagonal grids over regions
+    contents:
+      - grid_rect
+      - grid_global
+      - cell_to_sf
+      - lonlat_to_cell
+      - cell_to_lonlat
+
+  - title: Visualization
+    desc: Plotting and mapping functions
+    contents:
+      - hexify_ggplot
+      - hexify_map
+      - hexify_heatmap
+      - plot_world
+      - hexify_world
+
+  - title: Grid Statistics
+    desc: Resolution comparison and grid statistics
+    contents:
+      - dgearthstat
+      - hexify_compare_resolutions
+      - hexify_print_resolutions
+      - dgverify
+
+  - title: dggridR Compatibility
+    desc: Functions for interoperability with dggridR package
+    contents:
+      - as_dggrid
+      - from_dggrid
+      - dggrid_is_compatible
+      - dggrid_43h_sequence
+      - hexify_grid
+
+  - title: Low-Level Coordinate Conversions
+    desc: Internal coordinate transformation functions
     contents:
       - starts_with("hexify_lonlat")
       - starts_with("hexify_cell")
       - starts_with("hexify_quad")
-      - starts_with("hexify_grid")
-      - starts_with("hexify_h_index")
       - starts_with("hexify_icosa")
       - starts_with("hexify_index")
       - hexify_forward
       - hexify_forward_to_face
       - hexify_inverse
       - hexify_which_face
-  - title: Grid Construction
+
+  - title: Low-Level Grid Functions
+    desc: Internal grid construction and projection functions
     contents:
       - hexify_build_icosa
       - hexify_face_centers
-      - hexify_to_polygons
-      - hexify_to_sf
+      - hexify_grid_rect
+      - hexify_grid_global
+      - hexify_grid_to_cell
+      - hexify_grid_cell_to_lonlat
       - hex_corners_to_sf
-  - title: Resolution & Area
+      - hexify_projection_stats
+
+  - title: Resolution & Index Utilities
+    desc: Internal resolution and index functions
     contents:
+      - dg_closest_res_to_area
       - hexify_area_to_eff_res
       - hexify_eff_res_to_area
       - hexify_eff_res_to_resolution
       - hexify_resolution_to_eff_res
       - hexify_compare_indices
-      - hexify_compare_resolutions
       - hexify_default_index_type
       - hexify_is_valid_index_type
-      - hexify_print_resolutions
-      - hexify_projection_stats
-      - calculate_resolution_for_area
+
   - title: Hierarchy Functions
+    desc: Parent-child cell navigation
     contents:
+      - get_parent
+      - get_children
+      - cell_to_index
       - hexify_get_children
       - hexify_get_parent
       - hexify_get_precision
       - hexify_get_resolution
       - hexify_set_precision
       - hexify_z7_canonical
-  - title: Grid Statistics
-    contents:
-      - dgearthstat
-      - starts_with("dg_closest")
-      - dgverify
-  - title: dggridR Compatibility
-    contents:
-      - starts_with("dggrid")
-      - as_dggrid
-      - from_dggrid
-  - title: Visualization
-    contents:
-      - plot_world
-      - hexify_map
-      - hexify_plot
-      - hexify_heatmap
-      - hexify_world
+
   - title: Utilities
+    desc: Testing and debugging functions
     contents:
       - hexify_roundtrip_test
       - hexify_set_verbose
-      - index_to_cell_internal
+
   - title: Internal
+    desc: Internal documentation topics
     contents:
       - hexify-package
       - hexify-conversions
       - hexify-grid
       - hexify-stats
-      - starts_with("print.")
+      - starts_with("plot,HexData")

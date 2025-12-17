@@ -1,8 +1,7 @@
 # HexData Class
 
-An S4 class representing hexified data. Wraps the user's data with a
-reference to the grid specification used, enabling downstream operations
-without repeated parameter specification.
+An S4 class representing hexified data. Contains the original user data
+plus cell assignments from the hexification process.
 
 ## Usage
 
@@ -53,55 +52,15 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 as.list(x, ...)
 ```
 
-## Arguments
-
-- x:
-
-  A HexData object
-
-- name:
-
-  Column name for \$ access
-
-- value:
-
-  Value to assign
-
-- i:
-
-  Row indices or logical vector for subsetting
-
-- j:
-
-  Column indices, names, or logical vector for subsetting
-
-- ...:
-
-  Additional arguments passed to underlying methods
-
-- drop:
-
-  Whether to drop dimensions when subsetting (default FALSE)
-
-- object:
-
-  A HexData object (for show/as.data.frame methods)
-
-- row.names:
-
-  Row names for as.data.frame conversion
-
-- optional:
-
-  Logical; if TRUE, row.names may be omitted
-
 ## Details
 
 HexData objects are created by
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) and can
-be used with standard R functions. Use
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) to
-extract the underlying data as a plain data frame.
+[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md). The
+original data is preserved in the `data` slot, while cell assignments
+are stored separately in `cell_id` and `cell_center`.
+
+Use [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) to
+get a combined data frame with cell columns.
 
 ## Functions
 
@@ -113,26 +72,27 @@ extract the underlying data as a plain data frame.
 
 - `nrow(HexData)`: Get number of rows
 
-- `ncol(HexData)`: Get number of columns
+- `ncol(HexData)`: Get number of columns (includes virtual cell columns)
 
 - `dim(HexData)`: Get dimensions
 
-- `names(HexData)`: Get column names
+- `names(HexData)`: Get column names (includes virtual cell columns)
 
-- `$`: Access columns via \$
+- `$`: Access columns via \$ (includes virtual cell columns)
 
 - `` `$`(HexData) <- value ``: Set columns via \$\<-
 
 - `[`: Subset rows/columns
 
-- `[[`: Subset single column
+- `[[`: Subset single column (includes virtual cell columns)
 
 - `` `[[`(x = HexData, i = ANY, j = missing) <- value ``: Set single
   column
 
 - `show(HexData)`: Print summary
 
-- `as.data.frame(HexData)`: Convert to data.frame
+- `as.data.frame(HexData)`: Convert to data.frame (includes cell
+  columns)
 
 - `as.list(HexData)`: Convert to list
 
@@ -140,33 +100,19 @@ extract the underlying data as a plain data frame.
 
 - `data`:
 
-  Data frame or sf object. The underlying data with cell assignments.
+  Data frame or sf object. The original user data (untouched).
 
 - `grid`:
 
-  HexGrid object. The grid specification used for hexification.
+  HexGrid object. The grid specification used.
 
-- `mapping`:
+- `cell_id`:
 
-  List. Column name mappings (lon, lat, geometry columns used).
+  Numeric vector. Cell IDs for each row of data.
 
-- `kind`:
+- `cell_center`:
 
-  Character. Data type: "points", "cells", or "unknown".
-
-- `meta`:
-
-  List. Additional metadata (e.g., cached polygons).
-
-## Compatibility
-
-HexData objects preserve the structure of the underlying data:
-
-- If input was data.frame, output data slot is data.frame
-
-- If input was sf, output data slot is sf (geometry preserved)
-
-- Subsetting operations work transparently via `[` method
+  Matrix. Two-column matrix (lon, lat) of cell centers.
 
 ## See also
 

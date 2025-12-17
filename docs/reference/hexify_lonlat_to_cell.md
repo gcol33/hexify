@@ -37,14 +37,14 @@ Returns DGGRID-compatible cell identifiers. The cell ID uniquely
 identifies each hexagonal cell in the global grid.
 
 For a grid-object interface, use
-[`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md).
+[`lonlat_to_cell`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md).
 
 ## See also
 
+[`lonlat_to_cell`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md)
+for the recommended S4 interface,
 [`hexify_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_cell_to_lonlat.md)
-for the inverse operation,
-[`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
-for the grid-based wrapper
+for the inverse operation
 
 Other coordinate conversion:
 [`hexify_cell_id_to_quad_ij()`](https://gcol33.github.io/hexify/reference/hexify_cell_id_to_quad_ij.md),

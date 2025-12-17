@@ -15,11 +15,11 @@ hexify_heatmap(
   colors = NULL,
   breaks = NULL,
   labels = NULL,
-  hex_border = "gray30",
-  hex_lwd = 0.2,
+  hex_border = "#5D4E37",
+  hex_lwd = 0.3,
   hex_alpha = 0.7,
-  basemap_fill = "white",
-  basemap_border = "black",
+  basemap_fill = "gray90",
+  basemap_border = "gray50",
   basemap_lwd = 0.5,
   mask_outside = FALSE,
   aperture = 3L,
@@ -204,12 +204,11 @@ Common projections:
 
 [`hexify_map`](https://gcol33.github.io/hexify/reference/hexify_map.md)
 for base R plotting,
-[`hexify_plot`](https://gcol33.github.io/hexify/reference/hexify_plot.md)
-for simple plots
+[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+to generate polygons manually
 
 Other visualization:
 [`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
-[`hexify_plot()`](https://gcol33.github.io/hexify/reference/hexify_plot.md),
 [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
 
 ## Examples

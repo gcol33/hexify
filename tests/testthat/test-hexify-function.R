@@ -20,30 +20,26 @@ test_that("hexify works with data.frame and area_km2 parameter", {
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
   # Returns HexData object
-
   expect_s4_class(result, "HexData")
 
-  # Access underlying data
-  data <- result@data
+  # Original columns preserved in @data
+  expect_true("site" %in% names(result@data))
+  expect_true("lon" %in% names(result@data))
+  expect_true("lat" %in% names(result@data))
 
-  # Original columns preserved
-  expect_true("site" %in% names(data))
-  expect_true("lon" %in% names(data))
-  expect_true("lat" %in% names(data))
-
-  # Hex columns added
-  expect_true("cell_id" %in% names(data))
-  expect_true("cell_cen_lon" %in% names(data))
-  expect_true("cell_cen_lat" %in% names(data))
+  # Cell columns accessible via $ (virtual columns)
+  expect_true("cell_id" %in% names(result))
+  expect_true("cell_cen_lon" %in% names(result))
+  expect_true("cell_cen_lat" %in% names(result))
 
   # Types
-  expect_type(data$cell_id, "double")
-  expect_type(data$cell_cen_lon, "double")
-  expect_type(data$cell_cen_lat, "double")
+  expect_type(result$cell_id, "double")
+  expect_type(result$cell_cen_lon, "double")
+  expect_type(result$cell_cen_lat, "double")
 
   # Valid coordinates
-  expect_true(all(data$cell_cen_lon >= -180 & data$cell_cen_lon <= 180))
-  expect_true(all(data$cell_cen_lat >= -90 & data$cell_cen_lat <= 90))
+  expect_true(all(result$cell_cen_lon >= -180 & result$cell_cen_lon <= 180))
+  expect_true(all(result$cell_cen_lat >= -90 & result$cell_cen_lat <= 90))
 
   # Row count preserved
   expect_equal(nrow(result), 3)

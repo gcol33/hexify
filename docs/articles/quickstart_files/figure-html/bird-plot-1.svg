@@ -1957,7 +1957,7 @@
 <polyline points='422.97,215.67 419.51,215.67 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <text x='442.27' y='247.91' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>5</text>
 <text x='442.27' y='218.82' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='86.17' y='31.05' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='226.64px' lengthAdjust='spacingAndGlyphs'>ISEA3H grid at resolution 7 (~25000 km² cells)</text>
+<text x='86.17' y='31.05' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='229.11px' lengthAdjust='spacingAndGlyphs'>ISEA3H grid at resolution 7 (~23320 km2 cells)</text>
 <text x='86.17' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='287.97px' lengthAdjust='spacingAndGlyphs'>Bird Observations in Equal-Area Hexagonal Cells</text>
 </g>
 </g>

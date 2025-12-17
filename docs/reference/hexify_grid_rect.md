@@ -44,17 +44,15 @@ sf object with hexagon polygons covering the specified region
 
 ## See also
 
+[`grid_rect`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+for the recommended S4 interface,
 [`hexify_grid_global`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md)
-for global grids,
-[`hexify_to_polygons`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
-for data-driven polygon generation
+for global grids
 
 Other sf conversion:
 [`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
 [`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
-[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
-[`hexify_to_polygons()`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md),
-[`hexify_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_to_sf.md)
+[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md)
 
 ## Examples
 

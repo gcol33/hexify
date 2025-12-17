@@ -134,7 +134,7 @@ cell_to_sf <- function(cell_id = NULL, grid) {
   # Handle HexData input
   if (is_hex_data(grid)) {
     if (is.null(cell_id)) {
-      cell_id <- unique(grid@data$cell_id)
+      cell_id <- unique(grid@cell_id)
     }
     g <- grid@grid
   } else {
@@ -151,17 +151,20 @@ cell_to_sf <- function(cell_id = NULL, grid) {
   }
 
   # Generate polygons using C++ function
+  # Convert aperture to integer for C++ (mixed aperture "4/3" uses 3)
+  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+
   corners_list <- cpp_cell_to_corners(
     as.numeric(cell_id),
     g@resolution,
-    g@aperture
+    aperture_int
   )
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(coords))
   })
 
-  sfc <- sf::st_sfc(polygons, crs = g@crs_input)
+  sfc <- sf::st_sfc(polygons, crs = g@crs)
   sf::st_sf(cell_id = cell_id, geometry = sfc)
 }
 
@@ -204,8 +207,8 @@ grid_rect <- function(bbox, grid) {
   maxlon <- bbox[3]
   maxlat <- bbox[4]
 
-  # Create sampling grid
-  diagonal <- sqrt(g@area_km2 * 2 / sqrt(3))
+  # Create sampling grid - use diagonal_km from grid if available
+  diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
   spacing_deg <- diagonal / KM_PER_DEGREE * 0.8
 
   lons <- seq(minlon, maxlon, by = spacing_deg)
@@ -250,7 +253,13 @@ grid_global <- function(grid) {
   g <- extract_grid(grid)
 
   # Estimate cell count for warning
-  n_cells <- 10 * (g@aperture^g@resolution) + 2
+  if (g@aperture == "4/3") {
+    level <- as.integer(g@resolution / 2)
+    n_cells <- 10 * (4^level) * (3^(g@resolution - level)) + 2
+  } else {
+    ap <- as.integer(g@aperture)
+    n_cells <- 10 * (ap^g@resolution) + 2
+  }
   if (n_cells > 100000) {
     warning(sprintf(
       "This will generate approximately %.0f cells. Consider larger area_km2.",
@@ -258,8 +267,8 @@ grid_global <- function(grid) {
     ))
   }
 
-  # Dense sampling
-  diagonal <- sqrt(g@area_km2 * 2 / sqrt(3))
+  # Dense sampling - use diagonal_km from grid if available
+  diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
   spacing_deg <- diagonal / KM_PER_DEGREE * 0.7
 
   lons <- seq(-180, 180, by = spacing_deg)
@@ -278,18 +287,22 @@ grid_global <- function(grid) {
 
 #' Convert cell ID to hierarchical index string
 #'
+#' Advanced function for working with hierarchical index strings.
+#' Most users don't need this - use cell IDs directly.
+#'
 #' @param cell_id Numeric vector of cell IDs
 #' @param grid A HexGrid or HexData object
 #'
 #' @return Character vector of hierarchical index strings
 #'
+#' @keywords internal
 #' @export
 cell_to_index <- function(cell_id, grid) {
   g <- extract_grid(grid)
 
   # Determine index type based on aperture
-  index_type <- if (g@aperture == 3L) "z3"
-                else if (g@aperture == 7L) "z7"
+  index_type <- if (g@aperture == "3") "z3"
+                else if (g@aperture == "7") "z7"
                 else "zorder"
 
   sapply(cell_id, function(id) {
@@ -313,6 +326,7 @@ cell_to_index <- function(cell_id, grid) {
 #'
 #' @return Numeric vector of parent cell IDs
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' \dontrun{
@@ -327,8 +341,8 @@ get_parent <- function(cell_id, grid, levels = 1L) {
     stop("Cannot get parent: already at minimum resolution")
   }
 
-  index_type <- if (g@aperture == 3L) "z3"
-                else if (g@aperture == 7L) "z7"
+  index_type <- if (g@aperture == "3") "z3"
+                else if (g@aperture == "7") "z7"
                 else "zorder"
 
   # Get index, get parent, convert back
@@ -361,6 +375,7 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 #'
 #' @return List of numeric vectors containing child cell IDs
 #'
+#' @keywords internal
 #' @export
 get_children <- function(cell_id, grid, levels = 1L) {
   g <- extract_grid(grid)
@@ -369,8 +384,8 @@ get_children <- function(cell_id, grid, levels = 1L) {
     stop("Cannot get children: would exceed maximum resolution")
   }
 
-  index_type <- if (g@aperture == 3L) "z3"
-                else if (g@aperture == 7L) "z7"
+  index_type <- if (g@aperture == "3") "z3"
+                else if (g@aperture == "7") "z7"
                 else "zorder"
 
   lapply(cell_id, function(id) {
