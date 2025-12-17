@@ -217,6 +217,34 @@ text(0, -1.5, "Same bands after projection (areas preserved)", cex = 0.85)
 
 Each colored band has equal area on the sphere. After Lambert projection, shapes change (outer bands stretch radially, compress tangentially) but areas remain equal.
 
+### Inverse Formulas
+
+The inverse mapping $(x, y) \to (\lambda, \phi)$ recovers geographic coordinates from planar coordinates (Snyder, 1987, eq. 24-14 to 24-16, p. 187):
+
+$$\rho = \sqrt{x^2 + y^2}$$
+
+$$c = 2\arcsin\left(\frac{\rho}{2R}\right)$$
+
+where $c$ is the angular distance from the projection center. Then:
+
+$$\phi = \arcsin\left[\cos c \cdot \sin\phi_1 + \frac{y \cdot \sin c \cdot \cos\phi_1}{\rho}\right]$$
+
+$$\lambda = \lambda_0 + \arctan\left[\frac{x \cdot \sin c}{\rho\cos\phi_1\cos c - y\sin\phi_1\sin c}\right]$$
+
+If $\rho = 0$, the point is at the projection center: $\phi = \phi_1$, $\lambda = \lambda_0$.
+
+### Limitations
+
+**Antipode singularity:** The point diametrically opposite the projection center (angular distance 180°) maps to infinity and must be excluded from the domain.
+
+**Shape distortion:** While area is preserved exactly, shapes distort increasingly with distance from center. The maximum angular distortion $\omega$ at distance $c$ is (Snyder, 1987, eq. 24-24, p. 188):
+
+$$\sin\left(\frac{\omega}{2}\right) = \frac{k'^2 - 1}{k'^2 + 1}$$
+
+At $c = 90°$, distortion reaches $\omega \approx 70.5°$. ISEA grids limit this by using icosahedral faces subtending only ~72° from face center.
+
+**No conformality:** No projection can be both equal-area and conformal (angle-preserving)---a fundamental constraint from differential geometry (Snyder, 1987, p. 16-18).
+
 ## The Icosahedron
 
 Lambert's projection works for a single tangent plane covering at most a hemisphere. To cover the entire globe with minimal distortion, Snyder used **20 tangent planes**---one for each face of a regular icosahedron (Snyder, 1992, p. 10).
