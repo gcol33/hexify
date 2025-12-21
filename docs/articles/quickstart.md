@@ -333,6 +333,5 @@ types for very high resolutions.
 - [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
   Grid generation, multi-resolution analysis, spatial joins, choosing
   resolution
-- [`vignette("theory")`](https://gcol33.github.io/hexify/articles/theory.md) -
-  Mathematical foundations (ISEA projection, apertures, space-filling
-  curves)
+- `vignette("theory")` - Mathematical foundations (ISEA projection,
+  apertures, space-filling curves)

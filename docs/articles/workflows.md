@@ -529,5 +529,5 @@ wrapped <- st_wrap_dateline(
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
   [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md),
   [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
-- [`vignette("theory")`](https://gcol33.github.io/hexify/articles/theory.md) -
-  Mathematical foundations (ISEA projection, apertures)
+- `vignette("theory")` - Mathematical foundations (ISEA projection,
+  apertures)

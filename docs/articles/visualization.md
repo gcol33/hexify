@@ -242,7 +242,8 @@ city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 hexify_ggplot(result, title = "Cities with Labels") +
   geom_sf(data = city_points, color = "red", size = 2) +
   geom_sf_text(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 3)
+               nudge_y = 0.8, size = 3) +
+  coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
 #> Coordinate system already present.
 #> ℹ Adding new coordinate system, which will replace the existing one.
 #> Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
@@ -443,6 +444,10 @@ pentagon_polys_wrapped <- st_wrap_dateline(
   options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
   quiet = TRUE
 )
+#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
+#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
+#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
+#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +

@@ -12,3 +12,4 @@
 ^nul$
 ^doc$
 ^Meta$
+^vignettes/_.*$
