@@ -115,5 +115,5 @@ plot(result, show_points = TRUE, point_size = "large")
 }
 }
 \seealso{
-\code{\link{hexify_ggplot}} for ggplot2 plotting
+\code{\link{hexify_heatmap}} for ggplot2 plotting
 }

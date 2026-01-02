@@ -124,14 +124,20 @@ test_that("resolve_value_column errors on missing column", {
   )
 })
 
-test_that("resolve_value_column errors when no suitable column found", {
+test_that("resolve_value_column returns NULL when no suitable column found", {
   skip_if_not_installed("sf")
+
 
   cell_ids <- c(12847, 12532)
   hex_sf <- hexify_cell_to_sf(cell_ids, resolution = 10, aperture = 3)
 
+  # With require = FALSE (default), returns NULL for uniform fill
+  result <- hexify:::resolve_value_column(hex_sf, NULL)
+  expect_null(result)
+
+  # With require = TRUE, throws error
   expect_error(
-    hexify:::resolve_value_column(hex_sf, NULL),
+    hexify:::resolve_value_column(hex_sf, NULL, require = TRUE),
     "No 'value' column specified"
   )
 })
@@ -359,7 +365,7 @@ test_that("hexify_heatmap auto-detects n column", {
   expect_s3_class(result, "ggplot")
 })
 
-test_that("hexify_heatmap errors without value column", {
+test_that("hexify_heatmap works without value column (uniform fill)", {
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -368,7 +374,9 @@ test_that("hexify_heatmap errors without value column", {
     cell_area = c(863.94, 863.94)
   )
 
-  expect_error(hexify_heatmap(df), "No 'value' column specified")
+  # Should work with uniform fill when no value column specified
+  result <- hexify_heatmap(df)
+  expect_s3_class(result, "ggplot")
 })
 
 test_that("hexify_heatmap works with basemap", {

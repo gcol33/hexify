@@ -151,22 +151,22 @@ plot(result,
      main = "Points at Cell Centers (No Jitter)")
 ```
 
-## ggplot2 with hexify_ggplot()
+## ggplot2 with hexify_heatmap()
 
-For ggplot2 users, `hexify_ggplot()` returns a ggplot object that can be further customized.
+For ggplot2 users, `hexify_heatmap()` returns a ggplot object that can be further customized.
 
 ### Basic ggplot
 
 ```{r ggplot-basic, fig.width=7, fig.height=5}
-hexify_ggplot(result, title = "European Cities")
+hexify_heatmap(result, basemap = "world", title = "European Cities")
 ```
 
 ### Customizing with ggplot2
 
-Since `hexify_ggplot()` returns a ggplot object, you can add layers and modify themes:
+Since `hexify_heatmap()` returns a ggplot object, you can add layers and modify themes:
 
 ```{r ggplot-custom, fig.width=7, fig.height=5}
-hexify_ggplot(result) +
+hexify_heatmap(result, basemap = "world") +
   labs(
     title = "Major European Cities",
     subtitle = "Assigned to ISEA hexagonal grid cells",
@@ -185,16 +185,16 @@ hexify_ggplot(result) +
 # Get the city coordinates
 city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 
-hexify_ggplot(result, title = "Cities with Labels") +
+hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
   geom_sf(data = city_points, color = "red", size = 2) +
   geom_sf_text(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 3, color = "black") +
+               nudge_y = 0.8, size = 3, color = "darkgray") +
   coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
 ```
 
-## Heatmaps with hexify_heatmap()
+## Heatmaps with Value Mapping
 
-For choropleth-style visualizations with aggregated data, use `hexify_heatmap()`.
+For choropleth-style visualizations with aggregated data, pass a `value` column to `hexify_heatmap()`.
 
 ### Creating Aggregated Data
 
@@ -431,8 +431,7 @@ ggplot() +
 | Function | Description |
 |----------|-------------|
 | `plot()` | Base R plot method for HexData objects |
-| `hexify_ggplot()` | ggplot2 plotting, returns modifiable ggplot object |
-| `hexify_heatmap()` | Choropleth heatmap with color scale |
+| `hexify_heatmap()` | ggplot2 visualization, returns modifiable ggplot object |
 | `plot_world()` | Quick world basemap |
 | `cell_to_sf()` | Generate sf polygons from cell IDs |
 

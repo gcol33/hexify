@@ -12,4 +12,9 @@
 ^nul$
 ^doc$
 ^Meta$
-^vignettes/_.*$
+^_pkgdown\.yml$
+^data-raw$
+^docs$
+^pkgdown$
+^theory_rewrite$
+^\.claude$

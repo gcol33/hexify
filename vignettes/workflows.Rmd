@@ -455,5 +455,5 @@ wrapped <- st_wrap_dateline(
 ## See Also
 
 - `vignette("quickstart")` - Getting started with hexify
-- `vignette("visualization")` - Plotting with `plot()`, `hexify_ggplot()`, `hexify_heatmap()`
+- `vignette("visualization")` - Plotting with `plot()`, `hexify_heatmap()`
 - `vignette("theory")` - Mathematical foundations (ISEA projection, apertures)

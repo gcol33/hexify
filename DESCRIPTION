@@ -4,8 +4,15 @@ Version: 0.3.0
 Authors@R: 
     person("Gilles", "Colling", , "gilles.colling051@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-3070-6066"))
-Description: Provides functions to build and use equal-area hexagonal discrete global grids using the Snyder ISEA projection. Includes a fast C++ core for projection and aperture quantization, and sf/terra-compatible R wrappers for grid generation and coordinate assignment.
+Description: Provides functions to build and use equal-area hexagonal discrete
+    global grids using the Snyder ISEA projection (Snyder 1992
+    <doi:10.3138/27H7-8K88-4882-1752>). Implements the ISEA discrete global grid
+    system (Sahr, White & Kimerling 2003 <doi:10.1559/152304003100011090>).
+    Includes a fast C++ core for projection and aperture quantization, and
+    sf/terra-compatible R wrappers for grid generation and coordinate assignment.
+    Output is compatible with 'dggridR' for interoperability.
 License: MIT + file LICENSE
+Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -19,7 +26,8 @@ Suggests:
     ggplot2,
     RColorBrewer,
     rnaturalearth,
-    tibble
+    tibble,
+    gridExtra
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 Imports: sf, Rcpp, methods, rlang

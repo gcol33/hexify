@@ -194,16 +194,25 @@ create_outside_mask <- function(hex_sf, basemap_sf, xlim, ylim) {
 #' @noRd
 build_masked_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
                                 hex_alpha, basemap_sf, basemap_border,
-                                basemap_lwd, mask_sf) {
-  # Hexagons first
-
-  p <- p + ggplot2::geom_sf(
-    data = hex_sf,
-    ggplot2::aes(fill = .data[[fill_col]]),
-    color = hex_border,
-    linewidth = hex_lwd,
-    alpha = hex_alpha
-  )
+                                basemap_lwd, mask_sf, uniform_fill = "#E69F00") {
+ # Hexagons first
+  if (is.null(fill_col)) {
+    p <- p + ggplot2::geom_sf(
+      data = hex_sf,
+      fill = uniform_fill,
+      color = hex_border,
+      linewidth = hex_lwd,
+      alpha = hex_alpha
+    )
+  } else {
+    p <- p + ggplot2::geom_sf(
+      data = hex_sf,
+      ggplot2::aes(fill = .data[[fill_col]]),
+      color = hex_border,
+      linewidth = hex_lwd,
+      alpha = hex_alpha
+    )
+  }
 
   # Mask layer to hide hexes outside land
   if (!is.null(mask_sf)) {
@@ -223,7 +232,8 @@ build_masked_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
 #' @noRd
 build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
                                   hex_alpha, basemap_sf, basemap_fill,
-                                  basemap_border, basemap_lwd) {
+                                  basemap_border, basemap_lwd,
+                                  uniform_fill = "#E69F00") {
   if (!is.null(basemap_sf)) {
     p <- p + ggplot2::geom_sf(
       data = basemap_sf,
@@ -233,13 +243,23 @@ build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
     )
   }
 
-  p + ggplot2::geom_sf(
-    data = hex_sf,
-    ggplot2::aes(fill = .data[[fill_col]]),
-    color = hex_border,
-    linewidth = hex_lwd,
-    alpha = hex_alpha
-  )
+  if (is.null(fill_col)) {
+    p + ggplot2::geom_sf(
+      data = hex_sf,
+      fill = uniform_fill,
+      color = hex_border,
+      linewidth = hex_lwd,
+      alpha = hex_alpha
+    )
+  } else {
+    p + ggplot2::geom_sf(
+      data = hex_sf,
+      ggplot2::aes(fill = .data[[fill_col]]),
+      color = hex_border,
+      linewidth = hex_lwd,
+      alpha = hex_alpha
+    )
+  }
 }
 
 #' Simple sf preparation for hexify_map (no extra column merging)
@@ -277,7 +297,7 @@ prepare_hex_sf_simple <- function(data, aperture) {
 
 #' Resolve value column name (auto-detect if NULL)
 #' @noRd
-resolve_value_column <- function(hex_sf, value) {
+resolve_value_column <- function(hex_sf, value, require = FALSE) {
   if (!is.null(value)) {
     if (!value %in% names(hex_sf)) {
       stop("Column '", value, "' not found in data. ",
@@ -286,10 +306,17 @@ resolve_value_column <- function(hex_sf, value) {
     return(value)
   }
 
+  # Auto-detect common value columns
+
   if ("count" %in% names(hex_sf)) return("count")
   if ("n" %in% names(hex_sf)) return("n")
 
-  stop("No 'value' column specified and no 'count' or 'n' column found in data")
+
+  # No value column found - return NULL for uniform fill
+  if (require) {
+    stop("No 'value' column specified and no 'count' or 'n' column found in data")
+  }
+  NULL
 }
 
 #' Prepare fill column with optional binning
@@ -406,16 +433,17 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 }
 
 
-#' Create a heatmap visualization of hexagonal grid cells
+#' Create a ggplot2 visualization of hexagonal grid cells
 #'
-#' Creates a ggplot2-based heatmap of hexagonal grid cells colored by a value
-#' column. Supports continuous and discrete color scales, projection
-#' transformation, and customizable styling.
+#' Creates a ggplot2-based visualization of hexagonal grid cells, optionally
+#' colored by a value column. Supports continuous and discrete color scales,
+#' projection transformation, and customizable styling.
 #'
-#' @param data Data frame from hexify() containing cell_id and cell_area columns,
-#'   or an sf object with hexagon polygons. Must include a column for coloring.
-#' @param value Column name (as string) to use for fill color. If NULL and data
-#'   has a 'count' or 'n' column, that will be used.
+#' @param data A HexData object from \code{hexify()}, a data frame with cell_id
+#'   and cell_area columns, or an sf object with hexagon polygons.
+#' @param value Column name (as string) to use for fill color. If NULL, cells
+#'   are drawn with a uniform fill color. If not specified but data has a
+#'   'count' or 'n' column, that will be used automatically.
 #' @param basemap Optional basemap. Can be:
 #'   \itemize{
 #'     \item \code{NULL}: No basemap (default)
@@ -461,8 +489,8 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'
 #' @details
 #' This function provides publication-quality heatmap visualizations of
-#' hexagonal grids using ggplot2. Unlike \code{\link{hexify_map}}, it returns a
-#' ggplot object that can be further customized with standard ggplot2 functions.
+#' hexagonal grids using ggplot2. It returns a ggplot object that can be
+#' further customized with standard ggplot2 functions.
 #'
 #' @section Color Scales:
 #' The function supports three types of color scales:
@@ -483,7 +511,7 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' }
 #'
 #' @family visualization
-#' @seealso \code{\link{hexify_map}} for base R plotting,
+#' @seealso \code{\link{plot_grid}} for base R plotting,
 #'   \code{\link{cell_to_sf}} to generate polygons manually
 #' @export
 #' @examples
@@ -497,9 +525,12 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'   lat = c(48.21, 48.86, 40.42, 41.9, 52.4),
 #'   count = c(100, 250, 75, 180, 300)
 #' )
-#' result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
+#' result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
 #'
-#' # Simple heatmap
+#' # Simple plot (uniform fill, no value mapping)
+#' hexify_heatmap(result, basemap = "world")
+#'
+#' # Heatmap with value mapping
 #' hexify_heatmap(result, value = "count")
 #'
 #' # With world basemap and custom colors
@@ -558,8 +589,8 @@ hexify_heatmap <- function(data,
   # Prepare hex sf with extra columns merged
   hex_sf <- prepare_hex_sf(data, aperture)
 
-  # Resolve value column
-  value <- resolve_value_column(hex_sf, value)
+  # Resolve value column (NULL means uniform fill)
+  value <- resolve_value_column(hex_sf, value, require = FALSE)
 
   # Setup CRS
   crs <- if (is.null(crs)) 4326 else crs
@@ -583,11 +614,15 @@ hexify_heatmap <- function(data,
     mask_sf <- create_outside_mask(hex_sf, basemap_sf, xlim, ylim)
   }
 
-  # Prepare fill column (apply breaks if needed)
-  fill_info <- prepare_fill_column(hex_sf, value, breaks, labels)
-  hex_sf <- fill_info$data
-  fill_col <- fill_info$fill_col
-  is_discrete <- fill_info$is_discrete
+  # Prepare fill column (apply breaks if needed) - skip if no value
+ fill_col <- NULL
+  is_discrete <- FALSE
+  if (!is.null(value)) {
+    fill_info <- prepare_fill_column(hex_sf, value, breaks, labels)
+    hex_sf <- fill_info$data
+    fill_col <- fill_info$fill_col
+    is_discrete <- fill_info$is_discrete
+  }
 
   # Set legend title
   legend_title <- if (is.null(legend_title)) value else legend_title
@@ -606,12 +641,14 @@ hexify_heatmap <- function(data,
     )
   }
 
-  # Apply color scale using helper functions
-  n_levels <- length(unique(hex_sf[[fill_col]]))
-  if (is_discrete) {
-    p <- apply_discrete_scale(p, colors, legend_title, na_color, n_levels)
-  } else {
-    p <- apply_continuous_scale(p, colors, legend_title, na_color)
+  # Apply color scale (only if we have a value column)
+  if (!is.null(fill_col)) {
+    n_levels <- length(unique(hex_sf[[fill_col]]))
+    if (is_discrete) {
+      p <- apply_discrete_scale(p, colors, legend_title, na_color, n_levels)
+    } else {
+      p <- apply_continuous_scale(p, colors, legend_title, na_color)
+    }
   }
 
   # Set coordinate system with limits

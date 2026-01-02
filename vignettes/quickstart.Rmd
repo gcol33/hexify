@@ -278,6 +278,6 @@ Cell IDs are stored as integers. For resolutions above 15 (aperture 3), cell IDs
 
 ## See Also
 
-- `vignette("visualization")` - Plotting options: `plot()`, `hexify_ggplot()`, `hexify_heatmap()`
+- `vignette("visualization")` - Plotting options: `plot()`, `hexify_heatmap()`
 - `vignette("workflows")` - Grid generation, multi-resolution analysis, spatial joins, choosing resolution
 - `vignette("theory")` - Mathematical foundations (ISEA projection, apertures, space-filling curves)
