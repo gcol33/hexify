@@ -1,8 +1,7 @@
 # HexGridInfo S4 Methods
 
 S4 methods for HexGridInfo objects. These provide standard R operations
-like `$`, [`names()`](https://rdrr.io/r/base/names.html),
-[`show()`](https://rdrr.io/r/methods/show.html), and
+like `$`, [`names()`](https://rdrr.io/r/base/names.html), `show()`, and
 [`as.list()`](https://rdrr.io/r/base/list.html).
 
 ## Usage

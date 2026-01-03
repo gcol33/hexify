@@ -1,8 +1,8 @@
 # Package index
 
-## Core Functions
+## Core
 
-Main functions for creating grids and hexifying data
+Create grids and assign points to cells
 
 - [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
   : Create a Hexagonal Grid Specification
@@ -10,19 +10,14 @@ Main functions for creating grids and hexifying data
   Assign hexagonal DGGS cell IDs to geographic points
 - [`hexify_assign()`](https://gcol33.github.io/hexify/reference/hexify_assign.md)
   : Assign hex cells (ISEA3H, aperture 3) for lon/lat
-
-## S4 Classes
-
-S4 class documentation (HexGridInfo and HexData)
-
 - [`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
   : HexGridInfo Class
 - [`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
   : HexData Class
 
-## HexData Methods
+## Working with Results
 
-Methods for working with HexData objects
+Extract and convert HexData
 
 - [`grid_info()`](https://gcol33.github.io/hexify/reference/grid_info.md)
   : Get Grid Specification
@@ -41,7 +36,7 @@ Methods for working with HexData objects
 
 ## Grid Generation
 
-Functions for creating hexagonal grids over regions
+Create grids over regions
 
 - [`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md)
   : Generate a rectangular grid of hexagons
@@ -55,36 +50,29 @@ Functions for creating hexagonal grids over regions
   : Convert longitude/latitude to cell ID
 - [`cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)
   : Convert cell ID to longitude/latitude
+- [`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md)
+  : Get parent cell
+- [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)
+  : Get children cells
 
 ## Visualization
 
-Plotting and mapping functions
+Plotting functions
 
+- [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+  : Create a ggplot2 visualization of hexagonal grid cells
 - [`plot_grid()`](https://gcol33.github.io/hexify/reference/plot_grid.md)
   : Plot hexagonal grid clipped to a polygon boundary
-- [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
-  : Create a ggplot2 visualization of HexData
-- [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
-  : Create a heatmap visualization of hexagonal grid cells
 - [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
   : Quick world map plot
 - [`hexify_world`](https://gcol33.github.io/hexify/reference/hexify_world.md)
   : Simplified World Map
-
-## Grid Statistics
-
-Resolution comparison and grid statistics
-
-- [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md)
-  : Get grid statistics for Earth coverage
-- [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md)
-  : Compare grid resolutions
-- [`dgverify()`](https://gcol33.github.io/hexify/reference/dgverify.md)
-  : Verify grid object
+- [`plot(`*`<HexData>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
+  : Plot HexData objects
 
 ## dggridR Compatibility
 
-Functions for interoperability with dggridR package
+Interoperability with dggridR
 
 - [`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md)
   : Convert hexify grid to dggridR-compatible grid object
@@ -96,10 +84,16 @@ Functions for interoperability with dggridR package
   : Create DGGRID 43H aperture sequence
 - [`hexify_grid()`](https://gcol33.github.io/hexify/reference/hexify_grid.md)
   : Create a hexagonal grid specification
+- [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md)
+  : Get grid statistics for Earth coverage
+- [`dgverify()`](https://gcol33.github.io/hexify/reference/dgverify.md)
+  : Verify grid object
+- [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md)
+  : Compare grid resolutions
 
-## Low-Level Coordinate Conversions
+## Low-Level API
 
-Internal coordinate transformation functions
+Direct access to projection and coordinate transforms
 
 - [`hexify_forward()`](https://gcol33.github.io/hexify/reference/hexify_forward.md)
   : Forward Snyder projection
@@ -109,11 +103,6 @@ Internal coordinate transformation functions
   : Inverse Snyder projection
 - [`hexify_which_face()`](https://gcol33.github.io/hexify/reference/hexify_which_face.md)
   : Determine which face contains a point
-
-## Low-Level Grid Functions
-
-Internal grid construction and projection functions
-
 - [`hexify_build_icosa()`](https://gcol33.github.io/hexify/reference/hexify_build_icosa.md)
   : Initialize icosahedron geometry
 - [`hexify_face_centers()`](https://gcol33.github.io/hexify/reference/hexify_face_centers.md)
@@ -130,11 +119,6 @@ Internal grid construction and projection functions
   : Build an sf POLYGON from six (lon, lat) corner pairs
 - [`hexify_projection_stats()`](https://gcol33.github.io/hexify/reference/hexify_projection_stats.md)
   : Get inverse projection statistics
-
-## Resolution & Index Utilities
-
-Internal resolution and index functions
-
 - [`dg_closest_res_to_area()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_area.md)
   : Find closest resolution for target cell area
 - [`hexify_area_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_area_to_eff_res.md)
@@ -151,15 +135,6 @@ Internal resolution and index functions
   : Get default index type for aperture
 - [`hexify_is_valid_index_type()`](https://gcol33.github.io/hexify/reference/hexify_is_valid_index_type.md)
   : Check if index type is valid for aperture
-
-## Hierarchy Functions
-
-Parent-child cell navigation
-
-- [`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md)
-  : Get parent cell
-- [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)
-  : Get children cells
 - [`cell_to_index()`](https://gcol33.github.io/hexify/reference/cell_to_index.md)
   : Convert cell ID to hierarchical index string
 - [`hexify_get_children()`](https://gcol33.github.io/hexify/reference/hexify_get_children.md)
@@ -174,11 +149,6 @@ Parent-child cell navigation
   : Set inverse projection precision
 - [`hexify_z7_canonical()`](https://gcol33.github.io/hexify/reference/hexify_z7_canonical.md)
   : Get canonical form of Z7 index
-
-## Utilities
-
-Testing and debugging functions
-
 - [`hexify_roundtrip_test()`](https://gcol33.github.io/hexify/reference/hexify_roundtrip_test.md)
   : Round-trip accuracy test
 - [`hexify_set_verbose()`](https://gcol33.github.io/hexify/reference/hexify_set_verbose.md)
@@ -186,7 +156,7 @@ Testing and debugging functions
 
 ## Internal
 
-Internal documentation topics
+Package internals
 
 - [`hexify-package`](https://gcol33.github.io/hexify/reference/hexify-package.md)
   : hexify
@@ -217,5 +187,15 @@ Internal documentation topics
   [`as.data.frame(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
   [`as.list(`*`<HexData>`*`)`](https://gcol33.github.io/hexify/reference/HexData-methods.md)
   : HexData S4 Methods
-- [`plot(`*`<HexData>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
-  : Plot HexData objects
+- [`new_hex_data()`](https://gcol33.github.io/hexify/reference/new_hex_data.md)
+  : Create a HexData Object (Internal)
+- [`extract_grid()`](https://gcol33.github.io/hexify/reference/extract_grid.md)
+  : Extract grid from various objects
+- [`index_to_cell_internal()`](https://gcol33.github.io/hexify/reference/index_to_cell_internal.md)
+  : Decode a cell index to face, i, j, and resolution
+- [`calculate_resolution_for_area()`](https://gcol33.github.io/hexify/reference/calculate_resolution_for_area.md)
+  : Calculate resolution for target area
+- [`hexify_grid_to_HexGridInfo()`](https://gcol33.github.io/hexify/reference/hexify_grid_to_HexGridInfo.md)
+  : Convert legacy hexify_grid to HexGridInfo
+- [`HexGridInfo_to_hexify_grid()`](https://gcol33.github.io/hexify/reference/HexGridInfo_to_hexify_grid.md)
+  : Convert HexGridInfo to legacy hexify_grid

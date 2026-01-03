@@ -328,7 +328,6 @@ types for very high resolutions.
 - [`vignette("visualization")`](https://gcol33.github.io/hexify/articles/visualization.md) -
   Plotting options:
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-  [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md),
   [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
 - [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
   Grid generation, multi-resolution analysis, spatial joins, choosing

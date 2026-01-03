@@ -1,8 +1,8 @@
-# Create a heatmap visualization of hexagonal grid cells
+# Create a ggplot2 visualization of hexagonal grid cells
 
-Creates a ggplot2-based heatmap of hexagonal grid cells colored by a
-value column. Supports continuous and discrete color scales, projection
-transformation, and customizable styling.
+Creates a ggplot2-based visualization of hexagonal grid cells,
+optionally colored by a value column. Supports continuous and discrete
+color scales, projection transformation, and customizable styling.
 
 ## Usage
 
@@ -36,14 +36,16 @@ hexify_heatmap(
 
 - data:
 
-  Data frame from hexify() containing cell_id and cell_area columns, or
-  an sf object with hexagon polygons. Must include a column for
-  coloring.
+  A HexData object from
+  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md), a
+  data frame with cell_id and cell_area columns, or an sf object with
+  hexagon polygons.
 
 - value:
 
-  Column name (as string) to use for fill color. If NULL and data has a
-  'count' or 'n' column, that will be used.
+  Column name (as string) to use for fill color. If NULL, cells are
+  drawn with a uniform fill color. If not specified but data has a
+  'count' or 'n' column, that will be used automatically.
 
 - basemap:
 
@@ -155,8 +157,8 @@ A ggplot2 object that can be further customized or saved.
 ## Details
 
 This function provides publication-quality heatmap visualizations of
-hexagonal grids using ggplot2. Unlike `hexify_map`, it returns a ggplot
-object that can be further customized with standard ggplot2 functions.
+hexagonal grids using ggplot2. It returns a ggplot object that can be
+further customized with standard ggplot2 functions.
 
 ## Color Scales
 
@@ -200,7 +202,8 @@ Common projections:
 
 ## See also
 
-`hexify_map` for base R plotting,
+[`plot_grid`](https://gcol33.github.io/hexify/reference/plot_grid.md)
+for base R plotting,
 [`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
 to generate polygons manually
 
@@ -220,9 +223,12 @@ cities <- data.frame(
   lat = c(48.21, 48.86, 40.42, 41.9, 52.4),
   count = c(100, 250, 75, 180, 300)
 )
-result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
+result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
 
-# Simple heatmap
+# Simple plot (uniform fill, no value mapping)
+hexify_heatmap(result, basemap = "world")
+
+# Heatmap with value mapping
 hexify_heatmap(result, value = "count")
 
 # With world basemap and custom colors

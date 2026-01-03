@@ -21,21 +21,17 @@ navbar:
       aria-label: GitHub
 
 reference:
-  - title: Core Functions
-    desc: Main functions for creating grids and hexifying data
+  - title: Core
+    desc: Create grids and assign points to cells
     contents:
       - hex_grid
       - hexify
       - hexify_assign
-
-  - title: S4 Classes
-    desc: S4 class documentation (HexGridInfo and HexData)
-    contents:
       - HexGridInfo-class
       - HexData-class
 
-  - title: HexData Methods
-    desc: Methods for working with HexData objects
+  - title: Working with Results
+    desc: Extract and convert HexData
     contents:
       - grid_info
       - cells
@@ -46,7 +42,7 @@ reference:
       - is_hex_data
 
   - title: Grid Generation
-    desc: Functions for creating hexagonal grids over regions
+    desc: Create grids over regions
     contents:
       - grid_rect
       - grid_global
@@ -54,33 +50,32 @@ reference:
       - cell_to_sf
       - lonlat_to_cell
       - cell_to_lonlat
+      - get_parent
+      - get_children
 
   - title: Visualization
-    desc: Plotting and mapping functions
+    desc: Plotting functions
     contents:
-      - plot_grid
       - hexify_heatmap
+      - plot_grid
       - plot_world
       - hexify_world
-
-  - title: Grid Statistics
-    desc: Resolution comparison and grid statistics
-    contents:
-      - dgearthstat
-      - hexify_compare_resolutions
-      - dgverify
+      - starts_with("plot,HexData")
 
   - title: dggridR Compatibility
-    desc: Functions for interoperability with dggridR package
+    desc: Interoperability with dggridR
     contents:
       - as_dggrid
       - from_dggrid
       - dggrid_is_compatible
       - dggrid_43h_sequence
       - hexify_grid
+      - dgearthstat
+      - dgverify
+      - hexify_compare_resolutions
 
-  - title: Low-Level Coordinate Conversions
-    desc: Internal coordinate transformation functions
+  - title: Low-Level API
+    desc: Direct access to projection and coordinate transforms
     contents:
       - starts_with("hexify_lonlat")
       - starts_with("hexify_cell")
@@ -91,10 +86,6 @@ reference:
       - hexify_forward_to_face
       - hexify_inverse
       - hexify_which_face
-
-  - title: Low-Level Grid Functions
-    desc: Internal grid construction and projection functions
-    contents:
       - hexify_build_icosa
       - hexify_face_centers
       - hexify_grid_rect
@@ -103,10 +94,6 @@ reference:
       - hexify_grid_cell_to_lonlat
       - hex_corners_to_sf
       - hexify_projection_stats
-
-  - title: Resolution & Index Utilities
-    desc: Internal resolution and index functions
-    contents:
       - dg_closest_res_to_area
       - hexify_area_to_eff_res
       - hexify_eff_res_to_area
@@ -115,12 +102,6 @@ reference:
       - hexify_compare_indices
       - hexify_default_index_type
       - hexify_is_valid_index_type
-
-  - title: Hierarchy Functions
-    desc: Parent-child cell navigation
-    contents:
-      - get_parent
-      - get_children
       - cell_to_index
       - hexify_get_children
       - hexify_get_parent
@@ -128,15 +109,11 @@ reference:
       - hexify_get_resolution
       - hexify_set_precision
       - hexify_z7_canonical
-
-  - title: Utilities
-    desc: Testing and debugging functions
-    contents:
       - hexify_roundtrip_test
       - hexify_set_verbose
 
   - title: Internal
-    desc: Internal documentation topics
+    desc: Package internals
     contents:
       - hexify-package
       - hexify-conversions
@@ -144,4 +121,9 @@ reference:
       - hexify-stats
       - HexGridInfo-methods
       - HexData-methods
-      - starts_with("plot,HexData")
+      - new_hex_data
+      - extract_grid
+      - index_to_cell_internal
+      - calculate_resolution_for_area
+      - hexify_grid_to_HexGridInfo
+      - HexGridInfo_to_hexify_grid

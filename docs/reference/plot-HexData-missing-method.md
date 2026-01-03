@@ -134,7 +134,7 @@ minimize memory usage.
 
 ## See also
 
-[`hexify_ggplot`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
+[`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
 for ggplot2 plotting
 
 ## Examples

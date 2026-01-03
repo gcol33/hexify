@@ -194,17 +194,19 @@ plot(result,
 
     #> Spherical geometry (s2) switched on
 
-## ggplot2 with hexify_ggplot()
+## ggplot2 with hexify_heatmap()
 
 For ggplot2 users,
-[`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
+[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
 returns a ggplot object that can be further customized.
 
 ### Basic ggplot
 
 ``` r
 
-hexify_ggplot(result, title = "European Cities")
+hexify_heatmap(result, basemap = "world", title = "European Cities")
+#> Spherical geometry (s2) switched off
+#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/ggplot-basic-1.svg)
@@ -212,12 +214,12 @@ hexify_ggplot(result, title = "European Cities")
 ### Customizing with ggplot2
 
 Since
-[`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md)
+[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
 returns a ggplot object, you can add layers and modify themes:
 
 ``` r
 
-hexify_ggplot(result) +
+hexify_heatmap(result, basemap = "world") +
   labs(
     title = "Major European Cities",
     subtitle = "Assigned to ISEA hexagonal grid cells",
@@ -228,6 +230,8 @@ hexify_ggplot(result) +
     plot.title = element_text(face = "bold", size = 14),
     panel.grid = element_blank()
   )
+#> Spherical geometry (s2) switched off
+#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/ggplot-custom-1.svg)
@@ -239,11 +243,13 @@ hexify_ggplot(result) +
 # Get the city coordinates
 city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 
-hexify_ggplot(result, title = "Cities with Labels") +
+hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
   geom_sf(data = city_points, color = "red", size = 2) +
   geom_sf_text(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 3, color = "black") +
+               nudge_y = 0.8, size = 3, color = "darkgray") +
   coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
+#> Spherical geometry (s2) switched off
+#> Spherical geometry (s2) switched on
 #> Coordinate system already present.
 #> ℹ Adding new coordinate system, which will replace the existing one.
 #> Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
@@ -252,9 +258,10 @@ hexify_ggplot(result, title = "Cities with Labels") +
 
 ![](visualization_files/figure-html/ggplot-layers-1.svg)
 
-## Heatmaps with hexify_heatmap()
+## Heatmaps with Value Mapping
 
-For choropleth-style visualizations with aggregated data, use
+For choropleth-style visualizations with aggregated data, pass a `value`
+column to
 [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md).
 
 ### Creating Aggregated Data
@@ -444,10 +451,6 @@ pentagon_polys_wrapped <- st_wrap_dateline(
   options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
   quiet = TRUE
 )
-#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
-#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
-#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
-#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
@@ -555,8 +558,7 @@ ggplot() +
 | Function | Description |
 |----|----|
 | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Base R plot method for HexData objects |
-| [`hexify_ggplot()`](https://gcol33.github.io/hexify/reference/hexify_ggplot.md) | ggplot2 plotting, returns modifiable ggplot object |
-| [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md) | Choropleth heatmap with color scale |
+| [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md) | ggplot2 visualization, returns modifiable ggplot object |
 | [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md) | Quick world basemap |
 | [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md) | Generate sf polygons from cell IDs |
 
