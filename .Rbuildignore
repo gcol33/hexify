@@ -20,3 +20,4 @@
 ^\.claude$
 ^\.github$
 ^cran-comments\.md$
+\.orig$
