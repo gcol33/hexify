@@ -18,3 +18,5 @@
 ^pkgdown$
 ^theory_rewrite$
 ^\.claude$
+^\.github$
+^cran-comments\.md$

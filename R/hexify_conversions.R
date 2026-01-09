@@ -650,7 +650,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 # =============================================================================
 #
 # These functions convert from Cell IDs back to intermediate
-# coordinate representations, compatible with dggridR's conversion functions.
+# coordinate representations, compatible with 'dggridR' conversion functions.
 # =============================================================================
 
 #' Convert Cell ID to Quad IJ coordinates
@@ -658,7 +658,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #' Converts DGGRID-compatible cell IDs to Quad IJ coordinates.
 #' This is the inverse of hexify_quad_ij_to_cell().
 #'
-#' Compatible with dggridR's dgSEQNUM_to_Q2DI().
+#' Compatible with 'dggridR' dgSEQNUM_to_Q2DI().
 #'
 #' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
@@ -706,9 +706,9 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #'
 #' Converts DGGRID-compatible cell IDs to icosahedral triangle
 #' coordinates (face, x, y). These are the coordinates produced by the
-#' Snyder ISEA forward projection.
+#' 'Snyder' 'ISEA' forward projection.
 #'
-#' Compatible with dggridR's dgSEQNUM_to_PROJTRI().
+#' Compatible with 'dggridR' dgSEQNUM_to_PROJTRI().
 #'
 #' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
@@ -758,7 +758,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #' This is useful for understanding where a cell is located on the
 #' icosahedral projection.
 #'
-#' Equivalent to dggridR's dgQ2DI_to_PROJTRI().
+#' Equivalent to 'dggridR' dgQ2DI_to_PROJTRI().
 #'
 #' @param quad Quad number (0-11), integer or vector
 #' @param i Cell index along first axis, integer or vector
@@ -807,7 +807,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 # =============================================================================
 #
 # These functions work with Quad XY coordinates - the continuous (non-quantized)
-# representation in quad space. Equivalent to dggridR's Q2DD coordinate system.
+# representation in quad space. Equivalent to 'dggridR' Q2DD coordinate system.
 # =============================================================================
 
 #' Convert Cell ID to Quad XY coordinates
@@ -815,7 +815,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #' Converts DGGRID-compatible cell IDs to Quad XY coordinates
 #' (continuous quad space). This is the cell center in quad coordinates.
 #'
-#' Compatible with dggridR's dgSEQNUM_to_Q2DD().
+#' Compatible with 'dggridR' dgSEQNUM_to_Q2DD().
 #'
 #' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
@@ -864,7 +864,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible
 #' cell IDs. The coordinates are quantized to the nearest cell.
 #'
-#' Compatible with dggridR's dgQ2DD_to_SEQNUM().
+#' Compatible with 'dggridR' dgQ2DD_to_SEQNUM().
 #'
 #' @param quad Quad number (0-11), integer or vector
 #' @param quad_x Continuous X coordinate in quad space
@@ -926,7 +926,7 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #' (unfolded icosahedron). Each triangle is rotated and translated to its
 #' position in the unfolded layout.
 #'
-#' Equivalent to dggridR's dgPROJTRI_to_PLANE().
+#' Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 #'
 #' @param icosa_triangle_face Triangle face number (0-19), integer or vector
 #' @param icosa_triangle_x X coordinate on triangle face
@@ -974,7 +974,7 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #' Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 #' Returns the cell center in the unfolded icosahedron layout.
 #'
-#' Compatible with dggridR's dgSEQNUM_to_PLANE().
+#' Compatible with 'dggridR' dgSEQNUM_to_PLANE().
 #'
 #' @param cell_id Numeric vector of cell IDs (1-based)
 #' @param resolution Grid resolution level (0-30)
@@ -1016,10 +1016,10 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' Convert longitude/latitude to PLANE coordinates
 #'
 #' Converts geographic coordinates directly to PLANE coordinates
-#' (unfolded icosahedron). Combines forward Snyder projection with
+#' (unfolded icosahedron). Combines forward 'Snyder' projection with
 #' the PLANE transformation.
 #'
-#' Equivalent to dggridR's dgGEO_to_PLANE().
+#' Equivalent to 'dggridR' dgGEO_to_PLANE().
 #'
 #' @param lon Longitude in degrees (-180 to 180)
 #' @param lat Latitude in degrees (-90 to 90)

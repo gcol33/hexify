@@ -21,7 +21,7 @@
 #' @param aperture Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
-#' @param crs Coordinate reference system EPSG code (default 4326 = WGS84).
+#' @param crs Coordinate reference system EPSG code (default 4326 = 'WGS84').
 #'
 #' @return A HexGridInfo object containing the grid specification.
 #'

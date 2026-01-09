@@ -11,8 +11,8 @@ NULL
 
 #' Calculate resolution for target area
 #'
-#' Uses the ISEA3H cell count formula: N = 10 * aperture^res + 2
-#' This matches dggridR's resolution numbering exactly.
+#' Uses the 'ISEA3H' cell count formula: N = 10 * aperture^res + 2
+#' This matches 'dggridR' resolution numbering exactly.
 #'
 #' @param target_area_km2 Target area in square kilometers
 #' @param aperture Aperture (3, 4, or 7)
@@ -45,7 +45,7 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #' @param metric Whether area is in metric units (km^2)
 #' @param resround How to round resolution ("nearest", "up", "down")
 #' @param aperture Aperture sequence (3, 4, or 7)
-#' @param projection Projection type (only "ISEA" supported currently)
+#' @param projection Projection type (only 'ISEA' supported currently)
 #'
 #' @return A hexify_grid object containing:
 #'   \item{area}{Target cell area}

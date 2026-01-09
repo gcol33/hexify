@@ -46,10 +46,10 @@ are drawn with a uniform fill color. If not specified but data has a
 
 \item{crs}{Target CRS for the map projection. Can be:
 \itemize{
-\item A numeric EPSG code (e.g., 4326 for WGS84, 3035 for LAEA Europe)
+\item A numeric EPSG code (e.g., 4326 for 'WGS84', 3035 for LAEA Europe)
 \item A proj4 string
 \item An sf crs object
-\item NULL to use WGS84 (EPSG:4326)
+\item NULL to use 'WGS84' (EPSG:4326)
 }}
 
 \item{colors}{Color palette for the heatmap. Can be:
@@ -122,7 +122,7 @@ The function supports three types of color scales:
 
 Common projections:
 \describe{
-\item{4326}{WGS84 (unprojected lat/lon)}
+\item{4326}{'WGS84' (unprojected lat/lon)}
 \item{3035}{LAEA Europe}
 \item{3857}{Web Mercator}
 \item{"+proj=robin"}{Robinson (world maps)}

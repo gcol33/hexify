@@ -28,7 +28,7 @@ Transforms icosahedral triangle coordinates to the 2D PLANE representation
 position in the unfolded layout.
 }
 \details{
-Equivalent to dggridR's dgPROJTRI_to_PLANE().
+Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 
 The PLANE layout arranges all 20 icosahedral faces into a roughly
 rectangular region. Faces 0-4 and 5-9 form the upper row, while

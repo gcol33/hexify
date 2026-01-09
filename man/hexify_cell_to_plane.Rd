@@ -23,7 +23,7 @@ Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 Returns the cell center in the unfolded icosahedron layout.
 }
 \details{
-Compatible with dggridR's dgSEQNUM_to_PLANE().
+Compatible with 'dggridR' dgSEQNUM_to_PLANE().
 }
 \examples{
 \dontrun{

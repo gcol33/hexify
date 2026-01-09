@@ -1,6 +1,6 @@
 #' hexify
 #'
-#' Core icosahedron + Snyder projection helpers.
+#' Core icosahedron and 'Snyder' projection helpers.
 #'
 #' @useDynLib hexify, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

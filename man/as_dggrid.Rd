@@ -2,7 +2,7 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{as_dggrid}
 \alias{as_dggrid}
-\title{Convert hexify grid to dggridR-compatible grid object}
+\title{Convert hexify grid to 'dggridR'-compatible grid object}
 \usage{
 as_dggrid(grid)
 }
@@ -10,19 +10,19 @@ as_dggrid(grid)
 \item{grid}{A hexify_grid object from hexify_grid()}
 }
 \value{
-A list with dggridR-compatible fields:
+A list with 'dggridR'-compatible fields:
 \item{pole_lon_deg}{Longitude of grid pole (default 11.25)}
 \item{pole_lat_deg}{Latitude of grid pole (default 58.28252559)}
 \item{azimuth_deg}{Grid azimuth rotation (default 0)}
 \item{aperture}{Grid aperture (3, 4, or 7)}
 \item{res}{Resolution level}
 \item{topology}{Grid topology ("HEXAGON")}
-\item{projection}{Map projection ("ISEA")}
+\item{projection}{Map projection ('ISEA')}
 \item{precision}{Output decimal precision (default 7)}
 }
 \description{
-Creates a dggridR-compatible grid specification from a hexify_grid object.
-The resulting object can be used with dggridR functions that accept a dggs
+Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
+The resulting object can be used with 'dggridR' functions that accept a dggs
 object.
 }
 \examples{
@@ -38,9 +38,9 @@ dggs <- as_dggrid(hgrid)
 }
 }
 \seealso{
-Other dggridR compatibility: 
+Other 'dggridR' compatibility: 
 \code{\link{dggrid_43h_sequence}()},
 \code{\link{dggrid_is_compatible}()},
 \code{\link{from_dggrid}()}
 }
-\concept{dggridR compatibility}
+\concept{'dggridR' compatibility}

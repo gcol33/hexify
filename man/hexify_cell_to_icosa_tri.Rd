@@ -22,10 +22,10 @@ Data frame with columns:
 \description{
 Converts DGGRID-compatible cell IDs to icosahedral triangle
 coordinates (face, x, y). These are the coordinates produced by the
-Snyder ISEA forward projection.
+'Snyder' 'ISEA' forward projection.
 }
 \details{
-Compatible with dggridR's dgSEQNUM_to_PROJTRI().
+Compatible with 'dggridR' dgSEQNUM_to_PROJTRI().
 }
 \examples{
 \dontrun{

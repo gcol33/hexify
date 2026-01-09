@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(pkgdown-builder)",
+      "Skill(cran-release)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

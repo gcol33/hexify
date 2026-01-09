@@ -15,7 +15,7 @@ calculate_resolution_for_area(target_area_km2, aperture = 3)
 Resolution level
 }
 \description{
-Uses the ISEA3H cell count formula: N = 10 * aperture^res + 2
-This matches dggridR's resolution numbering exactly.
+Uses the 'ISEA3H' cell count formula: N = 10 * aperture^res + 2
+This matches 'dggridR' resolution numbering exactly.
 }
 \keyword{internal}

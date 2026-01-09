@@ -20,7 +20,7 @@
 #'   \item{gdp_md}{GDP in millions USD}
 #'   \item{income_grp}{Income group classification}
 #'   \item{economy}{Economy type}
-#'   \item{geometry}{MULTIPOLYGON geometry in WGS84 (EPSG:4326)}
+#'   \item{geometry}{MULTIPOLYGON geometry in 'WGS84' (EPSG:4326)}
 #' }
 #'
 #' @source Simplified from Natural Earth 1:110m Cultural Vectors

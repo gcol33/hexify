@@ -19,7 +19,7 @@ hexify_grid_rect(
 
 \item{minlat, maxlat}{Latitude bounds}
 
-\item{area}{Target cell area in km²}
+\item{area}{Target cell area in km^2}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 

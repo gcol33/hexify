@@ -26,7 +26,7 @@ area_km2, resolution, and aperture parameters.}
 
 \item{lat}{Column name for latitude (ignored if data is sf)}
 
-\item{area_km2}{Target cell area in km² (mutually exclusive with diagonal).}
+\item{area_km2}{Target cell area in km^2 (mutually exclusive with diagonal).}
 
 \item{diagonal}{Target cell diagonal (long diagonal) in km}
 
@@ -58,7 +58,7 @@ in separate slots.
 }
 \details{
 For sf objects, coordinates are automatically extracted and transformed to
-WGS84 (EPSG:4326) if needed. The geometry column is preserved.
+'WGS84' (EPSG:4326) if needed. The geometry column is preserved.
 
 Either \code{area_km2} (or \code{area}), \code{diagonal}, or \code{resolution}
 must be provided unless a \code{grid} object is supplied.

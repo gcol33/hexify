@@ -26,7 +26,7 @@ NULL
 #' @slot resolution Integer. Grid resolution level (0-30).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
-#' @slot crs Integer. Coordinate reference system (default 4326 = WGS84).
+#' @slot crs Integer. Coordinate reference system (default 4326 = 'WGS84').
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.

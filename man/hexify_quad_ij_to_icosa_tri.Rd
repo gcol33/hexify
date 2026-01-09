@@ -29,7 +29,7 @@ This is useful for understanding where a cell is located on the
 icosahedral projection.
 }
 \details{
-Equivalent to dggridR's dgQ2DI_to_PROJTRI().
+Equivalent to 'dggridR' dgQ2DI_to_PROJTRI().
 }
 \examples{
 \dontrun{

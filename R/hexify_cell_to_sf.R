@@ -45,7 +45,7 @@
 #'
 #' @details
 #' This function uses a native C++ implementation that is significantly faster
-#' than dggridR's polygon generation, especially for large numbers of cells.
+#' than 'dggridR' polygon generation, especially for large numbers of cells.
 #'
 #' For the recommended S4 interface, use \code{\link{cell_to_sf}} instead.
 #'
@@ -141,7 +141,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 #'
 #' @param minlon,maxlon Longitude bounds
 #' @param minlat,maxlat Latitude bounds
-#' @param area Target cell area in km²
+#' @param area Target cell area in km^2
 #' @param aperture Grid aperture: 3, 4, or 7
 #' @param resround Resolution rounding: "nearest", "up", or "down"
 #'
@@ -190,7 +190,7 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 #'
 #' Creates hexagon polygons covering the entire Earth.
 #'
-#' @param area Target cell area in km²
+#' @param area Target cell area in km^2
 #' @param aperture Grid aperture: 3, 4, or 7
 #' @param resround Resolution rounding: "nearest", "up", or "down"
 #'
@@ -206,7 +206,7 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 #' library(hexify)
 #' library(sf)
 #'
-#' # Coarse global grid (~100,000 km² cells)
+#' # Coarse global grid (~100,000 km^2 cells)
 #' global_grid <- hexify_grid_global(area = 100000)
 #' plot(st_geometry(global_grid), border = "gray")
 #' }

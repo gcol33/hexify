@@ -26,7 +26,7 @@ aperture grids that start with aperture 4 and switch to aperture 3.
 
 \item{\code{diagonal_km}}{Numeric. Cell diagonal (long diagonal) in kilometers.}
 
-\item{\code{crs}}{Integer. Coordinate reference system (default 4326 = WGS84).}
+\item{\code{crs}}{Integer. Coordinate reference system (default 4326 = 'WGS84').}
 }}
 
 \seealso{

@@ -6,11 +6,11 @@
 # Earth Geometry Constants
 # =============================================================================
 
-#' Total Earth surface area in square kilometers (WGS84 ellipsoid)
+#' Total Earth surface area in square kilometers ('WGS84' ellipsoid)
 #' @noRd
 EARTH_SURFACE_KM2 <- 510065621.724078904704516
 
-#' Mean Earth radius in kilometers (WGS84 mean radius)
+#' Mean Earth radius in kilometers ('WGS84' mean radius)
 #' Calculated as (2*a + b) / 3 where a = 6378.137 km (equatorial) and b = 6356.7523142 km (polar)
 #' @noRd
 EARTH_RADIUS_KM <- 6371.0088
@@ -26,7 +26,7 @@ KM_PER_DEGREE <- 111.0
 #' Get resolution from grid object (handles both field names)
 #'
 #' Extracts resolution from a grid object, supporting both 'resolution'
-#' (hexify style) and 'res' (dggridR style) field names.
+#' (hexify style) and 'res' ('dggridR' style) field names.
 #'
 #' @param dggs Grid specification object
 #' @param require Logical; if TRUE, stops with error if resolution not found

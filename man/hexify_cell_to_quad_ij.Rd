@@ -24,7 +24,7 @@ Converts DGGRID-compatible cell IDs to Quad IJ coordinates.
 This is the inverse of hexify_quad_ij_to_cell().
 }
 \details{
-Compatible with dggridR's dgSEQNUM_to_Q2DI().
+Compatible with 'dggridR' dgSEQNUM_to_Q2DI().
 }
 \examples{
 \dontrun{

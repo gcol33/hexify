@@ -7,7 +7,7 @@
 hexify_grid_global(area, aperture = 3L, resround = "nearest")
 }
 \arguments{
-\item{area}{Target cell area in km²}
+\item{area}{Target cell area in km^2}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 
@@ -24,7 +24,7 @@ Creates hexagon polygons covering the entire Earth.
 library(hexify)
 library(sf)
 
-# Coarse global grid (~100,000 km² cells)
+# Coarse global grid (~100,000 km^2 cells)
 global_grid <- hexify_grid_global(area = 100000)
 plot(st_geometry(global_grid), border = "gray")
 }

@@ -42,7 +42,7 @@ Returns an sf object by default, or a data frame for lightweight workflows.
 }
 \details{
 This function uses a native C++ implementation that is significantly faster
-than dggridR's polygon generation, especially for large numbers of cells.
+than 'dggridR' polygon generation, especially for large numbers of cells.
 
 For the recommended S4 interface, use \code{\link{cell_to_sf}} instead.
 }

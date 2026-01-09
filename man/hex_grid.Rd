@@ -24,7 +24,7 @@ with \code{resolution}.}
 \item{resround}{Resolution rounding when using \code{area_km2}:
 "nearest" (default), "up", or "down".}
 
-\item{crs}{Coordinate reference system EPSG code (default 4326 = WGS84).}
+\item{crs}{Coordinate reference system EPSG code (default 4326 = 'WGS84').}
 }
 \value{
 A HexGridInfo object containing the grid specification.

@@ -8,25 +8,25 @@
 # GRID OBJECT CONVERSION
 # =============================================================================
 
-#' Convert hexify grid to dggridR-compatible grid object
+#' Convert hexify grid to 'dggridR'-compatible grid object
 #'
-#' Creates a dggridR-compatible grid specification from a hexify_grid object.
-#' The resulting object can be used with dggridR functions that accept a dggs
+#' Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
+#' The resulting object can be used with 'dggridR' functions that accept a dggs
 #' object.
 #'
 #' @param grid A hexify_grid object from hexify_grid()
 #'
-#' @return A list with dggridR-compatible fields:
+#' @return A list with 'dggridR'-compatible fields:
 #'   \item{pole_lon_deg}{Longitude of grid pole (default 11.25)}
 #'   \item{pole_lat_deg}{Latitude of grid pole (default 58.28252559)}
 #'   \item{azimuth_deg}{Grid azimuth rotation (default 0)}
 #'   \item{aperture}{Grid aperture (3, 4, or 7)}
 #'   \item{res}{Resolution level}
 #'   \item{topology}{Grid topology ("HEXAGON")}
-#'   \item{projection}{Map projection ("ISEA")}
+#'   \item{projection}{Map projection ('ISEA')}
 #'   \item{precision}{Output decimal precision (default 7)}
 #'
-#' @family dggridR compatibility
+#' @family 'dggridR' compatibility
 #' @export
 #' @examples
 #' \dontrun{
@@ -60,25 +60,25 @@ as_dggrid <- function(grid) {
   dggs
 }
 
-#' Convert dggridR grid object to hexify_grid
+#' Convert 'dggridR' grid object to hexify_grid
 #'
-#' Creates a hexify_grid object from a dggridR dggs object. This allows
-#' using hexify functions with grids created by dggridR's dgconstruct().
+#' Creates a hexify_grid object from a 'dggridR' dggs object. This allows
+#' using hexify functions with grids created by 'dggridR' dgconstruct().
 #'
-#' @param dggs A dggridR grid object from dgconstruct()
+#' @param dggs A 'dggridR' grid object from dgconstruct()
 #'
 #' @return A hexify_grid object
 #'
 #' @details
-#' Only ISEA projection with HEXAGON topology is fully supported.
+#' Only 'ISEA' projection with HEXAGON topology is fully supported.
 #' Other configurations will generate warnings.
 #'
-#' The function validates that the dggridR grid uses compatible settings:
-#' - Projection must be "ISEA" (FULLER not supported)
+#' The function validates that the 'dggridR' grid uses compatible settings:
+#' - Projection must be 'ISEA' (FULLER not supported)
 #' - Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 #' - Aperture must be 3, 4, or 7
 #'
-#' @family dggridR compatibility
+#' @family 'dggridR' compatibility
 #' @export
 #' @examples
 #' \dontrun{
@@ -153,18 +153,18 @@ from_dggrid <- function(dggs) {
   grid
 }
 
-#' Validate dggridR grid compatibility with hexify
+#' Validate 'dggridR' grid compatibility with hexify
 #'
-#' Checks whether a dggridR grid object is compatible with hexify functions.
+#' Checks whether a 'dggridR' grid object is compatible with hexify functions.
 #' Returns TRUE if compatible, or throws an error describing incompatibilities.
 #'
-#' @param dggs A dggridR grid object
+#' @param dggs A 'dggridR' grid object
 #' @param strict If TRUE (default), throw errors for incompatibilities.
 #'   If FALSE, return FALSE instead of throwing errors.
 #'
 #' @return TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 #'
-#' @family dggridR compatibility
+#' @family 'dggridR' compatibility
 #' @export
 #' @examples
 #' \dontrun{

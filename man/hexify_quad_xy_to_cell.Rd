@@ -25,7 +25,7 @@ Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible
 cell IDs. The coordinates are quantized to the nearest cell.
 }
 \details{
-Compatible with dggridR's dgQ2DD_to_SEQNUM().
+Compatible with 'dggridR' dgQ2DD_to_SEQNUM().
 }
 \examples{
 \dontrun{

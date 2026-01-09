@@ -5,17 +5,17 @@
 \alias{hexify-package}
 \title{hexify}
 \description{
-Core icosahedron + Snyder projection helpers.
+Core icosahedron and 'Snyder' projection helpers.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://gcol33.github.io/hexify/}
+  \item \url{https://gillescolling.com/hexify/}
   \item Report bugs at \url{https://github.com/gcol33/hexify/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Gilles Colling \email{gilles.colling051@gmail.com} (\href{https://orcid.org/0000-0003-3070-6066}{ORCID})
+\strong{Maintainer}: Gilles Colling \email{gilles.colling051@gmail.com} (\href{https://orcid.org/0000-0003-3070-6066}{ORCID}) [copyright holder]
 
 }

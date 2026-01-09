@@ -18,11 +18,11 @@ Data frame with columns:
 }
 \description{
 Converts geographic coordinates directly to PLANE coordinates
-(unfolded icosahedron). Combines forward Snyder projection with
+(unfolded icosahedron). Combines forward 'Snyder' projection with
 the PLANE transformation.
 }
 \details{
-Equivalent to dggridR's dgGEO_to_PLANE().
+Equivalent to 'dggridR' dgGEO_to_PLANE().
 }
 \examples{
 \dontrun{

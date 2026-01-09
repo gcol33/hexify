@@ -2,12 +2,12 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{dggrid_is_compatible}
 \alias{dggrid_is_compatible}
-\title{Validate dggridR grid compatibility with hexify}
+\title{Validate 'dggridR' grid compatibility with hexify}
 \usage{
 dggrid_is_compatible(dggs, strict = TRUE)
 }
 \arguments{
-\item{dggs}{A dggridR grid object}
+\item{dggs}{A 'dggridR' grid object}
 
 \item{strict}{If TRUE (default), throw errors for incompatibilities.
 If FALSE, return FALSE instead of throwing errors.}
@@ -16,7 +16,7 @@ If FALSE, return FALSE instead of throwing errors.}
 TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 }
 \description{
-Checks whether a dggridR grid object is compatible with hexify functions.
+Checks whether a 'dggridR' grid object is compatible with hexify functions.
 Returns TRUE if compatible, or throws an error describing incompatibilities.
 }
 \examples{
@@ -33,9 +33,9 @@ dggrid_is_compatible(dggs2, strict = FALSE)  # FALSE
 }
 }
 \seealso{
-Other dggridR compatibility: 
+Other 'dggridR' compatibility: 
 \code{\link{as_dggrid}()},
 \code{\link{dggrid_43h_sequence}()},
 \code{\link{from_dggrid}()}
 }
-\concept{dggridR compatibility}
+\concept{'dggridR' compatibility}

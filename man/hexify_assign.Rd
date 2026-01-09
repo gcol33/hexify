@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_assign.R
 \name{hexify_assign}
 \alias{hexify_assign}
-\title{Assign hex cells (ISEA3H, aperture 3) for lon/lat}
+\title{Assign hex cells ('ISEA3H', aperture 3) for lon/lat}
 \usage{
 hexify_assign(
   lon,
@@ -17,7 +17,7 @@ hexify_assign(
 
 \item{effective_res}{integer effective resolution (>= 1).}
 
-\item{match_dggrid_parity}{logical; TRUE matches ISEA3H parity used by dggridR.}
+\item{match_dggrid_parity}{logical; TRUE matches 'ISEA3H' parity used by 'dggridR'.}
 
 \item{make_polygons}{logical; if TRUE, return an sf with hex polygons.}
 }

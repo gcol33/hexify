@@ -24,7 +24,7 @@ Converts DGGRID-compatible cell IDs to Quad XY coordinates
 (continuous quad space). This is the cell center in quad coordinates.
 }
 \details{
-Compatible with dggridR's dgSEQNUM_to_Q2DD().
+Compatible with 'dggridR' dgSEQNUM_to_Q2DD().
 }
 \examples{
 \dontrun{

@@ -24,7 +24,7 @@ hexify_grid(
 
 \item{aperture}{Aperture sequence (3, 4, or 7)}
 
-\item{projection}{Projection type (only "ISEA" supported currently)}
+\item{projection}{Projection type (only 'ISEA' supported currently)}
 }
 \value{
 A hexify_grid object containing:

@@ -1,7 +1,9 @@
 # hexify
 
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN status](https://www.r-pkg.org/badges/version/hexify)](https://CRAN.R-project.org/package=hexify)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/hexify)](https://cran.r-project.org/package=hexify)
 [![R-CMD-check](https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Equal-area hexagonal grids for spatial analysis**
 
@@ -44,9 +46,9 @@ plot(result)
 
 ## Learn More
 
-- [Quick Start](https://gcol33.github.io/hexify/articles/quickstart.html) - Basic usage and concepts
-- [Visualization](https://gcol33.github.io/hexify/articles/visualization.html) - Plotting options
-- [Workflows](https://gcol33.github.io/hexify/articles/workflows.html) - Grid generation, spatial joins, multi-resolution analysis
+- [Quick Start](https://gillescolling.com/hexify/articles/quickstart.html) - Basic usage and concepts
+- [Visualization](https://gillescolling.com/hexify/articles/visualization.html) - Plotting options
+- [Workflows](https://gillescolling.com/hexify/articles/workflows.html) - Grid generation, spatial joins, multi-resolution analysis
 
 ## License
 

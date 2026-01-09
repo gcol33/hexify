@@ -453,10 +453,10 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'   }
 #' @param crs Target CRS for the map projection. Can be:
 #'   \itemize{
-#'     \item A numeric EPSG code (e.g., 4326 for WGS84, 3035 for LAEA Europe)
+#'     \item A numeric EPSG code (e.g., 4326 for 'WGS84', 3035 for LAEA Europe)
 #'     \item A proj4 string
 #'     \item An sf crs object
-#'     \item NULL to use WGS84 (EPSG:4326)
+#'     \item NULL to use 'WGS84' (EPSG:4326)
 #'   }
 #' @param colors Color palette for the heatmap. Can be:
 #'   \itemize{
@@ -503,7 +503,7 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' @section Projections:
 #' Common projections:
 #' \describe{
-#'   \item{4326}{WGS84 (unprojected lat/lon)}
+#'   \item{4326}{'WGS84' (unprojected lat/lon)}
 #'   \item{3035}{LAEA Europe}
 #'   \item{3857}{Web Mercator}
 #'   \item{"+proj=robin"}{Robinson (world maps)}

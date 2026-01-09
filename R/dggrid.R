@@ -12,7 +12,7 @@
 #' @param num_ap3 Number of aperture-3 resolutions
 #' @return Integer vector of aperture sequence
 #'
-#' @family dggridR compatibility
+#' @family 'dggridR' compatibility
 #' @keywords internal
 #' @export
 #' @examples

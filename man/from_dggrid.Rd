@@ -2,27 +2,27 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{from_dggrid}
 \alias{from_dggrid}
-\title{Convert dggridR grid object to hexify_grid}
+\title{Convert 'dggridR' grid object to hexify_grid}
 \usage{
 from_dggrid(dggs)
 }
 \arguments{
-\item{dggs}{A dggridR grid object from dgconstruct()}
+\item{dggs}{A 'dggridR' grid object from dgconstruct()}
 }
 \value{
 A hexify_grid object
 }
 \description{
-Creates a hexify_grid object from a dggridR dggs object. This allows
-using hexify functions with grids created by dggridR's dgconstruct().
+Creates a hexify_grid object from a 'dggridR' dggs object. This allows
+using hexify functions with grids created by 'dggridR' dgconstruct().
 }
 \details{
-Only ISEA projection with HEXAGON topology is fully supported.
+Only 'ISEA' projection with HEXAGON topology is fully supported.
 Other configurations will generate warnings.
 
-The function validates that the dggridR grid uses compatible settings:
+The function validates that the 'dggridR' grid uses compatible settings:
 \itemize{
-\item Projection must be "ISEA" (FULLER not supported)
+\item Projection must be 'ISEA' (FULLER not supported)
 \item Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 \item Aperture must be 3, 4, or 7
 }
@@ -43,9 +43,9 @@ result <- hexify_grid_to_cell(hgrid, lon = 0, lat = 45)
 }
 }
 \seealso{
-Other dggridR compatibility: 
+Other 'dggridR' compatibility: 
 \code{\link{as_dggrid}()},
 \code{\link{dggrid_43h_sequence}()},
 \code{\link{dggrid_is_compatible}()}
 }
-\concept{dggridR compatibility}
+\concept{'dggridR' compatibility}
