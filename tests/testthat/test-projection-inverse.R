@@ -270,3 +270,91 @@ test_that("hexify_inverse validates input lengths", {
   expect_error(hexify_inverse(0.5, c(0.3, 0.4), face = 0))
   expect_error(hexify_inverse(0.5, 0.3, face = c(0, 1)))
 })
+
+# =============================================================================
+# INTERNAL CPP FUNCTION TESTS
+# =============================================================================
+
+test_that("cpp_icosa_face_params returns valid face parameters", {
+  hexify_build_icosa()
+
+  for (face in 0:19) {
+    params <- cpp_icosa_face_params(face)
+
+    expect_true("cen_lat" %in% names(params))
+    expect_true("cen_lon" %in% names(params))
+    expect_true("face_azimuth_offset" %in% names(params))
+
+    expect_true(params["cen_lat"] >= -90 && params["cen_lat"] <= 90)
+    expect_true(params["cen_lon"] >= -180 && params["cen_lon"] <= 180)
+  }
+})
+
+test_that("cpp_icosa_face_params errors on invalid face", {
+  hexify_build_icosa()
+
+  expect_error(cpp_icosa_face_params(-1), "face must be 0..19")
+  expect_error(cpp_icosa_face_params(20), "face must be 0..19")
+})
+
+test_that("cpp_hex_index_face_to_lonlat works with degrees=TRUE", {
+  hexify_build_icosa()
+
+  # Get face 0 parameters
+  params <- cpp_icosa_face_params(0)
+
+  result <- cpp_hex_index_face_to_lonlat(
+    x = 0.5,
+    y = 0.3,
+    cen_lat = params["cen_lat"],
+    cen_lon = params["cen_lon"],
+    face_azimuth_offset = params["face_azimuth_offset"],
+    degrees = TRUE
+  )
+
+  expect_length(result, 2)
+  expect_true(result[1] >= -180 && result[1] <= 180)  # lon
+  expect_true(result[2] >= -90 && result[2] <= 90)    # lat
+})
+
+test_that("cpp_hex_index_face_to_lonlat works with degrees=FALSE", {
+  hexify_build_icosa()
+
+  # Get face 0 parameters
+  params <- cpp_icosa_face_params(0)
+
+  result <- cpp_hex_index_face_to_lonlat(
+    x = 0.5,
+    y = 0.3,
+    cen_lat = params["cen_lat"],
+    cen_lon = params["cen_lon"],
+    face_azimuth_offset = params["face_azimuth_offset"],
+    degrees = FALSE
+  )
+
+  expect_length(result, 2)
+  # Radians: lon in [-pi, pi], lat in [-pi/2, pi/2]
+  expect_true(result[1] >= -pi && result[1] <= pi)
+  expect_true(result[2] >= -pi / 2 && result[2] <= pi / 2)
+})
+
+test_that("cpp_hex_index_face_to_lonlat works with custom tolerance", {
+  hexify_build_icosa()
+
+  params <- cpp_icosa_face_params(5)
+
+  result <- cpp_hex_index_face_to_lonlat(
+    x = 0.5,
+    y = 0.3,
+    cen_lat = params["cen_lat"],
+    cen_lon = params["cen_lon"],
+    face_azimuth_offset = params["face_azimuth_offset"],
+    degrees = TRUE,
+    tol = 1e-10,
+    max_iters = 50
+  )
+
+  expect_length(result, 2)
+  expect_true(is.finite(result[1]))
+  expect_true(is.finite(result[2]))
+})

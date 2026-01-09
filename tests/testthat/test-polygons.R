@@ -441,3 +441,33 @@ test_that("cell_to_sf deduplicates cell_ids", {
   expect_s3_class(result, "sf")
   expect_equal(nrow(result), 2)  # Should deduplicate
 })
+
+# =============================================================================
+# HEXIFY_CELL_TO_SF WITH GRID PARAMETER
+# =============================================================================
+
+test_that("hexify_cell_to_sf extracts parameters from grid object", {
+  skip_if_not_installed("sf")
+
+  grid <- hex_grid(area_km2 = 1000)
+  hex_ids <- c(12847, 12532)
+
+  # Pass grid instead of resolution/aperture
+
+  result <- hexify_cell_to_sf(hex_ids, grid = grid)
+
+  expect_s3_class(result, "sf")
+  expect_equal(nrow(result), 2)
+})
+
+test_that("hexify_cell_to_sf errors when resolution/aperture missing and no grid", {
+  expect_error(
+    hexify_cell_to_sf(c(12847), resolution = 10),
+    "resolution and aperture must be provided"
+  )
+
+  expect_error(
+    hexify_cell_to_sf(c(12847), aperture = 3),
+    "resolution and aperture must be provided"
+  )
+})

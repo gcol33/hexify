@@ -409,13 +409,17 @@ cell_to_index <- function(cell_id, grid) {
                 else if (g@aperture == "7") "z7"
                 else "zorder"
 
+
+  # Convert aperture to integer for C++ functions
+  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+
   sapply(cell_id, function(id) {
     # Get quad/ij coordinates
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, g@aperture)
+    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
     # Encode to index
     cpp_cell_to_index(
       qij$quad, qij$i, qij$j,
-      g@resolution, g@aperture, index_type
+      g@resolution, aperture_int, index_type
     )
   })
 }
@@ -449,23 +453,28 @@ get_parent <- function(cell_id, grid, levels = 1L) {
                 else if (g@aperture == "7") "z7"
                 else "zorder"
 
+  # Convert aperture to integer for C++ functions
+  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+
   # Get index, get parent, convert back
   parent_res <- g@resolution - levels
 
   sapply(cell_id, function(id) {
     # Get quad/ij at current resolution
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, g@aperture)
+    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
 
     # Get index string
     idx <- cpp_cell_to_index(qij$quad, qij$i, qij$j,
-                             g@resolution, g@aperture, index_type)
+                             g@resolution, aperture_int, index_type)
 
     # Get parent index
-    parent_idx <- cpp_get_parent_index(idx, g@aperture, index_type)
+    parent_idx <- cpp_get_parent_index(idx, aperture_int, index_type)
 
     # Convert back to cell ID at parent resolution
-    result <- cpp_index_to_cell(parent_idx, g@aperture, index_type)
-    result$cell_id
+    # cpp_index_to_cell returns face, i, j, resolution - not cell_id
+    result <- cpp_index_to_cell(parent_idx, aperture_int, index_type)
+    # Convert quad/ij coordinates to cell ID
+    cpp_quad_ij_to_cell(result$face, result$i, result$j, result$resolution, aperture_int)
   })
 }
 
@@ -492,18 +501,23 @@ get_children <- function(cell_id, grid, levels = 1L) {
                 else if (g@aperture == "7") "z7"
                 else "zorder"
 
+  # Convert aperture to integer for C++ functions
+  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+
   lapply(cell_id, function(id) {
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, g@aperture)
+    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
     idx <- cpp_cell_to_index(qij$quad, qij$i, qij$j,
-                             g@resolution, g@aperture, index_type)
+                             g@resolution, aperture_int, index_type)
 
     # Get children indices
-    children_idx <- cpp_get_children_indices(idx, g@aperture, index_type)
+    children_idx <- cpp_get_children_indices(idx, aperture_int, index_type)
 
     # Convert to cell IDs
+    # cpp_index_to_cell returns face, i, j, resolution - not cell_id
     sapply(children_idx, function(child_idx) {
-      result <- cpp_index_to_cell(child_idx, g@aperture, index_type)
-      result$cell_id
+      result <- cpp_index_to_cell(child_idx, aperture_int, index_type)
+      # Convert quad/ij coordinates to cell ID
+      cpp_quad_ij_to_cell(result$face, result$i, result$j, result$resolution, aperture_int)
     })
   })
 }

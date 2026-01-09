@@ -222,3 +222,118 @@ test_that("plot.HexData returns HexData invisibly", {
   returned <- plot(result, basemap = FALSE)
   expect_s4_class(returned, "HexData")
 })
+
+test_that("plot.HexData works with title", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(lon = c(2.35), lat = c(48.86))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  expect_silent({
+    pdf(NULL)
+    on.exit(dev.off())
+    plot(result, basemap = FALSE, main = "Test Title")
+  })
+})
+
+test_that("plot.HexData warns on unknown point_size", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(lon = c(2.35), lat = c(48.86))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  expect_warning({
+    pdf(NULL)
+    on.exit(dev.off())
+    plot(result, basemap = FALSE, show_points = TRUE, point_size = "unknown")
+  }, "Unknown point_size")
+})
+
+test_that("plot_grid creates ggplot", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  grid <- hex_grid(area_km2 = 50000)
+  france <- hexify_world[hexify_world$name == "France", ]
+
+  p <- suppressMessages(plot_grid(france, grid))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_grid works with custom colors", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  grid <- hex_grid(area_km2 = 50000)
+  france <- hexify_world[hexify_world$name == "France", ]
+
+  p <- suppressMessages(plot_grid(france, grid,
+                                   grid_fill = "coral",
+                                   boundary_fill = "lightyellow"))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_grid works with crop = FALSE", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  grid <- hex_grid(area_km2 = 50000)
+  france <- hexify_world[hexify_world$name == "France", ]
+
+  p <- suppressMessages(plot_grid(france, grid, crop = FALSE))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_grid auto-generates title", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  grid <- hex_grid(area_km2 = 50000)
+  france <- hexify_world[hexify_world$name == "France", ]
+
+  p <- suppressMessages(plot_grid(france, grid, title = NULL))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_grid accepts custom title", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  grid <- hex_grid(area_km2 = 50000)
+  france <- hexify_world[hexify_world$name == "France", ]
+
+  p <- suppressMessages(plot_grid(france, grid, title = "Custom Title"))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot.HexData works with 'very large' point_size", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    lon = c(2.35, 2.36),
+    lat = c(48.86, 48.87)
+  )
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 5000)
+
+  expect_silent({
+    pdf(NULL)
+    on.exit(dev.off())
+    plot(result, basemap = FALSE, show_points = TRUE, point_size = "very large")
+  })
+})
+
+test_that("plot.HexData works with 'verylarge' point_size variant", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    lon = c(2.35, 2.36),
+    lat = c(48.86, 48.87)
+  )
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 5000)
+
+  expect_silent({
+    pdf(NULL)
+    on.exit(dev.off())
+    plot(result, basemap = FALSE, show_points = TRUE, point_size = "verylarge")
+  })
+})

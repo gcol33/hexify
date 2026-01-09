@@ -17,7 +17,6 @@
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "aperture.h"
-#include "cell_numbering.h"
 #include "index_z7.h"
 #include "coordinate_transforms.h"
 
