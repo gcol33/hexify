@@ -3,6 +3,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/hexify)](https://CRAN.R-project.org/package=hexify)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/hexify)](https://cran.r-project.org/package=hexify)
 [![R-CMD-check](https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/gcol33/hexify/graph/badge.svg)](https://app.codecov.io/gh/gcol33/hexify)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Equal-area hexagonal grids for spatial analysis**
