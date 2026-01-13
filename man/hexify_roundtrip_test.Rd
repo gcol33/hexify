@@ -27,13 +27,6 @@ Tests the accuracy of the coordinate conversion functions by converting
 coordinates to cells and back, measuring the distance between original
 and reconstructed coordinates.
 }
-\examples{
-\dontrun{
-grid <- hexify_grid(area = 1000, aperture = 3)
-accuracy <- hexify_roundtrip_test(grid, lon = 0, lat = 45)
-print(accuracy)
-}
-}
 \seealso{
 Other coordinate conversion: 
 \code{\link{hexify_cell_id_to_quad_ij}()},

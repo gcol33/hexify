@@ -25,12 +25,10 @@ Converts Quad IJ coordinates to a global cell identifier.
 This is the final step in the coordinate pipeline.
 }
 \examples{
-\dontrun{
 # Convert Quad IJ to cell ID
 cell_id <- hexify_quad_ij_to_cell(quad = 1, i = 100, j = 50,
                                    resolution = 10, aperture = 3)
 print(cell_id)
-}
 }
 \seealso{
 Other coordinate conversion: 

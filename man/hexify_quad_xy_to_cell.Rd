@@ -28,12 +28,10 @@ cell IDs. The coordinates are quantized to the nearest cell.
 Compatible with 'dggridR' dgQ2DD_to_SEQNUM().
 }
 \examples{
-\dontrun{
 # Convert Quad XY to cell ID
 cell_id <- hexify_quad_xy_to_cell(quad = 1, quad_x = 0.5, quad_y = 0.3,
                                    resolution = 10, aperture = 3)
 print(cell_id)
-}
 }
 \seealso{
 \code{\link{hexify_cell_to_quad_xy}} for the inverse operation,

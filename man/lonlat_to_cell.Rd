@@ -25,14 +25,13 @@ a HexData object from \code{hexify()}. If a HexData object is provided,
 its grid specification is extracted automatically.
 }
 \examples{
-\dontrun{
 grid <- hex_grid(area_km2 = 1000)
 cells <- lonlat_to_cell(lon = c(0, 10), lat = c(45, 50), grid = grid)
 
 # Or use HexData object
+df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 cells <- lonlat_to_cell(lon = 5, lat = 48, grid = result)
-}
 }
 \seealso{
 \code{\link{cell_to_lonlat}} for the inverse operation,

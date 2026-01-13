@@ -39,12 +39,10 @@ The 20 icosahedral triangle faces are grouped into 12 quads:
 }
 }
 \examples{
-\dontrun{
 # Get Quad IJ coordinates for Paris
 result <- hexify_lonlat_to_quad_ij(lon = 2.35, lat = 48.86,
                                     resolution = 10, aperture = 3)
 print(result)
-}
 }
 \seealso{
 Other coordinate conversion: 

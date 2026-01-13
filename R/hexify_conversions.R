@@ -34,14 +34,6 @@ NULL
 #' - Parent/child cell relationships
 #'
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' grid <- hexify_grid(area = 1000, aperture = 3)
-#'
-#' # Get hierarchical index
-#' result <- hexify_lonlat_to_h_index(grid, lon = 0, lat = 0)
-#' print(result$h_index)
-#' }
 hexify_lonlat_to_h_index <- function(grid, lon, lat) {
   
   # Validate grid object
@@ -125,17 +117,6 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
 #' integer cell IDs.
 #'
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' grid <- hexify_grid(area = 1000, aperture = 3)
-#'
-#' # Convert coordinates to hierarchical index
-#' result <- hexify_lonlat_to_h_index(grid, lon = 5, lat = 45)
-#'
-#' # Convert back to coordinates
-#' coords <- hexify_h_index_to_lonlat(grid, result$h_index)
-#' print(coords)
-#' }
 hexify_h_index_to_lonlat <- function(grid, h_index) {
 
   # Validate grid object
@@ -208,10 +189,8 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' cell_ids <- hexify_grid_to_cell(grid, lon = c(0, 10), lat = c(45, 50))
-#' }
 hexify_grid_to_cell <- function(grid, lon, lat) {
   # Validate grid object
 
@@ -240,11 +219,9 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' cell_ids <- hexify_grid_to_cell(grid, lon = 5, lat = 45)
 #' coords <- hexify_grid_cell_to_lonlat(grid, cell_ids)
-#' }
 hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
   # Validate grid object
   if (!inherits(grid, "hexify_grid")) {
@@ -274,12 +251,6 @@ hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
 #'   \item{resolution}{Resolution level (integer)}
 #'   
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' # This is an internal function, typically called by other functions
-#' cell_info <- index_to_cell("0112345", aperture = 3, index_type = "z3")
-#' print(cell_info)
-#' }
 index_to_cell_internal <- function(index, aperture, index_type) {
   # Extract face from first 2 characters
   face <- as.integer(substr(index, 1, 2))
@@ -333,12 +304,6 @@ index_to_cell_internal <- function(index, aperture, index_type) {
 #'
 #' @family coordinate conversion
 #' @export
-#' @examples
-#' \dontrun{
-#' grid <- hexify_grid(area = 1000, aperture = 3)
-#' accuracy <- hexify_roundtrip_test(grid, lon = 0, lat = 45)
-#' print(accuracy)
-#' }
 hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
   # Convert to hierarchical index
   result <- hexify_lonlat_to_h_index(grid, lon, lat)
@@ -417,12 +382,10 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get Quad IJ coordinates for Paris
 #' result <- hexify_lonlat_to_quad_ij(lon = 2.35, lat = 48.86,
 #'                                     resolution = 10, aperture = 3)
 #' print(result)
-#' }
 hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -457,12 +420,10 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Convert Quad IJ to cell ID
 #' cell_id <- hexify_quad_ij_to_cell(quad = 1, i = 100, j = 50,
 #'                                    resolution = 10, aperture = 3)
 #' print(cell_id)
-#' }
 hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -500,12 +461,10 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get continuous quad coordinates for a cell
 #' xy <- hexify_quad_ij_to_xy(quad = 1, i = 100, j = 50,
 #'                            resolution = 10, aperture = 3)
 #' print(xy)
-#' }
 hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -539,18 +498,16 @@ hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # First get triangle coordinates from lon/lat
 #' fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 #'
 #' # Then convert to quad XY
 #' quad_xy <- hexify_icosa_tri_to_quad_xy(
-#'   icosa_triangle_face = fwd$face,
-#'   icosa_triangle_x = fwd$tx,
-#'   icosa_triangle_y = fwd$ty
+#'   icosa_triangle_face = fwd["face"],
+#'   icosa_triangle_x = fwd["icosa_triangle_x"],
+#'   icosa_triangle_y = fwd["icosa_triangle_y"]
 #' )
 #' print(quad_xy)
-#' }
 hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
                                          icosa_triangle_x,
                                          icosa_triangle_y) {
@@ -581,20 +538,18 @@ hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # First get triangle coordinates from lon/lat
 #' fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 #'
 #' # Then convert to quad IJ
 #' quad_ij <- hexify_icosa_tri_to_quad_ij(
-#'   icosa_triangle_face = fwd$face,
-#'   icosa_triangle_x = fwd$tx,
-#'   icosa_triangle_y = fwd$ty,
+#'   icosa_triangle_face = fwd["face"],
+#'   icosa_triangle_x = fwd["icosa_triangle_x"],
+#'   icosa_triangle_y = fwd["icosa_triangle_y"],
 #'   resolution = 10,
 #'   aperture = 3
 #' )
 #' print(quad_ij)
-#' }
 hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
                                          icosa_triangle_x,
                                          icosa_triangle_y,
@@ -632,11 +587,9 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Convert quad XY back to triangle coordinates
 #' tri <- hexify_quad_xy_to_icosa_tri(quad = 1, quad_x = 0.5, quad_y = 0.3)
 #' print(tri)
-#' }
 hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
   cpp_quad_xy_to_icosa_tri(
     quad = as.integer(quad),
@@ -676,7 +629,6 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get Quad IJ coordinates for a cell
 #' result <- hexify_cell_to_quad_ij(cell_id = 1000, resolution = 10, aperture = 3)
 #' print(result)
@@ -685,7 +637,6 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #' cell_id <- hexify_quad_ij_to_cell(result$quad, result$i, result$j,
 #'                                    resolution = 10, aperture = 3)
 #' # Should equal original cell_id
-#' }
 hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -726,7 +677,6 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get triangle coordinates for a cell
 #' result <- hexify_cell_to_icosa_tri(cell_id = 1000, resolution = 10, aperture = 3)
 #' print(result)
@@ -735,7 +685,6 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #' coords <- hexify_inverse(result$icosa_triangle_face,
 #'                          result$icosa_triangle_x,
 #'                          result$icosa_triangle_y)
-#' }
 hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -778,12 +727,10 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get triangle coordinates for a Quad IJ position
 #' result <- hexify_quad_ij_to_icosa_tri(quad = 1, i = 100, j = 50,
 #'                                        resolution = 10, aperture = 3)
 #' print(result)
-#' }
 hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -833,7 +780,6 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get Quad XY coordinates for a cell
 #' result <- hexify_cell_to_quad_xy(cell_id = 1000, resolution = 10, aperture = 3)
 #' print(result)
@@ -842,7 +788,6 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #' cell_id <- hexify_quad_xy_to_cell(result$quad, result$quad_x, result$quad_y,
 #'                                    resolution = 10, aperture = 3)
 #' # Should equal original cell_id
-#' }
 hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -881,12 +826,10 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Convert Quad XY to cell ID
 #' cell_id <- hexify_quad_xy_to_cell(quad = 1, quad_x = 0.5, quad_y = 0.3,
 #'                                    resolution = 10, aperture = 3)
 #' print(cell_id)
-#' }
 hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
                                    aperture = 3L) {
 
@@ -949,16 +892,14 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get PLANE coordinates from triangle coordinates
 #' fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 #' plane <- hexify_icosa_tri_to_plane(
-#'   icosa_triangle_face = fwd$face,
-#'   icosa_triangle_x = fwd$icosa_triangle_x,
-#'   icosa_triangle_y = fwd$icosa_triangle_y
+#'   icosa_triangle_face = fwd["face"],
+#'   icosa_triangle_x = fwd["icosa_triangle_x"],
+#'   icosa_triangle_y = fwd["icosa_triangle_y"]
 #' )
 #' print(plane)
-#' }
 hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
                                        icosa_triangle_x,
                                        icosa_triangle_y) {
@@ -991,12 +932,10 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get PLANE coordinates for cells
 #' plane <- hexify_cell_to_plane(cell_id = c(100, 200, 300),
 #'                                resolution = 5, aperture = 3)
 #' plot(plane$plane_x, plane$plane_y)
-#' }
 hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 
   if (!aperture %in% c(3L, 4L, 7L)) {
@@ -1035,7 +974,6 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Plot world cities in PLANE coordinates
 #' cities <- data.frame(
 #'   lon = c(2.35, -74.00, 139.69, 151.21),
@@ -1043,7 +981,6 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' )
 #' plane <- hexify_lonlat_to_plane(cities$lon, cities$lat)
 #' plot(plane$plane_x, plane$plane_y)
-#' }
 hexify_lonlat_to_plane <- function(lon, lat) {
   cpp_lonlat_to_plane(
     lon = as.numeric(lon),

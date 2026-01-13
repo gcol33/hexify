@@ -27,21 +27,6 @@ The function validates that the 'dggridR' grid uses compatible settings:
 \item Aperture must be 3, 4, or 7
 }
 }
-\examples{
-\dontrun{
-library(dggridR)
-library(hexify)
-
-# Create dggridR grid
-dggs <- dgconstruct(area = 1000, metric = TRUE)
-
-# Convert to hexify format
-hgrid <- from_dggrid(dggs)
-
-# Use with hexify functions
-result <- hexify_grid_to_cell(hgrid, lon = 0, lat = 45)
-}
-}
 \seealso{
 Other 'dggridR' compatibility: 
 \code{\link{as_dggrid}()},

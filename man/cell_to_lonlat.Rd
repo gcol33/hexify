@@ -18,11 +18,9 @@ Data frame with lon_deg and lat_deg columns
 Converts DGGS cell IDs back to geographic coordinates (cell centers).
 }
 \examples{
-\dontrun{
 grid <- hex_grid(area_km2 = 1000)
 cells <- lonlat_to_cell(c(0, 10), c(45, 50), grid)
 coords <- cell_to_lonlat(cells, grid)
-}
 }
 \seealso{
 \code{\link{lonlat_to_cell}} for the forward operation

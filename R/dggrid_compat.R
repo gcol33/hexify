@@ -28,17 +28,6 @@
 #'
 #' @family 'dggridR' compatibility
 #' @export
-#' @examples
-#' \dontrun{
-#' library(hexify)
-#' library(dggridR)
-#'
-#' # Create hexify grid
-#' hgrid <- hexify_grid(area = 1000, aperture = 3)
-#'
-#' # Convert to dggridR format for use with dggridR functions
-#' dggs <- as_dggrid(hgrid)
-#' }
 as_dggrid <- function(grid) {
 
   if (!inherits(grid, "hexify_grid")) {
@@ -80,20 +69,6 @@ as_dggrid <- function(grid) {
 #'
 #' @family 'dggridR' compatibility
 #' @export
-#' @examples
-#' \dontrun{
-#' library(dggridR)
-#' library(hexify)
-#'
-#' # Create dggridR grid
-#' dggs <- dgconstruct(area = 1000, metric = TRUE)
-#'
-#' # Convert to hexify format
-#' hgrid <- from_dggrid(dggs)
-#'
-#' # Use with hexify functions
-#' result <- hexify_grid_to_cell(hgrid, lon = 0, lat = 45)
-#' }
 from_dggrid <- function(dggs) {
   # Validate dggridR object
 
@@ -166,18 +141,6 @@ from_dggrid <- function(dggs) {
 #'
 #' @family 'dggridR' compatibility
 #' @export
-#' @examples
-#' \dontrun{
-#' library(dggridR)
-#'
-#' # Compatible grid
-#' dggs <- dgconstruct(res = 5, aperture = 3, projection = "ISEA")
-#' dggrid_is_compatible(dggs)  # TRUE
-#'
-#' # Incompatible grid (FULLER projection)
-#' dggs2 <- dgconstruct(res = 5, projection = "FULLER")
-#' dggrid_is_compatible(dggs2, strict = FALSE)  # FALSE
-#' }
 dggrid_is_compatible <- function(dggs, strict = TRUE) {
   issues <- character()
 

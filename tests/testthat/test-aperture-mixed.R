@@ -259,3 +259,59 @@ test_that("mixed aperture invalid level throws error", {
     "mixed_aperture_level must be between 0 and resolution"
   )
 })
+
+# =============================================================================
+# MIXED APERTURE LON/LAT WORKFLOW (ap34 functions)
+# =============================================================================
+
+test_that("cpp_lonlat_to_cell_ap34 and cpp_cell_to_lonlat_ap34 work", {
+  setup_icosa()
+
+  lon <- 16.37  # Vienna
+  lat <- 48.21
+
+  # Test with various aperture sequences
+  sequences <- list(
+    c(4, 3, 3, 3),      # res 4, one aperture-4 step
+    c(4, 4, 3, 3),      # res 4, two aperture-4 steps
+    c(3, 3, 3, 3, 3)    # res 5, all aperture-3
+  )
+
+  for (ap_seq in sequences) {
+    cell <- cpp_lonlat_to_cell_ap34(lon, lat, ap_seq)
+
+    expect_true(cell["face"] >= 0 && cell["face"] < 20)
+    expect_true(is.numeric(cell["i"]))
+    expect_true(is.numeric(cell["j"]))
+
+    ll <- cpp_cell_to_lonlat_ap34(cell["face"], cell["i"], cell["j"], ap_seq)
+
+    expect_true(ll["lon"] >= -180 && ll["lon"] <= 180)
+    expect_true(ll["lat"] >= -90 && ll["lat"] <= 90)
+  }
+})
+
+test_that("cpp_test_roundtrip_ap34 returns TRUE for valid points", {
+  setup_icosa()
+
+  test_points <- list(
+    c(0.5, 0.3),
+    c(-0.4, 0.2),
+    c(0.1, -0.6),
+    c(0.0, 0.0)
+  )
+
+  sequences <- list(
+    c(4, 3, 3, 3),
+    c(4, 4, 3, 3),
+    c(3, 3, 3, 3, 3)
+  )
+
+  for (ap_seq in sequences) {
+    for (pt in test_points) {
+      result <- cpp_test_roundtrip_ap34(pt[1], pt[2], ap_seq)
+      expect_true(result, info = sprintf("ap_seq length=%d, pt=(%.2f, %.2f)",
+                                          length(ap_seq), pt[1], pt[2]))
+    }
+  }
+})

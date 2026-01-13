@@ -78,7 +78,6 @@ result2 <- hexify(df2, grid = grid)
 }
 
 \examples{
-\dontrun{
 # Simple data.frame
 df <- data.frame(
   site = c("Vienna", "Paris", "Madrid"),
@@ -108,7 +107,6 @@ result_ap4 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = 4
 
 # Mixed aperture (ISEA43H)
 result_mixed <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
-}
 }
 \seealso{
 \code{\link{hex_grid}} for grid specification,

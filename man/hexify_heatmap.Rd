@@ -131,7 +131,6 @@ Common projections:
 }
 
 \examples{
-\dontrun{
 library(hexify)
 library(ggplot2)
 
@@ -173,7 +172,6 @@ hexify_heatmap(result, value = "count",
 hexify_heatmap(result, value = "count", basemap = "world") +
   labs(caption = "Data source: Example") +
   theme(legend.position = "bottom")
-}
 }
 \seealso{
 \code{\link{plot_grid}} for base R plotting,

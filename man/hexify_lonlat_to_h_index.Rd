@@ -35,13 +35,4 @@ This function returns hierarchical index strings useful for:
 \item Parent/child cell relationships
 }
 }
-\examples{
-\dontrun{
-grid <- hexify_grid(area = 1000, aperture = 3)
-
-# Get hierarchical index
-result <- hexify_lonlat_to_h_index(grid, lon = 0, lat = 0)
-print(result$h_index)
-}
-}
 \keyword{internal}

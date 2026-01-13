@@ -110,7 +110,7 @@ The `point_size` parameter accepts presets that define what fraction of a hex ce
 | `"very large"` | ~35% of cell |
 
 ```{r point-sizes, fig.width=7, fig.height=10}
-par(mfrow = c(3, 2))
+oldpar <- par(mfrow = c(3, 2))
 
 plot(result, show_points = TRUE, point_size = "tiny",
      point_color = "red", main = "tiny (~2%)")
@@ -123,7 +123,7 @@ plot(result, show_points = TRUE, point_size = "large",
 plot(result, show_points = TRUE, point_size = "very large",
      point_color = "red", main = "very large (~35%)")
 
-par(mfrow = c(1, 1))
+par(oldpar)
 ```
 
 ### Custom Point Styling

@@ -18,11 +18,9 @@ sf object with hexagon polygons
 Creates hexagon polygons covering a rectangular geographic region.
 }
 \examples{
-\dontrun{
 grid <- hex_grid(area_km2 = 5000)
 europe <- grid_rect(c(-10, 35, 30, 60), grid)
 plot(europe)
-}
 }
 \seealso{
 \code{\link{grid_global}} for global grids

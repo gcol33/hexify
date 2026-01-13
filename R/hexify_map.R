@@ -418,13 +418,11 @@ resolve_basemap_with_raster <- function(basemap) {
 #' @family visualization
 #' @export
 #' @examples
-#' \dontrun{
 #' # Quick world map
 #' plot_world()
 #'
 #' # Custom colors
 #' plot_world(fill = "lightblue", border = "darkblue")
-#' }
 plot_world <- function(fill = "gray90", border = "gray50", ...) {
 
   plot(sf::st_geometry(hexify_world),
@@ -515,7 +513,6 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'   \code{\link{cell_to_sf}} to generate polygons manually
 #' @export
 #' @examples
-#' \dontrun{
 #' library(hexify)
 #' library(ggplot2)
 #'
@@ -557,7 +554,6 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' hexify_heatmap(result, value = "count", basemap = "world") +
 #'   labs(caption = "Data source: Example") +
 #'   theme(legend.position = "bottom")
-#' }
 hexify_heatmap <- function(data,
                         value = NULL,
                         basemap = NULL,

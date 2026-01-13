@@ -91,7 +91,6 @@ the data and plots them. Polygons are computed on demand, not stored,
 to minimize memory usage.
 }
 \examples{
-\dontrun{
 df <- data.frame(lon = runif(100, -10, 10), lat = runif(100, 40, 50))
 result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
@@ -112,7 +111,6 @@ plot(result, show_points = TRUE)
 # Control point size with presets
 plot(result, show_points = TRUE, point_size = "small")
 plot(result, show_points = TRUE, point_size = "large")
-}
 }
 \seealso{
 \code{\link{hexify_heatmap}} for ggplot2 plotting

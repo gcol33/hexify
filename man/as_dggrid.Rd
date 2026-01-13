@@ -25,18 +25,6 @@ Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
 The resulting object can be used with 'dggridR' functions that accept a dggs
 object.
 }
-\examples{
-\dontrun{
-library(hexify)
-library(dggridR)
-
-# Create hexify grid
-hgrid <- hexify_grid(area = 1000, aperture = 3)
-
-# Convert to dggridR format for use with dggridR functions
-dggs <- as_dggrid(hgrid)
-}
-}
 \seealso{
 Other 'dggridR' compatibility: 
 \code{\link{dggrid_43h_sequence}()},

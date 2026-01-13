@@ -24,7 +24,6 @@ Generates a table comparing different resolution levels for a given
 grid configuration. Useful for choosing appropriate resolution.
 }
 \examples{
-\dontrun{
 # Get data frame of resolutions 0-10 for aperture 3
 comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:10)
 print(comparison)
@@ -34,7 +33,6 @@ hexify_compare_resolutions(aperture = 3, res_range = 0:10, print = TRUE)
 
 # Find resolution with cells ~1000 km^2
 subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
-}
 }
 \seealso{
 Other grid statistics: 

@@ -40,14 +40,12 @@ Creates a discrete global grid system (DGGS) object with hexagonal cells
 at a specified resolution. This is the main constructor for hexify grids.
 }
 \examples{
-\dontrun{
 # Create a grid with ~1000 km^2 cells
 grid <- hexify_grid(area = 1000, aperture = 3)
 print(grid)
 
 # Create a finer resolution grid (~100 km^2 cells)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
-}
 }
 \seealso{
 \code{\link{hexify}} for the main user function,

@@ -32,12 +32,10 @@ icosahedral projection.
 Equivalent to 'dggridR' dgQ2DI_to_PROJTRI().
 }
 \examples{
-\dontrun{
 # Get triangle coordinates for a Quad IJ position
 result <- hexify_quad_ij_to_icosa_tri(quad = 1, i = 100, j = 50,
                                        resolution = 10, aperture = 3)
 print(result)
-}
 }
 \seealso{
 \code{\link{hexify_icosa_tri_to_quad_ij}} for the inverse,

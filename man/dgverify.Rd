@@ -18,12 +18,10 @@ This function is called internally by most hexify functions to ensure
 grid integrity.
 }
 \examples{
-\dontrun{
 grid <- hexify_grid(area = 1000, aperture = 3)
 dgverify(grid)  # Should pass silently
 
 # Invalid grid will throw error
 bad_grid <- list(aperture = 5)
 try(dgverify(bad_grid))  # Will error
-}
 }

@@ -37,7 +37,6 @@ A lightweight sf object containing simplified world country borders,
 suitable for use as a basemap when visualizing hexagonal grids.
 }
 \examples{
-\dontrun{
 library(sf)
 
 # Plot the built-in world map
@@ -46,10 +45,5 @@ plot(st_geometry(hexify_world), col = "lightgray", border = "white")
 # Filter by continent
 europe <- hexify_world[hexify_world$continent == "Europe", ]
 plot(st_geometry(europe))
-
-# Use as basemap for hex grid visualization
-result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
-hex_map(result, basemap = hexify_world)
-}
 }
 \keyword{datasets}

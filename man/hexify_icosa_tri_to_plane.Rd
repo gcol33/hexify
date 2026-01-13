@@ -36,16 +36,14 @@ faces 10-14 and 15-19 form the lower row. Adjacent faces share
 edges in this representation.
 }
 \examples{
-\dontrun{
 # Get PLANE coordinates from triangle coordinates
 fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 plane <- hexify_icosa_tri_to_plane(
-  icosa_triangle_face = fwd$face,
-  icosa_triangle_x = fwd$icosa_triangle_x,
-  icosa_triangle_y = fwd$icosa_triangle_y
+  icosa_triangle_face = fwd["face"],
+  icosa_triangle_x = fwd["icosa_triangle_x"],
+  icosa_triangle_y = fwd["icosa_triangle_y"]
 )
 print(plane)
-}
 }
 \seealso{
 \code{\link{hexify_cell_to_plane}} for direct cell ID conversion,

@@ -25,6 +25,14 @@
 
 \item{...}{Additional arguments}
 }
+\value{
+\itemize{
+\item \code{$}: The value of the requested slot
+\item \code{names}: Character vector of slot names
+\item \code{show}: The object, invisibly (called for side effect of printing)
+\item \code{as.list}: A named list of slot values
+}
+}
 \description{
 S4 methods for HexGridInfo objects. These provide standard R operations
 like \code{$}, \code{names()}, \code{show()}, and \code{as.list()}.

@@ -27,7 +27,6 @@ This is the inverse of hexify_quad_ij_to_cell().
 Compatible with 'dggridR' dgSEQNUM_to_Q2DI().
 }
 \examples{
-\dontrun{
 # Get Quad IJ coordinates for a cell
 result <- hexify_cell_to_quad_ij(cell_id = 1000, resolution = 10, aperture = 3)
 print(result)
@@ -36,7 +35,6 @@ print(result)
 cell_id <- hexify_quad_ij_to_cell(result$quad, result$i, result$j,
                                    resolution = 10, aperture = 3)
 # Should equal original cell_id
-}
 }
 \seealso{
 \code{\link{hexify_quad_ij_to_cell}} for the forward operation,

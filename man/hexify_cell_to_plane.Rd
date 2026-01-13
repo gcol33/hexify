@@ -26,12 +26,10 @@ Returns the cell center in the unfolded icosahedron layout.
 Compatible with 'dggridR' dgSEQNUM_to_PLANE().
 }
 \examples{
-\dontrun{
 # Get PLANE coordinates for cells
 plane <- hexify_cell_to_plane(cell_id = c(100, 200, 300),
                                resolution = 5, aperture = 3)
 plot(plane$plane_x, plane$plane_y)
-}
 }
 \seealso{
 \code{\link{hexify_icosa_tri_to_plane}} for triangle conversion,

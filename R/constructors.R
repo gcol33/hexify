@@ -69,7 +69,6 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # Create grid by target area
 #' grid <- hex_grid(area_km2 = 1000)
 #' print(grid)
@@ -84,8 +83,8 @@
 #' grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
 #'
 #' # Use grid in hexify
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
-#' }
 hex_grid <- function(area_km2 = NULL,
                      resolution = NULL,
                      aperture = 3,
@@ -269,7 +268,7 @@ as_tibble.HexData <- function(x, ...) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #'
 #' # Get sf points
@@ -277,7 +276,6 @@ as_tibble.HexData <- function(x, ...) {
 #'
 #' # Get sf polygons
 #' sf_poly <- as_sf(result, geometry = "polygon")
-#' }
 as_sf <- function(x, geometry = c("point", "polygon"), ...) {
   UseMethod("as_sf")
 }

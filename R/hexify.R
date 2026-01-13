@@ -59,7 +59,6 @@
 #'   \code{\link{as_sf}} for converting to sf
 #' @export
 #' @examples
-#' \dontrun{
 #' # Simple data.frame
 #' df <- data.frame(
 #'   site = c("Vienna", "Paris", "Madrid"),
@@ -89,7 +88,6 @@
 #'
 #' # Mixed aperture (ISEA43H)
 #' result_mixed <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
-#' }
 hexify <- function(data,
                    grid = NULL,
                    lon = "lon",

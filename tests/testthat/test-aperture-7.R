@@ -151,3 +151,25 @@ test_that("aperture 7 lon/lat workflow works", {
   dist <- sqrt((ll["lon"] - lon)^2 + (ll["lat"] - lat)^2)
   expect_true(dist < 15.0)
 })
+
+# =============================================================================
+# SINGLE-POINT ROUNDTRIP TEST HELPER
+# =============================================================================
+
+test_that("cpp_test_roundtrip_ap7 returns TRUE for valid points", {
+  setup_icosa()
+
+  test_points <- list(
+    c(0.5, 0.3),
+    c(-0.4, 0.2),
+    c(0.1, -0.6),
+    c(0.0, 0.0)
+  )
+
+  for (res in c(2, 3, 4, 5)) {
+    for (pt in test_points) {
+      result <- cpp_test_roundtrip_ap7(pt[1], pt[2], res)
+      expect_true(result, info = sprintf("res=%d, pt=(%.2f, %.2f)", res, pt[1], pt[2]))
+    }
+  }
+})

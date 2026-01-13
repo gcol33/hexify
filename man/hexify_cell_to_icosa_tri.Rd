@@ -28,7 +28,6 @@ coordinates (face, x, y). These are the coordinates produced by the
 Compatible with 'dggridR' dgSEQNUM_to_PROJTRI().
 }
 \examples{
-\dontrun{
 # Get triangle coordinates for a cell
 result <- hexify_cell_to_icosa_tri(cell_id = 1000, resolution = 10, aperture = 3)
 print(result)
@@ -37,7 +36,6 @@ print(result)
 coords <- hexify_inverse(result$icosa_triangle_face,
                          result$icosa_triangle_x,
                          result$icosa_triangle_y)
-}
 }
 \seealso{
 \code{\link{hexify_cell_to_quad_ij}} for conversion to Quad IJ,

@@ -76,7 +76,6 @@ plot(mammals) # Same grid, different data
 }
 
 \examples{
-\dontrun{
 # Create grid by target area
 grid <- hex_grid(area_km2 = 1000)
 print(grid)
@@ -91,8 +90,8 @@ grid4 <- hex_grid(area_km2 = 500, aperture = 4)
 grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
 
 # Use grid in hexify
+df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
-}
 }
 \seealso{
 \code{\link{hexify}} for assigning points to cells,

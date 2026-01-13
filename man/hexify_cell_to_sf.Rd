@@ -47,7 +47,6 @@ than 'dggridR' polygon generation, especially for large numbers of cells.
 For the recommended S4 interface, use \code{\link{cell_to_sf}} instead.
 }
 \examples{
-\dontrun{
 library(hexify)
 
 # Generate some data with hex cells
@@ -63,7 +62,6 @@ polys <- hexify_cell_to_sf(result@cell_id, resolution = 10, aperture = 3)
 # Plot with sf
 library(sf)
 plot(st_geometry(polys), col = "lightblue", border = "blue")
-}
 }
 \seealso{
 \code{\link{cell_to_sf}} for the recommended S4 interface

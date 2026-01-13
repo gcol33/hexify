@@ -27,7 +27,6 @@ NULL
 #' @family grid statistics
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' stats <- dgearthstat(grid)
 #'
@@ -37,7 +36,6 @@ NULL
 #'               stats$cell_area_km2))
 #' print(sprintf("Average cell spacing: %.2f km",
 #'               stats$cell_spacing_km))
-#' }
 dgearthstat <- function(dggs) {
   # Validate grid
   if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {
@@ -93,7 +91,6 @@ dgearthstat <- function(dggs) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' # Create a temporary grid to get aperture settings
 #' temp_grid <- list(aperture = 3, topology = "HEXAGON")
 #' class(temp_grid) <- "hexify_grid"
@@ -102,7 +99,6 @@ dgearthstat <- function(dggs) {
 #' res <- dg_closest_res_to_area(temp_grid, area = 1000, 
 #'                                metric = TRUE, show_info = TRUE)
 #' print(res)
-#' }
 #' @family grid statistics
 dg_closest_res_to_area <- function(dggs, area, round = "nearest",
                                    metric = TRUE, show_info = FALSE) {
@@ -160,7 +156,6 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' @family grid statistics
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get data frame of resolutions 0-10 for aperture 3
 #' comparison <- hexify_compare_resolutions(aperture = 3, res_range = 0:10)
 #' print(comparison)
@@ -170,7 +165,6 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #'
 #' # Find resolution with cells ~1000 km^2
 #' subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
-#' }
 hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
                                        print = FALSE) {
   # Create temporary grid

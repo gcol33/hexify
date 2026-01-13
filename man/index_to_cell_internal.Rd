@@ -24,11 +24,4 @@ List with components:
 Internal function to decode a cell index string into its constituent
 components: face number, grid coordinates (i, j), and resolution level.
 }
-\examples{
-\dontrun{
-# This is an internal function, typically called by other functions
-cell_info <- index_to_cell("0112345", aperture = 3, index_type = "z3")
-print(cell_info)
-}
-}
 \keyword{internal}

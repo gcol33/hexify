@@ -27,12 +27,10 @@ Converts discrete cell indices to continuous quad coordinates.
 Useful for computing cell centers or understanding the cell geometry.
 }
 \examples{
-\dontrun{
 # Get continuous quad coordinates for a cell
 xy <- hexify_quad_ij_to_xy(quad = 1, i = 100, j = 50,
                            resolution = 10, aperture = 3)
 print(xy)
-}
 }
 \seealso{
 Other coordinate conversion: 

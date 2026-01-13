@@ -23,7 +23,6 @@ Calculates statistics about the hexagonal grid at the current resolution,
 including total number of cells, cell area, and cell spacing.
 }
 \examples{
-\dontrun{
 grid <- hexify_grid(area = 1000, aperture = 3)
 stats <- dgearthstat(grid)
 
@@ -33,7 +32,6 @@ print(sprintf("Average cell area: \%.2f km^2",
               stats$cell_area_km2))
 print(sprintf("Average cell spacing: \%.2f km",
               stats$cell_spacing_km))
-}
 }
 \seealso{
 Other grid statistics: 

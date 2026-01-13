@@ -32,7 +32,6 @@ sf object with hexagon polygons covering the specified region
 Creates hexagon polygons covering a rectangular geographic region.
 }
 \examples{
-\dontrun{
 library(hexify)
 library(sf)
 
@@ -42,7 +41,6 @@ grid <- hexify_grid_rect(
   area = 5000
 )
 plot(st_geometry(grid), border = "gray")
-}
 }
 \seealso{
 \code{\link{grid_rect}} for the recommended S4 interface,

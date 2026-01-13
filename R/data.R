@@ -27,7 +27,6 @@
 #'   (\url{https://www.naturalearthdata.com/})
 #'
 #' @examples
-#' \dontrun{
 #' library(sf)
 #'
 #' # Plot the built-in world map
@@ -36,9 +35,4 @@
 #' # Filter by continent
 #' europe <- hexify_world[hexify_world$continent == "Europe", ]
 #' plot(st_geometry(europe))
-#'
-#' # Use as basemap for hex grid visualization
-#' result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
-#' hex_map(result, basemap = hexify_world)
-#' }
 "hexify_world"

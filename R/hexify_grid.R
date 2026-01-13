@@ -60,14 +60,12 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #'   \code{\link{hexify_grid_to_cell}} for coordinate conversion
 #' @export
 #' @examples
-#' \dontrun{
 #' # Create a grid with ~1000 km^2 cells
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' print(grid)
 #'
 #' # Create a finer resolution grid (~100 km^2 cells)
 #' fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
-#' }
 hexify_grid <- function(area, 
                              topology = "HEXAGON", 
                              metric = TRUE,
@@ -158,14 +156,12 @@ hexify_grid <- function(area,
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' dgverify(grid)  # Should pass silently
 #'
 #' # Invalid grid will throw error
 #' bad_grid <- list(aperture = 5)
 #' try(dgverify(bad_grid))  # Will error
-#' }
 dgverify <- function(dggs) {
   # Check object type
   if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {

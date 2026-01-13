@@ -25,7 +25,6 @@ the PLANE transformation.
 Equivalent to 'dggridR' dgGEO_to_PLANE().
 }
 \examples{
-\dontrun{
 # Plot world cities in PLANE coordinates
 cities <- data.frame(
   lon = c(2.35, -74.00, 139.69, 151.21),
@@ -33,7 +32,6 @@ cities <- data.frame(
 )
 plane <- hexify_lonlat_to_plane(cities$lon, cities$lat)
 plot(plane$plane_x, plane$plane_y)
-}
 }
 \seealso{
 \code{\link{hexify_cell_to_plane}} for cell ID conversion,

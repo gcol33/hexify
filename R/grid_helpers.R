@@ -29,14 +29,13 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hex_grid(area_km2 = 1000)
 #' cells <- lonlat_to_cell(lon = c(0, 10), lat = c(45, 50), grid = grid)
 #'
 #' # Or use HexData object
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #' cells <- lonlat_to_cell(lon = 5, lat = 48, grid = result)
-#' }
 lonlat_to_cell <- function(lon, lat, grid) {
   g <- extract_grid(grid)
 
@@ -71,11 +70,9 @@ lonlat_to_cell <- function(lon, lat, grid) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hex_grid(area_km2 = 1000)
 #' cells <- lonlat_to_cell(c(0, 10), c(45, 50), grid)
 #' coords <- cell_to_lonlat(cells, grid)
-#' }
 cell_to_lonlat <- function(cell_id, grid) {
   g <- extract_grid(grid)
 
@@ -116,16 +113,15 @@ cell_to_lonlat <- function(cell_id, grid) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # From grid specification
 #' grid <- hex_grid(area_km2 = 1000)
 #' cells <- lonlat_to_cell(c(0, 10, 20), c(45, 50, 55), grid)
 #' polys <- cell_to_sf(cells, grid)
 #'
 #' # From HexData (all cells)
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #' polys <- cell_to_sf(grid = result)
-#' }
 cell_to_sf <- function(cell_id = NULL, grid) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
@@ -185,11 +181,9 @@ cell_to_sf <- function(cell_id = NULL, grid) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hex_grid(area_km2 = 5000)
 #' europe <- grid_rect(c(-10, 35, 30, 60), grid)
 #' plot(europe)
-#' }
 grid_rect <- function(bbox, grid) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required")
@@ -239,12 +233,10 @@ grid_rect <- function(bbox, grid) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # Coarse global grid
 #' grid <- hex_grid(area_km2 = 100000)
 #' global <- grid_global(grid)
 #' plot(global)
-#' }
 grid_global <- function(grid) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required")
@@ -309,7 +301,6 @@ grid_global <- function(grid) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # Get France boundary from built-in world map
 #' france <- hexify_world[hexify_world$name == "France", ]
 #'
@@ -327,7 +318,6 @@ grid_global <- function(grid) {
 #'
 #' # Keep only complete hexagons (no cropping)
 #' france_grid_complete <- grid_clip(france, grid, crop = FALSE)
-#' }
 grid_clip <- function(boundary, grid, crop = TRUE) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required")
@@ -437,11 +427,9 @@ cell_to_index <- function(cell_id, grid) {
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' grid <- hex_grid(resolution = 10)
 #' child_cells <- lonlat_to_cell(c(0, 10), c(45, 50), grid)
 #' parent_cells <- get_parent(child_cells, grid)
-#' }
 get_parent <- function(cell_id, grid, levels = 1L) {
   g <- extract_grid(grid)
 

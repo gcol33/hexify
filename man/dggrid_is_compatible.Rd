@@ -19,19 +19,6 @@ TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 Checks whether a 'dggridR' grid object is compatible with hexify functions.
 Returns TRUE if compatible, or throws an error describing incompatibilities.
 }
-\examples{
-\dontrun{
-library(dggridR)
-
-# Compatible grid
-dggs <- dgconstruct(res = 5, aperture = 3, projection = "ISEA")
-dggrid_is_compatible(dggs)  # TRUE
-
-# Incompatible grid (FULLER projection)
-dggs2 <- dgconstruct(res = 5, projection = "FULLER")
-dggrid_is_compatible(dggs2, strict = FALSE)  # FALSE
-}
-}
 \seealso{
 Other 'dggridR' compatibility: 
 \code{\link{as_dggrid}()},

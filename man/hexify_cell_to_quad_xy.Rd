@@ -27,7 +27,6 @@ Converts DGGRID-compatible cell IDs to Quad XY coordinates
 Compatible with 'dggridR' dgSEQNUM_to_Q2DD().
 }
 \examples{
-\dontrun{
 # Get Quad XY coordinates for a cell
 result <- hexify_cell_to_quad_xy(cell_id = 1000, resolution = 10, aperture = 3)
 print(result)
@@ -36,7 +35,6 @@ print(result)
 cell_id <- hexify_quad_xy_to_cell(result$quad, result$quad_x, result$quad_y,
                                    resolution = 10, aperture = 3)
 # Should equal original cell_id
-}
 }
 \seealso{
 \code{\link{hexify_quad_xy_to_cell}} for the inverse operation,

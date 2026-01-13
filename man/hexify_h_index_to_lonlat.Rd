@@ -26,16 +26,4 @@ Most users should use \code{\link{hexify_cell_to_lonlat}} or
 \code{\link{hexify_grid_cell_to_lonlat}} which work with DGGRID-compatible
 integer cell IDs.
 }
-\examples{
-\dontrun{
-grid <- hexify_grid(area = 1000, aperture = 3)
-
-# Convert coordinates to hierarchical index
-result <- hexify_lonlat_to_h_index(grid, lon = 5, lat = 45)
-
-# Convert back to coordinates
-coords <- hexify_h_index_to_lonlat(grid, result$h_index)
-print(coords)
-}
-}
 \keyword{internal}

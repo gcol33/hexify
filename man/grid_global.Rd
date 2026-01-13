@@ -21,12 +21,10 @@ densely across the globe. For large grids (many small cells),
 consider using \code{grid_rect()} to generate regional subsets.
 }
 \examples{
-\dontrun{
 # Coarse global grid
 grid <- hex_grid(area_km2 = 100000)
 global <- grid_global(grid)
 plot(global)
-}
 }
 \seealso{
 \code{\link{grid_rect}} for regional grids

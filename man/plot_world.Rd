@@ -20,13 +20,11 @@ NULL invisibly. Creates a plot as side effect.
 Simple wrapper to plot the built-in world map.
 }
 \examples{
-\dontrun{
 # Quick world map
 plot_world()
 
 # Custom colors
 plot_world(fill = "lightblue", border = "darkblue")
-}
 }
 \seealso{
 Other visualization: 

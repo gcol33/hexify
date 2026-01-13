@@ -68,6 +68,21 @@
 
 \item{optional}{Logical (ignored)}
 }
+\value{
+\itemize{
+\item \code{grid_info}: HexGridInfo object containing grid specification
+\item \code{cells}: Numeric vector of unique cell IDs
+\item \code{n_cells}: Integer count of unique cells
+\item \code{nrow}, \code{ncol}, \code{dim}: Integer dimensions
+\item \code{names}: Character vector of column names (including virtual cell columns)
+\item \code{$}, \code{[[}: The requested column or cell data as a vector
+\item \verb{$<-}, \verb{[[<-}: The modified HexData object
+\item \code{[}: Subsetted HexData object or extracted data
+\item \code{show}: The object, invisibly (called for side effect of printing)
+\item \code{as.data.frame}: Data frame with original data plus cell columns
+\item \code{as.list}: Named list containing data, grid, cell_id, and cell_center
+}
+}
 \description{
 S4 methods for HexData objects. These provide standard R operations
 for accessing data, subsetting, and conversion.

@@ -54,7 +54,6 @@
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' library(hexify)
 #'
 #' # Generate some data with hex cells
@@ -70,7 +69,6 @@
 #' # Plot with sf
 #' library(sf)
 #' plot(st_geometry(polys), col = "lightblue", border = "blue")
-#' }
 hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
                               return_sf = TRUE, grid = NULL) {
 
@@ -153,7 +151,6 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' library(hexify)
 #' library(sf)
 #'
@@ -163,7 +160,6 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 #'   area = 5000
 #' )
 #' plot(st_geometry(grid), border = "gray")
-#' }
 hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
                              area, aperture = 3L, resround = "nearest") {
 
@@ -202,14 +198,12 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 #' @keywords internal
 #' @export
 #' @examples
-#' \dontrun{
 #' library(hexify)
 #' library(sf)
 #'
 #' # Coarse global grid (~100,000 km^2 cells)
 #' global_grid <- hexify_grid_global(area = 100000)
 #' plot(st_geometry(global_grid), border = "gray")
-#' }
 hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
 
   if (!requireNamespace("sf", quietly = TRUE)) {

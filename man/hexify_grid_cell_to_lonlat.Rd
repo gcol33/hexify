@@ -20,11 +20,9 @@ DGGRID-compatible cell IDs back to cell center coordinates
 using the resolution and aperture from a grid object.
 }
 \examples{
-\dontrun{
 grid <- hexify_grid(area = 1000, aperture = 3)
 cell_ids <- hexify_grid_to_cell(grid, lon = 5, lat = 45)
 coords <- hexify_grid_cell_to_lonlat(grid, cell_ids)
-}
 }
 \seealso{
 \code{\link{cell_to_lonlat}} for the recommended S4 interface,

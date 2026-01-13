@@ -178,10 +178,9 @@ setValidity("HexData", function(object) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #' grid_spec <- grid_info(result)
-#' }
 setGeneric("grid_info", function(x) standardGeneric("grid_info"))
 
 #' Get Cell IDs
@@ -218,6 +217,11 @@ setGeneric("n_cells", function(x) standardGeneric("n_cells"))
 #' @param name Slot name
 #' @param object HexGridInfo object (for show)
 #' @param ... Additional arguments
+#' @return
+#' - `$`: The value of the requested slot
+#' - `names`: Character vector of slot names
+#' - `show`: The object, invisibly (called for side effect of printing)
+#' - `as.list`: A named list of slot values
 #' @keywords internal
 NULL
 
@@ -253,6 +257,18 @@ setMethod("names", "HexGridInfo", function(x) {
 #' @param row.names Optional row names
 #' @param optional Logical (ignored)
 #' @param ... Additional arguments
+#' @return
+#' - `grid_info`: HexGridInfo object containing grid specification
+#' - `cells`: Numeric vector of unique cell IDs
+#' - `n_cells`: Integer count of unique cells
+#' - `nrow`, `ncol`, `dim`: Integer dimensions
+#' - `names`: Character vector of column names (including virtual cell columns)
+#' - `$`, `[[`: The requested column or cell data as a vector
+#' - `$<-`, `[[<-`: The modified HexData object
+#' - `[`: Subsetted HexData object or extracted data
+#' - `show`: The object, invisibly (called for side effect of printing)
+#' - `as.data.frame`: Data frame with original data plus cell columns
+#' - `as.list`: Named list containing data, grid, cell_id, and cell_center
 #' @keywords internal
 NULL
 

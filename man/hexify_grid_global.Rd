@@ -20,14 +20,12 @@ sf object with hexagon polygons covering the globe
 Creates hexagon polygons covering the entire Earth.
 }
 \examples{
-\dontrun{
 library(hexify)
 library(sf)
 
 # Coarse global grid (~100,000 km^2 cells)
 global_grid <- hexify_grid_global(area = 100000)
 plot(st_geometry(global_grid), border = "gray")
-}
 }
 \seealso{
 \code{\link{grid_global}} for the recommended S4 interface,
