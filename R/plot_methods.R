@@ -209,26 +209,14 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 #' @export
 #' @examples
 #' \donttest{
-#' df <- data.frame(lon = runif(100, -10, 10), lat = runif(100, 40, 50))
-#' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+#' df <- data.frame(lon = runif(50, -5, 5), lat = runif(50, 45, 50))
+#' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 2000)
 #'
-#' # Basic plot (basemap shown by default)
-#' plot(result)
-#'
-#' # Without basemap
+#' # Basic plot
 #' plot(result, basemap = FALSE)
 #'
-#' # Custom styling
-#' plot(result,
-#'      grid_fill = "lightblue", grid_border = "darkblue",
-#'      basemap_fill = "ivory")
-#'
-#' # Show jittered points (auto-sized based on density)
-#' plot(result, show_points = TRUE)
-#'
-#' # Control point size with presets
-#' plot(result, show_points = TRUE, point_size = "small")
-#' plot(result, show_points = TRUE, point_size = "large")
+#' # With basemap and custom styling
+#' plot(result, grid_fill = "lightblue", grid_border = "darkblue")
 #' }
 setMethod("plot", signature(x = "HexData", y = "missing"),
   function(x, y,
