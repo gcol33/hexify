@@ -208,6 +208,7 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 #'
 #' @export
 #' @examples
+#' \donttest{
 #' df <- data.frame(lon = runif(100, -10, 10), lat = runif(100, 40, 50))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #'
@@ -228,6 +229,7 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 #' # Control point size with presets
 #' plot(result, show_points = TRUE, point_size = "small")
 #' plot(result, show_points = TRUE, point_size = "large")
+#' }
 setMethod("plot", signature(x = "HexData", y = "missing"),
   function(x, y,
            basemap = TRUE,
@@ -422,6 +424,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 #'
 #' @export
 #' @examples
+#' \donttest{
 #' # Plot grid over France
 #' france <- hexify_world[hexify_world$name == "France", ]
 #' grid <- hex_grid(area_km2 = 2000)
@@ -440,6 +443,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 #' plot_grid(france, grid) +
 #'   labs(subtitle = "ISEA3H Discrete Global Grid") +
 #'   theme_void()
+#' }
 plot_grid <- function(boundary,
                       grid,
                       crop = TRUE,

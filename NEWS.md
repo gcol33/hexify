@@ -7,10 +7,8 @@
   values of type 'long long'" at coordinate_transforms.cpp:243-244)
 * Root cause: floating-point precision in face assignment could project points
   onto geometrically invalid triangle faces near icosahedron edges
-* Solution: added DGGRID-style validation with face-retry logic - if projection
-  validation fails (z > DH), automatically tries adjacent faces until valid
-* This is more robust than DGGRID (which crashes on edge cases) while maintaining
-  full compatibility
+* Solution: added projection validation with face-retry logic - if validation
+  fails (z > DH), automatically tries adjacent faces until valid
 
 # hexify 0.3.3
 
