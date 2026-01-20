@@ -231,6 +231,13 @@ inline long long fold_i_negative_x(long long i, long long j) {
 
 // Class I (flat-top) quantization
 void quantize_class1(double x, double y, long long& out_i, long long& out_j) {
+    // Guard against NaN/Inf inputs to avoid undefined behavior in integer cast
+    if (!std::isfinite(x) || !std::isfinite(y)) {
+        out_i = 0;
+        out_j = 0;
+        return;
+    }
+
     // Work in positive quadrant
     double abs_x = std::fabs(x);
     double abs_y = std::fabs(y);
