@@ -56,9 +56,7 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 grid <- hexify_grid(area = 1000, aperture = 3)
 cell_ids <- hexify_grid_to_cell(grid, lon = 5, lat = 45)
 coords <- hexify_grid_cell_to_lonlat(grid, cell_ids)
-} # }
 ```

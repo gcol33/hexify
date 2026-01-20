@@ -1,3 +1,9 @@
+# hexify 0.3.5
+
+* Simplified plot examples to reduce runtime
+* Added non-standard files to .Rbuildignore
+* Fixed slow example NOTE
+
 # hexify 0.3.4
 
 **Hotfix for CRAN UBSAN check failure**

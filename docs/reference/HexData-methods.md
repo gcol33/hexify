@@ -89,3 +89,28 @@ as.list(x, ...)
 - optional:
 
   Logical (ignored)
+
+## Value
+
+- `grid_info`: HexGridInfo object containing grid specification
+
+- `cells`: Numeric vector of unique cell IDs
+
+- `n_cells`: Integer count of unique cells
+
+- `nrow`, `ncol`, `dim`: Integer dimensions
+
+- `names`: Character vector of column names (including virtual cell
+  columns)
+
+- `$`, `[[`: The requested column or cell data as a vector
+
+- `$<-`, `[[<-`: The modified HexData object
+
+- `[`: Subsetted HexData object or extracted data
+
+- `show`: The object, invisibly (called for side effect of printing)
+
+- `as.data.frame`: Data frame with original data plus cell columns
+
+- `as.list`: Named list containing data, grid, cell_id, and cell_center

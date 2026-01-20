@@ -95,7 +95,7 @@ grid specification
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Plot grid over France
 france <- hexify_world[hexify_world$name == "France", ]
 grid <- hex_grid(area_km2 = 2000)
@@ -114,5 +114,5 @@ library(ggplot2)
 plot_grid(france, grid) +
   labs(subtitle = "ISEA3H Discrete Global Grid") +
   theme_void()
-} # }
+# }
 ```

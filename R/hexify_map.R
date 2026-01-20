@@ -514,7 +514,6 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' @export
 #' @examples
 #' library(hexify)
-#' library(ggplot2)
 #'
 #' # Sample data with counts
 #' cities <- data.frame(
@@ -525,6 +524,12 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
 #'
 #' # Simple plot (uniform fill, no value mapping)
+#' hexify_heatmap(result)
+#'
+#' \donttest{
+#' library(ggplot2)
+#'
+#' # With world basemap
 #' hexify_heatmap(result, basemap = "world")
 #'
 #' # Heatmap with value mapping
@@ -554,6 +559,7 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' hexify_heatmap(result, value = "count", basemap = "world") +
 #'   labs(caption = "Data source: Example") +
 #'   theme(legend.position = "bottom")
+#' }
 hexify_heatmap <- function(data,
                         value = NULL,
                         basemap = NULL,

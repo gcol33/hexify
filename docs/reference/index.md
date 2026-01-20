@@ -9,7 +9,7 @@ Create grids and assign points to cells
 - [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) :
   Assign hexagonal DGGS cell IDs to geographic points
 - [`hexify_assign()`](https://gcol33.github.io/hexify/reference/hexify_assign.md)
-  : Assign hex cells (ISEA3H, aperture 3) for lon/lat
+  : Assign hex cells ('ISEA3H', aperture 3) for lon/lat
 - [`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
   : HexGridInfo Class
 - [`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
@@ -75,11 +75,11 @@ Plotting functions
 Interoperability with dggridR
 
 - [`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md)
-  : Convert hexify grid to dggridR-compatible grid object
+  : Convert hexify grid to 'dggridR'-compatible grid object
 - [`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
-  : Convert dggridR grid object to hexify_grid
+  : Convert 'dggridR' grid object to hexify_grid
 - [`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md)
-  : Validate dggridR grid compatibility with hexify
+  : Validate 'dggridR' grid compatibility with hexify
 - [`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md)
   : Create DGGRID 43H aperture sequence
 - [`hexify_grid()`](https://gcol33.github.io/hexify/reference/hexify_grid.md)

@@ -50,7 +50,7 @@ for global grids
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Get France boundary from built-in world map
 france <- hexify_world[hexify_world$name == "France", ]
 
@@ -68,5 +68,5 @@ ggplot() +
 
 # Keep only complete hexagons (no cropping)
 france_grid_complete <- grid_clip(france, grid, crop = FALSE)
-} # }
+# }
 ```

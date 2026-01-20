@@ -39,18 +39,3 @@ Most users should use
 or
 [`hexify_grid_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.md)
 which work with DGGRID-compatible integer cell IDs.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-grid <- hexify_grid(area = 1000, aperture = 3)
-
-# Convert coordinates to hierarchical index
-result <- hexify_lonlat_to_h_index(grid, lon = 5, lat = 45)
-
-# Convert back to coordinates
-coords <- hexify_h_index_to_lonlat(grid, result$h_index)
-print(coords)
-} # }
-```

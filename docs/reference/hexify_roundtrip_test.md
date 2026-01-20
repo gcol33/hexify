@@ -70,13 +70,3 @@ Other coordinate conversion:
 [`hexify_quad_ij_to_xy()`](https://gcol33.github.io/hexify/reference/hexify_quad_ij_to_xy.md),
 [`hexify_quad_xy_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_quad_xy_to_cell.md),
 [`hexify_quad_xy_to_icosa_tri()`](https://gcol33.github.io/hexify/reference/hexify_quad_xy_to_icosa_tri.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-grid <- hexify_grid(area = 1000, aperture = 3)
-accuracy <- hexify_roundtrip_test(grid, lon = 0, lat = 45)
-print(accuracy)
-} # }
-```

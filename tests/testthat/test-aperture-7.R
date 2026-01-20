@@ -45,6 +45,7 @@ test_that("aperture 7 round-trip works", {
 })
 
 test_that("aperture 7 batch round-trip succeeds", {
+  skip_on_cran()
   setup_icosa()
 
   set.seed(789)

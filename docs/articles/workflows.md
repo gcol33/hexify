@@ -46,24 +46,24 @@ set.seed(123)
 
 # Dataset 1: Bird observations (note different column names)
 bird_obs <- data.frame(
-  species = sample(c("Passer domesticus", "Turdus merula", "Parus major"), 200, replace = TRUE),
-  longitude = runif(200, -10, 30),
-  latitude = runif(200, 35, 60)
+  species = sample(c("Passer domesticus", "Turdus merula", "Parus major"), 50, replace = TRUE),
+  longitude = runif(50, -10, 30),
+  latitude = runif(50, 35, 60)
 )
 
 # Dataset 2: Mammal records
 mammal_obs <- data.frame(
-  species = sample(c("Vulpes vulpes", "Meles meles", "Sciurus vulgaris"), 150, replace = TRUE),
-  lon = runif(150, -10, 30),
-  lat = runif(150, 35, 60)
+  species = sample(c("Vulpes vulpes", "Meles meles", "Sciurus vulgaris"), 40, replace = TRUE),
+  lon = runif(40, -10, 30),
+  lat = runif(40, 35, 60)
 )
 
 # Dataset 3: Climate stations
 climate_data <- data.frame(
-  station_id = paste0("WS", 1:50),
-  x = runif(50, -10, 30),
-  y = runif(50, 35, 60),
-  temp_c = rnorm(50, 12, 5)
+  station_id = paste0("WS", 1:20),
+  x = runif(20, -10, 30),
+  y = runif(20, 35, 60),
+  temp_c = rnorm(20, 12, 5)
 )
 
 # Step 3: Attach all datasets to the SAME grid
@@ -72,11 +72,11 @@ mammals <- hexify(mammal_obs, lon = "lon", lat = "lat", grid = grid)
 climate <- hexify(climate_data, lon = "x", lat = "y", grid = grid)
 
 cat("Birds:  ", nrow(as.data.frame(birds)), "observations in", n_cells(birds), "cells\n")
-#> Birds:   200 observations in 182 cells
+#> Birds:   50 observations in 48 cells
 cat("Mammals:", nrow(as.data.frame(mammals)), "observations in", n_cells(mammals), "cells\n")
-#> Mammals: 150 observations in 140 cells
+#> Mammals: 40 observations in 38 cells
 cat("Climate:", nrow(as.data.frame(climate)), "stations in", n_cells(climate), "cells\n")
-#> Climate: 50 stations in 49 cells
+#> Climate: 20 stations in 20 cells
 ```
 
 ### Combining at the Cell Level
@@ -124,12 +124,12 @@ combined <- merge(combined, mean_temp, by = "cell_id", all = TRUE)
 
 head(combined)
 #>   cell_id bird_species mammal_species mean_temp
-#> 1      82            1             NA        NA
-#> 2     162            1             NA        NA
-#> 3     163            1             NA        NA
-#> 4     325           NA              1        NA
-#> 5     487            1             NA        NA
-#> 6    6637            1             NA        NA
+#> 1    6634           NA              1  12.18894
+#> 2    6635            1             NA        NA
+#> 3    6716           NA              1        NA
+#> 4    6718            1             NA        NA
+#> 5    6800           NA              1        NA
+#> 6    6882           NA              1        NA
 ```
 
 ## Grid Generation
@@ -216,13 +216,13 @@ Analyze data at multiple spatial scales using different target areas.
 # Sample data
 set.seed(42)
 observations <- data.frame(
-  species = sample(c("Species A", "Species B", "Species C"), 1000, replace = TRUE),
-  lon = runif(1000, -10, 30),
-  lat = runif(1000, 35, 60)
+  species = sample(c("Species A", "Species B", "Species C"), 100, replace = TRUE),
+  lon = runif(100, -10, 30),
+  lat = runif(100, 35, 60)
 )
 
-# Fine resolution (~100 km² cells)
-grid_fine <- hex_grid(area_km2 = 100)
+# Fine resolution (~1000 km² cells)
+grid_fine <- hex_grid(area_km2 = 1000)
 obs_fine <- hexify(observations, lon = "lon", lat = "lat", grid = grid_fine)
 
 # Coarse resolution (~10000 km² cells)
@@ -231,10 +231,10 @@ obs_coarse <- hexify(observations, lon = "lon", lat = "lat", grid = grid_coarse)
 
 cat(sprintf("Fine resolution: %d unique cells (area: %.1f km²)\n",
             n_cells(obs_fine), grid_fine@area_km2))
-#> Fine resolution: 996 unique cells (area: 96.0 km²)
+#> Fine resolution: 98 unique cells (area: 863.8 km²)
 cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
             n_cells(obs_coarse), grid_coarse@area_km2))
-#> Coarse resolution: 649 unique cells (area: 7774.0 km²)
+#> Coarse resolution: 93 unique cells (area: 7774.0 km²)
 ```
 
 ### Scale-Dependent Patterns
@@ -255,9 +255,9 @@ richness_coarse <- aggregate(species ~ cell_id, data = coarse_df,
                              FUN = function(x) length(unique(x)))
 
 cat(sprintf("Fine scale: mean %.2f species per cell\n", mean(richness_fine$species)))
-#> Fine scale: mean 1.00 species per cell
+#> Fine scale: mean 1.01 species per cell
 cat(sprintf("Coarse scale: mean %.2f species per cell\n", mean(richness_coarse$species)))
-#> Coarse scale: mean 1.33 species per cell
+#> Coarse scale: mean 1.06 species per cell
 ```
 
 ## Spatial Joins
@@ -313,11 +313,11 @@ city_weather
 #> 3     1482     Paris          NA
 #> 4     1484 Amsterdam          NA
 #> 5     1540    Berlin          NA
-#> 6     1567    Prague    21.64748
+#> 6     1567    Prague    11.60463
 #> 7     1591      Rome          NA
-#> 8     1594    Vienna          NA
-#> 9     1621  Budapest    19.43432
-#> 10    2240    Warsaw          NA
+#> 8     1594    Vienna    12.45533
+#> 9     1621  Budapest          NA
+#> 10    2240    Warsaw     7.30659
 ```
 
 ## Choosing Resolution

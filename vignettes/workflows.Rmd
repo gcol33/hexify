@@ -52,24 +52,24 @@ set.seed(123)
 
 # Dataset 1: Bird observations (note different column names)
 bird_obs <- data.frame(
-  species = sample(c("Passer domesticus", "Turdus merula", "Parus major"), 200, replace = TRUE),
-  longitude = runif(200, -10, 30),
-  latitude = runif(200, 35, 60)
+  species = sample(c("Passer domesticus", "Turdus merula", "Parus major"), 50, replace = TRUE),
+  longitude = runif(50, -10, 30),
+  latitude = runif(50, 35, 60)
 )
 
 # Dataset 2: Mammal records
 mammal_obs <- data.frame(
-  species = sample(c("Vulpes vulpes", "Meles meles", "Sciurus vulgaris"), 150, replace = TRUE),
-  lon = runif(150, -10, 30),
-  lat = runif(150, 35, 60)
+  species = sample(c("Vulpes vulpes", "Meles meles", "Sciurus vulgaris"), 40, replace = TRUE),
+  lon = runif(40, -10, 30),
+  lat = runif(40, 35, 60)
 )
 
 # Dataset 3: Climate stations
 climate_data <- data.frame(
-  station_id = paste0("WS", 1:50),
-  x = runif(50, -10, 30),
-  y = runif(50, 35, 60),
-  temp_c = rnorm(50, 12, 5)
+  station_id = paste0("WS", 1:20),
+  x = runif(20, -10, 30),
+  y = runif(20, 35, 60),
+  temp_c = rnorm(20, 12, 5)
 )
 
 # Step 3: Attach all datasets to the SAME grid
@@ -197,13 +197,13 @@ Analyze data at multiple spatial scales using different target areas.
 # Sample data
 set.seed(42)
 observations <- data.frame(
-  species = sample(c("Species A", "Species B", "Species C"), 1000, replace = TRUE),
-  lon = runif(1000, -10, 30),
-  lat = runif(1000, 35, 60)
+  species = sample(c("Species A", "Species B", "Species C"), 100, replace = TRUE),
+  lon = runif(100, -10, 30),
+  lat = runif(100, 35, 60)
 )
 
-# Fine resolution (~100 km² cells)
-grid_fine <- hex_grid(area_km2 = 100)
+# Fine resolution (~1000 km² cells)
+grid_fine <- hex_grid(area_km2 = 1000)
 obs_fine <- hexify(observations, lon = "lon", lat = "lat", grid = grid_fine)
 
 # Coarse resolution (~10000 km² cells)

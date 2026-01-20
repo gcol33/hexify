@@ -42,7 +42,7 @@ Data frame with columns:
 
 ## Details
 
-Equivalent to dggridR's dgPROJTRI_to_PLANE().
+Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 
 The PLANE layout arranges all 20 icosahedral faces into a roughly
 rectangular region. Faces 0-4 and 5-9 form the upper row, while faces
@@ -80,14 +80,12 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Get PLANE coordinates from triangle coordinates
 fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 plane <- hexify_icosa_tri_to_plane(
-  icosa_triangle_face = fwd$face,
-  icosa_triangle_x = fwd$icosa_triangle_x,
-  icosa_triangle_y = fwd$icosa_triangle_y
+  icosa_triangle_face = fwd["face"],
+  icosa_triangle_x = fwd["icosa_triangle_x"],
+  icosa_triangle_y = fwd["icosa_triangle_y"]
 )
 print(plane)
-} # }
 ```

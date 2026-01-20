@@ -71,6 +71,7 @@ test_that("aperture 3 round-trip works for Class II (odd resolutions)", {
 })
 
 test_that("aperture 3 batch round-trip succeeds", {
+  skip_on_cran()
   setup_icosa()
 
   set.seed(123)

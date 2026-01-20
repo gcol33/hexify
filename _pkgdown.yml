@@ -1,129 +1,127 @@
 url: https://gcol33.github.io/hexify/
-
 template:
   bootstrap: 5
   bootswatch: sandstone
-  light-switch: true
-
+  light-switch: yes
+  includes:
+    in_header: pkgdown/mathjax-config.html
 figures:
   dev: svglite::svglite
   fig.ext: svg
-  bg: "#F5F6F8"
-
+  bg: '#F5F6F8'
 navbar:
   structure:
-    left: [intro, reference, articles]
-    right: [search, github, lightswitch]
+    left:
+    - intro
+    - reference
+    - articles
+    right:
+    - search
+    - github
+    - lightswitch
   components:
     github:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify
       aria-label: GitHub
-
 reference:
-  - title: Core
-    desc: Create grids and assign points to cells
-    contents:
-      - hex_grid
-      - hexify
-      - hexify_assign
-      - HexGridInfo-class
-      - HexData-class
-
-  - title: Working with Results
-    desc: Extract and convert HexData
-    contents:
-      - grid_info
-      - cells
-      - n_cells
-      - as_sf
-      - as_tibble.HexData
-      - is_hex_grid
-      - is_hex_data
-
-  - title: Grid Generation
-    desc: Create grids over regions
-    contents:
-      - grid_rect
-      - grid_global
-      - grid_clip
-      - cell_to_sf
-      - lonlat_to_cell
-      - cell_to_lonlat
-      - get_parent
-      - get_children
-
-  - title: Visualization
-    desc: Plotting functions
-    contents:
-      - hexify_heatmap
-      - plot_grid
-      - plot_world
-      - hexify_world
-      - starts_with("plot,HexData")
-
-  - title: dggridR Compatibility
-    desc: Interoperability with dggridR
-    contents:
-      - as_dggrid
-      - from_dggrid
-      - dggrid_is_compatible
-      - dggrid_43h_sequence
-      - hexify_grid
-      - dgearthstat
-      - dgverify
-      - hexify_compare_resolutions
-
-  - title: Low-Level API
-    desc: Direct access to projection and coordinate transforms
-    contents:
-      - starts_with("hexify_lonlat")
-      - starts_with("hexify_cell")
-      - starts_with("hexify_quad")
-      - starts_with("hexify_icosa")
-      - starts_with("hexify_index")
-      - hexify_forward
-      - hexify_forward_to_face
-      - hexify_inverse
-      - hexify_which_face
-      - hexify_build_icosa
-      - hexify_face_centers
-      - hexify_grid_rect
-      - hexify_grid_global
-      - hexify_grid_to_cell
-      - hexify_grid_cell_to_lonlat
-      - hex_corners_to_sf
-      - hexify_projection_stats
-      - dg_closest_res_to_area
-      - hexify_area_to_eff_res
-      - hexify_eff_res_to_area
-      - hexify_eff_res_to_resolution
-      - hexify_resolution_to_eff_res
-      - hexify_compare_indices
-      - hexify_default_index_type
-      - hexify_is_valid_index_type
-      - cell_to_index
-      - hexify_get_children
-      - hexify_get_parent
-      - hexify_get_precision
-      - hexify_get_resolution
-      - hexify_set_precision
-      - hexify_z7_canonical
-      - hexify_roundtrip_test
-      - hexify_set_verbose
-
-  - title: Internal
-    desc: Package internals
-    contents:
-      - hexify-package
-      - hexify-conversions
-      - hexify-grid
-      - hexify-stats
-      - HexGridInfo-methods
-      - HexData-methods
-      - new_hex_data
-      - extract_grid
-      - index_to_cell_internal
-      - calculate_resolution_for_area
-      - hexify_grid_to_HexGridInfo
-      - HexGridInfo_to_hexify_grid
+- title: Core
+  desc: Create grids and assign points to cells
+  contents:
+  - hex_grid
+  - hexify
+  - hexify_assign
+  - HexGridInfo-class
+  - HexData-class
+- title: Working with Results
+  desc: Extract and convert HexData
+  contents:
+  - grid_info
+  - cells
+  - n_cells
+  - as_sf
+  - as_tibble.HexData
+  - is_hex_grid
+  - is_hex_data
+- title: Grid Generation
+  desc: Create grids over regions
+  contents:
+  - grid_rect
+  - grid_global
+  - grid_clip
+  - cell_to_sf
+  - lonlat_to_cell
+  - cell_to_lonlat
+  - get_parent
+  - get_children
+- title: Visualization
+  desc: Plotting functions
+  contents:
+  - hexify_heatmap
+  - plot_grid
+  - plot_world
+  - hexify_world
+  - starts_with("plot,HexData")
+- title: dggridR Compatibility
+  desc: Interoperability with dggridR
+  contents:
+  - as_dggrid
+  - from_dggrid
+  - dggrid_is_compatible
+  - dggrid_43h_sequence
+  - hexify_grid
+  - dgearthstat
+  - dgverify
+  - hexify_compare_resolutions
+- title: Low-Level API
+  desc: Direct access to projection and coordinate transforms
+  contents:
+  - starts_with("hexify_lonlat")
+  - starts_with("hexify_cell")
+  - starts_with("hexify_quad")
+  - starts_with("hexify_icosa")
+  - starts_with("hexify_index")
+  - hexify_forward
+  - hexify_forward_to_face
+  - hexify_inverse
+  - hexify_which_face
+  - hexify_build_icosa
+  - hexify_face_centers
+  - hexify_grid_rect
+  - hexify_grid_global
+  - hexify_grid_to_cell
+  - hexify_grid_cell_to_lonlat
+  - hex_corners_to_sf
+  - hexify_projection_stats
+  - dg_closest_res_to_area
+  - hexify_area_to_eff_res
+  - hexify_eff_res_to_area
+  - hexify_eff_res_to_resolution
+  - hexify_resolution_to_eff_res
+  - hexify_compare_indices
+  - hexify_default_index_type
+  - hexify_is_valid_index_type
+  - cell_to_index
+  - hexify_get_children
+  - hexify_get_parent
+  - hexify_get_precision
+  - hexify_get_resolution
+  - hexify_set_precision
+  - hexify_z7_canonical
+  - hexify_roundtrip_test
+  - hexify_set_verbose
+- title: Internal
+  desc: Package internals
+  contents:
+  - hexify-package
+  - hexify-conversions
+  - hexify-grid
+  - hexify-stats
+  - HexGridInfo-methods
+  - HexData-methods
+  - new_hex_data
+  - extract_grid
+  - index_to_cell_internal
+  - calculate_resolution_for_area
+  - hexify_grid_to_HexGridInfo
+  - HexGridInfo_to_hexify_grid

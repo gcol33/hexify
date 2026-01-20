@@ -1,7 +1,7 @@
 # Convert Cell ID to Icosa Triangle coordinates
 
 Converts DGGRID-compatible cell IDs to icosahedral triangle coordinates
-(face, x, y). These are the coordinates produced by the Snyder ISEA
+(face, x, y). These are the coordinates produced by the 'Snyder' 'ISEA'
 forward projection.
 
 ## Usage
@@ -42,7 +42,7 @@ Data frame with columns:
 
 ## Details
 
-Compatible with dggridR's dgSEQNUM_to_PROJTRI().
+Compatible with 'dggridR' dgSEQNUM_to_PROJTRI().
 
 ## See also
 
@@ -75,7 +75,6 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Get triangle coordinates for a cell
 result <- hexify_cell_to_icosa_tri(cell_id = 1000, resolution = 10, aperture = 3)
 print(result)
@@ -84,5 +83,4 @@ print(result)
 coords <- hexify_inverse(result$icosa_triangle_face,
                          result$icosa_triangle_x,
                          result$icosa_triangle_y)
-} # }
 ```

@@ -1,7 +1,7 @@
 # Convert longitude/latitude to PLANE coordinates
 
 Converts geographic coordinates directly to PLANE coordinates (unfolded
-icosahedron). Combines forward Snyder projection with the PLANE
+icosahedron). Combines forward 'Snyder' projection with the PLANE
 transformation.
 
 ## Usage
@@ -34,7 +34,7 @@ Data frame with columns:
 
 ## Details
 
-Equivalent to dggridR's dgGEO_to_PLANE().
+Equivalent to 'dggridR' dgGEO_to_PLANE().
 
 ## See also
 
@@ -67,7 +67,6 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Plot world cities in PLANE coordinates
 cities <- data.frame(
   lon = c(2.35, -74.00, 139.69, 151.21),
@@ -75,5 +74,4 @@ cities <- data.frame(
 )
 plane <- hexify_lonlat_to_plane(cities$lon, cities$lat)
 plot(plane$plane_x, plane$plane_y)
-} # }
 ```

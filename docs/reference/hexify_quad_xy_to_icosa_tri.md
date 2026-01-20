@@ -66,9 +66,7 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Convert quad XY back to triangle coordinates
 tri <- hexify_quad_xy_to_icosa_tri(quad = 1, quad_x = 0.5, quad_y = 0.3)
 print(tri)
-} # }
 ```

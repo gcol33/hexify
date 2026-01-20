@@ -57,6 +57,7 @@ This is a convenience wrapper around \code{grid_clip()} that handles the
 common use case of visualizing a hexagonal grid over a geographic region.
 }
 \examples{
+\donttest{
 # Plot grid over France
 france <- hexify_world[hexify_world$name == "France", ]
 grid <- hex_grid(area_km2 = 2000)
@@ -75,6 +76,7 @@ library(ggplot2)
 plot_grid(france, grid) +
   labs(subtitle = "ISEA3H Discrete Global Grid") +
   theme_void()
+}
 }
 \seealso{
 \code{\link{grid_clip}} for the underlying clipping function,

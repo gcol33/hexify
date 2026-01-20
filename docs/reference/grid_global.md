@@ -34,10 +34,8 @@ for regional grids
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Coarse global grid
 grid <- hex_grid(area_km2 = 100000)
 global <- grid_global(grid)
 plot(global)
-} # }
 ```

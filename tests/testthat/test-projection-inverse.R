@@ -54,6 +54,7 @@ test_that("forward-inverse round-trip works near face centers", {
 })
 
 test_that("forward-inverse round-trip works for random points", {
+  skip_on_cran()
   hexify_build_icosa()
   hexify_set_precision("high")
 
@@ -214,6 +215,7 @@ test_that("hexify_face_centers returns valid coordinates", {
 # =============================================================================
 
 test_that("hexify_which_face returns valid face indices", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(42)
@@ -227,6 +229,7 @@ test_that("hexify_which_face returns valid face indices", {
 })
 
 test_that("hexify_which_face is consistent with hexify_forward", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(123)

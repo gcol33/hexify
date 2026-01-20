@@ -301,6 +301,7 @@ grid_global <- function(grid) {
 #'
 #' @export
 #' @examples
+#' \donttest{
 #' # Get France boundary from built-in world map
 #' france <- hexify_world[hexify_world$name == "France", ]
 #'
@@ -318,6 +319,7 @@ grid_global <- function(grid) {
 #'
 #' # Keep only complete hexagons (no cropping)
 #' france_grid_complete <- grid_clip(france, grid, crop = FALSE)
+#' }
 grid_clip <- function(boundary, grid, crop = TRUE) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required")

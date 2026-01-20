@@ -30,9 +30,7 @@ for global grids
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 grid <- hex_grid(area_km2 = 5000)
 europe <- grid_rect(c(-10, 35, 30, 60), grid)
 plot(europe)
-} # }
 ```

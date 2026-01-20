@@ -40,14 +40,13 @@ converting HexData to sf
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # From grid specification
 grid <- hex_grid(area_km2 = 1000)
 cells <- lonlat_to_cell(c(0, 10, 20), c(45, 50, 55), grid)
 polys <- cell_to_sf(cells, grid)
 
 # From HexData (all cells)
+df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 polys <- cell_to_sf(grid = result)
-} # }
 ```

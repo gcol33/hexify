@@ -1,4 +1,4 @@
-# Assign hex cells (ISEA3H, aperture 3) for lon/lat
+# Assign hex cells ('ISEA3H', aperture 3) for lon/lat
 
 Forward -\> quantize (Z3) -\> center (face) -\> inverse to lon/lat.
 Optionally return polygons (sf), in which case sf must be installed.
@@ -27,7 +27,7 @@ hexify_assign(
 
 - match_dggrid_parity:
 
-  logical; TRUE matches ISEA3H parity used by dggridR.
+  logical; TRUE matches 'ISEA3H' parity used by 'dggridR'.
 
 - make_polygons:
 

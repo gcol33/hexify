@@ -37,7 +37,7 @@ Data frame with columns:
 
 ## Details
 
-Compatible with dggridR's dgSEQNUM_to_PLANE().
+Compatible with 'dggridR' dgSEQNUM_to_PLANE().
 
 ## See also
 
@@ -70,10 +70,8 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Get PLANE coordinates for cells
 plane <- hexify_cell_to_plane(cell_id = c(100, 200, 300),
                                resolution = 5, aperture = 3)
 plot(plane$plane_x, plane$plane_y)
-} # }
 ```

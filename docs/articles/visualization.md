@@ -120,11 +120,8 @@ a hex cell a single point covers:
 
 ``` r
 
-par(mfrow = c(3, 2))
+oldpar <- par(mfrow = c(2, 2))
 
-plot(result, show_points = TRUE, point_size = "tiny",
-     point_color = "red", main = "tiny (~2%)")
-#> Spherical geometry (s2) switched on
 plot(result, show_points = TRUE, point_size = "small",
      point_color = "red", main = "small (~5%)")
 #> Spherical geometry (s2) switched on
@@ -136,12 +133,13 @@ plot(result, show_points = TRUE, point_size = "large",
 #> Spherical geometry (s2) switched on
 plot(result, show_points = TRUE, point_size = "very large",
      point_color = "red", main = "very large (~35%)")
-#> Spherical geometry (s2) switched on
-
-par(mfrow = c(1, 1))
 ```
 
 ![](visualization_files/figure-html/point-sizes-1.svg)
+
+    #> Spherical geometry (s2) switched on
+
+    par(oldpar)
 
 ### Custom Point Styling
 
@@ -270,15 +268,15 @@ column to
 
 # Simulate observation data with counts
 set.seed(42)
-n_obs <- 500
+n_obs <- 100
 obs_data <- data.frame(
-  lon = c(rnorm(300, 10, 8), rnorm(200, 0, 10)),
-  lat = c(rnorm(300, 48, 5), rnorm(200, 52, 6)),
+  lon = c(rnorm(60, 10, 8), rnorm(40, 0, 10)),
+  lat = c(rnorm(60, 48, 5), rnorm(40, 52, 6)),
   count = rpois(n_obs, lambda = 50)
 )
 
 # Hexify
-grid <- hex_grid(area_km2 = 5000)
+grid <- hex_grid(area_km2 = 10000)
 obs_hex <- hexify(obs_data, lon = "lon", lat = "lat", grid = grid)
 ```
 
@@ -329,20 +327,12 @@ p1 <- hexify_heatmap(obs_hex, value = "count", colors = "viridis",
                      title = "viridis", xlim = c(-20, 35), ylim = c(35, 65))
 #> Spherical geometry (s2) switched off
 #> Spherical geometry (s2) switched on
-p2 <- hexify_heatmap(obs_hex, value = "count", colors = "plasma",
-                     title = "plasma", xlim = c(-20, 35), ylim = c(35, 65))
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
-p3 <- hexify_heatmap(obs_hex, value = "count", colors = "mako",
-                     title = "mako", xlim = c(-20, 35), ylim = c(35, 65))
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
-p4 <- hexify_heatmap(obs_hex, value = "count", colors = "YlGnBu",
+p2 <- hexify_heatmap(obs_hex, value = "count", colors = "YlGnBu",
                      title = "YlGnBu", xlim = c(-20, 35), ylim = c(35, 65))
 #> Spherical geometry (s2) switched off
 #> Spherical geometry (s2) switched on
 
-gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 2)
+gridExtra::grid.arrange(p1, p2, ncol = 2)
 ```
 
 ![](visualization_files/figure-html/heatmap-palettes-1.svg)
@@ -472,13 +462,13 @@ Visualizing uniformly sampled cells across Earth:
 
 ``` r
 
-# Grid parameters
-grid <- hex_grid(area_km2 = 100000, aperture = 3)
+# Grid parameters (coarse for faster build)
+grid <- hex_grid(area_km2 = 200000, aperture = 3)
 max_cell <- 10 * (3^grid@resolution) + 2
 
 # Sample random cell IDs
 set.seed(123)
-N <- 100
+N <- 50
 random_cells <- sample(1:max_cell, N, replace = FALSE)
 
 # Generate polygons for sampled cells
@@ -509,13 +499,13 @@ For full control, generate polygons directly and use ggplot2:
 # Create data with a numeric variable
 set.seed(456)
 stations <- data.frame(
-  lon = runif(200, -10, 30),
-  lat = runif(200, 35, 60),
-  temperature = rnorm(200, mean = 15, sd = 5)
+  lon = runif(50, -10, 30),
+  lat = runif(50, 35, 60),
+  temperature = rnorm(50, mean = 15, sd = 5)
 )
 
-# Hexify
-grid <- hex_grid(area_km2 = 8000)
+# Hexify (coarser grid for faster build)
+grid <- hex_grid(area_km2 = 20000)
 stations_hex <- hexify(stations, lon = "lon", lat = "lat", grid = grid)
 
 # Aggregate temperature by cell

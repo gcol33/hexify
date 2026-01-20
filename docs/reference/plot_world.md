@@ -34,11 +34,9 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Quick world map
 plot_world()
 
 # Custom colors
 plot_world(fill = "lightblue", border = "darkblue")
-} # }
 ```

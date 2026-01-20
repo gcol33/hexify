@@ -32,7 +32,7 @@ aperture grids that start with aperture 4 and switch to aperture 3.
 
 - `crs`:
 
-  Integer. Coordinate reference system (default 4326 = WGS84).
+  Integer. Coordinate reference system (default 4326 = 'WGS84').
 
 ## See also
 

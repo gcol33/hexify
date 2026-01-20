@@ -132,7 +132,6 @@ Common projections:
 
 \examples{
 library(hexify)
-library(ggplot2)
 
 # Sample data with counts
 cities <- data.frame(
@@ -143,6 +142,12 @@ cities <- data.frame(
 result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
 
 # Simple plot (uniform fill, no value mapping)
+hexify_heatmap(result)
+
+\donttest{
+library(ggplot2)
+
+# With world basemap
 hexify_heatmap(result, basemap = "world")
 
 # Heatmap with value mapping
@@ -172,6 +177,7 @@ hexify_heatmap(result, value = "count",
 hexify_heatmap(result, value = "count", basemap = "world") +
   labs(caption = "Data source: Example") +
   theme(legend.position = "bottom")
+}
 }
 \seealso{
 \code{\link{plot_grid}} for base R plotting,

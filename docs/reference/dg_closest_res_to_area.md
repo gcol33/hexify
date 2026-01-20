@@ -57,7 +57,6 @@ Other grid statistics:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Create a temporary grid to get aperture settings
 temp_grid <- list(aperture = 3, topology = "HEXAGON")
 class(temp_grid) <- "hexify_grid"
@@ -66,5 +65,4 @@ class(temp_grid) <- "hexify_grid"
 res <- dg_closest_res_to_area(temp_grid, area = 1000, 
                                metric = TRUE, show_info = TRUE)
 print(res)
-} # }
 ```

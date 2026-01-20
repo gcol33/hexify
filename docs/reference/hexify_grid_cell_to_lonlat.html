@@ -3,7 +3,20 @@
 DGGRID-compatible cell IDs back to cell center coordinates
 using the resolution and aperture from a grid object."><meta property="og:description" content="Grid-based wrapper for hexify_cell_to_lonlat. Converts
 DGGRID-compatible cell IDs back to cell center coordinates
-using the resolution and aperture from a grid object."></head><body>
+using the resolution and aperture from a grid object."></head><body><p>
+
+
+
+
+
+
+
+
+  pkgdown/mathjax-config.html
+
+  
+
+  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -11,7 +24,7 @@ using the resolution and aperture from a grid object."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,11 +116,9 @@ using the resolution and aperture from a grid object.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span>
-<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify_grid.html">hexify_grid</a></span><span class="op">(</span>area <span class="op">=</span> <span class="fl">1000</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify_grid_to_cell.html">hexify_grid_to_cell</a></span><span class="op">(</span><span class="va">grid</span>, lon <span class="op">=</span> <span class="fl">5</span>, lat <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span>
-<span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">hexify_grid_cell_to_lonlat</span><span class="op">(</span><span class="va">grid</span>, <span class="va">cell_ids</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="co"># }</span></span></code></pre></div>
+<span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu">hexify_grid_cell_to_lonlat</span><span class="op">(</span><span class="va">grid</span>, <span class="va">cell_ids</span><span class="op">)</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
@@ -127,5 +138,6 @@ using the resolution and aperture from a grid object.</p>
 
 
 
-  </body></html>
+  
+</body></html>
 

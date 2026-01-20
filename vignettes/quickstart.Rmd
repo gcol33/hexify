@@ -27,17 +27,17 @@ library(ggplot2)
 # Get world basemap
 countries <- hexify_world
 
-# Generate grids at different resolutions for specific regions
+# Generate grids at different resolutions for specific regions (coarser for speed)
 # Coarse grid: South America
-grid_sa <- hex_grid(area_km2 = 200000)
+grid_sa <- hex_grid(area_km2 = 300000)
 sa_hexes <- grid_rect(c(-80, -40, -35, 10), grid_sa)
 
 # Medium grid: Europe/Africa
-grid_eu <- hex_grid(area_km2 = 30000)
+grid_eu <- hex_grid(area_km2 = 80000)
 eu_hexes <- grid_rect(c(-10, -10, 40, 50), grid_eu)
 
 # Fine grid: East Asia
-grid_asia <- hex_grid(area_km2 = 8000)
+grid_asia <- hex_grid(area_km2 = 50000)
 asia_hexes <- grid_rect(c(90, 10, 140, 50), grid_asia)
 
 ggplot() +
@@ -120,27 +120,25 @@ This example demonstrates the typical workflow: loading point data, assigning to
 library(sf)
 library(ggplot2)
 
-# Simulate bird observation data
+# Simulate bird observation data (reduced for faster vignette build)
 set.seed(123)
-n_obs <- 3000
+n_obs <- 500
 
 # Generate observations with realistic spatial clustering
 birds <- data.frame(
   lon = c(
-    rnorm(800, mean = 10, sd = 15),    # Western Europe
-    rnorm(600, mean = 25, sd = 10),    # Eastern Europe
-    rnorm(400, mean = 20, sd = 20),    # Mediterranean
-    rnorm(500, mean = 0, sd = 15),     # West Africa
-    rnorm(400, mean = 35, sd = 10),    # East Africa
-    rnorm(300, mean = -5, sd = 8)      # Atlantic coast
+    rnorm(150, mean = 10, sd = 15),    # Western Europe
+    rnorm(100, mean = 25, sd = 10),    # Eastern Europe
+    rnorm(100, mean = 20, sd = 20),    # Mediterranean
+    rnorm(80, mean = 0, sd = 15),      # West Africa
+    rnorm(70, mean = 35, sd = 10)      # East Africa
   ),
   lat = c(
-    rnorm(800, mean = 50, sd = 8),     # Western Europe
-    rnorm(600, mean = 55, sd = 6),     # Eastern Europe
-    rnorm(400, mean = 42, sd = 5),     # Mediterranean
-    rnorm(500, mean = 10, sd = 10),    # West Africa
-    rnorm(400, mean = -5, sd = 12),    # East Africa
-    rnorm(300, mean = 35, sd = 10)     # Atlantic coast
+    rnorm(150, mean = 50, sd = 8),     # Western Europe
+    rnorm(100, mean = 55, sd = 6),     # Eastern Europe
+    rnorm(100, mean = 42, sd = 5),     # Mediterranean
+    rnorm(80, mean = 10, sd = 10),     # West Africa
+    rnorm(70, mean = -5, sd = 12)      # East Africa
   ),
   species = sample(c("Passer domesticus", "Turdus merula", "Parus major",
                      "Columba palumbus", "Sturnus vulgaris"), n_obs, replace = TRUE)
@@ -154,8 +152,8 @@ birds$lat <- pmax(-35, pmin(70, birds$lat))
 ### Assign Points to Grid Cells
 
 ```{r bird-assign}
-# Create grid and assign observations
-grid <- hex_grid(area_km2 = 25000)
+# Create grid and assign observations (coarser grid for faster build)
+grid <- hex_grid(area_km2 = 50000)
 birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = grid)
 
 # Extract data with cell IDs

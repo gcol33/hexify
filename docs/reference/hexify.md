@@ -43,7 +43,7 @@ hexify(
 
 - area_km2:
 
-  Target cell area in km² (mutually exclusive with diagonal).
+  Target cell area in km^2 (mutually exclusive with diagonal).
 
 - diagonal:
 
@@ -80,7 +80,7 @@ cell IDs. Use `result@cell_center` to get cell center coordinates.
 ## Details
 
 For sf objects, coordinates are automatically extracted and transformed
-to WGS84 (EPSG:4326) if needed. The geometry column is preserved.
+to 'WGS84' (EPSG:4326) if needed. The geometry column is preserved.
 
 Either `area_km2` (or `area`), `diagonal`, or `resolution` must be
 provided unless a `grid` object is supplied.
@@ -115,7 +115,6 @@ Other hexify main:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Simple data.frame
 df <- data.frame(
   site = c("Vienna", "Paris", "Madrid"),
@@ -145,5 +144,4 @@ result_ap4 <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = 4
 
 # Mixed aperture (ISEA43H)
 result_mixed <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture = "4/3")
-} # }
 ```

@@ -64,13 +64,13 @@ hexify_heatmap(
 
   Target CRS for the map projection. Can be:
 
-  - A numeric EPSG code (e.g., 4326 for WGS84, 3035 for LAEA Europe)
+  - A numeric EPSG code (e.g., 4326 for 'WGS84', 3035 for LAEA Europe)
 
   - A proj4 string
 
   - An sf crs object
 
-  - NULL to use WGS84 (EPSG:4326)
+  - NULL to use 'WGS84' (EPSG:4326)
 
 - colors:
 
@@ -182,7 +182,7 @@ Common projections:
 
 - 4326:
 
-  WGS84 (unprojected lat/lon)
+  'WGS84' (unprojected lat/lon)
 
 - 3035:
 
@@ -213,9 +213,7 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 library(hexify)
-library(ggplot2)
 
 # Sample data with counts
 cities <- data.frame(
@@ -226,6 +224,12 @@ cities <- data.frame(
 result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 5000)
 
 # Simple plot (uniform fill, no value mapping)
+hexify_heatmap(result)
+
+# \donttest{
+library(ggplot2)
+
+# With world basemap
 hexify_heatmap(result, basemap = "world")
 
 # Heatmap with value mapping
@@ -255,5 +259,5 @@ hexify_heatmap(result, value = "count",
 hexify_heatmap(result, value = "count", basemap = "world") +
   labs(caption = "Data source: Example") +
   theme(legend.position = "bottom")
-} # }
+# }
 ```

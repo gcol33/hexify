@@ -41,7 +41,7 @@ Data frame with columns:
 
 ## Details
 
-Compatible with dggridR's dgSEQNUM_to_Q2DI().
+Compatible with 'dggridR' dgSEQNUM_to_Q2DI().
 
 ## See also
 
@@ -74,7 +74,6 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Get Quad IJ coordinates for a cell
 result <- hexify_cell_to_quad_ij(cell_id = 1000, resolution = 10, aperture = 3)
 print(result)
@@ -83,5 +82,4 @@ print(result)
 cell_id <- hexify_quad_ij_to_cell(result$quad, result$i, result$j,
                                    resolution = 10, aperture = 3)
 # Should equal original cell_id
-} # }
 ```

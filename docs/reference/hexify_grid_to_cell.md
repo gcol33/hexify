@@ -60,8 +60,6 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 grid <- hexify_grid(area = 1000, aperture = 3)
 cell_ids <- hexify_grid_to_cell(grid, lon = c(0, 10), lat = c(45, 50))
-} # }
 ```

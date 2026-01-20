@@ -3,7 +3,20 @@
 colored by a value column. Supports continuous and discrete color scales,
 projection transformation, and customizable styling."><meta property="og:description" content="Creates a ggplot2-based visualization of hexagonal grid cells, optionally
 colored by a value column. Supports continuous and discrete color scales,
-projection transformation, and customizable styling."></head><body>
+projection transformation, and customizable styling."></head><body><p>
+
+
+
+
+
+
+
+
+  pkgdown/mathjax-config.html
+
+  
+
+  </p>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -11,7 +24,7 @@ projection transformation, and customizable styling."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,10 +118,10 @@ are drawn with a uniform fill color. If not specified but data has a
 
 
 <dt id="arg-crs">crs<a class="anchor" aria-label="anchor" href="#arg-crs"></a></dt>
-<dd><p>Target CRS for the map projection. Can be:</p><ul><li><p>A numeric EPSG code (e.g., 4326 for WGS84, 3035 for LAEA Europe)</p></li>
+<dd><p>Target CRS for the map projection. Can be:</p><ul><li><p>A numeric EPSG code (e.g., 4326 for 'WGS84', 3035 for LAEA Europe)</p></li>
 <li><p>A proj4 string</p></li>
 <li><p>An sf crs object</p></li>
-<li><p>NULL to use WGS84 (EPSG:4326)</p></li>
+<li><p>NULL to use 'WGS84' (EPSG:4326)</p></li>
 </ul></dd>
 
 
@@ -217,7 +230,7 @@ further customized with standard ggplot2 functions.</p>
 
 
 <p>Common projections:</p><dl><dt>4326</dt>
-<dd><p>WGS84 (unprojected lat/lon)</p></dd>
+<dd><p>'WGS84' (unprojected lat/lon)</p></dd>
 
 <dt>3035</dt>
 <dd><p>LAEA Europe</p></dd>
@@ -243,9 +256,7 @@ further customized with standard ggplot2 functions.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gcol33.github.io/hexify/">hexify</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gillescolling.com/hexify/" class="external-link">hexify</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Sample data with counts</span></span>
 <span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -256,6 +267,12 @@ further customized with standard ggplot2 functions.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simple plot (uniform fill, no value mapping)</span></span>
+<span><span class="fu">hexify_heatmap</span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># \donttest{</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># With world basemap</span></span>
 <span><span class="fu">hexify_heatmap</span><span class="op">(</span><span class="va">result</span>, basemap <span class="op">=</span> <span class="st">"world"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Heatmap with value mapping</span></span>
@@ -285,7 +302,7 @@ further customized with standard ggplot2 functions.</p>
 <span><span class="fu">hexify_heatmap</span><span class="op">(</span><span class="va">result</span>, value <span class="op">=</span> <span class="st">"count"</span>, basemap <span class="op">=</span> <span class="st">"world"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>caption <span class="op">=</span> <span class="st">"Data source: Example"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="co"># }</span></span></code></pre></div>
+<span><span class="co"># }</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
@@ -305,5 +322,6 @@ further customized with standard ggplot2 functions.</p>
 
 
 
-  </body></html>
+  
+</body></html>
 

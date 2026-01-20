@@ -50,7 +50,7 @@ Data frame with columns:
 
 ## Details
 
-Equivalent to dggridR's dgQ2DI_to_PROJTRI().
+Equivalent to 'dggridR' dgQ2DI_to_PROJTRI().
 
 ## See also
 
@@ -83,10 +83,8 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Get triangle coordinates for a Quad IJ position
 result <- hexify_quad_ij_to_icosa_tri(quad = 1, i = 100, j = 50,
                                        resolution = 10, aperture = 3)
 print(result)
-} # }
 ```

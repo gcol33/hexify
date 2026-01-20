@@ -33,6 +33,7 @@ boundary, which may produce partial hexagons at the edges. When
 the boundary are returned.
 }
 \examples{
+\donttest{
 # Get France boundary from built-in world map
 france <- hexify_world[hexify_world$name == "France", ]
 
@@ -50,6 +51,7 @@ ggplot() +
 
 # Keep only complete hexagons (no cropping)
 france_grid_complete <- grid_clip(france, grid, crop = FALSE)
+}
 }
 \seealso{
 \code{\link{grid_rect}} for rectangular grids,

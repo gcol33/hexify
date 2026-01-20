@@ -69,16 +69,14 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # First get triangle coordinates from lon/lat
 fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 
 # Then convert to quad XY
 quad_xy <- hexify_icosa_tri_to_quad_xy(
-  icosa_triangle_face = fwd$face,
-  icosa_triangle_x = fwd$tx,
-  icosa_triangle_y = fwd$ty
+  icosa_triangle_face = fwd["face"],
+  icosa_triangle_x = fwd["icosa_triangle_x"],
+  icosa_triangle_y = fwd["icosa_triangle_y"]
 )
 print(quad_xy)
-} # }
 ```

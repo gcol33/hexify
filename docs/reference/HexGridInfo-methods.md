@@ -37,3 +37,13 @@ as.list(x, ...)
 - ...:
 
   Additional arguments
+
+## Value
+
+- `$`: The value of the requested slot
+
+- `names`: Character vector of slot names
+
+- `show`: The object, invisibly (called for side effect of printing)
+
+- `as.list`: A named list of slot values

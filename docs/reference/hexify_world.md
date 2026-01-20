@@ -75,7 +75,7 @@ An sf object with 177 features and 15 fields:
 
 - geometry:
 
-  MULTIPOLYGON geometry in WGS84 (EPSG:4326)
+  MULTIPOLYGON geometry in 'WGS84' (EPSG:4326)
 
 ## Source
 
@@ -85,7 +85,6 @@ Simplified from Natural Earth 1:110m Cultural Vectors
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 library(sf)
 
 # Plot the built-in world map
@@ -94,9 +93,4 @@ plot(st_geometry(hexify_world), col = "lightgray", border = "white")
 # Filter by continent
 europe <- hexify_world[hexify_world$continent == "Europe", ]
 plot(st_geometry(europe))
-
-# Use as basemap for hex grid visualization
-result <- hexify(cities, lon = "lon", lat = "lat", area = 5000)
-hex_map(result, basemap = hexify_world)
-} # }
 ```

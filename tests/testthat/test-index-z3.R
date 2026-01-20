@@ -234,6 +234,7 @@ test_that("Z3: multi-digit encoding at resolution 6", {
 # =============================================================================
 
 test_that("Z3: basic roundtrip for small coordinates", {
+  skip_on_cran()
   # Generate test cases with valid Class II coordinates
   test_cases_raw <- expand.grid(
     face = c(0, 5, 10, 19),

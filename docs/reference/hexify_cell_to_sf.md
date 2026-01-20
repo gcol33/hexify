@@ -73,7 +73,7 @@ If return_sf = FALSE: data frame with columns:
 ## Details
 
 This function uses a native C++ implementation that is significantly
-faster than dggridR's polygon generation, especially for large numbers
+faster than 'dggridR' polygon generation, especially for large numbers
 of cells.
 
 For the recommended S4 interface, use
@@ -93,7 +93,6 @@ Other sf conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 library(hexify)
 
 # Generate some data with hex cells
@@ -109,5 +108,4 @@ polys <- hexify_cell_to_sf(result@cell_id, resolution = 10, aperture = 3)
 # Plot with sf
 library(sf)
 plot(st_geometry(polys), col = "lightblue", border = "blue")
-} # }
 ```

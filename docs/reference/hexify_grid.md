@@ -41,7 +41,7 @@ hexify_grid(
 
 - projection:
 
-  Projection type (only "ISEA" supported currently)
+  Projection type (only 'ISEA' supported currently)
 
 ## Value
 
@@ -84,12 +84,10 @@ Other hexify main:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Create a grid with ~1000 km^2 cells
 grid <- hexify_grid(area = 1000, aperture = 3)
 print(grid)
 
 # Create a finer resolution grid (~100 km^2 cells)
 fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
-} # }
 ```

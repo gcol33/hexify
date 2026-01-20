@@ -1,7 +1,7 @@
 # Calculate resolution for target area
 
-Uses the ISEA3H cell count formula: N = 10 \* aperture^res + 2 This
-matches dggridR's resolution numbering exactly.
+Uses the 'ISEA3H' cell count formula: N = 10 \* aperture^res + 2 This
+matches 'dggridR' resolution numbering exactly.
 
 ## Usage
 

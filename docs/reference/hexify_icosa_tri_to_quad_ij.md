@@ -79,18 +79,16 @@ Other coordinate conversion:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # First get triangle coordinates from lon/lat
 fwd <- hexify_forward(lon = 2.35, lat = 48.86)
 
 # Then convert to quad IJ
 quad_ij <- hexify_icosa_tri_to_quad_ij(
-  icosa_triangle_face = fwd$face,
-  icosa_triangle_x = fwd$tx,
-  icosa_triangle_y = fwd$ty,
+  icosa_triangle_face = fwd["face"],
+  icosa_triangle_x = fwd["icosa_triangle_x"],
+  icosa_triangle_y = fwd["icosa_triangle_y"],
   resolution = 10,
   aperture = 3
 )
 print(quad_ij)
-} # }
 ```

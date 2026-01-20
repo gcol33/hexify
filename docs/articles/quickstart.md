@@ -143,27 +143,25 @@ assigning to grid cells, aggregating, and visualizing.
 library(sf)
 library(ggplot2)
 
-# Simulate bird observation data
+# Simulate bird observation data (reduced for faster vignette build)
 set.seed(123)
-n_obs <- 3000
+n_obs <- 500
 
 # Generate observations with realistic spatial clustering
 birds <- data.frame(
   lon = c(
-    rnorm(800, mean = 10, sd = 15),    # Western Europe
-    rnorm(600, mean = 25, sd = 10),    # Eastern Europe
-    rnorm(400, mean = 20, sd = 20),    # Mediterranean
-    rnorm(500, mean = 0, sd = 15),     # West Africa
-    rnorm(400, mean = 35, sd = 10),    # East Africa
-    rnorm(300, mean = -5, sd = 8)      # Atlantic coast
+    rnorm(150, mean = 10, sd = 15),    # Western Europe
+    rnorm(100, mean = 25, sd = 10),    # Eastern Europe
+    rnorm(100, mean = 20, sd = 20),    # Mediterranean
+    rnorm(80, mean = 0, sd = 15),      # West Africa
+    rnorm(70, mean = 35, sd = 10)      # East Africa
   ),
   lat = c(
-    rnorm(800, mean = 50, sd = 8),     # Western Europe
-    rnorm(600, mean = 55, sd = 6),     # Eastern Europe
-    rnorm(400, mean = 42, sd = 5),     # Mediterranean
-    rnorm(500, mean = 10, sd = 10),    # West Africa
-    rnorm(400, mean = -5, sd = 12),    # East Africa
-    rnorm(300, mean = 35, sd = 10)     # Atlantic coast
+    rnorm(150, mean = 50, sd = 8),     # Western Europe
+    rnorm(100, mean = 55, sd = 6),     # Eastern Europe
+    rnorm(100, mean = 42, sd = 5),     # Mediterranean
+    rnorm(80, mean = 10, sd = 10),     # West Africa
+    rnorm(70, mean = -5, sd = 12)      # East Africa
   ),
   species = sample(c("Passer domesticus", "Turdus merula", "Parus major",
                      "Columba palumbus", "Sturnus vulgaris"), n_obs, replace = TRUE)
@@ -178,8 +176,8 @@ birds$lat <- pmax(-35, pmin(70, birds$lat))
 
 ``` r
 
-# Create grid and assign observations
-grid <- hex_grid(area_km2 = 25000)
+# Create grid and assign observations (coarser grid for faster build)
+grid <- hex_grid(area_km2 = 50000)
 birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = grid)
 
 # Extract data with cell IDs
@@ -205,12 +203,12 @@ names(richness)[2] <- "n_species"
 obs_counts <- merge(obs_counts, richness, by = "cell_id")
 head(obs_counts)
 #>   cell_id n_observations n_species
-#> 1       1              5         4
-#> 2      24              2         1
-#> 3      27              2         2
-#> 4      28              3         2
-#> 5      52              2         2
-#> 6      53              2         1
+#> 1       1              3         2
+#> 2      25              2         2
+#> 3      54              1         1
+#> 4     108              1         1
+#> 5     109              2         2
+#> 6     163              1         1
 ```
 
 #### Generate Cell Polygons and Visualize

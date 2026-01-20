@@ -1,7 +1,7 @@
-# Convert hexify grid to dggridR-compatible grid object
+# Convert hexify grid to 'dggridR'-compatible grid object
 
-Creates a dggridR-compatible grid specification from a hexify_grid
-object. The resulting object can be used with dggridR functions that
+Creates a 'dggridR'-compatible grid specification from a hexify_grid
+object. The resulting object can be used with 'dggridR' functions that
 accept a dggs object.
 
 ## Usage
@@ -18,7 +18,7 @@ as_dggrid(grid)
 
 ## Value
 
-A list with dggridR-compatible fields:
+A list with 'dggridR'-compatible fields:
 
 - pole_lon_deg:
 
@@ -46,7 +46,7 @@ A list with dggridR-compatible fields:
 
 - projection:
 
-  Map projection ("ISEA")
+  Map projection ('ISEA')
 
 - precision:
 
@@ -54,22 +54,7 @@ A list with dggridR-compatible fields:
 
 ## See also
 
-Other dggridR compatibility:
+Other 'dggridR' compatibility:
 [`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
 [`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md),
 [`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-library(hexify)
-library(dggridR)
-
-# Create hexify grid
-hgrid <- hexify_grid(area = 1000, aperture = 3)
-
-# Convert to dggridR format for use with dggridR functions
-dggs <- as_dggrid(hgrid)
-} # }
-```

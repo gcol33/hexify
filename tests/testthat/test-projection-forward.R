@@ -20,9 +20,11 @@ test_that("forward projection returns valid structure", {
 })
 
 test_that("forward projection returns finite values", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(123)
+
   n <- 100
   lon <- runif(n, -180, 180)
   lat <- runif(n, -89.99, 89.99)
@@ -37,6 +39,7 @@ test_that("forward projection returns finite values", {
 })
 
 test_that("forward projection face values are in valid range", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(456)
@@ -70,6 +73,7 @@ test_that("forward projection is deterministic", {
 # =============================================================================
 
 test_that("forward_to_face matches forward for detected face", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(789)
@@ -94,6 +98,7 @@ test_that("forward_to_face matches forward for detected face", {
 })
 
 test_that("forward_to_face returns values in [0, 1] range", {
+  skip_on_cran()
   hexify_build_icosa()
 
   set.seed(111)
@@ -153,6 +158,7 @@ test_that("forward projection handles antimeridian", {
 # =============================================================================
 
 test_that("forward projection matches reference data", {
+  skip_on_cran()
   hexify_build_icosa(11.25, 58.28252559, 0)
   hexify_set_precision("ultra")
 
