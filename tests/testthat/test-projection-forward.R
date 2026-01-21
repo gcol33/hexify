@@ -124,6 +124,7 @@ test_that("forward_to_face returns values in [0, 1] range", {
 # =============================================================================
 
 test_that("forward projection handles near-pole coordinates", {
+  skip_on_cran()
   hexify_build_icosa()
 
   eps <- 1e-9

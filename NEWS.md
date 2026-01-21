@@ -1,3 +1,9 @@
+# hexify 0.3.6
+
+* Reduced test suite runtime for CRAN by skipping detailed consistency tests
+  (full tests still run locally via NOT_CRAN=true)
+* Fixed CRAN incoming check NOTE: "Overall checktime 15 min > 10 min"
+
 # hexify 0.3.5
 
 * Simplified plot examples to reduce runtime

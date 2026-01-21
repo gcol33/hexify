@@ -380,6 +380,7 @@ test_that("hexify_heatmap works without value column (uniform fill)", {
 })
 
 test_that("hexify_heatmap works with basemap", {
+  skip_on_cran()  # Slow sf operations
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -443,6 +444,7 @@ test_that("hexify_heatmap respects styling parameters", {
 })
 
 test_that("hexify_heatmap works with projection", {
+  skip_on_cran()  # Slow CRS transformation
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -474,6 +476,7 @@ test_that("hexify_heatmap validates input", {
 })
 
 test_that("hexify_heatmap works with mask_outside", {
+  skip_on_cran()  # Slow sf intersection operations
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 

@@ -2,25 +2,21 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a resubmission addressing CRAN reviewer feedback.
+* This is a hotfix release addressing the clang-UBSAN issue identified in v0.3.4.
 
-The NOTE is "unable to verify current time" which is a network check issue, not a package problem.
+The NOTE is "Days since last update: 0" which is expected for a hotfix resubmission.
 
-## Changes since last submission
+## Changes in v0.3.5 (hotfix)
 
-Addressed all reviewer feedback:
-
-1. Fixed DESCRIPTION quoting (proper names without quotes, software with quotes)
-2. Added \value tags to HexData-methods.Rd and HexGridInfo-methods.Rd
-3. Removed examples from unexported functions (hexify_compare_resolutions, hexify_get_resolution)
-4. Replaced all \dontrun{} with executable examples or removed where not applicable
-5. Fixed par() reset in visualization vignette (now uses oldpar <- par(...); par(oldpar))
+1. Fixed clang-UBSAN NaN casting error in Snyder projection C++ code
+2. Simplified plot examples to reduce runtime (fixes slow example NOTE)
 
 ## Test environments
 
 * local Windows 11, R 4.5.2
-* win-builder R-devel (2026-01-08 r89292 ucrt)
-* win-builder R-release
+* win-builder R-devel (2026-01-20)
+* R-hub clang-asan (passed)
+* R-hub gcc-asan (passed)
 
 ## Downstream dependencies
 

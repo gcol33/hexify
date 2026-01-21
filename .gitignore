@@ -23,3 +23,5 @@ Rplots.pdf
 nul
 /doc/
 /Meta/
+hexify.Rcheck/
+hexify_*.tar.gz

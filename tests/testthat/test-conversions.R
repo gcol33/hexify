@@ -221,6 +221,7 @@ test_that("coordinate pipeline is consistent end-to-end", {
 })
 
 test_that("all apertures have consistent coordinate pipeline", {
+  skip_on_cran()  # Detailed loop test
   hexify_build_icosa()
 
   lon <- 0
@@ -536,6 +537,7 @@ test_that("hexify_cell_to_plane handles multiple cells", {
 # =============================================================================
 
 test_that("plane conversions work for all apertures", {
+  skip_on_cran()  # Loop test across apertures
   hexify_build_icosa()
 
   for (ap in c(3, 4, 7)) {

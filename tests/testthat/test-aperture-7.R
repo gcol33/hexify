@@ -17,6 +17,7 @@ setup_icosa <- function() {
 # =============================================================================
 
 test_that("aperture 7 round-trip works", {
+  skip_on_cran()
   setup_icosa()
 
   test_points <- list(
@@ -67,6 +68,7 @@ test_that("aperture 7 batch round-trip succeeds", {
 # =============================================================================
 
 test_that("aperture 7 alternates Class III-I and III-II", {
+  skip_on_cran()
   setup_icosa()
 
   # Cell (0,0) should always be at origin regardless of class
@@ -82,6 +84,7 @@ test_that("aperture 7 alternates Class III-I and III-II", {
 # =============================================================================
 
 test_that("aperture 7 refines by factor of 7", {
+  skip_on_cran()
   setup_icosa()
 
   # Aperture 7 has asymmetric scaling due to Class III variants:
@@ -117,6 +120,7 @@ test_that("aperture 7 refines by factor of 7", {
 # =============================================================================
 
 test_that("aperture 7 corners form valid hexagons", {
+  skip_on_cran()
   setup_icosa()
 
   for (res in c(0, 1, 2, 3)) {
@@ -134,6 +138,7 @@ test_that("aperture 7 corners form valid hexagons", {
 # =============================================================================
 
 test_that("aperture 7 lon/lat workflow works", {
+  skip_on_cran()
   setup_icosa()
 
   lon <- 16.37  # Vienna
@@ -158,6 +163,7 @@ test_that("aperture 7 lon/lat workflow works", {
 # =============================================================================
 
 test_that("cpp_test_roundtrip_ap7 returns TRUE for valid points", {
+  skip_on_cran()
   setup_icosa()
 
   test_points <- list(

@@ -17,6 +17,7 @@ setup_icosa <- function() {
 # =============================================================================
 
 test_that("pure aperture 4 sequence matches ap4 implementation", {
+  skip_on_cran()  # Detailed consistency check
   setup_icosa()
 
   # Pure ap4: sequence of all 4s
@@ -41,6 +42,7 @@ test_that("pure aperture 4 sequence matches ap4 implementation", {
 })
 
 test_that("pure aperture 3 sequence matches ap3 implementation", {
+  skip_on_cran()  # Detailed consistency check
   setup_icosa()
 
   # Pure ap3: sequence of all 3s
@@ -82,6 +84,7 @@ test_that("pure aperture 3 sequence matches ap3 implementation", {
 # =============================================================================
 
 test_that("mixed 43H pattern (DGGRID style) works", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   # DGGRID 43H: first 2 resolutions ap4, then ap3
@@ -117,6 +120,7 @@ test_that("mixed 43H pattern (DGGRID style) works", {
 # =============================================================================
 
 test_that("mixed aperture round-trip works for various sequences", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   sequences <- list(
@@ -157,6 +161,7 @@ test_that("mixed aperture round-trip works for various sequences", {
 # =============================================================================
 
 test_that("mixed aperture corners form valid hexagons", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   sequences <- list(
@@ -180,6 +185,7 @@ test_that("mixed aperture corners form valid hexagons", {
 # =============================================================================
 
 test_that("mixed aperture level = 0 (all aperture 3)", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   # When mixed_aperture_level = 0, should behave like pure aperture 3
@@ -199,6 +205,7 @@ test_that("mixed aperture level = 0 (all aperture 3)", {
 })
 
 test_that("mixed aperture level = resolution produces valid cells", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   # When mixed_aperture_level = resolution, all resolutions use aperture 4
@@ -225,6 +232,7 @@ test_that("mixed aperture level = resolution produces valid cells", {
 })
 
 test_that("mixed aperture round-trip at boundary resolutions", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   test_lon <- c(0, 45, -120)
@@ -265,6 +273,7 @@ test_that("mixed aperture invalid level throws error", {
 # =============================================================================
 
 test_that("cpp_lonlat_to_cell_ap34 and cpp_cell_to_lonlat_ap34 work", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   lon <- 16.37  # Vienna
@@ -292,6 +301,7 @@ test_that("cpp_lonlat_to_cell_ap34 and cpp_cell_to_lonlat_ap34 work", {
 })
 
 test_that("cpp_test_roundtrip_ap34 returns TRUE for valid points", {
+  skip_on_cran()  # Detailed loop test
   setup_icosa()
 
   test_points <- list(

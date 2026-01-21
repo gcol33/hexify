@@ -23,6 +23,7 @@ test_that("inverse projection returns valid lon/lat", {
 })
 
 test_that("inverse projection returns coordinates in valid range", {
+  skip_on_cran()
   hexify_build_icosa()
 
   for (face in 0:19) {
@@ -38,6 +39,7 @@ test_that("inverse projection returns coordinates in valid range", {
 # =============================================================================
 
 test_that("forward-inverse round-trip works near face centers", {
+  skip_on_cran()
   hexify_build_icosa()
   centers <- hexify_face_centers()
 
@@ -279,6 +281,7 @@ test_that("hexify_inverse validates input lengths", {
 # =============================================================================
 
 test_that("cpp_icosa_face_params returns valid face parameters", {
+  skip_on_cran()
   hexify_build_icosa()
 
   for (face in 0:19) {

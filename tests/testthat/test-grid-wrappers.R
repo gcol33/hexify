@@ -220,6 +220,7 @@ test_that("hexify_roundtrip_test error is reasonable", {
 # =============================================================================
 
 test_that("grid wrappers work for all apertures", {
+  skip_on_cran()  # Loop test across apertures
   setup_icosa()
 
   for (ap in c(3, 4, 7)) {
@@ -235,6 +236,7 @@ test_that("grid wrappers work for all apertures", {
 })
 
 test_that("h_index works for different apertures", {
+  skip_on_cran()  # Loop test across apertures
   setup_icosa()
 
   for (ap in c(3, 4, 7)) {
