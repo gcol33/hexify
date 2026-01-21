@@ -1,3 +1,4 @@
+
 # test-index_z7.R
 # Tests for Z7 encoding/decoding
 # Updated to match DGGRID's exact behavior for aperture 7

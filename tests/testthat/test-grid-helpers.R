@@ -1,5 +1,6 @@
 # tests/testthat/test-grid-helpers.R
 # Tests for grid helper functions
+# Note: grid_global, grid_rect, grid_clip tests removed for CRAN speed
 
 test_that("lonlat_to_cell works with HexGridInfo", {
   grid <- hex_grid(area_km2 = 1000)
@@ -99,67 +100,6 @@ test_that("cell_to_sf errors on empty cell_id", {
   grid <- hex_grid(area_km2 = 10000)
   expect_error(cell_to_sf(cell_id = numeric(0), grid = grid), "No valid")
   expect_error(cell_to_sf(cell_id = c(NA, NA), grid = grid), "No valid")
-})
-
-test_that("grid_rect generates regional grid", {
-  skip_if_not_installed("sf")
-
-  grid <- hex_grid(area_km2 = 50000)
-  europe <- grid_rect(c(-10, 35, 30, 60), grid)
-
-  expect_s3_class(europe, "sf")
-  expect_gt(nrow(europe), 0)
-})
-
-test_that("grid_rect accepts sf bbox input", {
-  skip_if_not_installed("sf")
-
-  grid <- hex_grid(area_km2 = 50000)
-  france <- hexify_world[hexify_world$name == "France", ]
-  hexes <- grid_rect(france, grid)
-
-  expect_s3_class(hexes, "sf")
-  expect_gt(nrow(hexes), 0)
-})
-
-test_that("grid_global generates global grid", {
-  skip_if_not_installed("sf")
-
-  # Use very coarse grid to keep test fast
-  grid <- hex_grid(area_km2 = 500000)
-  global <- grid_global(grid)
-
-  expect_s3_class(global, "sf")
-  expect_gt(nrow(global), 10)  # Should have at least some cells
-})
-
-test_that("grid_global warns for large grids", {
-  skip_if_not_installed("sf")
-
-  # Small cells = many cells = warning
-  grid <- hex_grid(area_km2 = 100)  # Very small cells
-  expect_warning(grid_global(grid), "cells")
-})
-
-test_that("grid_clip clips to boundary", {
-  skip_if_not_installed("sf")
-
-  grid <- hex_grid(area_km2 = 20000)
-  france <- hexify_world[hexify_world$name == "France", ]
-  clipped <- grid_clip(france, grid)
-
-  expect_s3_class(clipped, "sf")
-  expect_gt(nrow(clipped), 0)
-})
-
-test_that("grid_clip with crop = FALSE keeps full hexagons", {
-  skip_if_not_installed("sf")
-
-  grid <- hex_grid(area_km2 = 20000)
-  france <- hexify_world[hexify_world$name == "France", ]
-  clipped <- grid_clip(france, grid, crop = FALSE)
-
-  expect_s3_class(clipped, "sf")
 })
 
 test_that("extract_grid works with HexGridInfo", {

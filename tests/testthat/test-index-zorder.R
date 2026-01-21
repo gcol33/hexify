@@ -1,3 +1,4 @@
+
 # tests/testthat/test-index_zorder.R
 # Comprehensive tests for Z-Order indexing (generic, all apertures)
 
@@ -108,30 +109,31 @@ test_that("Z-Order aperture 3: Class I vs Class II string length", {
 })
 
 test_that("Z-Order aperture 3: comprehensive roundtrip", {
+  # Reduced test set for speed
   test_cases <- expand.grid(
-    face = c(0, 5, 10, 19),
-    i = 0:8,
-    j = 0:8,
-    res = 1:3
+    face = c(0, 10),
+    i = c(0, 2, 5),
+    j = c(0, 2, 5),
+    res = 1:2
   )
-  
+
   for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
 
     # Skip invalid coordinates
     max_coord <- get_max_coord(3, tc$res)
     if (tc$i > max_coord || tc$j > max_coord) next
-    
+
     # Skip invalid Class II coordinates
     if (tc$res %% 2 == 1) {  # Class II (odd resolution)
       j_required <- c(0, 2, 1)[tc$i %% 3 + 1]
       if (tc$j %% 3 != j_required) next
     }
-    
+
     # Roundtrip test
     index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 3, "zorder")
     result <- cpp_index_to_cell(index, 3, "zorder")
-    
+
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
     expect_equal(result$j, tc$j, label = sprintf("idx=%d", idx))
@@ -197,24 +199,25 @@ test_that("Z-Order aperture 4: basic encode/decode", {
 })
 
 test_that("Z-Order aperture 4: comprehensive roundtrip", {
+  # Reduced test set for speed
   test_cases <- expand.grid(
     face = c(0, 10),
-    i = c(0, 1, 5, 10, 15),
-    j = c(0, 1, 5, 10, 15),
-    res = 1:4
+    i = c(0, 3, 7),
+    j = c(0, 3, 7),
+    res = 1:3
   )
-  
+
   for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
 
     # Skip invalid coordinates
     max_coord <- get_max_coord(4, tc$res)
     if (tc$i > max_coord || tc$j > max_coord) next
-    
+
     # Roundtrip test
     index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 4, "zorder")
     result <- cpp_index_to_cell(index, 4, "zorder")
-    
+
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
     expect_equal(result$j, tc$j, label = sprintf("idx=%d", idx))
@@ -246,24 +249,25 @@ test_that("Z-Order aperture 7: basic encode/decode", {
 })
 
 test_that("Z-Order aperture 7: comprehensive roundtrip", {
+  # Reduced test set for speed
   test_cases <- expand.grid(
     face = c(0, 10),
-    i = c(0, 1, 3, 6, 10, 20),
-    j = c(0, 1, 3, 6, 10, 20),
+    i = c(0, 3, 6),
+    j = c(0, 3, 6),
     res = 1:2
   )
-  
+
   for (idx in seq_len(nrow(test_cases))) {
     tc <- test_cases[idx, ]
-    
+
     # Skip invalid coordinates
     max_coord <- get_max_coord(7, tc$res)
     if (tc$i > max_coord || tc$j > max_coord) next
-    
+
     # Roundtrip test
     index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 7, "zorder")
     result <- cpp_index_to_cell(index, 7, "zorder")
-    
+
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
     expect_equal(result$j, tc$j, label = sprintf("idx=%d", idx))

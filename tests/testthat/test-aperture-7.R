@@ -1,3 +1,4 @@
+
 # tests/testthat/test-aperture-7.R
 # Tests for aperture 7 (ISEA7H) hexagonal grid quantization
 #

@@ -1,3 +1,4 @@
+
 # tests/testthat/test-index_z3.R
 # Comprehensive tests for Z3 indexing (aperture 3 specialized)
 # VERSION: 2024-11-03 FIXED - Valid Class II coordinates

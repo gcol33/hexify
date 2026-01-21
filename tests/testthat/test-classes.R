@@ -1,3 +1,4 @@
+
 # tests/testthat/test-classes.R
 # Tests for S4 classes HexGridInfo and HexData
 

@@ -1,3 +1,4 @@
+
 # tests/testthat/test-icosahedron.R
 # Tests for icosahedron construction and face detection
 #

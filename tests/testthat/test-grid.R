@@ -1,3 +1,4 @@
+
 # tests/testthat/test-grid.R
 # Tests for hexify_grid.R - grid construction and validation
 

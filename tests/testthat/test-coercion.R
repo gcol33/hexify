@@ -1,3 +1,4 @@
+
 # tests/testthat/test-coercion.R
 # Tests for type coercion functions (as_tibble, as_sf)
 

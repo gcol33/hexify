@@ -1,3 +1,4 @@
+
 # tests/testthat/test-aperture-4.R
 # Tests for aperture 4 (ISEA4H) hexagonal grid quantization
 #

@@ -1,3 +1,4 @@
+
 # tests/testthat/test-dggrid-compat.R
 # Tests verifying hexify produces identical output to dggridR
 #

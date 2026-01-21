@@ -25,3 +25,4 @@
 ^submit_cran\.R$
 ^.*\.Rcheck$
 ^hexify_.*\.tar\.gz$
+^cookies\.txt$
