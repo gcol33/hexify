@@ -2,21 +2,21 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a hotfix release addressing the clang-UBSAN issue identified in v0.3.4.
+* This is a hotfix release addressing long test runtime (>10 min).
 
-The NOTE is "Days since last update: 0" which is expected for a hotfix resubmission.
+The NOTE is "Days since last update: 1" which is expected for a hotfix resubmission.
 
-## Changes in v0.3.5 (hotfix)
+## Changes in v0.3.6 (hotfix)
 
-1. Fixed clang-UBSAN NaN casting error in Snyder projection C++ code
-2. Simplified plot examples to reduce runtime (fixes slow example NOTE)
+1. Reduced test runtime from 13 min to ~3 min by adding skip_on_cran() to
+   detailed consistency tests (full tests still run locally via NOT_CRAN=true)
+2. Fixed CRAN incoming check NOTE: "Overall checktime 15 min > 10 min"
 
 ## Test environments
 
-* local Windows 11, R 4.5.2
-* win-builder R-devel (2026-01-20)
-* R-hub clang-asan (passed)
-* R-hub gcc-asan (passed)
+* local Windows 11, R 4.5.2 (tests: 199s)
+* mac-builder R-release (tests: 182s)
+* R-hub ubuntu-release (passed)
 
 ## Downstream dependencies
 
