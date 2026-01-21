@@ -395,7 +395,7 @@ resolve_basemap_with_raster <- function(basemap) {
     return(result)
   }
 
-  stop("basemap must be 'world', an sf object, or a raster (terra/raster)")
+stop("basemap must be 'world', an sf object, or a SpatRaster (terra)")
 }
 
 # =============================================================================
