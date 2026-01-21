@@ -2,21 +2,20 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a hotfix release addressing long test runtime (>10 min).
+* This is a resubmission after test runtime issues.
 
-The NOTE is "Days since last update: 1" which is expected for a hotfix resubmission.
+The NOTE is "Days since last update" which is expected for a resubmission.
 
-## Changes in v0.3.6 (hotfix)
+## Changes in v0.3.7
 
-1. Reduced test runtime from 13 min to ~3 min by adding skip_on_cran() to
-   detailed consistency tests (full tests still run locally via NOT_CRAN=true)
-2. Fixed CRAN incoming check NOTE: "Overall checktime 15 min > 10 min"
+1. Removed slow spatial operation tests (grid_global, grid_rect, grid_clip)
+2. Reduced comprehensive roundtrip test combinations
+3. Test runtime now ~13 seconds (previously exceeded 10 min limit)
 
 ## Test environments
 
-* local Windows 11, R 4.5.2 (tests: 199s)
-* mac-builder R-release (tests: 182s)
-* R-hub ubuntu-release (passed)
+* local Windows 11, R 4.5.2 (tests: ~13s)
+* GitHub Actions (ubuntu, macOS, windows)
 
 ## Downstream dependencies
 
