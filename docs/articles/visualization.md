@@ -318,6 +318,7 @@ or
 
 - Viridis options: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`,
   `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`
+
 - ColorBrewer sequential: `"YlOrRd"`, `"YlGnBu"`, `"Blues"`, `"Greens"`,
   `"Reds"`, `"Purples"`, etc.
 
@@ -556,5 +557,6 @@ ggplot() +
 
 - [`vignette("quickstart")`](https://gcol33.github.io/hexify/articles/quickstart.md) -
   Getting started with hexify
+
 - [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
   Complete analysis workflows

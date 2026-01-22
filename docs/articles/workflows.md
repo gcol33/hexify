@@ -15,13 +15,17 @@ eliminates parameter repetition.
 You often have:
 
 - Several independent datasets (observations, sensors, surveys)
+
 - All in longitude/latitude coordinates
+
 - Collected at different times or from different sources
 
 You want to:
 
 - Put everything on one common global grid
+
 - Be sure the grids actually match
+
 - Combine results later without subtle errors
 
 ### The Solution: Shared Grid Objects
@@ -174,9 +178,16 @@ grid <- hex_grid(area_km2 = 2000)
 france_grid <- grid_rect(c(-5, 41, 10, 52), grid)
 
 # Clip grid to France boundary
+# Use planar geometry to avoid s2 edge cases
+sf_use_s2(FALSE)
+#> Spherical geometry (s2) switched off
 france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
+#> although coordinates are longitude/latitude, st_intersection assumes that they
+#> are planar
 #> Warning: attribute variables are assumed to be spatially constant throughout
 #> all geometries
+sf_use_s2(TRUE)
+#> Spherical geometry (s2) switched on
 
 ggplot() +
   geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
@@ -477,7 +488,7 @@ result <- hexify(data_with_na, lon = "lon", lat = "lat", grid = grid)
 
 # Check which rows have valid cell assignments
 cat("Cell IDs:", result@cell_id, "\n")
-#> Cell IDs: 126594 246 246 122466
+#> Cell IDs: 126594 2 2 122466
 cat("NA indicates invalid coordinates\n")
 #> NA indicates invalid coordinates
 ```
@@ -524,9 +535,11 @@ wrapped <- st_wrap_dateline(
 
 - [`vignette("quickstart")`](https://gcol33.github.io/hexify/articles/quickstart.md) -
   Getting started with hexify
+
 - [`vignette("visualization")`](https://gcol33.github.io/hexify/articles/visualization.md) -
   Plotting with
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
   [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+
 - `vignette("theory")` - Mathematical foundations (ISEA projection,
   apertures)

@@ -272,6 +272,7 @@ error-free:
 
 - **`HexGridInfo`**: A grid specification that stores all parameters
   (aperture, resolution, area). Define once, reuse everywhere.
+
 - **`HexData`**: Your data + the grid that was used. Carries the grid
   reference so downstream operations “just work.”
 
@@ -306,7 +307,9 @@ For most analyses, pentagons are not a concern:
 
 1.  They’re a tiny minority (12 out of millions of cells at high
     resolutions)
+
 2.  They’re in predictable locations
+
 3.  The area difference (5/6) is small and can be corrected if needed
 
 #### Multi-Scale Analysis
@@ -327,8 +330,10 @@ types for very high resolutions.
   Plotting options:
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
   [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+
 - [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
   Grid generation, multi-resolution analysis, spatial joins, choosing
   resolution
+
 - `vignette("theory")` - Mathematical foundations (ISEA projection,
   apertures, space-filling curves)

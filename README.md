@@ -27,9 +27,12 @@ cities <- data.frame(
   lat = c(48.21, 48.86, 40.42)
 )
 
-# Create a grid and assign points
+# Option 1: Create grid first, then assign points
 grid <- hex_grid(area_km2 = 10000)
 result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
+
+# Option 2: Set grid parameters directly in hexify()
+result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 10000)
 
 # Visualize
 plot(result)
@@ -39,7 +42,7 @@ plot(result)
 
 Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.
 
-Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify implements the ISEA aperture-3 hexagonal grid (ISEA3H), the same system used by major biodiversity databases and spatial frameworks. This package provides:
+Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify implements ISEA hexagonal grids with multiple apertures (3, 4, 7, or mixed 4/3), the same system used by major biodiversity databases and spatial frameworks. This package provides:
 
 - **Consistent cell areas** regardless of latitude
 - **Deterministic cell assignment** for reproducible workflows

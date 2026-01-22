@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,43 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.6" id="hexify-036">hexify 0.3.6<a class="anchor" aria-label="anchor" href="#hexify-036"></a></h2>
+<ul><li>Reduced test suite runtime for CRAN by skipping detailed consistency tests (full tests still run locally via NOT_CRAN=true)</li>
+<li>Fixed CRAN incoming check NOTE: “Overall checktime 15 min &gt; 10 min”</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.5" id="hexify-035">hexify 0.3.5<a class="anchor" aria-label="anchor" href="#hexify-035"></a></h2>
+<ul><li>Simplified plot examples to reduce runtime</li>
+<li>Added non-standard files to .Rbuildignore</li>
+<li>Fixed slow example NOTE</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.4" id="hexify-034">hexify 0.3.4<a class="anchor" aria-label="anchor" href="#hexify-034"></a></h2>
+<p><strong>Hotfix for CRAN UBSAN check failure</strong></p>
+<ul><li>Fixed undefined behavior in Snyder ISEA projection causing NaN values (UBSAN error on M1 Mac CRAN check: “nan is outside the range of representable values of type ‘long long’” at coordinate_transforms.cpp:243-244)</li>
+<li>Root cause: floating-point precision in face assignment could project points onto geometrically invalid triangle faces near icosahedron edges</li>
+<li>Solution: added projection validation with face-retry logic - if validation fails (z &gt; DH), automatically tries adjacent faces until valid</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.3" id="hexify-033">hexify 0.3.3<a class="anchor" aria-label="anchor" href="#hexify-033"></a></h2><p class="text-muted">CRAN release: 2026-01-20</p>
+<ul><li>CRAN submission fixes</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.2" id="hexify-032">hexify 0.3.2<a class="anchor" aria-label="anchor" href="#hexify-032"></a></h2>
+<ul><li>Documentation improvements</li>
+<li>Fixed hierarchical index functions</li>
+<li>Increased test coverage to 90%</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="hexify-031">hexify 0.3.1<a class="anchor" aria-label="anchor" href="#hexify-031"></a></h2>
+<ul><li>Minor bug fixes</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="hexify-030">hexify 0.3.0<a class="anchor" aria-label="anchor" href="#hexify-030"></a></h2>
+<ul><li>Major refactoring of coordinate transformation system</li>
+<li>Improved performance for large grids</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="hexify-020">hexify 0.2.0<a class="anchor" aria-label="anchor" href="#hexify-020"></a></h2>
 <ul><li>Added dggridR compatibility functions (<code><a href="../reference/as_dggrid.html">as_dggrid()</a></code>, <code><a href="../reference/from_dggrid.html">from_dggrid()</a></code>)</li>
