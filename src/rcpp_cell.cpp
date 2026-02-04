@@ -947,6 +947,18 @@ static const double kClass1VertexY[6] = {kHexR, kHexR2, -kHexR2, -kHexR, -kHexR2
 static const double kClass2VertexX[6] = {-kHexR2, kHexR2, kHexR, kHexR2, -kHexR2, -kHexR};
 static const double kClass2VertexY[6] = {-0.5, -0.5, 0.0, 0.5, 0.5, 0.0};
 
+// Pentagon vertex skip indices for icosahedral vertex cells
+// All cells at (i=0, j=0) in any quad are pentagon cells (12 total, one per icosahedral vertex)
+// The invalid region depends on the quad:
+//   Quads 0-5: Region 3 is invalid -> skip vertex 3
+//   Quads 6-11: Region 4 is invalid -> skip vertex 2
+// These indices are based on the Class I vertex layout where vertices map to regions:
+//   Vertex 0 -> Region 0 (upper), Vertex 1 -> Region 5 (upper-left)
+//   Vertex 2 -> Region 4 (lower-left), Vertex 3 -> Region 3 (lower)
+//   Vertex 4 -> Region 2 (lower-right), Vertex 5 -> Region 1 (upper-right)
+constexpr int kPentagonSkipVertexRegion3 = 3;  // Skip vertex 3 for quads 0-5 (region 3 invalid)
+constexpr int kPentagonSkipVertexRegion4 = 2;  // Skip vertex 2 for quads 6-11 (region 4 invalid)
+
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
                                int aperture) {
@@ -1138,7 +1150,9 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         vertex_scale = center_scale;
     }
 
-    // Return a list of n elements, each element is a 7x2 matrix (lon, lat)
+    // Return a list of n elements, each element is a Nx2 matrix (lon, lat)
+    // Hexagons: 7 rows (6 vertices + closing)
+    // Pentagons: 6 rows (5 vertices + closing) - at icosahedral vertices
     List result(n);
 
     for (int k = 0; k < n; k++) {
@@ -1165,15 +1179,35 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
             }
         }
 
+        // Check if this is a pentagon cell (at icosahedral vertex)
+        // All 12 cells at (i=0, j=0) in any quad are pentagon cells
+        bool is_pentagon = (i == 0 && j == 0);
+        int skip_vertex = -1;  // -1 means no vertex to skip (hexagon)
+        if (is_pentagon) {
+            // Quads 0-5: region 3 is invalid -> skip vertex 3
+            // Quads 6-11: region 4 is invalid -> skip vertex 2
+            skip_vertex = (quad <= 5) ? kPentagonSkipVertexRegion3 : kPentagonSkipVertexRegion4;
+        }
+
         // Get cell center in Quad XY coordinates
         double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
         double grid_y = static_cast<double>(j) * hexify::kSin60;
         double qx_center = grid_x / center_scale;
         double qy_center = grid_y / center_scale;
 
-        // Create 7x2 matrix (closed polygon)
-        NumericMatrix coords(7, 2);
+        // Pentagon: 6 rows (5 vertices + closing)
+        // Hexagon: 7 rows (6 vertices + closing)
+        int n_vertices = is_pentagon ? 5 : 6;
+        int n_rows = n_vertices + 1;  // +1 for closing vertex
+        NumericMatrix coords(n_rows, 2);
+
+        int out_idx = 0;  // Output index (may differ from c if skipping a vertex)
         for (int c = 0; c < 6; c++) {
+            // Skip the invalid vertex for pentagon cells
+            if (c == skip_vertex) {
+                continue;
+            }
+
             // Vertex offsets are in backFrame coordinates, normalize to quad_xy
             double qx_vertex = qx_center + vertexX[c] / vertex_scale;
             double qy_vertex = qy_center + vertexY[c] / vertex_scale;
@@ -1184,10 +1218,10 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
             if (hexify::try_quad_xy_to_icosa_tri(quad, qx_vertex, qy_vertex, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)) {
                 // Normal case: convert to lon/lat via Snyder inverse
                 auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
-                coords(c, 0) = ll.first;
-                coords(c, 1) = ll.second;
+                coords(out_idx, 0) = ll.first;
+                coords(out_idx, 1) = ll.second;
             } else {
-                // Edge case: vertex is in invalid region (pentagon or quad boundary)
+                // Edge case: vertex is in invalid region (quad boundary)
                 // Fall back to using the center's face and projecting vertex offset
                 // This is an approximation but works for edge cells
                 int center_icosa_triangle_face;
@@ -1198,18 +1232,20 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
                     double vertex_icosa_triangle_x = center_icosa_triangle_x + (qx_vertex - qx_center);
                     double vertex_icosa_triangle_y = center_icosa_triangle_y + (qy_vertex - qy_center);
                     auto ll = hexify::face_xy_to_ll(vertex_icosa_triangle_x, vertex_icosa_triangle_y, center_icosa_triangle_face);
-                    coords(c, 0) = ll.first;
-                    coords(c, 1) = ll.second;
+                    coords(out_idx, 0) = ll.first;
+                    coords(out_idx, 1) = ll.second;
                 } else {
                     // Both center and vertex are invalid - use NaN
-                    coords(c, 0) = NA_REAL;
-                    coords(c, 1) = NA_REAL;
+                    coords(out_idx, 0) = NA_REAL;
+                    coords(out_idx, 1) = NA_REAL;
                 }
             }
+            out_idx++;
         }
+
         // Close polygon
-        coords(6, 0) = coords(0, 0);
-        coords(6, 1) = coords(0, 1);
+        coords(n_vertices, 0) = coords(0, 0);
+        coords(n_vertices, 1) = coords(0, 1);
 
         colnames(coords) = CharacterVector::create("lon", "lat");
         result[k] = coords;

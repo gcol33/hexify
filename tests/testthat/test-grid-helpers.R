@@ -128,3 +128,24 @@ test_that("extract_grid errors on invalid input", {
   expect_error(hexify:::extract_grid(list(a = 1)), "Cannot extract grid")
   expect_error(hexify:::extract_grid(data.frame()), "Cannot extract grid")
 })
+
+test_that("cell_to_sf returns valid geometries for all cells", {
+  skip_if_not_installed("sf")
+
+  # Test that polar cells (at icosahedral vertices) have valid geometries
+  # Cell 1 is always quad 0 (north pole), and the last cell is quad 11 (south pole)
+  grid <- hex_grid(area_km2 = 100000)
+  n_cells <- 10 * (as.integer(grid@aperture)^grid@resolution) + 2
+
+  # Test north and south pole cells
+  polar_cells <- c(1, n_cells)
+  polys <- cell_to_sf(polar_cells, grid)
+
+  # All geometries must be valid
+  validity <- sf::st_is_valid(polys)
+  expect_true(all(validity))
+
+  # These pentagon cells should have 5 vertices (6 coords with closing)
+  vertex_counts <- sapply(sf::st_geometry(polys), function(g) nrow(sf::st_coordinates(g)))
+  expect_true(all(vertex_counts == 6))
+})

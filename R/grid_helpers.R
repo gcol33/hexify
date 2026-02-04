@@ -161,6 +161,13 @@ cell_to_sf <- function(cell_id = NULL, grid) {
   })
 
   sfc <- sf::st_sfc(polygons, crs = g@crs)
+
+  # Handle antimeridian-crossing polygons by wrapping at the dateline
+
+  # This splits polygons that cross ±180° longitude into valid MULTIPOLYGONs
+  # DATELINEOFFSET=180 ensures proper splitting at the antimeridian
+  sfc <- sf::st_wrap_dateline(sfc, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+
   sf::st_sf(cell_id = cell_id, geometry = sfc)
 }
 
