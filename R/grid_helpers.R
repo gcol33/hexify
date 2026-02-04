@@ -274,6 +274,15 @@ grid_global <- function(grid) {
   lats <- seq(-85, 85, by = spacing_deg)
   grid_pts <- expand.grid(lon = lons, lat = lats)
 
+  # Add polar cap sampling (±85 to ±90 degrees)
+  # The regular grid misses polar cells because lat stops at ±85
+  polar_lons <- seq(-180, 180, by = 30)  # Coarser sampling near poles is fine
+  polar_lats <- c(seq(85.5, 89.9, by = 1), seq(-89.9, -85.5, by = 1))
+  polar_pts <- expand.grid(lon = polar_lons, lat = polar_lats)
+
+  # Combine main grid with polar samples
+  grid_pts <- rbind(grid_pts, polar_pts)
+
   cell_ids <- lonlat_to_cell(grid_pts$lon, grid_pts$lat, g)
   unique_cells <- unique(cell_ids)
 

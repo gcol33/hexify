@@ -1,3 +1,11 @@
+# hexify 0.3.10
+
+**Hotfix for geometry issues**
+
+* Fixed invalid pentagon geometries that caused gaps in global grids
+* Fixed antimeridian-crossing polygons using `st_wrap_dateline()`
+* Added polar cap sampling to `grid_global()` to include cells above ±85° latitude
+
 # hexify 0.3.6
 
 * Reduced test suite runtime for CRAN by skipping detailed consistency tests

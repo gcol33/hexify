@@ -2,15 +2,15 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a resubmission after test runtime issues.
+* This is a hotfix release addressing geometry issues in global grids.
 
-The NOTE is "Days since last update" which is expected for a resubmission.
+The NOTE is "Days since last update" which is expected for a patch release.
 
-## Changes in v0.3.7
+## Changes in v0.3.10
 
-1. Removed slow spatial operation tests (grid_global, grid_rect, grid_clip)
-2. Reduced comprehensive roundtrip test combinations
-3. Test runtime now ~13 seconds (previously exceeded 10 min limit)
+1. Fixed invalid pentagon geometries that caused visual gaps in global grids
+2. Fixed antimeridian-crossing polygons using `st_wrap_dateline()`
+3. Added polar cap sampling to `grid_global()` to include cells above ±85° latitude
 
 ## Test environments
 
