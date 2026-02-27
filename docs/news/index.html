@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,8 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/h3.html">H3 Grid Support</a></li>
+    <li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Practical Workflows</a></li>
   </ul></li>
@@ -56,6 +57,15 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="hexify-060">hexify 0.6.0<a class="anchor" aria-label="anchor" href="#hexify-060"></a></h2>
+<p><strong>ISEA–H3 crosswalk and per-cell area</strong></p>
+<ul><li>New <code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code>: bidirectional mapping between ISEA and H3 cell IDs, with automatic resolution matching and per-cell area comparison</li>
+<li>New <code><a href="../reference/cell_area.html">cell_area()</a></code>: returns geodesic area (km²) for each cell — constant for ISEA (equal-area), location-dependent for H3, with session-scoped caching</li>
+<li>HexData <code>$cell_area_km2</code>, <code>[["cell_area_km2"]]</code>, and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> now return per-cell areas for H3 grids instead of the grid-wide average</li>
+<li>Internal: extracted <code>closest_h3_resolution()</code> helper shared by <code><a href="../reference/hex_grid.html">hex_grid()</a></code> and <code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="hexify-050">hexify 0.5.0<a class="anchor" aria-label="anchor" href="#hexify-050"></a></h2>
 <p><strong>H3 grid support</strong></p>

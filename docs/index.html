@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
+<li><a class="dropdown-item" href="articles/h3.html">H3 Grid Support</a></li>
+    <li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="articles/workflows.html">Practical Workflows</a></li>
   </ul>
@@ -80,48 +81,44 @@
 <div class="page-header"><h1 id="hexify">hexify<a class="anchor" aria-label="anchor" href="#hexify"></a>
 </h1></div>
 <p><a href="https://CRAN.R-project.org/package=hexify" class="external-link"><img src="https://www.r-pkg.org/badges/version/hexify" alt="CRAN status"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/hexify" alt="CRAN downloads"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/hexify" alt="Monthly downloads"></a> <a href="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://app.codecov.io/gh/gcol33/hexify" class="external-link"><img src="https://codecov.io/gh/gcol33/hexify/graph/badge.svg" alt="Codecov test coverage"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
-<p><strong>Equal-Area Hexagonal Grids for Global Spatial Analysis</strong></p>
+<p><strong>Hexagonal Grids for Global Spatial Analysis — ISEA + H3</strong></p>
 <p align="center">
 <img src="reference/figures/hexify-hero.png" alt="Multi-resolution hexagonal grids" width="100%"></p>
-<p>The <code>hexify</code> package provides fast, accurate assignment of geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) discrete global grid system. Whether you’re aggregating species occurrences, analyzing point patterns, or preparing data for spatial modeling, <code>hexify</code> ensures every cell has identical area from the equator to the poles.</p>
+<p>The <code>hexify</code> package provides fast, accurate assignment of geographic coordinates to hexagonal grid cells. It supports two grid systems: <strong>ISEA</strong> (Icosahedral Snyder Equal Area) for guaranteed equal-area cells, and <strong>H3</strong> (Uber’s hierarchical hex system) for compatibility with industry-standard workflows like FCC broadband mapping. Whether you’re aggregating species occurrences, analyzing point patterns, or preparing data for spatial modeling, <code>hexify</code> gives you one consistent interface for both systems.</p>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gillescolling.com/hexify/" class="external-link">hexify</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Your data</span></span>
 <span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Vienna"</span>, <span class="st">"Paris"</span>, <span class="st">"Madrid"</span><span class="op">)</span>,</span>
 <span>  lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="fl">2.35</span>, <span class="op">-</span><span class="fl">3.70</span><span class="op">)</span>,</span>
 <span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">48.21</span>, <span class="fl">48.86</span>, <span class="fl">40.42</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Option 1: Create grid first, then assign points</span></span>
+<span><span class="co"># ISEA equal-area grid (default)</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Option 2: Set grid parameters directly in hexify()</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># H3 grid (Uber's system)</span></span>
+<span><span class="va">h3_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">4</span>, type <span class="op">=</span> <span class="st">"h3"</span><span class="op">)</span></span>
+<span><span class="va">result_h3</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">h3_grid</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result_h3</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="statement-of-need">Statement of Need<a class="anchor" aria-label="anchor" href="#statement-of-need"></a>
 </h2>
 <p>Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.</p>
-<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify implements ISEA hexagonal grids with multiple apertures (3, 4, 7, or mixed 4/3), the same system used by major biodiversity databases and spatial frameworks. This package provides:</p>
+<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify implements two hex grid systems:</p>
 <ul>
 <li>
-<strong>Consistent cell areas</strong> regardless of latitude</li>
+<strong>ISEA</strong> — True equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3. Fast C++ implementation. Compatible with dggridR cell IDs.</li>
 <li>
-<strong>Deterministic cell assignment</strong> for reproducible workflows</li>
-<li>
-<strong>Fast C++ implementation</strong> handling millions of points</li>
-<li>
-<strong>Direct compatibility</strong> with dggridR cell IDs</li>
+<strong>H3</strong> — Uber’s hierarchical hexagonal system (resolutions 0–15). Industry standard used by the FCC, Foursquare, and others. Powered by the <code>h3o</code> package.</li>
 </ul>
+<p>Both systems share the same interface: <code><a href="reference/hexify.html">hexify()</a></code>, <code><a href="reference/cell_to_sf.html">cell_to_sf()</a></code>, <code><a href="reference/grid_rect.html">grid_rect()</a></code>, <code><a href="reference/get_parent.html">get_parent()</a></code>, <code><a href="reference/get_children.html">get_children()</a></code>, and all other functions work with either grid type.</p>
 <p>These features make hexify suitable for:</p>
 <ul>
 <li>Species distribution modeling and biodiversity assessments</li>
@@ -179,6 +176,8 @@
 <strong><code><a href="reference/as_sf.html">as_sf()</a></code></strong>: Export HexData to sf object</li>
 <li>
 <strong><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code></strong>: Extract data with cell assignments</li>
+<li>
+<strong>H3 support</strong>: <code>hex_grid(resolution = 8, type = "h3")</code> — requires <code>h3o</code> package</li>
 </ul>
 </div>
 </div>

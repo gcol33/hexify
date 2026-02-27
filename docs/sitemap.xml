@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://gcol33.github.io/hexify/404.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/articles/h3.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/index.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/quickstart.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/articles/theory.html</loc></url>
@@ -21,6 +22,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/autoplot.HexData.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/calculate_resolution_for_area.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/cells.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/cell_area.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/cell_to_index.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/cell_to_lonlat.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/cell_to_sf.html</loc></url>
@@ -42,6 +44,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/grid_global.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid_info.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid_rect.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/h3_crosswalk.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexData-class.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexData-methods.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/HexGrid-class.html</loc></url>

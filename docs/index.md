@@ -12,16 +12,18 @@ coverage](https://codecov.io/gh/gcol33/hexify/graph/badge.svg)](https://app.code
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Equal-Area Hexagonal Grids for Global Spatial Analysis**
+**Hexagonal Grids for Global Spatial Analysis — ISEA + H3**
 
 ![Multi-resolution hexagonal grids](reference/figures/hexify-hero.png)
 
 The `hexify` package provides fast, accurate assignment of geographic
-coordinates to equal-area hexagonal grid cells using the ISEA
-(Icosahedral Snyder Equal Area) discrete global grid system. Whether
+coordinates to hexagonal grid cells. It supports two grid systems:
+**ISEA** (Icosahedral Snyder Equal Area) for guaranteed equal-area
+cells, and **H3** (Uber’s hierarchical hex system) for compatibility
+with industry-standard workflows like FCC broadband mapping. Whether
 you’re aggregating species occurrences, analyzing point patterns, or
-preparing data for spatial modeling, `hexify` ensures every cell has
-identical area from the equator to the poles.
+preparing data for spatial modeling, `hexify` gives you one consistent
+interface for both systems.
 
 ## Quick Start
 
@@ -29,22 +31,21 @@ identical area from the equator to the poles.
 
 library(hexify)
 
-# Your data
 cities <- data.frame(
   name = c("Vienna", "Paris", "Madrid"),
   lon = c(16.37, 2.35, -3.70),
   lat = c(48.21, 48.86, 40.42)
 )
 
-# Option 1: Create grid first, then assign points
+# ISEA equal-area grid (default)
 grid <- hex_grid(area_km2 = 10000)
 result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
-
-# Option 2: Set grid parameters directly in hexify()
-result <- hexify(cities, lon = "lon", lat = "lat", area_km2 = 10000)
-
-# Visualize
 plot(result)
+
+# H3 grid (Uber's system)
+h3_grid <- hex_grid(resolution = 4, type = "h3")
+result_h3 <- hexify(cities, lon = "lon", lat = "lat", grid = h3_grid)
+plot(result_h3)
 ```
 
 ## Statement of Need
@@ -57,15 +58,22 @@ that area. This violates the equal-sampling assumption underlying most
 spatial statistics.
 
 Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s
-surface into cells of uniform area. hexify implements ISEA hexagonal
-grids with multiple apertures (3, 4, 7, or mixed 4/3), the same system
-used by major biodiversity databases and spatial frameworks. This
-package provides:
+surface into cells of uniform area. hexify implements two hex grid
+systems:
 
-- **Consistent cell areas** regardless of latitude
-- **Deterministic cell assignment** for reproducible workflows
-- **Fast C++ implementation** handling millions of points
-- **Direct compatibility** with dggridR cell IDs
+- **ISEA** — True equal-area hexagonal grids with apertures 3, 4, 7, or
+  mixed 4/3. Fast C++ implementation. Compatible with dggridR cell IDs.
+- **H3** — Uber’s hierarchical hexagonal system (resolutions 0–15).
+  Industry standard used by the FCC, Foursquare, and others. Powered by
+  the `h3o` package.
+
+Both systems share the same interface:
+[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md),
+[`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md),
+[`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md),
+[`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md),
+[`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md),
+and all other functions work with either grid type.
 
 These features make hexify suitable for:
 
@@ -116,6 +124,8 @@ These features make hexify suitable for:
   Export HexData to sf object
 - **[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)**:
   Extract data with cell assignments
+- **H3 support**: `hex_grid(resolution = 8, type = "h3")` — requires
+  `h3o` package
 
 ## Installation
 

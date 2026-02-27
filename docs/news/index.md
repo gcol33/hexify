@@ -1,5 +1,25 @@
 # Changelog
 
+## hexify 0.6.0
+
+**ISEA–H3 crosswalk and per-cell area**
+
+- New
+  [`h3_crosswalk()`](https://gcol33.github.io/hexify/reference/h3_crosswalk.md):
+  bidirectional mapping between ISEA and H3 cell IDs, with automatic
+  resolution matching and per-cell area comparison
+- New
+  [`cell_area()`](https://gcol33.github.io/hexify/reference/cell_area.md):
+  returns geodesic area (km²) for each cell — constant for ISEA
+  (equal-area), location-dependent for H3, with session-scoped caching
+- HexData `$cell_area_km2`, `[["cell_area_km2"]]`, and
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) now
+  return per-cell areas for H3 grids instead of the grid-wide average
+- Internal: extracted `closest_h3_resolution()` helper shared by
+  [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+  and
+  [`h3_crosswalk()`](https://gcol33.github.io/hexify/reference/h3_crosswalk.md)
+
 ## hexify 0.5.0
 
 **H3 grid support**

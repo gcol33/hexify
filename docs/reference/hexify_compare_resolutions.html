@@ -22,7 +22,7 @@ grid configuration. Useful for choosing appropriate resolution."></head><body><p
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,8 @@ grid configuration. Useful for choosing appropriate resolution."></head><body><p
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/h3.html">H3 Grid Support</a></li>
+    <li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Practical Workflows</a></li>
   </ul></li>
@@ -79,11 +80,15 @@ grid configuration. Useful for choosing appropriate resolution.</p>
 
 
 <dl><dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>
-<dd><p>Grid aperture (3, 4, or 7)</p></dd>
+<dd><p>Grid aperture (3, 4, or 7). Ignored for H3 grids.</p></dd>
 
 
 <dt id="arg-res-range">res_range<a class="anchor" aria-label="anchor" href="#arg-res-range"></a></dt>
 <dd><p>Range of resolutions to compare (e.g., 1:10)</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Grid type: "isea" (default) or "h3".</p></dd>
 
 
 <dt id="arg-print">print<a class="anchor" aria-label="anchor" href="#arg-print"></a></dt>

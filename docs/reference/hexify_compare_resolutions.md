@@ -18,11 +18,15 @@ hexify_compare_resolutions(
 
 - aperture:
 
-  Grid aperture (3, 4, or 7)
+  Grid aperture (3, 4, or 7). Ignored for H3 grids.
 
 - res_range:
 
   Range of resolutions to compare (e.g., 1:10)
+
+- type:
+
+  Grid type: "isea" (default) or "h3".
 
 - print:
 

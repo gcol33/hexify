@@ -55,6 +55,15 @@ Create grids over regions
 - [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)
   : Get children cells
 
+## H3 Interoperability
+
+Cross-grid mapping and per-cell area
+
+- [`h3_crosswalk()`](https://gcol33.github.io/hexify/reference/h3_crosswalk.md)
+  : Crosswalk Between ISEA and H3 Cell IDs
+- [`cell_area()`](https://gcol33.github.io/hexify/reference/cell_area.md)
+  : Compute per-cell area in km²
+
 ## Visualization
 
 Plotting functions
