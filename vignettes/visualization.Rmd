@@ -235,6 +235,7 @@ hexify_heatmap(
 Available color palettes include any from `scale_fill_viridis_c()` or `scale_fill_distiller()`:
 
 - Viridis options: `"viridis"`, `"magma"`, `"plasma"`, `"inferno"`, `"cividis"`, `"mako"`, `"rocket"`, `"turbo"`
+
 - ColorBrewer sequential: `"YlOrRd"`, `"YlGnBu"`, `"Blues"`, `"Greens"`, `"Reds"`, `"Purples"`, etc.
 
 ```{r heatmap-palettes, fig.width=8, fig.height=4}
@@ -432,4 +433,5 @@ ggplot() +
 ## See Also
 
 - `vignette("quickstart")` - Getting started with hexify
+
 - `vignette("workflows")` - Complete analysis workflows

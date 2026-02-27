@@ -1247,6 +1247,22 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         coords(n_vertices, 0) = coords(0, 0);
         coords(n_vertices, 1) = coords(0, 1);
 
+        // Extend polar cells to reach 90°N or 90°S
+        // Find ALL vertices above 88° and extend them to the pole
+        // Also normalize longitude to 0° at poles (all longitudes = same point)
+        for (int v = 0; v <= n_vertices; v++) {
+            double lat = coords(v, 1);
+            if (!NumericVector::is_na(lat)) {
+                if (lat > 88.0) {
+                    coords(v, 1) = 90.0;   // Extend to North Pole
+                    coords(v, 0) = 0.0;    // Normalize lon (all lons same at pole)
+                } else if (lat < -88.0) {
+                    coords(v, 1) = -90.0;  // Extend to South Pole
+                    coords(v, 0) = 0.0;    // Normalize lon
+                }
+            }
+        }
+
         colnames(coords) = CharacterVector::create("lon", "lat");
         result[k] = coords;
     }

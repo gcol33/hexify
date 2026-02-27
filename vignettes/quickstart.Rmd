@@ -233,6 +233,7 @@ ggplot() +
 hexify uses two S4 classes to make spatial workflows clean and error-free:
 
 - **`HexGridInfo`**: A grid specification that stores all parameters (aperture, resolution, area). Define once, reuse everywhere.
+
 - **`HexData`**: Your data + the grid that was used. Carries the grid reference so downstream operations "just work."
 
 ### HexGridInfo Slots
@@ -263,7 +264,9 @@ At every resolution, the ISEA grid contains **12 pentagonal cells** with area 5/
 For most analyses, pentagons are not a concern:
 
 1. They're a tiny minority (12 out of millions of cells at high resolutions)
+
 2. They're in predictable locations
+
 3. The area difference (5/6) is small and can be corrected if needed
 
 ### Multi-Scale Analysis
@@ -277,5 +280,7 @@ Cell IDs are stored as integers. For resolutions above 15 (aperture 3), cell IDs
 ## See Also
 
 - `vignette("visualization")` - Plotting options: `plot()`, `hexify_heatmap()`
+
 - `vignette("workflows")` - Grid generation, multi-resolution analysis, spatial joins, choosing resolution
+
 - `vignette("theory")` - Mathematical foundations (ISEA projection, apertures, space-filling curves)
