@@ -12,9 +12,11 @@ hexify_compare_resolutions(
 )
 }
 \arguments{
-\item{aperture}{Grid aperture (3, 4, or 7)}
+\item{aperture}{Grid aperture (3, 4, or 7). Ignored for H3 grids.}
 
 \item{res_range}{Range of resolutions to compare (e.g., 1:10)}
+
+\item{type}{Grid type: "isea" (default) or "h3".}
 
 \item{print}{If TRUE, prints a formatted table to console. If FALSE (default),
 returns a data frame.}

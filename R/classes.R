@@ -367,6 +367,9 @@ setMethod("$", "HexData", function(x, name) {
     return(x@cell_center[, "lat"])
   }
   if (name == "cell_area_km2") {
+    if (is_h3_grid(x@grid)) {
+      return(as.numeric(cell_area(grid = x)))
+    }
     return(rep(x@grid@area_km2, nrow(x@data)))
   }
   if (name == "cell_diag_km") {
@@ -422,7 +425,10 @@ setMethod("[[", c("HexData", "ANY"), function(x, i) {
     if (i == "cell_id") return(x@cell_id)
     if (i == "cell_cen_lon") return(x@cell_center[, "lon"])
     if (i == "cell_cen_lat") return(x@cell_center[, "lat"])
-    if (i == "cell_area_km2") return(rep(x@grid@area_km2, nrow(x@data)))
+    if (i == "cell_area_km2") {
+      if (is_h3_grid(x@grid)) return(as.numeric(cell_area(grid = x)))
+      return(rep(x@grid@area_km2, nrow(x@data)))
+    }
     if (i == "cell_diag_km") return(rep(x@grid@diagonal_km, nrow(x@data)))
   }
   x@data[[i]]
@@ -572,7 +578,11 @@ setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
   df$cell_id <- x@cell_id
   df$cell_cen_lon <- x@cell_center[, "lon"]
   df$cell_cen_lat <- x@cell_center[, "lat"]
-  df$cell_area_km2 <- x@grid@area_km2
+  if (is_h3_grid(x@grid)) {
+    df$cell_area_km2 <- as.numeric(cell_area(grid = x))
+  } else {
+    df$cell_area_km2 <- x@grid@area_km2
+  }
   df$cell_diag_km <- x@grid@diagonal_km
 
   if (!is.null(row.names)) {

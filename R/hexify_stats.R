@@ -190,8 +190,9 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' Generates a table comparing different resolution levels for a given
 #' grid configuration. Useful for choosing appropriate resolution.
 #'
-#' @param aperture Grid aperture (3, 4, or 7)
+#' @param aperture Grid aperture (3, 4, or 7). Ignored for H3 grids.
 #' @param res_range Range of resolutions to compare (e.g., 1:10)
+#' @param type Grid type: "isea" (default) or "h3".
 #' @param print If TRUE, prints a formatted table to console. If FALSE (default),
 #'   returns a data frame.
 #'

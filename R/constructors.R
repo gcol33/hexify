@@ -121,8 +121,7 @@ hex_grid <- function(area_km2 = NULL,
         stop("area_km2 must be a positive number")
       }
       # Find closest H3 resolution by area
-      diffs <- abs(H3_AVG_AREA_KM2 - area_km2)
-      resolution <- which.min(diffs) - 1L  # 0-indexed
+      resolution <- closest_h3_resolution(area_km2)
       warning(sprintf(
         "H3 cells are not exactly equal-area. Closest resolution %d has average area ~%.3f km^2 (requested %.3f km^2)",
         resolution, H3_AVG_AREA_KM2[resolution + 1L], area_km2

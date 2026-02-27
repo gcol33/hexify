@@ -54,6 +54,11 @@ reference:
   - cell_to_lonlat
   - get_parent
   - get_children
+- title: H3 Interoperability
+  desc: Cross-grid mapping and per-cell area
+  contents:
+  - h3_crosswalk
+  - cell_area
 - title: Visualization
   desc: Plotting functions
   contents:

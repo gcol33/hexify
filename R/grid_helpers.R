@@ -529,6 +529,126 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 }
 
 # =============================================================================
+# CELL AREA COMPUTATION
+# =============================================================================
+
+#' Compute per-cell area in km²
+#'
+#' Returns the area of each cell in square kilometers. For ISEA grids, all
+#' cells have the same area (equal-area property). For H3 grids, each cell
+#' has a different geodesic area depending on its location.
+#'
+#' @param cell_id Cell IDs to compute area for. For ISEA grids, these are
+#'   numeric; for H3 grids, character strings. When \code{grid} is a HexData
+#'   object and \code{cell_id} is \code{NULL}, all cell IDs from the data are
+#'   used.
+#' @param grid A HexGridInfo or HexData object.
+#'
+#' @return Named numeric vector of areas in km², one per \code{cell_id}.
+#'
+#' @details
+#' For ISEA grids the area is constant across all cells and is read directly
+#' from the grid specification.
+#'
+#' For H3 grids the area varies by latitude. This function computes geodesic
+#' area via \code{sf::st_area()} on H3 cell polygons, with results cached in a
+#' session-scoped environment so repeated calls for the same cells are fast.
+#'
+#' @seealso \code{\link{hex_grid}} for grid specifications,
+#'   \code{\link{h3_crosswalk}} for ISEA/H3 interoperability
+#'
+#' @export
+#' @examples
+#' # ISEA: constant area
+#' grid <- hex_grid(area_km2 = 1000)
+#' cells <- lonlat_to_cell(c(0, 10, 20), c(45, 50, 55), grid)
+#' cell_area(cells, grid)
+#'
+#' # H3: area varies by location
+#' \donttest{
+#' h3 <- hex_grid(resolution = 5, type = "h3")
+#' h3_cells <- lonlat_to_cell(c(0, 0), c(0, 80), h3)
+#' cell_area(h3_cells, h3)  # equator vs polar — different areas
+#' }
+cell_area <- function(cell_id = NULL, grid) {
+
+  # Handle HexData input
+  if (is_hex_data(grid)) {
+    if (is.null(cell_id)) {
+      cell_id <- grid@cell_id
+    }
+    g <- grid@grid
+  } else {
+    g <- extract_grid(grid)
+    if (is.null(cell_id)) {
+      stop("cell_id required when grid is not HexData")
+    }
+  }
+
+  # ISEA: constant equal-area
+  if (!is_h3_grid(g)) {
+    areas <- rep(g@area_km2, length(cell_id))
+    if (is.numeric(cell_id)) {
+      names(areas) <- as.character(as.integer(cell_id))
+    } else {
+      names(areas) <- as.character(cell_id)
+    }
+    return(areas)
+  }
+
+  # H3: per-cell geodesic area (with caching)
+  check_h3o()
+  cell_id <- as.character(cell_id)
+
+  # Operate on unique IDs, then expand back
+  unique_ids <- unique(cell_id)
+  unique_areas <- .h3_cell_area_cached(unique_ids)
+
+  areas <- unique_areas[cell_id]
+  names(areas) <- cell_id
+  areas
+}
+
+#' Cached geodesic area computation for H3 cells
+#'
+#' Computes actual geodesic area for H3 cells using sf::st_area() on h3o
+#' polygons. Results are cached in .hexify_cache so repeated queries are fast.
+#'
+#' @param cell_ids Character vector of H3 cell IDs (should be unique)
+#' @return Named numeric vector of areas in km²
+#' @noRd
+.h3_cell_area_cached <- function(cell_ids) {
+  cache_key <- "h3_areas"
+  if (!exists(cache_key, envir = .hexify_cache)) {
+    assign(cache_key, new.env(parent = emptyenv()), envir = .hexify_cache)
+  }
+  area_env <- get(cache_key, envir = .hexify_cache)
+
+  # Split into cached and uncached (vectorized via ls())
+  cached_ids <- ls(area_env)
+  need_compute <- setdiff(cell_ids, cached_ids)
+
+  if (length(need_compute) > 0) {
+    # Temporarily enable s2 for geodesic area computation
+    s2_state <- sf::sf_use_s2()
+    sf::sf_use_s2(TRUE)
+    on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+
+    h3_idx <- h3o::h3_from_strings(need_compute)
+    polys_sfc <- sf::st_as_sfc(h3_idx)
+    areas_m2 <- as.numeric(sf::st_area(polys_sfc))
+    areas_km2 <- areas_m2 / 1e6
+
+    for (i in seq_along(need_compute)) {
+      assign(need_compute[i], areas_km2[i], envir = area_env)
+    }
+  }
+
+  # Vectorized retrieval
+  unlist(mget(cell_ids, envir = area_env))
+}
+
+# =============================================================================
 # HIERARCHICAL INDEX HELPERS
 # =============================================================================
 

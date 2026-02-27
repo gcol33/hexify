@@ -133,6 +133,31 @@ H3_AVG_AREA_KM2 <- c(
   0.000000895   # res 15
 )
 
+# =============================================================================
+# Session-Scoped Cache
+# =============================================================================
+
+#' Session-scoped cache for computed values (e.g., H3 cell areas)
+#' @noRd
+.hexify_cache <- new.env(parent = emptyenv())
+
+# =============================================================================
+# H3 Resolution Helpers
+# =============================================================================
+
+#' Find closest H3 resolution for a target area
+#'
+#' Shared by hex_grid() and h3_crosswalk() to avoid duplicating the
+#' resolution-matching logic.
+#'
+#' @param area_km2 Target cell area in km^2
+#' @return Integer H3 resolution (0-15)
+#' @noRd
+closest_h3_resolution <- function(area_km2) {
+  diffs <- abs(H3_AVG_AREA_KM2 - area_km2)
+  which.min(diffs) - 1L
+}
+
 #' Check that h3o package is available
 #' @noRd
 check_h3o <- function() {
