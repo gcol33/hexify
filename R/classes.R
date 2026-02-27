@@ -23,10 +23,11 @@ NULL
 #' parameters needed for grid operations.
 #'
 #' @slot aperture Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.
-#' @slot resolution Integer. Grid resolution level (0-30).
+#' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
 #' @slot crs Integer. Coordinate reference system (default 4326 = 'WGS84').
+#' @slot grid_type Character. Grid system: "isea" (default) or "h3".
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -34,6 +35,8 @@ NULL
 #'
 #' The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 #' aperture grids that start with aperture 4 and switch to aperture 3.
+#'
+#' For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.
 #'
 #' @seealso \code{\link{hex_grid}} for the constructor function,
 #'   \code{\link{HexData-class}} for hexified data objects
@@ -46,14 +49,16 @@ setClass(
     resolution = "integer",
     area_km2 = "numeric",
     diagonal_km = "numeric",
-    crs = "integer"
+    crs = "integer",
+    grid_type = "character"
   ),
   prototype = list(
     aperture = "3",
     resolution = 0L,
     area_km2 = NA_real_,
     diagonal_km = NA_real_,
-    crs = 4326L
+    crs = 4326L,
+    grid_type = "isea"
   )
 )
 
@@ -72,7 +77,8 @@ setClass(
 #'
 #' @slot data Data frame or sf object. The original user data (untouched).
 #' @slot grid HexGridInfo object. The grid specification used.
-#' @slot cell_id Numeric vector. Cell IDs for each row of data.
+#' @slot cell_id Cell IDs for each row of data. Numeric for ISEA grids,
+#'   character for H3 grids.
 #' @slot cell_center Matrix. Two-column matrix (lon, lat) of cell centers.
 #'
 #' @details
@@ -91,7 +97,7 @@ setClass(
   slots = c(
     data = "ANY",  # data.frame or sf
     grid = "HexGridInfo",
-    cell_id = "numeric",
+    cell_id = "ANY",  # numeric for ISEA, character for H3
     cell_center = "matrix"
   ),
   prototype = list(
@@ -111,14 +117,28 @@ setValidity("HexGridInfo", function(object) {
 
   errors <- character()
 
-  # Validate aperture
-  if (!object@aperture %in% c("3", "4", "7", "4/3")) {
-    errors <- c(errors, "aperture must be '3', '4', '7', or '4/3'")
+  # Validate grid_type
+  gt <- object@grid_type
+  if (!gt %in% c("isea", "h3")) {
+    errors <- c(errors, "grid_type must be 'isea' or 'h3'")
   }
 
-  # Validate resolution
-  if (object@resolution < 0L || object@resolution > 30L) {
-    errors <- c(errors, "resolution must be between 0 and 30")
+  if (gt == "h3") {
+    # H3 validation: aperture fixed at "7", resolution 0-15
+    if (object@aperture != "7") {
+      errors <- c(errors, "H3 grids must have aperture '7'")
+    }
+    if (object@resolution < 0L || object@resolution > 15L) {
+      errors <- c(errors, "H3 resolution must be between 0 and 15")
+    }
+  } else {
+    # ISEA validation
+    if (!object@aperture %in% c("3", "4", "7", "4/3")) {
+      errors <- c(errors, "aperture must be '3', '4', '7', or '4/3'")
+    }
+    if (object@resolution < 0L || object@resolution > 30L) {
+      errors <- c(errors, "resolution must be between 0 and 30")
+    }
   }
 
   # Validate area_km2 (must be positive if provided)
@@ -146,6 +166,18 @@ setValidity("HexData", function(object) {
   # Check data is valid type
   if (!inherits(object@data, "data.frame") && !inherits(object@data, "sf")) {
     errors <- c(errors, "data must be a data.frame or sf object")
+  }
+
+  # Check cell_id type matches grid_type
+  gt <- tryCatch(object@grid@grid_type, error = function(e) "isea")
+  if (gt == "h3") {
+    if (!is.character(object@cell_id) && length(object@cell_id) > 0) {
+      errors <- c(errors, "H3 cell_id must be character")
+    }
+  } else {
+    if (!is.numeric(object@cell_id) && length(object@cell_id) > 0) {
+      errors <- c(errors, "ISEA cell_id must be numeric")
+    }
   }
 
   # Check cell_id length matches data rows
@@ -412,30 +444,51 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 #' @keywords internal
 #' @export
 setMethod("show", "HexGridInfo", function(object) {
-  cat("HexGridInfo Specification\n")
-  cat("-------------------------\n")
-  cat(sprintf("Aperture:    %s\n", object@aperture))
-  cat(sprintf("Resolution:  %d\n", object@resolution))
+  gt <- tryCatch(object@grid_type, error = function(e) "isea")
 
-  if (!is.na(object@area_km2)) {
-    cat(sprintf("Area:        %.2f km^2\n", object@area_km2))
-  }
-  if (!is.na(object@diagonal_km)) {
-    cat(sprintf("Diagonal:    %.2f km\n", object@diagonal_km))
-  }
+  if (gt == "h3") {
+    cat("HexGridInfo Specification [H3]\n")
+    cat("-------------------------------\n")
+    cat(sprintf("Grid Type:   H3 (Uber)\n"))
+    cat(sprintf("Resolution:  %d\n", object@resolution))
 
-  cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+    if (!is.na(object@area_km2)) {
+      cat(sprintf("Avg Area:    %.4f km^2 (varies by location)\n", object@area_km2))
+    }
+    if (!is.na(object@diagonal_km)) {
+      cat(sprintf("Avg Diagonal:%.2f km\n", object@diagonal_km))
+    }
 
-  # Calculate total cells based on aperture
-  if (object@aperture == "4/3") {
-    # Mixed aperture: default to res/2 for level calculation
-    level <- as.integer(object@resolution / 2)
-    n_cells <- 10 * (4^level) * (3^(object@resolution - level)) + 2
+    cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+
+    h3_n_cells <- 2 + 120 * 7^object@resolution
+    cat(sprintf("Total Cells: %.0f\n", h3_n_cells))
+    cat("Note: H3 cells are NOT exactly equal-area\n")
   } else {
-    ap <- as.integer(object@aperture)
-    n_cells <- 10 * (ap^object@resolution) + 2
+    cat("HexGridInfo Specification\n")
+    cat("-------------------------\n")
+    cat(sprintf("Aperture:    %s\n", object@aperture))
+    cat(sprintf("Resolution:  %d\n", object@resolution))
+
+    if (!is.na(object@area_km2)) {
+      cat(sprintf("Area:        %.2f km^2\n", object@area_km2))
+    }
+    if (!is.na(object@diagonal_km)) {
+      cat(sprintf("Diagonal:    %.2f km\n", object@diagonal_km))
+    }
+
+    cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+
+    # Calculate total cells based on aperture
+    if (object@aperture == "4/3") {
+      level <- as.integer(object@resolution / 2)
+      n_cells <- 10 * (4^level) * (3^(object@resolution - level)) + 2
+    } else {
+      ap <- as.integer(object@aperture)
+      n_cells <- 10 * (ap^object@resolution) + 2
+    }
+    cat(sprintf("Total Cells: %.0f\n", n_cells))
   }
-  cat(sprintf("Total Cells: %.0f\n", n_cells))
 
   invisible(object)
 })
@@ -457,10 +510,18 @@ setMethod("show", "HexData", function(object) {
   }
 
   cat("\nGrid:\n")
-  cat(sprintf("  Aperture %s, Resolution %d",
-              object@grid@aperture, object@grid@resolution))
-  if (!is.na(object@grid@area_km2)) {
-    cat(sprintf(" (~%.1f km^2)", object@grid@area_km2))
+  gt <- tryCatch(object@grid@grid_type, error = function(e) "isea")
+  if (gt == "h3") {
+    cat(sprintf("  H3 Resolution %d", object@grid@resolution))
+    if (!is.na(object@grid@area_km2)) {
+      cat(sprintf(" (~%.4f km^2 avg)", object@grid@area_km2))
+    }
+  } else {
+    cat(sprintf("  Aperture %s, Resolution %d",
+                object@grid@aperture, object@grid@resolution))
+    if (!is.na(object@grid@area_km2)) {
+      cat(sprintf(" (~%.1f km^2)", object@grid@area_km2))
+    }
   }
   cat("\n")
 
@@ -529,7 +590,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
     resolution = x@resolution,
     area_km2 = x@area_km2,
     diagonal_km = x@diagonal_km,
-    crs = x@crs
+    crs = x@crs,
+    grid_type = x@grid_type
   )
 })
 
@@ -583,11 +645,19 @@ extract_grid <- function(x, allow_null = FALSE) {
   }
 
   if (is_hex_grid(x)) {
+    # Handle deserialized old objects without grid_type slot
+    if (!.hasSlot(x, "grid_type")) {
+      x@grid_type <- "isea"
+    }
     return(x)
   }
 
   if (is_hex_data(x)) {
-    return(x@grid)
+    g <- x@grid
+    if (!.hasSlot(g, "grid_type")) {
+      g@grid_type <- "isea"
+    }
+    return(g)
   }
 
   # Handle legacy hexify_grid objects (S3 class)
@@ -623,6 +693,12 @@ hexify_grid_to_HexGridInfo <- function(x) {
 #' @return A hexify_grid object (S3)
 #' @keywords internal
 HexGridInfo_to_hexify_grid <- function(x) {
+  # H3 grids cannot be converted to legacy format
+ gt <- tryCatch(x@grid_type, error = function(e) "isea")
+  if (gt == "h3") {
+    stop("H3 grids cannot be converted to legacy hexify_grid format")
+  }
+
   # Determine legacy index_type based on aperture
   ap <- x@aperture
   legacy_index <- if (ap == "3") {

@@ -191,7 +191,18 @@ hexify <- function(data,
   aperture_str <- hex_grid_obj@aperture
   res <- hex_grid_obj@resolution
 
-  if (aperture_str == "4/3") {
+  if (is_h3_grid(hex_grid_obj)) {
+    # H3 path: use h3o package
+    check_h3o()
+    pts_sfc <- sf::st_sfc(
+      lapply(seq_along(lon_vec), function(i) sf::st_point(c(lon_vec[i], lat_vec[i]))),
+      crs = 4326
+    )
+    cell_ids <- as.character(h3o::h3_from_points(pts_sfc, res))
+    center_pts <- h3o::h3_to_points(h3o::h3_from_strings(cell_ids))
+    center_coords <- sf::st_coordinates(center_pts)
+    centers <- list(lon_deg = center_coords[, 1], lat_deg = center_coords[, 2])
+  } else if (aperture_str == "4/3") {
     level <- as.integer(res / 2)
     cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
     centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)

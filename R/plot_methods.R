@@ -110,13 +110,16 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
   # Group points by cell
   cell_groups <- split(seq_along(cell_ids), cell_ids)
 
+  # Determine if cell_ids are character (H3) or numeric (ISEA)
+  h3_mode <- is.character(hex_sf$cell_id)
+
   for (cell_id_str in names(cell_groups)) {
-    cell_id_num <- as.numeric(cell_id_str)
+    cell_id_val <- if (h3_mode) cell_id_str else as.numeric(cell_id_str)
     indices <- cell_groups[[cell_id_str]]
     n_in_cell <- length(indices)
 
     # Get the polygon for this cell
-    poly_idx <- which(hex_sf$cell_id == cell_id_num)
+    poly_idx <- which(hex_sf$cell_id == cell_id_val)
     if (length(poly_idx) == 0) next
 
     poly <- hex_sf[poly_idx, ]

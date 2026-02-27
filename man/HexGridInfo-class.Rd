@@ -14,19 +14,23 @@ Do not use \code{new("HexGridInfo", ...)} directly.
 
 The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.
+
+For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.
 }
 \section{Slots}{
 
 \describe{
 \item{\code{aperture}}{Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.}
 
-\item{\code{resolution}}{Integer. Grid resolution level (0-30).}
+\item{\code{resolution}}{Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).}
 
 \item{\code{area_km2}}{Numeric. Cell area in square kilometers.}
 
 \item{\code{diagonal_km}}{Numeric. Cell diagonal (long diagonal) in kilometers.}
 
 \item{\code{crs}}{Integer. Coordinate reference system (default 4326 = 'WGS84').}
+
+\item{\code{grid_type}}{Character. Grid system: "isea" (default) or "h3".}
 }}
 
 \seealso{

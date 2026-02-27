@@ -4,7 +4,12 @@
 \alias{hexify_compare_resolutions}
 \title{Compare grid resolutions}
 \usage{
-hexify_compare_resolutions(aperture = 3, res_range = 0:15, print = FALSE)
+hexify_compare_resolutions(
+  aperture = 3,
+  res_range = 0:15,
+  type = c("isea", "h3"),
+  print = FALSE
+)
 }
 \arguments{
 \item{aperture}{Grid aperture (3, 4, or 7)}

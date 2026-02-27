@@ -1,3 +1,17 @@
+# hexify 0.5.0
+
+**H3 grid support**
+
+* Added H3 (Uber) as a first-class grid type: `hex_grid(resolution = 8, type = "h3")`
+* All core functions work with H3 grids: `hexify()`, `cell_to_sf()`, `grid_rect()`,
+  `grid_global()`, `grid_clip()`, `get_parent()`, `get_children()`
+* H3 support requires the `h3o` package (Suggests, not required for ISEA workflows)
+* New `hexify_compare_resolutions(type = "h3")` for H3 resolution table
+* `dgearthstat()` now accepts HexGridInfo objects directly
+* New `grid_type` slot on HexGridInfo: `"isea"` (default) or `"h3"`
+* HexData `cell_id` slot supports character (H3) and numeric (ISEA) cell IDs
+* Backward compatible: all existing ISEA workflows unchanged
+
 # hexify 0.3.10
 
 **Hotfix for geometry issues**

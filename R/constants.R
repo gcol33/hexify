@@ -100,6 +100,66 @@ MAX_RESOLUTION <- 30L
 MIN_RESOLUTION <- 0L
 
 # =============================================================================
+# H3 Grid Constants
+# =============================================================================
+
+#' Maximum H3 resolution
+#' @noRd
+H3_MAX_RESOLUTION <- 15L
+
+#' Minimum H3 resolution
+#' @noRd
+H3_MIN_RESOLUTION <- 0L
+
+#' Average cell areas from H3 documentation (km^2), indexed by resolution + 1
+#' Source: https://h3geo.org/docs/core-library/restable/
+#' @noRd
+H3_AVG_AREA_KM2 <- c(
+  4357449.416,  # res 0
+  609788.442,   # res 1
+  86801.780,    # res 2
+  12393.435,    # res 3
+  1770.348,     # res 4
+  252.904,      # res 5
+  36.129,       # res 6
+  5.161,        # res 7
+  0.737,        # res 8
+  0.105,        # res 9
+  0.015,        # res 10
+  0.00215,      # res 11
+  0.000307,     # res 12
+  0.0000439,    # res 13
+  0.00000627,   # res 14
+  0.000000895   # res 15
+)
+
+#' Check that h3o package is available
+#' @noRd
+check_h3o <- function() {
+  if (!requireNamespace("h3o", quietly = TRUE)) {
+    stop(
+      "Package 'h3o' is required for H3 grid operations.\n",
+      "Install with: install.packages('h3o')",
+      call. = FALSE
+    )
+  }
+}
+
+#' Check whether a grid is H3 type
+#'
+#' Safe check that handles old serialized objects without grid_type slot.
+#'
+#' @param grid A HexGridInfo object
+#' @return Logical
+#' @noRd
+is_h3_grid <- function(grid) {
+  tryCatch(
+    identical(grid@grid_type, "h3"),
+    error = function(e) FALSE
+  )
+}
+
+# =============================================================================
 # Coordinate Validation Helpers
 # =============================================================================
 

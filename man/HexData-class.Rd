@@ -22,7 +22,8 @@ Use \code{as.data.frame()} to get a combined data frame with cell columns.
 
 \item{\code{grid}}{HexGridInfo object. The grid specification used.}
 
-\item{\code{cell_id}}{Numeric vector. Cell IDs for each row of data.}
+\item{\code{cell_id}}{Cell IDs for each row of data. Numeric for ISEA grids,
+character for H3 grids.}
 
 \item{\code{cell_center}}{Matrix. Two-column matrix (lon, lat) of cell centers.}
 }}

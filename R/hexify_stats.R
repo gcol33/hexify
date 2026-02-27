@@ -37,9 +37,55 @@ NULL
 #' print(sprintf("Average cell spacing: %.2f km",
 #'               stats$cell_spacing_km))
 dgearthstat <- function(dggs) {
-  # Validate grid
+  # Accept HexGridInfo objects
+  if (is_hex_grid(dggs)) {
+    g <- dggs
+    gt <- tryCatch(g@grid_type, error = function(e) "isea")
+
+    if (gt == "h3") {
+      h3_n_cells <- 2 + 120 * 7^g@resolution
+      cell_area_km2 <- H3_AVG_AREA_KM2[g@resolution + 1L]
+      cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
+      cls_km <- 2 * sqrt(cell_area_km2 / pi)
+      return(list(
+        area_km = EARTH_SURFACE_KM2,
+        n_cells = h3_n_cells,
+        cell_area_km2 = cell_area_km2,
+        cell_spacing_km = cell_spacing_km,
+        cls_km = cls_km,
+        resolution = g@resolution,
+        aperture = 7L,
+        grid_type = "h3"
+      ))
+    }
+
+    # ISEA HexGridInfo
+    ap <- if (g@aperture == "4/3") {
+      level <- as.integer(g@resolution / 2)
+      n_cells <- 10 * (4^level) * (3^(g@resolution - level)) + 2
+      3L
+    } else {
+      ap_int <- as.integer(g@aperture)
+      n_cells <- 10 * (ap_int^g@resolution) + 2
+      ap_int
+    }
+    cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
+    cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
+    cls_km <- 2 * sqrt(cell_area_km2 / pi)
+    return(list(
+      area_km = EARTH_SURFACE_KM2,
+      n_cells = n_cells,
+      cell_area_km2 = cell_area_km2,
+      cell_spacing_km = cell_spacing_km,
+      cls_km = cls_km,
+      resolution = g@resolution,
+      aperture = ap
+    ))
+  }
+
+  # Legacy hexify_grid / dggs path
   if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {
-    stop("dggs must be a hexify_grid object")
+    stop("dggs must be a hexify_grid or HexGridInfo object")
   }
 
   resolution <- get_grid_resolution(dggs)
@@ -166,7 +212,59 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' # Find resolution with cells ~1000 km^2
 #' subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
 hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
+                                       type = c("isea", "h3"),
                                        print = FALSE) {
+  type <- match.arg(type)
+
+  if (type == "h3") {
+    # H3 resolution table from pre-computed area values
+    res_range <- res_range[res_range >= H3_MIN_RESOLUTION & res_range <= H3_MAX_RESOLUTION]
+    results <- lapply(res_range, function(res) {
+      cell_area_km2 <- H3_AVG_AREA_KM2[res + 1L]
+      h3_n_cells <- 2 + 120 * 7^res
+      cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
+      cls_km <- 2 * sqrt(cell_area_km2 / pi)
+      data.frame(
+        resolution = res,
+        n_cells = h3_n_cells,
+        cell_area_km2 = cell_area_km2,
+        cell_spacing_km = cell_spacing_km,
+        cls_km = cls_km
+      )
+    })
+    result_df <- do.call(rbind, results)
+
+    if (print) {
+      cat("\nGrid Resolution Comparison (H3)\n")
+      cat(paste(rep("=", 70), collapse = ""), "\n")
+      cat(sprintf("%-4s  %-12s  %-12s  %-12s  %-10s\n",
+                  "Res", "# Cells", "Area (km^2)", "Spacing (km)", "CLS (km)"))
+      cat(paste(rep("-", 70), collapse = ""), "\n")
+      for (i in seq_len(nrow(result_df))) {
+        row <- result_df[i, ]
+        n_cells_str <- if (row$n_cells > 1e12) {
+          sprintf("%.1fT", row$n_cells / 1e12)
+        } else if (row$n_cells > 1e9) {
+          sprintf("%.1fB", row$n_cells / 1e9)
+        } else if (row$n_cells > 1e6) {
+          sprintf("%.1fM", row$n_cells / 1e6)
+        } else if (row$n_cells > 1e3) {
+          sprintf("%.1fK", row$n_cells / 1e3)
+        } else {
+          sprintf("%.0f", row$n_cells)
+        }
+        cat(sprintf("%-4d  %-12s  %-12.4f  %-12.3f  %-10.3f\n",
+                    row$resolution, n_cells_str,
+                    row$cell_area_km2, row$cell_spacing_km, row$cls_km))
+      }
+      cat(paste(rep("=", 70), collapse = ""), "\n")
+      cat("Note: H3 areas are averages; actual area varies by location\n\n")
+      return(invisible(result_df))
+    }
+    return(result_df)
+  }
+
+  # ISEA path (original)
   # Create temporary grid
   temp_grid <- list(
     aperture = aperture,
