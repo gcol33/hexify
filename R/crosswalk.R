@@ -108,11 +108,7 @@ h3_crosswalk <- function(cell_id = NULL,
   # -------------------------------------------------------------------------
   # Deduplicate cell IDs
   # -------------------------------------------------------------------------
-  if (is.numeric(cell_id)) {
-    unique_ids <- unique(cell_id)
-  } else {
-    unique_ids <- unique(as.character(cell_id))
-  }
+  unique_ids <- unique(cell_id)
 
   # -------------------------------------------------------------------------
   # ISEA -> H3

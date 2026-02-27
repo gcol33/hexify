@@ -132,6 +132,11 @@ hex_grid <- function(area_km2 = NULL,
         stop(sprintf("H3 resolution must be between %d and %d",
                      H3_MIN_RESOLUTION, H3_MAX_RESOLUTION))
       }
+      rlang::inform(
+        "H3 cells are not exactly equal-area; area varies ~3-5% by latitude.",
+        .frequency = "once",
+        .frequency_id = "hexify_h3_not_equal_area"
+      )
     }
 
     actual_area <- H3_AVG_AREA_KM2[resolution + 1L]
