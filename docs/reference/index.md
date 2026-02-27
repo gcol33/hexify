@@ -65,8 +65,12 @@ Plotting functions
   : Plot hexagonal grid clipped to a polygon boundary
 - [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
   : Quick world map plot
+- [`plot_globe()`](https://gcol33.github.io/hexify/reference/plot_globe.md)
+  : Plot hexagonized globe
 - [`hexify_world`](https://gcol33.github.io/hexify/reference/hexify_world.md)
   : Simplified World Map
+- [`globe_centers`](https://gcol33.github.io/hexify/reference/globe_centers.md)
+  : Globe center presets
 - [`plot(`*`<HexData>`*`,`*`<missing>`*`)`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
   : Plot HexData objects
 

@@ -60,7 +60,9 @@ reference:
   - hexify_heatmap
   - plot_grid
   - plot_world
+  - plot_globe
   - hexify_world
+  - globe_centers
   - starts_with("plot,HexData")
 - title: dggridR Compatibility
   desc: Interoperability with dggridR

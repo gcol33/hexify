@@ -6,7 +6,12 @@ configuration. Useful for choosing appropriate resolution.
 ## Usage
 
 ``` r
-hexify_compare_resolutions(aperture = 3, res_range = 0:15, print = FALSE)
+hexify_compare_resolutions(
+  aperture = 3,
+  res_range = 0:15,
+  type = c("isea", "h3"),
+  print = FALSE
+)
 ```
 
 ## Arguments

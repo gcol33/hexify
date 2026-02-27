@@ -178,16 +178,9 @@ grid <- hex_grid(area_km2 = 2000)
 france_grid <- grid_rect(c(-5, 41, 10, 52), grid)
 
 # Clip grid to France boundary
-# Use planar geometry to avoid s2 edge cases
-sf_use_s2(FALSE)
-#> Spherical geometry (s2) switched off
 france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
-#> although coordinates are longitude/latitude, st_intersection assumes that they
-#> are planar
 #> Warning: attribute variables are assumed to be spatially constant throughout
 #> all geometries
-sf_use_s2(TRUE)
-#> Spherical geometry (s2) switched on
 
 ggplot() +
   geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +

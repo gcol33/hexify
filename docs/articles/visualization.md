@@ -437,6 +437,8 @@ grid <- hex_grid(area_km2 = 500000)
 pentagon_cells <- lonlat_to_cell(pentagon_coords$lon, pentagon_coords$lat, grid)
 
 pentagon_polys <- cell_to_sf(pentagon_cells, grid)
+#> Warning in st_is_longlat(x): bounding box has potentially an invalid value
+#> range for longlat data
 pentagon_polys_wrapped <- st_wrap_dateline(
   pentagon_polys,
   options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),

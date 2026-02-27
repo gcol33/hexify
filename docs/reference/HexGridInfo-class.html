@@ -22,7 +22,7 @@ parameters needed for grid operations."></head><body><p>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,7 @@ parameters needed for grid operations.</p>
 Do not use <code>new("HexGridInfo", ...)</code> directly.</p>
 <p>The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.</p>
+<p>For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.</p>
     </div>
     <div class="section level2">
     <h2 id="slots">Slots<a class="anchor" aria-label="anchor" href="#slots"></a></h2>
@@ -81,7 +82,7 @@ aperture grids that start with aperture 4 and switch to aperture 3.</p>
 
 
 <dt><code>resolution</code></dt>
-<dd><p>Integer. Grid resolution level (0-30).</p></dd>
+<dd><p>Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).</p></dd>
 
 
 <dt><code>area_km2</code></dt>
@@ -94,6 +95,10 @@ aperture grids that start with aperture 4 and switch to aperture 3.</p>
 
 <dt><code>crs</code></dt>
 <dd><p>Integer. Coordinate reference system (default 4326 = 'WGS84').</p></dd>
+
+
+<dt><code>grid_type</code></dt>
+<dd><p>Character. Grid system: "isea" (default) or "h3".</p></dd>
 
 
 </dl></div>

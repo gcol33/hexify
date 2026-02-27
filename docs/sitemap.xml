@@ -35,6 +35,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/from_dggrid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/get_children.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/get_parent.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/globe_centers.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid,HexData-method.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/grid_clip.html</loc></url>
@@ -129,6 +130,7 @@
 <url><loc>https://gcol33.github.io/hexify/reference/new_hex_data.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/n_cells.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.html</loc></url>
+<url><loc>https://gcol33.github.io/hexify/reference/plot_globe.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/plot_grid.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/plot_world.html</loc></url>
 <url><loc>https://gcol33.github.io/hexify/reference/print.hexify_grid.html</loc></url>

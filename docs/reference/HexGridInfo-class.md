@@ -12,6 +12,9 @@ constructor function. Do not use `new("HexGridInfo", ...)` directly.
 The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
 aperture grids that start with aperture 4 and switch to aperture 3.
 
+For H3 grids, the aperture is fixed at "7" and resolution ranges from 0
+to 15.
+
 ## Slots
 
 - `aperture`:
@@ -20,7 +23,7 @@ aperture grids that start with aperture 4 and switch to aperture 3.
 
 - `resolution`:
 
-  Integer. Grid resolution level (0-30).
+  Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 
 - `area_km2`:
 
@@ -33,6 +36,10 @@ aperture grids that start with aperture 4 and switch to aperture 3.
 - `crs`:
 
   Integer. Coordinate reference system (default 4326 = 'WGS84').
+
+- `grid_type`:
+
+  Character. Grid system: "isea" (default) or "h3".
 
 ## See also
 

@@ -1,5 +1,42 @@
 # Changelog
 
+## hexify 0.5.0
+
+**H3 grid support**
+
+- Added H3 (Uber) as a first-class grid type:
+  `hex_grid(resolution = 8, type = "h3")`
+- All core functions work with H3 grids:
+  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md),
+  [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md),
+  [`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md),
+  [`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md),
+  [`grid_clip()`](https://gcol33.github.io/hexify/reference/grid_clip.md),
+  [`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md),
+  [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)
+- H3 support requires the `h3o` package (Suggests, not required for ISEA
+  workflows)
+- New `hexify_compare_resolutions(type = "h3")` for H3 resolution table
+- [`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md)
+  now accepts HexGridInfo objects directly
+- New `grid_type` slot on HexGridInfo: `"isea"` (default) or `"h3"`
+- HexData `cell_id` slot supports character (H3) and numeric (ISEA) cell
+  IDs
+- Backward compatible: all existing ISEA workflows unchanged
+
+## hexify 0.3.10
+
+CRAN release: 2026-02-04
+
+**Hotfix for geometry issues**
+
+- Fixed invalid pentagon geometries that caused gaps in global grids
+- Fixed antimeridian-crossing polygons using
+  [`st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
+- Added polar cap sampling to
+  [`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md)
+  to include cells above ±85° latitude
+
 ## hexify 0.3.6
 
 - Reduced test suite runtime for CRAN by skipping detailed consistency

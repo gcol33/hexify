@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,30 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="hexify-050">hexify 0.5.0<a class="anchor" aria-label="anchor" href="#hexify-050"></a></h2>
+<p><strong>H3 grid support</strong></p>
+<ul><li>Added H3 (Uber) as a first-class grid type: <code>hex_grid(resolution = 8, type = "h3")</code>
+</li>
+<li>All core functions work with H3 grids: <code><a href="../reference/hexify.html">hexify()</a></code>, <code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code>, <code><a href="../reference/grid_rect.html">grid_rect()</a></code>, <code><a href="../reference/grid_global.html">grid_global()</a></code>, <code><a href="../reference/grid_clip.html">grid_clip()</a></code>, <code><a href="../reference/get_parent.html">get_parent()</a></code>, <code><a href="../reference/get_children.html">get_children()</a></code>
+</li>
+<li>H3 support requires the <code>h3o</code> package (Suggests, not required for ISEA workflows)</li>
+<li>New <code>hexify_compare_resolutions(type = "h3")</code> for H3 resolution table</li>
+<li>
+<code><a href="../reference/dgearthstat.html">dgearthstat()</a></code> now accepts HexGridInfo objects directly</li>
+<li>New <code>grid_type</code> slot on HexGridInfo: <code>"isea"</code> (default) or <code>"h3"</code>
+</li>
+<li>HexData <code>cell_id</code> slot supports character (H3) and numeric (ISEA) cell IDs</li>
+<li>Backward compatible: all existing ISEA workflows unchanged</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.10" id="hexify-0310">hexify 0.3.10<a class="anchor" aria-label="anchor" href="#hexify-0310"></a></h2><p class="text-muted">CRAN release: 2026-02-04</p>
+<p><strong>Hotfix for geometry issues</strong></p>
+<ul><li>Fixed invalid pentagon geometries that caused gaps in global grids</li>
+<li>Fixed antimeridian-crossing polygons using <code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_wrap_dateline()</a></code>
+</li>
+<li>Added polar cap sampling to <code><a href="../reference/grid_global.html">grid_global()</a></code> to include cells above ±85° latitude</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.6" id="hexify-036">hexify 0.3.6<a class="anchor" aria-label="anchor" href="#hexify-036"></a></h2>
 <ul><li>Reduced test suite runtime for CRAN by skipping detailed consistency tests (full tests still run locally via NOT_CRAN=true)</li>

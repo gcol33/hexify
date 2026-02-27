@@ -11,6 +11,7 @@ hex_grid(
   area_km2 = NULL,
   resolution = NULL,
   aperture = 3,
+  type = c("isea", "h3"),
   resround = "nearest",
   crs = 4326L
 )
@@ -25,11 +26,17 @@ hex_grid(
 
 - resolution:
 
-  Grid resolution level (0-30). Mutually exclusive with `area_km2`.
+  Grid resolution level (0-30 for ISEA, 0-15 for H3). Mutually exclusive
+  with `area_km2`.
 
 - aperture:
 
-  Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
+  Grid aperture: 3 (default), 4, 7, or "4/3" for mixed. Ignored for H3
+  grids (fixed at 7).
+
+- type:
+
+  Grid type: "isea" (default) or "h3". H3 grids require the h3o package.
 
 - resround:
 
@@ -49,7 +56,12 @@ A HexGridInfo object containing the grid specification.
 Exactly one of `area_km2` or `resolution` must be provided.
 
 When `area_km2` is provided, the resolution is calculated automatically
-using the cell count formula: N = 10 \* aperture^res + 2.
+using the cell count formula: N = 10 \* aperture^res + 2 (ISEA) or by
+matching the closest H3 resolution.
+
+H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA
+grids, H3 cells are NOT exactly equal-area (area varies by ~3-5\\
+location). H3 support requires the h3o package.
 
 ## One Grid, Many Datasets
 

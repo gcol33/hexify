@@ -25,7 +25,8 @@ get a combined data frame with cell columns.
 
 - `cell_id`:
 
-  Numeric vector. Cell IDs for each row of data.
+  Cell IDs for each row of data. Numeric for ISEA grids, character for
+  H3 grids.
 
 - `cell_center`:
 

@@ -24,7 +24,7 @@ downstream functions."></head><body><p>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,6 +73,7 @@ downstream functions.</p>
 <span>  area_km2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  aperture <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"isea"</span>, <span class="st">"h3"</span><span class="op">)</span>,</span>
 <span>  resround <span class="op">=</span> <span class="st">"nearest"</span>,</span>
 <span>  crs <span class="op">=</span> <span class="fl">4326L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -88,12 +89,18 @@ with <code>resolution</code>.</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
-<dd><p>Grid resolution level (0-30). Mutually exclusive with
-<code>area_km2</code>.</p></dd>
+<dd><p>Grid resolution level (0-30 for ISEA, 0-15 for H3).
+Mutually exclusive with <code>area_km2</code>.</p></dd>
 
 
 <dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>
-<dd><p>Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.</p></dd>
+<dd><p>Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
+Ignored for H3 grids (fixed at 7).</p></dd>
+
+
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
+<dd><p>Grid type: "isea" (default) or "h3". H3 grids require the
+<span class="pkg">h3o</span> package.</p></dd>
 
 
 <dt id="arg-resround">resround<a class="anchor" aria-label="anchor" href="#arg-resround"></a></dt>
@@ -113,7 +120,11 @@ with <code>resolution</code>.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Exactly one of <code>area_km2</code> or <code>resolution</code> must be provided.</p>
 <p>When <code>area_km2</code> is provided, the resolution is calculated automatically
-using the cell count formula: N = 10 * aperture^res + 2.</p>
+using the cell count formula: N = 10 * aperture^res + 2 (ISEA) or by
+matching the closest H3 resolution.</p>
+<p>H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
+H3 cells are NOT exactly equal-area (area varies by ~3-5\<!-- % depending on -->
+location). H3 support requires the <span class="pkg">h3o</span> package.</p>
     </div>
     <div class="section level2">
     <h2 id="one-grid-many-datasets">One Grid, Many Datasets<a class="anchor" aria-label="anchor" href="#one-grid-many-datasets"></a></h2>
