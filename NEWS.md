@@ -1,3 +1,10 @@
+# hexify 0.6.1
+
+* Warn when `aperture` is passed with `type = "h3"` (ignored parameter)
+* Expanded H3 resolution guidance in `hex_grid()` documentation
+* Extended H3 vignette resolution table to full range (0-15)
+* Added `h3_crosswalk()` example to H3 vignette
+
 # hexify 0.6.0
 
 **ISEA–H3 crosswalk and per-cell area**

@@ -27,7 +27,15 @@ hex_grid(
 - resolution:
 
   Grid resolution level (0-30 for ISEA, 0-15 for H3). Mutually exclusive
-  with `area_km2`.
+  with `area_km2`. For H3, typical use cases by resolution:
+
+  - 0-3: continental/country scale
+
+  - 4-7: regional/city scale
+
+  - 8-10: neighborhood/block scale (FCC uses 8-9)
+
+  - 11-15: building/sub-meter scale
 
 - aperture:
 

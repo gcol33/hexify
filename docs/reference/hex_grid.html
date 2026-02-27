@@ -24,7 +24,7 @@ downstream functions."></head><body><p>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,7 +91,12 @@ with <code>resolution</code>.</p></dd>
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
 <dd><p>Grid resolution level (0-30 for ISEA, 0-15 for H3).
-Mutually exclusive with <code>area_km2</code>.</p></dd>
+Mutually exclusive with <code>area_km2</code>. For H3, typical use cases by
+resolution:</p><ul><li><p>0-3: continental/country scale</p></li>
+<li><p>4-7: regional/city scale</p></li>
+<li><p>8-10: neighborhood/block scale (FCC uses 8-9)</p></li>
+<li><p>11-15: building/sub-meter scale</p></li>
+</ul></dd>
 
 
 <dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>

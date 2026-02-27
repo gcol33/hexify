@@ -17,7 +17,14 @@
 #' @param area_km2 Target cell area in square kilometers. Mutually exclusive
 #'   with \code{resolution}.
 #' @param resolution Grid resolution level (0-30 for ISEA, 0-15 for H3).
-#'   Mutually exclusive with \code{area_km2}.
+#'   Mutually exclusive with \code{area_km2}. For H3, typical use cases by
+#'   resolution:
+#'   \itemize{
+#'     \item 0-3: continental/country scale
+#'     \item 4-7: regional/city scale
+#'     \item 8-10: neighborhood/block scale (FCC uses 8-9)
+#'     \item 11-15: building/sub-meter scale
+#'   }
 #' @param aperture Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 #'   Ignored for H3 grids (fixed at 7).
 #' @param type Grid type: "isea" (default) or "h3". H3 grids require the
@@ -107,6 +114,10 @@ hex_grid <- function(area_km2 = NULL,
   # =========================================================================
   if (type == "h3") {
     check_h3o()
+
+    if (!missing(aperture) && aperture != 3) {
+      warning("aperture is ignored for H3 grids (H3 uses fixed aperture 7)")
+    }
 
     # Validate: exactly one of area_km2 or resolution
     if (is.null(area_km2) && is.null(resolution)) {

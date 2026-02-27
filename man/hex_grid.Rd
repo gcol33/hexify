@@ -18,7 +18,14 @@ hex_grid(
 with \code{resolution}.}
 
 \item{resolution}{Grid resolution level (0-30 for ISEA, 0-15 for H3).
-Mutually exclusive with \code{area_km2}.}
+Mutually exclusive with \code{area_km2}. For H3, typical use cases by
+resolution:
+\itemize{
+\item 0-3: continental/country scale
+\item 4-7: regional/city scale
+\item 8-10: neighborhood/block scale (FCC uses 8-9)
+\item 11-15: building/sub-meter scale
+}}
 
 \item{aperture}{Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 Ignored for H3 grids (fixed at 7).}

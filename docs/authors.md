@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/gcol33/hexify/blob/HEAD/DESCRIPTION)
 
 Colling G (2026). *hexify: Equal-Area Hex Grids on the 'Snyder' 'ISEA'
-'Icosahedron'*. R package version 0.6.0,
+'Icosahedron'*. R package version 0.6.1,
 <https://gillescolling.com/hexify/>.
 
     @Manual{,
       title = {hexify: Equal-Area Hex Grids on the 'Snyder' 'ISEA' 'Icosahedron'},
       author = {Gilles Colling},
       year = {2026},
-      note = {R package version 0.6.0},
+      note = {R package version 0.6.1},
       url = {https://gillescolling.com/hexify/},
     }

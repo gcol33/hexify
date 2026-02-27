@@ -236,6 +236,29 @@ ggplot() +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
+## ISEA--H3 Crosswalk
+
+hexify v0.6.0 added `h3_crosswalk()` for bidirectional mapping between ISEA
+and H3 cell IDs. This is useful when you work in ISEA for analysis but need to
+share results with H3 ecosystems (or vice versa).
+
+```{r h3-crosswalk}
+# Start with an ISEA grid and some cells
+grid_isea <- hex_grid(resolution = 9, aperture = 3)
+isea_ids <- lonlat_to_cell(
+  lon = c(16.37, 2.35, 13.40, -3.70, 12.50),
+  lat = c(48.21, 48.86, 52.52, 40.42, 41.90),
+  grid = grid_isea
+)
+
+# Map ISEA cells to their closest H3 equivalents
+xw <- h3_crosswalk(isea_ids, grid_isea)
+xw[, c("isea_cell_id", "h3_cell_id", "isea_area_km2", "h3_area_km2")]
+```
+
+The `area_ratio` column shows how ISEA and H3 cell sizes compare ---
+values close to 1 mean the resolutions are well-matched.
+
 ## ISEA vs H3: When to Use Which
 
 | | ISEA | H3 |
@@ -268,7 +291,7 @@ ggplot() +
 ## Resolution Reference
 
 ```{r h3-resolution-table}
-h3_res <- hexify_compare_resolutions(type = "h3", res_range = 0:10)
+h3_res <- hexify_compare_resolutions(type = "h3", res_range = 0:15)
 h3_res$n_cells_fmt <- ifelse(
   h3_res$n_cells > 1e9,
   sprintf("%.1fB", h3_res$n_cells / 1e9),
