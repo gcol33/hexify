@@ -5,6 +5,7 @@
 *.so
 *.dll
 src/*.o
+src/**/*.o
 src/*.so
 src/*.dll
 references/
