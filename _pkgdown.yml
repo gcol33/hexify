@@ -24,6 +24,15 @@ navbar:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify
       aria-label: GitHub
+articles:
+- title: Getting Started
+  contents:
+  - quickstart
+- title: Guides
+  contents:
+  - workflows
+  - visualization
+  - h3
 reference:
 - title: Core
   desc: Create grids and assign points to cells
