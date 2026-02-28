@@ -4,10 +4,14 @@
 \alias{grid_global}
 \title{Generate a global hexagon grid}
 \usage{
-grid_global(grid)
+grid_global(grid, wrap_dateline = TRUE)
 }
 \arguments{
 \item{grid}{A HexGridInfo object specifying the grid parameters}
+
+\item{wrap_dateline}{Logical. If TRUE (default), antimeridian-crossing
+polygons are split at +/-180 degrees. Set to FALSE for orthographic/globe
+projections where wrapping creates gaps.}
 }
 \value{
 sf object with hexagon polygons

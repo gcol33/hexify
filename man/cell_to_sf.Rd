@@ -4,7 +4,7 @@
 \alias{cell_to_sf}
 \title{Convert cell IDs to sf polygons}
 \usage{
-cell_to_sf(cell_id = NULL, grid)
+cell_to_sf(cell_id = NULL, grid, wrap_dateline = TRUE)
 }
 \arguments{
 \item{cell_id}{Numeric vector of cell IDs. If NULL and x is HexData,
@@ -12,6 +12,10 @@ uses cells from x.}
 
 \item{grid}{A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 polygons are generated for all cells in the data.}
+
+\item{wrap_dateline}{Logical. If TRUE (default), calls
+\code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps.}
 }
 \value{
 sf object with cell_id and geometry columns

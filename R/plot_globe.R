@@ -236,9 +236,11 @@ prepare_globe_data <- function(
   sf::sf_use_s2(FALSE)
   on.exit(sf::sf_use_s2(s2_state), add = TRUE)
 
-  # Generate global grid
+  # Generate global grid — skip dateline wrapping because orthographic
+  # projection handles antimeridian cells natively; wrapping splits them
+  # into MULTIPOLYGON halves that create visible gaps on the globe
   grid <- hex_grid(area_km2 = area, aperture = aperture)
-  global_hex <- grid_global(grid)
+  global_hex <- grid_global(grid, wrap_dateline = FALSE)
 
   # Pre-filter hexagons by angular distance (optimization)
   # Keep cells within ~95 degrees of center (visible hemisphere + margin)
@@ -362,40 +364,6 @@ prepare_globe_data <- function(
         result[geom_types %in% c("POLYGON", "MULTIPOLYGON"), ]
       }, error = function(e) hex_ortho)
     }
-  }
-
-  # Add polar cap to fill tiny gap at pole (where 4 cells meet at a point)
-  # Only needed if view includes the pole
-  pole_lat <- if (center["lat"] > 0) 90 else -90
-  pole_visible <- abs(center["lat"] - pole_lat) < 95
-
-  if (pole_visible && nrow(hex_ortho) > 0) {
-    # Create small circle at pole directly in orthographic coordinates
-    pole_cap <- tryCatch({
-      # Calculate pole position in orthographic projection
-      pole_y <- earth_radius * sin((pole_lat - center["lat"]) * pi / 180)
-
-      # Create circle at pole position to fill any gap
-      # Size tuned to be invisible but fill the rendering artifact at pole
-      cap_radius <- 200000  # 200 km
-      theta <- seq(0, 2 * pi, length.out = 37)
-      cap_x <- cap_radius * cos(theta)
-      cap_y <- pole_y + cap_radius * sin(theta)
-      cap_coords <- cbind(cap_x, cap_y)
-      cap_coords <- rbind(cap_coords, cap_coords[1, ])  # Close ring
-
-      cap_poly <- sf::st_polygon(list(cap_coords))
-      cap_sfc <- sf::st_sfc(cap_poly, crs = crs_string)
-
-      if (!sf::st_is_empty(cap_sfc) && sf::st_is_valid(cap_sfc)) {
-        cap_sf <- sf::st_sf(cell_id = 0L, geometry = cap_sfc)
-        rbind(hex_ortho, cap_sf)
-      } else {
-        hex_ortho
-      }
-    }, error = function(e) hex_ortho)
-
-    hex_ortho <- pole_cap
   }
 
   list(
@@ -558,18 +526,9 @@ plot_globe_ggplot <- function(
         linewidth = land_width
       )
     } +
-    # Polar cap (rendered first, no border, to fill gap at pole)
-    {if (0L %in% data$hexagons$cell_id)
-      ggplot2::geom_sf(
-        data = data$hexagons[data$hexagons$cell_id == 0L, ],
-        fill = fill,
-        color = NA,  # No border on cap
-        linewidth = 0
-      )
-    } +
-    # Hexagons (excluding polar cap)
+    # Hexagons
     ggplot2::geom_sf(
-      data = data$hexagons[data$hexagons$cell_id != 0L, ],
+      data = data$hexagons,
       fill = fill,
       color = border,
       linewidth = border_width

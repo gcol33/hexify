@@ -1,3 +1,13 @@
+# hexify 0.6.3
+
+* `cell_to_sf()` now applies `sf::st_wrap_dateline()` automatically, fixing
+  horizontal streaks on flat map projections (Plate Carrée, Robinson, etc.) for
+  hexagons crossing the ±180° antimeridian
+* `as_sf(x, geometry = "polygon")` now routes all grids (ISEA and H3) through
+  `cell_to_sf()`, ensuring consistent antimeridian handling
+* `hexify_cell_to_sf()` gains antimeridian normalization matching `cell_to_sf()`
+* Vignettes no longer require manual `st_wrap_dateline()` calls
+
 # hexify 0.6.2
 
 **Native H3 backend — zero external dependencies**

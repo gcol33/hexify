@@ -428,16 +428,9 @@ Coordinates with latitude > 89° may have projection artifacts. The grid remains
 
 ### Date Line
 
-The date line (lon = ±180°) is handled correctly. Use `st_wrap_dateline()` when visualizing polygons that cross it:
-
-```{r dateline, eval=FALSE}
-# For polygons crossing the date line
-wrapped <- st_wrap_dateline(
-  polygons,
-  options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
-  quiet = TRUE
-)
-```
+Polygons crossing the date line (lon = ±180°) are handled automatically.
+`cell_to_sf()` applies `sf::st_wrap_dateline()` internally, so flat map
+projections render correctly without manual intervention.
 
 ## Function Summary
 

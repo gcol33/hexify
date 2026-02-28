@@ -32,6 +32,9 @@
 #'   geometries. If FALSE, returns data frame with vertex coordinates.
 #' @param grid Optional HexGridInfo object. If provided, resolution and aperture
 #'   are extracted from it.
+#' @param wrap_dateline Logical. If TRUE (default), calls
+#'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
+#'   Set to FALSE for orthographic/globe projections where wrapping creates gaps.
 #'
 #' @return If return_sf = TRUE: sf object with columns:
 #'   \item{cell_id}{Cell identifier}
@@ -70,7 +73,8 @@
 #' library(sf)
 #' plot(st_geometry(polys), col = "lightblue", border = "blue")
 hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
-                              return_sf = TRUE, grid = NULL) {
+                              return_sf = TRUE, grid = NULL,
+                              wrap_dateline = TRUE) {
 
   # Extract from grid if provided
   if (!is.null(grid)) {
@@ -115,13 +119,31 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
     # Use the list-based corner function for efficient sf construction
     corners_list <- cpp_cell_to_corners(cell_id, resolution, aperture)
 
-    # Convert each matrix to sf polygon
+    # Handle antimeridian-crossing polygons by normalizing coordinates
     polygons <- lapply(corners_list, function(coords) {
+      lons <- coords[, 1]
+      lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
+
+      if (lon_range > 180) {
+        lons[lons < 0] <- lons[lons < 0] + 360
+        coords[, 1] <- lons
+        mean_lon <- mean(lons)
+        if (mean_lon > 180) {
+          coords[, 1] <- coords[, 1] - 360
+        }
+      }
+
       sf::st_polygon(list(coords))
     })
 
     sfc <- sf::st_sfc(polygons, crs = 4326)
-    sf::st_sf(cell_id = cell_id, geometry = sfc)
+    sfc <- sf::st_make_valid(sfc)
+    result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
+    if (wrap_dateline) {
+      result_sf <- sf::st_wrap_dateline(result_sf,
+        options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+    }
+    result_sf
 
   } else {
     # Return data frame format

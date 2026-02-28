@@ -398,17 +398,7 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
     # Polygon geometry from cell boundaries
     unique_ids <- unique(x@cell_id)
 
-    # Use cell_to_sf for H3 grids (native C backend), or legacy path for ISEA
-    if (is_h3_grid(grid)) {
-      polys_sf <- cell_to_sf(unique_ids, grid)
-    } else {
-      polys_sf <- hexify_cell_to_sf(
-        cell_id = unique_ids,
-        resolution = grid@resolution,
-        aperture = grid@aperture,
-        return_sf = TRUE
-      )
-    }
+    polys_sf <- cell_to_sf(unique_ids, grid)
 
     # Add cell_id to data for merge
     data_with_id <- cbind(data, cell_id = x@cell_id)

@@ -149,3 +149,50 @@ test_that("cell_to_sf returns valid geometries for all cells", {
   vertex_counts <- sapply(sf::st_geometry(polys), function(g) nrow(sf::st_coordinates(g)))
   expect_true(all(vertex_counts == 6))
 })
+
+# =============================================================================
+# ANTIMERIDIAN HANDLING
+# =============================================================================
+
+test_that("cell_to_sf splits ISEA cells at antimeridian", {
+  skip_if_not_installed("sf")
+
+  grid <- hex_grid(area_km2 = 100000)
+  # Get a cell near the antimeridian
+  cell <- lonlat_to_cell(179.5, 0, grid)
+  polys <- cell_to_sf(cell, grid)
+
+  # All coordinates must be within [-180, 180]
+  coords <- sf::st_coordinates(polys)
+  expect_true(all(coords[, "X"] >= -180 & coords[, "X"] <= 180))
+
+  # Geometry must be valid
+  expect_true(all(sf::st_is_valid(polys)))
+})
+
+test_that("cell_to_sf splits H3 cells at antimeridian", {
+  skip_if_not_installed("sf")
+
+  h3 <- hex_grid(resolution = 2, type = "h3")
+  cell <- lonlat_to_cell(179.5, 0, h3)
+  polys <- cell_to_sf(cell, h3)
+
+  # All coordinates must be within [-180, 180]
+  coords <- sf::st_coordinates(polys)
+  expect_true(all(coords[, "X"] >= -180 & coords[, "X"] <= 180))
+
+  # Geometry must be valid
+  expect_true(all(sf::st_is_valid(polys)))
+})
+
+test_that("cell_to_sf keeps non-crossing cells as POLYGON", {
+  skip_if_not_installed("sf")
+
+  grid <- hex_grid(area_km2 = 10000)
+  # Cell far from antimeridian
+  cell <- lonlat_to_cell(10, 45, grid)
+  polys <- cell_to_sf(cell, grid)
+
+  geom_type <- as.character(sf::st_geometry_type(polys))
+  expect_equal(geom_type, "POLYGON")
+})

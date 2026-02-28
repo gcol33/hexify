@@ -16,6 +16,8 @@ sf object with hexagon polygons
 }
 \description{
 Creates hexagon polygons covering a rectangular geographic region.
+For H3 grids, all cells that overlap the bounding box are included
+(not just cells whose center falls inside), ensuring full spatial coverage.
 }
 \examples{
 grid <- hex_grid(area_km2 = 5000)

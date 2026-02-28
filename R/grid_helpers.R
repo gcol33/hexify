@@ -109,6 +109,9 @@ cell_to_lonlat <- function(cell_id, grid) {
 #'   uses cells from x.
 #' @param grid A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 #'   polygons are generated for all cells in the data.
+#' @param wrap_dateline Logical. If TRUE (default), calls
+#'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
+#'   Set to FALSE for orthographic/globe projections where wrapping creates gaps.
 #'
 #' @return sf object with cell_id and geometry columns
 #'
@@ -131,7 +134,7 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #' polys <- cell_to_sf(grid = result)
-cell_to_sf <- function(cell_id = NULL, grid) {
+cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
@@ -173,8 +176,13 @@ cell_to_sf <- function(cell_id = NULL, grid) {
       sf::st_polygon(list(coords))
     })
     sfc <- sf::st_sfc(polygons, crs = g@crs)
-    sfc <- sf::st_make_valid(sfc)
-    return(sf::st_sf(cell_id = as.character(cell_id), geometry = sfc))
+    sfc <- suppressWarnings(sf::st_make_valid(sfc))
+    result_sf <- sf::st_sf(cell_id = as.character(cell_id), geometry = sfc)
+    if (wrap_dateline) {
+      result_sf <- sf::st_wrap_dateline(result_sf,
+        options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+    }
+    return(result_sf)
   }
 
   # ISEA path: generate polygons using C++ function
@@ -188,13 +196,10 @@ cell_to_sf <- function(cell_id = NULL, grid) {
   )
 
 
-  # Handle antimeridian-crossing polygons by normalizing coordinates
-
-  # DON'T split at dateline - orthographic projection handles spherical
-  # coordinates correctly. Splitting causes gaps in Pacific views.
-  #
-  # Instead: shift coordinates so the polygon is contiguous, then shift
-  # back to standard -180/180 range for storage.
+  # Handle antimeridian-crossing polygons: normalize coordinates so each
+  # polygon is contiguous. When wrap_dateline = TRUE, st_wrap_dateline
+  # then splits at ±180° for correct flat-map rendering. For globe/
+  # orthographic projections, pass wrap_dateline = FALSE to keep cells intact.
 
   polygons <- lapply(corners_list, function(coords) {
     lons <- coords[, 1]
@@ -220,9 +225,16 @@ cell_to_sf <- function(cell_id = NULL, grid) {
   sfc <- sf::st_sfc(polygons, crs = g@crs)
 
   # Fix any invalid geometries (self-intersecting polygons, etc.)
-  sfc <- sf::st_make_valid(sfc)
+  # suppressWarnings: antimeridian normalization may temporarily produce
+  # out-of-range longitudes that st_wrap_dateline corrects below
+  sfc <- suppressWarnings(sf::st_make_valid(sfc))
 
-  sf::st_sf(cell_id = cell_id, geometry = sfc)
+  result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
+  if (wrap_dateline) {
+    result_sf <- sf::st_wrap_dateline(result_sf,
+      options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+  }
+  result_sf
 }
 
 # =============================================================================
@@ -300,6 +312,9 @@ grid_rect <- function(bbox, grid) {
 #' Creates hexagon polygons covering the entire Earth.
 #'
 #' @param grid A HexGridInfo object specifying the grid parameters
+#' @param wrap_dateline Logical. If TRUE (default), antimeridian-crossing
+#'   polygons are split at +/-180 degrees. Set to FALSE for orthographic/globe
+#'   projections where wrapping creates gaps.
 #'
 #' @return sf object with hexagon polygons
 #'
@@ -316,7 +331,7 @@ grid_rect <- function(bbox, grid) {
 #' grid <- hex_grid(area_km2 = 100000)
 #' global <- grid_global(grid)
 #' plot(global)
-grid_global <- function(grid) {
+grid_global <- function(grid, wrap_dateline = TRUE) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required")
   }
@@ -345,7 +360,7 @@ grid_global <- function(grid) {
       all_cells <- c(all_cells, quad_cells)
     }
     cell_ids <- unique(all_cells)
-    return(cell_to_sf(cell_ids, g))
+    return(cell_to_sf(cell_ids, g, wrap_dateline = wrap_dateline))
   }
 
   # Estimate cell count for warning (ISEA)
@@ -387,7 +402,7 @@ grid_global <- function(grid) {
   cell_ids <- lonlat_to_cell(grid_pts$lon, grid_pts$lat, g)
   unique_cells <- unique(cell_ids)
 
-  cell_to_sf(unique_cells, g)
+  cell_to_sf(unique_cells, g, wrap_dateline = wrap_dateline)
 }
 
 #' Clip hexagon grid to polygon boundary

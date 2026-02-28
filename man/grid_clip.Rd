@@ -24,8 +24,10 @@ for generating grids that conform to country borders, study areas, or other
 irregular boundaries.
 }
 \details{
-The function first generates a rectangular grid covering the bounding box
-of the input polygon, then clips or filters cells to the boundary.
+The function first generates cells covering the boundary polygon, then
+clips or filters them. For H3 grids, all cells that overlap the boundary
+are included (not just cells whose center falls inside), ensuring full
+spatial coverage with no gaps along the boundary edge.
 
 When \code{crop = TRUE}, hexagons are geometrically intersected with the
 boundary, which may produce partial hexagons at the edges. When

@@ -322,15 +322,10 @@ grid <- hex_grid(area_km2 = 500000)
 pentagon_cells <- lonlat_to_cell(pentagon_coords$lon, pentagon_coords$lat, grid)
 
 pentagon_polys <- cell_to_sf(pentagon_cells, grid)
-pentagon_polys_wrapped <- st_wrap_dateline(
-  pentagon_polys,
-  options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
-  quiet = TRUE
-)
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
-  geom_sf(data = pentagon_polys_wrapped, fill = alpha("purple", 0.6),
+  geom_sf(data = pentagon_polys, fill = alpha("purple", 0.6),
           color = "purple", linewidth = 0.8) +
   labs(
     title = "Pentagon Cell Locations",
@@ -356,15 +351,10 @@ random_cells <- sample(1:max_cell, N, replace = FALSE)
 
 # Generate polygons for sampled cells
 sample_polys <- cell_to_sf(random_cells, grid)
-sample_polys_wrapped <- st_wrap_dateline(
-  sample_polys,
-  options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
-  quiet = TRUE
-)
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
-  geom_sf(data = sample_polys_wrapped, fill = alpha("forestgreen", 0.5),
+  geom_sf(data = sample_polys, fill = alpha("forestgreen", 0.5),
           color = "darkgreen", linewidth = 0.4) +
   labs(title = sprintf("Random Sample of %d Cells (~%.0f km2 each)", N, grid@area_km2)) +
   theme_minimal() +

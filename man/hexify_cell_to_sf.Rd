@@ -9,7 +9,8 @@ hexify_cell_to_sf(
   resolution = NULL,
   aperture = NULL,
   return_sf = TRUE,
-  grid = NULL
+  grid = NULL,
+  wrap_dateline = TRUE
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ geometries. If FALSE, returns data frame with vertex coordinates.}
 
 \item{grid}{Optional HexGridInfo object. If provided, resolution and aperture
 are extracted from it.}
+
+\item{wrap_dateline}{Logical. If TRUE (default), calls
+\code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps.}
 }
 \value{
 If return_sf = TRUE: sf object with columns:
