@@ -1,3 +1,14 @@
+# hexify 0.7.0
+
+**Native H3 backend — zero external dependencies**
+
+* Vendored H3 v4.4.1 C source, replacing the `h3o` R package dependency
+* H3 is now always available — no optional install, no Suggests
+* Uses H3 experimental polygon fill for full spatial coverage in `hexify()`
+* New native C++ bindings: `h3_lat_lng_to_cell`, `h3_cell_to_boundary`,
+  `h3_cell_to_parent`, `h3_cell_to_children`, `h3_polygon_to_cells`,
+  `h3_cell_area_km2`, `h3_cell_to_lat_lng`
+
 # hexify 0.6.1
 
 * Warn when `aperture` is passed with `type = "h3"` (ignored parameter)
