@@ -72,7 +72,8 @@ Returns an sf object by default, or a data frame for lightweight workflows.</p>
 <span>  resolution <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  aperture <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  return_sf <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  grid <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  wrap_dateline <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -100,6 +101,12 @@ geometries. If FALSE, returns data frame with vertex coordinates.</p></dd>
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
 <dd><p>Optional HexGridInfo object. If provided, resolution and aperture
 are extracted from it.</p></dd>
+
+
+<dt id="arg-wrap-dateline">wrap_dateline<a class="anchor" aria-label="anchor" href="#arg-wrap-dateline"></a></dt>
+<dd><p>Logical. If TRUE (default), calls
+<code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> to split antimeridian-crossing polygons.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps.</p></dd>
 
 </dl></div>
     <div class="section level2">

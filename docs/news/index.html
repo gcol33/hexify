@@ -58,6 +58,17 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.3" id="hexify-063">hexify 0.6.3<a class="anchor" aria-label="anchor" href="#hexify-063"></a></h2>
+<ul><li>
+<code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code> now applies <code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> automatically, fixing horizontal streaks on flat map projections (Plate Carrée, Robinson, etc.) for hexagons crossing the ±180° antimeridian</li>
+<li>
+<code>as_sf(x, geometry = "polygon")</code> now routes all grids (ISEA and H3) through <code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code>, ensuring consistent antimeridian handling</li>
+<li>
+<code><a href="../reference/hexify_cell_to_sf.html">hexify_cell_to_sf()</a></code> gains antimeridian normalization matching <code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code>
+</li>
+<li>Vignettes no longer require manual <code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_wrap_dateline()</a></code> calls</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.2" id="hexify-062">hexify 0.6.2<a class="anchor" aria-label="anchor" href="#hexify-062"></a></h2>
 <p><strong>Native H3 backend — zero external dependencies</strong></p>
 <ul><li>Vendored H3 v4.4.1 C source, replacing the <code>h3o</code> R package dependency</li>

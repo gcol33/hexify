@@ -64,7 +64,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cell_to_sf</span><span class="op">(</span>cell_id <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">grid</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cell_to_sf</span><span class="op">(</span>cell_id <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">grid</span>, wrap_dateline <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -79,6 +79,12 @@ uses cells from x.</p></dd>
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
 <dd><p>A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 polygons are generated for all cells in the data.</p></dd>
+
+
+<dt id="arg-wrap-dateline">wrap_dateline<a class="anchor" aria-label="anchor" href="#arg-wrap-dateline"></a></dt>
+<dd><p>Logical. If TRUE (default), calls
+<code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> to split antimeridian-crossing polygons.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps.</p></dd>
 
 </dl></div>
     <div class="section level2">

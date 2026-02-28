@@ -12,7 +12,8 @@ hexify_cell_to_sf(
   resolution = NULL,
   aperture = NULL,
   return_sf = TRUE,
-  grid = NULL
+  grid = NULL,
+  wrap_dateline = TRUE
 )
 ```
 
@@ -39,6 +40,13 @@ hexify_cell_to_sf(
 
   Optional HexGridInfo object. If provided, resolution and aperture are
   extracted from it.
+
+- wrap_dateline:
+
+  Logical. If TRUE (default), calls
+  [`sf::st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
+  to split antimeridian-crossing polygons. Set to FALSE for
+  orthographic/globe projections where wrapping creates gaps.
 
 ## Value
 

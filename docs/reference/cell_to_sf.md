@@ -5,7 +5,7 @@ Creates sf polygon geometries for hexagonal grid cells.
 ## Usage
 
 ``` r
-cell_to_sf(cell_id = NULL, grid)
+cell_to_sf(cell_id = NULL, grid, wrap_dateline = TRUE)
 ```
 
 ## Arguments
@@ -19,6 +19,13 @@ cell_to_sf(cell_id = NULL, grid)
 
   A HexGridInfo or HexData object. If HexData and cell_id is NULL,
   polygons are generated for all cells in the data.
+
+- wrap_dateline:
+
+  Logical. If TRUE (default), calls
+  [`sf::st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
+  to split antimeridian-crossing polygons. Set to FALSE for
+  orthographic/globe projections where wrapping creates gaps.
 
 ## Value
 

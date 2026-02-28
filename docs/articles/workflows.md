@@ -493,19 +493,12 @@ remains valid, but polygon visualization can be distorted near poles.
 
 ### Date Line
 
-The date line (lon = ±180°) is handled correctly. Use
-[`st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
-when visualizing polygons that cross it:
-
-``` r
-
-# For polygons crossing the date line
-wrapped <- st_wrap_dateline(
-  polygons,
-  options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"),
-  quiet = TRUE
-)
-```
+Polygons crossing the date line (lon = ±180°) are handled automatically.
+[`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+applies
+[`sf::st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
+internally, so flat map projections render correctly without manual
+intervention.
 
 ## Function Summary
 

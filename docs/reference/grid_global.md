@@ -5,7 +5,7 @@ Creates hexagon polygons covering the entire Earth.
 ## Usage
 
 ``` r
-grid_global(grid)
+grid_global(grid, wrap_dateline = TRUE)
 ```
 
 ## Arguments
@@ -13,6 +13,12 @@ grid_global(grid)
 - grid:
 
   A HexGridInfo object specifying the grid parameters
+
+- wrap_dateline:
+
+  Logical. If TRUE (default), antimeridian-crossing polygons are split
+  at +/-180 degrees. Set to FALSE for orthographic/globe projections
+  where wrapping creates gaps.
 
 ## Value
 
