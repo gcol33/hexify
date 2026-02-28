@@ -30,8 +30,7 @@ resolution:
 \item{aperture}{Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 Ignored for H3 grids (fixed at 7).}
 
-\item{type}{Grid type: "isea" (default) or "h3". H3 grids require the
-\pkg{h3o} package.}
+\item{type}{Grid type: "isea" (default) or "h3".}
 
 \item{resround}{Resolution rounding when using \code{area_km2}:
 "nearest" (default), "up", or "down".}
@@ -55,7 +54,7 @@ matching the closest H3 resolution.
 
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 H3 cells are NOT exactly equal-area (area varies by ~3-5\\% depending on
-location). H3 support requires the \pkg{h3o} package.
+location).
 }
 \section{One Grid, Many Datasets}{
 

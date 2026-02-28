@@ -68,7 +68,6 @@ h3_crosswalk <- function(cell_id = NULL,
                          direction = c("isea_to_h3", "h3_to_isea")) {
 
   direction <- match.arg(direction)
-  check_h3o()
 
   # -------------------------------------------------------------------------
   # Extract grid and cell IDs
@@ -129,17 +128,11 @@ h3_crosswalk <- function(cell_id = NULL,
     coords <- cell_to_lonlat(unique_ids, g)
 
     # Convert centers to H3 cell IDs
-    pts_sfc <- sf::st_sfc(
-      lapply(seq_len(nrow(coords)), function(i) {
-        sf::st_point(c(coords$lon_deg[i], coords$lat_deg[i]))
-      }),
-      crs = 4326
-    )
-    h3_ids <- as.character(h3o::h3_from_points(pts_sfc, h3_resolution))
+    h3_ids <- cpp_h3_latLngToCell(coords$lon_deg, coords$lat_deg, h3_resolution)
 
     # Compute areas
     isea_areas <- rep(g@area_km2, length(unique_ids))
-    h3_areas <- as.numeric(.h3_cell_area_cached(h3_ids))
+    h3_areas <- cpp_h3_cellAreaKm2(h3_ids)
 
     data.frame(
       isea_cell_id = unique_ids,
@@ -156,15 +149,13 @@ h3_crosswalk <- function(cell_id = NULL,
     # -----------------------------------------------------------------------
 
     # Get H3 cell centers
-    h3_idx <- h3o::h3_from_strings(as.character(unique_ids))
-    pts <- h3o::h3_to_points(h3_idx)
-    coords <- sf::st_coordinates(pts)
+    center_df <- cpp_h3_cellToLatLng(as.character(unique_ids))
 
     # Convert centers to ISEA cell IDs
-    isea_ids <- lonlat_to_cell(coords[, 1], coords[, 2], isea_g)
+    isea_ids <- lonlat_to_cell(center_df$lon, center_df$lat, isea_g)
 
     # Compute areas
-    h3_areas <- as.numeric(.h3_cell_area_cached(as.character(unique_ids)))
+    h3_areas <- cpp_h3_cellAreaKm2(as.character(unique_ids))
     isea_areas <- rep(isea_g@area_km2, length(unique_ids))
 
     data.frame(

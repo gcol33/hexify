@@ -45,7 +45,6 @@ test_that("cell_area() errors when cell_id is NULL and grid is HexGridInfo", {
 # H3 cell_area()
 # =============================================================================
 
-skip_if_not_installed("h3o")
 skip_if_not_installed("sf")
 
 test_that("cell_area() returns per-cell areas for H3", {

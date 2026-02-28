@@ -1,0 +1,9 @@
+This package includes vendored source code from the H3 library.
+
+== H3 Hexagonal Hierarchical Spatial Index ==
+
+Files: src/h3/*
+Copyright: 2016-2024 Uber Technologies, Inc.
+License: Apache-2.0
+  The full text of the Apache License 2.0 is included in src/h3/LICENSE.
+Source: https://github.com/uber/h3 (version 4.4.1)

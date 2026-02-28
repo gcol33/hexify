@@ -1,0 +1,17 @@
+PKG_CPPFLAGS = -Ih3 -DH3_PREFIX=hexify_h3_
+
+H3_OBJECTS = h3/algos.o h3/area.o h3/baseCells.o h3/bbox.o \
+    h3/cellsToMultiPoly.o h3/coordijk.o h3/directedEdge.o \
+    h3/faceijk.o h3/h3Assert.o h3/h3Index.o h3/iterators.o \
+    h3/latLng.o h3/linkedGeo.o h3/localij.o h3/mathExtensions.o \
+    h3/polyfill.o h3/polygon.o h3/vec2d.o h3/vec3d.o \
+    h3/vertex.o h3/vertexGraph.o
+
+CPP_OBJECTS = RcppExports.o aperture.o aperture_sequence.o cell_index.o \
+    coordinate_transforms.o icosahedron.o ijk_coordinates.o \
+    index_z3.o index_z7.o index_zorder.o \
+    projection_forward.o projection_inverse.o \
+    rcpp_aperture.o rcpp_cell.o rcpp_index.o rcpp_projection.o \
+    rcpp_h3.o
+
+OBJECTS = $(CPP_OBJECTS) $(H3_OBJECTS)

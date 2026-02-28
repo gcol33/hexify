@@ -1,9 +1,6 @@
 # test-h3.R
-# Tests for H3 grid support
-#
-# All tests require the h3o package and are skipped if not installed.
+# Tests for H3 grid support (native C backend)
 
-skip_if_not_installed("h3o")
 skip_if_not_installed("sf")
 
 # =============================================================================

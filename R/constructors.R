@@ -27,8 +27,7 @@
 #'   }
 #' @param aperture Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
 #'   Ignored for H3 grids (fixed at 7).
-#' @param type Grid type: "isea" (default) or "h3". H3 grids require the
-#'   \pkg{h3o} package.
+#' @param type Grid type: "isea" (default) or "h3".
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
 #' @param crs Coordinate reference system EPSG code (default 4326 = 'WGS84').
@@ -44,7 +43,7 @@
 #'
 #' H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 #' H3 cells are NOT exactly equal-area (area varies by ~3-5\% depending on
-#' location). H3 support requires the \pkg{h3o} package.
+#' location).
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
 #'   \code{\link{HexGridInfo-class}} for class documentation
@@ -113,8 +112,6 @@ hex_grid <- function(area_km2 = NULL,
   # H3 grid path
   # =========================================================================
   if (type == "h3") {
-    check_h3o()
-
     if (!missing(aperture) && aperture != 3) {
       warning("aperture is ignored for H3 grids (H3 uses fixed aperture 7)")
     }
@@ -401,7 +398,7 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
     # Polygon geometry from cell boundaries
     unique_ids <- unique(x@cell_id)
 
-    # Use cell_to_sf for H3 grids (routes through h3o), or legacy path for ISEA
+    # Use cell_to_sf for H3 grids (native C backend), or legacy path for ISEA
     if (is_h3_grid(grid)) {
       polys_sf <- cell_to_sf(unique_ids, grid)
     } else {

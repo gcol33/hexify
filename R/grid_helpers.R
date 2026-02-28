@@ -40,14 +40,7 @@ lonlat_to_cell <- function(lon, lat, grid) {
   g <- extract_grid(grid)
 
   if (is_h3_grid(g)) {
-    check_h3o()
-    lon_num <- as.numeric(lon)
-    lat_num <- as.numeric(lat)
-    pts_sfc <- sf::st_sfc(
-      lapply(seq_along(lon_num), function(i) sf::st_point(c(lon_num[i], lat_num[i]))),
-      crs = 4326
-    )
-    return(as.character(h3o::h3_from_points(pts_sfc, g@resolution)))
+    return(cpp_h3_latLngToCell(as.numeric(lon), as.numeric(lat), g@resolution))
   }
 
   if (g@aperture == "4/3") {
@@ -88,10 +81,8 @@ cell_to_lonlat <- function(cell_id, grid) {
   g <- extract_grid(grid)
 
   if (is_h3_grid(g)) {
-    check_h3o()
-    pts <- h3o::h3_to_points(h3o::h3_from_strings(as.character(cell_id)))
-    coords <- sf::st_coordinates(pts)
-    return(data.frame(lon_deg = coords[, 1], lat_deg = coords[, 2]))
+    result <- cpp_h3_cellToLatLng(as.character(cell_id))
+    return(data.frame(lon_deg = result$lon, lat_deg = result$lat))
   }
 
   if (g@aperture == "4/3") {
@@ -164,11 +155,25 @@ cell_to_sf <- function(cell_id = NULL, grid) {
     stop("No valid cell_id values")
   }
 
-  # H3 path: use h3o to generate polygons
+  # H3 path: use native C backend for boundaries
   if (is_h3_grid(g)) {
-    check_h3o()
-    h3_ids <- h3o::h3_from_strings(as.character(cell_id))
-    sfc <- sf::st_as_sfc(h3_ids)
+    boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
+    polygons <- lapply(boundaries, function(coords) {
+      if (nrow(coords) == 0) return(sf::st_polygon())
+      lons <- coords[, 1]
+      lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
+      if (lon_range > 180) {
+        lons[lons < 0] <- lons[lons < 0] + 360
+        coords[, 1] <- lons
+        mean_lon <- mean(lons)
+        if (mean_lon > 180) {
+          coords[, 1] <- coords[, 1] - 360
+        }
+      }
+      sf::st_polygon(list(coords))
+    })
+    sfc <- sf::st_sfc(polygons, crs = g@crs)
+    sfc <- sf::st_make_valid(sfc)
     return(sf::st_sf(cell_id = as.character(cell_id), geometry = sfc))
   }
 
@@ -252,15 +257,16 @@ grid_rect <- function(bbox, grid) {
     bbox <- as.numeric(sf::st_bbox(bbox))
   }
 
-  # H3 path: use h3o to fill bbox with cells
+  # H3 path: fill bbox with cells using native C backend
   if (is_h3_grid(g)) {
-    check_h3o()
-    bbox_poly <- sf::st_as_sfc(sf::st_bbox(
-      c(xmin = bbox[1], ymin = bbox[2], xmax = bbox[3], ymax = bbox[4]),
-      crs = 4326
-    ))
-    h3_cells <- h3o::sfc_to_cells(bbox_poly, g@resolution)[[1]]
-    cell_ids <- as.character(h3_cells)
+    bbox_coords <- matrix(c(
+      bbox[1], bbox[2],
+      bbox[3], bbox[2],
+      bbox[3], bbox[4],
+      bbox[1], bbox[4],
+      bbox[1], bbox[2]
+    ), ncol = 2, byrow = TRUE)
+    cell_ids <- cpp_h3_polygonToCells(bbox_coords, g@resolution)
     if (length(cell_ids) == 0) {
       stop("No H3 cells found in the specified bounding box at resolution ", g@resolution)
     }
@@ -315,10 +321,8 @@ grid_global <- function(grid) {
 
   g <- extract_grid(grid)
 
-  # H3 path
+  # H3 path: fill globe using native C backend
   if (is_h3_grid(g)) {
-    check_h3o()
-    # Warn for high resolutions (many cells)
     h3_n_cells <- 2 + 120 * 7^g@resolution
     if (h3_n_cells > 2e6) {
       warning(sprintf(
@@ -326,22 +330,17 @@ grid_global <- function(grid) {
         g@resolution, h3_n_cells
       ))
     }
-    # Split globe into quadrants to ensure full coverage with sfc_to_cells
-    s2_state <- sf::sf_use_s2()
-    sf::sf_use_s2(FALSE)
-    on.exit(sf::sf_use_s2(s2_state), add = TRUE)
-
+    # Split globe into quadrants for polygonToCells
     quads <- list(
-      c(xmin = -180, ymin = 0, xmax = 0, ymax = 90),
-      c(xmin = 0, ymin = 0, xmax = 180, ymax = 90),
-      c(xmin = -180, ymin = -90, xmax = 0, ymax = 0),
-      c(xmin = 0, ymin = -90, xmax = 180, ymax = 0)
+      matrix(c(-180, 0, 0, 0, 0, 90, -180, 90, -180, 0), ncol = 2, byrow = TRUE),
+      matrix(c(0, 0, 180, 0, 180, 90, 0, 90, 0, 0), ncol = 2, byrow = TRUE),
+      matrix(c(-180, -90, 0, -90, 0, 0, -180, 0, -180, -90), ncol = 2, byrow = TRUE),
+      matrix(c(0, -90, 180, -90, 180, 0, 0, 0, 0, -90), ncol = 2, byrow = TRUE)
     )
     all_cells <- character(0)
     for (q in quads) {
-      poly <- sf::st_as_sfc(sf::st_bbox(q, crs = 4326))
-      h3_cells <- h3o::sfc_to_cells(poly, g@resolution)[[1]]
-      all_cells <- c(all_cells, as.character(h3_cells))
+      quad_cells <- cpp_h3_polygonToCells(q, g@resolution)
+      all_cells <- c(all_cells, quad_cells)
     }
     cell_ids <- unique(all_cells)
     return(cell_to_sf(cell_ids, g))
@@ -448,10 +447,8 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 
   g <- extract_grid(grid)
 
-  # H3 path: use h3o::sfc_to_cells directly on boundary polygon
+  # H3 path: fill boundary polygon using native C backend
   if (is_h3_grid(g)) {
-    check_h3o()
-
     # Disable S2 for spatial operations
     s2_state <- sf::sf_use_s2()
     sf::sf_use_s2(FALSE)
@@ -463,8 +460,17 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
     }
     boundary_geom <- sf::st_make_valid(boundary_geom)
 
-    h3_cells <- h3o::sfc_to_cells(boundary_geom, g@resolution)[[1]]
-    cell_ids <- as.character(h3_cells)
+    # Extract polygon rings for cpp_h3_polygonToCells
+    polys <- sf::st_cast(boundary_geom, "POLYGON")
+    all_cells <- character(0)
+    for (p in polys) {
+      rings <- unclass(p)
+      outer_ring <- rings[[1]]
+      hole_rings <- if (length(rings) > 1) rings[-1] else NULL
+      pcells <- cpp_h3_polygonToCells(outer_ring, g@resolution, holes = hole_rings)
+      all_cells <- c(all_cells, pcells)
+    }
+    cell_ids <- unique(all_cells)
     hex_sf <- cell_to_sf(cell_ids, g)
 
     if (crop) {
@@ -596,57 +602,13 @@ cell_area <- function(cell_id = NULL, grid) {
     return(areas)
   }
 
-  # H3: per-cell geodesic area (with caching)
-  check_h3o()
+  # H3: per-cell area via native C backend
   cell_id <- as.character(cell_id)
-
-  # Operate on unique IDs, then expand back
-  unique_ids <- unique(cell_id)
-  unique_areas <- .h3_cell_area_cached(unique_ids)
-
-  areas <- unique_areas[cell_id]
+  areas <- cpp_h3_cellAreaKm2(cell_id)
   names(areas) <- cell_id
   areas
 }
 
-#' Cached geodesic area computation for H3 cells
-#'
-#' Computes actual geodesic area for H3 cells using sf::st_area() on h3o
-#' polygons. Results are cached in .hexify_cache so repeated queries are fast.
-#'
-#' @param cell_ids Character vector of H3 cell IDs (should be unique)
-#' @return Named numeric vector of areas in km²
-#' @noRd
-.h3_cell_area_cached <- function(cell_ids) {
-  cache_key <- "h3_areas"
-  if (!exists(cache_key, envir = .hexify_cache)) {
-    assign(cache_key, new.env(parent = emptyenv()), envir = .hexify_cache)
-  }
-  area_env <- get(cache_key, envir = .hexify_cache)
-
-  # Split into cached and uncached (vectorized via ls())
-  cached_ids <- ls(area_env)
-  need_compute <- setdiff(cell_ids, cached_ids)
-
-  if (length(need_compute) > 0) {
-    # Temporarily enable s2 for geodesic area computation
-    s2_state <- sf::sf_use_s2()
-    sf::sf_use_s2(TRUE)
-    on.exit(sf::sf_use_s2(s2_state), add = TRUE)
-
-    h3_idx <- h3o::h3_from_strings(need_compute)
-    polys_sfc <- sf::st_as_sfc(h3_idx)
-    areas_m2 <- as.numeric(sf::st_area(polys_sfc))
-    areas_km2 <- areas_m2 / 1e6
-
-    for (i in seq_along(need_compute)) {
-      assign(need_compute[i], areas_km2[i], envir = area_env)
-    }
-  }
-
-  # Vectorized retrieval
-  unlist(mget(cell_ids, envir = area_env))
-}
 
 # =============================================================================
 # HIERARCHICAL INDEX HELPERS
@@ -717,12 +679,11 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   # H3 path
   if (is_h3_grid(g)) {
-    check_h3o()
     parent_res <- g@resolution - as.integer(levels)
     if (parent_res < H3_MIN_RESOLUTION) {
       stop("Cannot get parent: would go below H3 minimum resolution")
     }
-    return(as.character(h3o::get_parents(h3o::h3_from_strings(as.character(cell_id)), parent_res)))
+    return(cpp_h3_cellToParent(as.character(cell_id), parent_res))
   }
 
   index_type <- if (g@aperture == "3") "z3"
@@ -771,15 +732,11 @@ get_children <- function(cell_id, grid, levels = 1L) {
 
   # H3 path
   if (is_h3_grid(g)) {
-    check_h3o()
     child_res <- g@resolution + as.integer(levels)
     if (child_res > H3_MAX_RESOLUTION) {
       stop("Cannot get children: would exceed H3 maximum resolution (15)")
     }
-    return(lapply(as.character(cell_id), function(id) {
-      ch <- h3o::get_children(h3o::h3_from_strings(id), child_res)[[1]]
-      as.character(ch)
-    }))
+    return(cpp_h3_cellToChildren(as.character(cell_id), child_res))
   }
 
   if (g@resolution + levels > MAX_RESOLUTION) {

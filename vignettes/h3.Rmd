@@ -10,8 +10,7 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-CAN_RUN <- requireNamespace("h3o", quietly = TRUE) &&
-           requireNamespace("sf", quietly = TRUE)
+CAN_RUN <- requireNamespace("sf", quietly = TRUE)
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -268,7 +267,7 @@ values close to 1 mean the resolutions are well-matched.
 | **Apertures** | 3, 4, 7, 4/3 | Fixed (7) |
 | **Resolutions** | 0--30 | 0--15 |
 | **Hierarchy** | Approximate (aperture-dependent) | Exact (7 children per parent) |
-| **Dependencies** | None (built-in C++) | Requires `h3o` package |
+| **Dependencies** | None (built-in C++) | None (vendored H3 C library) |
 | **Industry adoption** | Scientific / government | Tech industry / commercial |
 
 **Use ISEA when**:

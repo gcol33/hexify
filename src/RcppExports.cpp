@@ -653,6 +653,100 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_h3_latLngToCell
+Rcpp::CharacterVector cpp_h3_latLngToCell(Rcpp::NumericVector lon_deg, Rcpp::NumericVector lat_deg, int resolution);
+RcppExport SEXP _hexify_cpp_h3_latLngToCell(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type lon_deg(lon_degSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type lat_deg(lat_degSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_latLngToCell(lon_deg, lat_deg, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cellToLatLng
+Rcpp::DataFrame cpp_h3_cellToLatLng(Rcpp::CharacterVector cell_ids);
+RcppExport SEXP _hexify_cpp_h3_cellToLatLng(SEXP cell_idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cellToLatLng(cell_ids));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_isValidCell
+Rcpp::LogicalVector cpp_h3_isValidCell(Rcpp::CharacterVector cell_ids);
+RcppExport SEXP _hexify_cpp_h3_isValidCell(SEXP cell_idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_isValidCell(cell_ids));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cellToParent
+Rcpp::CharacterVector cpp_h3_cellToParent(Rcpp::CharacterVector cell_ids, int parent_res);
+RcppExport SEXP _hexify_cpp_h3_cellToParent(SEXP cell_idsSEXP, SEXP parent_resSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    Rcpp::traits::input_parameter< int >::type parent_res(parent_resSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cellToParent(cell_ids, parent_res));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cellToChildren
+Rcpp::List cpp_h3_cellToChildren(Rcpp::CharacterVector cell_ids, int child_res);
+RcppExport SEXP _hexify_cpp_h3_cellToChildren(SEXP cell_idsSEXP, SEXP child_resSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    Rcpp::traits::input_parameter< int >::type child_res(child_resSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cellToChildren(cell_ids, child_res));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cellToBoundary
+Rcpp::List cpp_h3_cellToBoundary(Rcpp::CharacterVector cell_ids);
+RcppExport SEXP _hexify_cpp_h3_cellToBoundary(SEXP cell_idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cellToBoundary(cell_ids));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_polygonToCells
+Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords, int resolution, Rcpp::Nullable<Rcpp::List> holes);
+RcppExport SEXP _hexify_cpp_h3_polygonToCells(SEXP coordsSEXP, SEXP resolutionSEXP, SEXP holesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type holes(holesSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_polygonToCells(coords, resolution, holes));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cellAreaKm2
+Rcpp::NumericVector cpp_h3_cellAreaKm2(Rcpp::CharacterVector cell_ids);
+RcppExport SEXP _hexify_cpp_h3_cellAreaKm2(SEXP cell_idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cellAreaKm2(cell_ids));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_to_index
 std::string cpp_cell_to_index(int face, double i, double j, int resolution, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_cell_to_index(SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
@@ -1141,6 +1235,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_icosa_tri_to_plane", (DL_FUNC) &_hexify_cpp_icosa_tri_to_plane, 3},
     {"_hexify_cpp_cell_to_plane", (DL_FUNC) &_hexify_cpp_cell_to_plane, 3},
     {"_hexify_cpp_lonlat_to_plane", (DL_FUNC) &_hexify_cpp_lonlat_to_plane, 2},
+    {"_hexify_cpp_h3_latLngToCell", (DL_FUNC) &_hexify_cpp_h3_latLngToCell, 3},
+    {"_hexify_cpp_h3_cellToLatLng", (DL_FUNC) &_hexify_cpp_h3_cellToLatLng, 1},
+    {"_hexify_cpp_h3_isValidCell", (DL_FUNC) &_hexify_cpp_h3_isValidCell, 1},
+    {"_hexify_cpp_h3_cellToParent", (DL_FUNC) &_hexify_cpp_h3_cellToParent, 2},
+    {"_hexify_cpp_h3_cellToChildren", (DL_FUNC) &_hexify_cpp_h3_cellToChildren, 2},
+    {"_hexify_cpp_h3_cellToBoundary", (DL_FUNC) &_hexify_cpp_h3_cellToBoundary, 1},
+    {"_hexify_cpp_h3_polygonToCells", (DL_FUNC) &_hexify_cpp_h3_polygonToCells, 3},
+    {"_hexify_cpp_h3_cellAreaKm2", (DL_FUNC) &_hexify_cpp_h3_cellAreaKm2, 1},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 6},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 3},
     {"_hexify_cpp_get_parent_index", (DL_FUNC) &_hexify_cpp_get_parent_index, 3},

@@ -9,11 +9,12 @@ Description: Provides functions to build and use hexagonal discrete global grids
     <doi:10.3138/27H7-8K88-4882-1752>) and the 'H3' hierarchical hexagonal system
     ('Uber' Technologies). Implements the 'ISEA' discrete global grid system
     ('Sahr', 'White' and 'Kimerling' 2003 <doi:10.1559/152304003100011090>).
-    Includes a fast 'C++' core for 'ISEA' projection and aperture quantization, and
+    Includes a fast 'C++' core for 'ISEA' projection and aperture quantization,
+    a vendored 'H3' v4.4.1 C library for native 'H3' grid operations, and
     'sf'/'terra'-compatible R wrappers for grid generation and coordinate assignment.
-    'H3' grid support is provided via the 'h3o' package (optional).
     Output is compatible with 'dggridR' for interoperability.
 License: MIT + file LICENSE
+SystemRequirements: C99
 Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -29,8 +30,7 @@ Suggests:
     RColorBrewer,
     rnaturalearth,
     tibble,
-    gridExtra,
-    h3o
+    gridExtra
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 Imports: sf, Rcpp, methods, rlang

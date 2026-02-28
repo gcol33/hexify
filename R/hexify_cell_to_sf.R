@@ -75,7 +75,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
   # Extract from grid if provided
   if (!is.null(grid)) {
     g <- extract_grid(grid)
-    # H3 grids: redirect to cell_to_sf() which handles h3o
+    # H3 grids: redirect to cell_to_sf() which handles H3 boundaries
     if (is_h3_grid(g)) {
       return(cell_to_sf(cell_id, g))
     }

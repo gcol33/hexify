@@ -137,10 +137,6 @@ H3_AVG_AREA_KM2 <- c(
 # Session-Scoped Cache
 # =============================================================================
 
-#' Session-scoped cache for computed values (e.g., H3 cell areas)
-#' @noRd
-.hexify_cache <- new.env(parent = emptyenv())
-
 # =============================================================================
 # H3 Resolution Helpers
 # =============================================================================
@@ -156,18 +152,6 @@ H3_AVG_AREA_KM2 <- c(
 closest_h3_resolution <- function(area_km2) {
   diffs <- abs(H3_AVG_AREA_KM2 - area_km2)
   which.min(diffs) - 1L
-}
-
-#' Check that h3o package is available
-#' @noRd
-check_h3o <- function() {
-  if (!requireNamespace("h3o", quietly = TRUE)) {
-    stop(
-      "Package 'h3o' is required for H3 grid operations.\n",
-      "Install with: install.packages('h3o')",
-      call. = FALSE
-    )
-  }
 }
 
 #' Check whether a grid is H3 type

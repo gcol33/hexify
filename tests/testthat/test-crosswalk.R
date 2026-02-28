@@ -1,7 +1,6 @@
 # test-crosswalk.R
 # Tests for h3_crosswalk()
 
-skip_if_not_installed("h3o")
 skip_if_not_installed("sf")
 
 # =============================================================================

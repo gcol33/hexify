@@ -193,6 +193,38 @@ cpp_lonlat_to_plane <- function(lon, lat) {
     .Call(`_hexify_cpp_lonlat_to_plane`, lon, lat)
 }
 
+cpp_h3_latLngToCell <- function(lon_deg, lat_deg, resolution) {
+    .Call(`_hexify_cpp_h3_latLngToCell`, lon_deg, lat_deg, resolution)
+}
+
+cpp_h3_cellToLatLng <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_cellToLatLng`, cell_ids)
+}
+
+cpp_h3_isValidCell <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_isValidCell`, cell_ids)
+}
+
+cpp_h3_cellToParent <- function(cell_ids, parent_res) {
+    .Call(`_hexify_cpp_h3_cellToParent`, cell_ids, parent_res)
+}
+
+cpp_h3_cellToChildren <- function(cell_ids, child_res) {
+    .Call(`_hexify_cpp_h3_cellToChildren`, cell_ids, child_res)
+}
+
+cpp_h3_cellToBoundary <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_cellToBoundary`, cell_ids)
+}
+
+cpp_h3_polygonToCells <- function(coords, resolution, holes = NULL) {
+    .Call(`_hexify_cpp_h3_polygonToCells`, coords, resolution, holes)
+}
+
+cpp_h3_cellAreaKm2 <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_cellAreaKm2`, cell_ids)
+}
+
 cpp_cell_to_index <- function(face, i, j, resolution, aperture, index_type = "auto") {
     .Call(`_hexify_cpp_cell_to_index`, face, i, j, resolution, aperture, index_type)
 }
