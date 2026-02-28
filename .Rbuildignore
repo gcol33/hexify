@@ -26,3 +26,6 @@
 ^.*\.Rcheck$
 ^hexify_.*\.tar\.gz$
 ^cookies\.txt$
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$

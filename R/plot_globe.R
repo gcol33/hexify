@@ -99,12 +99,12 @@ globe_centers <- list(
 #'
 #' @export
 #' @examples
-#' # Get data for custom plotting (fast, no rendering)
+#' \donttest{
+#' # Get data for custom plotting (no rendering)
 #' data <- plot_globe(area = 100000, center = "europe", return_data = TRUE)
 #' nrow(data$hexagons)
 #' class(data$ocean_circle)
 #'
-#' \donttest{
 #' # Basic usage - Europe-centered globe
 #' plot_globe(area = 80000, center = "europe")
 #' }

@@ -1,3 +1,11 @@
+# hexify 0.6.4
+
+* Removed compiled object files (`.o`) from source tarball that caused
+  installation failure on Linux (Debian) and NOTE on all platforms
+* Wrapped `plot_globe()` examples in `\donttest{}` to reduce check time
+  (was 608s on win-builder)
+* Reworded DESCRIPTION to avoid "vendored" spelling flag
+
 # hexify 0.6.3
 
 * `cell_to_sf()` now applies `sf::st_wrap_dateline()` automatically, fixing
