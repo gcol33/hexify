@@ -200,7 +200,7 @@ H3Error H3_EXPORT(h3ToString)(H3Index h, char *str, size_t sz) {
         // Buffer is potentially not large enough.
         return E_MEMORY_BOUNDS;
     }
-    sprintf(str, "%" PRIx64, h);
+    snprintf(str, sz, "%" PRIx64, h);
     return E_SUCCESS;
 }
 
