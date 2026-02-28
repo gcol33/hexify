@@ -16,6 +16,15 @@ This covers every hexagonal grid system that matters:
 
 No additional grid backends needed.
 
+## Vendored H3 C Library
+
+The H3 backend uses vendored C source from Uber's H3 library in `src/h3/`. This is a direct copy of upstream code — **do not rewrite or restyle it**. Benefits:
+- Zero external dependencies at install time
+- Easy to update: drop in new upstream C files when Uber releases a new version
+- Apache 2.0 license (compatible with MIT), kept at `src/h3/LICENSE`
+
+Only make minimal targeted fixes when R CMD check flags specific symbols (e.g., `sprintf` → `snprintf`). Never refactor vendored code for style.
+
 ## Build & Check
 
 Use Windows R (not WSL R):
