@@ -19,6 +19,17 @@ navbar:
     - github
     - lightswitch
   components:
+    articles:
+      text: Articles
+      menu:
+      - text: Quick Start
+        href: articles/quickstart.html
+      - text: Workflows
+        href: articles/workflows.html
+      - text: Visualization
+        href: articles/visualization.html
+      - text: H3 Grids
+        href: articles/h3.html
     github:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify

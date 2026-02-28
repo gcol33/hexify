@@ -1,14 +1,12 @@
 # Practical Workflows
 
-This vignette covers practical workflows for common spatial analysis
-tasks: sharing grids across datasets, generating grid polygons, choosing
-resolution, and exporting to GIS formats.
+Shared grids across datasets, polygon generation, resolution selection,
+and GIS export.
 
 ## One Grid, Many Datasets
 
-The most powerful pattern in hexify is defining a grid once and reusing
-it across multiple datasets. This ensures spatial consistency and
-eliminates parameter repetition.
+Define a grid once, reuse it everywhere. Same grid object = guaranteed
+spatial alignment across datasets.
 
 ### The Problem
 
@@ -356,23 +354,23 @@ cat(sprintf("Target ~10000 km²: resolution %d (actual: %.1f km²)\n",
 ### Resolution Table (Aperture 3)
 
 | Resolution | \# Cells | Cell Area (km²) | Spacing (km) |
-|-----------:|:---------|----------------:|-------------:|
-|          0 | 12       |      42505468.5 |       7005.8 |
-|          1 | 32       |      15939550.7 |       4290.2 |
-|          2 | 92       |       5544191.5 |       2530.2 |
-|          3 | 272      |       1875241.3 |       1471.5 |
-|          4 | 812      |        628159.6 |        851.7 |
-|          5 | 2.4K     |        209730.9 |        492.1 |
-|          6 | 7.3K     |         69948.7 |        284.2 |
-|          7 | 21.9K    |         23320.5 |        164.1 |
-|          8 | 65.6K    |          7774.0 |         94.7 |
-|          9 | 196.8K   |          2591.4 |         54.7 |
-|         10 | 590.5K   |           863.8 |         31.6 |
-|         11 | 1.8M     |           287.9 |         18.2 |
-|         12 | 5.3M     |            96.0 |         10.5 |
-|         13 | 15.9M    |            32.0 |          6.1 |
-|         14 | 47.8M    |            10.7 |          3.5 |
-|         15 | 143.5M   |             3.6 |          2.0 |
+|-----------:|---------:|----------------:|-------------:|
+|          0 |       12 |    42,505,468.5 |       7005.8 |
+|          1 |       32 |    15,939,550.7 |       4290.2 |
+|          2 |       92 |     5,544,191.5 |       2530.2 |
+|          3 |      272 |     1,875,241.3 |       1471.5 |
+|          4 |      812 |       628,159.6 |        851.7 |
+|          5 |     2.4K |       209,730.9 |        492.1 |
+|          6 |     7.3K |        69,948.7 |        284.2 |
+|          7 |    21.9K |        23,320.5 |        164.1 |
+|          8 |    65.6K |         7,774.0 |         94.7 |
+|          9 |   196.8K |         2,591.4 |         54.7 |
+|         10 |   590.5K |           863.8 |         31.6 |
+|         11 |     1.8M |           287.9 |         18.2 |
+|         12 |     5.3M |            96.0 |         10.5 |
+|         13 |    15.9M |            32.0 |          6.1 |
+|         14 |    47.8M |            10.7 |          3.5 |
+|         15 |   143.5M |             3.6 |          2.0 |
 
 ### Comparing Apertures
 

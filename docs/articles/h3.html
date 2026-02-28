@@ -31,7 +31,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -72,12 +80,11 @@ Colling</h4>
     
     
 <p>hexify v0.5.0 adds <a href="https://h3geo.org/" class="external-link">H3</a> as a
-first-class grid type alongside ISEA. Every core function —
-<code><a href="../reference/hexify.html">hexify()</a></code>, <code><a href="../reference/grid_rect.html">grid_rect()</a></code>,
+first-class grid type alongside ISEA. Every core function
+(<code><a href="../reference/hexify.html">hexify()</a></code>, <code><a href="../reference/grid_rect.html">grid_rect()</a></code>,
 <code><a href="../reference/grid_clip.html">grid_clip()</a></code>, <code><a href="../reference/get_parent.html">get_parent()</a></code>,
-<code><a href="../reference/get_children.html">get_children()</a></code> — works with both grid systems through the
-same interface. This vignette covers what H3 is, how to use it in
-hexify, and when to prefer it over ISEA.</p>
+<code><a href="../reference/get_children.html">get_children()</a></code>) works with both grid systems through the
+same interface.</p>
 <div class="section level2">
 <h2 id="what-is-h3">What is H3?<a class="anchor" aria-label="anchor" href="#what-is-h3"></a>
 </h2>
@@ -87,8 +94,9 @@ partitions Earth’s surface into hexagonal cells at 16 resolutions
 7<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
 finer than the last. Cell IDs are 64-bit integers encoded as hexadecimal
 strings (e.g., <code>"8528342bfffffff"</code>).</p>
-<p>H3 has become an industry standard adopted by the FCC, Foursquare,
-and numerous geospatial platforms.</p>
+<p>H3 is widely adopted: the FCC uses it for broadband mapping,
+Foursquare for POI analytics, and DuckDB/BigQuery both have native H3
+extensions.</p>
 <p><strong>Key difference from ISEA</strong>: H3 cells are <em>not</em>
 equal-area. Cell area varies by
 ~1.6<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
@@ -2136,8 +2144,8 @@ has exactly one parent and seven children. hexify exposes this with
 <div class="section level2">
 <h2 id="working-with-h3-data">Working with H3 Data<a class="anchor" aria-label="anchor" href="#working-with-h3-data"></a>
 </h2>
-<p>The standard hexify workflow applies to H3 grids. Here’s a complete
-example using simulated species observations:</p>
+<p>The same hexify workflow applies. Species observations across Europe,
+aggregated into H3 cells:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
@@ -2851,10 +2859,9 @@ example using simulated species observations:</p>
 <div class="section level2">
 <h2 id="iseah3-crosswalk">ISEA–H3 Crosswalk<a class="anchor" aria-label="anchor" href="#iseah3-crosswalk"></a>
 </h2>
-<p>hexify v0.6.0 added <code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code> for bidirectional
-mapping between ISEA and H3 cell IDs. This is useful when you work in
-ISEA for analysis but need to share results with H3 ecosystems (or vice
-versa).</p>
+<p><code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code> (v0.6.0) maps between ISEA and H3 cell
+IDs in both directions. If you run your analysis on ISEA but
+collaborators expect H3 cell IDs, this bridges the two.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Start with an ISEA grid and some cells</span></span>
 <span><span class="va">grid_isea</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">9</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
@@ -2874,7 +2881,7 @@ versa).</p>
 <span><span class="co">#&gt; 4        39585 84390cbffffffff      2591.375    1819.493</span></span>
 <span><span class="co">#&gt; 5        42516 841e80dffffffff      2591.375    1885.191</span></span></code></pre></div>
 <p>The <code>area_ratio</code> column shows how ISEA and H3 cell sizes
-compare — values close to 1 mean the resolutions are well-matched.</p>
+compare; values close to 1 mean the resolutions are well-matched.</p>
 </div>
 <div class="section level2">
 <h2 id="isea-vs-h3-when-to-use-which">ISEA vs H3: When to Use Which<a class="anchor" aria-label="anchor" href="#isea-vs-h3-when-to-use-which"></a>
@@ -2960,118 +2967,128 @@ analysis</p></li>
 <span>                <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.1fK"</span>, <span class="va">h3_res</span><span class="op">$</span><span class="va">n_cells</span> <span class="op">/</span> <span class="fl">1e3</span><span class="op">)</span>,</span>
 <span>                <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">h3_res</span><span class="op">$</span><span class="va">n_cells</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co"># Use scientific notation for tiny areas, fixed for larger ones</span></span>
+<span><span class="va">h3_res</span><span class="op">$</span><span class="va">area_fmt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
+<span>  <span class="va">h3_res</span><span class="op">$</span><span class="va">cell_area_km2</span> <span class="op">&lt;</span> <span class="fl">0.1</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/formatc.html" class="external-link">formatC</a></span><span class="op">(</span><span class="va">h3_res</span><span class="op">$</span><span class="va">cell_area_km2</span>, format <span class="op">=</span> <span class="st">"e"</span>, digits <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/formatc.html" class="external-link">formatC</a></span><span class="op">(</span><span class="va">h3_res</span><span class="op">$</span><span class="va">cell_area_km2</span>, format <span class="op">=</span> <span class="st">"f"</span>, digits <span class="op">=</span> <span class="fl">1</span>, big.mark <span class="op">=</span> <span class="st">","</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">h3_res</span><span class="op">$</span><span class="va">spacing_fmt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
+<span>  <span class="va">h3_res</span><span class="op">$</span><span class="va">cell_spacing_km</span> <span class="op">&lt;</span> <span class="fl">0.1</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/formatc.html" class="external-link">formatC</a></span><span class="op">(</span><span class="va">h3_res</span><span class="op">$</span><span class="va">cell_spacing_km</span>, format <span class="op">=</span> <span class="st">"e"</span>, digits <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/formatc.html" class="external-link">formatC</a></span><span class="op">(</span><span class="va">h3_res</span><span class="op">$</span><span class="va">cell_spacing_km</span>, format <span class="op">=</span> <span class="st">"f"</span>, digits <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
-<span>  <span class="va">h3_res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"resolution"</span>, <span class="st">"n_cells_fmt"</span>, <span class="st">"cell_area_km2"</span>, <span class="st">"cell_spacing_km"</span><span class="op">)</span><span class="op">]</span>,</span>
-<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Resolution"</span>, <span class="st">"# Cells"</span>, <span class="st">"Avg Area (km²)"</span>, <span class="st">"Spacing (km)"</span><span class="op">)</span>,</span>
-<span>  digits <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="va">h3_res</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"resolution"</span>, <span class="st">"n_cells_fmt"</span>, <span class="st">"area_fmt"</span>, <span class="st">"spacing_fmt"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Resolution"</span>, <span class="st">"# Cells"</span>, <span class="st">"Avg Area (km\u00b2)"</span>, <span class="st">"Spacing (km)"</span><span class="op">)</span>,</span>
+<span>  align <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="right">Resolution</th>
-<th align="left"># Cells</th>
+<th align="right"># Cells</th>
 <th align="right">Avg Area (km²)</th>
 <th align="right">Spacing (km)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">0</td>
-<td align="left">122</td>
-<td align="right">4357449.4</td>
+<td align="right">122</td>
+<td align="right">4,357,449.4</td>
 <td align="right">2243.1</td>
 </tr>
 <tr class="even">
 <td align="right">1</td>
-<td align="left">842</td>
-<td align="right">609788.4</td>
+<td align="right">842</td>
+<td align="right">609,788.4</td>
 <td align="right">839.1</td>
 </tr>
 <tr class="odd">
 <td align="right">2</td>
-<td align="left">5.9K</td>
-<td align="right">86801.8</td>
+<td align="right">5.9K</td>
+<td align="right">86,801.8</td>
 <td align="right">316.6</td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
-<td align="left">41.2K</td>
-<td align="right">12393.4</td>
+<td align="right">41.2K</td>
+<td align="right">12,393.4</td>
 <td align="right">119.6</td>
 </tr>
 <tr class="odd">
 <td align="right">4</td>
-<td align="left">288.1K</td>
-<td align="right">1770.3</td>
+<td align="right">288.1K</td>
+<td align="right">1,770.3</td>
 <td align="right">45.2</td>
 </tr>
 <tr class="even">
 <td align="right">5</td>
-<td align="left">2.0M</td>
+<td align="right">2.0M</td>
 <td align="right">252.9</td>
 <td align="right">17.1</td>
 </tr>
 <tr class="odd">
 <td align="right">6</td>
-<td align="left">14.1M</td>
+<td align="right">14.1M</td>
 <td align="right">36.1</td>
 <td align="right">6.5</td>
 </tr>
 <tr class="even">
 <td align="right">7</td>
-<td align="left">98.8M</td>
+<td align="right">98.8M</td>
 <td align="right">5.2</td>
 <td align="right">2.4</td>
 </tr>
 <tr class="odd">
 <td align="right">8</td>
-<td align="left">691.8M</td>
+<td align="right">691.8M</td>
 <td align="right">0.7</td>
 <td align="right">0.9</td>
 </tr>
 <tr class="even">
 <td align="right">9</td>
-<td align="left">4.8B</td>
+<td align="right">4.8B</td>
 <td align="right">0.1</td>
 <td align="right">0.3</td>
 </tr>
 <tr class="odd">
 <td align="right">10</td>
-<td align="left">33.9B</td>
-<td align="right">0.0</td>
+<td align="right">33.9B</td>
+<td align="right">1.5e-02</td>
 <td align="right">0.1</td>
 </tr>
 <tr class="even">
 <td align="right">11</td>
-<td align="left">237.3B</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td align="right">237.3B</td>
+<td align="right">2.2e-03</td>
+<td align="right">5.0e-02</td>
 </tr>
 <tr class="odd">
 <td align="right">12</td>
-<td align="left">1661.0B</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td align="right">1661.0B</td>
+<td align="right">3.1e-04</td>
+<td align="right">1.9e-02</td>
 </tr>
 <tr class="even">
 <td align="right">13</td>
-<td align="left">11626.7B</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td align="right">11626.7B</td>
+<td align="right">4.4e-05</td>
+<td align="right">7.1e-03</td>
 </tr>
 <tr class="odd">
 <td align="right">14</td>
-<td align="left">81386.8B</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td align="right">81386.8B</td>
+<td align="right">6.3e-06</td>
+<td align="right">2.7e-03</td>
 </tr>
 <tr class="even">
 <td align="right">15</td>
-<td align="left">569707.4B</td>
-<td align="right">0.0</td>
-<td align="right">0.0</td>
+<td align="right">569707.4B</td>
+<td align="right">9.0e-07</td>
+<td align="right">1.0e-03</td>
 </tr>
 </tbody>
 </table>
-<p>Areas are averages — actual cell area varies by latitude.</p>
 </div>
 <div class="section level2">
 <h2 id="see-also">See Also<a class="anchor" aria-label="anchor" href="#see-also"></a>

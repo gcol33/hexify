@@ -31,7 +31,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -71,9 +79,8 @@ Colling</h4>
 
     
     
-<p>This vignette covers hexify’s visualization functions in detail:
-customizing appearance, showing points, creating heatmaps, and working
-with ggplot2.</p>
+<p>Base R <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="../reference/hexify_heatmap.html">hexify_heatmap()</a></code> for
+ggplot2, and building custom maps from scratch.</p>
 <div class="section level2">
 <h2 id="sample-data">Sample Data<a class="anchor" aria-label="anchor" href="#sample-data"></a>
 </h2>

@@ -1,8 +1,8 @@
 # Visualization
 
-This vignette covers hexify’s visualization functions in detail:
-customizing appearance, showing points, creating heatmaps, and working
-with ggplot2.
+Base R [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+for ggplot2, and building custom maps from scratch.
 
 ## Sample Data
 

@@ -23,10 +23,9 @@ library(hexify)
 ```
 
 hexify v0.5.0 adds [H3](https://h3geo.org/) as a first-class grid type alongside
-ISEA. Every core function --- `hexify()`, `grid_rect()`, `grid_clip()`,
-`get_parent()`, `get_children()` --- works with both grid systems through the
-same interface. This vignette covers what H3 is, how to use it in hexify,
-and when to prefer it over ISEA.
+ISEA. Every core function (`hexify()`, `grid_rect()`, `grid_clip()`,
+`get_parent()`, `get_children()`) works with both grid systems through the
+same interface.
 
 ## What is H3?
 
@@ -35,8 +34,8 @@ Earth's surface into hexagonal cells at 16 resolutions (0--15), each roughly
 7$\times$ finer than the last. Cell IDs are 64-bit integers encoded as
 hexadecimal strings (e.g., `"8528342bfffffff"`).
 
-H3 has become an industry standard adopted by the FCC, Foursquare, and
-numerous geospatial platforms.
+H3 is widely adopted: the FCC uses it for broadband mapping, Foursquare for
+POI analytics, and DuckDB/BigQuery both have native H3 extensions.
 
 **Key difference from ISEA**: H3 cells are _not_ equal-area. Cell area varies
 by ~1.6$\times$ between the largest and smallest hexagons at any given
@@ -190,8 +189,8 @@ ggplot() +
 
 ## Working with H3 Data
 
-The standard hexify workflow applies to H3 grids. Here's a complete example
-using simulated species observations:
+The same hexify workflow applies. Species observations across Europe, aggregated
+into H3 cells:
 
 ```{r h3-workflow, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 set.seed(42)
@@ -237,9 +236,9 @@ ggplot() +
 
 ## ISEA--H3 Crosswalk
 
-hexify v0.6.0 added `h3_crosswalk()` for bidirectional mapping between ISEA
-and H3 cell IDs. This is useful when you work in ISEA for analysis but need to
-share results with H3 ecosystems (or vice versa).
+`h3_crosswalk()` (v0.6.0) maps between ISEA and H3 cell IDs in both directions.
+If you run your analysis on ISEA but collaborators expect H3 cell IDs, this
+bridges the two.
 
 ```{r h3-crosswalk}
 # Start with an ISEA grid and some cells
@@ -255,8 +254,8 @@ xw <- h3_crosswalk(isea_ids, grid_isea)
 xw[, c("isea_cell_id", "h3_cell_id", "isea_area_km2", "h3_area_km2")]
 ```
 
-The `area_ratio` column shows how ISEA and H3 cell sizes compare ---
-values close to 1 mean the resolutions are well-matched.
+The `area_ratio` column shows how ISEA and H3 cell sizes compare; values
+close to 1 mean the resolutions are well-matched.
 
 ## ISEA vs H3: When to Use Which
 
@@ -300,14 +299,23 @@ h3_res$n_cells_fmt <- ifelse(
                 sprintf("%.1fK", h3_res$n_cells / 1e3),
                 as.character(h3_res$n_cells)))
 )
+# Use scientific notation for tiny areas, fixed for larger ones
+h3_res$area_fmt <- ifelse(
+  h3_res$cell_area_km2 < 0.1,
+  formatC(h3_res$cell_area_km2, format = "e", digits = 1),
+  formatC(h3_res$cell_area_km2, format = "f", digits = 1, big.mark = ",")
+)
+h3_res$spacing_fmt <- ifelse(
+  h3_res$cell_spacing_km < 0.1,
+  formatC(h3_res$cell_spacing_km, format = "e", digits = 1),
+  formatC(h3_res$cell_spacing_km, format = "f", digits = 1)
+)
 knitr::kable(
-  h3_res[, c("resolution", "n_cells_fmt", "cell_area_km2", "cell_spacing_km")],
-  col.names = c("Resolution", "# Cells", "Avg Area (km²)", "Spacing (km)"),
-  digits = 1
+  h3_res[, c("resolution", "n_cells_fmt", "area_fmt", "spacing_fmt")],
+  col.names = c("Resolution", "# Cells", "Avg Area (km\u00b2)", "Spacing (km)"),
+  align = c("r", "r", "r", "r")
 )
 ```
-
-Areas are averages --- actual cell area varies by latitude.
 
 ## See Also
 

@@ -19,11 +19,11 @@ library(sf)
 library(ggplot2)
 ```
 
-This vignette covers practical workflows for common spatial analysis tasks: sharing grids across datasets, generating grid polygons, choosing resolution, and exporting to GIS formats.
+Shared grids across datasets, polygon generation, resolution selection, and GIS export.
 
 ## One Grid, Many Datasets
 
-The most powerful pattern in hexify is defining a grid once and reusing it across multiple datasets. This ensures spatial consistency and eliminates parameter repetition.
+Define a grid once, reuse it everywhere. Same grid object = guaranteed spatial alignment across datasets.
 
 ### The Problem
 
@@ -322,10 +322,20 @@ comparison$n_cells_fmt <- ifelse(
          sprintf("%.1fK", comparison$n_cells / 1e3),
          as.character(comparison$n_cells))
 )
+comparison$area_fmt <- ifelse(
+  comparison$cell_area_km2 < 0.1,
+  formatC(comparison$cell_area_km2, format = "e", digits = 1),
+  formatC(comparison$cell_area_km2, format = "f", digits = 1, big.mark = ",")
+)
+comparison$spacing_fmt <- ifelse(
+  comparison$cell_spacing_km < 0.1,
+  formatC(comparison$cell_spacing_km, format = "e", digits = 1),
+  formatC(comparison$cell_spacing_km, format = "f", digits = 1)
+)
 knitr::kable(
-  comparison[, c("resolution", "n_cells_fmt", "cell_area_km2", "cell_spacing_km")],
-  col.names = c("Resolution", "# Cells", "Cell Area (km²)", "Spacing (km)"),
-  digits = 1
+  comparison[, c("resolution", "n_cells_fmt", "area_fmt", "spacing_fmt")],
+  col.names = c("Resolution", "# Cells", "Cell Area (km\u00b2)", "Spacing (km)"),
+  align = c("r", "r", "r", "r")
 )
 ```
 

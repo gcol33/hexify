@@ -31,7 +31,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
+    <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -68,15 +76,13 @@
 
     
     
-<p>This vignette covers practical workflows for common spatial analysis
-tasks: sharing grids across datasets, generating grid polygons, choosing
-resolution, and exporting to GIS formats.</p>
+<p>Shared grids across datasets, polygon generation, resolution
+selection, and GIS export.</p>
 <div class="section level2">
 <h2 id="one-grid-many-datasets">One Grid, Many Datasets<a class="anchor" aria-label="anchor" href="#one-grid-many-datasets"></a>
 </h2>
-<p>The most powerful pattern in hexify is defining a grid once and
-reusing it across multiple datasets. This ensures spatial consistency
-and eliminates parameter repetition.</p>
+<p>Define a grid once, reuse it everywhere. Same grid object =
+guaranteed spatial alignment across datasets.</p>
 <div class="section level3">
 <h3 id="the-problem">The Problem<a class="anchor" aria-label="anchor" href="#the-problem"></a>
 </h3>
@@ -4759,104 +4765,104 @@ closest available resolution:</p>
 <table class="table">
 <thead><tr class="header">
 <th align="right">Resolution</th>
-<th align="left"># Cells</th>
+<th align="right"># Cells</th>
 <th align="right">Cell Area (km²)</th>
 <th align="right">Spacing (km)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">0</td>
-<td align="left">12</td>
-<td align="right">42505468.5</td>
+<td align="right">12</td>
+<td align="right">42,505,468.5</td>
 <td align="right">7005.8</td>
 </tr>
 <tr class="even">
 <td align="right">1</td>
-<td align="left">32</td>
-<td align="right">15939550.7</td>
+<td align="right">32</td>
+<td align="right">15,939,550.7</td>
 <td align="right">4290.2</td>
 </tr>
 <tr class="odd">
 <td align="right">2</td>
-<td align="left">92</td>
-<td align="right">5544191.5</td>
+<td align="right">92</td>
+<td align="right">5,544,191.5</td>
 <td align="right">2530.2</td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
-<td align="left">272</td>
-<td align="right">1875241.3</td>
+<td align="right">272</td>
+<td align="right">1,875,241.3</td>
 <td align="right">1471.5</td>
 </tr>
 <tr class="odd">
 <td align="right">4</td>
-<td align="left">812</td>
-<td align="right">628159.6</td>
+<td align="right">812</td>
+<td align="right">628,159.6</td>
 <td align="right">851.7</td>
 </tr>
 <tr class="even">
 <td align="right">5</td>
-<td align="left">2.4K</td>
-<td align="right">209730.9</td>
+<td align="right">2.4K</td>
+<td align="right">209,730.9</td>
 <td align="right">492.1</td>
 </tr>
 <tr class="odd">
 <td align="right">6</td>
-<td align="left">7.3K</td>
-<td align="right">69948.7</td>
+<td align="right">7.3K</td>
+<td align="right">69,948.7</td>
 <td align="right">284.2</td>
 </tr>
 <tr class="even">
 <td align="right">7</td>
-<td align="left">21.9K</td>
-<td align="right">23320.5</td>
+<td align="right">21.9K</td>
+<td align="right">23,320.5</td>
 <td align="right">164.1</td>
 </tr>
 <tr class="odd">
 <td align="right">8</td>
-<td align="left">65.6K</td>
-<td align="right">7774.0</td>
+<td align="right">65.6K</td>
+<td align="right">7,774.0</td>
 <td align="right">94.7</td>
 </tr>
 <tr class="even">
 <td align="right">9</td>
-<td align="left">196.8K</td>
-<td align="right">2591.4</td>
+<td align="right">196.8K</td>
+<td align="right">2,591.4</td>
 <td align="right">54.7</td>
 </tr>
 <tr class="odd">
 <td align="right">10</td>
-<td align="left">590.5K</td>
+<td align="right">590.5K</td>
 <td align="right">863.8</td>
 <td align="right">31.6</td>
 </tr>
 <tr class="even">
 <td align="right">11</td>
-<td align="left">1.8M</td>
+<td align="right">1.8M</td>
 <td align="right">287.9</td>
 <td align="right">18.2</td>
 </tr>
 <tr class="odd">
 <td align="right">12</td>
-<td align="left">5.3M</td>
+<td align="right">5.3M</td>
 <td align="right">96.0</td>
 <td align="right">10.5</td>
 </tr>
 <tr class="even">
 <td align="right">13</td>
-<td align="left">15.9M</td>
+<td align="right">15.9M</td>
 <td align="right">32.0</td>
 <td align="right">6.1</td>
 </tr>
 <tr class="odd">
 <td align="right">14</td>
-<td align="left">47.8M</td>
+<td align="right">47.8M</td>
 <td align="right">10.7</td>
 <td align="right">3.5</td>
 </tr>
 <tr class="even">
 <td align="right">15</td>
-<td align="left">143.5M</td>
+<td align="right">143.5M</td>
 <td align="right">3.6</td>
 <td align="right">2.0</td>
 </tr>

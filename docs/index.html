@@ -33,7 +33,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="articles/workflows.html">Workflows</a></li>
+    <li><a class="dropdown-item" href="articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="articles/h3.html">H3 Grids</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -59,10 +67,10 @@
 <div class="page-header"><h1 id="hexify">hexify<a class="anchor" aria-label="anchor" href="#hexify"></a>
 </h1></div>
 <p><a href="https://CRAN.R-project.org/package=hexify" class="external-link"><img src="https://www.r-pkg.org/badges/version/hexify" alt="CRAN status"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/hexify" alt="CRAN downloads"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/hexify" alt="Monthly downloads"></a> <a href="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://app.codecov.io/gh/gcol33/hexify" class="external-link"><img src="https://codecov.io/gh/gcol33/hexify/graph/badge.svg" alt="Codecov test coverage"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
-<p><strong>Hexagonal Grids for Global Spatial Analysis — ISEA + H3</strong></p>
+<p><strong>Equal-Area Hexagonal Grids for Global Spatial Analysis</strong></p>
 <p align="center">
 <img src="reference/figures/hexify-hero.png" alt="Multi-resolution hexagonal grids" width="100%"></p>
-<p>The <code>hexify</code> package provides fast, accurate assignment of geographic coordinates to hexagonal grid cells. It supports two grid systems: <strong>ISEA</strong> (Icosahedral Snyder Equal Area) for guaranteed equal-area cells, and <strong>H3</strong> (Uber’s hierarchical hex system) for compatibility with industry-standard workflows like FCC broadband mapping. Whether you’re aggregating species occurrences, analyzing point patterns, or preparing data for spatial modeling, <code>hexify</code> gives you one consistent interface for both systems.</p>
+<p><code>hexify</code> assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every cell has the same area regardless of latitude, eliminating the sampling bias inherent in rectangular lat-lon grids. H3 (Uber’s hierarchical hex system) is also supported for interoperability with industry platforms.</p>
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
@@ -89,15 +97,8 @@
 <h2 id="statement-of-need">Statement of Need<a class="anchor" aria-label="anchor" href="#statement-of-need"></a>
 </h2>
 <p>Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.</p>
-<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify implements two hex grid systems:</p>
-<ul>
-<li>
-<strong>ISEA</strong> — True equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3. Fast C++ implementation. Compatible with dggridR cell IDs.</li>
-<li>
-<strong>H3</strong> — Uber’s hierarchical hexagonal system (resolutions 0–15). Industry standard used by the FCC, Foursquare, and others. Powered by the <code>h3o</code> package.</li>
-</ul>
-<p>Both systems share the same interface: <code><a href="reference/hexify.html">hexify()</a></code>, <code><a href="reference/cell_to_sf.html">cell_to_sf()</a></code>, <code><a href="reference/grid_rect.html">grid_rect()</a></code>, <code><a href="reference/get_parent.html">get_parent()</a></code>, <code><a href="reference/get_children.html">get_children()</a></code>, and all other functions work with either grid type.</p>
-<p>These features make hexify suitable for:</p>
+<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify’s primary backend is <strong>ISEA</strong> (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports <strong>H3</strong> grids via a vendored C library.</p>
+<p>Equal-area grids are directly applicable to:</p>
 <ul>
 <li>Species distribution modeling and biodiversity assessments</li>
 <li>Epidemiological surveillance and disease mapping</li>

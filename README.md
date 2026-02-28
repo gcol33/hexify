@@ -7,13 +7,13 @@
 [![Codecov test coverage](https://codecov.io/gh/gcol33/hexify/graph/badge.svg)](https://app.codecov.io/gh/gcol33/hexify)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Hexagonal Grids for Global Spatial Analysis — ISEA + H3**
+**Equal-Area Hexagonal Grids for Global Spatial Analysis**
 
 <p align="center">
   <img src="man/figures/hexify-hero.png" alt="Multi-resolution hexagonal grids" width="100%">
 </p>
 
-The `hexify` package provides fast, accurate assignment of geographic coordinates to hexagonal grid cells. It supports two grid systems: **ISEA** (Icosahedral Snyder Equal Area) for guaranteed equal-area cells, and **H3** (Uber's hierarchical hex system) for compatibility with industry-standard workflows like FCC broadband mapping. Whether you're aggregating species occurrences, analyzing point patterns, or preparing data for spatial modeling, `hexify` gives you one consistent interface for both systems.
+`hexify` assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every cell has the same area regardless of latitude, eliminating the sampling bias inherent in rectangular lat-lon grids. H3 (Uber's hierarchical hex system) is also supported for interoperability with industry platforms.
 
 ## Quick Start
 
@@ -41,14 +41,9 @@ plot(result_h3)
 
 Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.
 
-Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify implements two hex grid systems:
+Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify's primary backend is **ISEA** (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports **H3** grids via a vendored C library.
 
-- **ISEA** — True equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3. Fast C++ implementation. Compatible with dggridR cell IDs.
-- **H3** — Uber's hierarchical hexagonal system (resolutions 0–15). Industry standard used by the FCC, Foursquare, and others. Powered by the `h3o` package.
-
-Both systems share the same interface: `hexify()`, `cell_to_sf()`, `grid_rect()`, `get_parent()`, `get_children()`, and all other functions work with either grid type.
-
-These features make hexify suitable for:
+Equal-area grids are directly applicable to:
 
 - Species distribution modeling and biodiversity assessments
 - Epidemiological surveillance and disease mapping
