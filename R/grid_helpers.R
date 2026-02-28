@@ -232,6 +232,8 @@ cell_to_sf <- function(cell_id = NULL, grid) {
 #' Generate a rectangular grid of hexagons
 #'
 #' Creates hexagon polygons covering a rectangular geographic region.
+#' For H3 grids, all cells that overlap the bounding box are included
+#' (not just cells whose center falls inside), ensuring full spatial coverage.
 #'
 #' @param bbox Bounding box as c(xmin, ymin, xmax, ymax), or an sf/sfc object
 #' @param grid A HexGridInfo object specifying the grid parameters
@@ -266,7 +268,7 @@ grid_rect <- function(bbox, grid) {
       bbox[1], bbox[4],
       bbox[1], bbox[2]
     ), ncol = 2, byrow = TRUE)
-    cell_ids <- cpp_h3_polygonToCells(bbox_coords, g@resolution, flags = 2L)
+    cell_ids <- cpp_h3_polygonToCells(bbox_coords, g@resolution)
     if (length(cell_ids) == 0) {
       stop("No H3 cells found in the specified bounding box at resolution ", g@resolution)
     }
@@ -339,7 +341,7 @@ grid_global <- function(grid) {
     )
     all_cells <- character(0)
     for (q in quads) {
-      quad_cells <- cpp_h3_polygonToCells(q, g@resolution, flags = 2L)
+      quad_cells <- cpp_h3_polygonToCells(q, g@resolution)
       all_cells <- c(all_cells, quad_cells)
     }
     cell_ids <- unique(all_cells)
@@ -403,8 +405,10 @@ grid_global <- function(grid) {
 #' @return sf object with hexagon polygons clipped to the boundary
 #'
 #' @details
-#' The function first generates a rectangular grid covering the bounding box
-#' of the input polygon, then clips or filters cells to the boundary.
+#' The function first generates cells covering the boundary polygon, then
+#' clips or filters them. For H3 grids, all cells that overlap the boundary
+#' are included (not just cells whose center falls inside), ensuring full
+#' spatial coverage with no gaps along the boundary edge.
 #'
 #' When \code{crop = TRUE}, hexagons are geometrically intersected with the
 #' boundary, which may produce partial hexagons at the edges. When
@@ -467,7 +471,7 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
       rings <- unclass(p)
       outer_ring <- rings[[1]]
       hole_rings <- if (length(rings) > 1) rings[-1] else NULL
-      pcells <- cpp_h3_polygonToCells(outer_ring, g@resolution, holes = hole_rings, flags = 2L)
+      pcells <- cpp_h3_polygonToCells(outer_ring, g@resolution, holes = hole_rings)
       all_cells <- c(all_cells, pcells)
     }
     cell_ids <- unique(all_cells)

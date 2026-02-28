@@ -217,7 +217,7 @@ cpp_h3_cellToBoundary <- function(cell_ids) {
     .Call(`_hexify_cpp_h3_cellToBoundary`, cell_ids)
 }
 
-cpp_h3_polygonToCells <- function(coords, resolution, holes = NULL, flags = 0L) {
+cpp_h3_polygonToCells <- function(coords, resolution, holes = NULL, flags = 2L) {
     .Call(`_hexify_cpp_h3_polygonToCells`, coords, resolution, holes, flags)
 }
 

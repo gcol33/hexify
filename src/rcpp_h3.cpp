@@ -217,7 +217,7 @@ Rcpp::List cpp_h3_cellToBoundary(Rcpp::CharacterVector cell_ids) {
 Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
                                              int resolution,
                                              Rcpp::Nullable<Rcpp::List> holes = R_NilValue,
-                                             int flags = 0) {
+                                             int flags = 2) {
     int n_outer = coords.nrow();
     // Convert outer ring degrees → radians
     std::vector<LatLng> outer_verts(n_outer);
@@ -259,7 +259,8 @@ Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
     }
 
     // Get max size and fill cells
-    // Use the Experimental API when flags != 0 (standard API ignores flags)
+    // Default flags=2 (CONTAINMENT_OVERLAPPING): include cells that overlap the
+    // polygon boundary, ensuring full spatial coverage for ecological sampling.
     int64_t max_cells = 0;
     uint32_t h3_flags = static_cast<uint32_t>(flags);
     H3Error err;
