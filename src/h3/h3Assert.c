@@ -29,4 +29,7 @@
 ** release builds, that should not be a concern.
 */
 unsigned int h3CoverageCounter;
+#else
+/* ISO C requires at least one declaration per translation unit */
+typedef int h3Assert_empty_tu;
 #endif

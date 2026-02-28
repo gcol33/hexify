@@ -6,9 +6,14 @@ The installed size NOTE (~6 MB) is expected: the package includes a C++
 core for the ISEA projection engine and the H3 v4.4.1 C library compiled
 from source. Debug symbols are now stripped in Makevars to minimize size.
 
-## Resubmission (v0.6.4)
+## Resubmission (v0.6.5)
 
-Fixes for issues flagged in v0.6.3 incoming checks:
+Fixes for issues flagged in v0.6.4 incoming checks:
+
+5. Fixed empty translation unit WARNING in `h3Assert.c` (clang 21
+   `-Wempty-translation-unit` on Debian)
+
+Fixes carried from v0.6.4:
 
 1. Removed compiled object files (`.o`) from source tarball — caused
    installation ERROR on Debian and NOTE on all platforms

@@ -1,3 +1,8 @@
+# hexify 0.6.5
+
+* Fixed empty translation unit warning in vendored H3 `h3Assert.c`
+  (clang 21 `-Wempty-translation-unit`)
+
 # hexify 0.6.4
 
 * Removed compiled object files (`.o`) from source tarball that caused
