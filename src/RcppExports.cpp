@@ -724,15 +724,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_h3_polygonToCells
-Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords, int resolution, Rcpp::Nullable<Rcpp::List> holes);
-RcppExport SEXP _hexify_cpp_h3_polygonToCells(SEXP coordsSEXP, SEXP resolutionSEXP, SEXP holesSEXP) {
+Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords, int resolution, Rcpp::Nullable<Rcpp::List> holes, int flags);
+RcppExport SEXP _hexify_cpp_h3_polygonToCells(SEXP coordsSEXP, SEXP resolutionSEXP, SEXP holesSEXP, SEXP flagsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type coords(coordsSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type holes(holesSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_h3_polygonToCells(coords, resolution, holes));
+    Rcpp::traits::input_parameter< int >::type flags(flagsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_polygonToCells(coords, resolution, holes, flags));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1241,7 +1242,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_h3_cellToParent", (DL_FUNC) &_hexify_cpp_h3_cellToParent, 2},
     {"_hexify_cpp_h3_cellToChildren", (DL_FUNC) &_hexify_cpp_h3_cellToChildren, 2},
     {"_hexify_cpp_h3_cellToBoundary", (DL_FUNC) &_hexify_cpp_h3_cellToBoundary, 1},
-    {"_hexify_cpp_h3_polygonToCells", (DL_FUNC) &_hexify_cpp_h3_polygonToCells, 3},
+    {"_hexify_cpp_h3_polygonToCells", (DL_FUNC) &_hexify_cpp_h3_polygonToCells, 4},
     {"_hexify_cpp_h3_cellAreaKm2", (DL_FUNC) &_hexify_cpp_h3_cellAreaKm2, 1},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 6},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 3},

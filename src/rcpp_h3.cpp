@@ -216,7 +216,8 @@ Rcpp::List cpp_h3_cellToBoundary(Rcpp::CharacterVector cell_ids) {
 // [[Rcpp::export]]
 Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
                                              int resolution,
-                                             Rcpp::Nullable<Rcpp::List> holes = R_NilValue) {
+                                             Rcpp::Nullable<Rcpp::List> holes = R_NilValue,
+                                             int flags = 0) {
     int n_outer = coords.nrow();
     // Convert outer ring degrees → radians
     std::vector<LatLng> outer_verts(n_outer);
@@ -257,16 +258,27 @@ Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
         polygon.holes = NULL;
     }
 
-    // Get max size
+    // Get max size and fill cells
+    // Use the Experimental API when flags != 0 (standard API ignores flags)
     int64_t max_cells = 0;
-    H3Error err = hexify_h3_maxPolygonToCellsSize(&polygon, resolution, 0, &max_cells);
+    uint32_t h3_flags = static_cast<uint32_t>(flags);
+    H3Error err;
+
+    if (h3_flags != 0) {
+        err = hexify_h3_maxPolygonToCellsSizeExperimental(&polygon, resolution, h3_flags, &max_cells);
+    } else {
+        err = hexify_h3_maxPolygonToCellsSize(&polygon, resolution, 0, &max_cells);
+    }
     if (err != E_SUCCESS || max_cells <= 0) {
         return Rcpp::CharacterVector(0);
     }
 
-    // Fill cells
     std::vector<H3Index> cells(max_cells, H3_NULL);
-    err = hexify_h3_polygonToCells(&polygon, resolution, 0, cells.data());
+    if (h3_flags != 0) {
+        err = hexify_h3_polygonToCellsExperimental(&polygon, resolution, h3_flags, max_cells, cells.data());
+    } else {
+        err = hexify_h3_polygonToCells(&polygon, resolution, 0, cells.data());
+    }
     if (err != E_SUCCESS) {
         return Rcpp::CharacterVector(0);
     }

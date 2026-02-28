@@ -266,7 +266,7 @@ grid_rect <- function(bbox, grid) {
       bbox[1], bbox[4],
       bbox[1], bbox[2]
     ), ncol = 2, byrow = TRUE)
-    cell_ids <- cpp_h3_polygonToCells(bbox_coords, g@resolution)
+    cell_ids <- cpp_h3_polygonToCells(bbox_coords, g@resolution, flags = 2L)
     if (length(cell_ids) == 0) {
       stop("No H3 cells found in the specified bounding box at resolution ", g@resolution)
     }
@@ -339,7 +339,7 @@ grid_global <- function(grid) {
     )
     all_cells <- character(0)
     for (q in quads) {
-      quad_cells <- cpp_h3_polygonToCells(q, g@resolution)
+      quad_cells <- cpp_h3_polygonToCells(q, g@resolution, flags = 2L)
       all_cells <- c(all_cells, quad_cells)
     }
     cell_ids <- unique(all_cells)
@@ -467,7 +467,7 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
       rings <- unclass(p)
       outer_ring <- rings[[1]]
       hole_rings <- if (length(rings) > 1) rings[-1] else NULL
-      pcells <- cpp_h3_polygonToCells(outer_ring, g@resolution, holes = hole_rings)
+      pcells <- cpp_h3_polygonToCells(outer_ring, g@resolution, holes = hole_rings, flags = 2L)
       all_cells <- c(all_cells, pcells)
     }
     cell_ids <- unique(all_cells)
