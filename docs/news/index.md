@@ -1,5 +1,22 @@
 # Changelog
 
+## hexify 0.6.5
+
+CRAN release: 2026-02-28
+
+- Fixed empty translation unit warning in vendored H3 `h3Assert.c`
+  (clang 21 `-Wempty-translation-unit`)
+
+## hexify 0.6.4
+
+- Removed compiled object files (`.o`) from source tarball that caused
+  installation failure on Linux (Debian) and NOTE on all platforms
+- Wrapped
+  [`plot_globe()`](https://gcol33.github.io/hexify/reference/plot_globe.md)
+  examples in `\donttest{}` to reduce check time (was 608s on
+  win-builder)
+- Reworded DESCRIPTION to avoid “vendored” spelling flag
+
 ## hexify 0.6.3
 
 - [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)

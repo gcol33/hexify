@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,16 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.5" id="hexify-065">hexify 0.6.5<a class="anchor" aria-label="anchor" href="#hexify-065"></a></h2><p class="text-muted">CRAN release: 2026-02-28</p>
+<ul><li>Fixed empty translation unit warning in vendored H3 <code>h3Assert.c</code> (clang 21 <code>-Wempty-translation-unit</code>)</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.4" id="hexify-064">hexify 0.6.4<a class="anchor" aria-label="anchor" href="#hexify-064"></a></h2>
+<ul><li>Removed compiled object files (<code>.o</code>) from source tarball that caused installation failure on Linux (Debian) and NOTE on all platforms</li>
+<li>Wrapped <code><a href="../reference/plot_globe.html">plot_globe()</a></code> examples in <code>\donttest{}</code> to reduce check time (was 608s on win-builder)</li>
+<li>Reworded DESCRIPTION to avoid “vendored” spelling flag</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.3" id="hexify-063">hexify 0.6.3<a class="anchor" aria-label="anchor" href="#hexify-063"></a></h2>
 <ul><li>
