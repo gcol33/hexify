@@ -15,3 +15,6 @@ CPP_OBJECTS = RcppExports.o aperture.o aperture_sequence.o cell_index.o \
     rcpp_h3.o
 
 OBJECTS = $(CPP_OBJECTS) $(H3_OBJECTS)
+
+all: $(SHLIB)
+	@if [ -x "$(R_TOOLS_SOFT)/bin/strip.exe" ]; then "$(R_TOOLS_SOFT)/bin/strip.exe" --strip-debug $(SHLIB) || true; fi

@@ -1,6 +1,10 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+The installed size NOTE (~6 MB) is expected: the package includes a C++
+core for the ISEA projection engine and the H3 v4.4.1 C library compiled
+from source. Debug symbols are now stripped in Makevars to minimize size.
 
 ## Resubmission (v0.6.4)
 
@@ -10,6 +14,7 @@ Fixes for issues flagged in v0.6.3 incoming checks:
    installation ERROR on Debian and NOTE on all platforms
 2. Wrapped `plot_globe()` examples in `\donttest{}` — was 608s on win-builder
 3. Reworded DESCRIPTION to avoid "vendored" spelling flag
+4. Added `strip -S` in Makevars to reduce installed library size (NOTE)
 
 ## Changes in v0.6.3 (carried forward)
 
