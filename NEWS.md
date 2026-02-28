@@ -1,4 +1,4 @@
-# hexify 0.7.0
+# hexify 0.6.2
 
 **Native H3 backend — zero external dependencies**
 
