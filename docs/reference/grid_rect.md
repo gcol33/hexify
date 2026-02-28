@@ -1,6 +1,8 @@
 # Generate a rectangular grid of hexagons
 
-Creates hexagon polygons covering a rectangular geographic region.
+Creates hexagon polygons covering a rectangular geographic region. For
+H3 grids, all cells that overlap the bounding box are included (not just
+cells whose center falls inside), ensuring full spatial coverage.
 
 ## Usage
 

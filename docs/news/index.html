@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,6 +57,16 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.2" id="hexify-062">hexify 0.6.2<a class="anchor" aria-label="anchor" href="#hexify-062"></a></h2>
+<p><strong>Native H3 backend — zero external dependencies</strong></p>
+<ul><li>Vendored H3 v4.4.1 C source, replacing the <code>h3o</code> R package dependency</li>
+<li>H3 is now always available — no optional install, no Suggests</li>
+<li>Uses H3 experimental polygon fill for full spatial coverage in <code><a href="../reference/hexify.html">hexify()</a></code>
+</li>
+<li>New native C++ bindings: <code>h3_lat_lng_to_cell</code>, <code>h3_cell_to_boundary</code>, <code>h3_cell_to_parent</code>, <code>h3_cell_to_children</code>, <code>h3_polygon_to_cells</code>, <code>h3_cell_area_km2</code>, <code>h3_cell_to_lat_lng</code>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.1" id="hexify-061">hexify 0.6.1<a class="anchor" aria-label="anchor" href="#hexify-061"></a></h2>
 <ul><li>Warn when <code>aperture</code> is passed with <code>type = "h3"</code> (ignored parameter)</li>

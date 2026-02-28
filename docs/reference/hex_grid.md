@@ -44,7 +44,7 @@ hex_grid(
 
 - type:
 
-  Grid type: "isea" (default) or "h3". H3 grids require the h3o package.
+  Grid type: "isea" (default) or "h3".
 
 - resround:
 
@@ -69,7 +69,7 @@ matching the closest H3 resolution.
 
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA
 grids, H3 cells are NOT exactly equal-area (area varies by ~3-5\\
-location). H3 support requires the h3o package.
+location).
 
 ## One Grid, Many Datasets
 
