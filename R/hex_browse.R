@@ -112,8 +112,9 @@ hex_browse <- function(hex_data, grid = NULL, value = NULL,
   if (!is.null(value) && value %in% names(cell_df)) {
     vals <- cell_df[[value]]
     pal <- leaflet::colorNumeric(palette, domain = vals, na.color = "#808080")
+    fill_colors <- pal(vals)
     m <- leaflet::addPolygons(m,
-                               fillColor = ~pal(hex_sf[[value]]),
+                               fillColor = fill_colors,
                                fillOpacity = opacity,
                                weight = 1,
                                color = "#333333",
