@@ -6,7 +6,7 @@ Collect notes for the theory pkgdown article (`vignettes/theory.Rmd`).
 
 ## AP7 Encoding Bug & Fix (2026-03-01)
 
-### The two-grid architecture (DGGRID-compatible)
+### The two-grid architecture
 
 Aperture 7 grids use two coordinate systems internally:
 
@@ -15,11 +15,11 @@ Aperture 7 grids use two coordinate systems internally:
 | **Substrate** | sqrt(7)^res × sqrt(7) | 0° | Class III quantized — only valid ap7 positions |
 | **Surrogate** | sqrt(7)^res | −19.1° | Class I hex lattice — ±1 offsets = neighbors |
 
-The surrogate is rotated by arctan(√(3/7)) ≈ 19.1° from the substrate and scaled down by √7. Each surrogate lattice point corresponds to exactly one valid ap7 cell. This is confirmed by the DGGRID source (`DgHexC3Grid2D.cpp`): neighbor finding delegates to the surrogate's `setNeighbors`, which applies the standard 6 hex offsets {(+1,0), (+1,+1), (0,+1), (−1,0), (−1,−1), (0,−1)}.
+The surrogate is rotated by arctan(√(3/7)) ≈ 19.1° from the substrate and scaled down by √7. Each surrogate lattice point corresponds to exactly one valid ap7 cell. The standard 6 hex offsets {(+1,0), (+1,+1), (0,+1), (−1,0), (−1,−1), (0,−1)} in surrogate space find neighbors.
 
 ### The encoding pipeline
 
-Correct (DGGRID-matching):
+Correct:
 
 ```
 lon/lat → Snyder forward → icosa triangle → Class III quantize → SUBSTRATE (i,j)

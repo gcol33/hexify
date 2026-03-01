@@ -8,9 +8,8 @@
   substrate quantization, directly snapping to the surrogate hex lattice.
   This produced ~3.6× too many cells (every lattice position in the bounding
   box, not just valid ap7 positions). Neighbors were reported at ~380–450 km
-  instead of the correct ~80–100 km. The fix routes encoding through
-  `icosa_tri_to_quad_ij()` → `substrate_to_surrogate_ap7()`, matching the
-  DGGRID reference implementation.
+  instead of the correct ~80–100 km. The fix applies the correct Class III
+  quantization (Sahr 2008) before surrogate encoding.
 * Updated `max_cell_id()` for aperture 7 to use surrogate bounding box
   dimensions instead of the theoretical cell count formula.
 * Regenerated test cache for corrected ap7 cell IDs.
