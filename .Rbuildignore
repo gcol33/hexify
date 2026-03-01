@@ -29,3 +29,4 @@
 ^src/.*\.o$
 ^src/.*\.so$
 ^src/.*\.dll$
+^theory-plan\.md$
