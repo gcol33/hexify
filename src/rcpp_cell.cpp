@@ -12,12 +12,14 @@
 // Copyright (c) 2024-2025 hexify authors. MIT License.
 
 #include <Rcpp.h>
+#include <algorithm>
 #include "constants.h"
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "aperture.h"
 #include "index_z7.h"
+#include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
 
 using namespace Rcpp;
@@ -1480,6 +1482,204 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
         _["lon_deg"] = lon,
         _["lat_deg"] = lat
     );
+}
+
+// ============================================================================
+// Neighbor Finding (v0.7.0)
+// ============================================================================
+
+// Helper: convert (quad, i, j) to cell_id for a given aperture/resolution
+static double encode_cell_id(int quad, long long i, long long j,
+                              int aperture, int resolution,
+                              uint64_t offsetPerQuad, long long dim,
+                              bool use_offset_ap3, bool use_offset_ap7,
+                              double substrate_scale_ap7) {
+    if (quad == 0 && i == 0 && j == 0) {
+        return 1.0;
+    }
+
+    uint64_t offset = 1 + (quad - 1) * offsetPerQuad;
+    uint64_t bnd2D_seq;
+
+    if (use_offset_ap3) {
+        bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
+    } else if (use_offset_ap7) {
+        long long si = static_cast<long long>(std::round(i / substrate_scale_ap7));
+        long long sj = static_cast<long long>(std::round(j / substrate_scale_ap7));
+        bnd2D_seq = cell_index_2d_offset_ap7(si, sj, dim);
+    } else {
+        bnd2D_seq = cell_index_2d_aligned(i, j, dim);
+    }
+
+    return static_cast<double>(offset + bnd2D_seq + 1);
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
+                                   int aperture) {
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        Rcpp::stop("cpp_get_neighbors_isea: aperture must be 3, 4, or 7");
+    }
+
+    int n = cell_id.size();
+    Rcpp::List out(n);
+
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
+
+    long long dim;
+    if (aperture == 3) {
+        dim = calc_max_grid_dim_ap3(resolution) + 1;
+    } else if (aperture == 4) {
+        dim = calc_max_grid_dim_ap4(resolution) + 1;
+    } else {
+        dim = calc_surrogate_dim_ap7(resolution) + 1;
+    }
+
+    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    bool use_offset_ap7 = (aperture == 7);
+    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
+
+    long long max_ij = hexify::get_max_ij(aperture, resolution);
+
+    // Hex neighbor offsets in axial coordinates
+    static const long long hex_offsets[6][2] = {
+        { 1,  0}, { 0,  1}, {-1,  1},
+        {-1,  0}, { 0, -1}, { 1, -1}
+    };
+
+    for (int k = 0; k < n; k++) {
+        uint64_t idx = static_cast<uint64_t>(cell_id[k]);
+        idx--;
+
+        int quad;
+        long long i, j;
+
+        if (idx == 0) {
+            quad = 0; i = 0; j = 0;
+        } else {
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            idx -= (quad - 1) * offsetPerQuad;
+
+            if (use_offset_ap3) {
+                ij_from_cell_index_offset_ap3(idx, dim, i, j);
+            } else if (use_offset_ap7) {
+                ij_from_cell_index_offset_ap7(idx, dim, i, j);
+                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
+                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else {
+                i = idx / dim;
+                j = idx % dim;
+            }
+        }
+
+        // Get cell center lon/lat for cross-quad fallback
+        double center_qx, center_qy;
+        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, center_qx, center_qy);
+
+        std::vector<double> neighbor_ids;
+        neighbor_ids.reserve(6);
+
+        for (int d = 0; d < 6; d++) {
+            long long ni = i + hex_offsets[d][0];
+            long long nj = j + hex_offsets[d][1];
+
+            bool in_bounds = (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
+
+            if (in_bounds) {
+                // Interior cell: direct IJ encode
+                neighbor_ids.push_back(
+                    encode_cell_id(quad, ni, nj, aperture, resolution,
+                                   offsetPerQuad, dim, use_offset_ap3,
+                                   use_offset_ap7, substrate_scale_ap7));
+            } else {
+                // Boundary cell: convert neighbor IJ to XY, then to icosa tri,
+                // then back through full pipeline
+                double nbr_qx, nbr_qy;
+                hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution, nbr_qx, nbr_qy);
+
+                int tri_face;
+                double tri_x, tri_y;
+                if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
+                                                       tri_face, tri_x, tri_y)) {
+                    continue;
+                }
+
+                // Reproject through lon/lat to find canonical cell
+                auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+
+                auto fwd = hexify::snyder_forward(ll.first, ll.second);
+                int final_quad;
+                long long final_i, final_j;
+                hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                              fwd.icosa_triangle_y,
+                                              aperture, resolution,
+                                              final_quad, final_i, final_j);
+
+                neighbor_ids.push_back(
+                    encode_cell_id(final_quad, final_i, final_j,
+                                   aperture, resolution, offsetPerQuad, dim,
+                                   use_offset_ap3, use_offset_ap7,
+                                   substrate_scale_ap7));
+            }
+        }
+
+        // Remove duplicates (can happen at pentagons / boundary)
+        std::sort(neighbor_ids.begin(), neighbor_ids.end());
+        neighbor_ids.erase(std::unique(neighbor_ids.begin(), neighbor_ids.end()),
+                           neighbor_ids.end());
+        // Remove self
+        double self_id = cell_id[k];
+        neighbor_ids.erase(
+            std::remove(neighbor_ids.begin(), neighbor_ids.end(), self_id),
+            neighbor_ids.end());
+
+        out[k] = Rcpp::NumericVector(neighbor_ids.begin(), neighbor_ids.end());
+    }
+
+    return out;
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_get_neighbors_z7(Rcpp::CharacterVector index_ids, int resolution) {
+    int n = index_ids.size();
+    Rcpp::List out(n);
+
+    for (int k = 0; k < n; k++) {
+        if (index_ids[k] == NA_STRING) {
+            out[k] = Rcpp::CharacterVector(0);
+            continue;
+        }
+
+        std::string idx = Rcpp::as<std::string>(index_ids[k]);
+
+        int quadNum;
+        long long ci, cj;
+        hexify::z7::decode(idx, resolution, quadNum, ci, cj);
+
+        hexify::z7::IVec3D coord(ci, cj);
+
+        std::vector<std::string> neighbors;
+        neighbors.reserve(6);
+
+        for (int d = 1; d <= 6; d++) {
+            hexify::z7::IVec3D nbr = coord;
+            nbr.neighbor(static_cast<hexify::z7::IVec3D::Direction>(d));
+
+            try {
+                std::string nbr_idx = hexify::z7::encode(quadNum, nbr.i(), nbr.j(), resolution);
+                nbr_idx = hexify::z7::canonical_form(nbr_idx);
+                neighbors.push_back(nbr_idx);
+            } catch (...) {
+                // Skip invalid neighbors (edge/boundary)
+            }
+        }
+
+        out[k] = Rcpp::wrap(neighbors);
+    }
+
+    return out;
 }
 
 // ============================================================================

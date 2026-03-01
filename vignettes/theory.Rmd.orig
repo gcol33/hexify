@@ -543,7 +543,7 @@ ggplot() +
 
 Pentagon area is exactly 5/6 of hexagonal cell area at the same resolution (Sahr et al., 2003, p. 125).
 
-## Coordinate Systems
+## Coordinate Systems and Indexing
 
 hexify uses a multi-stage coordinate pipeline (Sahr, 2008, p. 178):
 
@@ -553,19 +553,205 @@ hexify uses a multi-stage coordinate pipeline (Sahr, 2008, p. 178):
 | **Icosa Triangle** | face (0-19), tx, ty | Snyder projection output |
 | **Quad XY** | quad (0-11), qx, qy | Paired-triangle coordinates |
 | **Quad IJ** | quad (0-11), i, j | Quantized grid indices |
+| **Index** | string | Hierarchical cell address (Z3, Z7, or Z-order) |
 | **SEQNUM** | integer | Global cell ID (1-based) |
 
 ### Triangle to Quad
 
-The 20 triangular faces are paired into 12 "quads" (diamond-shaped regions). Each quad contains two adjacent triangular faces sharing an edge, simplifying grid indexing (DGGRID Manual, 2023).
+The 20 triangular faces are paired into 12 "quads" (diamond-shaped regions). Each quad contains two adjacent triangular faces sharing an edge. This pairing transforms 20 triangles into 10 diamond-shaped quads plus 2 polar quads, simplifying grid indexing because a diamond admits a rectangular $(i, j)$ lattice (DGGRID Manual, 2023).
 
-### SEQNUM Assignment
+### Quad IJ: The Integer Lattice
 
-The SEQNUM provides a unique integer for each cell. The formula is:
+After Snyder projection maps a point onto a triangular face, the continuous $(x, y)$ coordinates are quantized to integer $(i, j)$ indices on the hexagonal lattice. At resolution $r$ with aperture $a$, the lattice dimension along each axis is:
+
+$$d = \left\lfloor a^{r/2} \right\rfloor$$
+
+The $(i, j)$ pair uniquely identifies a cell within a quad. Combined with the quad number (0--11), this gives a globally unique cell address.
+
+### Hierarchical Index Types
+
+hexify supports three hierarchical index encodings. Each converts the $(quad, i, j)$ triple into a compact string or integer that encodes the cell's position in the subdivision hierarchy.
+
+#### Z7 Index (Aperture 7)
+
+The Z7 index represents each cell as a hierarchical path through the aperture-7 subdivision tree (Sahr, 2025). The format is:
+
+$$\texttt{BB}\underbrace{\texttt{D}_1\texttt{D}_2\cdots\texttt{D}_r}_{r \text{ digits}}$$
+
+where **BB** is the base cell (00--11) and each digit $D_k \in \{0, 1, \ldots, 6\}$ selects one of 7 children at level $k$. The digit meanings correspond to positions in the IVec3D cube coordinate system:
+
+| Digit | Direction | Meaning |
+|-------|-----------|---------|
+| 0 | CENTER | Center child (same position as parent) |
+| 1 | K_AXES | K-axis direction |
+| 2 | J_AXES | J-axis direction |
+| 3 | JK_AXES | JK-axis direction |
+| 4 | I_AXES | I-axis direction |
+| 5 | IK_AXES | IK-axis direction |
+| 6 | IJ_AXES | IJ-axis direction |
+
+Pentagon cells (at icosahedron vertices) have only 5 children instead of 7. Base cells 0--5 skip digit 2 (J_AXES); cells 6--11 skip digit 5 (IK_AXES).
+
+```{r z7-example}
+# Z7 index encoding for aperture 7
+g7 <- hex_grid(resolution = 4, aperture = 7)
+cell <- lonlat_to_cell(16.37, 48.21, g7)
+idx <- cell_to_index(cell, g7)
+cat(sprintf("Cell %d -> Z7 index: %s\n", cell, idx))
+cat(sprintf("  Base cell: %s, Digits: %s\n",
+            substr(idx, 1, 2), substr(idx, 3, nchar(idx))))
+
+# Hierarchical property: parent is obtained by dropping the last digit
+parent_idx <- substr(idx, 1, nchar(idx) - 1)
+parent_cell <- hexify_index_to_cell(parent_idx, 7, "z7")
+cat(sprintf("  Parent index: %s (cell %d)\n", parent_idx, parent_cell))
+```
+
+#### Z3 Index (Aperture 3)
+
+The Z3 index encodes the aperture-3 subdivision hierarchy using **digit pairs** (Sahr, 2008). Because aperture 3 alternates between Class I and Class II orientation at each level, the encoding uses two digits per resolution-level pair:
+
+$$\texttt{BB}\underbrace{\texttt{D}_1\texttt{D}_2\texttt{D}_3\texttt{D}_4\cdots}_{2\lceil r/2 \rceil \text{ digits}}$$
+
+Each $(i_d, j_d)$ digit pair is mapped through a lookup table to a Z3 code pair. For example, the offset $(1, 0)$ maps to digits "01", while $(0, 1)$ maps to "22". This mapping preserves the space-filling curve property, ensuring hierarchical locality.
+
+```{r z3-example}
+# Z3 index encoding for aperture 3
+g3 <- hex_grid(resolution = 8, aperture = 3)
+cell <- lonlat_to_cell(16.37, 48.21, g3)
+idx <- cell_to_index(cell, g3)
+cat(sprintf("Cell %d -> Z3 index: %s\n", cell, idx))
+cat(sprintf("  Base cell: %s, Digits: %s (%d digit pairs)\n",
+            substr(idx, 1, 2), substr(idx, 3, nchar(idx)),
+            (nchar(idx) - 2) / 2))
+```
+
+#### Z-Order Index (Morton Curve)
+
+The Z-order (Morton) index uses bit-interleaving of the $(i, j)$ coordinates, producing a Morton space-filling curve (Morton, 1966). The encoding depends on the aperture:
+
+- **Aperture 4**: Binary interleaving. Each $(i, j)$ digit pair in base 2 produces one output digit: $d = 2i_b + j_b$, yielding digits in $\{0, 1, 2, 3\}$.
+- **Aperture 3**: Base-3 interleaving. The $(i, j)$ coordinates are expressed in base 3, and digits alternate: $i_0, j_0, i_1, j_1, \ldots$
+- **Aperture 7**: Base-7 interleaving with 2 digits per level.
+
+```{r zorder-example}
+# Z-order index for aperture 4
+g4 <- hex_grid(resolution = 8, aperture = 4)
+cell <- lonlat_to_cell(16.37, 48.21, g4)
+idx <- cell_to_index(cell, g4)
+cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
+```
+
+### Index Type Comparison
+
+| Property | Z7 | Z3 | Z-order |
+|----------|----|----|---------|
+| **Apertures** | 7 only | 3 only | 3, 4, 7 |
+| **Digits per level** | 1 (range 0--6) | 2 (pairs) | 1 (ap3/4) or 2 (ap7) |
+| **Encoding** | Hierarchical path | Mapping table | Bit interleaving |
+| **Locality** | Excellent | Excellent | Good |
+| **Parent operation** | Drop last digit | Drop last pair | Drop last digit(s) |
+| **Index length** (res $r$) | $2 + r$ | $2 + 2\lceil r/2\rceil$ | $2 + r$ or $2 + 2r$ |
+
+All three encodings are bijective: each $(quad, i, j)$ triple maps to exactly one index string, and vice versa. hexify stores indices as character strings to support arbitrary precision and avoid integer overflow at high resolutions.
+
+### SEQNUM: The Flat Cell ID
+
+The SEQNUM provides a unique integer for each cell, independent of the hierarchical index. The total cell count at resolution $r$ with aperture $a$ is:
 
 $$N(r) = 10 \times a^r + 2$$
 
-where $a$ is the aperture and $r$ is the resolution. SEQNUMs are assigned to maintain compatibility with dggridR.
+The "+2" accounts for the two polar pentagon cells. SEQNUMs are assigned by traversing quads in order (0--11) and cells within each quad in row-major $(i, j)$ order. This numbering maintains compatibility with dggridR.
+
+### Compact uint64 Storage
+
+For database-friendly storage, hexify can pack any hierarchical index into a single 64-bit unsigned integer:
+
+$$\texttt{uint64} = (\texttt{face} \ll 60) \;|\; \texttt{packed\_digits}$$
+
+The top 4 bits encode the face (0--11), and the remaining 60 bits pack the index digits. This supports resolutions up to $\lfloor 60 / \lceil\log_2 a\rceil \rfloor$ before overflow.
+
+## H3 Comparison
+
+hexify supports Uber's H3 system as a first-class alternative to the ISEA backend. H3 uses a fundamentally different design with important trade-offs.
+
+### Architecture
+
+| Property | ISEA (hexify native) | H3 (Uber) |
+|----------|---------------------|-----------|
+| **Projection** | Snyder ISEA (equal-area) | Face-centered gnomonic |
+| **Polyhedron** | Icosahedron (20 faces) | Icosahedron (20 faces) |
+| **Aperture** | 3, 4, 7, or mixed 4/3 | 7 (fixed) |
+| **Cell area** | Exactly equal | Varies by location |
+| **Resolutions** | 0--30 | 0--15 |
+| **Cell IDs** | Integer SEQNUM | 64-bit hex string |
+| **Pentagon handling** | 12 per resolution | 12 per resolution |
+
+Both systems tile the sphere with hexagons on an icosahedral framework, but the projection and subdivision choices lead to different properties.
+
+### The Area Variation Trade-Off
+
+The most significant difference is area uniformity. ISEA uses the Snyder equal-area projection, guaranteeing that all hexagonal cells at a given resolution have identical area (pentagons are 5/6 of hex area). H3 uses a gnomonic (central) projection per face, which is not equal-area. This causes cell areas to vary by latitude:
+
+```{r h3-area-variation, fig.width=8, fig.height=5}
+# Compare ISEA (constant area) vs H3 (variable area) at similar resolutions
+lats <- seq(-85, 85, by = 5)
+lons <- rep(10, length(lats))
+
+# ISEA: aperture 7, resolution 6 (~130 km² cells)
+g_isea <- hex_grid(resolution = 6, aperture = 7)
+isea_cells <- lonlat_to_cell(lons, lats, g_isea)
+isea_areas <- cell_area(isea_cells, g_isea)
+
+# H3: resolution 4 (~1,770 km² cells — different scale, but shows the pattern)
+g_h3 <- hex_grid(resolution = 4, type = "h3")
+h3_cells <- lonlat_to_cell(lons, lats, g_h3)
+h3_areas <- cell_area(h3_cells, g_h3)
+
+# Normalize to show relative variation
+isea_rel <- isea_areas / mean(isea_areas)
+h3_rel <- h3_areas / mean(h3_areas)
+
+par(mar = c(4, 4, 2, 1), bg = "white")
+plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
+     xlab = "Latitude (degrees)", ylab = "Relative cell area",
+     main = "Cell Area Variation by Latitude",
+     ylim = range(c(isea_rel, h3_rel)))
+lines(lats, isea_rel, col = "#457B9D", lwd = 2.5)
+abline(h = 1, lty = 2, col = "gray50")
+legend("topright", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
+       col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
+```
+
+For ecological and statistical applications where equal-area cells are important (species density estimation, spatial sampling), ISEA is the correct choice. For applications where hierarchical indexing speed matters more than area equality (ride-sharing, logistics), H3 may be preferable.
+
+### Resolution Mapping
+
+Because ISEA supports multiple apertures, there is no one-to-one resolution mapping to H3. The `h3_crosswalk()` function finds the closest H3 resolution for a given ISEA grid:
+
+```{r resolution-mapping}
+# H3 resolution table
+cat("H3 Res  Avg Area (km²)  ISEA Ap7 Equivalent\n")
+cat("------  --------------  -------------------\n")
+for (h3_res in 0:8) {
+  g <- hex_grid(resolution = h3_res, type = "h3")
+  h3_area <- hexify_eff_res_to_area(h3_res, "h3")
+  isea_res <- dg_closest_res_to_area(h3_area, aperture = 7)
+  cat(sprintf("   %2d   %14.1f  res %d (%.1f km²)\n",
+              h3_res, h3_area, isea_res,
+              hexify_eff_res_to_area(isea_res, aperture = 7)))
+}
+```
+
+### When to Use Which
+
+| Use case | Recommended | Reason |
+|----------|------------|--------|
+| Species distribution modeling | ISEA | Equal area eliminates sampling bias |
+| Spatial statistics (Moran's I, variograms) | ISEA | Equal area ensures unbiased estimates |
+| Ride-sharing / logistics | H3 | Fast hierarchical lookups |
+| Visualization only | Either | Area variation invisible at map scale |
+| Cross-system interoperability | Both via `h3_crosswalk()` | Bidirectional mapping |
 
 ## Round-Trip Accuracy
 
@@ -599,11 +785,17 @@ for (ap in c(3, 4, 7)) {
 
 ## References
 
+- Brodsky, I. (2018). H3: Uber's Hexagonal Hierarchical Spatial Index. *Uber Engineering Blog*. https://eng.uber.com/h3/
+
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover Publications.
 
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*. https://github.com/sahrk/DGGRID
 
+- Morton, G.M. (1966). *A Computer Oriented Geodetic Data Base and a New Technique in File Sequencing*. IBM Technical Report.
+
 - Sahr, K. (2008). Location coding on icosahedral aperture 3 hexagon discrete global grids. *Computers, Environment and Urban Systems*, 32(3), 174-187.
+
+- Sahr, K. (2025). IGEO7: An equal-area hierarchical hexagonal discrete global grid system with Z7 indexing. *Cartography and Geographic Information Science*.
 
 - Sahr, K., White, D., & Kimerling, A.J. (2003). Geodesic Discrete Global Grid Systems. *Cartography and Geographic Information Science*, 30(2), 121-134.
 

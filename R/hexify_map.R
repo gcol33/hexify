@@ -599,8 +599,10 @@ hexify_heatmap <- function(data,
   if (is.na(sf::st_crs(hex_sf))) sf::st_crs(hex_sf) <- 4326
   hex_sf <- sf::st_transform(hex_sf, crs)
 
-  # Resolve and transform basemap
-  basemap_sf <- resolve_basemap(basemap)
+  # Resolve and transform basemap (supports sf and SpatRaster)
+  basemap_info <- resolve_basemap_with_raster(basemap)
+  basemap_sf <- basemap_info$sf
+  basemap_raster <- basemap_info$raster
   if (!is.null(basemap_sf)) {
     basemap_sf <- sf::st_transform(basemap_sf, crs)
   }
@@ -631,6 +633,35 @@ hexify_heatmap <- function(data,
 
   # Build ggplot with layers
   p <- ggplot2::ggplot()
+
+  # Add raster basemap if provided (rendered as grayscale annotation)
+  if (!is.null(basemap_raster)) {
+    if (requireNamespace("terra", quietly = TRUE)) {
+      rast_proj <- terra::project(basemap_raster, paste0("EPSG:", crs))
+      ext <- as.vector(terra::ext(rast_proj))
+      # Convert to matrix for annotation_raster
+      vals <- terra::values(rast_proj[[1]])
+      nr <- terra::nrow(rast_proj)
+      nc <- terra::ncol(rast_proj)
+      # Normalize to grayscale
+      vmin <- min(vals, na.rm = TRUE)
+      vmax <- max(vals, na.rm = TRUE)
+      if (vmax > vmin) {
+        gray_vals <- (vals - vmin) / (vmax - vmin)
+      } else {
+        gray_vals <- rep(0.5, length(vals))
+      }
+      gray_vals[is.na(gray_vals)] <- 1
+      gray_mat <- matrix(grDevices::gray(gray_vals), nrow = nr, ncol = nc,
+                          byrow = TRUE)
+      p <- p + ggplot2::annotation_raster(
+        gray_mat,
+        xmin = ext[1], xmax = ext[2],
+        ymin = ext[3], ymax = ext[4]
+      )
+    }
+  }
+
   if (mask_outside && !is.null(basemap_sf)) {
     p <- build_masked_layers(
       p, hex_sf, fill_col, hex_border, hex_lwd, hex_alpha,

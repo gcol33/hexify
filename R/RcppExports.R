@@ -181,6 +181,14 @@ cpp_cell_to_lonlat_ap43 <- function(cell_id, resolution, mixed_aperture_level) {
     .Call(`_hexify_cpp_cell_to_lonlat_ap43`, cell_id, resolution, mixed_aperture_level)
 }
 
+cpp_get_neighbors_isea <- function(cell_id, resolution, aperture) {
+    .Call(`_hexify_cpp_get_neighbors_isea`, cell_id, resolution, aperture)
+}
+
+cpp_get_neighbors_z7 <- function(index_ids, resolution) {
+    .Call(`_hexify_cpp_get_neighbors_z7`, index_ids, resolution)
+}
+
 cpp_icosa_tri_to_plane <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
     .Call(`_hexify_cpp_icosa_tri_to_plane`, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)
 }
@@ -227,6 +235,34 @@ cpp_h3_getResolution <- function(cell_ids) {
 
 cpp_h3_cellAreaKm2 <- function(cell_ids) {
     .Call(`_hexify_cpp_h3_cellAreaKm2`, cell_ids)
+}
+
+cpp_h3_gridDisk <- function(cell_ids, k) {
+    .Call(`_hexify_cpp_h3_gridDisk`, cell_ids, k)
+}
+
+cpp_h3_gridDiskDistances <- function(cell_ids, k) {
+    .Call(`_hexify_cpp_h3_gridDiskDistances`, cell_ids, k)
+}
+
+cpp_h3_gridRingUnsafe <- function(cell_ids, k) {
+    .Call(`_hexify_cpp_h3_gridRingUnsafe`, cell_ids, k)
+}
+
+cpp_h3_compactCells <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_compactCells`, cell_ids)
+}
+
+cpp_h3_uncompactCells <- function(cell_ids, target_res) {
+    .Call(`_hexify_cpp_h3_uncompactCells`, cell_ids, target_res)
+}
+
+cpp_h3_isPentagon <- function(cell_ids) {
+    .Call(`_hexify_cpp_h3_isPentagon`, cell_ids)
+}
+
+cpp_h3_gridDistance <- function(origin, destination) {
+    .Call(`_hexify_cpp_h3_gridDistance`, origin, destination)
 }
 
 cpp_cell_to_index <- function(face, i, j, resolution, aperture, index_type = "auto") {

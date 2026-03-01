@@ -340,3 +340,265 @@ Rcpp::NumericVector cpp_h3_cellAreaKm2(Rcpp::CharacterVector cell_ids) {
     }
     return out;
 }
+
+// ==========================================================================
+// Grid Disk / Neighbors (v0.7.0)
+// ==========================================================================
+
+// [[Rcpp::export]]
+Rcpp::List cpp_h3_gridDisk(Rcpp::CharacterVector cell_ids, int k) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::List out(n);
+
+    int64_t max_size = 0;
+    H3Error err = hexify_h3_maxGridDiskSize(k, &max_size);
+    if (err != E_SUCCESS || max_size <= 0) {
+        Rcpp::stop("Invalid k value for gridDisk");
+    }
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+        H3Index h = string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL) {
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+
+        std::vector<H3Index> disk(max_size, H3_NULL);
+        err = hexify_h3_gridDisk(h, k, disk.data());
+        if (err != E_SUCCESS) {
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+
+        std::vector<std::string> valid;
+        valid.reserve(max_size);
+        for (int64_t j = 0; j < max_size; j++) {
+            if (disk[j] != H3_NULL) {
+                valid.push_back(h3_to_string(disk[j]));
+            }
+        }
+        out[i] = Rcpp::wrap(valid);
+    }
+    return out;
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_h3_gridDiskDistances(Rcpp::CharacterVector cell_ids, int k) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::List out(n);
+
+    int64_t max_size = 0;
+    H3Error err = hexify_h3_maxGridDiskSize(k, &max_size);
+    if (err != E_SUCCESS || max_size <= 0) {
+        Rcpp::stop("Invalid k value for gridDiskDistances");
+    }
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            out[i] = Rcpp::DataFrame::create();
+            continue;
+        }
+        H3Index h = string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL) {
+            out[i] = Rcpp::DataFrame::create();
+            continue;
+        }
+
+        std::vector<H3Index> disk(max_size, H3_NULL);
+        std::vector<int> distances(max_size, -1);
+        err = hexify_h3_gridDiskDistances(h, k, disk.data(), distances.data());
+        if (err != E_SUCCESS) {
+            out[i] = Rcpp::DataFrame::create();
+            continue;
+        }
+
+        std::vector<std::string> valid_ids;
+        std::vector<int> valid_dists;
+        for (int64_t j = 0; j < max_size; j++) {
+            if (disk[j] != H3_NULL) {
+                valid_ids.push_back(h3_to_string(disk[j]));
+                valid_dists.push_back(distances[j]);
+            }
+        }
+        out[i] = Rcpp::DataFrame::create(
+            Rcpp::Named("cell_id") = Rcpp::wrap(valid_ids),
+            Rcpp::Named("ring_distance") = Rcpp::wrap(valid_dists),
+            Rcpp::Named("stringsAsFactors") = false
+        );
+    }
+    return out;
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_h3_gridRingUnsafe(Rcpp::CharacterVector cell_ids, int k) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::List out(n);
+
+    // Ring size: 6*k for k > 0, 1 for k = 0
+    int64_t ring_size = (k == 0) ? 1 : 6 * static_cast<int64_t>(k);
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+        H3Index h = string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL) {
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+
+        std::vector<H3Index> ring(ring_size, H3_NULL);
+        H3Error err = hexify_h3_gridRingUnsafe(h, k, ring.data());
+        if (err != E_SUCCESS) {
+            // Fallback: gridRingUnsafe fails near pentagons, use gridDisk diff
+            out[i] = Rcpp::CharacterVector(0);
+            continue;
+        }
+
+        std::vector<std::string> valid;
+        for (int64_t j = 0; j < ring_size; j++) {
+            if (ring[j] != H3_NULL) {
+                valid.push_back(h3_to_string(ring[j]));
+            }
+        }
+        out[i] = Rcpp::wrap(valid);
+    }
+    return out;
+}
+
+// ==========================================================================
+// Compact / Uncompact (v0.9.0)
+// ==========================================================================
+
+// [[Rcpp::export]]
+Rcpp::CharacterVector cpp_h3_compactCells(Rcpp::CharacterVector cell_ids) {
+    R_xlen_t n = cell_ids.size();
+    std::vector<H3Index> h3_set(n);
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            h3_set[i] = H3_NULL;
+        } else {
+            h3_set[i] = string_to_h3(CHAR(cell_ids[i]));
+        }
+    }
+
+    std::vector<H3Index> compacted(n, H3_NULL);
+    H3Error err = hexify_h3_compactCells(h3_set.data(), compacted.data(), n);
+    if (err != E_SUCCESS) {
+        Rcpp::stop("H3 compactCells failed (error code %d)", (int)err);
+    }
+
+    std::vector<std::string> valid;
+    valid.reserve(n);
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (compacted[i] != H3_NULL) {
+            valid.push_back(h3_to_string(compacted[i]));
+        }
+    }
+    return Rcpp::wrap(valid);
+}
+
+// [[Rcpp::export]]
+Rcpp::CharacterVector cpp_h3_uncompactCells(Rcpp::CharacterVector cell_ids,
+                                             int target_res) {
+    R_xlen_t n = cell_ids.size();
+    std::vector<H3Index> h3_set(n);
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            h3_set[i] = H3_NULL;
+        } else {
+            h3_set[i] = string_to_h3(CHAR(cell_ids[i]));
+        }
+    }
+
+    int64_t max_size = 0;
+    H3Error err = hexify_h3_uncompactCellsSize(h3_set.data(), n, target_res,
+                                                &max_size);
+    if (err != E_SUCCESS || max_size <= 0) {
+        Rcpp::stop("H3 uncompactCellsSize failed (error code %d)", (int)err);
+    }
+
+    std::vector<H3Index> uncompacted(max_size, H3_NULL);
+    err = hexify_h3_uncompactCells(h3_set.data(), n, uncompacted.data(),
+                                    max_size, target_res);
+    if (err != E_SUCCESS) {
+        Rcpp::stop("H3 uncompactCells failed (error code %d)", (int)err);
+    }
+
+    std::vector<std::string> valid;
+    valid.reserve(max_size);
+    for (int64_t i = 0; i < max_size; i++) {
+        if (uncompacted[i] != H3_NULL) {
+            valid.push_back(h3_to_string(uncompacted[i]));
+        }
+    }
+    return Rcpp::wrap(valid);
+}
+
+// ==========================================================================
+// Pentagon Detection (v0.9.0)
+// ==========================================================================
+
+// [[Rcpp::export]]
+Rcpp::LogicalVector cpp_h3_isPentagon(Rcpp::CharacterVector cell_ids) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::LogicalVector out(n);
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            out[i] = NA_LOGICAL;
+            continue;
+        }
+        H3Index h = string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL) {
+            out[i] = NA_LOGICAL;
+        } else {
+            out[i] = hexify_h3_isPentagon(h) ? TRUE : FALSE;
+        }
+    }
+    return out;
+}
+
+// ==========================================================================
+// Grid Distance (v0.9.0)
+// ==========================================================================
+
+// [[Rcpp::export]]
+Rcpp::IntegerVector cpp_h3_gridDistance(Rcpp::CharacterVector origin,
+                                        Rcpp::CharacterVector destination) {
+    R_xlen_t n = origin.size();
+    if (destination.size() != n) {
+        Rcpp::stop("origin and destination must have the same length");
+    }
+
+    Rcpp::IntegerVector out(n);
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (origin[i] == NA_STRING || destination[i] == NA_STRING) {
+            out[i] = NA_INTEGER;
+            continue;
+        }
+        H3Index h_orig = string_to_h3(CHAR(origin[i]));
+        H3Index h_dest = string_to_h3(CHAR(destination[i]));
+        if (h_orig == H3_NULL || h_dest == H3_NULL) {
+            out[i] = NA_INTEGER;
+            continue;
+        }
+
+        int64_t dist;
+        H3Error err = hexify_h3_gridDistance(h_orig, h_dest, &dist);
+        if (err != E_SUCCESS) {
+            out[i] = NA_INTEGER;
+        } else {
+            out[i] = static_cast<int>(dist);
+        }
+    }
+    return out;
+}

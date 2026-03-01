@@ -160,23 +160,128 @@ void index_to_cell(const std::string& index, int aperture,
 
 std::string cell_to_index_ap34(int face, long long i, long long j,
                                const std::vector<int>& ap_seq) {
-  throw std::runtime_error("hex_index: mixed aperture not yet implemented");
+  // Mixed aperture 4/3: encode hierarchically using alternating bases
+  // First levels use aperture 4 (2x2 subdivisions), then aperture 3
+  if (ap_seq.empty()) {
+    return format_quad(face);
+  }
+
+  std::string result = format_quad(face);
+  long long ci = i;
+  long long cj = j;
+
+  // Encode from finest to coarsest, collecting digits
+  std::string digits;
+  for (int r = static_cast<int>(ap_seq.size()) - 1; r >= 0; r--) {
+    int ap = ap_seq[r];
+    if (ap == 4) {
+      // Aperture 4: 2-bit encoding (i mod 2, j mod 2)
+      int di = static_cast<int>(ci % 2);
+      int dj = static_cast<int>(cj % 2);
+      char digit = static_cast<char>('0' + di * 2 + dj);
+      digits += digit;
+      ci /= 2;
+      cj /= 2;
+    } else {
+      // Aperture 3: 1-digit encoding (0-2)
+      int di = static_cast<int>(ci % 3);
+      digits += static_cast<char>('0' + di);
+      ci /= 3;
+      cj /= 3;
+    }
+  }
+  // Reverse to get coarsest-first order
+  std::reverse(digits.begin(), digits.end());
+  return result + digits;
 }
 
 void index_to_cell_ap34(const std::string& index,
                         const std::vector<int>& ap_seq,
                         int& face, long long& i, long long& j) {
-  throw std::runtime_error("hex_index: mixed aperture not yet implemented");
+  if (index.length() < 2) {
+    throw std::runtime_error("hex_index: invalid ap34 index string (too short)");
+  }
+
+  face = parse_quad(index);
+  i = 0;
+  j = 0;
+
+  if (index.length() == 2) return;
+
+  std::string digits = index.substr(2);
+  for (size_t r = 0; r < digits.length() && r < ap_seq.size(); r++) {
+    int digit = digits[r] - '0';
+    int ap = ap_seq[r];
+    if (ap == 4) {
+      i = i * 2 + digit / 2;
+      j = j * 2 + digit % 2;
+    } else {
+      i = i * 3 + digit;
+      j = j * 3;
+    }
+  }
 }
 
 uint64_t index_to_uint64(const std::string& index, int aperture,
                          IndexType index_type) {
-  throw std::runtime_error("hex_index: uint64 conversion not yet implemented");
+  // Pack index string into a 64-bit integer:
+  // Bits 60-63: face/quad (4 bits, 0-11)
+  // Remaining bits: resolution digits packed per aperture
+  if (index.length() < 2) {
+    throw std::runtime_error("hex_index: index too short for uint64 conversion");
+  }
+
+  int face = parse_quad(index);
+  uint64_t result = static_cast<uint64_t>(face) << 60;
+
+  if (index.length() == 2) return result;
+
+  std::string digits = index.substr(2);
+  int bits_per_digit;
+  if (aperture == 3) bits_per_digit = 2;       // 0-2 needs 2 bits
+  else if (aperture == 4) bits_per_digit = 2;   // 0-3 needs 2 bits
+  else if (aperture == 7) bits_per_digit = 3;   // 0-6 needs 3 bits
+  else throw std::runtime_error("hex_index: unsupported aperture for uint64");
+
+  // Check we don't overflow (60 bits available for digits)
+  if (static_cast<int>(digits.length()) * bits_per_digit > 60) {
+    throw std::runtime_error("hex_index: index too long for uint64 (overflow)");
+  }
+
+  for (size_t r = 0; r < digits.length(); r++) {
+    int digit = digits[r] - '0';
+    int shift = 60 - static_cast<int>((r + 1) * bits_per_digit);
+    result |= (static_cast<uint64_t>(digit) << shift);
+  }
+
+  return result;
 }
 
 std::string uint64_to_index(uint64_t value, int resolution, int aperture,
                             IndexType index_type) {
-  throw std::runtime_error("hex_index: uint64 conversion not yet implemented");
+  // Unpack uint64 back to index string
+  int face = static_cast<int>((value >> 60) & 0xF);
+  std::string result = format_quad(face);
+
+  if (resolution == 0) return result;
+
+  int bits_per_digit;
+  int max_digit;
+  if (aperture == 3) { bits_per_digit = 2; max_digit = 2; }
+  else if (aperture == 4) { bits_per_digit = 2; max_digit = 3; }
+  else if (aperture == 7) { bits_per_digit = 3; max_digit = 6; }
+  else throw std::runtime_error("hex_index: unsupported aperture for uint64");
+
+  uint64_t mask = (1ULL << bits_per_digit) - 1;
+
+  for (int r = 0; r < resolution; r++) {
+    int shift = 60 - (r + 1) * bits_per_digit;
+    int digit = static_cast<int>((value >> shift) & mask);
+    if (digit > max_digit) digit = 0;  // Safety clamp
+    result += static_cast<char>('0' + digit);
+  }
+
+  return result;
 }
 
 std::string get_parent_index(const std::string& index, int aperture,
