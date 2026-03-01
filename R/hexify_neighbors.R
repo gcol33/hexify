@@ -116,9 +116,11 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
   ap <- as.integer(grid@aperture)
   res <- grid@resolution
 
+  # Use k=1 fast path helper (C++ handles all apertures including ap7)
+  get_k1 <- function(cids) cpp_get_neighbors_isea(cids, res, ap)
+
   if (k == 1L && !distances) {
-    # Fast path: direct C++ neighbor lookup
-    result <- cpp_get_neighbors_isea(cell_id, res, ap)
+    result <- get_k1(cell_id)
     if (include_self) {
       result <- mapply(function(nbrs, origin) c(origin, nbrs),
                         result, cell_id, SIMPLIFY = FALSE, USE.NAMES = FALSE)
@@ -133,8 +135,7 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
     current_ring <- origin
 
     for (ring in seq_len(k)) {
-      # Get neighbors of all cells in current ring
-      all_nbrs <- cpp_get_neighbors_isea(current_ring, res, ap)
+      all_nbrs <- get_k1(current_ring)
       new_cells <- unique(unlist(all_nbrs))
       new_cells <- setdiff(new_cells, visited)
 

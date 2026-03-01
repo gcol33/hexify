@@ -30,3 +30,6 @@
 ^src/.*\.so$
 ^src/.*\.dll$
 ^theory-plan\.md$
+^theory-notes\.md$
+^RELEASE_PLAN\.md$
+^test_ap7.*\.R$

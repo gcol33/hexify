@@ -420,6 +420,131 @@ const QuadAdjacency kQuadAdjacency[12] = {
 } // anonymous namespace
 
 // ============================================================================
+// Aperture 7: Substrate ↔ True Surrogate Conversion
+// ============================================================================
+// These functions convert between substrate (Class I) integer coordinates
+// and the "true surrogate" coordinates used internally by DGGRID's Class III
+// grids. The surrogate is a Class I (even res) or Class II (odd res) hex grid
+// rotated by ~19.1° from the substrate frame.
+//
+// This is needed for finding neighbors: ±1 offsets in surrogate integer space
+// correspond to actual adjacent ap7 cells.
+
+void substrate_to_surrogate_ap7(long long sub_i, long long sub_j, int resolution,
+                                 long long& sur_i, long long& sur_j) {
+    double x, y;
+    inv_quantize_class1(sub_i, sub_j, x, y);
+
+    // Substrate Cartesian is sqrt(7)x (even) or sqrt(21)x (odd) larger
+    // than the surrogate scale. Divide down before rotation + quantization.
+    bool is_class3i = (resolution % 2 == 0);
+    double divisor = is_class3i ? kSqrt7 : kSqrt21;
+    x /= divisor;
+    y /= divisor;
+
+    const double c = std::cos(-kAp7RotRad);
+    const double s = std::sin(-kAp7RotRad);
+    double rx = x * c - y * s;
+    double ry = x * s + y * c;
+
+    if (is_class3i) {
+        quantize_class1(rx, ry, sur_i, sur_j);
+    } else {
+        constexpr double c_30 = 0.866025403784438646763723170752936183;
+        constexpr double s_30 = -0.5;
+        double c1x = rx * c_30 - ry * s_30;
+        double c1y = rx * s_30 + ry * c_30;
+        quantize_class1(c1x, c1y, sur_i, sur_j);
+    }
+}
+
+void surrogate_to_substrate_ap7(long long sur_i, long long sur_j, int resolution,
+                                 long long& sub_i, long long& sub_j) {
+    double sx, sy;
+    inv_quantize_class1(sur_i, sur_j, sx, sy);
+
+    bool is_class3i = (resolution % 2 == 0);
+    const double c_ap7 = std::cos(kAp7RotRad);
+    const double s_ap7 = std::sin(kAp7RotRad);
+
+    double back_x, back_y;
+    if (is_class3i) {
+        back_x = sx * c_ap7 - sy * s_ap7;
+        back_y = sx * s_ap7 + sy * c_ap7;
+        quantize_class1(back_x * kSqrt7, back_y * kSqrt7, sub_i, sub_j);
+    } else {
+        constexpr double c_30 = 0.866025403784438646763723170752936183;
+        constexpr double s_30 = 0.5;
+        double c2x = sx * c_30 - sy * s_30;
+        double c2y = sx * s_30 + sy * c_30;
+        back_x = c2x * c_ap7 - c2y * s_ap7;
+        back_y = c2x * s_ap7 + c2y * c_ap7;
+        quantize_class1(back_x * kSqrt21, back_y * kSqrt21, sub_i, sub_j);
+    }
+}
+
+// ============================================================================
+// Aperture 7: Direct Surrogate Quantization (bypasses substrate)
+// ============================================================================
+// These functions quantize quad XY coordinates directly to surrogate
+// coordinates, avoiding the substrate round-trip that introduces fp error.
+
+void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
+                                  long long& sur_i, long long& sur_j) {
+    double scale = std::pow(std::sqrt(7.0), resolution);
+    double scaled_x = quad_x * scale;
+    double scaled_y = quad_y * scale;
+
+    const double c = std::cos(-kAp7RotRad);
+    const double s = std::sin(-kAp7RotRad);
+
+    // Rotate to surrogate frame
+    double rx = scaled_x * c - scaled_y * s;
+    double ry = scaled_x * s + scaled_y * c;
+
+    bool is_class3i = (resolution % 2 == 0);
+    if (is_class3i) {
+        // Class I surrogate - quantize directly
+        quantize_class1(rx, ry, sur_i, sur_j);
+    } else {
+        // Class II surrogate - rotate by -30 deg to Class I frame first
+        constexpr double c_30 = 0.866025403784438646763723170752936183;
+        constexpr double s_30 = -0.5;
+        double c1x = rx * c_30 - ry * s_30;
+        double c1y = rx * s_30 + ry * c_30;
+        quantize_class1(c1x, c1y, sur_i, sur_j);
+    }
+}
+
+void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
+                                  double& out_quad_x, double& out_quad_y) {
+    double sx, sy;
+    inv_quantize_class1(sur_i, sur_j, sx, sy);
+
+    bool is_class3i = (resolution % 2 == 0);
+    if (!is_class3i) {
+        // Class II: rotate from Class I back to Class II (+30 deg)
+        constexpr double c_30 = 0.866025403784438646763723170752936183;
+        constexpr double s_30 = 0.5;
+        double c2x = sx * c_30 - sy * s_30;
+        double c2y = sx * s_30 + sy * c_30;
+        sx = c2x;
+        sy = c2y;
+    }
+
+    // Rotate from surrogate frame back to quad frame (+19.1 deg)
+    const double c = std::cos(kAp7RotRad);
+    const double s = std::sin(kAp7RotRad);
+    double qx = sx * c - sy * s;
+    double qy = sx * s + sy * c;
+
+    // Undo the scale
+    double scale = std::pow(std::sqrt(7.0), resolution);
+    out_quad_x = qx / scale;
+    out_quad_y = qy / scale;
+}
+
+// ============================================================================
 // Public API Implementation
 // ============================================================================
 

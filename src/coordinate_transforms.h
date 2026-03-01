@@ -95,6 +95,25 @@ long long get_max_ij(int aperture, int resolution);
 bool handle_edge_overflow(int& quad, long long& i, long long& j,
                           int aperture, int resolution);
 
+// Aperture 7: Convert substrate (Class I) coords to true surrogate coords.
+// The surrogate is a Class I (even res) or Class II (odd res) hex grid
+// rotated by ~19.1° from the substrate frame.
+void substrate_to_surrogate_ap7(long long sub_i, long long sub_j, int resolution,
+                                 long long& sur_i, long long& sur_j);
+
+// Aperture 7: Convert true surrogate coords back to substrate (Class I) coords.
+void surrogate_to_substrate_ap7(long long sur_i, long long sur_j, int resolution,
+                                 long long& sub_i, long long& sub_j);
+
+// Aperture 7: Direct surrogate quantization (bypasses substrate round-trip).
+// Scales quad XY by sqrt(7)^res, rotates to surrogate frame, and quantizes.
+void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
+                                  long long& sur_i, long long& sur_j);
+
+// Aperture 7: Inverse - surrogate IJ back to quad XY coordinates.
+void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
+                                  double& out_quad_x, double& out_quad_y);
+
 } // namespace hexify
 
 #endif // HEXIFY_COORDINATE_TRANSFORMS_H

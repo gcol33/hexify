@@ -209,21 +209,8 @@ static long long calc_max_grid_dim_ap4(int resolution) {
     return (1LL << resolution) - 1;  // 2^res - 1
 }
 
-// Calculate SURROGATE grid dimension for aperture 7 (for cell ID encoding)
-// This is the "logical" dimension before substrate scaling
-static long long calc_surrogate_dim_ap7(int resolution) {
-    if (resolution == 0) return 0;
-
-    // Surrogate dimension: sqrt(7)^resolution
-    double scale = 1.0;
-    for (int r = 1; r <= resolution; r++) {
-        scale *= 2.6457513110645905905;  // sqrt(7)
-    }
-
-    return static_cast<long long>(scale + 0.000001);
-}
-
-// Calculate SUBSTRATE grid dimension for aperture 7 (for coordinate space)
+// Calculate SUBSTRATE grid dimension for aperture 7
+// Used by coordinate_transforms (edge overflow) and polygon generation
 static long long calc_max_grid_dim_ap7(int resolution) {
     if (resolution == 0) return 0;
 
@@ -247,16 +234,57 @@ static long long calc_max_grid_dim_ap7(int resolution) {
     return static_cast<long long>(scale + 0.000001) - 1;
 }
 
-// Get substrate scaling factor for aperture 7
-static double get_substrate_scale_ap7(int resolution) {
-    bool is_class3i = (resolution % 2) == 0;
-    return is_class3i ? 2.6457513110645905905 : 4.5825756949558400065;  // sqrt(7) or sqrt(21)
-}
-
 // 2D cell index for aligned grid (aperture 3 even res, aperture 4 all res)
 // Simple row-major ordering where all (i,j) pairs are valid
 static uint64_t cell_index_2d_aligned(long long i, long long j, long long dim) {
     return static_cast<uint64_t>(i) * dim + j;
+}
+
+// ============================================================================
+// Aperture 7: Surrogate-based encoding
+// ============================================================================
+// Surrogates are the canonical cell coordinates for aperture 7.
+// Each ap7 cell corresponds to exactly one surrogate (i,j), unlike substrates
+// where the substrate grid has ~7x more positions than actual cells.
+//
+// The surrogate grid dimension is approximately sqrt(7)^res per axis.
+// Due to the 19.1° rotation between surrogate and quad frames, surrogate
+// coordinates can be negative. We add an offset to shift to non-negative range.
+// ============================================================================
+
+// Offset to shift minimum surrogate coordinate to >= 0
+// From rotation analysis: min surrogate ≈ -0.4 * sqrt(7)^res
+static long long calc_sur_offset_ap7(int resolution) {
+    if (resolution == 0) return 0;
+    double S = std::pow(2.6457513110645905905, resolution);  // sqrt(7)^res
+    return static_cast<long long>(0.45 * S) + 2;
+}
+
+// One-axis dimension of the shifted surrogate grid
+// After shifting by offset, surrogates range from [0, dim-1]
+// Max surrogate ≈ 1.15 * sqrt(7)^res, so dim = offset + ceil(1.15*S) + 1
+static long long calc_sur_dim_ap7(int resolution) {
+    if (resolution == 0) return 1;
+    double S = std::pow(2.6457513110645905905, resolution);  // sqrt(7)^res
+    long long offset = calc_sur_offset_ap7(resolution);
+    long long max_sur = static_cast<long long>(1.2 * S) + 2;
+    return offset + max_sur + 1;
+}
+
+// Encode surrogate (i,j) directly as cell index within a quad
+static uint64_t encode_surrogate_ap7(
+    long long sur_i, long long sur_j, int resolution, long long sur_dim) {
+    long long sur_offset = calc_sur_offset_ap7(resolution);
+    return cell_index_2d_aligned(sur_i + sur_offset, sur_j + sur_offset, sur_dim);
+}
+
+// Decode cell index to surrogate (i,j) directly
+static void decode_surrogate_ap7(
+    uint64_t idx, int resolution, long long sur_dim,
+    long long& sur_i, long long& sur_j) {
+    long long sur_offset = calc_sur_offset_ap7(resolution);
+    sur_i = static_cast<long long>(idx / sur_dim) - sur_offset;
+    sur_j = static_cast<long long>(idx % sur_dim) - sur_offset;
 }
 
 // 2D cell index for offset grid (aperture 3 odd resolutions)
@@ -284,49 +312,25 @@ static void ij_from_cell_index_offset_ap3(uint64_t idx, long long dim,
     }
 }
 
-// 2D cell index for offset grid (aperture 7)
-// Only 1/7 of cells are valid - those satisfying the Class III pattern
-// The modulo-7 arithmetic compacts the sparse grid into dense numbering
-static uint64_t cell_index_2d_offset_ap7(long long i, long long j, long long dim) {
-    uint64_t idx = static_cast<uint64_t>(i) * dim / 7;
-    switch (i % 7) {
-        case 0: idx += j / 7; break;
-        case 1: idx += (j - 5) / 7; break;
-        case 2: idx += (j - 3) / 7; break;
-        case 3: idx += (j - 1) / 7; break;
-        case 4: idx += (j - 6) / 7; break;
-        case 5: idx += (j - 4) / 7; break;
-        case 6: idx += (j - 2) / 7; break;
-    }
-    return idx;
-}
-
-// Inverse: cell index to (i, j) for offset grid (aperture 7)
-static void ij_from_cell_index_offset_ap7(uint64_t idx, long long dim,
-                                      long long& i, long long& j) {
-    i = (idx * 7) / dim;
-    j = (idx * 7) % dim;
-    switch (i % 7) {
-        case 0: break;
-        case 1: j += 5; break;
-        case 2: j += 3; break;
-        case 3: j += 1; break;
-        case 4: j += 6; break;
-        case 5: j += 4; break;
-        case 6: j += 2; break;
-    }
-}
-
 // Calculate cell count and offset per quad for any aperture
-// Formula: nCells = 10 * aperture^res + 2
+// For apertures 3 and 4: nCells = 10 * aperture^res + 2
+// For aperture 7: we use surrogate-based encoding where each quad has
+// sur_dim² ID slots. Surrogates are the canonical ap7 cell coordinates
+// (one surrogate per cell), avoiding the substrate overcount problem.
 static void calc_grid_params(int resolution, int aperture,
                              uint64_t& nCells, uint64_t& offsetPerQuad) {
-    nCells = 10;
-    for (int r = 0; r < resolution; r++) {
-        nCells *= aperture;
+    if (aperture == 7) {
+        long long sur_dim = calc_sur_dim_ap7(resolution);
+        offsetPerQuad = static_cast<uint64_t>(sur_dim) * sur_dim;
+        nCells = 10 * offsetPerQuad + 2;
+    } else {
+        nCells = 10;
+        for (int r = 0; r < resolution; r++) {
+            nCells *= aperture;
+        }
+        nCells += 2;
+        offsetPerQuad = (nCells - 2) / 10;
     }
-    nCells += 2;
-    offsetPerQuad = (nCells - 2) / 10;
 }
 
 // [[Rcpp::export]]
@@ -350,7 +354,7 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_max_grid_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     // Check if using offset grid (only aperture 3 odd resolutions)
@@ -363,7 +367,6 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
 
         uint64_t offset = 0;
         if (q > 0) {
-            // For hex grids, firstAdd is quad 0, so add 1
             offset = 1 + (q - 1) * offsetPerQuad;
         }
 
@@ -371,6 +374,9 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
         uint64_t bnd2D_idx;
         if (use_offset) {
             bnd2D_idx = cell_index_2d_offset_ap3(ii, jj, dim);
+        } else if (aperture == 7) {
+            // Input (i,j) are surrogate coords for ap7
+            bnd2D_idx = encode_surrogate_ap7(ii, jj, resolution, dim);
         } else {
             bnd2D_idx = cell_index_2d_aligned(ii, jj, dim);
         }
@@ -399,53 +405,54 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     // Grid dimension depends on aperture
-    // For aperture 7, use SURROGATE dimension for cell ID encoding
     long long dim;
     if (aperture == 3) {
         dim = calc_max_grid_dim_ap3(resolution) + 1;
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        // Aperture 7: use surrogate dimension for cell ID formula
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
-    // Determine grid type:
-    // - Aperture 3 odd resolutions: offset grid with /3, %3
-    // - Aperture 4 all resolutions: aligned grid
-    // - Aperture 7 all resolutions: offset grid with /7, %7
+    // Aperture 3 odd resolutions use offset grid; all others use aligned
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-
-    // Get substrate scale for aperture 7 coordinate conversion
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
-        // Get Quad IJ coordinates (in substrate coordinates)
         hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
 
+        uint64_t bnd2D_seq;
         int quad;
-        long long i, j;
-        hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y, aperture, resolution,
-                                     quad, i, j);
+
+        if (aperture == 7) {
+            // AP7: Go through substrate (Class III quantize) then
+            // convert to surrogate. This ensures only valid ap7 cell
+            // positions are used (matching DGGRID's architecture).
+            long long sub_i, sub_j;
+            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                         fwd.icosa_triangle_y,
+                                         7, resolution, quad, sub_i, sub_j);
+
+            // Convert substrate → surrogate for storage
+            long long sur_i, sur_j;
+            hexify::substrate_to_surrogate_ap7(sub_i, sub_j, resolution,
+                                               sur_i, sur_j);
+            bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
+        } else {
+            // AP3/AP4: standard substrate-based encoding
+            long long i, j;
+            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
+                                         aperture, resolution, quad, i, j);
+            if (use_offset_ap3) {
+                bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
+            } else {
+                bnd2D_seq = cell_index_2d_aligned(i, j, dim);
+            }
+        }
 
         // Calculate cell ID offset within quad
         uint64_t offset = 0;
         if (quad > 0) {
             offset = 1 + (quad - 1) * offsetPerQuad;
-        }
-
-        // Calculate 2D cell index based on grid pattern
-        uint64_t bnd2D_seq;
-        if (use_offset_ap3) {
-            bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-        } else if (use_offset_ap7) {
-            // For aperture 7: convert substrate (i,j) to surrogate indices
-            long long i_sur = static_cast<long long>(std::round(i / substrate_scale_ap7));
-            long long j_sur = static_cast<long long>(std::round(j / substrate_scale_ap7));
-            bnd2D_seq = cell_index_2d_offset_ap7(i_sur, j_sur, dim);
-        } else {
-            bnd2D_seq = cell_index_2d_aligned(i, j, dim);
         }
 
         uint64_t cid = offset + bnd2D_seq + 1;
@@ -471,26 +478,16 @@ DataFrame cpp_cell_to_lonlat(NumericVector cell_id, int resolution,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     // Grid dimension depends on aperture
-    // For aperture 7, use SURROGATE dimension for cell decoding
     long long dim;
     if (aperture == 3) {
         dim = calc_max_grid_dim_ap3(resolution) + 1;
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        // Aperture 7: use surrogate dimension for cell ID formula
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
-    // Determine grid type:
-    // - Aperture 3 odd resolutions: offset grid with /3, %3
-    // - Aperture 4 all resolutions: aligned grid
-    // - Aperture 7 all resolutions: offset grid with /7, %7
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-
-    // Get substrate scale for aperture 7 coordinate conversion
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
@@ -514,30 +511,53 @@ DataFrame cpp_cell_to_lonlat(NumericVector cell_id, int resolution,
             quad = static_cast<int>(idx / offsetPerQuad) + 1;
             idx -= (quad - 1) * offsetPerQuad;
 
-            // Get i, j from remaining cell based on grid type
-            if (use_offset_ap3) {
+            // Decode (i, j) from within-quad index
+            if (quad == 11 && aperture == 7) {
+                // South pole pentagon
+                i = 0;
+                j = 0;
+            } else if (use_offset_ap3) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                // Decode to surrogate indices
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                // Convert surrogate to substrate indices
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else if (aperture == 7) {
+                // Decode to surrogate (i,j stored as surrogates for ap7)
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
             }
         }
 
-        // Convert quad coordinates to lon/lat
-        // Step 1: quad_ij -> quad_xy (i,j are now in substrate coordinates)
-        double quad_x, quad_y;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        // Handle polar pentagons directly
+        if (quad == 0) {
+            lon[k] = 0.0;
+            lat[k] = 90.0;
+            continue;
+        }
+        if (quad == 11) {
+            lon[k] = 0.0;
+            lat[k] = -90.0;
+            continue;
+        }
 
-        // Step 2: quad_xy -> icosa triangle coords
+        // Convert to lon/lat
+        double quad_x, quad_y;
+        if (aperture == 7) {
+            // AP7: surrogate IJ → quad XY directly
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
+        } else {
+            // AP3/AP4: substrate IJ → quad XY
+            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        }
+
+        // quad_xy -> icosa triangle coords
         int icosa_triangle_face;
         double icosa_triangle_x, icosa_triangle_y;
-        hexify::quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y);
+        if (!hexify::try_quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)) {
+            // Surrogate center falls in an invalid region (e.g. pentagon gap)
+            lon[k] = NA_REAL;
+            lat[k] = NA_REAL;
+            continue;
+        }
 
         // Step 3: icosa triangle coords -> lon/lat
         auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
@@ -581,15 +601,10 @@ DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
-    // Determine grid type
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-
-    // Get substrate scale for aperture 7 coordinate conversion
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
@@ -607,12 +622,15 @@ DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
             quad = static_cast<int>(idx / offsetPerQuad) + 1;
             idx -= (quad - 1) * offsetPerQuad;
 
-            if (use_offset_ap3) {
+            if (quad == 11 && aperture == 7) {
+                // South pole pentagon
+                i = 0;
+                j = 0;
+            } else if (use_offset_ap3) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else if (aperture == 7) {
+                // Decode to surrogate (i,j) for ap7
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
@@ -661,12 +679,10 @@ DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
@@ -686,19 +702,21 @@ DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
 
             if (use_offset_ap3) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else if (aperture == 7) {
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
             }
         }
 
-        // Convert Quad IJ → Quad XY
+        // Convert to Quad XY
         double quad_x, quad_y;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        if (aperture == 7) {
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
+        } else {
+            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        }
 
         out_quad[k] = quad;
         out_qx[k] = quad_x;
@@ -741,46 +759,47 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];
         double qx = quad_x[k];
         double qy = quad_y[k];
 
-        // Convert Quad XY → Quad IJ via quantization
-        // First convert quad_xy to icosa triangle, then use icosa_tri_to_quad_ij
-        int icosa_triangle_face;
-        double icosa_triangle_x, icosa_triangle_y;
-        hexify::quad_xy_to_icosa_tri(q, qx, qy, icosa_triangle_face,
-                                     icosa_triangle_x, icosa_triangle_y);
-
-        // Now convert back to Quad IJ with quantization
+        uint64_t bnd2D_seq;
         int out_quad;
-        long long i, j;
-        hexify::icosa_tri_to_quad_ij(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y,
-                                     aperture, resolution, out_quad, i, j);
+
+        if (aperture == 7) {
+            // AP7: Class III quantize → substrate → surrogate
+            long long sub_i, sub_j;
+            hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, sub_i, sub_j);
+
+            long long sur_i, sur_j;
+            hexify::substrate_to_surrogate_ap7(sub_i, sub_j, resolution, sur_i, sur_j);
+            bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
+        } else {
+            // AP3/AP4: standard substrate path
+            int icosa_triangle_face;
+            double icosa_triangle_x, icosa_triangle_y;
+            hexify::quad_xy_to_icosa_tri(q, qx, qy, icosa_triangle_face,
+                                         icosa_triangle_x, icosa_triangle_y);
+            long long i, j;
+            hexify::icosa_tri_to_quad_ij(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y,
+                                         aperture, resolution, out_quad, i, j);
+            if (use_offset_ap3) {
+                bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
+            } else {
+                bnd2D_seq = cell_index_2d_aligned(i, j, dim);
+            }
+        }
 
         // Calculate cell ID
         uint64_t offset = 0;
         if (out_quad > 0) {
             offset = 1 + (out_quad - 1) * offsetPerQuad;
-        }
-
-        uint64_t bnd2D_seq;
-        if (use_offset_ap3) {
-            bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-        } else if (use_offset_ap7) {
-            long long i_sur = static_cast<long long>(std::round(i / substrate_scale_ap7));
-            long long j_sur = static_cast<long long>(std::round(j / substrate_scale_ap7));
-            bnd2D_seq = cell_index_2d_offset_ap7(i_sur, j_sur, dim);
-        } else {
-            bnd2D_seq = cell_index_2d_aligned(i, j, dim);
         }
 
         uint64_t cid = offset + bnd2D_seq + 1;
@@ -819,12 +838,10 @@ DataFrame cpp_cell_to_icosa_tri(NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
@@ -844,19 +861,21 @@ DataFrame cpp_cell_to_icosa_tri(NumericVector cell_id, int resolution,
 
             if (use_offset_ap3) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else if (aperture == 7) {
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
             }
         }
 
-        // Convert Quad IJ → Quad XY
+        // Convert to Quad XY
         double quad_x, quad_y;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        if (aperture == 7) {
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
+        } else {
+            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        }
 
         // Convert Quad XY → Icosa Triangle
         int icosa_triangle_face;
@@ -989,7 +1008,7 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_max_grid_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     // Check if using offset grid (only aperture 3 odd resolutions)
@@ -1020,8 +1039,12 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
         center_scale = std::pow(2.0, resolution);
         vertex_scale = center_scale;
     } else {  // aperture == 7
-        center_scale = std::pow(std::sqrt(7.0), resolution);
-        vertex_scale = center_scale;
+        // Substrate scale for center coords (decoded substrate i,j)
+        double base_scale = std::pow(std::sqrt(7.0), resolution);
+        bool is_class3i = (resolution % 2 == 0);
+        double substrate_mult = is_class3i ? hexify::kSqrt7 : hexify::kSqrt21;
+        center_scale = base_scale * substrate_mult;
+        vertex_scale = base_scale;
     }
 
     int out_idx = 0;
@@ -1030,7 +1053,7 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
         double orig_cell_id = cell_id[k];
 
-        // Convert cell to (quad, i, j)
+        // Convert cell to (quad, i, j) — substrate coords
         idx--;  // Convert to 0-based
 
         int quad;
@@ -1047,6 +1070,8 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
 
             if (use_offset) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
+            } else if (aperture == 7) {
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
@@ -1054,11 +1079,15 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
         }
 
         // Get cell center in Quad XY coordinates
-        // inv_quantize_class1: (i - 0.5*j, j * sin60) is in substrate coords for Class II
-        double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
-        double grid_y = static_cast<double>(j) * hexify::kSin60;
-        double qx_center = grid_x / center_scale;
-        double qy_center = grid_y / center_scale;
+        double qx_center, qy_center;
+        if (aperture == 7) {
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, qx_center, qy_center);
+        } else {
+            double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
+            double grid_y = static_cast<double>(j) * hexify::kSin60;
+            qx_center = grid_x / center_scale;
+            qy_center = grid_y / center_scale;
+        }
 
         // Generate 6 corners: add vertex offsets (which are in backFrame scale)
         double first_lon = 0.0, first_lat = 0.0;
@@ -1123,7 +1152,7 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_max_grid_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
@@ -1148,8 +1177,11 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         center_scale = std::pow(2.0, resolution);
         vertex_scale = center_scale;
     } else {  // aperture == 7
-        center_scale = std::pow(std::sqrt(7.0), resolution);
-        vertex_scale = center_scale;
+        double base_scale = std::pow(std::sqrt(7.0), resolution);
+        bool is_class3i = (resolution % 2 == 0);
+        double substrate_mult = is_class3i ? hexify::kSqrt7 : hexify::kSqrt21;
+        center_scale = base_scale * substrate_mult;
+        vertex_scale = base_scale;
     }
 
     // Return a list of n elements, each element is a Nx2 matrix (lon, lat)
@@ -1175,6 +1207,8 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
 
             if (use_offset) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
+            } else if (aperture == 7) {
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
@@ -1182,20 +1216,22 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         }
 
         // Check if this is a pentagon cell (at icosahedral vertex)
-        // All 12 cells at (i=0, j=0) in any quad are pentagon cells
         bool is_pentagon = (i == 0 && j == 0);
-        int skip_vertex = -1;  // -1 means no vertex to skip (hexagon)
+        int skip_vertex = -1;
         if (is_pentagon) {
-            // Quads 0-5: region 3 is invalid -> skip vertex 3
-            // Quads 6-11: region 4 is invalid -> skip vertex 2
             skip_vertex = (quad <= 5) ? kPentagonSkipVertexRegion3 : kPentagonSkipVertexRegion4;
         }
 
         // Get cell center in Quad XY coordinates
-        double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
-        double grid_y = static_cast<double>(j) * hexify::kSin60;
-        double qx_center = grid_x / center_scale;
-        double qy_center = grid_y / center_scale;
+        double qx_center, qy_center;
+        if (aperture == 7) {
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, qx_center, qy_center);
+        } else {
+            double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
+            double grid_y = static_cast<double>(j) * hexify::kSin60;
+            qx_center = grid_x / center_scale;
+            qy_center = grid_y / center_scale;
+        }
 
         // Pentagon: 6 rows (5 vertices + closing)
         // Hexagon: 7 rows (6 vertices + closing)
@@ -1488,12 +1524,11 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
 // Neighbor Finding (v0.7.0)
 // ============================================================================
 
-// Helper: convert (quad, i, j) to cell_id for a given aperture/resolution
+// Helper: convert (quad, i, j) to cell_id
+// For ap7: (i,j) are surrogates. For ap3/4: (i,j) are substrates.
 static double encode_cell_id(int quad, long long i, long long j,
-                              int aperture, int resolution,
                               uint64_t offsetPerQuad, long long dim,
-                              bool use_offset_ap3, bool use_offset_ap7,
-                              double substrate_scale_ap7) {
+                              bool use_offset_ap3, int aperture, int resolution) {
     if (quad == 0 && i == 0 && j == 0) {
         return 1.0;
     }
@@ -1503,10 +1538,8 @@ static double encode_cell_id(int quad, long long i, long long j,
 
     if (use_offset_ap3) {
         bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-    } else if (use_offset_ap7) {
-        long long si = static_cast<long long>(std::round(i / substrate_scale_ap7));
-        long long sj = static_cast<long long>(std::round(j / substrate_scale_ap7));
-        bnd2D_seq = cell_index_2d_offset_ap7(si, sj, dim);
+    } else if (aperture == 7) {
+        bnd2D_seq = encode_surrogate_ap7(i, j, resolution, dim);
     } else {
         bnd2D_seq = cell_index_2d_aligned(i, j, dim);
     }
@@ -1533,95 +1566,145 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     long long max_ij = hexify::get_max_ij(aperture, resolution);
 
-    // Hex neighbor offsets in axial coordinates
+    // Standard hex neighbor offsets in axial coordinates (ap3, ap4)
     static const long long hex_offsets[6][2] = {
         { 1,  0}, { 0,  1}, {-1,  1},
         {-1,  0}, { 0, -1}, { 1, -1}
+    };
+
+    // Aperture 7 surrogate neighbor offsets (hexify coordinate convention)
+    static const long long sur_offsets[6][2] = {
+        {1, 0}, {1, 1}, {0, 1}, {-1, 0}, {-1, -1}, {0, -1}
     };
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
         idx--;
 
-        int quad;
-        long long i, j;
-
-        if (idx == 0) {
-            quad = 0; i = 0; j = 0;
-        } else {
-            idx--;
-            quad = static_cast<int>(idx / offsetPerQuad) + 1;
-            idx -= (quad - 1) * offsetPerQuad;
-
-            if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
-            } else {
-                i = idx / dim;
-                j = idx % dim;
-            }
-        }
-
-        // Get cell center lon/lat for cross-quad fallback
-        double center_qx, center_qy;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, center_qx, center_qy);
-
         std::vector<double> neighbor_ids;
         neighbor_ids.reserve(6);
 
-        for (int d = 0; d < 6; d++) {
-            long long ni = i + hex_offsets[d][0];
-            long long nj = j + hex_offsets[d][1];
+        if (idx == 0) {
+            // North pole: pentagon, skip for now
+            out[k] = Rcpp::NumericVector(0);
+            continue;
+        }
 
-            bool in_bounds = (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
+        idx--;
+        int quad = static_cast<int>(idx / offsetPerQuad) + 1;
+        uint64_t within_quad = idx - (quad - 1) * offsetPerQuad;
 
-            if (in_bounds) {
-                // Interior cell: direct IJ encode
-                neighbor_ids.push_back(
-                    encode_cell_id(quad, ni, nj, aperture, resolution,
-                                   offsetPerQuad, dim, use_offset_ap3,
-                                   use_offset_ap7, substrate_scale_ap7));
-            } else {
-                // Boundary cell: convert neighbor IJ to XY, then to icosa tri,
-                // then back through full pipeline
-                double nbr_qx, nbr_qy;
-                hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution, nbr_qx, nbr_qy);
+        if (aperture == 7) {
+            // Aperture 7: direct surrogate-integer approach.
+            // 1. Decode cell_id → surrogate (i,j) directly
+            // 2. Add ±1 neighbor offset in surrogate space
+            // 3. Encode directly (or cross-quad via forward pipeline)
+            long long sur_i, sur_j;
+            decode_surrogate_ap7(within_quad, resolution, dim, sur_i, sur_j);
 
-                int tri_face;
-                double tri_x, tri_y;
-                if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
-                                                       tri_face, tri_x, tri_y)) {
-                    continue;
+            for (int d = 0; d < 6; d++) {
+                long long nbr_sur_i = sur_i + sur_offsets[d][0];
+                long long nbr_sur_j = sur_j + sur_offsets[d][1];
+
+                // Bounds check: use surrogate offset/dim to detect cross-quad
+                long long sur_offset = calc_sur_offset_ap7(resolution);
+                long long shifted_i = nbr_sur_i + sur_offset;
+                long long shifted_j = nbr_sur_j + sur_offset;
+                bool in_bounds = (shifted_i >= 0 && shifted_j >= 0 &&
+                                   shifted_i < dim && shifted_j < dim);
+
+                if (in_bounds) {
+                    // Same quad: encode directly
+                    uint64_t nbr_offset = 1 + (quad - 1) * offsetPerQuad;
+                    uint64_t nbr_idx = encode_surrogate_ap7(
+                        nbr_sur_i, nbr_sur_j, resolution, dim);
+                    neighbor_ids.push_back(
+                        static_cast<double>(nbr_offset + nbr_idx + 1));
+                } else {
+                    // Cross-quad boundary: route through forward pipeline
+                    double nbr_qx, nbr_qy;
+                    hexify::surrogate_ij_to_quad_xy_ap7(
+                        nbr_sur_i, nbr_sur_j, resolution, nbr_qx, nbr_qy);
+
+                    int tri_face;
+                    double tri_x, tri_y;
+                    if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
+                                                           tri_face, tri_x, tri_y)) {
+                        continue;
+                    }
+
+                    auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+                    auto fwd = hexify::snyder_forward(ll.first, ll.second);
+
+                    int final_quad;
+                    double final_qx, final_qy;
+                    hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x,
+                                                  fwd.icosa_triangle_y,
+                                                  final_quad, final_qx, final_qy);
+                    long long final_sur_i, final_sur_j;
+                    hexify::quad_xy_to_surrogate_ij_ap7(
+                        final_qx, final_qy, resolution, final_sur_i, final_sur_j);
+
+                    neighbor_ids.push_back(
+                        encode_cell_id(final_quad, final_sur_i, final_sur_j,
+                                       offsetPerQuad, dim, use_offset_ap3,
+                                       aperture, resolution));
                 }
+            }
+        } else {
+            // Aperture 3 and 4: standard hex offset approach
+            long long i, j;
+            if (use_offset_ap3) {
+                ij_from_cell_index_offset_ap3(within_quad, dim, i, j);
+            } else {
+                i = within_quad / dim;
+                j = within_quad % dim;
+            }
 
-                // Reproject through lon/lat to find canonical cell
-                auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+            for (int d = 0; d < 6; d++) {
+                long long ni = i + hex_offsets[d][0];
+                long long nj = j + hex_offsets[d][1];
 
-                auto fwd = hexify::snyder_forward(ll.first, ll.second);
-                int final_quad;
-                long long final_i, final_j;
-                hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
-                                              fwd.icosa_triangle_y,
-                                              aperture, resolution,
-                                              final_quad, final_i, final_j);
+                bool in_bounds = (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
 
-                neighbor_ids.push_back(
-                    encode_cell_id(final_quad, final_i, final_j,
-                                   aperture, resolution, offsetPerQuad, dim,
-                                   use_offset_ap3, use_offset_ap7,
-                                   substrate_scale_ap7));
+                if (in_bounds) {
+                    neighbor_ids.push_back(
+                        encode_cell_id(quad, ni, nj,
+                                       offsetPerQuad, dim, use_offset_ap3,
+                                       aperture, resolution));
+                } else {
+                    double nbr_qx, nbr_qy;
+                    hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution,
+                                           nbr_qx, nbr_qy);
+
+                    int tri_face;
+                    double tri_x, tri_y;
+                    if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
+                                                           tri_face, tri_x, tri_y)) {
+                        continue;
+                    }
+
+                    auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+                    auto fwd = hexify::snyder_forward(ll.first, ll.second);
+                    int final_quad;
+                    long long final_i, final_j;
+                    hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                                  fwd.icosa_triangle_y,
+                                                  aperture, resolution,
+                                                  final_quad, final_i, final_j);
+
+                    neighbor_ids.push_back(
+                        encode_cell_id(final_quad, final_i, final_j,
+                                       offsetPerQuad, dim, use_offset_ap3,
+                                       aperture, resolution));
+                }
             }
         }
 
@@ -1758,12 +1841,10 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
     } else if (aperture == 4) {
         dim = calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        dim = calc_surrogate_dim_ap7(resolution) + 1;
+        dim = calc_sur_dim_ap7(resolution);
     }
 
     bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
-    bool use_offset_ap7 = (aperture == 7);
-    double substrate_scale_ap7 = (aperture == 7) ? get_substrate_scale_ap7(resolution) : 1.0;
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = static_cast<uint64_t>(cell_id[k]);
@@ -1783,19 +1864,21 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
 
             if (use_offset_ap3) {
                 ij_from_cell_index_offset_ap3(idx, dim, i, j);
-            } else if (use_offset_ap7) {
-                ij_from_cell_index_offset_ap7(idx, dim, i, j);
-                i = static_cast<long long>(std::round(i * substrate_scale_ap7));
-                j = static_cast<long long>(std::round(j * substrate_scale_ap7));
+            } else if (aperture == 7) {
+                decode_surrogate_ap7(idx, resolution, dim, i, j);
             } else {
                 i = idx / dim;
                 j = idx % dim;
             }
         }
 
-        // Convert Quad IJ → Quad XY
+        // Convert to Quad XY
         double quad_x, quad_y;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        if (aperture == 7) {
+            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
+        } else {
+            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
+        }
 
         // Convert Quad XY → Icosa Triangle
         int tri_face;

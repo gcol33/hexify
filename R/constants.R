@@ -252,6 +252,17 @@ max_cell_id <- function(resolution, aperture) {
 
   # This matches the C++ cell_numbering.cpp logic
   if (resolution == 0) return(20)
+
+  if (aperture == 7) {
+    # AP7 stores surrogates in a dim x dim bounding box per quad.
+    # Max cell ID = 2 (poles) + 10 * dim^2
+    # Must match calc_sur_dim_ap7() in rcpp_cell.cpp
+    S <- sqrt(7)^resolution
+    sur_offset <- as.integer(0.45 * S) + 2L
+    sur_dim <- sur_offset + as.integer(1.2 * S) + 2L + 1L
+    return(2 + 10 * as.numeric(sur_dim)^2)
+  }
+
   10 * (aperture^resolution) + 2
 }
 

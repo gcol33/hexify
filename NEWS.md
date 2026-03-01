@@ -1,44 +1,21 @@
-# hexify 1.0.0
-
-**CRAN 1.0.0 release — interactive maps, theory vignette, full polish**
-
-* New `hex_browse()`: interactive leaflet-based hex map with colored cells,
-  popups, and basemap tiles
-* Comprehensive theory vignette covering ISEA projection mathematics,
-  hexagonal grid apertures, coordinate indexing systems, and H3 comparison
-* All legacy S3 functions preserved — no deprecations
-* Added `leaflet` to Suggests
-
-# hexify 0.9.0
-
-**Multi-resolution tools and topology**
-
-* New `hex_compact()` / `hex_uncompact()`: lossless multi-resolution
-  compression. Merges child cells into parents when all children are present
-  (H3 backend via `compactCells`; ISEA Z7 via hierarchical digit logic)
-* New `is_pentagon()`: detects the 12 pentagon cells (icosahedron vertices)
-  that exist at every resolution (H3 via `isPentagon`, ISEA via vertex lookup)
-* New `hex_distance()`: grid distance (minimum hops) between cell pairs
-  (H3 via `gridDistance`, ISEA via cube-coordinate distance within quads)
-* Implemented mixed aperture 4/3 indexing (`cell_to_index_ap34` /
-  `index_to_cell_ap34`) — previously a stub
-* Implemented `index_to_uint64` / `uint64_to_index` for database-friendly
-  compact cell ID storage
-
-# hexify 0.8.0
-
-**Raster integration**
-
-* New `hex_extract()`: extract raster values at hex cell centers using
-  `terra::extract()` — fast point-based sampling
-* New `hex_zonal()`: full zonal statistics aggregating all raster pixels
-  within hex polygon boundaries
-* `hexify_heatmap()` now accepts `SpatRaster` and `Raster*` objects as
-  basemaps (rendered as grayscale annotation layer under hex polygons)
-
 # hexify 0.7.0
 
-**Spatial analysis primitives**
+**Spatial analysis primitives + critical ap7 bug fix**
+
+## Bug fix
+
+* **Fixed aperture 7 cell encoding** — the previous encoding skipped Class III
+  substrate quantization, directly snapping to the surrogate hex lattice.
+  This produced ~3.6× too many cells (every lattice position in the bounding
+  box, not just valid ap7 positions). Neighbors were reported at ~380–450 km
+  instead of the correct ~80–100 km. The fix routes encoding through
+  `icosa_tri_to_quad_ij()` → `substrate_to_surrogate_ap7()`, matching the
+  DGGRID reference implementation.
+* Updated `max_cell_id()` for aperture 7 to use surrogate bounding box
+  dimensions instead of the theoretical cell count formula.
+* Regenerated test cache for corrected ap7 cell IDs.
+
+## New features
 
 * New `get_neighbors()`: returns k-ring (disk) of neighboring cells for
   both ISEA and H3 grids. Supports `k > 1` for multi-ring expansion,

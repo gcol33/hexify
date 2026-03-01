@@ -603,8 +603,10 @@ cat(sprintf("  Base cell: %s, Digits: %s\n",
 
 # Hierarchical property: parent is obtained by dropping the last digit
 parent_idx <- substr(idx, 1, nchar(idx) - 1)
-parent_cell <- hexify_index_to_cell(parent_idx, 7, "z7")
-cat(sprintf("  Parent index: %s (cell %d)\n", parent_idx, parent_cell))
+parent_info <- hexify_index_to_cell(parent_idx, 7, "z7")
+cat(sprintf("  Parent index: %s (face %d, i=%d, j=%d)\n",
+            parent_idx, parent_info$face,
+            as.integer(parent_info$i), as.integer(parent_info$j)))
 ```
 
 #### Z3 Index (Aperture 3)
@@ -730,16 +732,24 @@ For ecological and statistical applications where equal-area cells are important
 Because ISEA supports multiple apertures, there is no one-to-one resolution mapping to H3. The `h3_crosswalk()` function finds the closest H3 resolution for a given ISEA grid:
 
 ```{r resolution-mapping}
-# H3 resolution table
+# H3 resolution table: compare H3 and ISEA aperture-7 cell areas
 cat("H3 Res  Avg Area (km²)  ISEA Ap7 Equivalent\n")
 cat("------  --------------  -------------------\n")
 for (h3_res in 0:8) {
-  g <- hex_grid(resolution = h3_res, type = "h3")
-  h3_area <- hexify_eff_res_to_area(h3_res, "h3")
-  isea_res <- dg_closest_res_to_area(h3_area, aperture = 7)
+  g_h3 <- hex_grid(resolution = h3_res, type = "h3")
+  h3_area <- g_h3@area_km2
+
+  # Find closest ISEA ap7 resolution by brute force
+  best_res <- 0
+  best_diff <- Inf
+  for (r in 0:15) {
+    g_test <- hex_grid(resolution = r, aperture = 7)
+    d <- abs(log(g_test@area_km2) - log(h3_area))
+    if (d < best_diff) { best_diff <- d; best_res <- r }
+  }
+  g_isea <- hex_grid(resolution = best_res, aperture = 7)
   cat(sprintf("   %2d   %14.1f  res %d (%.1f km²)\n",
-              h3_res, h3_area, isea_res,
-              hexify_eff_res_to_area(isea_res, aperture = 7)))
+              h3_res, h3_area, best_res, g_isea@area_km2))
 }
 ```
 
