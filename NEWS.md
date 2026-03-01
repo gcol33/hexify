@@ -1,18 +1,13 @@
 # hexify 0.7.0
 
-**Spatial analysis primitives + critical ap7 bug fix**
+**Spatial analysis primitives + ap7 encoding fix**
 
 ## Bug fix
 
 * **Fixed aperture 7 cell encoding** — the previous encoding skipped Class III
-  substrate quantization, directly snapping to the surrogate hex lattice.
-  This produced ~3.6× too many cells (every lattice position in the bounding
-  box, not just valid ap7 positions). Neighbors were reported at ~380–450 km
-  instead of the correct ~80–100 km. The fix applies the correct Class III
-  quantization (Sahr 2008) before surrogate encoding.
-* Updated `max_cell_id()` for aperture 7 to use surrogate bounding box
-  dimensions instead of the theoretical cell count formula.
-* Regenerated test cache for corrected ap7 cell IDs.
+  substrate quantization, assigning cell IDs to invalid lattice positions.
+  Aperture 7 grids now produce the correct number of cells per quad.
+* Updated `max_cell_id()` for aperture 7 bounding box.
 
 ## New features
 
