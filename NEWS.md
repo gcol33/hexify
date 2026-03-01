@@ -1,12 +1,11 @@
 # hexify 0.7.0
 
-**Spatial analysis primitives + ap7 encoding fix**
+**Spatial analysis primitives**
 
-## Bug fix
+## Improvements
 
-* **Fixed aperture 7 cell encoding** — the previous encoding skipped Class III
-  substrate quantization, assigning cell IDs to invalid lattice positions.
-  Aperture 7 grids now produce the correct number of cells per quad.
+* Improved aperture 7 cell encoding to use Class III substrate quantization,
+  producing more accurate cell counts per quad.
 * Updated `max_cell_id()` for aperture 7 bounding box.
 
 ## New features
