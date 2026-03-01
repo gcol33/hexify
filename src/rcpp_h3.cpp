@@ -297,6 +297,25 @@ Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
 }
 
 // [[Rcpp::export]]
+Rcpp::IntegerVector cpp_h3_getResolution(Rcpp::CharacterVector cell_ids) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::IntegerVector out(n);
+    for (R_xlen_t i = 0; i < n; i++) {
+        if (cell_ids[i] == NA_STRING) {
+            out[i] = NA_INTEGER;
+            continue;
+        }
+        H3Index h = string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL) {
+            out[i] = NA_INTEGER;
+        } else {
+            out[i] = hexify_h3_getResolution(h);
+        }
+    }
+    return out;
+}
+
+// [[Rcpp::export]]
 Rcpp::NumericVector cpp_h3_cellAreaKm2(Rcpp::CharacterVector cell_ids) {
     R_xlen_t n = cell_ids.size();
     Rcpp::NumericVector out(n);
