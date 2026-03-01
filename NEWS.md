@@ -2,10 +2,9 @@
 
 **Spatial analysis primitives**
 
-## Improvements
+## Hotfix
 
-* Improved aperture 7 cell encoding to use Class III substrate quantization,
-  producing more accurate cell counts per quad.
+* Fixed aperture 7 cell encoding to use Class III substrate quantization.
 * Updated `max_cell_id()` for aperture 7 bounding box.
 
 ## New features
