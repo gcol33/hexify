@@ -26,3 +26,6 @@ nul
 /Meta/
 hexify.Rcheck/
 hexify_*.tar.gz
+
+# Claude Code
+.claude/
