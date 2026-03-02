@@ -13,7 +13,7 @@
   <img src="man/figures/hexify-hero.png" alt="Multi-resolution hexagonal grids" width="100%">
 </p>
 
-`hexify` assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every cell has the same area regardless of latitude, eliminating the sampling bias inherent in rectangular lat-lon grids. H3 (Uber's hierarchical hex system) is also supported for interoperability with industry platforms.
+`hexify` assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every cell has the same area regardless of latitude, eliminating the sampling bias inherent in rectangular lat-lon grids. H3 is supported for compatibility with existing H3 workflows.
 
 ## Quick Start
 
