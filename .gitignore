@@ -16,7 +16,10 @@ R/.Rhistory
 GLOSSARY.md
 REWRITE_PLAN.md
 REFACTOR_PLAN.md
+RELEASE_PLAN.md
 refactor_mit_safe.md
+theory-notes.md
+theory-plan.md
 
 # Development artifacts
 ref_polygons*.rds
