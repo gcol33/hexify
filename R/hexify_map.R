@@ -698,9 +698,8 @@ hexify_heatmap <- function(data,
 
   # Apply theme
   if (theme_void) {
-    p <- p + ggplot2::theme_minimal() +
+    p <- p + .theme_clean() +
       ggplot2::theme(
-        panel.grid = ggplot2::element_blank(),
         axis.text = ggplot2::element_blank(),
         axis.title = ggplot2::element_blank(),
         axis.ticks = ggplot2::element_blank()
