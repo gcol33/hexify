@@ -9,6 +9,8 @@
 #' @name hexify-conversions
 NULL
 
+# Validation: use validate_aperture() / validate_resolution() from constants.R
+
 #' Convert longitude/latitude to hexagonal cell hierarchical index
 #'
 #' Converts geographic coordinates (longitude, latitude) to hexagonal cell
@@ -388,12 +390,8 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 #' print(result)
 hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_lonlat_to_quad_ij(
     lon_deg = as.numeric(lon),
@@ -426,12 +424,8 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #' print(cell_id)
 hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_quad_ij_to_cell(
     quad = as.integer(quad),
@@ -467,9 +461,7 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
 #' print(xy)
 hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
+  validate_aperture(aperture)
 
   cpp_quad_ij_to_xy(
     quad = as.integer(quad),
@@ -556,9 +548,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
                                          resolution,
                                          aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
+  validate_aperture(aperture)
 
   cpp_icosa_tri_to_quad_ij(
     icosa_triangle_face = as.integer(icosa_triangle_face),
@@ -639,12 +629,8 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #' # Should equal original cell_id
 hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_cell_to_quad_ij(
     cell_id = as.numeric(cell_id),
@@ -687,12 +673,8 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #'                          result$icosa_triangle_y)
 hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_cell_to_icosa_tri(
     cell_id = as.numeric(cell_id),
@@ -733,12 +715,8 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #' print(result)
 hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_quad_ij_to_icosa_tri(
     quad = as.integer(quad),
@@ -790,12 +768,8 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #' # Should equal original cell_id
 hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_cell_to_quad_xy(
     cell_id = as.numeric(cell_id),
@@ -833,12 +807,8 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
                                    aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_quad_xy_to_cell(
     quad = as.integer(quad),
@@ -938,12 +908,8 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #' plot(plane$plane_x, plane$plane_y)
 hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 
-  if (!aperture %in% c(3L, 4L, 7L)) {
-    stop("aperture must be 3, 4, or 7")
-  }
-  if (resolution < 0 || resolution > 30) {
-    stop("resolution must be between 0 and 30")
-  }
+  validate_aperture(aperture)
+  validate_resolution(resolution)
 
   cpp_cell_to_plane(
     cell_id = as.numeric(cell_id),

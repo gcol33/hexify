@@ -1,3 +1,34 @@
+# hexify 0.8.0
+
+**Code quality and documentation**
+
+## Improvements
+
+* Refactored `rcpp_aperture.cpp`: extracted parameterized helpers for
+  quantize/center/corners, eliminating copy-paste across 3 apertures.
+* Consolidated input validation: conversion functions now use shared
+  `validate_aperture()` / `validate_resolution()` from `constants.R`.
+* Optimized `is_pentagon()` for ISEA grids: computes pentagon cell IDs
+  directly from quad coordinates instead of looping through the lon/lat
+  pipeline.
+* Stricter aperture parsing in `hexify()`: rejects unexpected values with
+  an informative error instead of silently coercing via `as.integer()`.
+* Deduplicated `theme_minimal()` calls in plot methods with `.theme_clean()`
+  helper.
+
+## Documentation
+
+* Added "Why Hexagonal Grids?" section to README (equal area, uniform
+  adjacency, low shape distortion).
+* Added "Known Limitations" section to README (H3 resolution cap, pentagons,
+  projection precision).
+
+## Tests
+
+* New `test-edge-cases.R` with 32 tests covering poles, antimeridian,
+  dateline, equator, roundtrip stability, pentagon invariants, neighbor
+  symmetry, and resolution-0 cell counts.
+
 # hexify 0.7.0
 
 **Spatial analysis primitives**

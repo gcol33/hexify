@@ -53,15 +53,12 @@ is_pentagon <- function(cell_id, grid) {
     return(rep(TRUE, length(cell_id)))
   }
 
-  # Calculate which cell_ids correspond to (quad, 0, 0)
-  nCells <- 0
-  offsetPerQuad <- 0
-  # Re-derive pentagon cell IDs
-  pentagon_ids <- vapply(0:11, function(q) {
-    ll <- cell_to_lonlat(q + 1L, hex_grid(resolution = 0L, aperture = g@aperture))
-    cid <- lonlat_to_cell(ll$lon_deg, ll$lat_deg, g)
-    cid
-  }, numeric(1))
+  # Pentagon cells are at (i=0, j=0) in each of the 12 quads.
+  # Compute their cell IDs directly from grid coordinates — no projection needed.
+  pentagon_ids <- cpp_quad_ij_to_cell(
+    quad = 0:11, i = rep(0, 12), j = rep(0, 12),
+    resolution = res, aperture = ap
+  )
 
   cell_id %in% pentagon_ids
 }

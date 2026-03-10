@@ -5,6 +5,22 @@
 # Users can visualize hexified data without specifying grid parameters.
 
 # =============================================================================
+# THEME HELPER
+# =============================================================================
+
+#' Clean minimal theme for pkgdown-friendly plots
+#'
+#' Wraps \code{ggplot2::theme_minimal()} with grid lines removed so that
+#' plots render cleanly on pkgdown sites regardless of background colour.
+#'
+#' @return A ggplot2 theme object.
+#' @noRd
+.theme_clean <- function() {
+  ggplot2::theme_minimal() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank())
+}
+
+# =============================================================================
 # POINT SIZE AND JITTERING HELPERS
 # =============================================================================
 
@@ -489,9 +505,8 @@ plot_grid <- function(boundary,
     ) +
     ggplot2::coord_sf(xlim = xlim, ylim = ylim, expand = FALSE) +
     ggplot2::labs(title = title) +
-    ggplot2::theme_minimal() +
+    .theme_clean() +
     ggplot2::theme(
-      panel.grid = ggplot2::element_blank(),
       axis.title = ggplot2::element_blank()
     )
 

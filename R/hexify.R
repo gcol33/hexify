@@ -201,7 +201,11 @@ hexify <- function(data,
     cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
     centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)
   } else {
-    aperture_num <- as.integer(aperture_str)
+    aperture_num <- match(aperture_str, c("3", "4", "7"))
+    if (is.na(aperture_num)) {
+      stop(sprintf("unexpected aperture value '%s' in grid object", aperture_str))
+    }
+    aperture_num <- c(3L, 4L, 7L)[aperture_num]
     cell_ids <- cpp_lonlat_to_cell(lon_vec, lat_vec, res, aperture_num)
     centers <- cpp_cell_to_lonlat(cell_ids, res, aperture_num)
   }

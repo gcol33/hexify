@@ -50,6 +50,16 @@ Equal-area grids are directly applicable to:
 - Environmental monitoring and remote sensing aggregation
 - Any analysis requiring unbiased spatial binning
 
+## Why Hexagonal Grids?
+
+Hexagons tile the sphere with three properties that squares and triangles lack:
+
+1. **Equal area** — every cell covers the same surface area, from equator to pole
+2. **Uniform adjacency** — all six neighbors share an edge (no ambiguous diagonal neighbors)
+3. **Low shape distortion** — hexagons approximate circles better than any other regular polygon, minimizing edge effects in spatial statistics
+
+These properties make hexagonal grids the natural choice for unbiased spatial binning. Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.
+
 ## Features
 
 ### Core Workflow
@@ -184,6 +194,12 @@ ggplot(cell_polys) +
   scale_fill_viridis_c() +
   theme_minimal()
 ```
+
+## Known Limitations
+
+- **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4, 7, and mixed 4/3 up to resolution 30.
+- **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use `is_pentagon()` to detect them.
+- **Projection precision**: The inverse Snyder projection uses iterative Newton-Raphson convergence. Default precision is sufficient for sub-meter accuracy; use `hexify_set_precision()` to adjust the speed/accuracy trade-off.
 
 ## Documentation
 

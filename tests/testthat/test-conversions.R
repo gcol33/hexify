@@ -255,7 +255,7 @@ test_that("all apertures have consistent coordinate pipeline", {
 test_that("hexify_lonlat_to_quad_ij validates aperture", {
   expect_error(
     hexify_lonlat_to_quad_ij(lon = 0, lat = 0, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -273,7 +273,7 @@ test_that("hexify_lonlat_to_quad_ij validates resolution", {
 test_that("hexify_quad_ij_to_cell validates aperture", {
   expect_error(
     hexify_quad_ij_to_cell(quad = 0, i = 1, j = 1, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -287,7 +287,7 @@ test_that("hexify_quad_ij_to_cell validates resolution", {
 test_that("hexify_quad_ij_to_xy validates aperture", {
   expect_error(
     hexify_quad_ij_to_xy(quad = 1, i = 10, j = 5, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -300,7 +300,7 @@ test_that("hexify_icosa_tri_to_quad_ij validates aperture", {
       resolution = 5,
       aperture = 5
     ),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -322,7 +322,7 @@ test_that("hexify_cell_to_quad_ij returns correct structure", {
 test_that("hexify_cell_to_quad_ij validates aperture", {
   expect_error(
     hexify_cell_to_quad_ij(cell_id = 100, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -351,7 +351,7 @@ test_that("hexify_cell_to_icosa_tri returns correct structure", {
 test_that("hexify_cell_to_icosa_tri validates aperture", {
   expect_error(
     hexify_cell_to_icosa_tri(cell_id = 100, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -367,7 +367,7 @@ test_that("hexify_quad_ij_to_icosa_tri validates aperture", {
     hexify_quad_ij_to_icosa_tri(
       quad = 1, i = 10, j = 5, resolution = 5, aperture = 5
     ),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -398,7 +398,7 @@ test_that("hexify_cell_to_quad_xy returns correct structure", {
 test_that("hexify_cell_to_quad_xy validates aperture", {
   expect_error(
     hexify_cell_to_quad_xy(cell_id = 100, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -426,7 +426,7 @@ test_that("hexify_quad_xy_to_cell validates aperture", {
     hexify_quad_xy_to_cell(
       quad = 1, quad_x = 0.5, quad_y = 0.3, resolution = 5, aperture = 5
     ),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
@@ -487,7 +487,7 @@ test_that("hexify_cell_to_plane returns correct structure", {
 test_that("hexify_cell_to_plane validates aperture", {
   expect_error(
     hexify_cell_to_plane(cell_id = 100, resolution = 5, aperture = 5),
-    "3, 4, or 7"
+    "3, 4, 7"
   )
 })
 
