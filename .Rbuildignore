@@ -33,3 +33,4 @@
 ^theory-notes\.md$
 ^RELEASE_PLAN\.md$
 ^test_ap7.*\.R$
+^\.unrot$

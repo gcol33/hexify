@@ -85,16 +85,16 @@ cpp_test_roundtrip_ap3 <- function(icosa_triangle_x, icosa_triangle_y, resolutio
     .Call(`_hexify_cpp_test_roundtrip_ap3`, icosa_triangle_x, icosa_triangle_y, resolution)
 }
 
-cpp_test_roundtrip_ap34 <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
-    .Call(`_hexify_cpp_test_roundtrip_ap34`, icosa_triangle_x, icosa_triangle_y, ap_seq)
-}
-
 cpp_test_roundtrip_ap4 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {
     .Call(`_hexify_cpp_test_roundtrip_ap4`, icosa_triangle_x, icosa_triangle_y, resolution)
 }
 
 cpp_test_roundtrip_ap7 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {
     .Call(`_hexify_cpp_test_roundtrip_ap7`, icosa_triangle_x, icosa_triangle_y, resolution)
+}
+
+cpp_test_roundtrip_ap34 <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
+    .Call(`_hexify_cpp_test_roundtrip_ap34`, icosa_triangle_x, icosa_triangle_y, ap_seq)
 }
 
 cpp_batch_test_roundtrip_ap3 <- function(tx_vec, ty_vec, resolution) {

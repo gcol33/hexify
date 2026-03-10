@@ -291,19 +291,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_test_roundtrip_ap34
-bool cpp_test_roundtrip_ap34(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_test_roundtrip_ap34(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type icosa_triangle_x(icosa_triangle_xSEXP);
-    Rcpp::traits::input_parameter< double >::type icosa_triangle_y(icosa_triangle_ySEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_test_roundtrip_ap34(icosa_triangle_x, icosa_triangle_y, ap_seq));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_test_roundtrip_ap4
 bool cpp_test_roundtrip_ap4(double icosa_triangle_x, double icosa_triangle_y, int resolution);
 RcppExport SEXP _hexify_cpp_test_roundtrip_ap4(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP resolutionSEXP) {
@@ -327,6 +314,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type icosa_triangle_y(icosa_triangle_ySEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_test_roundtrip_ap7(icosa_triangle_x, icosa_triangle_y, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_test_roundtrip_ap34
+bool cpp_test_roundtrip_ap34(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_test_roundtrip_ap34(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type icosa_triangle_x(icosa_triangle_xSEXP);
+    Rcpp::traits::input_parameter< double >::type icosa_triangle_y(icosa_triangle_ySEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_test_roundtrip_ap34(icosa_triangle_x, icosa_triangle_y, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1327,9 +1327,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_lonlat_to_cell_ap34", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_ap34, 3},
     {"_hexify_cpp_cell_to_lonlat_ap34", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_ap34, 4},
     {"_hexify_cpp_test_roundtrip_ap3", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap3, 3},
-    {"_hexify_cpp_test_roundtrip_ap34", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap34, 3},
     {"_hexify_cpp_test_roundtrip_ap4", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap4, 3},
     {"_hexify_cpp_test_roundtrip_ap7", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap7, 3},
+    {"_hexify_cpp_test_roundtrip_ap34", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap34, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap3", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap3, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap4", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap4, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap7", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap7, 3},
