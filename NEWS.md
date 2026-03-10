@@ -1,4 +1,4 @@
-# hexify 0.8.0
+# hexify 0.7.1
 
 **Code quality and documentation**
 
