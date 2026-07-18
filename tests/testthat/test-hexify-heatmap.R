@@ -16,6 +16,8 @@ test_that("hexify_heatmap creates ggplot object", {
   p <- hexify_heatmap(result)
 
   expect_s3_class(p, "ggplot")
+  expect_s3_class(p$layers[[1]]$geom, "GeomSf")
+  expect_true(nrow(p$layers[[1]]$data) > 0)
 })
 
 test_that("hexify_heatmap works with value column", {
@@ -32,6 +34,9 @@ test_that("hexify_heatmap works with value column", {
   p <- hexify_heatmap(result, value = "count")
 
   expect_s3_class(p, "ggplot")
+  # The fill aesthetic must actually reference the requested column, not just
+  # produce *a* plot.
+  expect_identical(rlang::as_label(p$layers[[1]]$mapping$fill), "count")
 })
 
 test_that("hexify_heatmap works with basemap = 'world'", {
@@ -81,6 +86,10 @@ test_that("hexify_heatmap works with discrete values", {
   p <- hexify_heatmap(result, value = "category")
 
   expect_s3_class(p, "ggplot")
+  expect_identical(rlang::as_label(p$layers[[1]]$mapping$fill), "category")
+  # A discrete value column must produce a discrete (not continuous) scale.
+  fill_scale <- Filter(function(s) identical(s$aesthetics, "fill"), p$scales$scales)[[1]]
+  expect_s3_class(fill_scale, "ScaleDiscrete")
 })
 
 test_that("hexify_heatmap works with custom colors vector", {
@@ -98,6 +107,11 @@ test_that("hexify_heatmap works with custom colors vector", {
                       colors = c("blue", "white", "red"))
 
   expect_s3_class(p, "ggplot")
+  fill_scale <- Filter(function(s) identical(s$aesthetics, "fill"), p$scales$scales)[[1]]
+  # The gradient's endpoints must actually be the requested colors, not the
+  # default viridis palette.
+  ends <- fill_scale$palette(c(0, 1))
+  expect_equal(toupper(ends), c("#0000FF", "#FF0000"))
 })
 
 test_that("hexify_heatmap works with breaks", {
@@ -116,6 +130,13 @@ test_that("hexify_heatmap works with breaks", {
                       labels = c("Low", "Medium", "High"))
 
   expect_s3_class(p, "ggplot")
+  expect_identical(rlang::as_label(p$layers[[1]]$mapping$fill), "value_bin")
+  expect_identical(levels(p$layers[[1]]$data[["value_bin"]]), c("Low", "Medium", "High"))
+  # Bin membership must match the supplied breaks, not just have 3 levels.
+  expect_identical(
+    as.character(p$layers[[1]]$data[["value_bin"]][order(p$layers[[1]]$data$value)]),
+    c("Low", "Medium", "High")
+  )
 })
 
 test_that("hexify_heatmap works with breaks (auto labels)", {
@@ -134,6 +155,11 @@ test_that("hexify_heatmap works with breaks (auto labels)", {
                       breaks = c(-Inf, 15, 25, Inf))
 
   expect_s3_class(p, "ggplot")
+  bin_levels <- levels(p$layers[[1]]$data[["value_bin"]])
+  expect_length(bin_levels, 3)
+  # Auto-labels must be distinct and non-empty, not e.g. all "NA" or blank.
+  expect_false(anyNA(bin_levels))
+  expect_length(unique(bin_levels), 3)
 })
 
 test_that("hexify_heatmap works with xlim and ylim", {
@@ -151,6 +177,8 @@ test_that("hexify_heatmap works with xlim and ylim", {
                       ylim = c(40, 60))
 
   expect_s3_class(p, "ggplot")
+  expect_equal(p$coordinates$limits$x, c(-10, 20))
+  expect_equal(p$coordinates$limits$y, c(40, 60))
 })
 
 test_that("hexify_heatmap works with title", {
@@ -163,6 +191,7 @@ test_that("hexify_heatmap works with title", {
   p <- hexify_heatmap(result, title = "Test Title")
 
   expect_s3_class(p, "ggplot")
+  expect_identical(p$labels$title, "Test Title")
 })
 
 test_that("hexify_heatmap works with legend_title", {
@@ -179,6 +208,14 @@ test_that("hexify_heatmap works with legend_title", {
   p <- hexify_heatmap(result, value = "value", legend_title = "Custom Legend")
 
   expect_s3_class(p, "ggplot")
+  fill_scale <- Filter(function(s) identical(s$aesthetics, "fill"), p$scales$scales)[[1]]
+  expect_identical(fill_scale$name, "Custom Legend")
+
+  # Default (no legend_title) falls back to the value column name.
+  p_default <- hexify_heatmap(result, value = "value")
+  fill_scale_default <- Filter(function(s) identical(s$aesthetics, "fill"),
+                                p_default$scales$scales)[[1]]
+  expect_identical(fill_scale_default$name, "value")
 })
 
 test_that("hexify_heatmap works with mask_outside", {
@@ -195,8 +232,15 @@ test_that("hexify_heatmap works with mask_outside", {
   p <- suppressMessages(hexify_heatmap(result,
                                         basemap = "world",
                                         mask_outside = TRUE))
+  p_unmasked <- suppressMessages(hexify_heatmap(result, basemap = "world"))
 
   expect_s3_class(p, "ggplot")
+  # Masking to land must actually change the hex layer's geometry, not just
+  # produce a plot with the same unmasked data.
+  expect_false(isTRUE(all.equal(
+    sf::st_area(p$layers[[1]]$data),
+    sf::st_area(p_unmasked$layers[[1]]$data)
+  )))
 })
 
 test_that("hexify_heatmap works with theme_void = FALSE", {
@@ -207,8 +251,11 @@ test_that("hexify_heatmap works with theme_void = FALSE", {
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
 
   p <- hexify_heatmap(result, theme_void = FALSE)
+  p_void <- hexify_heatmap(result, theme_void = TRUE)
 
   expect_s3_class(p, "ggplot")
+  # The two themes must actually differ, not both fall back to one default.
+  expect_false(identical(p$theme$axis.text.x, p_void$theme$axis.text.x))
 })
 
 test_that("hexify_heatmap errors on invalid value column", {
@@ -244,6 +291,10 @@ test_that("hexify_heatmap works with custom styling", {
                       hex_alpha = 0.5)
 
   expect_s3_class(p, "ggplot")
+  params <- p$layers[[1]]$aes_params
+  expect_identical(params$colour, "blue")
+  expect_equal(params$linewidth, 1.5)
+  expect_equal(params$alpha, 0.5)
 })
 
 test_that("hexify_heatmap works with CRS transformation", {
@@ -261,6 +312,7 @@ test_that("hexify_heatmap works with CRS transformation", {
   p <- suppressWarnings(hexify_heatmap(result, crs = 3035))
 
   expect_s3_class(p, "ggplot")
+  expect_equal(sf::st_crs(p$layers[[1]]$data)$epsg, 3035)
 })
 
 test_that("hexify_heatmap auto-detects count column", {
@@ -278,6 +330,7 @@ test_that("hexify_heatmap auto-detects count column", {
   p <- hexify_heatmap(result)
 
   expect_s3_class(p, "ggplot")
+  expect_identical(rlang::as_label(p$layers[[1]]$mapping$fill), "count")
 })
 
 test_that("hexify_heatmap auto-detects n column", {
@@ -295,6 +348,7 @@ test_that("hexify_heatmap auto-detects n column", {
   p <- hexify_heatmap(result)
 
   expect_s3_class(p, "ggplot")
+  expect_identical(rlang::as_label(p$layers[[1]]$mapping$fill), "n")
 })
 
 # =============================================================================

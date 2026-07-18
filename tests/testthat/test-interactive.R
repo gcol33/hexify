@@ -25,6 +25,18 @@ test_that("hex_browse with value column works", {
   hd <- hexify(df, lon = "lon", lat = "lat", area_km2 = 2000)
   m <- hex_browse(hd, value = "temp")
   expect_true(inherits(m, "leaflet"))
+
+  # The value= mapping must actually reach the widget's polygon fill colors
+  # (not just build *a* map): fillColor should vary across cells, and a map
+  # built without value= should use the flat default fill instead.
+  poly_call <- Filter(function(c) c$method == "addPolygons", m$x$calls)[[1]]
+  fill_colors <- poly_call$args[[4]]$fillColor
+  expect_length(fill_colors, nrow(as.data.frame(hd)))
+  expect_gt(length(unique(fill_colors)), 1)
+
+  m_default <- hex_browse(hd)
+  poly_call_default <- Filter(function(c) c$method == "addPolygons", m_default$x$calls)[[1]]
+  expect_identical(poly_call_default$args[[4]]$fillColor, "#3388ff")
 })
 
 test_that("hex_browse errors without leaflet", {
