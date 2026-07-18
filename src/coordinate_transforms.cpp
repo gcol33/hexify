@@ -739,6 +739,87 @@ void quad_ij_to_xy(int quad, long long i, long long j,
     out_quad_y = y / scale;
 }
 
+// Shared scale/class computation for the mixed 4/3 substrate: 2x per
+// aperture-4 level, sqrt(3)x per aperture-3 level, mirroring
+// calc_grid_params_ap43()'s cell-count formula in rcpp_cell.cpp
+// (N = 10*4^level*3^(res-level)+2) so the quantized (i,j) match the grid
+// that formula describes rather than a pure aperture-3 approximation.
+namespace {
+void ap43_scale_and_class(int resolution, int mixed_aperture_level,
+                           double& out_scale, bool& out_use_class2) {
+    double scale = 1.0;
+    int ap3_count = 0;
+    for (int r = 1; r <= resolution; r++) {
+        if (r <= mixed_aperture_level) {
+            scale *= 2.0;
+        } else {
+            scale *= kSqrt3;
+            ap3_count++;
+        }
+    }
+    out_scale = scale;
+    out_use_class2 = (ap3_count % 2) == 1;
+}
+} // anonymous namespace
+
+void quad_xy_to_ij_ap43(int quad, double quad_x, double quad_y,
+                        int resolution, int mixed_aperture_level,
+                        int& out_quad, long long& out_i, long long& out_j) {
+    double scale;
+    bool use_class2;
+    ap43_scale_and_class(resolution, mixed_aperture_level, scale, use_class2);
+
+    double scaled_x = quad_x * scale;
+    double scaled_y = quad_y * scale;
+
+    if (use_class2) {
+        quantize_class2(scaled_x, scaled_y, out_i, out_j);
+    } else {
+        quantize_class1(scaled_x, scaled_y, out_i, out_j);
+    }
+
+    out_quad = quad;
+
+    // Class II quantization internally re-quantizes on a substrate that's
+    // sqrt(3)x finer than `scale` (see quantize_class2()), so the grid's
+    // true edge coordinate needs that same factor -- matching
+    // calc_max_grid_dim_ap43()'s "use_offset" boost in rcpp_cell.cpp.
+    double edge_scale = use_class2 ? scale * kSqrt3 : scale;
+    long long edge_coord = static_cast<long long>(edge_scale + 1e-9);
+
+    // quantize_class2()'s internal rotate/requantize chain can overshoot the
+    // predicted edge_coord by a tie-breaking unit near a quad boundary
+    // (floating-point kSqrt3*kSqrt3 isn't exactly 3.0); handle_upper_edge()/
+    // handle_lower_edge() below only match on exact equality, so clamp any
+    // overshoot back onto the boundary they expect.
+    if (out_i > edge_coord) out_i = edge_coord;
+    if (out_j > edge_coord) out_j = edge_coord;
+
+    if ((out_i == edge_coord || out_j == edge_coord) && out_quad >= 1 && out_quad <= 10) {
+        const QuadAdjacency& adj = kQuadAdjacency[out_quad];
+        if (adj.is_upper) {
+            handle_upper_edge(out_quad, out_i, out_j, edge_coord, adj);
+        } else {
+            handle_lower_edge(out_quad, out_i, out_j, edge_coord, adj);
+        }
+    }
+}
+
+void quad_ij_to_xy_ap43(int quad, long long i, long long j,
+                        int resolution, int mixed_aperture_level,
+                        double& out_quad_x, double& out_quad_y) {
+    double x, y;
+    inv_quantize_class1(i, j, x, y);
+
+    double scale;
+    bool use_class2;
+    ap43_scale_and_class(resolution, mixed_aperture_level, scale, use_class2);
+    double effective_scale = use_class2 ? scale * kSqrt3 : scale;
+
+    out_quad_x = x / effective_scale;
+    out_quad_y = y / effective_scale;
+}
+
 // ============================================================================
 // vertTable - Derived from First Principles
 // ============================================================================

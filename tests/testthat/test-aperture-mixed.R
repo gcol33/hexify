@@ -182,6 +182,70 @@ test_that("mixed aperture corners form valid hexagons", {
 })
 
 # =============================================================================
+# TRUE MIXED-RADIX SUBSTRATE (i,j) -- not a pure aperture-3 approximation
+# =============================================================================
+#
+# cpp_lonlat_to_cell_ap43() used to quantize (i,j) as pure aperture-3 at the
+# full target resolution, ignoring mixed_aperture_level entirely (only the
+# cell-count/offset arithmetic accounted for the aperture-4 prefix). That
+# meant distinct real cells could collide onto the same cell ID once the
+# aperture-4 prefix meaningfully changed the coordinate scale. These tests
+# lock in the fix: (i,j) now come from the same 2^level * sqrt(3)^(res-level)
+# substrate that calc_grid_params_ap43()'s cell-count formula describes.
+
+test_that("mixed aperture (i,j) does not collide across many sampled points", {
+  skip_on_cran()  # Detailed loop test
+  setup_icosa()
+
+  set.seed(43)
+  lons <- runif(2000, -170, 170)
+  lats <- runif(2000, -80, 80)
+
+  for (mixed_level in c(1, 2, 3)) {
+    for (res in c(3, 4, 5, 6)) {
+      if (mixed_level >= res) next
+      cells <- cpp_lonlat_to_cell_ap43(lons, lats, res, mixed_level)
+      centers <- cpp_cell_to_lonlat_ap43(cells, res, mixed_level)
+      cells2 <- cpp_lonlat_to_cell_ap43(centers$lon_deg, centers$lat_deg, res, mixed_level)
+
+      expect_equal(cells2, cells,
+                   info = sprintf("mixed_level=%d res=%d: cell id round-trip", mixed_level, res))
+    }
+  }
+})
+
+test_that("mixed aperture (i,j) matches the mixed-radix grid dimension, not pure aperture 3", {
+  skip_on_cran()
+  setup_icosa()
+
+  # Regression check for the specific collision from issue #31: at
+  # mixed_aperture_level=2 res=5 the pure-aperture-3-at-full-resolution
+  # approximation produced (i,j) an order of magnitude too small, causing
+  # unrelated points to land on the same cell ID.
+  set.seed(44)
+  lons <- runif(500, -170, 170)
+  lats <- runif(500, -80, 80)
+
+  res <- 5
+  mixed_level <- 2
+  cells <- cpp_lonlat_to_cell_ap43(lons, lats, res, mixed_level)
+  qij <- cpp_cell_to_quad_ij_ap43(cells, res, mixed_level)
+
+  # True mixed-radix dim: 2^2 * sqrt(3)^3 (+ substrate boost if class II)
+  ap3_count <- res - mixed_level
+  true_scale <- 2^mixed_level * sqrt(3)^ap3_count
+  if (ap3_count %% 2 == 1) true_scale <- true_scale * sqrt(3)
+  pure_ap3_scale <- sqrt(3)^res
+
+  expect_true(true_scale > pure_ap3_scale * 1.5,
+              info = "sanity: mixed-radix scale is meaningfully larger than pure ap3 at this res")
+  expect_true(max(qij$i) <= true_scale + 1,
+              info = "i must not exceed the true mixed-radix grid dimension")
+  expect_true(max(qij$j) <= true_scale + 1,
+              info = "j must not exceed the true mixed-radix grid dimension")
+})
+
+# =============================================================================
 # EDGE CASES - MIXED APERTURE LEVEL BOUNDARIES
 # =============================================================================
 

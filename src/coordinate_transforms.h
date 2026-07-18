@@ -114,6 +114,24 @@ void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
                                   double& out_quad_x, double& out_quad_y);
 
+// Mixed aperture 4/3 (ISEA43H): quad XY -> quad IJ.
+// Uses aperture 4 for the first mixed_aperture_level resolutions and
+// aperture 3 for the remaining resolutions, matching the cell-count formula
+// in calc_grid_params_ap43() (rcpp_cell.cpp): N = 10*4^level*3^(res-level)+2.
+// Unlike icosa_tri_to_quad_ij(), which only supports a single pure aperture,
+// this scales by the compounded 2^level * sqrt(3)^(res-level) factor so the
+// returned (i,j) are on the grid's actual mixed-radix substrate rather than
+// a pure aperture-3 approximation.
+void quad_xy_to_ij_ap43(int quad, double quad_x, double quad_y,
+                        int resolution, int mixed_aperture_level,
+                        int& out_quad, long long& out_i, long long& out_j);
+
+// Mixed aperture 4/3 (ISEA43H): quad IJ -> quad XY (inverse of
+// quad_xy_to_ij_ap43()).
+void quad_ij_to_xy_ap43(int quad, long long i, long long j,
+                        int resolution, int mixed_aperture_level,
+                        double& out_quad_x, double& out_quad_y);
+
 } // namespace hexify
 
 #endif // HEXIFY_COORDINATE_TRANSFORMS_H

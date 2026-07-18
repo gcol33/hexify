@@ -1248,36 +1248,18 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
     // Check if using offset grid
     bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
 
-    // Build aperture sequence for icosa_tri_to_quad_ij
-    // Need resolution+1 entries (one for each level from 0 to resolution)
-    std::vector<int> ap_seq(resolution + 1);
-    for (int r = 0; r <= resolution; r++) {
-        ap_seq[r] = (r < mixed_aperture_level) ? 4 : 3;
-    }
-
-    // Note: icosa_tri_to_quad_ij currently doesn't support mixed aperture sequences
-    // We use aperture=3 with adjusted resolution for the Quad IJ conversion
-    // This is a simplification that works because the final grid class
-    // depends only on the number of aperture-3 levels
-
     for (int k = 0; k < n; k++) {
-        // Get Quad IJ coordinates using equivalent pure aperture-3 calculation
         hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
+
+        int quad_pre;
+        double quad_x, quad_y;
+        hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
+                                     quad_pre, quad_x, quad_y);
 
         int quad;
         long long i, j;
-
-        // Use the mixed aperture quantization directly
-        // The icosa_tri_to_quad_ij function handles the aperture sequence
-        // For now, we approximate using pure aperture 3 with adjusted resolution
-        // This gives correct cell assignments but may need refinement
-
-        // Calculate equivalent "effective resolution" for aperture 3
-        // Each aperture-4 level is equivalent to ~1.26 aperture-3 levels (log(4)/log(3))
-        // But for grid structure, we use the actual mixed calculation
-
-        hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y, 3, resolution,
-                                     quad, i, j);
+        hexify::quad_xy_to_ij_ap43(quad_pre, quad_x, quad_y, resolution, mixed_aperture_level,
+                                    quad, i, j);
 
         // Calculate cell ID offset within quad
         uint64_t offset = 0;
@@ -1331,9 +1313,8 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
                         quad, i, j);
 
         // Convert quad IJ to lon/lat via quad_xy -> icosa triangle -> lon/lat
-        // Use aperture 3 for the coordinate conversion (structure is similar)
         double quad_x, quad_y;
-        hexify::quad_ij_to_xy(quad, i, j, 3, resolution, quad_x, quad_y);
+        hexify::quad_ij_to_xy_ap43(quad, i, j, resolution, mixed_aperture_level, quad_x, quad_y);
 
         int icosa_triangle_face;
         double icosa_triangle_x, icosa_triangle_y;
@@ -1347,6 +1328,43 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
     return DataFrame::create(
         _["lon_deg"] = lon,
         _["lat_deg"] = lat
+    );
+}
+
+// [[Rcpp::export]]
+DataFrame cpp_cell_to_quad_ij_ap43(NumericVector cell_id, int resolution,
+                                    int mixed_aperture_level) {
+    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
+        stop("cpp_cell_to_quad_ij_ap43: mixed_aperture_level must be between 0 and resolution");
+    }
+
+    int n = cell_id.size();
+    IntegerVector out_quad(n);
+    NumericVector out_i(n);
+    NumericVector out_j(n);
+
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
+    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
+    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+
+    for (int k = 0; k < n; k++) {
+        int quad;
+        long long i, j;
+        // aperture=3 here is a placeholder for decode_cell_id's ap7 branch,
+        // which mixed-aperture (4/3) grids never take.
+        decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
+                        nCells, use_offset, /*handle_ap7_south_pole=*/false,
+                        quad, i, j);
+        out_quad[k] = quad;
+        out_i[k] = static_cast<double>(i);
+        out_j[k] = static_cast<double>(j);
+    }
+
+    return DataFrame::create(
+        _["quad"] = out_quad,
+        _["i"] = out_i,
+        _["j"] = out_j
     );
 }
 
