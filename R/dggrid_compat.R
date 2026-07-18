@@ -30,6 +30,16 @@
 #' @export
 as_dggrid <- function(grid) {
 
+  # Accept the modern HexGridInfo (S4) object by converting to the legacy
+  # list representation this function builds from, matching dgverify()'s
+  # fix (#7) for the same gap.
+  if (is_hex_grid(grid)) {
+    if (grid@grid_type == "h3") {
+      stop("as_dggrid() has no dggridR-compatible representation for H3 grids")
+    }
+    grid <- HexGridInfo_to_hexify_grid(grid)
+  }
+
   if (!inherits(grid, "hexify_grid")) {
     stop("grid must be a hexify_grid object from hexify_grid()")
   }
@@ -107,9 +117,12 @@ from_dggrid <- function(dggs) {
     warning("Non-default azimuth_deg not supported. Using standard ISEA orientation.")
   }
 
-  # Create hexify_grid
+  # Create hexify_grid. `area` is a throwaway placeholder -- both `resolution`
+  # and `area` are overwritten below from `dggs$res` directly, but
+  # hexify_grid() requires a valid positive area (see #43) to construct the
+  # object at all.
   hexify_grid(
-    area = NA,  # Will be calculated from resolution if needed
+    area = 1000,
     topology = "HEXAGON",
     metric = TRUE,
     resround = "nearest",

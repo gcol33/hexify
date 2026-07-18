@@ -180,14 +180,18 @@ setValidity("HexData", function(object) {
     }
   }
 
-  # Check cell_id length matches data rows
+  # Check cell_id length matches data rows. `length(cell_id) != n_rows` alone
+  # already correctly allows the valid empty-prototype case (0 != 0 is
+  # FALSE), so no extra "> 0" guard is needed -- and such a guard would hide
+  # exactly the corrupt case this check exists to catch (data has rows but
+  # cell_id is empty).
   n_rows <- nrow(object@data)
-  if (length(object@cell_id) != n_rows && length(object@cell_id) > 0) {
+  if (length(object@cell_id) != n_rows) {
     errors <- c(errors, "cell_id length must match number of data rows")
   }
 
-  # Check cell_center dimensions
-  if (nrow(object@cell_center) != n_rows && nrow(object@cell_center) > 0) {
+  # Check cell_center dimensions (same reasoning as cell_id above)
+  if (nrow(object@cell_center) != n_rows) {
     errors <- c(errors, "cell_center rows must match number of data rows")
   }
   if (ncol(object@cell_center) != 2 && nrow(object@cell_center) > 0) {

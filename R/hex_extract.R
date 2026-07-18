@@ -7,7 +7,7 @@
 #' [hex_zonal()] because it only queries cell center points, not full
 #' polygons.
 #'
-#' @param raster A `terra::SpatRaster` or `stars` object.
+#' @param raster A `terra::SpatRaster` object.
 #' @param grid A HexGridInfo or HexData object specifying the grid.
 #' @param cells Optional cell IDs to extract. If `NULL` (default), extracts
 #'   at all cell centers from `grid` (only works for HexData objects or
@@ -53,19 +53,24 @@ hex_extract <- function(raster, grid, cells = NULL, boundary = NULL) {
 
   g <- extract_grid(grid)
 
-  # Get cell centers
-  if (is_hex_data(grid)) {
-    cell_ids <- grid@cell_id
-    centers <- grid@cell_center
-  } else if (!is.null(boundary)) {
-    # Generate cells within boundary
-    cell_data <- grid_clip(g, boundary)
-    cell_ids <- cell_data$cell_id
-    centers <- cbind(lon = cell_data$lon, lat = cell_data$lat)
-  } else if (!is.null(cells)) {
+  # Get cell centers. `cells`/`boundary`, when supplied, take precedence over
+  # a HexData grid's own already-assigned cells (matching hex_zonal()) --
+  # otherwise they'd be silently ignored whenever `grid` is a HexData object.
+  if (!is.null(cells)) {
     cell_ids <- cells
     ll <- cell_to_lonlat(cells, g)
     centers <- cbind(lon = ll$lon_deg, lat = ll$lat_deg)
+  } else if (!is.null(boundary)) {
+    # Generate cells within boundary. grid_clip() returns polygon geometries
+    # (a cell_id column, no lon/lat), so cell centers are recomputed the same
+    # way as the 'cells' branch above.
+    cell_data <- grid_clip(boundary, g)
+    cell_ids <- cell_data$cell_id
+    ll <- cell_to_lonlat(cell_ids, g)
+    centers <- cbind(lon = ll$lon_deg, lat = ll$lat_deg)
+  } else if (is_hex_data(grid)) {
+    cell_ids <- grid@cell_id
+    centers <- grid@cell_center
   } else {
     stop("Provide a HexData object, cell IDs via 'cells', or a 'boundary' polygon")
   }

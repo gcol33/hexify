@@ -74,8 +74,22 @@ hex_browse <- function(hex_data, grid = NULL, value = NULL,
   } else if (is.data.frame(hex_data)) {
     if (is.null(grid)) stop("grid is required when hex_data is a data.frame")
     g <- extract_grid(grid)
-    cell_df <- hex_data
+    if (!"cell_id" %in% names(hex_data)) {
+      stop("hex_data must have a 'cell_id' column")
+    }
+    # Duplicate cell_id rows are collapsed to their first occurrence --
+    # cell_to_sf() dedupes internally below, and cell_df's columns are
+    # attached to hex_sf by row position afterward, so unresolved duplicates
+    # would misalign the attached data or crash on the row-count mismatch.
+    cell_df <- hex_data[!duplicated(hex_data$cell_id), , drop = FALSE]
     cell_ids <- cell_df$cell_id
+    # The popup text below needs cell centers; the data.frame input mode
+    # doesn't require the caller to supply them.
+    if (!all(c("cell_cen_lon", "cell_cen_lat") %in% names(cell_df))) {
+      ll <- cell_to_lonlat(cell_ids, g)
+      cell_df$cell_cen_lon <- ll$lon_deg
+      cell_df$cell_cen_lat <- ll$lat_deg
+    }
   } else {
     stop("hex_data must be a HexData object or data.frame with cell_id column")
   }
@@ -83,7 +97,10 @@ hex_browse <- function(hex_data, grid = NULL, value = NULL,
   # Generate polygons
   hex_sf <- cell_to_sf(cell_ids, g)
 
-  # Attach data to sf
+  # Attach data to sf by cell_id key rather than assuming row-position
+  # alignment (cell_to_sf() dedupes/may reorder internally).
+  cell_df <- cell_df[match(hex_sf$cell_id, cell_df$cell_id), , drop = FALSE]
+  cell_ids <- cell_df$cell_id
   for (col in names(cell_df)) {
     if (col != "cell_id") {
       hex_sf[[col]] <- cell_df[[col]]

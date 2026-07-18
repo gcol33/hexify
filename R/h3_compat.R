@@ -111,6 +111,15 @@ import_h3 <- function(cell_ids, data = NULL, validate = TRUE) {
     ))
   }
 
+  # Drop NA cell_id rows, mirroring hexify()'s NA-coordinate handling --
+  # otherwise they'd silently survive into the HexData object with
+  # cell_id = NA / cell_center = c(NaN, NaN).
+  if (any(!non_na)) {
+    warning(sprintf("%d cell ID(s) are NA and will be skipped", sum(!non_na)))
+    data <- data[non_na, , drop = FALSE]
+    cell_ids <- valid_ids
+  }
+
   # Get cell centers for HexData
   centers <- cpp_h3_cellToLatLng(cell_ids)
   cell_center <- cbind(lon = centers$lon, lat = centers$lat)

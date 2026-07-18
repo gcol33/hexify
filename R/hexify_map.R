@@ -325,6 +325,12 @@ prepare_fill_column <- function(hex_sf, value, breaks, labels) {
   value_data <- hex_sf[[value]]
   is_discrete <- is.factor(value_data) || is.character(value_data)
 
+  if (!is.null(breaks) && is_discrete) {
+    warning(sprintf(
+      "'breaks' is ignored because '%s' is discrete (factor/character)", value
+    ))
+  }
+
   if (is.null(breaks) || is_discrete) {
     return(list(data = hex_sf, fill_col = value, is_discrete = is_discrete))
   }

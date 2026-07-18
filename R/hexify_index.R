@@ -41,6 +41,8 @@
 hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_resolution(resolution)
+  validate_aperture(aperture)
   cpp_cell_to_index(
     as.integer(face), as.numeric(i), as.numeric(j),
     as.integer(resolution), as.integer(aperture), index_type
@@ -65,6 +67,7 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
 hexify_index_to_cell <- function(index, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_aperture(aperture)
   cpp_index_to_cell(as.character(index), as.integer(aperture), index_type)
 }
 
@@ -88,6 +91,8 @@ hexify_index_to_cell <- function(index, aperture = 3L,
 hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
                                     index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_resolution(resolution)
+  validate_aperture(aperture)
   cpp_lonlat_to_index(lon, lat, as.integer(resolution),
                       as.integer(aperture), index_type)
 }
@@ -110,6 +115,7 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
 hexify_index_to_lonlat <- function(index, aperture = 3L,
                                     index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_aperture(aperture)
   cpp_index_to_lonlat(as.character(index), as.integer(aperture), index_type)
 }
 
@@ -133,6 +139,7 @@ hexify_index_to_lonlat <- function(index, aperture = 3L,
 hexify_get_parent <- function(index, aperture = 3L,
                                index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_aperture(aperture)
   cpp_get_parent_index(as.character(index), as.integer(aperture), index_type)
 }
 
@@ -152,6 +159,7 @@ hexify_get_parent <- function(index, aperture = 3L,
 hexify_get_children <- function(index, aperture = 3L,
                                  index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_aperture(aperture)
   cpp_get_children_indices(as.character(index), as.integer(aperture), index_type)
 }
 
@@ -171,6 +179,7 @@ hexify_get_children <- function(index, aperture = 3L,
 hexify_get_resolution <- function(index, aperture = 3L,
                                    index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
+  validate_aperture(aperture)
   cpp_get_index_resolution(as.character(index), as.integer(aperture), index_type)
 }
 

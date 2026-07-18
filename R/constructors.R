@@ -108,6 +108,10 @@ hex_grid <- function(area_km2 = NULL,
 
   type <- match.arg(type)
 
+  if (!is.numeric(crs) || length(crs) != 1 || is.na(crs)) {
+    stop("crs must be a single non-NA integer (EPSG code)")
+  }
+
   # =========================================================================
   # H3 grid path
   # =========================================================================
@@ -135,6 +139,9 @@ hex_grid <- function(area_km2 = NULL,
         resolution, H3_AVG_AREA_KM2[resolution + 1L], area_km2
       ))
     } else {
+      if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
+        stop("resolution must be a single non-NA number")
+      }
       resolution <- as.integer(resolution)
       if (resolution < H3_MIN_RESOLUTION || resolution > H3_MAX_RESOLUTION) {
         stop(sprintf("H3 resolution must be between %d and %d",
@@ -208,6 +215,9 @@ hex_grid <- function(area_km2 = NULL,
     # Clamp to valid range
     resolution <- max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
   } else {
+    if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
+      stop("resolution must be a single non-NA number")
+    }
     resolution <- as.integer(resolution)
     if (resolution < MIN_RESOLUTION || resolution > MAX_RESOLUTION) {
       stop(sprintf("Resolution must be between %d and %d",

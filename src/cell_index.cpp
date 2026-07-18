@@ -74,7 +74,13 @@ std::string cell_to_index(int face, long long i, long long j,
   if (aperture == 7 && resolution > MAX_RES_AP7) {
     throw std::runtime_error("hex_index: resolution exceeds max for aperture 7");
   }
-  
+  if (aperture == 3 && resolution > MAX_RES_AP3) {
+    throw std::runtime_error("hex_index: resolution exceeds max for aperture 3");
+  }
+  if (aperture == 4 && resolution > MAX_RES_AP4) {
+    throw std::runtime_error("hex_index: resolution exceeds max for aperture 4");
+  }
+
   if (index_type == IndexType::AUTO) {
     index_type = get_default_index_type(aperture);
   }

@@ -83,11 +83,15 @@ hexify_grid <- function(area,
   }
   
   validate_aperture(aperture)
-  
+
   if (!resround %in% c("nearest", "up", "down")) {
     stop("resround must be 'nearest', 'up', or 'down'")
   }
-  
+
+  if (!is.numeric(area) || length(area) != 1 || is.na(area) || area <= 0) {
+    stop("area must be a positive number")
+  }
+
   # Calculate resolution for target area
   resolution <- calculate_resolution_for_area(area, aperture)
   

@@ -208,7 +208,13 @@ resolve_center <- function(center) {
     if (is.null(names(center))) {
       return(c(lon = center[1], lat = center[2]))
     }
-    return(center)
+    if (!setequal(names(center), c("lon", "lat"))) {
+      stop(sprintf(
+        "center must be named c(lon = ..., lat = ...); got names: %s",
+        paste(names(center), collapse = ", ")
+      ))
+    }
+    return(center[c("lon", "lat")])
   }
 
   stop("center must be a preset name or numeric c(lon, lat)")
@@ -442,6 +448,10 @@ prepare_land_data <- function(land_data, exclude_antarctica, crs_string, ocean_c
       land_data <- land_data[land_data$name != "Antarctica", ]
     } else if ("NAME" %in% names(land_data)) {
       land_data <- land_data[land_data$NAME != "Antarctica", ]
+    } else {
+      warning("exclude_antarctica = TRUE but land_data has none of the ",
+              "recognized country-name columns ('sovereignt', 'name', 'NAME'); ",
+              "Antarctica was not excluded.")
     }
   }
 

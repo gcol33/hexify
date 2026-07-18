@@ -7,7 +7,7 @@
 hex_extract(raster, grid, cells = NULL, boundary = NULL)
 }
 \arguments{
-\item{raster}{A \code{terra::SpatRaster} or \code{stars} object.}
+\item{raster}{A \code{terra::SpatRaster} object.}
 
 \item{grid}{A HexGridInfo or HexData object specifying the grid.}
 
