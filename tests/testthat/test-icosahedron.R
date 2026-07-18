@@ -41,9 +41,33 @@ test_that("face_centers returns 20 faces with valid coordinates", {
   expect_true(all(is.finite(centers$lon)))
   expect_true(all(is.finite(centers$lat)))
 
-  # Valid coordinate ranges
-  expect_true(all(centers$lon >= -180 & centers$lon <= 180))
-  expect_true(all(centers$lat >= -90 & centers$lat <= 90))
+  # hexify_face_centers() returns radians; valid range is [-pi, pi] / [-pi/2, pi/2]
+  expect_true(all(centers$lon >= -pi & centers$lon <= pi))
+  expect_true(all(centers$lat >= -pi / 2 & centers$lat <= pi / 2))
+})
+
+test_that("face_centers returns the exact standard ISEA orientation", {
+  # The 20 icosahedron face centers are a fixed, closed-form geometric
+  # structure for the default ISEA3H orientation (pole_lon=11.25,
+  # pole_lat=58.28252559, azimuth=0) - not just "some finite value".
+  hexify_build_icosa()
+  centers <- hexify_face_centers()
+
+  expected_lon <- c(
+    -1.3744467860, -0.5890486226, 0.1963495408, 0.9817477043, 1.7671458677,
+    -2.1598449437, -1.0095829578, 0.1963495479, 1.4022820395, 2.5525440367,
+    -1.7393106141, -0.5890486168, 0.9817477099, 2.1320096958, -2.9452431057,
+    -2.1598449424, -1.3744467859, 1.7671458676, 2.5525440380, -2.9452431041
+  )
+  expected_lat <- c(
+    1.2059324925, 0.6154797087, 0.3648638281, 0.6154797087, 1.2059325048,
+    0.6154797060, 0.0000000000, -0.3648638281, 0.0000000000, 0.6154797113,
+    -0.0000000000, -0.6154797113, -0.6154797060, -0.0000000000, 0.3648638281,
+    -0.6154797054, -1.2059324973, -1.2059325001, -0.6154797120, -0.3648638281
+  )
+
+  expect_equal(centers$lon, expected_lon, tolerance = 1e-8)
+  expect_equal(centers$lat, expected_lat, tolerance = 1e-8)
 })
 
 test_that("face centers span the globe", {
@@ -136,16 +160,17 @@ test_that("which_face matches reference data", {
 # FACE CENTER CONSISTENCY
 # =============================================================================
 
-test_that("face center detection returns valid faces", {
+test_that("face center detection returns the originating face", {
+  # hexify_face_centers() returns radians; hexify_which_face() expects
+  # degrees (see its @param docs) - convert before round-tripping.
   hexify_build_icosa()
   centers <- hexify_face_centers()
 
-  # Face center detection may return a different face due to numerical
-  # precision at face boundaries (this is expected behavior).
-  # We just verify that valid faces are returned.
   for (face in 0:19) {
-    detected <- hexify_which_face(centers$lon[face + 1], centers$lat[face + 1])
-    expect_true(detected >= 0 && detected <= 19,
-                info = sprintf("Face center %d returned valid face %d", face, detected))
+    lon_deg <- centers$lon[face + 1] * 180 / pi
+    lat_deg <- centers$lat[face + 1] * 180 / pi
+    detected <- hexify_which_face(lon_deg, lat_deg)
+    expect_equal(detected, face,
+                info = sprintf("Face center %d was detected as face %d", face, detected))
   }
 })

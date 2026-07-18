@@ -71,10 +71,10 @@ plot(st_geometry(polys), col = "lightblue", border = "blue")
 \seealso{
 \code{\link{cell_to_sf}} for the recommended S4 interface
 
-Other sf conversion: 
-\code{\link{hex_corners_to_sf}()},
-\code{\link{hexify_grid_global}()},
-\code{\link{hexify_grid_rect}()}
+Other sf conversion:
+\code{\link[=hex_corners_to_sf]{hex_corners_to_sf()}},
+\code{\link[=hexify_grid_global]{hexify_grid_global()}},
+\code{\link[=hexify_grid_rect]{hexify_grid_rect()}}
 }
 \concept{sf conversion}
 \keyword{internal}

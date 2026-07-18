@@ -183,7 +183,7 @@ hexify_heatmap(result, value = "count", basemap = "world") +
 \code{\link{plot_grid}} for base R plotting,
 \code{\link{cell_to_sf}} to generate polygons manually
 
-Other visualization: 
-\code{\link{plot_world}()}
+Other visualization:
+\code{\link[=plot_world]{plot_world()}}
 }
 \concept{visualization}

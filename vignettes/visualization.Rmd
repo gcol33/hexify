@@ -238,7 +238,7 @@ Available color palettes include any from `scale_fill_viridis_c()` or `scale_fil
 
 - ColorBrewer sequential: `"YlOrRd"`, `"YlGnBu"`, `"Blues"`, `"Greens"`, `"Reds"`, `"Purples"`, etc.
 
-```{r heatmap-palettes, fig.width=8, fig.height=4}
+```{r heatmap-palettes, fig.width=8, fig.height=4, eval = requireNamespace("gridExtra", quietly = TRUE)}
 p1 <- hexify_heatmap(obs_hex, value = "count", colors = "viridis",
                      title = "viridis", xlim = c(-20, 35), ylim = c(35, 65))
 p2 <- hexify_heatmap(obs_hex, value = "count", colors = "YlGnBu",

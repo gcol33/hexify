@@ -17,10 +17,12 @@
 #' @param grid A HexGridInfo or HexData object. For \code{direction =
 #'   "isea_to_h3"}, this must be an ISEA grid. For \code{direction =
 #'   "h3_to_isea"}, this must be an H3 grid.
-#' @param h3_resolution Target H3 resolution for \code{"isea_to_h3"}, or the
-#'   source H3 resolution for \code{"h3_to_isea"}. When \code{NULL} (default),
-#'   the closest H3 resolution matching the ISEA cell area is selected
-#'   automatically.
+#' @param h3_resolution Target H3 resolution for \code{"isea_to_h3"}. When
+#'   \code{NULL} (default), the closest H3 resolution matching the ISEA cell
+#'   area is selected automatically. For \code{"h3_to_isea"}, the source H3
+#'   resolution is always inferred from \code{grid}; if \code{h3_resolution}
+#'   is supplied for that direction it is validated against \code{grid}'s
+#'   resolution rather than used to select one.
 #' @param isea_grid A HexGridInfo for the target ISEA grid. Required when
 #'   \code{direction = "h3_to_isea"}.
 #' @param direction One of \code{"isea_to_h3"} (default) or \code{"h3_to_isea"}.
@@ -147,6 +149,18 @@ h3_crosswalk <- function(cell_id = NULL,
     # -----------------------------------------------------------------------
     # H3 -> ISEA
     # -----------------------------------------------------------------------
+
+    # h3_resolution isn't used to select anything here (the source resolution
+    # is always g@resolution) but if supplied, it must agree with the grid.
+    if (!is.null(h3_resolution)) {
+      h3_resolution <- as.integer(h3_resolution)
+      if (h3_resolution != g@resolution) {
+        stop(sprintf(
+          "h3_resolution (%d) does not match the resolution of 'grid' (%d); h3_to_isea always infers the source resolution from 'grid'",
+          h3_resolution, g@resolution
+        ))
+      }
+    }
 
     # Get H3 cell centers
     center_df <- cpp_h3_cellToLatLng(as.character(unique_ids))

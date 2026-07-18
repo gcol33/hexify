@@ -4,12 +4,12 @@
 test_that("get_neighbors returns 6 neighbors for interior ISEA cell (ap4)", {
   g <- hex_grid(area_km2 = 1000)
   cell <- lonlat_to_cell(10, 50, g)
+  expect_false(is_pentagon(cell, g))
   nbrs <- get_neighbors(cell, g)
   expect_type(nbrs, "list")
   expect_length(nbrs, 1)
-  # Interior hex should have 6 neighbors
-
-  expect_true(length(nbrs[[1]]) >= 5 && length(nbrs[[1]]) <= 6)
+  # Interior (non-pentagon) hex cells always have exactly 6 neighbors
+  expect_equal(length(nbrs[[1]]), 6)
   # Self should not be in neighbors
   expect_false(cell %in% nbrs[[1]])
 })
@@ -17,15 +17,17 @@ test_that("get_neighbors returns 6 neighbors for interior ISEA cell (ap4)", {
 test_that("get_neighbors returns 6 neighbors for interior ISEA cell (ap3)", {
   g <- hex_grid(area_km2 = 1000, aperture = 3)
   cell <- lonlat_to_cell(10, 50, g)
+  expect_false(is_pentagon(cell, g))
   nbrs <- get_neighbors(cell, g)
-  expect_true(length(nbrs[[1]]) >= 5 && length(nbrs[[1]]) <= 6)
+  expect_equal(length(nbrs[[1]]), 6)
 })
 
 test_that("get_neighbors returns 6 neighbors for interior ISEA cell (ap7)", {
   g <- hex_grid(area_km2 = 1000, aperture = 7)
   cell <- lonlat_to_cell(10, 50, g)
+  expect_false(is_pentagon(cell, g))
   nbrs <- get_neighbors(cell, g)
-  expect_true(length(nbrs[[1]]) >= 5 && length(nbrs[[1]]) <= 6)
+  expect_equal(length(nbrs[[1]]), 6)
 })
 
 test_that("get_neighbors works for H3 cells", {
@@ -34,7 +36,8 @@ test_that("get_neighbors works for H3 cells", {
   nbrs <- get_neighbors(cell, g)
   expect_type(nbrs, "list")
   expect_length(nbrs, 1)
-  expect_true(length(nbrs[[1]]) >= 5 && length(nbrs[[1]]) <= 6)
+  # H3 pentagons (12 per resolution) have 5 neighbors; this point isn't one
+  expect_equal(length(nbrs[[1]]), 6)
 })
 
 test_that("k_ring with k=2 returns more cells than k=1", {

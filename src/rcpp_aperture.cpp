@@ -15,6 +15,7 @@
 
 #include <Rcpp.h>
 #include <array>
+#include <cmath>
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
@@ -33,6 +34,16 @@ constexpr int HEX_VERTICES = 6;
 // Shared helpers (aperture-parameterized, not exported to R)
 // ============================================================================
 
+// Validate an R-supplied i/j grid coordinate before casting to long long.
+// Casting NA/NaN/Inf to an integer type is undefined behavior; this turns
+// that into a normal R error instead.
+static long long checked_ij(double v, const char* label) {
+  if (!std::isfinite(v)) {
+    Rcpp::stop("'%s' must be a finite number (not NA/NaN/Inf)", label);
+  }
+  return static_cast<long long>(v);
+}
+
 static NumericVector quantize_impl(double icosa_triangle_x, double icosa_triangle_y,
                                    int aperture, int resolution) {
   long long i = 0, j = 0;
@@ -45,8 +56,8 @@ static NumericVector quantize_impl(double icosa_triangle_x, double icosa_triangl
 
 static NumericVector center_impl(double i, double j, int aperture, int resolution) {
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center(static_cast<long long>(i),
-                     static_cast<long long>(j),
+  hexify::hex_center(checked_ij(i, "i"),
+                     checked_ij(j, "j"),
                      aperture, resolution, cx, cy);
   return NumericVector::create(_["cx"] = cx, _["cy"] = cy);
 }
@@ -55,8 +66,8 @@ static List corners_impl(double i, double j, int aperture, int resolution,
                           double hex_radius) {
   std::array<double, HEX_VERTICES> xs{};
   std::array<double, HEX_VERTICES> ys{};
-  hexify::hex_corners(static_cast<long long>(i),
-                      static_cast<long long>(j),
+  hexify::hex_corners(checked_ij(i, "i"),
+                      checked_ij(j, "j"),
                       aperture, resolution, hex_radius, xs.data(), ys.data());
   return List::create(
     _["x"] = NumericVector(xs.begin(), xs.end()),
@@ -80,8 +91,8 @@ static NumericVector lonlat_to_cell_impl(double lon_deg, double lat_deg,
 static NumericVector cell_to_lonlat_impl(int face, double i, double j,
                                           int aperture, int resolution) {
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center(static_cast<long long>(i),
-                     static_cast<long long>(j),
+  hexify::hex_center(checked_ij(i, "i"),
+                     checked_ij(j, "j"),
                      aperture, resolution, cx, cy);
   auto ll = hexify::face_xy_to_ll(cx, cy, face);
   return NumericVector::create(_["lon"] = ll.first, _["lat"] = ll.second);
@@ -255,8 +266,8 @@ NumericVector cpp_hex_center_ap34(double i, double j,
                                   IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center_ap34(static_cast<long long>(i),
-                          static_cast<long long>(j),
+  hexify::hex_center_ap34(checked_ij(i, "i"),
+                          checked_ij(j, "j"),
                           seq, cx, cy);
   return NumericVector::create(_["cx"] = cx, _["cy"] = cy);
 }
@@ -268,8 +279,8 @@ List cpp_hex_corners_ap34(double i, double j,
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   std::array<double, HEX_VERTICES> xs{};
   std::array<double, HEX_VERTICES> ys{};
-  hexify::hex_corners_ap34(static_cast<long long>(i),
-                           static_cast<long long>(j),
+  hexify::hex_corners_ap34(checked_ij(i, "i"),
+                           checked_ij(j, "j"),
                            seq, hex_radius, xs.data(), ys.data());
   return List::create(
     _["x"] = NumericVector(xs.begin(), xs.end()),
@@ -296,8 +307,8 @@ NumericVector cpp_cell_to_lonlat_ap34(int face, double i, double j,
                                        IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center_ap34(static_cast<long long>(i),
-                          static_cast<long long>(j),
+  hexify::hex_center_ap34(checked_ij(i, "i"),
+                          checked_ij(j, "j"),
                           seq, cx, cy);
   auto ll = hexify::face_xy_to_ll(cx, cy, face);
   return NumericVector::create(_["lon"] = ll.first, _["lat"] = ll.second);

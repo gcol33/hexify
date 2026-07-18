@@ -59,9 +59,14 @@ hex_compact <- function(cell_ids, grid) {
 
     if (!any(compactable)) break
 
-    parent_table <- table(parents[compactable])
-    # Parents with all 7 children present
-    full_parents <- names(parent_table[parent_table == 7L])
+    # Parents with all 7 distinct children (0-6) present. Group by distinct
+    # last digit rather than raw row count, so duplicate cell IDs can't be
+    # mistaken for a full sibling set.
+    compactable_ids <- ids[compactable]
+    compactable_parents <- parents[compactable]
+    last_digit <- substr(compactable_ids, nchar(compactable_ids), nchar(compactable_ids))
+    digit_sets <- split(last_digit, compactable_parents)
+    full_parents <- names(digit_sets)[vapply(digit_sets, function(d) length(unique(d)) == 7L, logical(1))]
 
     if (length(full_parents) > 0) {
       changed <- TRUE
@@ -117,6 +122,14 @@ hex_uncompact <- function(cell_ids, grid, target_resolution) {
   }
 
   ids <- as.character(cell_ids)
+
+  initial_res <- nchar(ids) - 2L  # Z7: first 2 chars are quad
+  if (any(initial_res > target_resolution)) {
+    stop(sprintf(
+      "target_resolution (%d) is coarser than some input cells (max resolution %d); hex_uncompact() cannot expand to a coarser resolution",
+      target_resolution, max(initial_res)
+    ))
+  }
 
   repeat {
     # Check which cells need expansion

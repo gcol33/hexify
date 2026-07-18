@@ -288,6 +288,25 @@ city_weather <- merge(
 city_weather
 ```
 
+## Cell-Level Aggregation and Neighbors
+
+`hex_summarize()` aggregates data per cell without manually splitting and
+merging, and `get_neighbors()` finds the ring of cells surrounding a given
+cell — useful for smoothing, spatial lag features, or checking what
+surrounds a hotspot.
+
+```{r cell-summarize}
+# Aggregate the station data straight from the HexData object
+hex_summarize(stations_hex, mean_temp = mean(temperature), n_stations = length(temperature))
+```
+
+```{r cell-neighbors}
+# The 6 cells surrounding a given cell (k = 1), or a wider ring with k > 1
+some_cell <- stations_hex@cell_id[1]
+get_neighbors(some_cell, grid)
+get_neighbors(some_cell, grid, k = 2)
+```
+
 ## Choosing Resolution
 
 ### By Target Area
@@ -458,6 +477,14 @@ projections render correctly without manual intervention.
 | Global grid | `grid_global(grid)` |
 | Coordinate conversion | `lonlat_to_cell()`, `cell_to_lonlat()` |
 | Compare resolutions | `hexify_compare_resolutions()` |
+| Aggregate data per cell | `hex_summarize(result, ...)` |
+| Find neighboring cells | `get_neighbors(cell_id, grid, k = ...)` |
+| Merge/split multi-resolution cells | `hex_compact()`, `hex_uncompact()` |
+| Distance between cells | `hex_distance(cell_id1, cell_id2, grid)` |
+| Extract raster values at cell centers | `hex_extract(raster, grid)` |
+| Zonal statistics over cell polygons | `hex_zonal(raster, grid)` |
+| Map ISEA cells to H3 (or vice versa) | `h3_crosswalk()` |
+| Per-cell area | `cell_area(cell_ids, grid)` |
 
 ## See Also
 

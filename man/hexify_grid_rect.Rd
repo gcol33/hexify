@@ -46,10 +46,10 @@ plot(st_geometry(grid), border = "gray")
 \code{\link{grid_rect}} for the recommended S4 interface,
 \code{\link{hexify_grid_global}} for global grids
 
-Other sf conversion: 
-\code{\link{hex_corners_to_sf}()},
-\code{\link{hexify_cell_to_sf}()},
-\code{\link{hexify_grid_global}()}
+Other sf conversion:
+\code{\link[=hex_corners_to_sf]{hex_corners_to_sf()}},
+\code{\link[=hexify_cell_to_sf]{hexify_cell_to_sf()}},
+\code{\link[=hexify_grid_global]{hexify_grid_global()}}
 }
 \concept{sf conversion}
 \keyword{internal}

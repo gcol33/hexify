@@ -23,10 +23,10 @@ first num_ap4 resolutions use aperture 4, then aperture 3.
 seq <- dggrid_43h_sequence(2, 3)  # c(4, 4, 3, 3, 3)
 }
 \seealso{
-Other 'dggridR' compatibility: 
-\code{\link{as_dggrid}()},
-\code{\link{dggrid_is_compatible}()},
-\code{\link{from_dggrid}()}
+Other 'dggridR' compatibility:
+\code{\link[=as_dggrid]{as_dggrid()}},
+\code{\link[=dggrid_is_compatible]{dggrid_is_compatible()}},
+\code{\link[=from_dggrid]{from_dggrid()}}
 }
 \concept{'dggridR' compatibility}
 \keyword{internal}

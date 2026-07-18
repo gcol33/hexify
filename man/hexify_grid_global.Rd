@@ -31,10 +31,10 @@ plot(st_geometry(global_grid), border = "gray")
 \code{\link{grid_global}} for the recommended S4 interface,
 \code{\link{hexify_grid_rect}} for regional grids
 
-Other sf conversion: 
-\code{\link{hex_corners_to_sf}()},
-\code{\link{hexify_cell_to_sf}()},
-\code{\link{hexify_grid_rect}()}
+Other sf conversion:
+\code{\link[=hex_corners_to_sf]{hex_corners_to_sf()}},
+\code{\link[=hexify_cell_to_sf]{hexify_cell_to_sf()}},
+\code{\link[=hexify_grid_rect]{hexify_grid_rect()}}
 }
 \concept{sf conversion}
 \keyword{internal}

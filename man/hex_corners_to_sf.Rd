@@ -21,10 +21,10 @@ Low-level helper to create a single hexagon polygon from corner coordinates.
 Most users should use \code{\link{cell_to_sf}} instead.
 }
 \seealso{
-Other sf conversion: 
-\code{\link{hexify_cell_to_sf}()},
-\code{\link{hexify_grid_global}()},
-\code{\link{hexify_grid_rect}()}
+Other sf conversion:
+\code{\link[=hexify_cell_to_sf]{hexify_cell_to_sf()}},
+\code{\link[=hexify_grid_global]{hexify_grid_global()}},
+\code{\link[=hexify_grid_rect]{hexify_grid_rect()}}
 }
 \concept{sf conversion}
 \keyword{internal}

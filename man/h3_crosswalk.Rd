@@ -21,10 +21,12 @@ all cell IDs from the data are used.}
 "isea_to_h3"}, this must be an ISEA grid. For \code{direction =
 "h3_to_isea"}, this must be an H3 grid.}
 
-\item{h3_resolution}{Target H3 resolution for \code{"isea_to_h3"}, or the
-source H3 resolution for \code{"h3_to_isea"}. When \code{NULL} (default),
-the closest H3 resolution matching the ISEA cell area is selected
-automatically.}
+\item{h3_resolution}{Target H3 resolution for \code{"isea_to_h3"}. When
+\code{NULL} (default), the closest H3 resolution matching the ISEA cell
+area is selected automatically. For \code{"h3_to_isea"}, the source H3
+resolution is always inferred from \code{grid}; if \code{h3_resolution}
+is supplied for that direction it is validated against \code{grid}'s
+resolution rather than used to select one.}
 
 \item{isea_grid}{A HexGridInfo for the target ISEA grid. Required when
 \code{direction = "h3_to_isea"}.}

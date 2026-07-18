@@ -20,29 +20,29 @@ Data frame with quad, i, j columns
 Converts cell ID to cell components (quad, i, j).
 }
 \examples{
-info <- hexify_cell_to_quad_ij(1702, resolution = 5, aperture = 3)
+info <- hexify_cell_id_to_quad_ij(1702, resolution = 5, aperture = 3)
 }
 \seealso{
-Other coordinate conversion: 
-\code{\link{hexify_cell_to_icosa_tri}()},
-\code{\link{hexify_cell_to_lonlat}()},
-\code{\link{hexify_cell_to_plane}()},
-\code{\link{hexify_cell_to_quad_ij}()},
-\code{\link{hexify_cell_to_quad_xy}()},
-\code{\link{hexify_grid_cell_to_lonlat}()},
-\code{\link{hexify_grid_to_cell}()},
-\code{\link{hexify_icosa_tri_to_plane}()},
-\code{\link{hexify_icosa_tri_to_quad_ij}()},
-\code{\link{hexify_icosa_tri_to_quad_xy}()},
-\code{\link{hexify_lonlat_to_cell}()},
-\code{\link{hexify_lonlat_to_plane}()},
-\code{\link{hexify_lonlat_to_quad_ij}()},
-\code{\link{hexify_quad_ij_to_cell}()},
-\code{\link{hexify_quad_ij_to_icosa_tri}()},
-\code{\link{hexify_quad_ij_to_xy}()},
-\code{\link{hexify_quad_xy_to_cell}()},
-\code{\link{hexify_quad_xy_to_icosa_tri}()},
-\code{\link{hexify_roundtrip_test}()}
+Other coordinate conversion:
+\code{\link[=hexify_cell_to_icosa_tri]{hexify_cell_to_icosa_tri()}},
+\code{\link[=hexify_cell_to_lonlat]{hexify_cell_to_lonlat()}},
+\code{\link[=hexify_cell_to_plane]{hexify_cell_to_plane()}},
+\code{\link[=hexify_cell_to_quad_ij]{hexify_cell_to_quad_ij()}},
+\code{\link[=hexify_cell_to_quad_xy]{hexify_cell_to_quad_xy()}},
+\code{\link[=hexify_grid_cell_to_lonlat]{hexify_grid_cell_to_lonlat()}},
+\code{\link[=hexify_grid_to_cell]{hexify_grid_to_cell()}},
+\code{\link[=hexify_icosa_tri_to_plane]{hexify_icosa_tri_to_plane()}},
+\code{\link[=hexify_icosa_tri_to_quad_ij]{hexify_icosa_tri_to_quad_ij()}},
+\code{\link[=hexify_icosa_tri_to_quad_xy]{hexify_icosa_tri_to_quad_xy()}},
+\code{\link[=hexify_lonlat_to_cell]{hexify_lonlat_to_cell()}},
+\code{\link[=hexify_lonlat_to_plane]{hexify_lonlat_to_plane()}},
+\code{\link[=hexify_lonlat_to_quad_ij]{hexify_lonlat_to_quad_ij()}},
+\code{\link[=hexify_quad_ij_to_cell]{hexify_quad_ij_to_cell()}},
+\code{\link[=hexify_quad_ij_to_icosa_tri]{hexify_quad_ij_to_icosa_tri()}},
+\code{\link[=hexify_quad_ij_to_xy]{hexify_quad_ij_to_xy()}},
+\code{\link[=hexify_quad_xy_to_cell]{hexify_quad_xy_to_cell()}},
+\code{\link[=hexify_quad_xy_to_icosa_tri]{hexify_quad_xy_to_icosa_tri()}},
+\code{\link[=hexify_roundtrip_test]{hexify_roundtrip_test()}}
 }
 \concept{coordinate conversion}
 \keyword{internal}

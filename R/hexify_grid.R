@@ -151,7 +151,7 @@ hexify_grid <- function(area,
 #' This function is called internally by most hexify functions to ensure
 #' grid integrity.
 #'
-#' @param dggs Grid object to verify (from hexify_grid)
+#' @param dggs Grid object to verify (from hexify_grid() or hex_grid())
 #' @return TRUE (invisibly) if valid, otherwise throws an error
 #'
 #' @export
@@ -159,15 +159,28 @@ hexify_grid <- function(area,
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' dgverify(grid)  # Should pass silently
 #'
+#' # Modern HexGridInfo objects are accepted too
+#' dgverify(hex_grid(area_km2 = 1000))
+#'
 #' # Invalid grid will throw error
 #' bad_grid <- list(aperture = 5)
 #' try(dgverify(bad_grid))  # Will error
 dgverify <- function(dggs) {
+  # Accept the modern HexGridInfo (S4) object by converting to the legacy
+  # list representation this function checks.
+  if (is_hex_grid(dggs)) {
+    if (dggs@grid_type == "h3") {
+      validate_resolution(dggs@resolution)
+      return(invisible(TRUE))
+    }
+    dggs <- HexGridInfo_to_hexify_grid(dggs)
+  }
+
   # Check object type
   if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {
-    stop("dggs must be a grid object from hexify_grid()")
+    stop("dggs must be a grid object from hexify_grid() or hex_grid()")
   }
-  
+
   # Check required fields exist
   required_fields <- c("aperture", "topology", "projection")
   missing_fields <- setdiff(required_fields, names(dggs))

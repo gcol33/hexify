@@ -62,8 +62,8 @@ test_that("quad_ij_to_cell returns positive cell IDs", {
   cell_id <- hexify_quad_ij_to_cell(quad = 1, i = 100, j = 50,
                                      resolution = 10, aperture = 3)
 
-  expect_true(cell_id > 0)
   expect_true(is.numeric(cell_id))
+  expect_equal(cell_id, 24352)
 })
 
 test_that("quad_ij_to_cell is consistent with lonlat_to_cell", {
@@ -95,8 +95,8 @@ test_that("quad_ij_to_xy returns valid structure", {
 
   expect_true("quad_x" %in% names(result))
   expect_true("quad_y" %in% names(result))
-  expect_true(is.numeric(result$quad_x))
-  expect_true(is.numeric(result$quad_y))
+  expect_equal(result$quad_x, 0.30864197530864212, tolerance = 1e-12)
+  expect_equal(result$quad_y, 0.17819452752766235, tolerance = 1e-12)
 })
 
 # =============================================================================
@@ -418,7 +418,7 @@ test_that("hexify_quad_xy_to_cell returns valid cell ID", {
   )
 
   expect_true(is.numeric(cell_id))
-  expect_true(cell_id > 0)
+  expect_equal(cell_id, 167)
 })
 
 test_that("hexify_quad_xy_to_cell validates aperture", {

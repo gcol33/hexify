@@ -28,7 +28,9 @@ Any projection from a sphere to a plane must distort *something*. For spatial st
 The ISEA projection solves this by:
 
 1. Inscribing a regular icosahedron in the sphere
+
 2. Projecting each spherical "cap" onto its corresponding flat triangular face using a modified Lambert equal-area projection
+
 3. Overlaying a hexagonal grid on the resulting planar triangles
 
 ## The Lambert Azimuthal Equal-Area Projection
@@ -40,6 +42,7 @@ The foundation of Snyder's projection is Lambert's azimuthal equal-area projecti
 The Lambert azimuthal equal-area projection is defined by a mathematical constraint, not a geometric construction. For a projection centered at point $S$:
 
 - **Azimuthal property:** The direction (azimuth) from $S$ to any point $P$ on the sphere equals the direction from the origin to $P'$ on the plane
+
 - **Equal-area property:** Any region on the sphere maps to a region of identical area on the plane
 
 These two constraints uniquely determine the radial distance formula. For a point $P$ at angular distance $c$ from the center (measured along the sphere surface), the projected distance from the origin is:
@@ -253,7 +256,9 @@ Lambert's projection works for a single tangent plane covering at most a hemisph
 A regular icosahedron has:
 
 - **20 equilateral triangular faces** (each covering ~1/20 of Earth's surface)
+
 - **12 vertices** (where 5 faces meet---these become pentagon cells)
+
 - **30 edges**
 
 ```{r icosahedron-projection, echo=FALSE, fig.width=7, fig.height=6}
@@ -633,7 +638,9 @@ cat(sprintf("  Base cell: %s, Digits: %s (%d digit pairs)\n",
 The Z-order (Morton) index uses bit-interleaving of the $(i, j)$ coordinates, producing a Morton space-filling curve (Morton, 1966). The encoding depends on the aperture:
 
 - **Aperture 4**: Binary interleaving. Each $(i, j)$ digit pair in base 2 produces one output digit: $d = 2i_b + j_b$, yielding digits in $\{0, 1, 2, 3\}$.
+
 - **Aperture 3**: Base-3 interleaving. The $(i, j)$ coordinates are expressed in base 3, and digits alternate: $i_0, j_0, i_1, j_1, \ldots$
+
 - **Aperture 7**: Base-7 interleaving with 2 digits per level.
 
 ```{r zorder-example}

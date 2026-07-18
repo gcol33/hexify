@@ -19,6 +19,43 @@ test_that("plot.HexData works with default settings", {
   })
 })
 
+test_that("jitter_points_in_cells(jitter = FALSE) snaps points to the cell centroid", {
+  skip_if_not_installed("sf")
+
+  # Many points in one cell
+  df <- data.frame(lon = rep(2.35, 20), lat = rep(48.86, 20))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 200000)
+  hex_sf <- cell_to_sf(unique(result@cell_id), result@grid)
+
+  jittered <- hexify:::jitter_points_in_cells(result@cell_id, hex_sf, jitter = TRUE)
+  unjittered <- hexify:::jitter_points_in_cells(result@cell_id, hex_sf, jitter = FALSE)
+
+  # With jitter, 20 random points in the same cell are extremely unlikely
+  # to all land on the exact same coordinate
+  expect_true(length(unique(jittered$lon)) > 1 || length(unique(jittered$lat)) > 1)
+
+  # Without jitter, every point in the cell collapses to the same centroid
+  expect_equal(length(unique(unjittered$lon)), 1)
+  expect_equal(length(unique(unjittered$lat)), 1)
+})
+
+test_that("plot.HexData accepts jitter and point_alpha arguments", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(
+    lon = c(2.35, 4.90, -3.70),
+    lat = c(48.86, 52.37, 40.42)
+  )
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  expect_no_error({
+    pdf(NULL)
+    on.exit(dev.off())
+    plot(result, basemap = FALSE, show_points = TRUE, jitter = FALSE,
+         point_alpha = 0.5, point_color = "darkblue")
+  })
+})
+
 test_that("plot.HexData works with basemap", {
   skip_on_cran()  # Slow sf operations
   skip_if_not_installed("sf")

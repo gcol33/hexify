@@ -85,7 +85,7 @@ These properties make hexagonal grids the natural choice for unbiased spatial bi
 - **`as_dggrid()` / `from_dggrid()`**: Convert to/from dggridR format
 - **`as_sf()`**: Export HexData to sf object
 - **`as.data.frame()`**: Extract data with cell assignments
-- **H3 support**: `hex_grid(resolution = 8, type = "h3")` — requires `h3o` package
+- **H3 support**: `hex_grid(resolution = 8, type = "h3")` — vendored H3 C library, no extra install needed
 
 ## Installation
 
@@ -108,7 +108,14 @@ library(hexify)
 # Define grid: ~10,000 km² cells
 grid <- hex_grid(area_km2 = 10000)
 grid
-#> HexGridInfo: aperture=3, resolution=5, area=12364.17 km²
+#> HexGridInfo Specification
+#> -------------------------
+#> Aperture:    3
+#> Resolution:  8
+#> Area:        7773.97 km^2
+#> Diagonal:    94.74 km
+#> CRS:         EPSG:4326
+#> Total Cells: 65612
 
 # Assign coordinates to cells
 coords <- data.frame(

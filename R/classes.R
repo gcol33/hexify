@@ -487,8 +487,7 @@ setMethod("show", "HexGridInfo", function(object) {
 
     # Calculate total cells based on aperture
     if (object@aperture == "4/3") {
-      level <- as.integer(object@resolution / 2)
-      n_cells <- 10 * (4^level) * (3^(object@resolution - level)) + 2
+      n_cells <- ap43_n_cells(object@resolution)
     } else {
       ap <- as.integer(object@aperture)
       n_cells <- 10 * (ap^object@resolution) + 2

@@ -18,7 +18,6 @@ setup_icosa <- function() {
 # =============================================================================
 
 test_that("aperture 3 round-trip works for Class I (even resolutions)", {
-  skip_on_cran()
   setup_icosa()
 
   test_points <- list(
@@ -46,7 +45,6 @@ test_that("aperture 3 round-trip works for Class I (even resolutions)", {
 })
 
 test_that("aperture 3 round-trip works for Class II (odd resolutions)", {
-  skip_on_cran()
   setup_icosa()
 
   test_points <- list(
@@ -74,7 +72,6 @@ test_that("aperture 3 round-trip works for Class II (odd resolutions)", {
 })
 
 test_that("aperture 3 batch round-trip succeeds", {
-  skip_on_cran()
   setup_icosa()
 
   set.seed(123)
@@ -96,7 +93,6 @@ test_that("aperture 3 batch round-trip succeeds", {
 # =============================================================================
 
 test_that("aperture 3 cell spacing decreases with resolution", {
-  skip_on_cran()
   setup_icosa()
 
   # Compare spacing between same-class resolutions
@@ -118,7 +114,6 @@ test_that("aperture 3 cell spacing decreases with resolution", {
 })
 
 test_that("resolution refinement decreases distance to point", {
-  skip_on_cran()
   setup_icosa()
 
   tx <- 0.4
@@ -145,7 +140,6 @@ test_that("resolution refinement decreases distance to point", {
 # =============================================================================
 
 test_that("Class I to Class II transition is consistent", {
-  skip_on_cran()
   setup_icosa()
 
   tx <- 0.42
@@ -172,7 +166,6 @@ test_that("Class I to Class II transition is consistent", {
 # =============================================================================
 
 test_that("aperture 3 corners form valid hexagons", {
-  skip_on_cran()
   setup_icosa()
 
   for (res in c(2, 3)) {
@@ -186,7 +179,6 @@ test_that("aperture 3 corners form valid hexagons", {
 })
 
 test_that("hexagon corners centroid matches center", {
-  skip_on_cran()
   setup_icosa()
 
   for (res in c(2, 4)) {
@@ -210,7 +202,6 @@ test_that("hexagon corners centroid matches center", {
 # =============================================================================
 
 test_that("aperture 3 lon/lat workflow works", {
-  skip_on_cran()
   setup_icosa()
 
   lon <- 16.37  # Vienna
@@ -235,7 +226,6 @@ test_that("aperture 3 lon/lat workflow works", {
 # =============================================================================
 
 test_that("cpp_test_roundtrip_ap3 returns TRUE for valid points", {
-  skip_on_cran()
   setup_icosa()
 
   # Test various points and resolutions

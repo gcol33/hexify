@@ -16,13 +16,13 @@ Index resolution (integer)
 For aperture 3: res_index = 2 * eff_res - 1 for odd index resolutions.
 }
 \seealso{
-Other grid statistics: 
-\code{\link{dg_closest_res_to_area}()},
-\code{\link{dgearthstat}()},
-\code{\link{hexify_area_to_eff_res}()},
-\code{\link{hexify_compare_resolutions}()},
-\code{\link{hexify_eff_res_to_area}()},
-\code{\link{hexify_resolution_to_eff_res}()}
+Other grid statistics:
+\code{\link[=dg_closest_res_to_area]{dg_closest_res_to_area()}},
+\code{\link[=dgearthstat]{dgearthstat()}},
+\code{\link[=hexify_area_to_eff_res]{hexify_area_to_eff_res()}},
+\code{\link[=hexify_compare_resolutions]{hexify_compare_resolutions()}},
+\code{\link[=hexify_eff_res_to_area]{hexify_eff_res_to_area()}},
+\code{\link[=hexify_resolution_to_eff_res]{hexify_resolution_to_eff_res()}}
 }
 \concept{grid statistics}
 \keyword{internal}

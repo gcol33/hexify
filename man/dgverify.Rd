@@ -7,7 +7,7 @@
 dgverify(dggs)
 }
 \arguments{
-\item{dggs}{Grid object to verify (from hexify_grid)}
+\item{dggs}{Grid object to verify (from hexify_grid() or hex_grid())}
 }
 \value{
 TRUE (invisibly) if valid, otherwise throws an error
@@ -20,6 +20,9 @@ grid integrity.
 \examples{
 grid <- hexify_grid(area = 1000, aperture = 3)
 dgverify(grid)  # Should pass silently
+
+# Modern HexGridInfo objects are accepted too
+dgverify(hex_grid(area_km2 = 1000))
 
 # Invalid grid will throw error
 bad_grid <- list(aperture = 5)

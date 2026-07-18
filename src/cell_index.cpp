@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
-#include <algorithm>
 
 namespace hexify {
 
@@ -155,70 +154,6 @@ void index_to_cell(const std::string& index, int aperture,
     int quadNum = face;
     z7::decode(index, resolution, quadNum, i, j);
     face = quadNum;
-  }
-}
-
-std::string cell_to_index_ap34(int face, long long i, long long j,
-                               const std::vector<int>& ap_seq) {
-  // Mixed aperture 4/3: encode hierarchically using alternating bases
-  // First levels use aperture 4 (2x2 subdivisions), then aperture 3
-  if (ap_seq.empty()) {
-    return format_quad(face);
-  }
-
-  std::string result = format_quad(face);
-  long long ci = i;
-  long long cj = j;
-
-  // Encode from finest to coarsest, collecting digits
-  std::string digits;
-  for (int r = static_cast<int>(ap_seq.size()) - 1; r >= 0; r--) {
-    int ap = ap_seq[r];
-    if (ap == 4) {
-      // Aperture 4: 2-bit encoding (i mod 2, j mod 2)
-      int di = static_cast<int>(ci % 2);
-      int dj = static_cast<int>(cj % 2);
-      char digit = static_cast<char>('0' + di * 2 + dj);
-      digits += digit;
-      ci /= 2;
-      cj /= 2;
-    } else {
-      // Aperture 3: 1-digit encoding (0-2)
-      int di = static_cast<int>(ci % 3);
-      digits += static_cast<char>('0' + di);
-      ci /= 3;
-      cj /= 3;
-    }
-  }
-  // Reverse to get coarsest-first order
-  std::reverse(digits.begin(), digits.end());
-  return result + digits;
-}
-
-void index_to_cell_ap34(const std::string& index,
-                        const std::vector<int>& ap_seq,
-                        int& face, long long& i, long long& j) {
-  if (index.length() < 2) {
-    throw std::runtime_error("hex_index: invalid ap34 index string (too short)");
-  }
-
-  face = parse_quad(index);
-  i = 0;
-  j = 0;
-
-  if (index.length() == 2) return;
-
-  std::string digits = index.substr(2);
-  for (size_t r = 0; r < digits.length() && r < ap_seq.size(); r++) {
-    int digit = digits[r] - '0';
-    int ap = ap_seq[r];
-    if (ap == 4) {
-      i = i * 2 + digit / 2;
-      j = j * 2 + digit % 2;
-    } else {
-      i = i * 3 + digit;
-      j = j * 3;
-    }
   }
 }
 

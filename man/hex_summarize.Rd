@@ -10,11 +10,15 @@ hex_summarize(hex_data, ..., .fns = NULL, geometry = FALSE)
 \item{hex_data}{A HexData object (from \code{\link[=hexify]{hexify()}}).}
 
 \item{...}{Named summary expressions (tidyeval). Each expression is
-evaluated per cell group. Examples: \code{mean_temp = mean(temperature)},
-\code{n = dplyr::n()}, \code{max_elev = max(elevation, na.rm = TRUE)}.}
+evaluated per cell group with the group's columns available by name.
+Examples: \code{mean_temp = mean(temperature)},
+\code{n_species = length(unique(species))},
+\code{max_elev = max(elevation, na.rm = TRUE)}. Provide either \code{...} or
+\code{.fns}, not both.}
 
 \item{.fns}{Optional named list of functions for formula-style aggregation.
-Example: \code{.fns = list(mean_temp = ~mean(temperature))}.}
+Example: \code{.fns = list(mean_temp = ~mean(temperature))}. Provide either
+\code{...} or \code{.fns}, not both.}
 
 \item{geometry}{Logical. If \code{TRUE}, attach cell center points as an
 sf geometry column (requires sf). Default \code{FALSE}.}

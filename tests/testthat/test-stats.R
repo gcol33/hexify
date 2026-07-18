@@ -94,10 +94,10 @@ test_that("max_cell_id returns correct number of cells", {
 })
 
 test_that("max_cell_id handles resolution 0", {
-  # Resolution 0 returns 20 (20 icosahedron faces)
-  expect_equal(max_cell_id(0, 3), 20)
-  expect_equal(max_cell_id(0, 4), 20)
-  expect_equal(max_cell_id(0, 7), 20)
+  # Resolution 0 returns 12 (10 * aperture^0 + 2 = 12 cells: 12 icosahedron vertices)
+  expect_equal(max_cell_id(0, 3), 12)
+  expect_equal(max_cell_id(0, 4), 12)
+  expect_equal(max_cell_id(0, 7), 12)
 })
 
 # =============================================================================

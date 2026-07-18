@@ -240,18 +240,53 @@ validate_aperture <- function(aperture) {
   TRUE
 }
 
+#' Hierarchical index type for a grid aperture
+#' @param aperture Character aperture ("3", "4", "7", or "4/3")
+#' @return "z3", "z7", or "zorder"
+#' @noRd
+index_type_for_aperture <- function(aperture) {
+  if (aperture == "3") "z3"
+  else if (aperture == "7") "z7"
+  else "zorder"
+}
+
+#' Integer aperture for C++ functions (mixed "4/3" uses base aperture 3)
+#' @param aperture Character or numeric aperture ("3", "4", "7", or "4/3")
+#' @return Integer aperture (3L, 4L, or 7L)
+#' @noRd
+aperture_to_int <- function(aperture) {
+  if (aperture == "4/3") 3L else as.integer(aperture)
+}
+
+#' Number of aperture-4 levels for a mixed 4/3 (ISEA43H) grid
+#'
+#' Half the resolution (rounded down): odd resolutions get one more
+#' aperture-3 level than aperture-4 level.
+#' @param resolution Integer resolution value
+#' @return Integer number of aperture-4 levels
+#' @noRd
+ap43_level <- function(resolution) {
+  as.integer(resolution / 2)
+}
+
+#' Cell count for a mixed 4/3 (ISEA43H) grid at a given resolution
+#' @param resolution Integer resolution value
+#' @return Numeric cell count: 10 * 4^level * 3^(resolution - level) + 2
+#' @noRd
+ap43_n_cells <- function(resolution) {
+  level <- ap43_level(resolution)
+  10 * (4^level) * (3^(resolution - level)) + 2
+}
+
 #' Calculate maximum cell ID for given resolution and aperture
 #' @param resolution Integer resolution value
 #' @param aperture Integer aperture value
 #' @return Maximum valid cell ID (numeric)
 #' @noRd
 max_cell_id <- function(resolution, aperture) {
-  # Cell count formula: N = 10 * aperture^res + 2
-  # But for cell numbering, we use 20 faces with aperture^res cells each
-  # Max cell ID = 20 * (max_coord + 1)^2 for the simple linear indexing
-
-  # This matches the C++ cell_numbering.cpp logic
-  if (resolution == 0) return(20)
+  # Cell count formula: N = 10 * aperture^res + 2 (cell IDs are 1..N,
+  # matching calc_grid_params() in rcpp_cell.cpp)
+  if (resolution == 0) return(10 + 2)
 
   if (aperture == 7) {
     # AP7 stores surrogates in a dim x dim bounding box per quad.

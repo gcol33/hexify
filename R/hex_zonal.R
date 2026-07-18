@@ -70,8 +70,14 @@ hex_zonal <- function(raster, grid, fun = "mean", boundary = NULL,
   # Convert to terra SpatVector
   hex_vect <- terra::vect(hex_sf)
 
-  # Extract zonal statistics
-  extracted <- terra::extract(raster, hex_vect, fun = fun, ID = TRUE)
+  # Extract zonal statistics. terra::extract() has no built-in "count"
+  # function, so translate it to a count of non-NA pixels per cell.
+  fun_actual <- if (identical(fun, "count")) {
+    function(x, ...) sum(!is.na(x))
+  } else {
+    fun
+  }
+  extracted <- terra::extract(raster, hex_vect, fun = fun_actual, ID = TRUE)
 
   # Build result
   result <- data.frame(cell_id = cell_ids, stringsAsFactors = FALSE)

@@ -28,9 +28,9 @@ The function validates that the 'dggridR' grid uses compatible settings:
 }
 }
 \seealso{
-Other 'dggridR' compatibility: 
-\code{\link{as_dggrid}()},
-\code{\link{dggrid_43h_sequence}()},
-\code{\link{dggrid_is_compatible}()}
+Other 'dggridR' compatibility:
+\code{\link[=as_dggrid]{as_dggrid()}},
+\code{\link[=dggrid_43h_sequence]{dggrid_43h_sequence()}},
+\code{\link[=dggrid_is_compatible]{dggrid_is_compatible()}}
 }
 \concept{'dggridR' compatibility}

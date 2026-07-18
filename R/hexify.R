@@ -138,24 +138,27 @@ hexify <- function(data,
   # Extract coordinates from data
   # -------------------------------------------------------------------------
   is_sf <- inherits(data, "sf")
-  mapping <- list()
 
   if (is_sf) {
     if (!requireNamespace("sf", quietly = TRUE)) {
       stop("Package 'sf' is required to process sf objects")
     }
 
-    # Get coordinates, transforming to WGS84 if needed
-    if (sf::st_crs(data)$epsg != 4326 && !is.na(sf::st_crs(data)$epsg)) {
-      coords_sf <- sf::st_transform(data, 4326)
-    } else {
+    # Get coordinates, transforming to WGS84 if needed. A missing CRS (not
+    # merely one without a mapped EPSG code) can't be transformed from, so
+    # treat it as already lon/lat rather than erroring; otherwise compare
+    # full CRS objects (not just $epsg, which is NA for many valid CRS built
+    # from WKT/proj4 strings) and transform when they differ.
+    data_crs <- sf::st_crs(data)
+    if (is.na(data_crs) || data_crs == sf::st_crs(4326)) {
       coords_sf <- data
+    } else {
+      coords_sf <- sf::st_transform(data, 4326)
     }
 
     coords <- sf::st_coordinates(coords_sf)
     lon_vec <- coords[, 1]
     lat_vec <- coords[, 2]
-    mapping$geometry <- attr(data, "sf_column")
   } else {
     # Regular data.frame
     if (!lon %in% names(data)) {
@@ -167,14 +170,14 @@ hexify <- function(data,
 
     lon_vec <- data[[lon]]
     lat_vec <- data[[lat]]
-    mapping$lon <- lon
-    mapping$lat <- lat
   }
 
   # Validate coordinates
   if (!is.numeric(lon_vec) || !is.numeric(lat_vec)) {
     stop("Coordinates must be numeric")
   }
+  validate_lon(lon_vec)
+  validate_lat(lat_vec)
 
   na_mask <- is.na(lon_vec) | is.na(lat_vec)
   if (all(na_mask)) {
@@ -183,6 +186,9 @@ hexify <- function(data,
   if (any(na_mask)) {
     warning(sprintf("%d coordinate pairs contain NA values and will be skipped",
                     sum(na_mask)))
+    data <- data[!na_mask, , drop = FALSE]
+    lon_vec <- lon_vec[!na_mask]
+    lat_vec <- lat_vec[!na_mask]
   }
 
   # -------------------------------------------------------------------------
@@ -197,7 +203,7 @@ hexify <- function(data,
     center_df <- cpp_h3_cellToLatLng(cell_ids)
     centers <- list(lon_deg = center_df$lon, lat_deg = center_df$lat)
   } else if (aperture_str == "4/3") {
-    level <- as.integer(res / 2)
+    level <- ap43_level(res)
     cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
     centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)
   } else {

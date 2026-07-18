@@ -107,9 +107,11 @@ resolve_point_size <- function(size, hex_sf, xlim, ylim) {
 #' Jitter points within their assigned hexagon cells
 #' @param cell_ids Vector of cell IDs (one per point)
 #' @param hex_sf sf object with cell polygons (must have cell_id column)
+#' @param jitter If TRUE (default), randomly scatter points within their
+#'   cell. If FALSE, place every point at its cell's centroid.
 #' @return Data frame with lon, lat columns for jittered positions
 #' @noRd
-jitter_points_in_cells <- function(cell_ids, hex_sf) {
+jitter_points_in_cells <- function(cell_ids, hex_sf, jitter = TRUE) {
   n_points <- length(cell_ids)
 
   # Pre-allocate result
@@ -140,10 +142,15 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 
     poly <- hex_sf[poly_idx, ]
 
-    # Sample random points inside the polygon
-    sampled <- suppressMessages(suppressWarnings(
-      sf::st_sample(poly, size = n_in_cell, type = "random")
-    ))
+    # Sample random points inside the polygon (or none, if jitter = FALSE,
+    # so every point in the cell falls back to the centroid below)
+    sampled <- if (jitter) {
+      suppressMessages(suppressWarnings(
+        sf::st_sample(poly, size = n_in_cell, type = "random")
+      ))
+    } else {
+      sf::st_sfc()
+    }
 
     # If sampling failed or returned wrong count, use centroid
     if (length(sampled) == 0) {
@@ -211,6 +218,10 @@ jitter_points_in_cells <- function(cell_ids, hex_sf) {
 #'       "large" (~20\%), "very large" (~35\%)
 #'   }
 #' @param point_color Color of points (default "red")
+#' @param point_alpha Transparency for points (0-1, default 1)
+#' @param jitter If TRUE (default), points are randomly scattered within
+#'   their assigned hexagon. If FALSE, all points in a cell are plotted at
+#'   the cell centroid instead.
 #' @param crop Crop to data extent (default TRUE)
 #' @param crop_expand Expansion factor for crop (default 0.1)
 #' @param main Plot title
@@ -252,6 +263,8 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
            show_points = FALSE,
            point_size = "auto",
            point_color = "red",
+           point_alpha = 1,
+           jitter = TRUE,
            crop = TRUE,
            crop_expand = 0.1,
            main = NULL,
@@ -383,11 +396,12 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
       # Resolve point size based on hex cell size
       cex <- resolve_point_size(point_size, hex_sf, xlim, ylim)
 
-      # Jitter points within their hexagon
-      jittered <- jitter_points_in_cells(x@cell_id, hex_sf)
+      # Jitter points within their hexagon (or centroid-snap if jitter = FALSE)
+      jittered <- jitter_points_in_cells(x@cell_id, hex_sf, jitter = jitter)
 
       points(jittered$lon, jittered$lat,
-             pch = 19, cex = cex, col = point_color)
+             pch = 19, cex = cex,
+             col = adjustcolor(point_color, alpha.f = point_alpha))
     }
 
     invisible(x)

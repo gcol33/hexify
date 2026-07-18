@@ -26,9 +26,9 @@ The resulting object can be used with 'dggridR' functions that accept a dggs
 object.
 }
 \seealso{
-Other 'dggridR' compatibility: 
-\code{\link{dggrid_43h_sequence}()},
-\code{\link{dggrid_is_compatible}()},
-\code{\link{from_dggrid}()}
+Other 'dggridR' compatibility:
+\code{\link[=dggrid_43h_sequence]{dggrid_43h_sequence()}},
+\code{\link[=dggrid_is_compatible]{dggrid_is_compatible()}},
+\code{\link[=from_dggrid]{from_dggrid()}}
 }
 \concept{'dggridR' compatibility}

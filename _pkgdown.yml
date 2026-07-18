@@ -1,9 +1,24 @@
-url: https://gcol33.github.io/hexify/
+url: https://gillescolling.com/hexify/
 template:
   bootstrap: 5
   bootswatch: sandstone
   light-switch: yes
-  # MathJax: not needed (no LaTeX math in vignettes)
+  includes:
+    in_header: |
+      <script>
+      (function () {
+        var D = String.fromCharCode(36);
+        window.MathJax = {
+          tex: {
+            inlineMath: [[D, D], ["\\(", "\\)"]],
+            displayMath: [[D + D, D + D], ["\\[", "\\]"]]
+          },
+          chtml: { linebreaks: { automatic: true, width: "90% container" } },
+          svg: { linebreaks: { automatic: true, width: "90% container" } },
+          options: { renderActions: { addMenu: [] } }
+        };
+      })();
+      </script>
 figures:
   dev: svglite::svglite
   fig.ext: svg
@@ -30,6 +45,8 @@ navbar:
         href: articles/visualization.html
       - text: H3 Grids
         href: articles/h3.html
+      - text: Mathematical Foundations
+        href: articles/theory.html
     github:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify

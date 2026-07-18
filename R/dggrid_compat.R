@@ -45,7 +45,7 @@ as_dggrid <- function(grid) {
     precision = 7L
   )
 
-  class(dggs) <- "list"
+  class(dggs) <- c("dggs", "list")
   dggs
 }
 
@@ -118,6 +118,7 @@ from_dggrid <- function(dggs) {
   ) -> grid
 
   # Override resolution to match dggridR exactly
+  validate_resolution(dggs$res)
   grid$resolution <- as.integer(dggs$res)
   grid$res <- as.integer(dggs$res)
 

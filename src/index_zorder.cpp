@@ -44,6 +44,31 @@ static long long radix_to_int(const std::string& radix_str, int radix) {
   return result;
 }
 
+// Helper: interleave two equal-length digit strings as i0 j0 i1 j1 ...
+// (shared by encode_ap3/encode_ap7; the radix and digit count they pass in
+// differ, but the interleaving itself is identical).
+static std::string interleave_digits(const std::string& i_str, const std::string& j_str) {
+  std::string result;
+  result.reserve(i_str.size() + j_str.size());
+  for (size_t idx = 0; idx < i_str.size(); idx++) {
+    result += i_str[idx];
+    result += j_str[idx];
+  }
+  return result;
+}
+
+// Helper: inverse of interleave_digits - split i0 j0 i1 j1 ... back into two
+// digit strings (shared by decode_ap3/decode_ap7).
+static void deinterleave_digits(const std::string& combined,
+                                 std::string& i_str, std::string& j_str) {
+  for (size_t idx = 0; idx < combined.length(); idx += 2) {
+    i_str += combined[idx];
+    if (idx + 1 < combined.length()) {
+      j_str += combined[idx + 1];
+    }
+  }
+}
+
 // ============================================================================
 // Aperture 4: Combine i,j bits into single digits
 // ============================================================================
@@ -93,13 +118,9 @@ std::string encode_ap3(long long i, long long j, int resolution) {
   
   std::string i_str = int_to_radix(i, 3, eff_res);
   std::string j_str = int_to_radix(j, 3, eff_res);
-  
-  // Simple alternation (i then j)
-  for (int idx = 0; idx < eff_res; idx++) {
-    result += i_str[idx];
-    result += j_str[idx];
-  }
-  
+
+  result = interleave_digits(i_str, j_str);
+
   // Trim last digit if Class II
   if (!is_class_i && result.length() > 0) {
     result.pop_back();
@@ -126,14 +147,8 @@ void decode_ap3(const std::string& z_str, int resolution,
   
   // Split alternating digits (i then j)
   std::string i_str, j_str;
-  
-  for (size_t idx = 0; idx < adjusted.length(); idx += 2) {
-    i_str += adjusted[idx];
-    if (idx + 1 < adjusted.length()) {
-      j_str += adjusted[idx + 1];
-    }
-  }
-  
+  deinterleave_digits(adjusted, i_str, j_str);
+
   i = radix_to_int(i_str, 3);
   j = radix_to_int(j_str, 3);
 }
@@ -148,34 +163,23 @@ std::string encode_ap7(long long i, long long j, int resolution) {
   // Convert to radix-7 strings (one digit per resolution level)
   std::string i_str = int_to_radix(i, 7, resolution);
   std::string j_str = int_to_radix(j, 7, resolution);
-  
+
   // Interleave: i0 j0 i1 j1 i2 j2 ...
-  std::string result;
-  for (int idx = 0; idx < resolution; idx++) {
-    result += i_str[idx];
-    result += j_str[idx];
-  }
-  
-  return result;
+  return interleave_digits(i_str, j_str);
 }
 
-void decode_ap7(const std::string& z_str, int resolution, 
+void decode_ap7(const std::string& z_str, int resolution,
                 long long& i, long long& j) {
   if (z_str.empty()) {
     i = 0;
     j = 0;
     return;
   }
-  
+
   // De-interleave: i digits are at even positions, j at odd
   std::string i_str, j_str;
-  for (size_t idx = 0; idx < z_str.length(); idx += 2) {
-    i_str += z_str[idx];
-    if (idx + 1 < z_str.length()) {
-      j_str += z_str[idx + 1];
-    }
-  }
-  
+  deinterleave_digits(z_str, i_str, j_str);
+
   // Convert radix-7 strings to integers
   i = radix_to_int(i_str, 7);
   j = radix_to_int(j_str, 7);

@@ -20,6 +20,8 @@
   show_points = FALSE,
   point_size = "auto",
   point_color = "red",
+  point_alpha = 1,
+  jitter = TRUE,
   crop = TRUE,
   crop_expand = 0.1,
   main = NULL,
@@ -69,6 +71,12 @@ Points are jittered within their assigned hexagon.}
 }}
 
 \item{point_color}{Color of points (default "red")}
+
+\item{point_alpha}{Transparency for points (0-1, default 1)}
+
+\item{jitter}{If TRUE (default), points are randomly scattered within
+their assigned hexagon. If FALSE, all points in a cell are plotted at
+the cell centroid instead.}
 
 \item{crop}{Crop to data extent (default TRUE)}
 

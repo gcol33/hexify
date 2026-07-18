@@ -51,7 +51,7 @@ fine_grid <- hexify_grid(area = 100, aperture = 3, resround = "up")
 \code{\link{hexify}} for the main user function,
 \code{\link{hexify_grid_to_cell}} for coordinate conversion
 
-Other hexify main: 
-\code{\link{hexify}()}
+Other hexify main:
+\code{\link[=hexify]{hexify()}}
 }
 \concept{hexify main}

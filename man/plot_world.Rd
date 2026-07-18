@@ -27,7 +27,7 @@ plot_world()
 plot_world(fill = "lightblue", border = "darkblue")
 }
 \seealso{
-Other visualization: 
-\code{\link{hexify_heatmap}()}
+Other visualization:
+\code{\link[=hexify_heatmap]{hexify_heatmap()}}
 }
 \concept{visualization}

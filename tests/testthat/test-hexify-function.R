@@ -240,10 +240,13 @@ test_that("hexify handles NA coordinate values", {
 
   expect_warning(
     result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000),
-    "coordinate pairs contain NA"
+    "2 coordinate pairs contain NA"
   )
 
-  expect_equal(nrow(result), 3)
+  # Rows with an NA lon or lat are dropped; only row 1 (lon=0, lat=45) is valid
+  expect_equal(nrow(result), 1)
+  expect_equal(as.data.frame(result)$lon, 0)
+  expect_equal(as.data.frame(result)$lat, 45)
 })
 
 test_that("hexify errors on all NA coordinates", {

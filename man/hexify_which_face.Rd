@@ -21,15 +21,15 @@ Returns the icosahedral face index (0-19) containing the given coordinates.
 face <- hexify_which_face(16.37, 48.21)
 }
 \seealso{
-Other projection: 
-\code{\link{hexify_build_icosa}()},
-\code{\link{hexify_face_centers}()},
-\code{\link{hexify_forward}()},
-\code{\link{hexify_forward_to_face}()},
-\code{\link{hexify_get_precision}()},
-\code{\link{hexify_inverse}()},
-\code{\link{hexify_projection_stats}()},
-\code{\link{hexify_set_precision}()},
-\code{\link{hexify_set_verbose}()}
+Other projection:
+\code{\link[=hexify_build_icosa]{hexify_build_icosa()}},
+\code{\link[=hexify_face_centers]{hexify_face_centers()}},
+\code{\link[=hexify_forward]{hexify_forward()}},
+\code{\link[=hexify_forward_to_face]{hexify_forward_to_face()}},
+\code{\link[=hexify_get_precision]{hexify_get_precision()}},
+\code{\link[=hexify_inverse]{hexify_inverse()}},
+\code{\link[=hexify_projection_stats]{hexify_projection_stats()}},
+\code{\link[=hexify_set_precision]{hexify_set_precision()}},
+\code{\link[=hexify_set_verbose]{hexify_set_verbose()}}
 }
 \concept{projection}

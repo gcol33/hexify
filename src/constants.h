@@ -129,6 +129,25 @@ constexpr PlaneTriLayout kPlaneLayout[20] = {
 };
 
 // =============================================================================
+// Grid Bounds
+// =============================================================================
+// Mirrors R/constants.R's MIN_RESOLUTION/MAX_RESOLUTION. Resolutions outside
+// this range are rejected before they can reach shift-overflow or
+// scale-to-infinity arithmetic in the grid-dimension calculations.
+
+constexpr int kMinResolution = 0;
+constexpr int kMaxResolution = 30;
+
+// Valid range for a quad index (12 quads: 0 = north pole, 1-10 = equatorial
+// belt, 11 = south pole)
+constexpr int kMinQuad = 0;
+constexpr int kMaxQuad = 11;
+
+// Valid range for an icosahedron triangle face index
+constexpr int kMinFace = 0;
+constexpr int kMaxFace = 19;
+
+// =============================================================================
 // Numerical Precision Constants
 // =============================================================================
 

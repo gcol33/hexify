@@ -268,7 +268,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 #' @keywords internal
 #' @export
 #' @examples
-#' info <- hexify_cell_to_quad_ij(1702, resolution = 5, aperture = 3)
+#' info <- hexify_cell_id_to_quad_ij(1702, resolution = 5, aperture = 3)
 hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)

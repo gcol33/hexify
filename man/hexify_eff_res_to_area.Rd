@@ -17,13 +17,13 @@ Calculates approximate cell area for ISEA3H (aperture 3) grids.
 Based on calibration: eff_res 10 = 863.8006 km^2.
 }
 \seealso{
-Other grid statistics: 
-\code{\link{dg_closest_res_to_area}()},
-\code{\link{dgearthstat}()},
-\code{\link{hexify_area_to_eff_res}()},
-\code{\link{hexify_compare_resolutions}()},
-\code{\link{hexify_eff_res_to_resolution}()},
-\code{\link{hexify_resolution_to_eff_res}()}
+Other grid statistics:
+\code{\link[=dg_closest_res_to_area]{dg_closest_res_to_area()}},
+\code{\link[=dgearthstat]{dgearthstat()}},
+\code{\link[=hexify_area_to_eff_res]{hexify_area_to_eff_res()}},
+\code{\link[=hexify_compare_resolutions]{hexify_compare_resolutions()}},
+\code{\link[=hexify_eff_res_to_resolution]{hexify_eff_res_to_resolution()}},
+\code{\link[=hexify_resolution_to_eff_res]{hexify_resolution_to_eff_res()}}
 }
 \concept{grid statistics}
 \keyword{internal}

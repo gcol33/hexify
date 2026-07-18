@@ -20,9 +20,9 @@ Checks whether a 'dggridR' grid object is compatible with hexify functions.
 Returns TRUE if compatible, or throws an error describing incompatibilities.
 }
 \seealso{
-Other 'dggridR' compatibility: 
-\code{\link{as_dggrid}()},
-\code{\link{dggrid_43h_sequence}()},
-\code{\link{from_dggrid}()}
+Other 'dggridR' compatibility:
+\code{\link[=as_dggrid]{as_dggrid()}},
+\code{\link[=dggrid_43h_sequence]{dggrid_43h_sequence()}},
+\code{\link[=from_dggrid]{from_dggrid()}}
 }
 \concept{'dggridR' compatibility}

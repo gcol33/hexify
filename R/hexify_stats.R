@@ -61,8 +61,7 @@ dgearthstat <- function(dggs) {
 
     # ISEA HexGridInfo
     ap <- if (g@aperture == "4/3") {
-      level <- as.integer(g@resolution / 2)
-      n_cells <- 10 * (4^level) * (3^(g@resolution - level)) + 2
+      n_cells <- ap43_n_cells(g@resolution)
       3L
     } else {
       ap_int <- as.integer(g@aperture)
@@ -88,8 +87,7 @@ dgearthstat <- function(dggs) {
     stop("dggs must be a hexify_grid or HexGridInfo object")
   }
 
-  resolution <- get_grid_resolution(dggs)
-
+  resolution <- get_grid_resolution(dggs, require = TRUE)
 
   # DGGRID cell count formula: N = 10 * aperture^res + 2
   # This accounts for the 12 pentagon cells at icosahedron vertices
@@ -117,8 +115,6 @@ dgearthstat <- function(dggs) {
     aperture = dggs$aperture
   ))
 }
-
-# NOTE: dgmaxcell() is defined in dggrid_compat.R for dggridR compatibility
 
 #' Find closest resolution for target cell area
 #'

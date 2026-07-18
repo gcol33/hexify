@@ -628,11 +628,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #'                                    resolution = 10, aperture = 3)
 #' # Should equal original cell_id
 hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
-
-  validate_aperture(aperture)
-  validate_resolution(resolution)
-
-  cpp_cell_to_quad_ij(
+  hexify_cell_id_to_quad_ij(
     cell_id = as.numeric(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)

@@ -107,6 +107,10 @@ static ProjectionWithStatus project_to_face_with_validation(const Geo& geo, cons
 }
 
 std::pair<double,double> project_to_face(const Geo& geo, const IcosaData& ico_data, int face) {
+  if (face < kMinFace || face > kMaxFace) {
+    throw std::invalid_argument("project_to_face: face must be between 0 and 19");
+  }
+
   const double glon = geo.lon;
   const double glat = geo.lat;
 

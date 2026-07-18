@@ -1154,6 +1154,10 @@ static int compute_subtriangle(double x, double y) {
 // false if the point is in an invalid region (e.g., outside the valid quad bounds).
 bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
                               int& out_icosa_triangle_face, double& out_icosa_triangle_x, double& out_icosa_triangle_y) {
+    if (quad < kMinQuad || quad > kMaxQuad) {
+        throw std::invalid_argument("try_quad_xy_to_icosa_tri: quad must be between 0 and 11");
+    }
+
     // Detect which of 6 sub-regions the point falls into
     int subTri = compute_subtriangle(quad_x, quad_y);
 

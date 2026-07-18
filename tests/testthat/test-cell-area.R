@@ -59,6 +59,11 @@ test_that("cell_area() returns per-cell areas for H3", {
   expect_false(areas[1] == areas[2])
   # Both should be positive
   expect_true(all(areas > 0))
+  # Exact geodesic areas (km^2) for these two cells, computed via the H3 C
+  # library at resolution 5; both are within known bounds of the published
+  # resolution-5 average of 252.904 km^2 (H3_AVG_AREA_KM2[6] in constants.R)
+  expect_equal(unname(areas[1]), 187.9593512, tolerance = 1e-6)
+  expect_equal(unname(areas[2]), 232.5434903, tolerance = 1e-6)
 })
 
 test_that("cell_area() caching works for H3", {

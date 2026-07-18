@@ -9,10 +9,14 @@
 #'
 #' @param hex_data A HexData object (from [hexify()]).
 #' @param ... Named summary expressions (tidyeval). Each expression is
-#'   evaluated per cell group. Examples: `mean_temp = mean(temperature)`,
-#'   `n = dplyr::n()`, `max_elev = max(elevation, na.rm = TRUE)`.
+#'   evaluated per cell group with the group's columns available by name.
+#'   Examples: `mean_temp = mean(temperature)`,
+#'   `n_species = length(unique(species))`,
+#'   `max_elev = max(elevation, na.rm = TRUE)`. Provide either `...` or
+#'   `.fns`, not both.
 #' @param .fns Optional named list of functions for formula-style aggregation.
-#'   Example: `.fns = list(mean_temp = ~mean(temperature))`.
+#'   Example: `.fns = list(mean_temp = ~mean(temperature))`. Provide either
+#'   `...` or `.fns`, not both.
 #' @param geometry Logical. If `TRUE`, attach cell center points as an
 #'   sf geometry column (requires sf). Default `FALSE`.
 #'
@@ -64,9 +68,14 @@ hex_summarize <- function(hex_data, ..., .fns = NULL, geometry = FALSE) {
   # Capture user expressions
   dots <- rlang::enquos(...)
 
-  # Group by cell_id
+  if (length(dots) > 0 && !is.null(.fns)) {
+    stop("Provide summary expressions via either '...' or '.fns', not both")
+  }
+
+  # Group by cell_id, preserving first-occurrence order so cell_ids stays
+  # aligned with split_df's group order (split() would otherwise sort groups)
   cell_ids <- unique(df$cell_id)
-  split_df <- split(df, df$cell_id)
+  split_df <- split(df, factor(df$cell_id, levels = cell_ids))
 
   if (length(dots) == 0 && is.null(.fns)) {
     # No summary expressions: just count

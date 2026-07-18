@@ -152,10 +152,11 @@ test_that("validate_aperture errors on vector input", {
 # MAX_CELL_ID
 # =============================================================================
 
-test_that("max_cell_id returns 20 for resolution 0", {
-  expect_equal(hexify:::max_cell_id(0, 3), 20)
-  expect_equal(hexify:::max_cell_id(0, 4), 20)
-  expect_equal(hexify:::max_cell_id(0, 7), 20)
+test_that("max_cell_id returns 12 for resolution 0", {
+  # N = 10 * aperture^0 + 2 = 12, independent of aperture
+  expect_equal(hexify:::max_cell_id(0, 3), 12)
+  expect_equal(hexify:::max_cell_id(0, 4), 12)
+  expect_equal(hexify:::max_cell_id(0, 7), 12)
 })
 
 test_that("max_cell_id increases with resolution", {
@@ -183,7 +184,7 @@ test_that("max_cell_id formula is correct", {
 
 test_that("validate_cell_id returns TRUE for valid cell IDs", {
   result <- hexify:::validate_cell_id(
-    c(1, 10, 20), resolution = 0, aperture = 3, warn = FALSE
+    c(1, 10, 12), resolution = 0, aperture = 3, warn = FALSE
   )
   expect_true(all(result))
 })

@@ -5,6 +5,38 @@
 # to accept grid specifications, eliminating the need to repeat
 # aperture/resolution parameters.
 
+#' Normalize antimeridian-crossing polygon coordinates
+#'
+#' Shifts longitudes of a ring's coordinate matrix so an antimeridian-crossing
+#' polygon becomes contiguous instead of spanning nearly the full [-180, 180]
+#' range. Downstream `sf::st_wrap_dateline()` then splits it correctly for
+#' flat-map rendering.
+#'
+#' @param coords A 2+ column matrix whose first column is longitude
+#' @return The same matrix, with the longitude column normalized if the ring
+#'   crosses the antimeridian
+#' @noRd
+normalize_antimeridian_coords <- function(coords) {
+  lons <- coords[, 1]
+  lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
+
+  if (lon_range > 180) {
+    # Polygon crosses antimeridian - normalize to be contiguous.
+    # Shift negative lons to 0-360 range.
+    lons[lons < 0] <- lons[lons < 0] + 360
+    coords[, 1] <- lons
+
+    # Now shift back to standard range, but keeping contiguity: if the
+    # centroid ends up > 180, shift everything by -360.
+    mean_lon <- mean(lons)
+    if (mean_lon > 180) {
+      coords[, 1] <- coords[, 1] - 360
+    }
+  }
+
+  coords
+}
+
 # =============================================================================
 # COORDINATE CONVERSION HELPERS
 # =============================================================================
@@ -44,7 +76,7 @@ lonlat_to_cell <- function(lon, lat, grid) {
   }
 
   if (g@aperture == "4/3") {
-    level <- as.integer(g@resolution / 2)
+    level <- ap43_level(g@resolution)
     cpp_lonlat_to_cell_ap43(
       as.numeric(lon),
       as.numeric(lat),
@@ -86,7 +118,7 @@ cell_to_lonlat <- function(cell_id, grid) {
   }
 
   if (g@aperture == "4/3") {
-    level <- as.integer(g@resolution / 2)
+    level <- ap43_level(g@resolution)
     cpp_cell_to_lonlat_ap43(
       as.numeric(cell_id),
       g@resolution,
@@ -163,16 +195,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
     boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
     polygons <- lapply(boundaries, function(coords) {
       if (nrow(coords) == 0) return(sf::st_polygon())
-      lons <- coords[, 1]
-      lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
-      if (lon_range > 180) {
-        lons[lons < 0] <- lons[lons < 0] + 360
-        coords[, 1] <- lons
-        mean_lon <- mean(lons)
-        if (mean_lon > 180) {
-          coords[, 1] <- coords[, 1] - 360
-        }
-      }
+      coords <- normalize_antimeridian_coords(coords)
       sf::st_polygon(list(coords))
     })
     sfc <- sf::st_sfc(polygons, crs = g@crs)
@@ -186,8 +209,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   }
 
   # ISEA path: generate polygons using C++ function
-  # Convert aperture to integer for C++ (mixed aperture "4/3" uses 3)
-  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+  aperture_int <- aperture_to_int(g@aperture)
 
   corners_list <- cpp_cell_to_corners(
     as.numeric(cell_id),
@@ -202,23 +224,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   # orthographic projections, pass wrap_dateline = FALSE to keep cells intact.
 
   polygons <- lapply(corners_list, function(coords) {
-    lons <- coords[, 1]
-    lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
-
-    if (lon_range > 180) {
-      # Polygon crosses antimeridian - normalize to be contiguous
-      # Shift negative lons to 0-360 range
-      lons[lons < 0] <- lons[lons < 0] + 360
-      coords[, 1] <- lons
-
-      # Now shift back to standard range, but keeping contiguity
-      # If centroid is > 180, shift everything by -360
-      mean_lon <- mean(lons)
-      if (mean_lon > 180) {
-        coords[, 1] <- coords[, 1] - 360
-      }
-    }
-
+    coords <- normalize_antimeridian_coords(coords)
     sf::st_polygon(list(coords))
   })
 
@@ -365,8 +371,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
 
   # Estimate cell count for warning (ISEA)
   if (g@aperture == "4/3") {
-    level <- as.integer(g@resolution / 2)
-    n_cells <- 10 * (4^level) * (3^(g@resolution - level)) + 2
+    n_cells <- ap43_n_cells(g@resolution)
   } else {
     ap <- as.integer(g@aperture)
     n_cells <- 10 * (ap^g@resolution) + 2
@@ -614,7 +619,7 @@ cell_area <- function(cell_id = NULL, grid) {
   if (!is_h3_grid(g)) {
     areas <- rep(g@area_km2, length(cell_id))
     if (is.numeric(cell_id)) {
-      names(areas) <- as.character(as.integer(cell_id))
+      names(areas) <- as.character(cell_id)
     } else {
       names(areas) <- as.character(cell_id)
     }
@@ -654,13 +659,8 @@ cell_to_index <- function(cell_id, grid) {
   }
 
   # Determine index type based on aperture
-  index_type <- if (g@aperture == "3") "z3"
-                else if (g@aperture == "7") "z7"
-                else "zorder"
-
-
-  # Convert aperture to integer for C++ functions
-  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+  index_type <- index_type_for_aperture(g@aperture)
+  aperture_int <- aperture_to_int(g@aperture)
 
   sapply(cell_id, function(id) {
     # Get quad/ij coordinates
@@ -705,12 +705,8 @@ get_parent <- function(cell_id, grid, levels = 1L) {
     return(cpp_h3_cellToParent(as.character(cell_id), parent_res))
   }
 
-  index_type <- if (g@aperture == "3") "z3"
-                else if (g@aperture == "7") "z7"
-                else "zorder"
-
-  # Convert aperture to integer for C++ functions
-  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+  index_type <- index_type_for_aperture(g@aperture)
+  aperture_int <- aperture_to_int(g@aperture)
 
   # Get index, get parent, convert back
   parent_res <- g@resolution - levels
@@ -762,12 +758,8 @@ get_children <- function(cell_id, grid, levels = 1L) {
     stop("Cannot get children: would exceed maximum resolution")
   }
 
-  index_type <- if (g@aperture == "3") "z3"
-                else if (g@aperture == "7") "z7"
-                else "zorder"
-
-  # Convert aperture to integer for C++ functions
-  aperture_int <- if (g@aperture == "4/3") 3L else as.integer(g@aperture)
+  index_type <- index_type_for_aperture(g@aperture)
+  aperture_int <- aperture_to_int(g@aperture)
 
   lapply(cell_id, function(id) {
     qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)

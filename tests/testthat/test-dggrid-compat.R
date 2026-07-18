@@ -23,7 +23,6 @@ load_validation_data <- function(aperture, resolution) {
 # =============================================================================
 
 test_that("hexify matches dggridR for aperture 3, resolution 3", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 3)
@@ -49,7 +48,6 @@ test_that("hexify matches dggridR for aperture 3, resolution 3", {
 })
 
 test_that("hexify matches dggridR for aperture 3, resolution 5", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 5)
@@ -75,7 +73,6 @@ test_that("hexify matches dggridR for aperture 3, resolution 5", {
 })
 
 test_that("hexify matches dggridR for aperture 3, resolution 7", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 7)
@@ -105,7 +102,6 @@ test_that("hexify matches dggridR for aperture 3, resolution 7", {
 # =============================================================================
 
 test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 3", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 3)
@@ -131,7 +127,6 @@ test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 3", {
 })
 
 test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 5", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 5)
@@ -155,7 +150,6 @@ test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 5", {
 })
 
 test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 7", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 7)
@@ -183,7 +177,6 @@ test_that("hexify batch cell_id matches dggridR for aperture 3, resolution 7", {
 # =============================================================================
 
 test_that("hexify cell_id matches dggridR cell IDs for aperture 3", {
-  skip_on_cran()
   setup_icosa()
 
   for (res in c(3, 5, 7)) {
@@ -216,7 +209,6 @@ test_that("hexify cell_id matches dggridR cell IDs for aperture 3", {
 # =============================================================================
 
 test_that("hexify face assignment matches dggridR tnum", {
-  skip_on_cran()
   setup_icosa()
 
   for (res in c(3, 5, 7)) {
@@ -237,7 +229,6 @@ test_that("hexify face assignment matches dggridR tnum", {
 # =============================================================================
 
 test_that("hexify projection matches dggridR tx/ty", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 5)  # Use res 5 data
@@ -267,7 +258,6 @@ test_that("hexify projection matches dggridR tx/ty", {
 # =============================================================================
 
 test_that("lon/lat -> cell -> lon/lat round-trip lands in same cell", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 5)
@@ -302,7 +292,6 @@ test_that("lon/lat -> cell -> lon/lat round-trip lands in same cell", {
 })
 
 test_that("quad/i/j -> cell -> quad/i/j round-trip is exact", {
-  skip_on_cran()
   setup_icosa()
 
   ref <- load_validation_data(3, 5)

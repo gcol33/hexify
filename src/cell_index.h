@@ -22,13 +22,6 @@ void index_to_cell(const std::string& index, int aperture,
                    IndexType index_type,
                    int& face, long long& i, long long& j, int& resolution);
 
-std::string cell_to_index_ap34(int face, long long i, long long j,
-                               const std::vector<int>& ap_seq);
-
-void index_to_cell_ap34(const std::string& index,
-                        const std::vector<int>& ap_seq,
-                        int& face, long long& i, long long& j);
-
 uint64_t index_to_uint64(const std::string& index, int aperture,
                          IndexType index_type);
 

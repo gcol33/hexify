@@ -195,11 +195,7 @@ hex_grid <- function(area_km2 = NULL,
       stop("area_km2 must be a positive number")
     }
 
-    # Cell count formula: N = 10 * aperture^res + 2
-    # Solving for res: res = log((N - 2) / 10) / log(aperture)
-    # where N = EARTH_SURFACE_KM2 / area_km2
-    n_cells <- EARTH_SURFACE_KM2 / area_km2
-    res_exact <- log((n_cells - 2) / 10) / log(aperture_num)
+    res_exact <- calculate_resolution_for_area(area_km2, aperture_num)
 
     # Apply rounding
     resolution <- switch(resround,
@@ -223,8 +219,7 @@ hex_grid <- function(area_km2 = NULL,
   # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
   if (aperture_str == "4/3") {
-    level <- as.integer(resolution / 2)
-    n_cells <- 10 * (4^level) * (3^(resolution - level)) + 2
+    n_cells <- ap43_n_cells(resolution)
   } else {
     n_cells <- 10 * (aperture_num^resolution) + 2
   }

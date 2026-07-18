@@ -121,18 +121,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 
     # Handle antimeridian-crossing polygons by normalizing coordinates
     polygons <- lapply(corners_list, function(coords) {
-      lons <- coords[, 1]
-      lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
-
-      if (lon_range > 180) {
-        lons[lons < 0] <- lons[lons < 0] + 360
-        coords[, 1] <- lons
-        mean_lon <- mean(lons)
-        if (mean_lon > 180) {
-          coords[, 1] <- coords[, 1] - 360
-        }
-      }
-
+      coords <- normalize_antimeridian_coords(coords)
       sf::st_polygon(list(coords))
     })
 

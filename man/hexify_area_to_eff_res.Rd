@@ -16,13 +16,13 @@ Effective resolution (may be fractional)
 Finds the effective resolution that gives approximately the target area.
 }
 \seealso{
-Other grid statistics: 
-\code{\link{dg_closest_res_to_area}()},
-\code{\link{dgearthstat}()},
-\code{\link{hexify_compare_resolutions}()},
-\code{\link{hexify_eff_res_to_area}()},
-\code{\link{hexify_eff_res_to_resolution}()},
-\code{\link{hexify_resolution_to_eff_res}()}
+Other grid statistics:
+\code{\link[=dg_closest_res_to_area]{dg_closest_res_to_area()}},
+\code{\link[=dgearthstat]{dgearthstat()}},
+\code{\link[=hexify_compare_resolutions]{hexify_compare_resolutions()}},
+\code{\link[=hexify_eff_res_to_area]{hexify_eff_res_to_area()}},
+\code{\link[=hexify_eff_res_to_resolution]{hexify_eff_res_to_resolution()}},
+\code{\link[=hexify_resolution_to_eff_res]{hexify_resolution_to_eff_res()}}
 }
 \concept{grid statistics}
 \keyword{internal}

@@ -17,7 +17,6 @@
 # =============================================================================
 
 test_that("Z3: lookup table matches DGGRID exactly", {
-  skip_on_cran()
   # DGGRID Z3 lookup table (DgZ3StringRF.cpp:135-140)
   z3_table <- matrix(c(
     "00", "22", "21",   # i=0, j=0,1,2
@@ -57,7 +56,6 @@ test_that("Z3: specific lookup table entries", {
 # =============================================================================
 
 test_that("Z3: decode all 9 lookup table entries", {
-  skip_on_cran()
   z3_codes <- list(
     list(code = "0000", i = 0, j = 0),  # "00"→[0][0]
     list(code = "0022", i = 0, j = 1),  # "22"→[0][1]
@@ -83,7 +81,6 @@ test_that("Z3: decode all 9 lookup table entries", {
 })
 
 test_that("Z3: decode reverse lookup table correctness", {
-  skip_on_cran()
   # Test that the reverse lookup matches DGGRID
   # DGGRID reverse table (DgZ3StringRF.cpp:196-253)
   reverse_cases <- list(
@@ -114,7 +111,6 @@ test_that("Z3: decode reverse lookup table correctness", {
 # =============================================================================
 
 test_that("Z3: Class I string length (even resolutions)", {
-  skip_on_cran()
   # Class I resolutions: 0, 2, 4, 6, ...
   # String length: 2 (face) + resolution digits
 
@@ -133,7 +129,6 @@ test_that("Z3: Class I string length (even resolutions)", {
 })
 
 test_that("Z3: Class II string length (odd resolutions)", {
-  skip_on_cran()
   # Class II resolutions: 1, 3, 5, 7, ...
   # String length: 2 (face) + resolution digits
 
@@ -172,7 +167,6 @@ test_that("Z3: Class II trimming behavior", {
 })
 
 test_that("Z3: Class II j-digit inference", {
-  skip_on_cran()
   # For Class II (odd resolution), last j digit is inferred from last i digit
   # Rule from DGGRID: i%3=0→j%3=0, i%3=1→j%3=2, i%3=2→j%3=1
 
@@ -241,7 +235,6 @@ test_that("Z3: multi-digit encoding at resolution 6", {
 # =============================================================================
 
 test_that("Z3: basic roundtrip for small coordinates", {
-  skip_on_cran()
   # Generate test cases with valid Class II coordinates
   test_cases_raw <- expand.grid(
     face = c(0, 5, 10, 19),
@@ -287,7 +280,6 @@ test_that("Z3: basic roundtrip for small coordinates", {
 })
 
 test_that("Z3: roundtrip for higher resolutions", {
-  skip_on_cran()
   # All coordinates must satisfy Class II constraint for odd resolutions
   test_cases <- list(
     # Resolution 4 (Class I): eff_res=2, max=8
@@ -318,7 +310,6 @@ test_that("Z3: roundtrip for higher resolutions", {
 # =============================================================================
 
 test_that("Z3: face number encoding", {
-  skip_on_cran()
   # All faces should encode with leading zero if needed
   for (face in 0:19) {
     index <- cpp_cell_to_index(face, 0, 0, 1, 3, "z3")
@@ -331,7 +322,6 @@ test_that("Z3: face number encoding", {
 })
 
 test_that("Z3: resolution 0 (face only)", {
-  skip_on_cran()
   # At resolution 0, only faces 0-11 are valid (the 12 pentagons)
   # Faces 12-19 only appear at resolution 1+
   for (face in c(0, 5, 10, 11)) {  # Changed from c(0, 5, 10, 15, 19)
@@ -354,7 +344,6 @@ test_that("Z3: resolution 0 (face only)", {
 # =============================================================================
 
 test_that("Z3: parent/child relationships", {
-  skip_on_cran()
   # Create a cell at resolution 5 (Class II) with valid coordinates
   # i=10, j=11: i%3=1, j%3=2 ✓
   child <- cpp_cell_to_index(0, 10, 11, 5, 3, "z3")
@@ -376,7 +365,6 @@ test_that("Z3: parent/child relationships", {
 })
 
 test_that("Z3: multi-level parent traversal", {
-  skip_on_cran()
   # Start at resolution 6 with valid coordinates
   idx_r6 <- cpp_cell_to_index(0, 20, 22, 6, 3, "z3")  # i%3=2, j%3=1 ✓
   
@@ -411,7 +399,6 @@ test_that("Z3: index comparison", {
 })
 
 test_that("Z3: resolution extraction", {
-  skip_on_cran()
   # Resolution extraction works for both Class I and Class II
   # Resolution = string length (after face), regardless of class
 
@@ -441,7 +428,6 @@ test_that("Z3: resolution extraction", {
 # =============================================================================
 
 test_that("Z3: produces different results than Z-Order", {
-  skip_on_cran()
   # Z3 and Z-Order should give different indices for same input
   # IMPORTANT: Use VALID coordinates for Class II!
   test_cases <- list(
