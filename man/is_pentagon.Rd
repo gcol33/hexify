@@ -22,10 +22,14 @@ Pentagon cells have 5 neighbors instead of 6.
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{isPentagon} function.
 
-\strong{ISEA backend:} The 12 pentagons are located at icosahedron vertices.
-At any resolution, the pentagon cells are those whose IJ coordinates
-are (0, 0) within the 12 vertex quads (quads 0 and 11 for the poles,
-and specific cells in quads 1-10).
+\strong{ISEA backend:} The 12 pentagons are located at icosahedron vertices,
+which are always the (i, j) = (0, 0) cell of their quad. Pentagon status
+is checked by decoding each input cell ID's own (quad, i, j) coordinates
+via \code{\link[=cell_to_lonlat]{cell_to_lonlat()}}'s underlying grid math and testing whether i and j
+are both zero, rather than by re-deriving each vertex's cell ID (the
+forward direction has aperture-specific quirks -- e.g. aperture 7's
+substrate/surrogate coordinate distinction -- that make a single fixed
+formula for "the (0,0) cell ID of quad Q" unreliable across apertures).
 }
 \examples{
 \donttest{

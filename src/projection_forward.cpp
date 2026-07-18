@@ -196,6 +196,9 @@ static double face_distance(const Geo& point, const IcosaData& ico_data, int fac
 }
 
 ProjectionResult snyder_forward(double lon_deg, double lat_deg) {
+  if (!std::isfinite(lon_deg) || !std::isfinite(lat_deg)) {
+    throw std::invalid_argument("snyder_forward: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
+  }
   const IcosaData& ico_data = ico();
   const Geo g(deg2rad(lon_deg), deg2rad(lat_deg));
 

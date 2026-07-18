@@ -70,11 +70,28 @@ hex_compact <- function(cell_ids, grid) {
 
     if (length(full_parents) > 0) {
       changed <- TRUE
-      # Remove children of full parents, add parent
+      # Remove children of full parents, add parent. If the input already
+      # contained the parent id itself alongside all 7 children, that parent
+      # entry's own `parents` value (its grandparent) never matches
+      # `full_parents`, so it would survive untouched while the
+      # newly-synthesized parent is also appended -- drop it explicitly to
+      # avoid emitting the same parent id twice.
       is_child_of_full <- compactable & parents %in% full_parents
-      remaining <- ids[!is_child_of_full]
+      is_full_parent_itself <- ids %in% full_parents
+      remaining <- ids[!is_child_of_full & !is_full_parent_itself]
       ids <- c(remaining, full_parents)
     }
+  }
+
+  # Mixed-resolution input can also leave a coarser ancestor and one of its
+  # own (not-fully-compactable) descendants both present in the result --
+  # the ancestor's area already covers the descendant's, so the descendant
+  # is redundant even though it's not a literal duplicate ID.
+  if (length(ids) > 1L) {
+    is_redundant <- vapply(seq_along(ids), function(k) {
+      any(nchar(ids) < nchar(ids[k]) & substr(ids[k], 1, nchar(ids)) == ids)
+    }, logical(1))
+    ids <- ids[!is_redundant]
   }
 
   ids

@@ -2,6 +2,7 @@
 #include "constants.h"
 #include <array>
 #include <cmath>
+#include <stdexcept>
 
 namespace hexify {
 
@@ -179,6 +180,9 @@ double get_face_azimuth_offset(int face) {
 }
 
 int which_face(double lon_deg, double lat_deg) {
+  if (!std::isfinite(lon_deg) || !std::isfinite(lat_deg)) {
+    throw std::invalid_argument("which_face: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
+  }
   const IcosaData& icosa = ico();
   const Geo point(deg2rad(lon_deg), deg2rad(lat_deg));
   int best = 0;

@@ -15,10 +15,14 @@
 #' @details
 #' **H3 backend:** Uses the vendored H3 `isPentagon` function.
 #'
-#' **ISEA backend:** The 12 pentagons are located at icosahedron vertices.
-#' At any resolution, the pentagon cells are those whose IJ coordinates
-#' are (0, 0) within the 12 vertex quads (quads 0 and 11 for the poles,
-#' and specific cells in quads 1-10).
+#' **ISEA backend:** The 12 pentagons are located at icosahedron vertices,
+#' which are always the (i, j) = (0, 0) cell of their quad. Pentagon status
+#' is checked by decoding each input cell ID's own (quad, i, j) coordinates
+#' via [cell_to_lonlat()]'s underlying grid math and testing whether i and j
+#' are both zero, rather than by re-deriving each vertex's cell ID (the
+#' forward direction has aperture-specific quirks -- e.g. aperture 7's
+#' substrate/surrogate coordinate distinction -- that make a single fixed
+#' formula for "the (0,0) cell ID of quad Q" unreliable across apertures).
 #'
 #' @seealso [get_neighbors()] for neighbor finding (pentagons have 5 neighbors)
 #'
@@ -38,27 +42,13 @@ is_pentagon <- function(cell_id, grid) {
     return(as.logical(cpp_h3_isPentagon(as.character(cell_id))))
   }
 
-  # ISEA backend: pentagon cells are at icosahedron vertices
-  # The 12 pentagons correspond to cells at (i=0, j=0) in:
-  #   - Quad 0 (north pole)
-  #   - Quads 1-10: the cell at origin of each quad
-  #   - Quad 11 (south pole)
-  # At resolution 0, cell_id 1 through 12 are the 12 quads (all pentagons)
-  # At higher resolutions, pentagon = cell_id corresponding to (quad, 0, 0)
-  ap <- as.integer(g@aperture)
-  res <- g@resolution
-
-  if (res == 0L) {
-    # At resolution 0, all 12 cells are pentagons
+  if (g@resolution == 0L) {
+    # At resolution 0, all 12 cells (the icosahedron vertices) are pentagons
     return(rep(TRUE, length(cell_id)))
   }
 
-  # Pentagon cells are at (i=0, j=0) in each of the 12 quads.
-  # Compute their cell IDs directly from grid coordinates — no projection needed.
-  pentagon_ids <- cpp_quad_ij_to_cell(
-    quad = 0:11, i = rep(0, 12), j = rep(0, 12),
-    resolution = res, aperture = ap
-  )
-
-  cell_id %in% pentagon_ids
+  # Pentagon cells are exactly the (i, j) = (0, 0) cell of each quad.
+  ap <- aperture_to_int(g@aperture)
+  qij <- cpp_cell_to_quad_ij(cell_id, g@resolution, ap)
+  qij$i == 0 & qij$j == 0
 }

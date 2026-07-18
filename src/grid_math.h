@@ -154,6 +154,14 @@ inline void rotate_point_inverse(double& x, double& y,
  */
 inline void quantize_rotation_classI(double x, double y,
                                      long long& out_i, long long& out_j) {
+    // Guard against NaN/Inf inputs to avoid UB in CubeCoord::round_to_nearest()'s
+    // std::llround() call. Matches coordinate_transforms.cpp::quantize_class1.
+    if (!std::isfinite(x) || !std::isfinite(y)) {
+        out_i = 0;
+        out_j = 0;
+        return;
+    }
+
     // Convert to cube coordinates using flat-top layout
     CubeCoord cube = cartesian_to_cube(x, y, kSqrt3);
 

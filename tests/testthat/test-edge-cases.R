@@ -109,17 +109,26 @@ test_that("cell centers re-encode to the same cell", {
 # =============================================================================
 
 test_that("exactly 12 pentagons exist for all ISEA apertures", {
+  # Deriving the 12 pentagon cell IDs via cpp_quad_ij_to_cell(quad=0:11, 0, 0)
+  # only holds for apertures 3/4; aperture 7's substrate/surrogate coordinate
+  # distinction makes that forward computation unreliable (see #32). Sweep
+  # every valid cell ID instead and let is_pentagon() itself (which decodes
+  # each ID's own quad/i/j) determine pentagon status -- this exercises the
+  # full valid cell-ID range rather than a handful of specific candidates.
+  max_cell_id <- function(res, ap) {
+    err <- tryCatch({
+      hexify:::cpp_cell_to_quad_ij(.Machine$integer.max, res, ap)
+      NA_real_
+    }, error = function(e) conditionMessage(e))
+    as.numeric(sub(".*\\[1, ([0-9]+)\\].*", "\\1", err))
+  }
+
   for (ap in c(3, 4, 7)) {
     res <- if (ap == 7) 3 else 5
     g <- hex_grid(resolution = res, aperture = ap)
 
-    # Pentagon cell IDs are at (quad=0:11, i=0, j=0)
-    pentagon_ids <- hexify:::cpp_quad_ij_to_cell(
-      quad = 0:11, i = rep(0, 12), j = rep(0, 12),
-      resolution = res, aperture = ap
-    )
-
-    pent_flags <- is_pentagon(pentagon_ids, g)
+    n <- max_cell_id(res, ap)
+    pent_flags <- is_pentagon(seq_len(n), g)
     expect_equal(sum(pent_flags), 12L,
                  info = sprintf("12 pentagons, ap %d", ap))
   }

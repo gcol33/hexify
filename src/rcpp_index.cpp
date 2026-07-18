@@ -18,6 +18,7 @@
 #include "cell_index.h"
 #include "index_z3.h"
 #include "index_z7.h"
+#include <cstdlib>
 
 using namespace Rcpp;
 
@@ -122,10 +123,19 @@ std::string cpp_get_default_index_type(int aperture) {
 std::string cpp_lonlat_to_index_ap3(double lon_deg, double lat_deg, int resolution,
                                      std::string index_type = "auto") {
   auto fwd = hexify::snyder_forward(lon_deg, lat_deg);
+  // Quantizing directly against the raw triangle-frame coordinates (as this
+  // used to do) yields (i,j) centered on the triangle's local origin, which
+  // can be negative -- a different, ungrounded coordinate frame from what
+  // cell_to_index()/z3::encode() expect (non-negative offsets from the
+  // face's corner, as produced by cpp_lonlat_to_cell() via the same fold
+  // used for aperture 4/7 below). Route through icosa_tri_to_quad_ij() first,
+  // matching cpp_lonlat_to_index_ap4/ap7() and cpp_lonlat_to_cell().
+  int face;
   long long i, j;
-  hexify::hex_quantize_ap3(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, i, j);
+  hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
+                                3, resolution, face, i, j);
   hexify::IndexType idx_type = parse_index_type(index_type);
-  return hexify::cell_to_index(fwd.face, i, j, resolution, 3, idx_type);
+  return hexify::cell_to_index(face, i, j, resolution, 3, idx_type);
 }
 
 // [[Rcpp::export]]
@@ -187,18 +197,13 @@ Rcpp::NumericVector cpp_index_to_lonlat(std::string index, int aperture,
   hexify::index_to_cell(index, aperture, idx_type, face, i, j, resolution);
 
   double lon, lat;
-  if (aperture == 3) {
-    double cx, cy;
-    hexify::hex_center_ap3(i, j, resolution, cx, cy);
-    auto ll = hexify::face_xy_to_ll(cx, cy, face);
-    lon = ll.first;
-    lat = ll.second;
-  } else {
-    // For aperture 4/7, `face` decoded from the index is a quad (0-11), not
-    // a raw icosahedron triangle face -- it must be folded back to the
-    // triangle frame via quad_ij_to_xy()/quad_xy_to_icosa_tri() before
-    // face_xy_to_ll(), mirroring the forward fold done in
-    // cpp_lonlat_to_index_ap4/ap7().
+  {
+    // `face` decoded from the index is a quad (0-11 for aperture 3 too, now
+    // that cpp_lonlat_to_index_ap3() folds through icosa_tri_to_quad_ij()
+    // like ap4/ap7 do), not a raw icosahedron triangle face -- it must be
+    // folded back to the triangle frame via
+    // quad_ij_to_xy()/quad_xy_to_icosa_tri() before face_xy_to_ll(),
+    // mirroring the forward fold done in cpp_lonlat_to_index_ap3/ap4/ap7().
     double quad_x, quad_y;
     hexify::quad_ij_to_xy(face, i, j, aperture, resolution, quad_x, quad_y);
 
@@ -316,6 +321,18 @@ std::string digits_to_z3_string(const IntegerVector& d) {
 
 } // anonymous namespace
 
+// hexify_assign() quantizes directly against the raw triangle-local (tx, ty)
+// coordinates (it does not fold through icosa_tri_to_quad_ij() into the
+// non-negative quad frame the way cell_to_index()'s pipeline does), so
+// hex_quantize_ap3() can legitimately return negative i/j here. z3::encode()/
+// decode() are the same DGGRID-verified digit table used by cell_to_index()
+// for the non-negative case and must stay byte-for-byte compatible with it
+// (tests assert exact strings/lengths against DGGRID's own table), so the
+// sign cannot be folded into that shared encoding. Instead, two extra trailing
+// digits (0 = non-negative, 1 = negative) carry the sign of i and j
+// separately; the magnitude digits are still produced by the unmodified
+// shared z3::encode()/decode().
+
 // [[Rcpp::export]]
 List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res,
                                       double center_thr = 0.4,
@@ -323,13 +340,17 @@ List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res,
   long long i, j;
   hexify::hex_quantize_ap3(tx, ty, eff_res, i, j);
 
-  std::string z3_str = hexify::z3::encode(i, j, eff_res);
+  int sign_i = (i < 0) ? 1 : 0;
+  int sign_j = (j < 0) ? 1 : 0;
+  std::string z3_str = hexify::z3::encode(std::llabs(i), std::llabs(j), eff_res);
 
   std::vector<int> digits;
-  digits.reserve(z3_str.size());
+  digits.reserve(z3_str.size() + 2);
   for (char c : z3_str) {
     digits.push_back(c - '0');
   }
+  digits.push_back(sign_i);
+  digits.push_back(sign_j);
 
   return List::create(
     Named("digits") = digits,
@@ -338,14 +359,34 @@ List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res,
   );
 }
 
+namespace {
+
+// Splits a hexify_assign() digit vector (magnitude digits + 2 trailing sign
+// flags) into a decoded, sign-restored (i, j) pair.
+void decode_signed_digits(const IntegerVector& d, int& out_resolution,
+                          long long& out_i, long long& out_j) {
+  if (d.size() < 2) {
+    Rcpp::stop("hex_index_z3: digit vector must include the trailing sign digits");
+  }
+  int mag_len = d.size() - 2;
+  IntegerVector mag(mag_len);
+  for (int idx = 0; idx < mag_len; ++idx) mag[idx] = d[idx];
+
+  std::string z3_str = digits_to_z3_string(mag);
+  hexify::z3::decode(z3_str, mag_len, out_i, out_j);
+  if (d[mag_len] != 0) out_i = -out_i;
+  if (d[mag_len + 1] != 0) out_j = -out_j;
+  out_resolution = mag_len;
+}
+
+} // anonymous namespace
+
 // [[Rcpp::export]]
 List cpp_hex_index_z3_center(IntegerVector d,
                              LogicalVector flip_classes = LogicalVector::create()) {
-  std::string z3_str = digits_to_z3_string(d);
-  int resolution = static_cast<int>(d.size());
-
+  int resolution;
   long long i, j;
-  hexify::z3::decode(z3_str, resolution, i, j);
+  decode_signed_digits(d, resolution, i, j);
 
   double cx, cy;
   hexify::hex_center_ap3(i, j, resolution, cx, cy);
@@ -360,11 +401,9 @@ List cpp_hex_index_z3_center(IntegerVector d,
 List cpp_hex_index_z3_corners(IntegerVector digs,
                               LogicalVector flip_classes = LogicalVector::create(),
                               double hex_radius = 1.0) {
-  std::string z3_str = digits_to_z3_string(digs);
-  int resolution = static_cast<int>(digs.size());
-
+  int resolution;
   long long i, j;
-  hexify::z3::decode(z3_str, resolution, i, j);
+  decode_signed_digits(digs, resolution, i, j);
 
   double out_x[6], out_y[6];
   hexify::hex_corners_ap3(i, j, resolution, hex_radius, out_x, out_y);

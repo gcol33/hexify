@@ -662,6 +662,10 @@ cell_to_index <- function(cell_id, grid) {
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
 
+  if (g@aperture == "4/3") {
+    stop_ap43_hierarchical_index_unsupported()
+  }
+
   sapply(cell_id, function(id) {
     # Get quad/ij coordinates
     qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
@@ -671,6 +675,24 @@ cell_to_index <- function(cell_id, grid) {
       g@resolution, aperture_int, index_type
     )
   })
+}
+
+#' Mixed aperture 4/3 grids don't have a hierarchical index encoding
+#'
+#' The Z3/zorder index string encoders size their digit capacity from the
+#' pure aperture-3/4 (i,j) range at a given resolution (3^eff_res / 2^res).
+#' A mixed "4/3" grid's actual (i,j) range at the same nominal resolution is
+#' larger (it mixes base-4 and base-3 subdivisions per level), so encoding it
+#' with those encoders silently truncates/collides. A correct fix needs a
+#' dedicated mixed-radix index format, not just routing to
+#' \code{cpp_cell_to_quad_ij_ap43()}/\code{cpp_quad_ij_to_cell_ap43()} (which
+#' correctly convert cell IDs to/from quad/i/j coordinates, but that alone
+#' isn't sufficient for hierarchical navigation).
+#' @noRd
+stop_ap43_hierarchical_index_unsupported <- function() {
+  stop("Hierarchical index navigation (cell_to_index()/get_parent()/get_children()) ",
+       "is not implemented for mixed aperture \"4/3\" grids. Use lonlat_to_cell()/",
+       "cell_to_lonlat() for coordinate conversion on these grids instead.")
 }
 
 #' Get parent cell
@@ -707,6 +729,10 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
+
+  if (g@aperture == "4/3") {
+    stop_ap43_hierarchical_index_unsupported()
+  }
 
   # Get index, get parent, convert back
   parent_res <- g@resolution - levels
@@ -760,6 +786,10 @@ get_children <- function(cell_id, grid, levels = 1L) {
 
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
+
+  if (g@aperture == "4/3") {
+    stop_ap43_hierarchical_index_unsupported()
+  }
 
   lapply(cell_id, function(id) {
     qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
