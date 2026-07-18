@@ -5,11 +5,52 @@
 #include "index_z3.h"
 #include "index_zorder.h"
 #include "index_z7.h"
+#include "coordinate_transforms.h"
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
 
 namespace hexify {
+
+// ---------------------------------------------------------------------------
+// Aperture-7 surrogate <-> DGGRID Q2DI reconciliation (Z7 index path only)
+//
+// z7::encode/decode are a faithful port of DGGRID's DgZ7StringRF, which
+// quantifies a DgQ2DICoord expressed on the quad's *Class I substrate* at
+// numClassI = (res + 1) / 2 aperture-7 levels (scale 7^numClassI). hexify's
+// canonical ap7 cell coordinate is the "surrogate": Class I for even res,
+// Class II for odd res, at scale sqrt(7)^res. For even res the two frames
+// coincide (7^(res/2) == sqrt(7)^res, Class I); for odd res they differ by a
+// single aperture-7 refinement (the surrogate is one Class II level coarser
+// than the Class I substrate the encoder walks).
+//
+// We reconcile geometrically through the shared, already-validated quad_xy
+// frame rather than duplicating any per-quad lattice algebra here, so this
+// adapter never touches the forward/inverse quantization pipeline.
+// ---------------------------------------------------------------------------
+namespace {
+
+inline int ap7_classI_res(int res) { return 2 * ((res + 1) / 2); }  // res if even, res+1 if odd
+
+void ap7_surrogate_to_q2di(long long sur_i, long long sur_j, int res,
+                           long long& q_i, long long& q_j) {
+  int cres = ap7_classI_res(res);
+  if (cres == res) { q_i = sur_i; q_j = sur_j; return; }
+  double qx, qy;
+  surrogate_ij_to_quad_xy_ap7(sur_i, sur_j, res, qx, qy);
+  quad_xy_to_surrogate_ij_ap7(qx, qy, cres, q_i, q_j);
+}
+
+void ap7_q2di_to_surrogate(long long q_i, long long q_j, int res,
+                           long long& sur_i, long long& sur_j) {
+  int cres = ap7_classI_res(res);
+  if (cres == res) { sur_i = q_i; sur_j = q_j; return; }
+  double qx, qy;
+  surrogate_ij_to_quad_xy_ap7(q_i, q_j, cres, qx, qy);
+  quad_xy_to_surrogate_ij_ap7(qx, qy, res, sur_i, sur_j);
+}
+
+} // anonymous namespace
 
 namespace {
   const int MAX_RES_AP3 = 30;
@@ -106,8 +147,12 @@ std::string cell_to_index(int face, long long i, long long j,
   } else if (index_type == IndexType::Z3) {
     result += z3::encode(i, j, resolution);
   } else if (index_type == IndexType::Z7) {
-    // Z7 encode already includes the base cell in its output
-    return z7::encode(face, i, j, resolution);
+    // Z7 encode already includes the base cell in its output. hexify stores ap7
+    // cells as surrogates; the DGGRID Z7 encoder expects a Q2DI on the Class I
+    // substrate, so reconcile first (identity for even res).
+    long long q_i, q_j;
+    ap7_surrogate_to_q2di(i, j, resolution, q_i, q_j);
+    return z7::encode(face, q_i, q_j, resolution);
   }
   
   return result;
@@ -158,7 +203,11 @@ void index_to_cell(const std::string& index, int aperture,
     // Calculate resolution from index length first
     resolution = index.length() - 2;
     int quadNum = face;
-    z7::decode(index, resolution, quadNum, i, j);
+    long long q_i, q_j;
+    z7::decode(index, resolution, quadNum, q_i, q_j);
+    // Decode returns a Class I substrate Q2DI; convert back to a surrogate
+    // (identity for even res) so downstream cell conversion sees hexify coords.
+    ap7_q2di_to_surrogate(q_i, q_j, resolution, i, j);
     face = quadNum;
   }
 }
