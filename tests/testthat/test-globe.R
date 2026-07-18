@@ -65,7 +65,7 @@ test_that("plot_globe(return_data = TRUE) returns valid, back-side-filtered geom
 
   # Back-side hexagons are filtered out: fewer cells than a full global grid
   full_grid <- hex_grid(area_km2 = 500000)
-  full_count <- 10 * (full_grid@aperture |> as.integer())^full_grid@resolution + 2
+  full_count <- 10 * as.integer(full_grid@aperture)^full_grid@resolution + 2
   expect_true(nrow(data$hexagons) < full_count)
 
   # Invalid geometries are repaired (st_buffer(0)) before being returned

@@ -60,7 +60,7 @@ in separate slots.
 For sf objects, coordinates are automatically extracted and transformed to
 'WGS84' (EPSG:4326) if needed. The geometry column is preserved.
 
-Either \code{area_km2} (or \code{area}), \code{diagonal}, or \code{resolution}
+Either \code{area_km2}, \code{diagonal}, or \code{resolution}
 must be provided unless a \code{grid} object is supplied.
 
 The HexData return type (default) stores the grid specification so downstream

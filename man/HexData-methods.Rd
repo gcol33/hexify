@@ -87,4 +87,10 @@
 S4 methods for HexData objects. These provide standard R operations
 for accessing data, subsetting, and conversion.
 }
+\details{
+Unlike \code{[.data.frame}, \code{drop} defaults to \code{FALSE}: selecting
+a single column returns a \code{HexData} object (preserving \code{grid}/
+\code{cell_id}/\code{cell_center}) rather than dropping to a bare vector.
+Pass \code{drop = TRUE} explicitly to get data.frame-style dropping.
+}
 \keyword{internal}

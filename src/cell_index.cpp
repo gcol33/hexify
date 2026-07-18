@@ -218,7 +218,9 @@ std::string uint64_to_index(uint64_t value, int resolution, int aperture,
   for (int r = 0; r < resolution; r++) {
     int shift = 60 - (r + 1) * bits_per_digit;
     int digit = static_cast<int>((value >> shift) & mask);
-    if (digit > max_digit) digit = 0;  // Safety clamp
+    if (digit > max_digit) {
+      throw std::runtime_error("hex_index: uint64 value has an out-of-range digit for this aperture");
+    }
     result += static_cast<char>('0' + digit);
   }
 
@@ -275,7 +277,19 @@ std::vector<std::string> get_children_indices(const std::string& index,
   index_to_cell(index, aperture, index_type, face, parent_i, parent_j, parent_res);
   
   int child_res = parent_res + 1;
-  
+
+  // Children beyond the aperture's max resolution are desired to be omitted
+  // (a query one level below the finest supported resolution just yields no
+  // children), so this is checked explicitly up front rather than relying
+  // on a catch-all around cell_to_index() below to swallow the resulting
+  // "resolution exceeds max" error -- which would also hide unrelated bugs.
+  int max_res_for_aperture = (aperture == 7) ? MAX_RES_AP7 :
+                             (aperture == 3) ? MAX_RES_AP3 :
+                             (aperture == 4) ? MAX_RES_AP4 : -1;
+  if (max_res_for_aperture >= 0 && child_res > max_res_for_aperture) {
+    return children;
+  }
+
   if (aperture == 7 && index_type == IndexType::Z7) {
     // For Z7, children are simply parent_index + digit (0-6)
     // The Z7 encoding is hierarchical - no coordinate computation needed
@@ -304,13 +318,10 @@ std::vector<std::string> get_children_indices(const std::string& index,
     for (const auto& offset : hex_offsets) {
       long long child_i = base_i + offset.first;
       long long child_j = base_j + offset.second;
-      
-      try {
-        std::string child = cell_to_index(face, child_i, child_j,
-                                          child_res, aperture, index_type);
-        children.push_back(child);
-      } catch (...) {
-      }
+
+      std::string child = cell_to_index(face, child_i, child_j,
+                                        child_res, aperture, index_type);
+      children.push_back(child);
     }
     
     return children;
@@ -341,19 +352,16 @@ std::vector<std::string> get_children_indices(const std::string& index,
         }
       }
       
-      try {
-        std::string child_index = cell_to_index(face, child_i, child_j,
-                                                 child_res, aperture, index_type);
-        children.push_back(child_index);
-        
-        if (children.size() >= static_cast<size_t>(num_children)) {
-          return children;
-        }
-      } catch (const std::exception& e) {
+      std::string child_index = cell_to_index(face, child_i, child_j,
+                                               child_res, aperture, index_type);
+      children.push_back(child_index);
+
+      if (children.size() >= static_cast<size_t>(num_children)) {
+        return children;
       }
     }
   }
-  
+
   return children;
 }
 

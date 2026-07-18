@@ -80,11 +80,8 @@ std::string encode(int quadNum, long long i, long long j, int resolution) {
     
     // Allocate (res + 1) elements for digit storage
     // Index 0 unused; indices 1..res store the hierarchical path digits
-    IVec3D::Direction* digits = 
-        (IVec3D::Direction*) malloc((res + 1) * sizeof(IVec3D::Direction));
-    for (int r = 0; r < res + 1; r++) {
-        digits[r] = IVec3D::INVALID_DIGIT;
-    }
+    std::vector<IVec3D::Direction> digits_vec(res + 1, IVec3D::INVALID_DIGIT);
+    IVec3D::Direction* digits = digits_vec.data();
     
     bool first = true;
     for (int r = effectiveRes; r >= 0; r--) {
@@ -183,8 +180,6 @@ std::string encode(int quadNum, long long i, long long j, int resolution) {
         
         addstr += std::to_string((int)d);
     }
-    
-    free(digits);
     
     return addstr;
 }

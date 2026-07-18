@@ -393,6 +393,11 @@ setMethod("$<-", "HexData", function(x, name, value) {
 
 #' @rdname HexData-methods
 #' @keywords internal
+#' @details
+#' Unlike \code{[.data.frame}, \code{drop} defaults to \code{FALSE}: selecting
+#' a single column returns a \code{HexData} object (preserving \code{grid}/
+#' \code{cell_id}/\code{cell_center}) rather than dropping to a bare vector.
+#' Pass \code{drop = TRUE} explicitly to get data.frame-style dropping.
 #' @export
 setMethod("[", c("HexData", "ANY", "ANY"), function(x, i, j, ..., drop = FALSE) {
   # Create new HexData with subsetted data

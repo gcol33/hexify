@@ -237,55 +237,6 @@ hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
 # INTERNAL HELPERS
 # =============================================================================
 
-#' Decode a cell index to face, i, j, and resolution
-#' 
-#' Internal function to decode a cell index string into its constituent
-#' components: face number, grid coordinates (i, j), and resolution level.
-#' 
-#' @param index Cell index string
-#' @param aperture Grid aperture (3, 4, or 7)
-#' @param index_type Index encoding type ("z3", "z7", or "zorder")
-#' 
-#' @return List with components:
-#'   \item{face}{Face number (integer)}
-#'   \item{i}{Grid coordinate i (integer)}
-#'   \item{j}{Grid coordinate j (integer)}
-#'   \item{resolution}{Resolution level (integer)}
-#'   
-#' @keywords internal
-index_to_cell_internal <- function(index, aperture, index_type) {
-  # Extract face from first 2 characters
-  face <- as.integer(substr(index, 1, 2))
-
-  # Extract the rest of the index
-  index_body <- substr(index, 3, nchar(index))
-
-  # Decode based on index type
-  if (index_type == "z3") {
-    # Z3 indexing for aperture 3
-    result <- cpp_decode_z3(index_body, aperture)
-  } else if (index_type == "z7") {
-    # Z7 indexing for aperture 7 - expects the FULL index string
-    result <- cpp_decode_z7(index, aperture)
-    # cpp_decode_z7 returns quad, but we already extracted face
-    return(list(
-      face = result$quad,
-      i = result$i,
-      j = result$j,
-      resolution = result$resolution
-    ))
-  } else {
-    # Z-order (Morton) indexing for aperture 4
-    result <- cpp_decode_zorder(index_body, aperture)
-  }
-
-  return(list(
-    face = face,
-    i = result$i,
-    j = result$j,
-    resolution = result$resolution
-  ))
-}
 
 #' Round-trip accuracy test
 #' 

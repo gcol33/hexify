@@ -146,6 +146,16 @@ std::string encode(long long i, long long j, int resolution) {
 
 void decode(const std::string& z3_str, int resolution,
             long long& i, long long& j) {
+    // encode() always produces a string of exactly `resolution` characters
+    // (see its doc comment), so this invariant lets `resolution` catch a
+    // caller passing a resolution inconsistent with the string, rather than
+    // silently decoding using Class I/II inferred purely from the string's
+    // own length parity with no cross-check.
+    if (static_cast<int>(z3_str.length()) != resolution) {
+        throw std::runtime_error(
+            "hex_index_z3: resolution does not match Z3 string length");
+    }
+
     std::string adjusted = z3_str;
 
     // Pad with "0" if odd length (Class II needs even length for decoding)
