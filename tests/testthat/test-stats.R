@@ -172,8 +172,10 @@ test_that("dgearthstat handles aperture 7 differently", {
   grid <- hexify_grid(area = 10000, aperture = 7)
   stats <- dgearthstat(grid)
 
-  # Aperture 7 uses 12 base faces
-  expected_cells <- 10 * (7 ^ stats$resolution) + 2
+  # Aperture 7 doesn't grow as a clean power of the aperture (surrogate
+  # bounding-box encoding, see max_cell_id() in constants.R) -- 10*7^res+2
+  # undercounts (issue #52).
+  expected_cells <- max_cell_id(stats$resolution, 7)
   expect_equal(stats$n_cells, expected_cells)
 })
 

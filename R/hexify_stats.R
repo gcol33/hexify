@@ -65,7 +65,7 @@ dgearthstat <- function(dggs) {
       3L
     } else {
       ap_int <- as.integer(g@aperture)
-      n_cells <- 10 * (ap_int^g@resolution) + 2
+      n_cells <- max_cell_id(g@resolution, ap_int)
       ap_int
     }
     cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
@@ -89,9 +89,10 @@ dgearthstat <- function(dggs) {
 
   resolution <- get_grid_resolution(dggs, require = TRUE)
 
-  # DGGRID cell count formula: N = 10 * aperture^res + 2
-  # This accounts for the 12 pentagon cells at icosahedron vertices
-  n_cells <- 10 * (dggs$aperture ^ resolution) + 2
+  # Cell count formula (matches calc_grid_params() in rcpp_cell.cpp); the
+  # aperture-7 case uses a surrogate bounding-box formula, not a clean power
+  # of aperture, so max_cell_id() special-cases it.
+  n_cells <- max_cell_id(resolution, dggs$aperture)
 
   # Calculate cell area
   cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells

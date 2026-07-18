@@ -374,7 +374,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
     n_cells <- ap43_n_cells(g@resolution)
   } else {
     ap <- as.integer(g@aperture)
-    n_cells <- 10 * (ap^g@resolution) + 2
+    n_cells <- max_cell_id(g@resolution, ap)
   }
   if (n_cells > 100000) {
     warning(sprintf(

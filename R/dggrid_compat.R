@@ -136,7 +136,7 @@ from_dggrid <- function(dggs) {
   grid$res <- as.integer(dggs$res)
 
   # Calculate actual area for this resolution
-  n_cells <- 10 * (grid$aperture ^ grid$resolution) + 2
+  n_cells <- max_cell_id(grid$resolution, grid$aperture)
   grid$area <- EARTH_SURFACE_KM2 / n_cells
 
   grid

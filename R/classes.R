@@ -499,7 +499,7 @@ setMethod("show", "HexGridInfo", function(object) {
       n_cells <- ap43_n_cells(object@resolution)
     } else {
       ap <- as.integer(object@aperture)
-      n_cells <- 10 * (ap^object@resolution) + 2
+      n_cells <- max_cell_id(object@resolution, ap)
     }
     cat(sprintf("Total Cells: %.0f\n", n_cells))
   }

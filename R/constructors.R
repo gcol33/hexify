@@ -231,7 +231,7 @@ hex_grid <- function(area_km2 = NULL,
   if (aperture_str == "4/3") {
     n_cells <- ap43_n_cells(resolution)
   } else {
-    n_cells <- 10 * (aperture_num^resolution) + 2
+    n_cells <- max_cell_id(resolution, aperture_num)
   }
   actual_area <- EARTH_SURFACE_KM2 / n_cells
   actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
