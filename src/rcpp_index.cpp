@@ -14,6 +14,7 @@
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "aperture.h"
+#include "coordinate_transforms.h"
 #include "cell_index.h"
 #include "index_z3.h"
 #include "index_z7.h"
@@ -131,20 +132,30 @@ std::string cpp_lonlat_to_index_ap3(double lon_deg, double lat_deg, int resoluti
 std::string cpp_lonlat_to_index_ap4(double lon_deg, double lat_deg, int resolution,
                                      std::string index_type = "auto") {
   auto fwd = hexify::snyder_forward(lon_deg, lat_deg);
+  // cell_to_index() only accepts face 0-11 for aperture 4/7 (a "quad", not the
+  // raw 0-19 icosahedron triangle), so the triangle must first be folded into
+  // its quad via icosa_tri_to_quad_ij() -- the same step cpp_lonlat_to_cell()
+  // performs. Quantizing directly against the triangle-frame coordinates and
+  // passing fwd.face through unfolded (as this used to do) throws for any
+  // point on a triangle numbered 12-19.
+  int quad;
   long long i, j;
-  hexify::hex_quantize_ap4(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, i, j);
+  hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
+                                4, resolution, quad, i, j);
   hexify::IndexType idx_type = parse_index_type(index_type);
-  return hexify::cell_to_index(fwd.face, i, j, resolution, 4, idx_type);
+  return hexify::cell_to_index(quad, i, j, resolution, 4, idx_type);
 }
 
 // [[Rcpp::export]]
 std::string cpp_lonlat_to_index_ap7(double lon_deg, double lat_deg, int resolution,
                                      std::string index_type = "auto") {
   auto fwd = hexify::snyder_forward(lon_deg, lat_deg);
+  int quad;
   long long i, j;
-  hexify::hex_quantize_ap7(fwd.icosa_triangle_x, fwd.icosa_triangle_y, resolution, i, j);
+  hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
+                                7, resolution, quad, i, j);
   hexify::IndexType idx_type = parse_index_type(index_type);
-  return hexify::cell_to_index(fwd.face, i, j, resolution, 7, idx_type);
+  return hexify::cell_to_index(quad, i, j, resolution, 7, idx_type);
 }
 
 // [[Rcpp::export]]
@@ -175,22 +186,34 @@ Rcpp::NumericVector cpp_index_to_lonlat(std::string index, int aperture,
   hexify::IndexType idx_type = parse_index_type(index_type);
   hexify::index_to_cell(index, aperture, idx_type, face, i, j, resolution);
 
-  double cx, cy;
+  double lon, lat;
   if (aperture == 3) {
+    double cx, cy;
     hexify::hex_center_ap3(i, j, resolution, cx, cy);
-  } else if (aperture == 4) {
-    hexify::hex_center_ap4(i, j, resolution, cx, cy);
-  } else if (aperture == 7) {
-    hexify::hex_center_ap7(i, j, resolution, cx, cy);
+    auto ll = hexify::face_xy_to_ll(cx, cy, face);
+    lon = ll.first;
+    lat = ll.second;
   } else {
-    Rcpp::stop("Invalid aperture");
+    // For aperture 4/7, `face` decoded from the index is a quad (0-11), not
+    // a raw icosahedron triangle face -- it must be folded back to the
+    // triangle frame via quad_ij_to_xy()/quad_xy_to_icosa_tri() before
+    // face_xy_to_ll(), mirroring the forward fold done in
+    // cpp_lonlat_to_index_ap4/ap7().
+    double quad_x, quad_y;
+    hexify::quad_ij_to_xy(face, i, j, aperture, resolution, quad_x, quad_y);
+
+    int tri_face;
+    double tri_x, tri_y;
+    hexify::quad_xy_to_icosa_tri(face, quad_x, quad_y, tri_face, tri_x, tri_y);
+
+    auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+    lon = ll.first;
+    lat = ll.second;
   }
 
-  auto ll = hexify::face_xy_to_ll(cx, cy, face);
-
   return Rcpp::NumericVector::create(
-    _["lon"] = ll.first,
-    _["lat"] = ll.second
+    _["lon"] = lon,
+    _["lat"] = lat
   );
 }
 
@@ -260,17 +283,52 @@ std::string cpp_z7_canonical_form(std::string index, int max_iterations = 128) {
 
 // ============================================================================
 // Z3 Helpers
+//
+// These bind hexify_assign()'s per-point Z3 workflow (quantize -> digits ->
+// center/corners) onto the same quantization primitives and Z3 digit table
+// used everywhere else Z3 cell IDs are produced (hexify::hex_quantize_ap3/
+// hex_center_ap3/hex_corners_ap3 and hexify::z3::encode/decode), rather than
+// re-deriving the geometry. z3::encode(i, j, resolution) always returns a
+// string of exactly `resolution` characters ('0'-'2'), so it maps 1:1 onto a
+// "digits" vector of the same length -- no separate digit scheme is needed.
+//
+// `flip_classes`/`center_thr` are accepted for API compatibility with the
+// documented `match_dggrid_parity` argument but are not yet wired to a
+// concrete effect: no DGGRID ISEA3H parity convention distinct from the
+// Class I/II alternation already implemented in hex_quantize_ap3/z3::encode
+// has been specified. See the tracking issue for this gap.
 // ============================================================================
+
+namespace {
+
+std::string digits_to_z3_string(const IntegerVector& d) {
+  std::string s;
+  s.reserve(d.size());
+  for (int idx = 0; idx < d.size(); ++idx) {
+    int v = d[idx];
+    if (v < 0 || v > 2) {
+      Rcpp::stop("hex_index_z3: digit at position %d must be 0, 1, or 2 (got %d)", idx + 1, v);
+    }
+    s += static_cast<char>('0' + v);
+  }
+  return s;
+}
+
+} // anonymous namespace
 
 // [[Rcpp::export]]
 List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res,
                                       double center_thr = 0.4,
                                       LogicalVector flip_classes = LogicalVector::create()) {
-  // Placeholder implementation for Z3 quantization
-  std::vector<int> digits;
+  long long i, j;
+  hexify::hex_quantize_ap3(tx, ty, eff_res, i, j);
 
-  for (int i = 0; i < eff_res; i++) {
-    digits.push_back(0);
+  std::string z3_str = hexify::z3::encode(i, j, eff_res);
+
+  std::vector<int> digits;
+  digits.reserve(z3_str.size());
+  for (char c : z3_str) {
+    digits.push_back(c - '0');
   }
 
   return List::create(
@@ -283,8 +341,14 @@ List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res,
 // [[Rcpp::export]]
 List cpp_hex_index_z3_center(IntegerVector d,
                              LogicalVector flip_classes = LogicalVector::create()) {
-  double cx = 0.0;
-  double cy = 0.0;
+  std::string z3_str = digits_to_z3_string(d);
+  int resolution = static_cast<int>(d.size());
+
+  long long i, j;
+  hexify::z3::decode(z3_str, resolution, i, j);
+
+  double cx, cy;
+  hexify::hex_center_ap3(i, j, resolution, cx, cy);
 
   return List::create(
     Named("cx") = cx,
@@ -296,14 +360,17 @@ List cpp_hex_index_z3_center(IntegerVector d,
 List cpp_hex_index_z3_corners(IntegerVector digs,
                               LogicalVector flip_classes = LogicalVector::create(),
                               double hex_radius = 1.0) {
-  std::vector<double> x_coords;
-  std::vector<double> y_coords;
+  std::string z3_str = digits_to_z3_string(digs);
+  int resolution = static_cast<int>(digs.size());
 
-  for (int i = 0; i < 6; i++) {
-    double angle = hexify::kPiOver3 * i;
-    x_coords.push_back(hex_radius * std::cos(angle));
-    y_coords.push_back(hex_radius * std::sin(angle));
-  }
+  long long i, j;
+  hexify::z3::decode(z3_str, resolution, i, j);
+
+  double out_x[6], out_y[6];
+  hexify::hex_corners_ap3(i, j, resolution, hex_radius, out_x, out_y);
+
+  std::vector<double> x_coords(out_x, out_x + 6);
+  std::vector<double> y_coords(out_y, out_y + 6);
 
   return List::create(
     Named("x") = x_coords,

@@ -1,3 +1,21 @@
+# hexify 0.7.2
+
+**Bug fixes**
+
+## Fixes
+
+* Fixed aperture 4/7 lon/lat-to-index and index-to-lon/lat conversion:
+  quantization was operating on raw icosahedron triangle coordinates
+  instead of folding into the quad frame first, producing wrong indices
+  for any point on triangles numbered 12-19.
+* Implemented `cpp_hex_index_z3_quantize_digits()`, `cpp_hex_index_z3_center()`,
+  and the Z3 corners helper, which previously returned placeholder zeros
+  instead of real quantized digits/coordinates.
+* Fixed `hex_zonal()` row misalignment: results are now keyed off the
+  deduplicated `hex_sf$cell_id` order instead of the pre-dedup input,
+  and `cells` input now drops `NA`/duplicate values before lookup.
+* Fixed `grid_clip()` argument order in `hex_zonal()`'s boundary path.
+
 # hexify 0.7.1
 
 **Code quality and documentation**

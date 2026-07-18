@@ -54,11 +54,11 @@ hex_zonal <- function(raster, grid, fun = "mean", boundary = NULL,
 
   # Get cell IDs
   if (!is.null(cells)) {
-    cell_ids <- cells
+    cell_ids <- unique(cells[!is.na(cells)])
   } else if (is_hex_data(grid)) {
     cell_ids <- unique(grid@cell_id)
   } else if (!is.null(boundary)) {
-    cell_data <- grid_clip(g, boundary)
+    cell_data <- grid_clip(boundary, g)
     cell_ids <- unique(cell_data$cell_id)
   } else {
     stop("Provide a HexData object, cell IDs via 'cells', or a 'boundary' polygon")
@@ -79,8 +79,11 @@ hex_zonal <- function(raster, grid, fun = "mean", boundary = NULL,
   }
   extracted <- terra::extract(raster, hex_vect, fun = fun_actual, ID = TRUE)
 
-  # Build result
-  result <- data.frame(cell_id = cell_ids, stringsAsFactors = FALSE)
+  # Build result. Key off hex_sf$cell_id (not the original cell_ids) since
+  # cell_to_sf() deduplicates internally and hex_vect/extracted follow its
+  # row order -- using the pre-dedup cell_ids here would silently misalign
+  # rows whenever the input contained duplicates.
+  result <- data.frame(cell_id = hex_sf$cell_id, stringsAsFactors = FALSE)
   if ("ID" %in% names(extracted)) {
     extracted$ID <- NULL
   }
