@@ -1,3 +1,17 @@
+# hexify 0.7.4 (development version)
+
+## New features
+
+* Hierarchical navigation now works for mixed aperture `"4/3"` (ISEA43H) grids:
+  `get_parent()`, `get_children()`, and `cell_to_index()` no longer error on
+  these grids (#31). Mixed 4/3 grids have no DGGRID-standard hierarchical index,
+  so hexify defines the hierarchy geometrically -- a cell's parent is the
+  coarser cell whose lattice point contains the cell's centre. This is the
+  correct relationship for how these grids quantise (a single scaled
+  quantisation per resolution, not a step-composed subdivision), and it
+  round-trips `cell -> cell_to_index() -> cell` exactly, including the seam and
+  icosahedron-vertex cells that a purely local walk would miss.
+
 # hexify 0.7.3
 
 **Bug fixes, package hygiene, and test coverage**
@@ -18,10 +32,11 @@
 * Fixed NaN/Inf inputs reaching undefined behavior in `snyder_forward()`'s
   sort comparator and silently returning garbage from hex quantization
   instead of erroring.
-* `cell_to_index()`/`get_parent()`/`get_children()` now raise a clear error
-  for mixed aperture `"4/3"` grids instead of a confusing internal bound
-  error (or, with a naive fix, silently wrong cell IDs) -- true hierarchical
-  navigation for `"4/3"` needs a dedicated mixed-radix index format.
+* `cell_to_index()`/`get_parent()`/`get_children()` no longer produce a
+  confusing internal bound error (or, with a naive fix, silently wrong cell
+  IDs) for mixed aperture `"4/3"` grids. In 0.7.3 these raised a clear
+  "not implemented" error; 0.7.4 implements the navigation geometrically
+  (see above).
 * `hex_extract()` now respects `cells=`/`boundary=` when `grid` is a
   HexData object (previously silently ignored).
 * `hex_browse()`'s data.frame input mode no longer crashes on duplicate

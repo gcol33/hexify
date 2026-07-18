@@ -628,6 +628,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_quad_ij_to_cell_ap43
+NumericVector cpp_quad_ij_to_cell_ap43(IntegerVector quad, NumericVector i, NumericVector j, int resolution, int mixed_aperture_level);
+RcppExport SEXP _hexify_cpp_quad_ij_to_cell_ap43(SEXP quadSEXP, SEXP iSEXP, SEXP jSEXP, SEXP resolutionSEXP, SEXP mixed_aperture_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type quad(quadSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type i(iSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type j(jSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type mixed_aperture_level(mixed_aperture_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_quad_ij_to_cell_ap43(quad, i, j, resolution, mixed_aperture_level));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_get_neighbors_isea
 Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution, int aperture);
 RcppExport SEXP _hexify_cpp_get_neighbors_isea(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
@@ -1365,6 +1380,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_lonlat_to_cell_ap43", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_ap43, 4},
     {"_hexify_cpp_cell_to_lonlat_ap43", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_ap43, 3},
     {"_hexify_cpp_cell_to_quad_ij_ap43", (DL_FUNC) &_hexify_cpp_cell_to_quad_ij_ap43, 3},
+    {"_hexify_cpp_quad_ij_to_cell_ap43", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell_ap43, 5},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 3},
     {"_hexify_cpp_get_neighbors_z7", (DL_FUNC) &_hexify_cpp_get_neighbors_z7, 2},
     {"_hexify_cpp_icosa_tri_to_plane", (DL_FUNC) &_hexify_cpp_icosa_tri_to_plane, 3},

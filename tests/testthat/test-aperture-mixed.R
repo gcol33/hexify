@@ -390,3 +390,105 @@ test_that("cpp_test_roundtrip_ap34 returns TRUE for valid points", {
     }
   }
 })
+
+# =============================================================================
+# HIERARCHICAL NAVIGATION (issue #31): cell_to_index / get_parent / get_children
+# =============================================================================
+#
+# Mixed 4/3 grids have no DGGRID-standard hierarchical index. hexify defines the
+# hierarchy geometrically (a cell's parent is the coarser cell containing its
+# centre; see R/aperture_mixed_hierarchy.R). These functions used to throw on
+# every call for aperture "4/3"; they now navigate the hierarchy and round-trip.
+
+test_that("mixed 4/3 hierarchical navigation no longer errors (issue #31)", {
+  setup_icosa()
+  grid <- hex_grid(resolution = 6, aperture = "4/3")
+  cells <- lonlat_to_cell(c(0, 30, -60), c(10, 45, -30), grid)
+
+  expect_silent(p <- get_parent(cells, grid))
+  expect_silent(idx <- cell_to_index(cells, grid))
+  expect_silent(kids <- get_children(cells, grid))
+
+  expect_true(all(p >= 1))
+  expect_type(idx, "character")
+  expect_length(idx, length(cells))
+  expect_type(kids, "list")
+  expect_length(kids, length(cells))
+})
+
+test_that("mixed 4/3 get_parent(get_children()) recovers the parent", {
+  setup_icosa()
+  for (res in c(3, 4, 5, 6)) {
+    grid  <- hex_grid(resolution = res, aperture = "4/3")
+    cgrid <- hex_grid(resolution = res + 1L, aperture = "4/3")
+    set.seed(res)
+    cells <- unique(lonlat_to_cell(runif(40, -180, 180), runif(40, -85, 85), grid))
+    kids <- get_children(cells, grid)
+    for (i in seq_along(cells)) {
+      k <- kids[[i]]
+      expect_true(length(k) >= 1,
+                  info = sprintf("res=%d cell=%.0f has at least one child", res, cells[i]))
+      back <- get_parent(k, cgrid)
+      expect_true(all(back == cells[i]),
+                  info = sprintf("res=%d cell=%.0f: every child maps back to it", res, cells[i]))
+    }
+  }
+})
+
+test_that("mixed 4/3 cell_to_index round-trips to the original cell", {
+  setup_icosa()
+  decode <- hexify:::ap43_index_to_cell_one
+  for (res in c(2, 4, 6, 7)) {
+    grid <- hex_grid(resolution = res, aperture = "4/3")
+    set.seed(100 + res)
+    # Include high-latitude (near-pole) points so the icosahedron-vertex scatter
+    # case is exercised, not just interior cells.
+    lon <- c(runif(80, -180, 180), runif(20, -180, 180))
+    lat <- c(runif(80, -85, 85), runif(20, 80, 89.9) * sample(c(-1, 1), 20, TRUE))
+    cells <- unique(lonlat_to_cell(lon, lat, grid))
+    idx <- cell_to_index(cells, grid)
+    back <- vapply(idx, function(s) decode(s, res), numeric(1))
+    expect_equal(unname(back), cells,
+                 info = sprintf("res=%d: index round-trip", res))
+    # Parent's index is a prefix of the child's index.
+    parents <- get_parent(cells, grid)
+    pidx <- cell_to_index(parents, hex_grid(resolution = res - 1L, aperture = "4/3"))
+    expect_true(all(substr(idx, 1, nchar(pidx)) == pidx),
+                info = sprintf("res=%d: parent index is a prefix", res))
+  }
+})
+
+test_that("mixed 4/3 get_children is exactly the geometric-parent inverse", {
+  skip_on_cran()  # brute-force ground-truth comparison
+  setup_icosa()
+  # At a small resolution, brute-force {c : parent(c) == P} and compare.
+  for (res in c(2, 3)) {
+    grid  <- hex_grid(resolution = res, aperture = "4/3")
+    cgrid <- hex_grid(resolution = res + 1L, aperture = "4/3")
+    ncc <- hexify:::ap43_n_cells(res + 1L)
+    all_child <- seq_len(ncc)
+    par_of_child <- get_parent(all_child, cgrid)
+    parents <- sort(unique(par_of_child))
+    for (p in parents) {
+      truth <- sort(all_child[par_of_child == p])
+      got <- get_children(p, grid)[[1]]
+      expect_equal(got, truth,
+                   info = sprintf("res=%d parent=%.0f exact children", res, p))
+    }
+  }
+})
+
+test_that("mixed 4/3 multi-level parent and children are consistent", {
+  setup_icosa()
+  grid <- hex_grid(resolution = 6, aperture = "4/3")
+  g2   <- hex_grid(resolution = 4, aperture = "4/3")
+  set.seed(7)
+  cells <- unique(lonlat_to_cell(runif(30, -180, 180), runif(30, -85, 85), grid))
+  gp2 <- get_parent(cells, grid, levels = 2L)
+  expect_true(all(gp2 >= 1))
+  desc <- get_children(gp2, g2, levels = 2L)
+  for (i in seq_along(cells)) {
+    expect_true(cells[i] %in% desc[[i]],
+                info = sprintf("cell %.0f is a 2-level descendant of its 2-up parent", cells[i]))
+  }
+})

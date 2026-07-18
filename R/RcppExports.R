@@ -185,6 +185,10 @@ cpp_cell_to_quad_ij_ap43 <- function(cell_id, resolution, mixed_aperture_level) 
     .Call(`_hexify_cpp_cell_to_quad_ij_ap43`, cell_id, resolution, mixed_aperture_level)
 }
 
+cpp_quad_ij_to_cell_ap43 <- function(quad, i, j, resolution, mixed_aperture_level) {
+    .Call(`_hexify_cpp_quad_ij_to_cell_ap43`, quad, i, j, resolution, mixed_aperture_level)
+}
+
 cpp_get_neighbors_isea <- function(cell_id, resolution, aperture) {
     .Call(`_hexify_cpp_get_neighbors_isea`, cell_id, resolution, aperture)
 }

@@ -1368,6 +1368,48 @@ DataFrame cpp_cell_to_quad_ij_ap43(NumericVector cell_id, int resolution,
     );
 }
 
+// [[Rcpp::export]]
+NumericVector cpp_quad_ij_to_cell_ap43(IntegerVector quad, NumericVector i,
+                                        NumericVector j, int resolution,
+                                        int mixed_aperture_level) {
+    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
+        stop("cpp_quad_ij_to_cell_ap43: mixed_aperture_level must be between 0 and resolution");
+    }
+
+    int n = quad.size();
+    NumericVector result(n);
+
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
+    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
+    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+
+    for (int k = 0; k < n; k++) {
+        int q = quad[k];
+        long long ii = static_cast<long long>(i[k]);
+        long long jj = static_cast<long long>(j[k]);
+
+        // Mirror the cell-ID packing of cpp_lonlat_to_cell_ap43: offset by quad,
+        // then the 2D boundary sequence index within the quad's substrate.
+        uint64_t offset = 0;
+        if (q > 0) {
+            offset = 1 + (q - 1) * offsetPerQuad;
+        }
+
+        uint64_t bnd2D_seq;
+        if (use_offset) {
+            bnd2D_seq = cell_index_2d_offset_ap3(ii, jj, dim);
+        } else {
+            bnd2D_seq = cell_index_2d_aligned(ii, jj, dim);
+        }
+
+        uint64_t cid = offset + bnd2D_seq + 1;
+        result[k] = static_cast<double>(cid);
+    }
+
+    return result;
+}
+
 // ============================================================================
 // Neighbor Finding (v0.7.0)
 // ============================================================================

@@ -658,13 +658,17 @@ cell_to_index <- function(cell_id, grid) {
     return(as.character(cell_id))
   }
 
+  # Mixed 4/3 grids use a geometric hierarchical index (see
+  # R/aperture_mixed_hierarchy.R); pure apertures use the Z7/Z3/zorder encoders.
+  if (g@aperture == "4/3") {
+    return(vapply(as.numeric(cell_id),
+                  function(id) ap43_cell_to_index_one(id, g@resolution),
+                  character(1)))
+  }
+
   # Determine index type based on aperture
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
-
-  if (g@aperture == "4/3") {
-    stop_ap43_hierarchical_index_unsupported()
-  }
 
   sapply(cell_id, function(id) {
     # Get quad/ij coordinates
@@ -675,24 +679,6 @@ cell_to_index <- function(cell_id, grid) {
       g@resolution, aperture_int, index_type
     )
   })
-}
-
-#' Mixed aperture 4/3 grids don't have a hierarchical index encoding
-#'
-#' The Z3/zorder index string encoders size their digit capacity from the
-#' pure aperture-3/4 (i,j) range at a given resolution (3^eff_res / 2^res).
-#' A mixed "4/3" grid's actual (i,j) range at the same nominal resolution is
-#' larger (it mixes base-4 and base-3 subdivisions per level), so encoding it
-#' with those encoders silently truncates/collides. A correct fix needs a
-#' dedicated mixed-radix index format, not just routing to
-#' \code{cpp_cell_to_quad_ij_ap43()}/\code{cpp_quad_ij_to_cell_ap43()} (which
-#' correctly convert cell IDs to/from quad/i/j coordinates, but that alone
-#' isn't sufficient for hierarchical navigation).
-#' @noRd
-stop_ap43_hierarchical_index_unsupported <- function() {
-  stop("Hierarchical index navigation (cell_to_index()/get_parent()/get_children()) ",
-       "is not implemented for mixed aperture \"4/3\" grids. Use lonlat_to_cell()/",
-       "cell_to_lonlat() for coordinate conversion on these grids instead.")
 }
 
 #' Get parent cell
@@ -727,12 +713,13 @@ get_parent <- function(cell_id, grid, levels = 1L) {
     return(cpp_h3_cellToParent(as.character(cell_id), parent_res))
   }
 
+  # Mixed 4/3: geometric parent (centre re-quantised at the coarser resolution).
+  if (g@aperture == "4/3") {
+    return(ap43_get_parent(as.numeric(cell_id), g@resolution, as.integer(levels)))
+  }
+
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
-
-  if (g@aperture == "4/3") {
-    stop_ap43_hierarchical_index_unsupported()
-  }
 
   # Get index, get parent, convert back
   parent_res <- g@resolution - levels
@@ -784,12 +771,16 @@ get_children <- function(cell_id, grid, levels = 1L) {
     stop("Cannot get children: would exceed maximum resolution")
   }
 
+  # Mixed 4/3: geometric children (cells whose geometric parent is this cell).
+  if (g@aperture == "4/3") {
+    child_res <- g@resolution + as.integer(levels)
+    ncc <- ap43_n_cells(child_res)
+    return(lapply(as.numeric(cell_id), function(id)
+      ap43_get_children_one(id, g@resolution, child_res, ncc)))
+  }
+
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
-
-  if (g@aperture == "4/3") {
-    stop_ap43_hierarchical_index_unsupported()
-  }
 
   lapply(cell_id, function(id) {
     qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
