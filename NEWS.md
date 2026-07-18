@@ -1,8 +1,73 @@
-# hexify 0.7.2
+# hexify 0.7.3
 
-**Bug fixes**
+**Bug fixes, package hygiene, and test coverage**
 
 ## Fixes
+
+* Fixed `hexify_lonlat_to_index()`/`hexify_index_to_lonlat()` for aperture 3:
+  quantization skipped the quad-frame fold that aperture 4/7 already had,
+  producing indices inconsistent with `lonlat_to_cell()`/`cell_to_index()`
+  for essentially all points.
+* Fixed `is_pentagon()` for ISEA aperture 7, which undercounted or threw at
+  resolution >= 1; it now decodes each cell's own (i, j) instead of relying
+  on an unreliable forward computation.
+* Fixed `hex_compact()` emitting duplicate cell IDs when the input already
+  contained a parent cell alongside all 7 of its children.
+* Fixed `hexify_assign()`'s Z3 backend discarding the sign of quantized
+  (i, j), causing sign-flipped points to collide on the same cell ID.
+* Fixed NaN/Inf inputs reaching undefined behavior in `snyder_forward()`'s
+  sort comparator and silently returning garbage from hex quantization
+  instead of erroring.
+* `cell_to_index()`/`get_parent()`/`get_children()` now raise a clear error
+  for mixed aperture `"4/3"` grids instead of a confusing internal bound
+  error (or, with a naive fix, silently wrong cell IDs) -- true hierarchical
+  navigation for `"4/3"` needs a dedicated mixed-radix index format.
+* `hex_extract()` now respects `cells=`/`boundary=` when `grid` is a
+  HexData object (previously silently ignored).
+* `hex_browse()`'s data.frame input mode no longer crashes on duplicate
+  `cell_id` rows.
+* `plot_globe()`'s `resolve_center()` now validates a named `center`
+  vector's names instead of silently building an invalid PROJ string.
+* Hierarchical-index functions (`hexify_cell_to_index()` and siblings) now
+  validate `resolution`/`aperture` like `hexify_lonlat_to_cell()` already
+  did; the C++ layer now enforces the max resolution for aperture 3/4 the
+  same way it already did for aperture 7.
+* `as_dggrid()` now accepts a modern `HexGridInfo` object, matching
+  `dgverify()`.
+* `HexData`'s validity check no longer has a blind spot for empty
+  `cell_id`/`cell_center` paired with non-empty `data`.
+* `hex_grid()` and legacy `hexify_grid()` now give clear errors for
+  non-numeric/NA/non-positive `resolution`, `crs`, or `area`, instead of
+  base-R errors or a silent `resolution = NaN`.
+* `plot_globe(exclude_antarctica = TRUE)` now warns instead of silently
+  no-op'ing for custom `land_data` without a recognized country-name
+  column.
+* `import_h3()` now drops NA cell IDs (with a warning) when `data` is
+  attached, matching `hexify()`'s existing NA-coordinate handling.
+* `prepare_fill_column()` now warns when `breaks=` is supplied for a
+  discrete value column instead of silently discarding it.
+
+## Package hygiene
+
+* Removed dead code (`index_to_cell_internal()`), an orphaned test
+  fixture, and a committed rendered vignette; fixed a native-pipe usage
+  that required a newer R than the package declares; fixed stale roxygen
+  text; documented `HexData[`'s `drop = FALSE` default explicitly.
+* C++: replaced a raw `malloc`/`free` digit buffer with `std::vector`;
+  an out-of-range digit now throws instead of silently clamping; added a
+  resolution/string-length consistency check to `z3::decode()`;
+  `get_children_indices()` no longer swallows unrelated exceptions behind
+  a catch-all around the max-resolution boundary check.
+
+## Tests
+
+* Strengthened ~20 `hexify_heatmap()` tests that previously only checked
+  the return type is a ggplot object to assert on the actual plot
+  data/mapping (fill column, scale type, colors, bins, limits, labels).
+* Added coverage for the `Raster*`/`SpatRaster` basemap path and for
+  `hex_browse()`'s value-to-fill-color mapping.
+
+# hexify 0.7.2
 
 * Fixed aperture 4/7 lon/lat-to-index and index-to-lon/lat conversion:
   quantization was operating on raw icosahedron triangle coordinates
