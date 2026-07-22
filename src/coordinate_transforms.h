@@ -95,9 +95,22 @@ long long get_max_ij(int aperture, int resolution);
 bool handle_edge_overflow(int& quad, long long& i, long long& j,
                           int aperture, int resolution);
 
+// Aperture 7: Class I substrate scale for a resolution (7^numClassI,
+// numClassI = (resolution + 1) / 2) -- the scale the exact integer surrogate
+// is quantized at and that z7::encode/decode expect.
+long long ap7_classI_scale(int resolution);
+
+// Aperture 7: exact-integer conversion between the Class I substrate IJK (what
+// z7 operates on) and the resolution-r surrogate IJK (hexify's stored cell
+// coordinate). Even resolutions are the identity; odd resolutions apply one
+// exact aperture-7 level (upAp7r / downAp7r).
+void ap7_substrate_to_surrogate_ijk(long long sub_i, long long sub_j, int resolution,
+                                    long long& sur_i, long long& sur_j);
+void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolution,
+                                    long long& sub_i, long long& sub_j);
+
 // Aperture 7: Convert substrate (Class I) coords to true surrogate coords.
-// The surrogate is a Class I (even res) or Class II (odd res) hex grid
-// rotated by ~19.1° from the substrate frame.
+// (Legacy float-rotation helper; unused on the exact path.)
 void substrate_to_surrogate_ap7(long long sub_i, long long sub_j, int resolution,
                                  long long& sur_i, long long& sur_j);
 

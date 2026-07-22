@@ -456,18 +456,14 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
         int quad;
 
         if (aperture == 7) {
-            // AP7: Go through substrate (Class III quantize) then
-            // convert to surrogate. This ensures only valid ap7 cell
-            // positions are used (matching DGGRID's architecture).
-            long long sub_i, sub_j;
+            // AP7: exact-integer quantization straight to the surrogate (the
+            // resolution-r cell IJK). icosa_tri_to_quad_ij() now returns the
+            // canonical surrogate directly (clean Class I quantize + DGGRID
+            // edgeTable canonicalization + exact coarsen).
+            long long sur_i, sur_j;
             hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
                                          fwd.icosa_triangle_y,
-                                         7, resolution, quad, sub_i, sub_j);
-
-            // Convert substrate → surrogate for storage
-            long long sur_i, sur_j;
-            hexify::substrate_to_surrogate_ap7(sub_i, sub_j, resolution,
-                                               sur_i, sur_j);
+                                         7, resolution, quad, sur_i, sur_j);
             bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
         } else {
             // AP3/AP4: standard substrate-based encoding
@@ -702,12 +698,9 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
         int out_quad;
 
         if (aperture == 7) {
-            // AP7: Class III quantize → substrate → surrogate
-            long long sub_i, sub_j;
-            hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, sub_i, sub_j);
-
+            // AP7: exact-integer quantization straight to the surrogate.
             long long sur_i, sur_j;
-            hexify::substrate_to_surrogate_ap7(sub_i, sub_j, resolution, sur_i, sur_j);
+            hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, sur_i, sur_j);
             bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
         } else {
             // AP3/AP4: standard substrate path

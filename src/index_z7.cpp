@@ -366,6 +366,107 @@ void decode(const std::string& z7_index, int resolution,
     }
 }
 
+// ============================================================================
+// Bijective aperture-7 hierarchical index (hexify-native)
+// ============================================================================
+// DGGRID's DgZ7StringRF encode is non-injective near the pentagon base cells:
+// two geographically distinct cells can encode to one string (verified
+// reproducer: lon/lat (5,45) and (-34.9,60.2) both -> "0045310"), so a
+// bijective cell<->index round-trip is impossible with the faithful algorithm.
+//
+// These functions keep hexify's geographic quad fixed -- they reuse the exact
+// aperture-7 digit machinery (upAp7/downAp7 + diffVec) but drop DGGRID's
+// base-cell adjacency reassignment and pentagon digit-skip, the steps that
+// merge distinct cells. Every (quad, i, j) then maps to a unique string and
+// back. The string equals the DGGRID Z7 string for cells DGGRID does not
+// reassign, and deviates only for the pentagon-region cells where DGGRID's own
+// encoder collides. Input/output (i,j) are the Class I substrate coordinate
+// (the same convention encode()/decode() use).
+
+std::string encode_bijective(int quadNum, long long i, long long j, int resolution) {
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(2) << quadNum;
+    if (resolution == 0) {
+        return oss.str();
+    }
+
+    IVec3D ijk(i, j, 0);
+    int res = resolution;
+    bool isClassIII = (res % 2);
+    int effectiveRes = isClassIII ? res + 1 : res;
+
+    std::vector<IVec3D::Direction> digits_vec(res + 1, IVec3D::INVALID_DIGIT);
+    IVec3D::Direction* digits = digits_vec.data();
+
+    bool first = true;
+    for (int r = effectiveRes; r >= 0; r--) {
+        IVec3D lastIJK = ijk;
+        IVec3D lastCenter;
+        if (r % 2) {
+            ijk.upAp7();
+            lastCenter = ijk;
+            lastCenter.downAp7();
+        } else {
+            ijk.upAp7r();
+            lastCenter = ijk;
+            lastCenter.downAp7r();
+        }
+        if (first && isClassIII) {
+            first = false;
+            continue;
+        }
+        IVec3D diff = lastIJK.diffVec(lastCenter);
+        digits[r] = diff.unitIjkPlusToDigit();
+    }
+
+    std::string out = oss.str();
+    for (int r = 1; r <= res; r++) {
+        out += std::to_string((int) digits[r]);
+    }
+    return out;
+}
+
+void decode_bijective(const std::string& index, int resolution,
+                      int& quadNum, long long& i, long long& j) {
+    if (index.length() < 2) {
+        throw std::runtime_error("Z7 index too short");
+    }
+    std::string bcStr = index.substr(0, 2);
+    if (bcStr[0] == '0') {
+        bcStr = bcStr.substr(1, 1);
+    }
+    quadNum = std::stoi(bcStr);
+    if (quadNum < 0 || quadNum > 11) {
+        throw std::runtime_error("Invalid base cell number");
+    }
+
+    std::string z7str = index.substr(2);
+    int res = (int) z7str.length();
+    if (res == 0) {
+        i = 0;
+        j = 0;
+        return;
+    }
+    if (res % 2) {
+        z7str += "0";
+        res++;
+    }
+
+    IVec3D ijk(0, 0, 0);
+    for (int r = 0; r < res; r++) {
+        if ((r + 1) % 2) {
+            ijk.downAp7();
+        } else {
+            ijk.downAp7r();
+        }
+        ijk.neighbor((IVec3D::Direction) (z7str.c_str()[r] - '0'));
+    }
+
+    IVec2D ij(ijk);
+    i = ij.i();
+    j = ij.j();
+}
+
 std::string canonical_form(const std::string& z7_index, int max_iterations) {
     // Handle resolution 0 (just base cell)
     if (z7_index.length() <= 2) {

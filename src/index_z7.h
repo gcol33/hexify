@@ -39,6 +39,15 @@ std::string encode(int quadNum, long long i, long long j, int resolution);
 void decode(const std::string& z7_str, int resolution,
             int& quadNum, long long& i, long long& j);
 
+// Bijective aperture-7 hierarchical index (hexify-native). Keeps the quad fixed
+// (no DGGRID base-cell reassignment / pentagon skip), so every (quad, i, j)
+// round-trips. Matches the DGGRID Z7 string except for the pentagon-region
+// cells where DGGRID's encoder is non-injective. (i,j) are Class I substrate.
+std::string encode_bijective(int quadNum, long long i, long long j, int resolution);
+
+void decode_bijective(const std::string& index, int resolution,
+                      int& quadNum, long long& i, long long& j);
+
 // Get the canonical form of a Z7 index
 // Finds the lexicographically smallest index in the cycle
 // max_iterations: maximum number of decode/encode cycles to try (default 128)

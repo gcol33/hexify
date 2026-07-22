@@ -73,9 +73,12 @@
 
 #include "coordinate_transforms.h"
 #include "cube_coordinates.h"
+#include "ijk_coordinates.h"
+#include "index_z7.h"
 #include "constants.h"
 #include <cmath>
 #include <stdexcept>
+#include <string>
 
 namespace hexify {
 
@@ -484,64 +487,119 @@ void surrogate_to_substrate_ap7(long long sur_i, long long sur_j, int resolution
 }
 
 // ============================================================================
-// Aperture 7: Direct Surrogate Quantization (bypasses substrate)
+// Aperture 7: exact-integer surrogate machinery (matches DGGRID / H3)
 // ============================================================================
-// These functions quantize quad XY coordinates directly to surrogate
-// coordinates, avoiding the substrate round-trip that introduces fp error.
+// The "surrogate" is hexify's canonical aperture-7 cell coordinate: the exact
+// integer IJK of the resolution-r cell. It is obtained by a clean, unrotated
+// Class I quantization of the shared quad_xy frame at the Class I substrate
+// scale (7^numClassI = sqrt(7)^effectiveRes), DGGRID's edgeTable quad
+// canonicalization, and, for odd resolutions, one exact aperture-7 coarsen
+// (upAp7r). This replaces the earlier floating-point-rotation surrogate, whose
+// re-quantization rounded boundary cells to a neighbour and diverged from the
+// exact integer grid.
+
+namespace {
+
+// DgIDGGBase::edgeTable_[12]: quads 0/11 are pole placeholders (never occur).
+struct DgQuadEdge { int quadNum; bool isType0; int loneVert, up, down, right, left; };
+const DgQuadEdge kDggridEdgeTable[12] = {
+    {0,  true,  0,  0,  0,  0,  0},
+    {1,  true,  0,  2,  10, 6,  5},
+    {2,  true,  0,  3,  6,  7,  1},
+    {3,  true,  0,  4,  7,  8,  2},
+    {4,  true,  0,  5,  8,  9,  3},
+    {5,  true,  0,  1,  9,  10, 4},
+    {6,  false, 11, 2,  10, 7,  1},
+    {7,  false, 11, 3,  6,  8,  2},
+    {8,  false, 11, 4,  7,  9,  3},
+    {9,  false, 11, 5,  8,  10, 4},
+    {10, false, 11, 1,  9,  6,  5},
+    {11, false, 11, 0,  0,  0,  0},
+};
+
+// Reassign an out-of-box Class I (i,j) to the quad that owns it. topEdge =
+// 7^numClassI = maxI + 1 = maxJ + 1. Port of DgQ2DDtoIConverter's reassignment.
+void dggrid_canonicalize_q2di(long long topEdge, int& quadNum,
+                              long long& i, long long& j) {
+    const long long maxI = topEdge - 1, maxJ = topEdge - 1;
+    const long long topEdgeI = topEdge, topEdgeJ = topEdge;
+
+    bool underI = i < 0, underJ = j < 0, overI = i > maxI, overJ = j > maxJ;
+    int numOver = (int)underI + (int)underJ + (int)overI + (int)overJ;
+    if (!numOver) return;
+
+    const DgQuadEdge& ec = kDggridEdgeTable[quadNum];
+
+    if (overI && overJ) {
+        quadNum = ec.isType0 ? ec.up : ec.right;
+        i = 0; j = 0;
+    } else if (numOver > 1) {
+        return;  // multi-underage: unreached for valid cell centres
+    } else if (underI) {
+        quadNum = ec.left;
+        if (ec.isType0) { long long ni = topEdgeJ - j + i, nj = topEdgeJ + i; i = ni; j = nj; }
+        else            { i = topEdgeI + i; }
+    } else if (underJ) {
+        quadNum = ec.down;
+        if (ec.isType0) { j = topEdgeJ + j; }
+        else            { long long ni = topEdgeJ + j, nj = (topEdgeI - i) + j; i = ni; j = nj; }
+    } else if (overI) {
+        if (ec.isType0) { quadNum = ec.right; i = i - topEdgeI; }
+        else if (j == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
+        else { quadNum = ec.right; long long iOver = i - topEdgeI; long long ni = (topEdgeJ - j) + iOver; i = ni; j = iOver; }
+    } else if (overJ) {
+        if (!ec.isType0) { quadNum = ec.up; j = j - topEdgeJ; }
+        else if (i == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
+        else { quadNum = ec.up; long long jOver = j - topEdgeJ; long long nj = topEdgeI - i + jOver; i = jOver; j = nj; }
+    }
+}
+
+} // anonymous namespace
+
+long long ap7_classI_scale(int resolution) {   // 7^numClassI, numClassI = (res+1)/2
+    long long s = 1;
+    for (int k = 0, n = (resolution + 1) / 2; k < n; ++k) s *= 7;
+    return s;
+}
+
+void ap7_substrate_to_surrogate_ijk(long long sub_i, long long sub_j, int resolution,
+                                    long long& sur_i, long long& sur_j) {
+    if (resolution % 2 == 0) { sur_i = sub_i; sur_j = sub_j; return; }
+    z7::IVec3D v(sub_i, sub_j, 0);
+    v.upAp7r();
+    z7::IVec2D a(v);
+    sur_i = a.i();
+    sur_j = a.j();
+}
+
+void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolution,
+                                    long long& sub_i, long long& sub_j) {
+    if (resolution % 2 == 0) { sub_i = sur_i; sub_j = sur_j; return; }
+    z7::IVec3D v(sur_i, sur_j, 0);
+    v.downAp7r();
+    z7::IVec2D a(v);
+    sub_i = a.i();
+    sub_j = a.j();
+}
 
 void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
                                   long long& sur_i, long long& sur_j) {
-    double scale = std::pow(std::sqrt(7.0), resolution);
-    double scaled_x = quad_x * scale;
-    double scaled_y = quad_y * scale;
-
-    const double c = std::cos(-kAp7RotRad);
-    const double s = std::sin(-kAp7RotRad);
-
-    // Rotate to surrogate frame
-    double rx = scaled_x * c - scaled_y * s;
-    double ry = scaled_x * s + scaled_y * c;
-
-    bool is_class3i = (resolution % 2 == 0);
-    if (is_class3i) {
-        // Class I surrogate - quantize directly
-        quantize_class1(rx, ry, sur_i, sur_j);
-    } else {
-        // Class II surrogate - rotate by -30 deg to Class I frame first
-        constexpr double c_30 = 0.866025403784438646763723170752936183;
-        constexpr double s_30 = -0.5;
-        double c1x = rx * c_30 - ry * s_30;
-        double c1y = rx * s_30 + ry * c_30;
-        quantize_class1(c1x, c1y, sur_i, sur_j);
-    }
+    long long S = ap7_classI_scale(resolution);
+    long long sub_i, sub_j;
+    quantize_class1(quad_x * static_cast<double>(S), quad_y * static_cast<double>(S),
+                    sub_i, sub_j);
+    ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, sur_i, sur_j);
 }
 
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
                                   double& out_quad_x, double& out_quad_y) {
-    double sx, sy;
-    inv_quantize_class1(sur_i, sur_j, sx, sy);
-
-    bool is_class3i = (resolution % 2 == 0);
-    if (!is_class3i) {
-        // Class II: rotate from Class I back to Class II (+30 deg)
-        constexpr double c_30 = 0.866025403784438646763723170752936183;
-        constexpr double s_30 = 0.5;
-        double c2x = sx * c_30 - sy * s_30;
-        double c2y = sx * s_30 + sy * c_30;
-        sx = c2x;
-        sy = c2y;
-    }
-
-    // Rotate from surrogate frame back to quad frame (+19.1 deg)
-    const double c = std::cos(kAp7RotRad);
-    const double s = std::sin(kAp7RotRad);
-    double qx = sx * c - sy * s;
-    double qy = sx * s + sy * c;
-
-    // Undo the scale
-    double scale = std::pow(std::sqrt(7.0), resolution);
-    out_quad_x = qx / scale;
-    out_quad_y = qy / scale;
+    long long S = ap7_classI_scale(resolution);
+    long long sub_i, sub_j;
+    ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, sub_i, sub_j);
+    double cx, cy;
+    inv_quantize_class1(sub_i, sub_j, cx, cy);
+    out_quad_x = cx / static_cast<double>(S);
+    out_quad_y = cy / static_cast<double>(S);
 }
 
 // ============================================================================
@@ -663,14 +721,38 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
                    int aperture, int resolution,
                    int& out_quad, long long& out_i, long long& out_j) {
 
+    // Aperture 7: exact-integer route. Clean unrotated Class I quantization at
+    // the substrate scale, DGGRID edgeTable quad canonicalization (an out-of-box
+    // coordinate belongs to the neighbouring quad), then (odd res) one exact
+    // aperture-7 coarsen -- yielding the exact resolution-r cell IJK. This keeps
+    // forward/inverse geometry consistent and replaces the float-rotation Class
+    // III quantization + handle_edge_overflow, which rounded boundary cells.
+    if (aperture == 7) {
+        if (resolution == 0) {
+            // Resolution 0: one cell per quad plus the two poles. Poles arise
+            // from the edge-overflow mapping (a point at an icosa vertex), so
+            // keep that here rather than the z7 hierarchy (empty at res 0).
+            quantize_class1(quad_x, quad_y, out_i, out_j);
+            out_quad = quad;
+            handle_edge_overflow(out_quad, out_i, out_j, 7, 0);
+            return;
+        }
+        long long S = ap7_classI_scale(resolution);
+        long long sub_i, sub_j;
+        quantize_class1(quad_x * static_cast<double>(S), quad_y * static_cast<double>(S),
+                        sub_i, sub_j);
+        out_quad = quad;
+        dggrid_canonicalize_q2di(S, out_quad, sub_i, sub_j);
+        ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, out_i, out_j);
+        return;
+    }
+
     // Compute scale factor
     double scale;
     if (aperture == 3) {
         scale = std::pow(kSqrt3, resolution);
     } else if (aperture == 4) {
         scale = std::pow(2.0, resolution);
-    } else if (aperture == 7) {
-        scale = std::pow(std::sqrt(7.0), resolution);
     } else {
         throw std::runtime_error("quad_xy_to_ij: unsupported aperture");
     }
@@ -679,15 +761,7 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
     double scaled_y = quad_y * scale;
 
     // Select quantization based on aperture and grid class
-    if (aperture == 7) {
-        // Aperture 7: Class III quantization
-        bool is_class3i = (resolution % 2 == 0);
-        if (is_class3i) {
-            quantize_class3i(scaled_x, scaled_y, out_i, out_j);
-        } else {
-            quantize_class3ii(scaled_x, scaled_y, out_i, out_j);
-        }
-    } else if (aperture == 4 || (aperture == 3 && resolution % 2 == 0)) {
+    if (aperture == 4 || (aperture == 3 && resolution % 2 == 0)) {
         // Class I quantization
         quantize_class1(scaled_x, scaled_y, out_i, out_j);
     } else {
