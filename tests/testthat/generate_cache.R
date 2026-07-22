@@ -41,7 +41,7 @@ coords7 <- hexify_cell_to_lonlat(cells7, resolution = 3, aperture = 7)
 cache$cells_ap7 <- list(cells = cells7, lon = coords7$lon_deg, lat = coords7$lat_deg)
 
 # Projection forward
-proj <- cpp_snyder_forward(10, 45)
+proj <- hexify:::cpp_snyder_forward(10, 45)
 cache$proj_forward <- as.list(proj)
 
 # Face centers

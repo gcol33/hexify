@@ -292,22 +292,20 @@ hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
 
 #' Get canonical form of Z7 index
 #'
-#' For Z7 indices that form cycles during decode/encode, returns the
-#' lexicographically smallest index in the cycle. Provides stable
-#' unique identifiers for aperture 7 grids.
+#' Returns the stable form of a Z7 index after decode/encode. Z7 indices are
+#' bijective, so valid indices are already canonical.
 #'
 #' @param index Z7 index string
-#' @param max_iterations Maximum iterations for cycle detection (default 128)
+#' @param max_iterations Maximum decode/encode iterations (default 128)
 #'
-#' @return Canonical form (lexicographically smallest in cycle)
+#' @return Stable canonical form of the index
 #'
 #' @family hierarchical index
 #' @keywords internal
 #' @export
 #' @examples
-#' # These all return the same canonical form
+#' # Valid Z7 indices are stable
 #' hexify_z7_canonical("110001")
-#' hexify_z7_canonical("110002")
 hexify_z7_canonical <- function(index, max_iterations = 128L) {
   cpp_z7_canonical_form(as.character(index), as.integer(max_iterations))
 }

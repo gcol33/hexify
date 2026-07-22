@@ -492,8 +492,8 @@ std::string canonical_form(const std::string& z7_index, int max_iterations) {
         long long i, j;
         int res = current.length() - 2;
         
-        decode(current, res, quadNum, i, j);
-        std::string next = encode(quadNum, i, j, res);
+        decode_bijective(current, res, quadNum, i, j);
+        std::string next = encode_bijective(quadNum, i, j, res);
         
         // Check for fixed point
         if (next == current) {

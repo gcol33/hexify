@@ -9,20 +9,18 @@ hexify_z7_canonical(index, max_iterations = 128L)
 \arguments{
 \item{index}{Z7 index string}
 
-\item{max_iterations}{Maximum iterations for cycle detection (default 128)}
+\item{max_iterations}{Maximum decode/encode iterations (default 128)}
 }
 \value{
-Canonical form (lexicographically smallest in cycle)
+Stable canonical form of the index
 }
 \description{
-For Z7 indices that form cycles during decode/encode, returns the
-lexicographically smallest index in the cycle. Provides stable
-unique identifiers for aperture 7 grids.
+Returns the stable form of a Z7 index after decode/encode. Z7 indices are
+bijective, so valid indices are already canonical.
 }
 \examples{
-# These all return the same canonical form
+# Valid Z7 indices are stable
 hexify_z7_canonical("110001")
-hexify_z7_canonical("110002")
 }
 \seealso{
 Other hierarchical index:
