@@ -7,20 +7,31 @@
 hexify_z7_canonical(index, max_iterations = 128L)
 }
 \arguments{
-\item{index}{Z7 index string}
+\item{index}{A length-one Z7 index string.}
 
-\item{max_iterations}{Maximum decode/encode iterations (default 128)}
+\item{max_iterations}{Maximum number of decode/encode iterations. This is a
+safety bound for legacy indices; the default is 128.}
 }
 \value{
-Stable canonical form of the index
+A length-one character string containing the stable index.
 }
 \description{
-Returns the stable form of a Z7 index after decode/encode. Z7 indices are
-bijective, so valid indices are already canonical.
+Decodes and re-encodes a Z7 index until it reaches a stable form. Current Z7
+indices are bijective, so every valid index is already canonical and this
+function normally returns its input unchanged. It remains available for
+validating or normalizing indices created by older hexify versions.
 }
 \examples{
 # Valid Z7 indices are stable
 hexify_z7_canonical("110001")
+
+cell <- hexify_index_to_cell("110001", aperture = 7)
+identical(
+  hexify_cell_to_index(cell$face, cell$i, cell$j,
+    cell$resolution, aperture = 7
+  ),
+  "110001"
+)
 }
 \seealso{
 Other hierarchical index:

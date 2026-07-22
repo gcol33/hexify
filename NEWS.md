@@ -1,4 +1,10 @@
-# hexify 0.7.4 (development version)
+# hexify 0.7.4
+
+## Documentation
+
+* Documented the bijective aperture-7 Z7 format, exact round-trip guarantee,
+  index structure, and the limited pentagon-region difference from DGGRID's
+  non-injective raw Z7 encoding.
 
 ## New features
 

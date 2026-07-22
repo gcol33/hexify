@@ -18,10 +18,12 @@ hexify_index_to_lonlat(
 \item{index_type}{Index encoding. Default "auto" infers from aperture.}
 }
 \value{
-Named numeric vector with lon and lat in degrees
+A named numeric vector with \code{lon} and \code{lat} in degrees.
 }
 \description{
-Returns the cell center coordinates for a given index.
+Returns the geographic coordinates of an indexed cell's center. This is a
+cell-level inverse of \code{\link[=hexify_lonlat_to_index]{hexify_lonlat_to_index()}}: the returned point is the
+center, not necessarily the original input point.
 }
 \examples{
 coords <- hexify_index_to_lonlat("0012012", aperture = 3)

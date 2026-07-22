@@ -8,7 +8,7 @@
 #' Normalize antimeridian-crossing polygon coordinates
 #'
 #' Shifts longitudes of a ring's coordinate matrix so an antimeridian-crossing
-#' polygon becomes contiguous instead of spanning nearly the full [-180, 180]
+#' polygon becomes contiguous instead of spanning nearly the full -180 to 180
 #' range. Downstream `sf::st_wrap_dateline()` then splits it correctly for
 #' flat-map rendering.
 #'

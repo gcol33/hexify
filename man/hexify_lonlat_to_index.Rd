@@ -24,13 +24,17 @@ hexify_lonlat_to_index(
 \item{index_type}{Index encoding: "auto" (default), "z3", "z7", or "zorder"}
 }
 \value{
-Index string
+A character vector of index strings.
 }
 \description{
-Main entry point for geocoding points to grid cells.
+Projects geographic coordinates to grid cells and returns their hierarchical
+index strings. Inputs are vectorized over \code{lon} and \code{lat}.
 }
 \examples{
 idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
+idx7 <- hexify_lonlat_to_index(16.37, 48.21,
+  resolution = 4, aperture = 7
+)
 }
 \seealso{
 Other hierarchical index:

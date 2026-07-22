@@ -15,8 +15,8 @@
 
 #' Convert cell coordinates to index string
 #'
-#' Converts DGGRID cell coordinates (face, i, j) to a hierarchical index string.
-#' The index type is automatically selected based on aperture unless specified.
+#' Converts cell coordinates (`face`, `i`, `j`) to a hierarchical index string.
+#' The index type is selected from `aperture` when `index_type = "auto"`.
 #'
 #' @param face Face/quad number (0-19)
 #' @param i I coordinate
@@ -25,19 +25,30 @@
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding: "auto" (default), "z3", "z7", or "zorder"
 #'
-#' @return Index string (e.g., "051223")
+#' @return A character vector of index strings.
 #'
 #' @details
 #' Default index types by aperture:
 #' - Aperture 3: Z3 (optimized digit selection)
 #' - Aperture 4: Z-order (Morton curve)
-#' - Aperture 7: Z7 (hierarchical with Class III handling)
+#' - Aperture 7: Z7 (one base-7 child digit per resolution)
+#'
+#' A Z7 index has the form `BBd1...dr`, where `BB` is the two-digit base
+#' cell (00--11), `r` is the resolution, and every child digit is in 0--6.
+#' hexify's Z7 encoding is bijective: decoding and re-encoding a valid index
+#' returns the same string. It follows DGGRID's Z7 layout for ordinary cells,
+#' but retains distinct indices in pentagon regions where DGGRID's encoder can
+#' map different cells to the same string.
 #'
 #' @family hierarchical index
 #' @keywords internal
 #' @export
 #' @examples
 #' idx <- hexify_cell_to_index(5, 10, 15, resolution = 3, aperture = 3)
+#'
+#' # Aperture-7 indices contain a two-digit base cell and one digit per level
+#' z7 <- hexify_cell_to_index(5, 1, 1, resolution = 2, aperture = 7)
+#' nchar(z7) == 4L
 hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
@@ -51,19 +62,26 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
 
 #' Convert index string to cell coordinates
 #'
-#' Decodes a hierarchical index string back to cell coordinates.
+#' Decodes a hierarchical index string back to its cell coordinates and
+#' resolution. For Z7, valid indices round-trip exactly through
+#' [hexify_cell_to_index()].
 #'
 #' @param index Index string
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding used. Default "auto" infers from aperture.
 #'
-#' @return List with face, i, j, and resolution
+#' @return A list with `face`, `i`, `j`, and `resolution`.
 #'
 #' @family hierarchical index
 #' @keywords internal
 #' @export
 #' @examples
 #' cell <- hexify_index_to_cell("0012012", aperture = 3)
+#'
+#' z7_cell <- hexify_index_to_cell("110001", aperture = 7)
+#' hexify_cell_to_index(z7_cell$face, z7_cell$i, z7_cell$j,
+#'   z7_cell$resolution, aperture = 7
+#' )
 hexify_index_to_cell <- function(index, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
@@ -73,7 +91,8 @@ hexify_index_to_cell <- function(index, aperture = 3L,
 
 #' Convert longitude/latitude to index string
 #'
-#' Main entry point for geocoding points to grid cells.
+#' Projects geographic coordinates to grid cells and returns their hierarchical
+#' index strings. Inputs are vectorized over `lon` and `lat`.
 #'
 #' @param lon Longitude in degrees
 #' @param lat Latitude in degrees
@@ -81,13 +100,16 @@ hexify_index_to_cell <- function(index, aperture = 3L,
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding: "auto" (default), "z3", "z7", or "zorder"
 #'
-#' @return Index string
+#' @return A character vector of index strings.
 #'
 #' @family hierarchical index
 #' @keywords internal
 #' @export
 #' @examples
 #' idx <- hexify_lonlat_to_index(16.37, 48.21, resolution = 5, aperture = 3)
+#' idx7 <- hexify_lonlat_to_index(16.37, 48.21,
+#'   resolution = 4, aperture = 7
+#' )
 hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
                                     index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
@@ -99,13 +121,15 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
 
 #' Convert index string to longitude/latitude
 #'
-#' Returns the cell center coordinates for a given index.
+#' Returns the geographic coordinates of an indexed cell's center. This is a
+#' cell-level inverse of [hexify_lonlat_to_index()]: the returned point is the
+#' center, not necessarily the original input point.
 #'
 #' @param index Index string
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding. Default "auto" infers from aperture.
 #'
-#' @return Named numeric vector with lon and lat in degrees
+#' @return A named numeric vector with `lon` and `lat` in degrees.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -292,13 +316,16 @@ hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
 
 #' Get canonical form of Z7 index
 #'
-#' Returns the stable form of a Z7 index after decode/encode. Z7 indices are
-#' bijective, so valid indices are already canonical.
+#' Decodes and re-encodes a Z7 index until it reaches a stable form. Current Z7
+#' indices are bijective, so every valid index is already canonical and this
+#' function normally returns its input unchanged. It remains available for
+#' validating or normalizing indices created by older hexify versions.
 #'
-#' @param index Z7 index string
-#' @param max_iterations Maximum decode/encode iterations (default 128)
+#' @param index A length-one Z7 index string.
+#' @param max_iterations Maximum number of decode/encode iterations. This is a
+#'   safety bound for legacy indices; the default is 128.
 #'
-#' @return Stable canonical form of the index
+#' @return A length-one character string containing the stable index.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -306,6 +333,14 @@ hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
 #' @examples
 #' # Valid Z7 indices are stable
 #' hexify_z7_canonical("110001")
+#'
+#' cell <- hexify_index_to_cell("110001", aperture = 7)
+#' identical(
+#'   hexify_cell_to_index(cell$face, cell$i, cell$j,
+#'     cell$resolution, aperture = 7
+#'   ),
+#'   "110001"
+#' )
 hexify_z7_canonical <- function(index, max_iterations = 128L) {
   cpp_z7_canonical_form(as.character(index), as.integer(max_iterations))
 }

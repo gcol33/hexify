@@ -18,13 +18,20 @@ hexify_index_to_cell(
 \item{index_type}{Index encoding used. Default "auto" infers from aperture.}
 }
 \value{
-List with face, i, j, and resolution
+A list with \code{face}, \code{i}, \code{j}, and \code{resolution}.
 }
 \description{
-Decodes a hierarchical index string back to cell coordinates.
+Decodes a hierarchical index string back to its cell coordinates and
+resolution. For Z7, valid indices round-trip exactly through
+\code{\link[=hexify_cell_to_index]{hexify_cell_to_index()}}.
 }
 \examples{
 cell <- hexify_index_to_cell("0012012", aperture = 3)
+
+z7_cell <- hexify_index_to_cell("110001", aperture = 7)
+hexify_cell_to_index(z7_cell$face, z7_cell$i, z7_cell$j,
+  z7_cell$resolution, aperture = 7
+)
 }
 \seealso{
 Other hierarchical index:

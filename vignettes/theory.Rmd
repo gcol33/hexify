@@ -595,7 +595,18 @@ where **BB** is the base cell (00--11) and each digit $D_k \in \{0, 1, \ldots, 6
 | 5 | IK_AXES | IK-axis direction |
 | 6 | IJ_AXES | IJ-axis direction |
 
-Pentagon cells (at icosahedron vertices) have only 5 children instead of 7. Base cells 0--5 skip digit 2 (J_AXES); cells 6--11 skip digit 5 (IK_AXES).
+The first two characters always identify the base cell, so the resolution is
+`nchar(index) - 2`. Dropping the final digit gives the parent; appending digits
+0--6 enumerates the seven positions in the next refinement level.
+
+hexify uses a **bijective Z7 variant**. DGGRID's base-cell reassignment and
+pentagon digit-skip rules can make its encoder non-injective near pentagons:
+distinct cells may receive the same string. hexify keeps the geographic quad
+fixed in those regions, giving every cell a distinct index and guaranteeing
+`index -> cell -> index` round-trips. Away from those pentagon-region cases,
+the strings follow the DGGRID Z7 layout. This distinction matters when
+exchanging raw Z7 strings with DGGRID; geographic coordinates and cell geometry
+remain the safest interoperability layer.
 
 ```{r z7-example}
 # Z7 index encoding for aperture 7
@@ -612,6 +623,14 @@ parent_info <- hexify_index_to_cell(parent_idx, 7, "z7")
 cat(sprintf("  Parent index: %s (face %d, i=%d, j=%d)\n",
             parent_idx, parent_info$face,
             as.integer(parent_info$i), as.integer(parent_info$j)))
+
+# A valid Z7 index decodes and re-encodes without changing
+decoded <- hexify_index_to_cell(idx, 7, "z7")
+stopifnot(identical(
+  hexify_cell_to_index(decoded$face, decoded$i, decoded$j,
+                       decoded$resolution, 7, "z7"),
+  idx
+))
 ```
 
 #### Z3 Index (Aperture 3)
@@ -662,7 +681,11 @@ cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
 | **Parent operation** | Drop last digit | Drop last pair | Drop last digit(s) |
 | **Index length** (res $r$) | $2 + r$ | $2 + 2\lceil r/2\rceil$ | $2 + r$ or $2 + 2r$ |
 
-All three encodings are bijective: each $(quad, i, j)$ triple maps to exactly one index string, and vice versa. hexify stores indices as character strings to support arbitrary precision and avoid integer overflow at high resolutions.
+All three hexify encodings are bijective: each valid $(quad, i, j)$ cell maps
+to exactly one index string, and vice versa. hexify stores indices as character
+strings to support arbitrary precision and avoid integer overflow at high
+resolutions. As noted above, hexify's bijective Z7 strings intentionally differ
+from DGGRID in the pentagon regions where DGGRID's raw Z7 encoding collides.
 
 ### SEQNUM: The Flat Cell ID
 
