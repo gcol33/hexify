@@ -246,7 +246,7 @@ inline void quantize_rotation_classII(double x, double y,
 
 // Pre-computed constants for ~19.1 degree rotation
 namespace detail {
-    // arctan(sqrt(3/7)) in radians
+    // arctan(sqrt(3)/5) in radians
     constexpr double kAp7RotRad = kAp7RotDeg * kDegToRad;
     constexpr double kCos19 = 0.9449111825230680440492389263705078;  // cos(19.106...°)
     constexpr double kSin19 = 0.3273268353539885718950317563490135;  // sin(19.106...°)

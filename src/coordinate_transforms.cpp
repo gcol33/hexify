@@ -317,11 +317,11 @@ void quantize_class2(double x, double y, long long& out_i, long long& out_j) {
 // ============================================================================
 // Class III Quantization (Aperture 7)
 // ============================================================================
-// Class III hexagons are rotated by arctan(sqrt(3/7)) ~= 19.1deg from Class I.
+// Class III hexagons are rotated by arctan(sqrt(3)/5) ~= 19.1deg from Class I.
 // This creates a grid where only 1/7 of substrate cells are valid.
 
 // Aperture 7 rotation angle in radians
-constexpr double kAp7RotRad = 19.10660535003926406149339781619697490 * kPi / 180.0;
+constexpr double kAp7RotRad = kAp7RotDeg * kDegToRad;
 
 // Class III-I (even resolutions): Class I surrogate rotated by ~19.1deg
 void quantize_class3i(double x, double y, long long& out_i, long long& out_j) {

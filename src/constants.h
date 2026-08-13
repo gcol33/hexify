@@ -49,9 +49,10 @@ constexpr double kRadToDeg = 57.29577951308232087679815481410517033;  // 180/pi
 // ISEA Projection Constants
 // =============================================================================
 
-// Aperture 7 rotation angle: arctan(sqrt(3/7)) in degrees
-// Exact: atan(sqrt(3/7)) = 19.10660535003926...°
-constexpr double kAp7RotDeg = 19.10660535003926406149339781619697490;
+// Aperture 7 rotation angle: arctan(sqrt(3)/5) in degrees
+// Exact: atan(sqrt(3)/5) = 19.10660535086909...°
+// Cross-checked against DGGRID's M_AP7_ROT_DEGS (src/lib/dglib/include/dglib/DgConstants.h)
+constexpr double kAp7RotDeg = 19.106605350869094394517474740130082234976075229;
 
 // =============================================================================
 // Snyder Projection Sector Angles
