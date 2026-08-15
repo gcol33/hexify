@@ -50,7 +50,9 @@
 // OFFSET COORDINATES (i, j)
 // -------------------------
 // Two-axis system output by quantization. Maps directly to cell indices.
-// In our implementation: i = q, j = r (from cube coordinates).
+// The i and j axes point at 0 and 120 degrees, so they are two of the three
+// cube axes rather than an adjacent pair: i = q + r and j = r, with the cube
+// triple (q, r, s) = (i - j, j, -i). See cube_coordinates.h.
 //
 // ============================================================================
 // SURROGATE-SUBSTRATE PATTERN
@@ -145,12 +147,12 @@ inline void rotate_point_inverse(double& x, double& y,
  *   1. Convert Cartesian (x, y) to cube coordinates (q, r, s)
  *   2. Round each cube coordinate to nearest integer
  *   3. Fix rounding to maintain q + r + s = 0 constraint
- *   4. Output offset coordinates (i, j) = (q, r)
+ *   4. Output offset coordinates (i, j) = (q + r, r)
  *
  * @param x       X coordinate in hex grid space
  * @param y       Y coordinate in hex grid space
- * @param out_i   Output: column index (q from cube coords)
- * @param out_j   Output: row index (r from cube coords)
+ * @param out_i   Output: column index
+ * @param out_j   Output: row index
  */
 inline void quantize_rotation_classI(double x, double y,
                                      long long& out_i, long long& out_j) {
@@ -168,8 +170,8 @@ inline void quantize_rotation_classI(double x, double y,
     // Round to nearest hex center (maintains q + r + s = 0)
     cube.round_to_nearest();
 
-    // Extract offset coordinates
-    out_i = static_cast<long long>(cube.q);
+    // Back to the grid's (i, j) axes (see cartesian_to_cube)
+    out_i = static_cast<long long>(cube.q + cube.r);
     out_j = static_cast<long long>(cube.r);
 }
 

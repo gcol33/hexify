@@ -78,10 +78,19 @@ struct CubeCoord {
 
 // Cartesian to cube for flat-top hex layout
 // Hex width = 1 (distance between parallel edges)
+//
+// The grid's (i, j) axes point at 0 and 120 degrees, so they are two of the
+// three cube axes rather than the adjacent pair cube rounding needs: the
+// coordinate on the axis between them is i - j, and the third cube coordinate
+// is -i. Round-and-fix requires all three, so the triple is
+//
+//   (q, r, s) = (i - j, j, -i),   q + r + s = 0
+//
+// and the grid coordinates come back as i = q + r, j = r.
 inline CubeCoord cartesian_to_cube(double x, double y, double sqrt3) {
     double fj = (2.0 * y) / sqrt3;
     double fi = x + fj * 0.5;
-    return CubeCoord(fi, fj, -fi - fj);
+    return CubeCoord(fi - fj, fj, -fi);
 }
 
 // Cube to Cartesian for flat-top hex layout

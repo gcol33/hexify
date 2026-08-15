@@ -34,3 +34,4 @@
 ^RELEASE_PLAN\.md$
 ^test_ap7.*\.R$
 ^\.unrot$
+^dev_notes$

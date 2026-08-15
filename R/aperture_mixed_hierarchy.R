@@ -7,7 +7,7 @@
 # string to port. hexify instead defines the hierarchy geometrically, which is
 # the mathematically correct relationship for how these grids are built:
 #
-# quad_xy_to_ij_ap43() quantizes the projected point once, by a single scalar
+# quad_xy_to_ij_mixed() quantizes the projected point once, by a single scalar
 # scale = 2^(#ap4 levels) * sqrt(3)^(#ap3 levels). A cell at resolution r and its
 # parent at r-1 are therefore both direct quantizations of the SAME continuous
 # quad-space at different scales -- so a cell's parent is simply the coarser cell
@@ -35,18 +35,17 @@ ap43_qij_cell <- function(quad, i, j, resolution) {
 }
 
 #' Maximum (i,j) substrate coordinate for a mixed 4/3 grid at a resolution.
-#' Mirrors calc_max_grid_dim_ap43() in src/rcpp_cell.cpp.
+#' One less than quad_edge_coord_mixed() in src/coordinate_transforms.cpp: the
+#' substrate scale is the square root of the product of the apertures times the
+#' lattice norm (3 for the Class II substrate an odd number of aperture-3 levels
+#' leaves, 1 otherwise), which is an exact integer.
 #' @noRd
 ap43_max_dim <- function(resolution) {
   if (resolution == 0) return(0L)
   level <- ap43_level(resolution)
-  scale <- 1.0
-  ap3 <- 0L
-  for (r in 1:resolution) {
-    if (r <= level) scale <- scale * 2 else { scale <- scale * sqrt(3); ap3 <- ap3 + 1L }
-  }
-  if (ap3 %% 2L == 1L) scale <- scale * sqrt(3)
-  as.integer(scale + 1e-6) - 1L
+  ap3 <- resolution - level
+  norm <- if (ap3 %% 2L == 1L) 3 else 1
+  as.integer(round(sqrt(4^level * 3^ap3 * norm))) - 1L
 }
 
 #' All valid cells within a band of the (i,j) boundary of the ten body quads,

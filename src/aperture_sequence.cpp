@@ -37,4 +37,20 @@ void hex_corners_mixed(long long i, long long j,
     corners_form(form, i, j, hex_radius, out_x, out_y);
 }
 
+std::vector<int> ap43_sequence(int resolution, int mixed_aperture_level) {
+    if (resolution < 0) {
+        throw std::runtime_error("ap43_sequence: resolution must be >= 0");
+    }
+    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
+        throw std::runtime_error("ap43_sequence: mixed_aperture_level must be between 0 and resolution");
+    }
+    std::vector<int> ap_seq;
+    ap_seq.reserve(static_cast<size_t>(resolution) + 1);
+    ap_seq.push_back(mixed_aperture_level > 0 ? 4 : 3);  // base grid
+    for (int r = 1; r <= resolution; ++r) {
+        ap_seq.push_back(r <= mixed_aperture_level ? 4 : 3);
+    }
+    return ap_seq;
+}
+
 } // namespace hexify

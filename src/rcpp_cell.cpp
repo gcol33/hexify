@@ -14,11 +14,15 @@
 #include <Rcpp.h>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 #include "constants.h"
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "aperture.h"
+#include "aperture_sequence.h"
+#include "grid_math.h"
 #include "index_z7.h"
 #include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
@@ -1150,71 +1154,39 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
 }
 
 // ============================================================================
-// Mixed Aperture 3/4 (ISEA43H) Cell ID Conversion
+// Mixed Aperture Sequence Cell ID Conversion
 // ============================================================================
-// ISEA43H uses aperture 4 for the first 'mixed_aperture_level' resolutions
-// and aperture 3 for the remaining resolutions.
+// A mixed grid refines by a different aperture at each level, given as the
+// sequence ap_seq (see aperture_sequence.h). ISEA43H is aperture 4 for the
+// first 'mixed_aperture_level' resolutions and aperture 3 for the rest.
 //
-// Cell count: N = 10 * 4^mixed_level * 3^(res - mixed_level) + 2
+// Cell count: N = 10 * (product of the apertures) + 2
 // ============================================================================
 
-// Calculate grid dimension for mixed aperture 3/4
-// The grid class depends on the count of aperture-3 levels at odd positions
-static long long calc_max_grid_dim_ap43(int resolution, int mixed_aperture_level) {
-    if (resolution == 0) return 0;
-
-    // Count aperture-3 resolutions and determine grid class
-    int ap3_count = 0;
-    double scale = 1.0;
-
-    for (int r = 1; r <= resolution; r++) {
-        if (r <= mixed_aperture_level) {
-            // Aperture 4 level: scale by 2
-            scale *= 2.0;
-        } else {
-            // Aperture 3 level: scale by sqrt(3)
-            scale *= 1.7320508075688772935;
-            ap3_count++;
-        }
+// Which 2D packing the substrate uses: the unrotated Class I lattice packs
+// aligned, the 30-degree Class II lattice packs on the offset sequence.
+static bool is_offset_grid_mixed(const std::vector<int>& ap_seq) {
+    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
+    long long norm = hexify::eisenstein_norm(form.m, form.n);
+    if (norm != 1 && norm != 3) {
+        Rcpp::stop("mixed aperture sequence: cell IDs are defined for the Class I "
+                   "and Class II substrates, got lattice norm " + std::to_string(norm));
     }
-
-    // If odd number of aperture-3 levels, we're in "offset" grid class
-    // which requires extra sqrt(3) factor for substrate
-    bool use_offset = (ap3_count % 2) == 1;
-    if (use_offset) {
-        scale *= 1.7320508075688772935;
-    }
-
-    return static_cast<long long>(scale + 0.000001) - 1;
+    return norm == 3;
 }
 
-// Check if mixed aperture grid uses offset (Class II) pattern
-static inline bool is_offset_grid_ap43(int resolution, int mixed_aperture_level) {
-    int ap3_count = 0;
-    for (int r = mixed_aperture_level + 1; r <= resolution; r++) {
-        ap3_count++;
-    }
-    return (ap3_count % 2) == 1;
-}
-
-// Calculate cell count and offset per quad for mixed aperture
-// Formula: nCells = 10 * 4^mixed_level * 3^(res - mixed_level) + 2
-static void calc_grid_params_ap43(int resolution, int mixed_aperture_level,
-                                   uint64_t& nCells, uint64_t& offsetPerQuad) {
+// Cell count and per-quad offset for a mixed aperture sequence
+static void calc_grid_params_mixed(const std::vector<int>& ap_seq,
+                                    uint64_t& nCells, uint64_t& offsetPerQuad) {
+    int resolution = static_cast<int>(ap_seq.size()) - 1;
     if (resolution < hexify::kMinResolution || resolution > hexify::kMaxResolution) {
         Rcpp::stop("resolution must be between %d and %d",
                    hexify::kMinResolution, hexify::kMaxResolution);
     }
+
     nCells = 10;
-
-    // Apply aperture 4 for first mixed_aperture_level resolutions
-    for (int r = 0; r < mixed_aperture_level && r < resolution; r++) {
-        nCells *= 4;
-    }
-
-    // Apply aperture 3 for remaining resolutions
-    for (int r = mixed_aperture_level; r < resolution; r++) {
-        nCells *= 3;
+    for (size_t k = 1; k < ap_seq.size(); k++) {
+        nCells *= static_cast<uint64_t>(ap_seq[k]);
     }
 
     nCells += 2;
@@ -1231,15 +1203,17 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
     int n = lon.size();
     NumericVector result(n);
 
+    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
+
     // Calculate grid parameters
     uint64_t nCells, offsetPerQuad;
-    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
+    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
 
     // Grid dimension
-    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
+    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
 
     // Check if using offset grid
-    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+    bool use_offset = is_offset_grid_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
@@ -1251,8 +1225,7 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
 
         int quad;
         long long i, j;
-        hexify::quad_xy_to_ij_ap43(quad_pre, quad_x, quad_y, resolution, mixed_aperture_level,
-                                    quad, i, j);
+        hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, ap_seq, quad, i, j);
 
         // Calculate cell ID offset within quad
         uint64_t offset = 0;
@@ -1286,15 +1259,17 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
     NumericVector lon(n);
     NumericVector lat(n);
 
+    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
+
     // Calculate grid parameters
     uint64_t nCells, offsetPerQuad;
-    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
+    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
 
     // Grid dimension
-    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
+    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
 
     // Check if using offset grid
-    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+    bool use_offset = is_offset_grid_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int quad;
@@ -1307,7 +1282,7 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
 
         // Convert quad IJ to lon/lat via quad_xy -> icosa triangle -> lon/lat
         double quad_x, quad_y;
-        hexify::quad_ij_to_xy_ap43(quad, i, j, resolution, mixed_aperture_level, quad_x, quad_y);
+        hexify::quad_ij_to_xy_mixed(quad, i, j, ap_seq, quad_x, quad_y);
 
         int icosa_triangle_face;
         double icosa_triangle_x, icosa_triangle_y;
@@ -1336,10 +1311,11 @@ DataFrame cpp_cell_to_quad_ij_ap43(NumericVector cell_id, int resolution,
     NumericVector out_i(n);
     NumericVector out_j(n);
 
+    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
     uint64_t nCells, offsetPerQuad;
-    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
-    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
-    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
+    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
+    bool use_offset = is_offset_grid_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int quad;
@@ -1372,10 +1348,11 @@ NumericVector cpp_quad_ij_to_cell_ap43(IntegerVector quad, NumericVector i,
     int n = quad.size();
     NumericVector result(n);
 
+    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
     uint64_t nCells, offsetPerQuad;
-    calc_grid_params_ap43(resolution, mixed_aperture_level, nCells, offsetPerQuad);
-    long long dim = calc_max_grid_dim_ap43(resolution, mixed_aperture_level) + 1;
-    bool use_offset = is_offset_grid_ap43(resolution, mixed_aperture_level);
+    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
+    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
+    bool use_offset = is_offset_grid_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];

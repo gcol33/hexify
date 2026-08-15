@@ -41,6 +41,8 @@
 #ifndef HEXIFY_COORDINATE_TRANSFORMS_H
 #define HEXIFY_COORDINATE_TRANSFORMS_H
 
+#include <vector>
+
 namespace hexify {
 
 // Convert from icosahedral triangle coordinates to quad XY coordinates
@@ -119,23 +121,27 @@ void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
                                   double& out_quad_x, double& out_quad_y);
 
-// Mixed aperture 4/3 (ISEA43H): quad XY -> quad IJ.
-// Uses aperture 4 for the first mixed_aperture_level resolutions and
-// aperture 3 for the remaining resolutions, matching the cell-count formula
-// in calc_grid_params_ap43() (rcpp_cell.cpp): N = 10*4^level*3^(res-level)+2.
-// Unlike icosa_tri_to_quad_ij(), which only supports a single pure aperture,
-// this scales by the compounded 2^level * sqrt(3)^(res-level) factor so the
-// returned (i,j) are on the grid's actual mixed-radix substrate rather than
-// a pure aperture-3 approximation.
-void quad_xy_to_ij_ap43(int quad, double quad_x, double quad_y,
-                        int resolution, int mixed_aperture_level,
-                        int& out_quad, long long& out_i, long long& out_j);
+// Mixed aperture sequence: quad XY -> quad IJ.
+// ap_seq gives the aperture of every resolution level (see aperture_sequence.h):
+// entry 0 names the base grid, entries 1.. are the refinement steps, and
+// apertures 3, 4 and 7 may appear in any order. Scale and lattice orientation
+// both come from hex_form_sequence(), so the returned (i,j) are on the grid's
+// own mixed-radix substrate. Unlike icosa_tri_to_quad_ij(), which takes a
+// single pure aperture, this covers ISEA43H and any other ordering.
+void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
+                         const std::vector<int>& ap_seq,
+                         int& out_quad, long long& out_i, long long& out_j);
 
-// Mixed aperture 4/3 (ISEA43H): quad IJ -> quad XY (inverse of
-// quad_xy_to_ij_ap43()).
-void quad_ij_to_xy_ap43(int quad, long long i, long long j,
-                        int resolution, int mixed_aperture_level,
-                        double& out_quad_x, double& out_quad_y);
+// Mixed aperture sequence: quad IJ -> quad XY (inverse of
+// quad_xy_to_ij_mixed()).
+void quad_ij_to_xy_mixed(int quad, long long i, long long j,
+                         const std::vector<int>& ap_seq,
+                         double& out_quad_x, double& out_quad_y);
+
+// Substrate coordinate of a quad's far edge for a mixed sequence: the total
+// scale sqrt(product of apertures * lattice norm), which is also the number of
+// substrate cells along a quad edge.
+long long quad_edge_coord_mixed(const std::vector<int>& ap_seq);
 
 } // namespace hexify
 
