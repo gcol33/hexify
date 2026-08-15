@@ -1,3 +1,15 @@
+# hexify 0.7.5
+
+## Bug fixes
+
+* `kAp7RotDeg` was mislabeled as `atan(sqrt(3/7))` (~33.2 deg) and its numeric
+  literal drifted from the true value starting at the 12th significant digit,
+  present since the initial release. The correct closed form is
+  `atan(sqrt(3)/5)`, now cross-checked against DGGRID's `M_AP7_ROT_DEGS` and
+  updated to full double precision. A duplicate literal in
+  `coordinate_transforms.cpp` was removed in favor of deriving from the same
+  constant (reported by Christian Carey).
+
 # hexify 0.7.4
 
 ## Documentation
