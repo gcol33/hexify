@@ -566,18 +566,6 @@ DataFrame cpp_cell_to_lonlat(NumericVector cell_id, int resolution,
                         nCells, sub_lat, /*handle_ap7_south_pole=*/true,
                         quad, i, j);
 
-        // Handle polar pentagons directly
-        if (quad == 0) {
-            lon[k] = 0.0;
-            lat[k] = 90.0;
-            continue;
-        }
-        if (quad == 11) {
-            lon[k] = 0.0;
-            lat[k] = -90.0;
-            continue;
-        }
-
         // Convert to lon/lat
         double quad_x, quad_y;
         if (aperture == 7) {

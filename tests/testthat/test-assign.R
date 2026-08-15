@@ -33,12 +33,31 @@ test_that("hexify_assign produces valid cell IDs", {
 
   result <- hexify_assign(lon, lat, effective_res = 5)
 
-  # Cell IDs should be formatted strings
-  expect_true(all(grepl("^F\\d+:Z3:", result$id)))
+  # Z3 index: 2-digit quad followed by one digit per resolution level
+  expect_true(all(grepl("^\\d{2}[0-2]{5}$", result$id)))
 
-  # Face should be valid (0-19)
+  # Face is the quad (0-11)
   expect_true(all(result$face >= 0))
-  expect_true(all(result$face <= 19))
+  expect_true(all(result$face <= 11))
+})
+
+test_that("hexify_assign agrees with the grid pipeline", {
+  setup_icosa()
+
+  lon <- c(16.37, 2.35, -3.70, 151.21, -58.38)
+  lat <- c(48.21, 48.86, 40.42, -33.87, -34.60)
+
+  for (res in 1:8) {
+    grid <- hex_grid(resolution = res, aperture = 3)
+    cells <- lonlat_to_cell(lon, lat, grid)
+    centers <- cell_to_lonlat(cells, grid)
+
+    result <- hexify_assign(lon, lat, effective_res = res)
+
+    expect_equal(result$center_lon, centers$lon_deg)
+    expect_equal(result$center_lat, centers$lat_deg)
+    expect_equal(result$id, unname(cell_to_index(cells, grid)))
+  }
 })
 
 test_that("hexify_assign centers are valid coordinates", {
@@ -90,29 +109,36 @@ test_that("hexify_assign resolution affects cell ID length", {
 })
 
 # =============================================================================
-# PARITY MATCHING
+# CENTER ACCURACY
 # =============================================================================
 
-test_that("hexify_assign respects match_dggrid_parity", {
+test_that("hexify_assign centers lie inside the assigned cell", {
   setup_icosa()
 
-  lon <- c(10)
-  lat <- c(50)
+  # Uniform points on the sphere
+  set.seed(23)
+  n <- 400
+  lon <- 360 * runif(n) - 180
+  lat <- asin(2 * runif(n) - 1) * 180 / pi
 
-  result_true <- hexify_assign(
-    lon, lat, effective_res = 4, match_dggrid_parity = TRUE
-  )
-  result_false <- hexify_assign(
-    lon, lat, effective_res = 4, match_dggrid_parity = FALSE
-  )
+  gc_km <- function(lon1, lat1, lon2, lat2) {
+    r <- pi / 180
+    EARTH_RADIUS_KM * acos(pmin(1, pmax(-1,
+      sin(lat1 * r) * sin(lat2 * r) +
+        cos(lat1 * r) * cos(lat2 * r) * cos((lon2 - lon1) * r))))
+  }
 
-  # Both should return valid results
-  expect_equal(nrow(result_true), 1)
-  expect_equal(nrow(result_false), 1)
+  for (res in 1:8) {
+    result <- hexify_assign(lon, lat, effective_res = res)
+    d <- gc_km(lon, lat, result$center_lon, result$center_lat)
 
-  # Results may differ based on parity setting
-  expect_s3_class(result_true, "data.frame")
-  expect_s3_class(result_false, "data.frame")
+    # Center spacing of a grid of 10 * 3^res + 2 cells over the sphere; a point
+    # lies at most one circumradius, about 0.6 of the spacing, from its cell
+    # center.
+    n_cells <- 10 * 3^res + 2
+    spacing <- sqrt(2 * EARTH_SURFACE_KM2 / (sqrt(3) * n_cells))
+    expect_lt(max(d), 0.7 * spacing)
+  }
 })
 
 # =============================================================================

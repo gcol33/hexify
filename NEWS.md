@@ -28,6 +28,30 @@
 
 ## Bug fixes
 
+* `cell_to_lonlat()` reported the two vertex-quad pentagons (quads 0 and 11) at
+  the geographic poles (#58). Those cells sit at icosahedron vertex 0 and its
+  antipode, which are the poles only under a pole-aligned orientation; under the
+  ISEA default they are at (11.25, 58.28) and (-168.75, -58.28), about 3500 km
+  away. Both now come from folding the cell through the quad frame, as the
+  polygon and mixed-sequence paths already did, so a point assigned to one gets
+  its own cell's centre back. `index_to_cell()`'s inverse carried the same
+  hardcoded pair and is fixed with it.
+
+* `hexify_assign()` returned centres thousands of kilometres outside the
+  assigned cell for a share of points -- 113 of 400 uniformly sampled points
+  further than two centre spacings at effective resolution 2 (#58). It was the
+  one path that quantized against raw triangle-local coordinates instead of
+  folding into the non-negative quad frame, so it needed its own Z3 digit scheme
+  (magnitude digits plus two trailing sign digits) whose round trip through
+  `z3::encode()`/`decode()` did not preserve `(i, j)`. It now runs on the same
+  pipeline as `hexify()`: `lonlat_to_cell()` for the cell, `cell_to_lonlat()`
+  for the centre, `cell_to_index()` for the ID. Every sampled point is now
+  within one circumradius of its cell centre at effective resolutions 1-8. The
+  reported `id` is the Z3 index string, `face` is the quad (0-11), and the
+  `match_dggrid_parity` argument is gone -- it was never wired to an effect, and
+  the shared pipeline is the DGGRID-verified one. `cpp_hex_index_z3_*()` are
+  removed with the scheme they served.
+
 * Quantization built the cube triple `(i, j, -i-j)` from the grid coordinates.
   The `i` and `j` axes point at 0 and 120 degrees, so they are two of the three
   cube axes rather than the adjacent pair round-and-fix expects, and the step

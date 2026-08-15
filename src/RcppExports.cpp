@@ -1154,46 +1154,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex_index_z3_quantize_digits
-List cpp_hex_index_z3_quantize_digits(double tx, double ty, int eff_res, double center_thr, LogicalVector flip_classes);
-RcppExport SEXP _hexify_cpp_hex_index_z3_quantize_digits(SEXP txSEXP, SEXP tySEXP, SEXP eff_resSEXP, SEXP center_thrSEXP, SEXP flip_classesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type tx(txSEXP);
-    Rcpp::traits::input_parameter< double >::type ty(tySEXP);
-    Rcpp::traits::input_parameter< int >::type eff_res(eff_resSEXP);
-    Rcpp::traits::input_parameter< double >::type center_thr(center_thrSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type flip_classes(flip_classesSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_index_z3_quantize_digits(tx, ty, eff_res, center_thr, flip_classes));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_hex_index_z3_center
-List cpp_hex_index_z3_center(IntegerVector d, LogicalVector flip_classes);
-RcppExport SEXP _hexify_cpp_hex_index_z3_center(SEXP dSEXP, SEXP flip_classesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type d(dSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type flip_classes(flip_classesSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_index_z3_center(d, flip_classes));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_hex_index_z3_corners
-List cpp_hex_index_z3_corners(IntegerVector digs, LogicalVector flip_classes, double hex_radius);
-RcppExport SEXP _hexify_cpp_hex_index_z3_corners(SEXP digsSEXP, SEXP flip_classesSEXP, SEXP hex_radiusSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type digs(digsSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type flip_classes(flip_classesSEXP);
-    Rcpp::traits::input_parameter< double >::type hex_radius(hex_radiusSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_index_z3_corners(digs, flip_classes, hex_radius));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_build_icosa
 void cpp_build_icosa(double vert0_lon_deg, double vert0_lat_deg, double azimuth_deg);
 RcppExport SEXP _hexify_cpp_build_icosa(SEXP vert0_lon_degSEXP, SEXP vert0_lat_degSEXP, SEXP azimuth_degSEXP) {
@@ -1429,9 +1389,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_get_children_indices", (DL_FUNC) &_hexify_get_children_indices, 3},
     {"_hexify_get_index_resolution", (DL_FUNC) &_hexify_get_index_resolution, 3},
     {"_hexify_cpp_z7_canonical_form", (DL_FUNC) &_hexify_cpp_z7_canonical_form, 2},
-    {"_hexify_cpp_hex_index_z3_quantize_digits", (DL_FUNC) &_hexify_cpp_hex_index_z3_quantize_digits, 5},
-    {"_hexify_cpp_hex_index_z3_center", (DL_FUNC) &_hexify_cpp_hex_index_z3_center, 2},
-    {"_hexify_cpp_hex_index_z3_corners", (DL_FUNC) &_hexify_cpp_hex_index_z3_corners, 3},
     {"_hexify_cpp_build_icosa", (DL_FUNC) &_hexify_cpp_build_icosa, 3},
     {"_hexify_cpp_which_face", (DL_FUNC) &_hexify_cpp_which_face, 2},
     {"_hexify_cpp_face_centers", (DL_FUNC) &_hexify_cpp_face_centers, 0},

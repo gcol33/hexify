@@ -37,6 +37,34 @@ normalize_antimeridian_coords <- function(coords) {
   coords
 }
 
+#' Build hexagon polygons for ISEA cell IDs
+#'
+#' Antimeridian-crossing rings are normalized so each polygon is contiguous;
+#' callers that render on a flat map pass the result through
+#' `sf::st_wrap_dateline()` to split them at +/-180.
+#'
+#' @param cell_id Numeric vector of cell IDs
+#' @param resolution Grid resolution level
+#' @param aperture Grid aperture: 3, 4, or 7
+#' @param crs Integer CRS
+#' @return An sfc of POLYGON geometries, one per cell ID, in input order
+#' @noRd
+isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
+  corners_list <- cpp_cell_to_corners(
+    as.numeric(cell_id),
+    as.integer(resolution),
+    as.integer(aperture)
+  )
+
+  polygons <- lapply(corners_list, function(coords) {
+    sf::st_polygon(list(normalize_antimeridian_coords(coords)))
+  })
+
+  # suppressWarnings: antimeridian normalization may temporarily produce
+  # out-of-range longitudes that st_wrap_dateline corrects downstream
+  suppressWarnings(sf::st_make_valid(sf::st_sfc(polygons, crs = crs)))
+}
+
 # =============================================================================
 # COORDINATE CONVERSION HELPERS
 # =============================================================================
@@ -204,32 +232,10 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
     return(result_sf)
   }
 
-  # ISEA path: generate polygons using C++ function
-  aperture_int <- aperture_to_int(g@aperture)
-
-  corners_list <- cpp_cell_to_corners(
-    as.numeric(cell_id),
-    g@resolution,
-    aperture_int
-  )
-
-
-  # Handle antimeridian-crossing polygons: normalize coordinates so each
-  # polygon is contiguous. When wrap_dateline = TRUE, st_wrap_dateline
-  # then splits at ±180° for correct flat-map rendering. For globe/
-  # orthographic projections, pass wrap_dateline = FALSE to keep cells intact.
-
-  polygons <- lapply(corners_list, function(coords) {
-    coords <- normalize_antimeridian_coords(coords)
-    sf::st_polygon(list(coords))
-  })
-
-  sfc <- sf::st_sfc(polygons, crs = g@crs)
-
-  # Fix any invalid geometries (self-intersecting polygons, etc.)
-  # suppressWarnings: antimeridian normalization may temporarily produce
-  # out-of-range longitudes that st_wrap_dateline corrects below
-  sfc <- suppressWarnings(sf::st_make_valid(sfc))
+  # ISEA path: generate polygons using C++ function. For globe/orthographic
+  # projections, pass wrap_dateline = FALSE to keep cells intact.
+  sfc <- isea_cells_to_sfc(cell_id, g@resolution, aperture_to_int(g@aperture),
+                           crs = g@crs)
 
   result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
   if (wrap_dateline) {

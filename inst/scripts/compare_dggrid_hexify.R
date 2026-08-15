@@ -34,26 +34,10 @@ hav_m <- function(lon1, lat1, lon2, lat2) {
   2 * 6371008.8 * asin(pmin(1, sqrt(a)))  # Earth mean radius
 }
 
-# hexify helper: Snyder → quantize Z3 at eff_res → hex center → inverse
-# IMPORTANT: flip_classes = TRUE to match ISEA3H (dggridR).
+# hexify cell centers at an effective resolution (ISEA3H, aperture 3)
 hexify_center_ll <- function(lon_deg, lat_deg, eff_res) {
-  fwd  <- cpp_snyder_forward(lon_deg, lat_deg)
-  face <- as.integer(fwd[["face"]])
-  tx   <- as.numeric(fwd[["tx"]])
-  ty   <- as.numeric(fwd[["ty"]])
-
-  digs <- cpp_hex_index_z3_quantize_digits(tx, ty, eff_res,
-                                           center_thr = 0.4,
-                                           flip_classes = TRUE)$digits
-  cen  <- cpp_hex_index_z3_center(digs, flip_classes = TRUE)
-  ll   <- hex_face_xy_to_ll(cen[["cx"]], cen[["cy"]], face)
-
-  c(lon = as.numeric(ll[["lon"]]), lat = as.numeric(ll[["lat"]]))
-}
-
-# optional: tighten inverse precision (if exposed)
-if ("hex_snyder_set_precision" %in% getNamespaceExports("hexify")) {
-  hex_snyder_set_precision("ultra")
+  a <- hexify_assign(lon_deg, lat_deg, eff_res)
+  cbind(lon = a$center_lon, lat = a$center_lat)
 }
 
 # ---- compare across areas -------------------------------------------------
@@ -80,7 +64,7 @@ for (area in areas_km2) {
   )
 
   # hexify centers at same effective resolution
-  hex_mat <- t(mapply(function(lo, la) hexify_center_ll(lo, la, eff_res), pts$lon, pts$lat))
+  hex_mat <- hexify_center_ll(pts$lon, pts$lat, eff_res)
   hex_df <- as_tibble(hex_mat) |>
     mutate(id = pts$id, .before = 1L) |>
     rename(hex_lon = lon, hex_lat = lat)

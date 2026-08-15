@@ -116,17 +116,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
            "Install with: install.packages('sf')")
     }
 
-    # Use the list-based corner function for efficient sf construction
-    corners_list <- cpp_cell_to_corners(cell_id, resolution, aperture)
-
-    # Handle antimeridian-crossing polygons by normalizing coordinates
-    polygons <- lapply(corners_list, function(coords) {
-      coords <- normalize_antimeridian_coords(coords)
-      sf::st_polygon(list(coords))
-    })
-
-    sfc <- sf::st_sfc(polygons, crs = 4326)
-    sfc <- sf::st_make_valid(sfc)
+    sfc <- isea_cells_to_sfc(cell_id, resolution, aperture)
     result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
     if (wrap_dateline) {
       result_sf <- sf::st_wrap_dateline(result_sf,

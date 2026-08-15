@@ -21,7 +21,7 @@
 //   - icosa_triangle_x, icosa_triangle_y: Normalized coords within triangle [0,1]
 //
 // Quad XY: Quad with continuous (double) coordinates
-//   - quad: Quad index (0-11, where 0=North pole, 11=South pole)
+//   - quad: Quad index (0-11; 0 and 11 are the vertex quads, see below)
 //   - quad_x, quad_y: Continuous position within quad
 //
 // Quad IJ: Quad with integer cell indices (used for cell ID computation)
@@ -34,7 +34,7 @@
 //
 // The icosahedron has 20 triangular faces grouped into 12 quads:
 //
-//           Quad 0 (North Pole)
+//           Quad 0 (vertex 0)
 //                  /\
 //                 /  \
 //           +----+----+----+----+----+
@@ -44,7 +44,14 @@
 //           +----+----+----+----+----+
 //                 \  /
 //                  \/
-//           Quad 11 (South Pole)
+//           Quad 11 (antipode of vertex 0)
+//
+// Quads 0 and 11 are the two degenerate quads: each holds the single pentagon
+// at the icosahedron vertex its neighbours share -- vertex 0 for the upper
+// quads, its antipode for the lower ones. Those vertices sit at the poles only
+// under a pole-aligned orientation; under the ISEA default (vertex 0 at 11.25,
+// 58.28) they do not, so their lon/lat comes from folding (0, 0) through the
+// quad frame like any other cell.
 //
 // Each non-polar quad contains 2 triangles forming a rhombus.
 // Triangles 0-4 and 5-9 map to quads 1-5

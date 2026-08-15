@@ -157,6 +157,25 @@ test_that("round-trip conversion works for aperture 7", {
   }
 })
 
+test_that("vertex-quad pentagons report their own centre", {
+  # Quads 0 and 11 hold the single pentagon at icosahedron vertex 0 and at its
+  # antipode. Under the ISEA orientation neither is a geographic pole.
+  vert_lon <- c(ISEA_VERT0_LON_DEG, ISEA_VERT0_LON_DEG - 180)
+  vert_lat <- c(ISEA_VERT0_LAT_DEG, -ISEA_VERT0_LAT_DEG)
+
+  for (ap in c(3, 4)) {
+    for (res in c(2, 5)) {
+      cells <- hexify_lonlat_to_cell(vert_lon, vert_lat, res, aperture = ap)
+      qij <- hexify_cell_to_quad_ij(cells, res, aperture = ap)
+      coords <- hexify_cell_to_lonlat(cells, res, aperture = ap)
+
+      expect_equal(qij$quad, c(0L, 11L))
+      expect_equal(coords$lon_deg, vert_lon, tolerance = 1e-6)
+      expect_equal(coords$lat_deg, vert_lat, tolerance = 1e-6)
+    }
+  }
+})
+
 # =============================================================================
 # CELL TO QUAD IJ
 # =============================================================================

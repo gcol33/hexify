@@ -353,18 +353,6 @@ cpp_z7_canonical_form <- function(index, max_iterations = 128L) {
     .Call(`_hexify_cpp_z7_canonical_form`, index, max_iterations)
 }
 
-cpp_hex_index_z3_quantize_digits <- function(tx, ty, eff_res, center_thr = 0.4, flip_classes = as.logical( c())) {
-    .Call(`_hexify_cpp_hex_index_z3_quantize_digits`, tx, ty, eff_res, center_thr, flip_classes)
-}
-
-cpp_hex_index_z3_center <- function(d, flip_classes = as.logical( c())) {
-    .Call(`_hexify_cpp_hex_index_z3_center`, d, flip_classes)
-}
-
-cpp_hex_index_z3_corners <- function(digs, flip_classes = as.logical( c()), hex_radius = 1.0) {
-    .Call(`_hexify_cpp_hex_index_z3_corners`, digs, flip_classes, hex_radius)
-}
-
 cpp_build_icosa <- function(vert0_lon_deg = 11.25, vert0_lat_deg = 58.28252559, azimuth_deg = 0.0) {
     invisible(.Call(`_hexify_cpp_build_icosa`, vert0_lon_deg, vert0_lat_deg, azimuth_deg))
 }
