@@ -197,6 +197,42 @@ test_that("quad_ij_to_icosa_tri returns valid structure", {
   expect_true(result$icosa_triangle_face >= 0 && result$icosa_triangle_face <= 19)
 })
 
+test_that("aperture-7 quad IJ -> XY lands on the cell centre", {
+  # quad_ij_to_xy() used to scale aperture-7 coordinates by a sqrt(7)/sqrt(21)
+  # substrate while the forward quantization used the exact 7^ceil(res/2) one,
+  # so anything reaching it without the aperture-7 guard landed in the wrong
+  # place (or outside the quad entirely).
+  hexify_build_icosa()
+
+  set.seed(57)
+  lon <- runif(40, -170, 170)
+  lat <- runif(40, -75, 75)
+
+  for (res in 0:5) {
+    g <- hex_grid(resolution = res, aperture = 7)
+    cells <- lonlat_to_cell(lon, lat, g)
+    ctr <- cell_to_lonlat(cells, g)
+    qij <- cpp_cell_to_quad_ij(cells, res, 7L)
+
+    # Polar quads are pentagons that cell_to_lonlat() answers directly.
+    keep <- which(qij$quad >= 1 & qij$quad <= 10 & !is.na(ctr$lon))
+    expect_gt(length(keep), 0)
+
+    for (k in keep) {
+      xy <- cpp_quad_ij_to_xy(qij$quad[k], qij$i[k], qij$j[k], 7L, res)
+      tri <- cpp_quad_xy_to_icosa_tri(qij$quad[k], xy$quad_x, xy$quad_y)
+      ll <- cpp_face_xy_to_ll(tri[["icosa_triangle_x"]],
+                              tri[["icosa_triangle_y"]],
+                              tri[["icosa_triangle_face"]])
+
+      expect_equal(as.numeric(ll[["lon"]]), ctr$lon[k], tolerance = 1e-9,
+                   info = sprintf("res=%d quad=%d", res, qij$quad[k]))
+      expect_equal(as.numeric(ll[["lat"]]), ctr$lat[k], tolerance = 1e-9,
+                   info = sprintf("res=%d quad=%d", res, qij$quad[k]))
+    }
+  }
+})
+
 # =============================================================================
 # PIPELINE CONSISTENCY
 # =============================================================================

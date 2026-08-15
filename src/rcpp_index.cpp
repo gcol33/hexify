@@ -197,7 +197,17 @@ Rcpp::NumericVector cpp_index_to_lonlat(std::string index, int aperture,
   hexify::index_to_cell(index, aperture, idx_type, face, i, j, resolution);
 
   double lon, lat;
-  {
+  if (face == 0) {
+    // Quads 0 and 11 are the polar pentagons, whose centres are the poles
+    // themselves. Folding (0, 0) through the quad frame would instead give the
+    // icosahedron vertex at the quad's corner, so answer them directly as
+    // cpp_cell_to_lonlat() does.
+    lon = 0.0;
+    lat = 90.0;
+  } else if (face == 11) {
+    lon = 0.0;
+    lat = -90.0;
+  } else {
     // `face` decoded from the index is a quad (0-11 for aperture 3 too, now
     // that cpp_lonlat_to_index_ap3() folds through icosa_tri_to_quad_ij()
     // like ap4/ap7 do), not a raw icosahedron triangle face -- it must be

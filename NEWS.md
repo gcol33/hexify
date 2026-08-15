@@ -29,6 +29,24 @@
   unrotated. A sequence such as `c(4, 4, 3)` was therefore 30 degrees away from
   the grid it describes, and `c(4, 3, 4)` was not nested in `c(4, 3)`.
 
+* The aperture-7 inverse in `quad_ij_to_xy()` scaled by a `sqrt(7)`/`sqrt(21)`
+  substrate while the forward quantization used the exact `7^ceil(res/2)` one.
+  Callers that reached it -- `hexify_index_to_lonlat()`,
+  `hexify_quad_ij_to_xy()` and `hexify_quad_ij_to_icosa_tri()` -- placed
+  aperture-7 cells in the wrong location, or outside the quad entirely, where
+  the conversion then failed. DGGRID's `DgHexGrid2DS` toggles Class III on
+  every aperture-7 level, so even resolutions are an unrotated Class I grid and
+  odd ones carry one aperture-7 level; the inverse now takes the same
+  exact-integer route as the forward. The float-rotation Class III helpers that
+  encoded the old substrate (`quantize_class3i()`, `quantize_class3ii()`,
+  `substrate_to_surrogate_ap7()`, `surrogate_to_substrate_ap7()`) were unused
+  and have been removed.
+
+* `hexify_index_to_lonlat()` returned the icosahedron vertex instead of the
+  pole for cells in the polar pentagon quads, at every aperture. It now answers
+  those directly, as `cell_to_lonlat()` does. Aperture-7 indices remain limited
+  by the upstream Z7 encoding collision tracked in #53.
+
 # hexify 0.7.5
 
 ## Bug fixes

@@ -306,3 +306,31 @@ test_that("hexify_lonlat_to_index and hexify_index_to_lonlat are consistent", {
   expect_true(lon_diff < 5)
   expect_true(lat_diff < 5)
 })
+
+test_that("hexify_index_to_lonlat agrees with cell_to_lonlat for apertures 3 and 4", {
+  setup_icosa()
+
+  # Both are cell-centre lookups for the same cell, so they must agree exactly.
+  # They used to differ at the polar pentagons, where folding (0, 0) through the
+  # quad frame returns the icosahedron vertex rather than the pole.
+  set.seed(311)
+  lon <- c(runif(30, -170, 170), 0, 0)
+  lat <- c(runif(30, -80, 80), 89.9, -89.9)
+
+  for (ap in c(3, 4)) {
+    for (res in c(1, 2, 3, 5)) {
+      g <- hex_grid(resolution = res, aperture = ap)
+      cells <- lonlat_to_cell(lon, lat, g)
+      ctr <- cell_to_lonlat(cells, g)
+      idx <- cell_to_index(cells, g)
+
+      for (k in seq_along(idx)) {
+        got <- hexify_index_to_lonlat(idx[k], aperture = ap)
+        expect_equal(as.numeric(got[["lon"]]), ctr$lon[k], tolerance = 1e-4,
+                     info = sprintf("ap=%d res=%d cell %d lon", ap, res, k))
+        expect_equal(as.numeric(got[["lat"]]), ctr$lat[k], tolerance = 1e-4,
+                     info = sprintf("ap=%d res=%d cell %d lat", ap, res, k))
+      }
+    }
+  }
+})

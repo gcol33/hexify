@@ -315,84 +315,6 @@ void quantize_class2(double x, double y, long long& out_i, long long& out_j) {
 
 
 // ============================================================================
-// Class III Quantization (Aperture 7)
-// ============================================================================
-// Class III hexagons are rotated by arctan(sqrt(3)/5) ~= 19.1deg from Class I.
-// This creates a grid where only 1/7 of substrate cells are valid.
-
-// Aperture 7 rotation angle in radians
-constexpr double kAp7RotRad = kAp7RotDeg * kDegToRad;
-
-// Class III-I (even resolutions): Class I surrogate rotated by ~19.1deg
-void quantize_class3i(double x, double y, long long& out_i, long long& out_j) {
-    const double c = std::cos(-kAp7RotRad);
-    const double s = std::sin(-kAp7RotRad);
-
-    // Rotate to surrogate
-    double rx = x * c - y * s;
-    double ry = x * s + y * c;
-
-    // Quantize in Class I surrogate
-    long long sur_i, sur_j;
-    quantize_class1(rx, ry, sur_i, sur_j);
-
-    // Get surrogate center and rotate back
-    double sur_x, sur_y;
-    inv_quantize_class1(sur_i, sur_j, sur_x, sur_y);
-
-    double back_x = sur_x * c + sur_y * s;
-    double back_y = -sur_x * s + sur_y * c;
-
-    // Scale to substrate (sqrt(7)x finer) and re-quantize
-    quantize_class1(back_x * kSqrt7, back_y * kSqrt7, out_i, out_j);
-}
-
-// Class III-II (odd resolutions): Class II surrogate rotated by ~19.1deg
-// The surrogate is a Class II grid (pointy-top, 30° rotated from Class I).
-// We need to:
-//   1. Rotate to surrogate frame (-19.1 degrees)
-//   2. Quantize in Class II surrogate (which is Class I at -30 degrees)
-//   3. Get the Class II surrogate center
-//   4. Rotate back to original frame (+19.1 degrees)
-//   5. Scale to Class I substrate (sqrt(21)x) and re-quantize
-void quantize_class3ii(double x, double y, long long& out_i, long long& out_j) {
-    const double c_ap7 = std::cos(-kAp7RotRad);
-    const double s_ap7 = std::sin(-kAp7RotRad);
-
-    // Step 1: Rotate to surrogate frame (-19.1 degrees)
-    double sur_x = x * c_ap7 - y * s_ap7;
-    double sur_y = x * s_ap7 + y * c_ap7;
-
-    // Step 2: Quantize in Class II surrogate
-    // Class II = Class I rotated by -30 degrees
-    constexpr double c_30 = 0.866025403784438646763723170752936183;  // cos(-30°)
-    constexpr double s_30 = -0.5;  // sin(-30°)
-
-    // Rotate to Class I orientation within the surrogate
-    double c1_x = sur_x * c_30 - sur_y * s_30;
-    double c1_y = sur_x * s_30 + sur_y * c_30;
-
-    // Quantize in Class I
-    long long sur1_i, sur1_j;
-    quantize_class1(c1_x, c1_y, sur1_i, sur1_j);
-
-    // Get Class I center
-    double sur1_cen_x, sur1_cen_y;
-    inv_quantize_class1(sur1_i, sur1_j, sur1_cen_x, sur1_cen_y);
-
-    // Rotate back to Class II orientation (+30 degrees)
-    double c2_back_x = sur1_cen_x * c_30 + sur1_cen_y * s_30;
-    double c2_back_y = -sur1_cen_x * s_30 + sur1_cen_y * c_30;
-
-    // Step 3: Rotate back to original frame (+19.1 degrees)
-    double back_x = c2_back_x * c_ap7 + c2_back_y * s_ap7;
-    double back_y = -c2_back_x * s_ap7 + c2_back_y * c_ap7;
-
-    // Step 4: Scale to substrate (sqrt(21)x finer for Class III-II) and re-quantize
-    quantize_class1(back_x * kSqrt21, back_y * kSqrt21, out_i, out_j);
-}
-
-// ============================================================================
 // Quad Edge Adjacency
 // ============================================================================
 //
@@ -421,70 +343,6 @@ const QuadAdjacency kQuadAdjacency[12] = {
 };
 
 } // anonymous namespace
-
-// ============================================================================
-// Aperture 7: Substrate ↔ True Surrogate Conversion
-// ============================================================================
-// These functions convert between substrate (Class I) integer coordinates
-// and the "true surrogate" coordinates used internally by DGGRID's Class III
-// grids. The surrogate is a Class I (even res) or Class II (odd res) hex grid
-// rotated by ~19.1° from the substrate frame.
-//
-// This is needed for finding neighbors: ±1 offsets in surrogate integer space
-// correspond to actual adjacent ap7 cells.
-
-void substrate_to_surrogate_ap7(long long sub_i, long long sub_j, int resolution,
-                                 long long& sur_i, long long& sur_j) {
-    double x, y;
-    inv_quantize_class1(sub_i, sub_j, x, y);
-
-    // Substrate Cartesian is sqrt(7)x (even) or sqrt(21)x (odd) larger
-    // than the surrogate scale. Divide down before rotation + quantization.
-    bool is_class3i = (resolution % 2 == 0);
-    double divisor = is_class3i ? kSqrt7 : kSqrt21;
-    x /= divisor;
-    y /= divisor;
-
-    const double c = std::cos(-kAp7RotRad);
-    const double s = std::sin(-kAp7RotRad);
-    double rx = x * c - y * s;
-    double ry = x * s + y * c;
-
-    if (is_class3i) {
-        quantize_class1(rx, ry, sur_i, sur_j);
-    } else {
-        constexpr double c_30 = 0.866025403784438646763723170752936183;
-        constexpr double s_30 = -0.5;
-        double c1x = rx * c_30 - ry * s_30;
-        double c1y = rx * s_30 + ry * c_30;
-        quantize_class1(c1x, c1y, sur_i, sur_j);
-    }
-}
-
-void surrogate_to_substrate_ap7(long long sur_i, long long sur_j, int resolution,
-                                 long long& sub_i, long long& sub_j) {
-    double sx, sy;
-    inv_quantize_class1(sur_i, sur_j, sx, sy);
-
-    bool is_class3i = (resolution % 2 == 0);
-    const double c_ap7 = std::cos(kAp7RotRad);
-    const double s_ap7 = std::sin(kAp7RotRad);
-
-    double back_x, back_y;
-    if (is_class3i) {
-        back_x = sx * c_ap7 - sy * s_ap7;
-        back_y = sx * s_ap7 + sy * c_ap7;
-        quantize_class1(back_x * kSqrt7, back_y * kSqrt7, sub_i, sub_j);
-    } else {
-        constexpr double c_30 = 0.866025403784438646763723170752936183;
-        constexpr double s_30 = 0.5;
-        double c2x = sx * c_30 - sy * s_30;
-        double c2y = sx * s_30 + sy * c_30;
-        back_x = c2x * c_ap7 - c2y * s_ap7;
-        back_y = c2x * s_ap7 + c2y * c_ap7;
-        quantize_class1(back_x * kSqrt21, back_y * kSqrt21, sub_i, sub_j);
-    }
-}
 
 // ============================================================================
 // Aperture 7: exact-integer surrogate machinery (matches DGGRID / H3)
@@ -786,6 +644,17 @@ void quad_ij_to_xy(int quad, long long i, long long j,
                    int aperture, int resolution,
                    double& out_quad_x, double& out_quad_y) {
 
+    // Aperture 7: exact-integer route, the inverse of the one quad_xy_to_ij()
+    // takes. DGGRID's DgHexGrid2DS toggles Class III on every aperture-7 level
+    // (DgHexGrid2DS.cpp), so even resolutions are an unrotated Class I grid with
+    // no substrate and odd resolutions carry one aperture-7 level; both come out
+    // as the integer divisor 7^numClassI that surrogate_ij_to_quad_xy_ap7()
+    // applies.
+    if (aperture == 7) {
+        surrogate_ij_to_quad_xy_ap7(i, j, resolution, out_quad_x, out_quad_y);
+        return;
+    }
+
     double x, y;
     inv_quantize_class1(i, j, x, y);
 
@@ -798,13 +667,6 @@ void quad_ij_to_xy(int quad, long long i, long long j,
             : std::pow(kSqrt3, resolution + 1);  // Class II substrate
     } else if (aperture == 4) {
         scale = std::pow(2.0, resolution);
-    } else if (aperture == 7) {
-        // Aperture 7: base scale * substrate multiplier
-        double base_scale = std::pow(std::sqrt(7.0), resolution);
-        bool is_class3i = (resolution % 2 == 0);
-        // Class III-I substrate is sqrt(7)x finer, Class III-II is sqrt(21)x finer
-        double substrate_mult = is_class3i ? kSqrt7 : kSqrt21;
-        scale = base_scale * substrate_mult;
     } else {
         throw std::runtime_error("quad_ij_to_xy: unsupported aperture");
     }
