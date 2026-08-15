@@ -2,6 +2,20 @@
 
 ## New features
 
+* `hex_grid()` takes any aperture sequence, so mixed grids beyond ISEA43H are
+  reachable from R (#57). A family name splits the levels in two, as `"4/3"`
+  already did -- `"4/7"`, `"7/4"`, `"3/7"` -- and a vector names one aperture
+  per resolution level, `aperture = c(4, 4, 7, 3)`. Cell IDs, centres,
+  neighbours, the geometric hierarchy and the resolution-for-area inversion all
+  follow the sequence. The cell count of a sequence is
+  `10 * prod(apertures) + 2`.
+
+* Cell IDs pack onto the substrate sublattice of any grid form. A sequence with
+  an odd number of aperture-7 levels leaves the cells on a lattice of norm 7 or
+  21 rather than the norm-1 or norm-3 lattices pure apertures give; all four are
+  now the single congruence `j = c * i (mod N)`, which the aligned and Class II
+  packings turn out to be the `N = 1` and `N = 3` cases of.
+
 * Mixed aperture sequences accept aperture 7 alongside 3 and 4, in any order
   (#55, requested by Christian Carey). Scale and lattice orientation now come
   from one model shared by the pure-aperture and mixed-sequence code: refining
@@ -13,6 +27,18 @@
   what they accept.
 
 ## Bug fixes
+
+* Quantization built the cube triple `(i, j, -i-j)` from the grid coordinates.
+  The `i` and `j` axes point at 0 and 120 degrees, so they are two of the three
+  cube axes rather than the adjacent pair round-and-fix expects, and the step
+  that corrects the coordinate with the largest rounding error corrected the
+  wrong one: against brute-force nearest-centre over 3000 points, the quantizer
+  returned a cell other than the nearest for 1026 of them. The triple is
+  `(i - j, j, -i)`. This reached `hex_quantize_ap3/4/7()`, the mixed-sequence
+  quantizer and `hexify_assign()`, whose cell assignment changes for about 35%
+  of points at every effective resolution. Cell IDs and hierarchical indices are
+  unaffected -- they quantize through `quad_xy_to_ij()`, which uses the exact
+  region-classifying quantizer.
 
 * The aperture-7 grids returned by the `hex_*_ap7()` helpers were not
   centre-nested: each level applied a fixed `kAp7RotDeg` offset plus a 30-degree

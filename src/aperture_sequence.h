@@ -25,8 +25,4 @@ void hex_corners_mixed(long long i, long long j,
                        double hex_radius,
                        double* out_x, double* out_y);  // 6 vertices
 
-// Sequence of an ISEA43H grid: aperture 4 for the first mixed_aperture_level
-// refinements, aperture 3 for the remaining resolution - mixed_aperture_level.
-std::vector<int> ap43_sequence(int resolution, int mixed_aperture_level);
-
 } // namespace hexify

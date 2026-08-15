@@ -27,8 +27,13 @@ resolution:
 \item 11-15: building/sub-meter scale
 }}
 
-\item{aperture}{Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
-Ignored for H3 grids (fixed at 7).}
+\item{aperture}{Grid aperture: 3 (default), 4, 7, a mixed family such as
+"4/3", "4/7" or "7/4", or one aperture per resolution level as a vector,
+e.g. \code{c(4, 4, 7, 3)}. A family name refines by the first aperture for
+the first \code{floor(resolution / 2)} levels and by the second for the
+rest, which is how DGGRID arranges ISEA43H. A per-level vector needs
+\code{resolution} rather than \code{area_km2}. Ignored for H3 grids (fixed
+at 7).}
 
 \item{type}{Grid type: "isea" (default) or "h3".}
 
@@ -104,6 +109,10 @@ grid4 <- hex_grid(area_km2 = 500, aperture = 4)
 
 # Create mixed aperture grid
 grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
+
+# Mix in aperture 7, either as a family or level by level
+grid47 <- hex_grid(area_km2 = 1000, aperture = "4/7")
+grid_seq <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
 
 # Use grid in hexify
 df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))

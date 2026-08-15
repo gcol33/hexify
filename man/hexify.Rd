@@ -32,7 +32,9 @@ area_km2, resolution, and aperture parameters.}
 
 \item{resolution}{Grid resolution (0-30). Alternative to area_km2.}
 
-\item{aperture}{Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)}
+\item{aperture}{Grid aperture: 3, 4, 7, a mixed family such as "4/3" or
+"4/7", or one aperture per resolution level, e.g. \code{c(4, 4, 7, 3)}
+(default 3)}
 
 \item{resround}{How to round resolution: "nearest", "up", or "down"}
 }

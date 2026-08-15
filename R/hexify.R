@@ -18,7 +18,9 @@
 #' @param area_km2 Target cell area in km^2 (mutually exclusive with diagonal).
 #' @param diagonal Target cell diagonal (long diagonal) in km
 #' @param resolution Grid resolution (0-30). Alternative to area_km2.
-#' @param aperture Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)
+#' @param aperture Grid aperture: 3, 4, 7, a mixed family such as "4/3" or
+#'   "4/7", or one aperture per resolution level, e.g. \code{c(4, 4, 7, 3)}
+#'   (default 3)
 #' @param resround How to round resolution: "nearest", "up", or "down"
 #'
 #' @return A HexData object containing:
@@ -202,10 +204,10 @@ hexify <- function(data,
     cell_ids <- cpp_h3_latLngToCell(lon_vec, lat_vec, res)
     center_df <- cpp_h3_cellToLatLng(cell_ids)
     centers <- list(lon_deg = center_df$lon, lat_deg = center_df$lat)
-  } else if (aperture_str == "4/3") {
-    level <- ap43_level(res)
-    cell_ids <- cpp_lonlat_to_cell_ap43(lon_vec, lat_vec, res, level)
-    centers <- cpp_cell_to_lonlat_ap43(cell_ids, res, level)
+  } else if (is_mixed_aperture(aperture_str)) {
+    ap_seq <- parse_aperture_seq(aperture_str, res)
+    cell_ids <- cpp_lonlat_to_cell_seq(lon_vec, lat_vec, ap_seq)
+    centers <- cpp_cell_to_lonlat_seq(cell_ids, ap_seq)
   } else {
     aperture_num <- match(aperture_str, c("3", "4", "7"))
     if (is.na(aperture_num)) {

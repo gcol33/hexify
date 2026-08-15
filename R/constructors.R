@@ -25,8 +25,13 @@
 #'     \item 8-10: neighborhood/block scale (FCC uses 8-9)
 #'     \item 11-15: building/sub-meter scale
 #'   }
-#' @param aperture Grid aperture: 3 (default), 4, 7, or "4/3" for mixed.
-#'   Ignored for H3 grids (fixed at 7).
+#' @param aperture Grid aperture: 3 (default), 4, 7, a mixed family such as
+#'   "4/3", "4/7" or "7/4", or one aperture per resolution level as a vector,
+#'   e.g. \code{c(4, 4, 7, 3)}. A family name refines by the first aperture for
+#'   the first \code{floor(resolution / 2)} levels and by the second for the
+#'   rest, which is how DGGRID arranges ISEA43H. A per-level vector needs
+#'   \code{resolution} rather than \code{area_km2}. Ignored for H3 grids (fixed
+#'   at 7).
 #' @param type Grid type: "isea" (default) or "h3".
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
@@ -95,6 +100,10 @@
 #'
 #' # Create mixed aperture grid
 #' grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
+#'
+#' # Mix in aperture 7, either as a family or level by level
+#' grid47 <- hex_grid(area_km2 = 1000, aperture = "4/7")
+#' grid_seq <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
 #'
 #' # Use grid in hexify
 #' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
@@ -172,16 +181,20 @@ hex_grid <- function(area_km2 = NULL,
   # =========================================================================
 
   # -------------------------------------------------------------------------
-  # Parse aperture (handle "4/3" mixed aperture)
+  # Parse aperture: a single aperture, a family such as "4/3", or one aperture
+  # per resolution level (see R/aperture_sequence.R)
   # -------------------------------------------------------------------------
-  aperture_str <- as.character(aperture)
+  if (length(aperture) > 1L && is.null(resolution)) {
+    stop("An aperture given per level needs 'resolution', not 'area_km2'")
+  }
+  aperture_str <- format_aperture(aperture, resolution)
 
-  if (aperture_str == "4/3") {
-    aperture_num <- 3L  # Base aperture for resolution calculation
+  if (is_mixed_aperture(aperture_str)) {
+    aperture_num <- NA_integer_
   } else if (aperture_str %in% c("3", "4", "7")) {
     aperture_num <- as.integer(aperture_str)
   } else {
-    stop("Aperture must be 3, 4, 7, or '4/3' for mixed aperture")
+    stop("Aperture must be 3, 4, 7, a family such as \"4/3\", or one aperture per level")
   }
 
   # -------------------------------------------------------------------------
@@ -202,7 +215,11 @@ hex_grid <- function(area_km2 = NULL,
       stop("area_km2 must be a positive number")
     }
 
-    res_exact <- calculate_resolution_for_area(area_km2, aperture_num)
+    res_exact <- if (is_mixed_aperture(aperture_str)) {
+      calculate_resolution_for_area_mixed(area_km2, aperture_str)
+    } else {
+      calculate_resolution_for_area(area_km2, aperture_num)
+    }
 
     # Apply rounding
     resolution <- switch(resround,
@@ -228,11 +245,7 @@ hex_grid <- function(area_km2 = NULL,
   # -------------------------------------------------------------------------
   # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
-  if (aperture_str == "4/3") {
-    n_cells <- ap43_n_cells(resolution)
-  } else {
-    n_cells <- max_cell_id(resolution, aperture_num)
-  }
+  n_cells <- aperture_n_cells(aperture_str, resolution)
   actual_area <- EARTH_SURFACE_KM2 / n_cells
   actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
 

@@ -1,51 +1,53 @@
 # =============================================================================
-# Hierarchical navigation for mixed aperture "4/3" (ISEA43H) grids
+# Hierarchical navigation for mixed aperture grids
 # =============================================================================
 #
-# Mixed 4/3 grids have no DGGRID-standard hierarchical index (DGGRID rejects
+# Mixed grids have no DGGRID-standard hierarchical index (DGGRID rejects
 # hierarchical indexing for any non-"PURE" aperture), so there is no Z7/Z3-style
 # string to port. hexify instead defines the hierarchy geometrically, which is
 # the mathematically correct relationship for how these grids are built:
 #
 # quad_xy_to_ij_mixed() quantizes the projected point once, by a single scalar
-# scale = 2^(#ap4 levels) * sqrt(3)^(#ap3 levels). A cell at resolution r and its
-# parent at r-1 are therefore both direct quantizations of the SAME continuous
-# quad-space at different scales -- so a cell's parent is simply the coarser cell
-# whose lattice point contains the cell's centre (center-containment), with no
-# accumulated per-step rotation to go wrong. Parent/children/index all follow
-# from re-projecting a cell centre through the validated forward pipeline.
+# scale, the product of sqrt(aperture) over the levels. A cell at resolution r
+# and its parent at r-1 are therefore both direct quantizations of the SAME
+# continuous quad-space at different scales -- so a cell's parent is simply the
+# coarser cell whose lattice point contains the cell's centre
+# (center-containment), with no accumulated per-step rotation to go wrong.
+# Parent/children/index all follow from re-projecting a cell centre through the
+# validated forward pipeline.
+#
+# Every helper takes the aperture spelling alongside the resolution, since the
+# coarser grid a parent lives on is the same spelling read at that resolution
+# (see aperture_at_resolution()).
 
-# Convenience wrappers pinning the "4/3" level convention (level = floor(res/2)).
-ap43_cell_center <- function(cell_id, resolution) {
-  cpp_cell_to_lonlat_ap43(as.numeric(cell_id), resolution, ap43_level(resolution))
+mixed_ap_seq <- function(aperture, resolution) {
+  parse_aperture_seq(aperture_at_resolution(aperture, resolution), resolution)
 }
 
-ap43_point_to_cell <- function(lon, lat, resolution) {
-  cpp_lonlat_to_cell_ap43(as.numeric(lon), as.numeric(lat),
-                          resolution, ap43_level(resolution))
+mixed_cell_center <- function(cell_id, resolution, aperture) {
+  cpp_cell_to_lonlat_seq(as.numeric(cell_id), mixed_ap_seq(aperture, resolution))
 }
 
-ap43_cell_qij <- function(cell_id, resolution) {
-  cpp_cell_to_quad_ij_ap43(as.numeric(cell_id), resolution, ap43_level(resolution))
+mixed_point_to_cell <- function(lon, lat, resolution, aperture) {
+  cpp_lonlat_to_cell_seq(as.numeric(lon), as.numeric(lat),
+                         mixed_ap_seq(aperture, resolution))
 }
 
-ap43_qij_cell <- function(quad, i, j, resolution) {
-  cpp_quad_ij_to_cell_ap43(as.integer(quad), as.numeric(i), as.numeric(j),
-                           resolution, ap43_level(resolution))
+mixed_cell_qij <- function(cell_id, resolution, aperture) {
+  cpp_cell_to_quad_ij_seq(as.numeric(cell_id), mixed_ap_seq(aperture, resolution))
 }
 
-#' Maximum (i,j) substrate coordinate for a mixed 4/3 grid at a resolution.
-#' One less than quad_edge_coord_mixed() in src/coordinate_transforms.cpp: the
-#' substrate scale is the square root of the product of the apertures times the
-#' lattice norm (3 for the Class II substrate an odd number of aperture-3 levels
-#' leaves, 1 otherwise), which is an exact integer.
+mixed_qij_cell <- function(quad, i, j, resolution, aperture) {
+  cpp_quad_ij_to_cell_seq(as.integer(quad), as.numeric(i), as.numeric(j),
+                          mixed_ap_seq(aperture, resolution))
+}
+
+#' Maximum (i,j) substrate coordinate for a mixed grid at a resolution.
+#' One less than the quad edge coordinate the C++ layer quantizes against.
 #' @noRd
-ap43_max_dim <- function(resolution) {
+mixed_max_dim <- function(resolution, aperture) {
   if (resolution == 0) return(0L)
-  level <- ap43_level(resolution)
-  ap3 <- resolution - level
-  norm <- if (ap3 %% 2L == 1L) 3 else 1
-  as.integer(round(sqrt(4^level * 3^ap3 * norm))) - 1L
+  as.integer(cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution))) - 1L
 }
 
 #' All valid cells within a band of the (i,j) boundary of the ten body quads,
@@ -55,8 +57,8 @@ ap43_max_dim <- function(resolution) {
 #' inside the quad edge, so the band has width `w` (not just the edge line). The
 #' set is O(w * sqrt(n_cells)), still cheap against the full grid.
 #' @noRd
-ap43_boundary_cells <- function(resolution, n_cells, w = 4L) {
-  m <- ap43_max_dim(resolution)
+mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L) {
+  m <- mixed_max_dim(resolution, aperture)
   w <- min(w, as.integer(m) + 1L)
   lo <- 0:(w - 1L)
   hi <- (m - w + 1L):m
@@ -70,44 +72,45 @@ ap43_boundary_cells <- function(resolution, n_cells, w = 4L) {
   q <- rep(1:10, each = ne)
   ii <- rep(gi, times = 10)
   jj <- rep(gj, times = 10)
-  cells <- ap43_qij_cell(q, ii, jj, resolution)
+  cells <- mixed_qij_cell(q, ii, jj, resolution, aperture)
   cells <- c(cells,
-             ap43_point_to_cell(0, 90, resolution),
-             ap43_point_to_cell(0, -90, resolution))
+             mixed_point_to_cell(0, 90, resolution, aperture),
+             mixed_point_to_cell(0, -90, resolution, aperture))
   cells <- unique(cells)
   cells <- cells[is.finite(cells) & cells >= 1 & cells <= n_cells]
   # Keep only (i,j) that round-trip to a real cell.
   if (length(cells) == 0) return(cells)
-  q2 <- ap43_cell_qij(cells, resolution)
-  rt <- ap43_qij_cell(q2$quad, q2$i, q2$j, resolution)
+  q2 <- mixed_cell_qij(cells, resolution, aperture)
+  rt <- mixed_qij_cell(q2$quad, q2$i, q2$j, resolution, aperture)
   cells[rt == cells]
 }
 
-#' Geometric parent of mixed 4/3 cells (center-containment)
+#' Geometric parent of mixed cells (center-containment)
 #' @noRd
-ap43_get_parent <- function(cell_id, resolution, levels = 1L) {
+mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L) {
   parent_res <- resolution - as.integer(levels)
-  ll <- ap43_cell_center(cell_id, resolution)
-  ap43_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res)
+  ll <- mixed_cell_center(cell_id, resolution, aperture)
+  mixed_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res, aperture)
 }
 
-#' Candidate neighbour cells of a set of mixed 4/3 cells.
+#' Candidate neighbour cells of a set of mixed cells.
 #'
 #' Two sources unioned for robustness: exact axial (i,j) neighbours in each
 #' cell's own quad (correct for quad interiors), plus directional lon/lat probes
 #' at the cell spacing (which cross icosahedron seams into adjacent quads). Only
 #' used to grow a candidate superset; correctness comes from the parent filter.
 #' @noRd
-ap43_neighbors <- function(cells, child_res, spacing_deg, n_cells_child) {
-  qij <- ap43_cell_qij(cells, child_res)
+mixed_neighbors <- function(cells, child_res, aperture, spacing_deg, n_cells_child) {
+  qij <- mixed_cell_qij(cells, child_res, aperture)
   # 6 axial hex-neighbour offsets
   off <- rbind(c(1, 0), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1), c(1, -1))
   nb <- integer(0)
   for (r in seq_len(nrow(off))) {
-    nb <- c(nb, ap43_qij_cell(qij$quad, qij$i + off[r, 1], qij$j + off[r, 2], child_res))
+    nb <- c(nb, mixed_qij_cell(qij$quad, qij$i + off[r, 1], qij$j + off[r, 2],
+                               child_res, aperture))
   }
   # Directional probes at the cell spacing (seam-crossing)
-  cll <- ap43_cell_center(cells, child_res)
+  cll <- mixed_cell_center(cells, child_res, aperture)
   if (is.finite(spacing_deg) && spacing_deg > 0) {
     ang <- seq(0, 2 * pi, length.out = 13)[-13]
     coslat <- cos(cll$lat_deg * pi / 180)
@@ -116,7 +119,7 @@ ap43_neighbors <- function(cells, child_res, spacing_deg, n_cells_child) {
         plat <- pmax(pmin(cll$lat_deg + rad * sin(a), 89.9999), -89.9999)
         dlon <- ifelse(coslat > 1e-6, rad * cos(a) / coslat, rad * cos(a))
         plon <- ((cll$lon_deg + dlon + 180) %% 360) - 180
-        nb <- c(nb, ap43_point_to_cell(plon, plat, child_res))
+        nb <- c(nb, mixed_point_to_cell(plon, plat, child_res, aperture))
       }
     }
   }
@@ -124,12 +127,12 @@ ap43_neighbors <- function(cells, child_res, spacing_deg, n_cells_child) {
   nb <- nb[is.finite(nb) & nb >= 1 & nb <= n_cells_child]
   # Keep only cells whose (i,j) round-trips to a real cell
   if (length(nb) == 0) return(nb)
-  q2 <- ap43_cell_qij(nb, child_res)
-  rt <- ap43_qij_cell(q2$quad, q2$i, q2$j, child_res)
+  q2 <- mixed_cell_qij(nb, child_res, aperture)
+  rt <- mixed_qij_cell(q2$quad, q2$i, q2$j, child_res, aperture)
   nb[rt == nb]
 }
 
-#' Geometric children of a single mixed 4/3 cell.
+#' Geometric children of a single mixed cell.
 #'
 #' Children are cells whose geometric parent (centre re-quantised at the coarser
 #' resolution) is this cell -- an exact test. The work is producing a complete
@@ -139,31 +142,34 @@ ap43_neighbors <- function(cells, child_res, spacing_deg, n_cells_child) {
 #' an (i,j) box and grown only through cells that pass the parent test, visits
 #' them all without relying on sampling density. Returns child IDs sorted.
 #' @noRd
-ap43_get_children_one <- function(cell_id, resolution, child_res, n_cells_child) {
+mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
+                                   n_cells_child) {
   # Coarse levels: exhaustive filter (no locality assumptions, cheap).
   if (n_cells_child <= 2000) {
     all_child <- seq_len(n_cells_child)
-    par <- ap43_get_parent(all_child, child_res, child_res - resolution)
+    par <- mixed_get_parent(all_child, child_res, aperture, child_res - resolution)
     return(sort(all_child[par == cell_id]))
   }
 
-  spacing_deg <- ap43_spacing_deg(child_res)
-  ll <- ap43_cell_center(cell_id, resolution)
+  spacing_deg <- mixed_spacing_deg(child_res, aperture)
+  ll <- mixed_cell_center(cell_id, resolution, aperture)
 
   # Seed set: (i,j) box around the central child, plus the pole cells.
-  central <- ap43_point_to_cell(ll$lon_deg, ll$lat_deg, child_res)
-  cq <- ap43_cell_qij(central, child_res)
+  central <- mixed_point_to_cell(ll$lon_deg, ll$lat_deg, child_res, aperture)
+  cq <- mixed_cell_qij(central, child_res, aperture)
   box <- 3L
   di <- rep(-box:box, times = 2 * box + 1)
   dj <- rep(-box:box, each = 2 * box + 1)
-  seed <- ap43_qij_cell(cq$quad, cq$i + di, cq$j + dj, child_res)
+  seed <- mixed_qij_cell(cq$quad, cq$i + di, cq$j + dj, child_res, aperture)
   seed <- c(seed, central,
-            ap43_point_to_cell(0, 90, child_res),
-            ap43_point_to_cell(0, -90, child_res))
+            mixed_point_to_cell(0, 90, child_res, aperture),
+            mixed_point_to_cell(0, -90, child_res, aperture))
   seed <- unique(seed)
   seed <- seed[is.finite(seed) & seed >= 1 & seed <= n_cells_child]
 
-  parent_of <- function(x) ap43_get_parent(x, child_res, child_res - resolution)
+  parent_of <- function(x) {
+    mixed_get_parent(x, child_res, aperture, child_res - resolution)
+  }
 
   found <- seed[parent_of(seed) == cell_id]
   if (length(found) == 0) {
@@ -176,7 +182,7 @@ ap43_get_children_one <- function(cell_id, resolution, child_res, n_cells_child)
   # BFS over neighbours, keeping only genuine children.
   for (iter in seq_len(64)) {
     if (length(frontier) == 0) break
-    nb <- ap43_neighbors(frontier, child_res, spacing_deg, n_cells_child)
+    nb <- mixed_neighbors(frontier, child_res, aperture, spacing_deg, n_cells_child)
     nb <- setdiff(nb, visited)
     visited <- c(visited, nb)
     if (length(nb) == 0) break
@@ -192,12 +198,12 @@ ap43_get_children_one <- function(cell_id, resolution, child_res, n_cells_child)
   # such parents -- an O(sqrt(n)) minority -- sweep the O(sqrt(n)) boundary band
   # and add any cell whose exact parent is this cell. Interior parents keep all
   # children in-quad, so the fast walk above is already complete for them.
-  pq <- ap43_cell_qij(cell_id, resolution)
-  m_parent <- ap43_max_dim(resolution)
+  pq <- mixed_cell_qij(cell_id, resolution, aperture)
+  m_parent <- mixed_max_dim(resolution, aperture)
   gate <- 3L
   near_boundary <- min(pq$i, pq$j, m_parent - pq$i, m_parent - pq$j) < gate
   if (near_boundary) {
-    bnd <- ap43_boundary_cells(child_res, n_cells_child)
+    bnd <- mixed_boundary_cells(child_res, aperture, n_cells_child)
     if (length(bnd) > 0) {
       found <- c(found, bnd[parent_of(bnd) == cell_id])
     }
@@ -209,11 +215,11 @@ ap43_get_children_one <- function(cell_id, resolution, child_res, n_cells_child)
 #' Approximate cell centre spacing in degrees at a resolution, for sizing the
 #' child-footprint sampling disk.
 #' @noRd
-ap43_spacing_deg <- function(resolution) {
-  # Mean cell area (km^2) from the ISEA43H cell count over Earth's surface, then
+mixed_spacing_deg <- function(resolution, aperture) {
+  # Mean cell area (km^2) from the grid's cell count over Earth's surface, then
   # hexagon centre spacing s = sqrt(2 A / sqrt(3)); ~111 km per degree.
   earth_area_km2 <- 5.10072e8
-  n <- ap43_n_cells(resolution)
+  n <- aperture_n_cells(aperture, resolution)
   area_km2 <- earth_area_km2 / n
   spacing_km <- sqrt(2 * area_km2 / sqrt(3))
   spacing_km / 111.0
@@ -228,11 +234,11 @@ ap43_spacing_deg <- function(resolution) {
 # per level because near the twelve icosahedron vertices centre-containment can
 # gather more than nine children into one coarse cell. Dropping the last two
 # digits yields the parent's index, so the string sorts by spatial ancestry.
-ap43_index_digit_width <- 2L
+mixed_index_digit_width <- 2L
 
-#' Encode a single mixed 4/3 cell to its hierarchical index string.
+#' Encode a single mixed cell to its hierarchical index string.
 #' @noRd
-ap43_cell_to_index_one <- function(cell_id, resolution) {
+mixed_cell_to_index_one <- function(cell_id, resolution, aperture) {
   if (resolution == 0) {
     return(sprintf("%02d", as.integer(cell_id)))
   }
@@ -240,39 +246,41 @@ ap43_cell_to_index_one <- function(cell_id, resolution) {
   anc <- numeric(resolution + 1)
   anc[resolution + 1] <- cell_id
   for (k in resolution:1) {
-    anc[k] <- ap43_get_parent(anc[k + 1], k, 1L)
+    anc[k] <- mixed_get_parent(anc[k + 1], k, aperture, 1L)
   }
-  w <- ap43_index_digit_width
+  w <- mixed_index_digit_width
   digits <- integer(resolution)
   for (k in 1:resolution) {
-    kids <- ap43_get_children_one(anc[k], k - 1L, k, ap43_n_cells(k))
+    kids <- mixed_get_children_one(anc[k], k - 1L, k, aperture,
+                                   aperture_n_cells(aperture, k))
     pos <- match(anc[k + 1], kids)
     if (is.na(pos)) {
-      stop("hexify internal error: ap43 child enumeration missed a descendant ",
+      stop("hexify internal error: mixed child enumeration missed a descendant ",
            "(cell ", format(cell_id, scientific = FALSE), ", level ", k, ")")
     }
     digits[k] <- pos - 1L
   }
   if (any(digits >= 10^w)) {
-    stop("hexify internal error: ap43 child ordinal exceeds index digit width")
+    stop("hexify internal error: mixed child ordinal exceeds index digit width")
   }
   paste0(sprintf("%02d", as.integer(anc[1])),
          paste(sprintf(paste0("%0", w, "d"), digits), collapse = ""))
 }
 
-#' Decode a single mixed 4/3 hierarchical index string to a cell ID.
+#' Decode a single mixed hierarchical index string to a cell ID.
 #' @noRd
-ap43_index_to_cell_one <- function(index, resolution) {
+mixed_index_to_cell_one <- function(index, resolution, aperture) {
   base0 <- as.integer(substr(index, 1, 2))
   cell <- base0
   if (resolution == 0) return(cell)
-  w <- ap43_index_digit_width
+  w <- mixed_index_digit_width
   for (k in 1:resolution) {
     start <- 2L + (k - 1L) * w + 1L
     d <- as.integer(substr(index, start, start + w - 1L))
-    kids <- ap43_get_children_one(cell, k - 1L, k, ap43_n_cells(k))
+    kids <- mixed_get_children_one(cell, k - 1L, k, aperture,
+                                   aperture_n_cells(aperture, k))
     if (d + 1L > length(kids)) {
-      stop("hexify internal error: ap43 index digit out of range on decode")
+      stop("hexify internal error: mixed index digit out of range on decode")
     }
     cell <- kids[d + 1L]
   }

@@ -60,14 +60,8 @@ dgearthstat <- function(dggs) {
     }
 
     # ISEA HexGridInfo
-    ap <- if (g@aperture == "4/3") {
-      n_cells <- ap43_n_cells(g@resolution)
-      3L
-    } else {
-      ap_int <- as.integer(g@aperture)
-      n_cells <- max_cell_id(g@resolution, ap_int)
-      ap_int
-    }
+    n_cells <- aperture_n_cells(g@aperture, g@resolution)
+    ap <- aperture_to_int(g@aperture)
     cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
     cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
     cls_km <- 2 * sqrt(cell_area_km2 / pi)

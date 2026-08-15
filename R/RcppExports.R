@@ -173,20 +173,24 @@ cpp_cell_to_corners <- function(cell_id, resolution, aperture) {
     .Call(`_hexify_cpp_cell_to_corners`, cell_id, resolution, aperture)
 }
 
-cpp_lonlat_to_cell_ap43 <- function(lon, lat, resolution, mixed_aperture_level) {
-    .Call(`_hexify_cpp_lonlat_to_cell_ap43`, lon, lat, resolution, mixed_aperture_level)
+cpp_ap_seq_edge_dim <- function(ap_seq_in) {
+    .Call(`_hexify_cpp_ap_seq_edge_dim`, ap_seq_in)
 }
 
-cpp_cell_to_lonlat_ap43 <- function(cell_id, resolution, mixed_aperture_level) {
-    .Call(`_hexify_cpp_cell_to_lonlat_ap43`, cell_id, resolution, mixed_aperture_level)
+cpp_lonlat_to_cell_seq <- function(lon, lat, ap_seq_in) {
+    .Call(`_hexify_cpp_lonlat_to_cell_seq`, lon, lat, ap_seq_in)
 }
 
-cpp_cell_to_quad_ij_ap43 <- function(cell_id, resolution, mixed_aperture_level) {
-    .Call(`_hexify_cpp_cell_to_quad_ij_ap43`, cell_id, resolution, mixed_aperture_level)
+cpp_cell_to_lonlat_seq <- function(cell_id, ap_seq_in) {
+    .Call(`_hexify_cpp_cell_to_lonlat_seq`, cell_id, ap_seq_in)
 }
 
-cpp_quad_ij_to_cell_ap43 <- function(quad, i, j, resolution, mixed_aperture_level) {
-    .Call(`_hexify_cpp_quad_ij_to_cell_ap43`, quad, i, j, resolution, mixed_aperture_level)
+cpp_cell_to_quad_ij_seq <- function(cell_id, ap_seq_in) {
+    .Call(`_hexify_cpp_cell_to_quad_ij_seq`, cell_id, ap_seq_in)
+}
+
+cpp_quad_ij_to_cell_seq <- function(quad, i, j, ap_seq_in) {
+    .Call(`_hexify_cpp_quad_ij_to_cell_seq`, quad, i, j, ap_seq_in)
 }
 
 cpp_get_neighbors_isea <- function(cell_id, resolution, aperture) {

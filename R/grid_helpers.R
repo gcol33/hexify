@@ -75,13 +75,11 @@ lonlat_to_cell <- function(lon, lat, grid) {
     return(cpp_h3_latLngToCell(as.numeric(lon), as.numeric(lat), g@resolution))
   }
 
-  if (g@aperture == "4/3") {
-    level <- ap43_level(g@resolution)
-    cpp_lonlat_to_cell_ap43(
+  if (is_mixed_aperture(g@aperture)) {
+    cpp_lonlat_to_cell_seq(
       as.numeric(lon),
       as.numeric(lat),
-      g@resolution,
-      level
+      grid_ap_seq(g)
     )
   } else {
     cpp_lonlat_to_cell(
@@ -117,12 +115,10 @@ cell_to_lonlat <- function(cell_id, grid) {
     return(data.frame(lon_deg = result$lon, lat_deg = result$lat))
   }
 
-  if (g@aperture == "4/3") {
-    level <- ap43_level(g@resolution)
-    cpp_cell_to_lonlat_ap43(
+  if (is_mixed_aperture(g@aperture)) {
+    cpp_cell_to_lonlat_seq(
       as.numeric(cell_id),
-      g@resolution,
-      level
+      grid_ap_seq(g)
     )
   } else {
     cpp_cell_to_lonlat(
@@ -370,12 +366,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
   }
 
   # Estimate cell count for warning (ISEA)
-  if (g@aperture == "4/3") {
-    n_cells <- ap43_n_cells(g@resolution)
-  } else {
-    ap <- as.integer(g@aperture)
-    n_cells <- max_cell_id(g@resolution, ap)
-  }
+  n_cells <- aperture_n_cells(g@aperture, g@resolution)
   if (n_cells > 100000) {
     warning(sprintf(
       "This will generate approximately %.0f cells. Consider larger area_km2.",
@@ -658,11 +649,11 @@ cell_to_index <- function(cell_id, grid) {
     return(as.character(cell_id))
   }
 
-  # Mixed 4/3 grids use a geometric hierarchical index (see
+  # Mixed sequences use a geometric hierarchical index (see
   # R/aperture_mixed_hierarchy.R); pure apertures use the Z7/Z3/zorder encoders.
-  if (g@aperture == "4/3") {
+  if (is_mixed_aperture(g@aperture)) {
     return(vapply(as.numeric(cell_id),
-                  function(id) ap43_cell_to_index_one(id, g@resolution),
+                  function(id) mixed_cell_to_index_one(id, g@resolution, g@aperture),
                   character(1)))
   }
 
@@ -713,9 +704,10 @@ get_parent <- function(cell_id, grid, levels = 1L) {
     return(cpp_h3_cellToParent(as.character(cell_id), parent_res))
   }
 
-  # Mixed 4/3: geometric parent (centre re-quantised at the coarser resolution).
-  if (g@aperture == "4/3") {
-    return(ap43_get_parent(as.numeric(cell_id), g@resolution, as.integer(levels)))
+  # Mixed sequences: geometric parent (centre re-quantised at the coarser resolution).
+  if (is_mixed_aperture(g@aperture)) {
+    return(mixed_get_parent(as.numeric(cell_id), g@resolution, g@aperture,
+                            as.integer(levels)))
   }
 
   index_type <- index_type_for_aperture(g@aperture)
@@ -771,12 +763,12 @@ get_children <- function(cell_id, grid, levels = 1L) {
     stop("Cannot get children: would exceed maximum resolution")
   }
 
-  # Mixed 4/3: geometric children (cells whose geometric parent is this cell).
-  if (g@aperture == "4/3") {
+  # Mixed sequences: geometric children (cells whose geometric parent is this cell).
+  if (is_mixed_aperture(g@aperture)) {
     child_res <- g@resolution + as.integer(levels)
-    ncc <- ap43_n_cells(child_res)
+    ncc <- aperture_n_cells(g@aperture, child_res)
     return(lapply(as.numeric(cell_id), function(id)
-      ap43_get_children_one(id, g@resolution, child_res, ncc)))
+      mixed_get_children_one(id, g@resolution, child_res, g@aperture, ncc)))
   }
 
   index_type <- index_type_for_aperture(g@aperture)

@@ -22,7 +22,8 @@ NULL
 #' An S4 class representing a hexagonal grid specification. Stores all
 #' parameters needed for grid operations.
 #'
-#' @slot aperture Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.
+#' @slot aperture Character. Grid aperture: "3", "4", "7", a mixed family such
+#'   as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").
 #' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
@@ -33,8 +34,10 @@ NULL
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
 #' Do not use \code{new("HexGridInfo", ...)} directly.
 #'
-#' The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
-#' aperture grids that start with aperture 4 and switch to aperture 3.
+#' The aperture can be "3", "4", "7" for grids that refine by one aperture at
+#' every level; a family name such as "4/3" or "4/7", which refines by the first
+#' aperture for the first floor(resolution / 2) levels and by the second for the
+#' rest; or one aperture per level, "4/4/7/3".
 #'
 #' For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.
 #'
@@ -133,8 +136,13 @@ setValidity("HexGridInfo", function(object) {
     }
   } else {
     # ISEA validation
-    if (!object@aperture %in% c("3", "4", "7", "4/3")) {
-      errors <- c(errors, "aperture must be '3', '4', '7', or '4/3'")
+    ap_ok <- tryCatch({
+      parse_aperture_seq(object@aperture, object@resolution)
+      TRUE
+    }, error = function(e) FALSE)
+    if (!ap_ok) {
+      errors <- c(errors, paste0("aperture must be 3, 4, 7, a family such as \"4/3\", ",
+                                 "or one aperture per resolution level"))
     }
     if (object@resolution < 0L || object@resolution > 30L) {
       errors <- c(errors, "resolution must be between 0 and 30")
@@ -494,13 +502,7 @@ setMethod("show", "HexGridInfo", function(object) {
 
     cat(sprintf("CRS:         EPSG:%d\n", object@crs))
 
-    # Calculate total cells based on aperture
-    if (object@aperture == "4/3") {
-      n_cells <- ap43_n_cells(object@resolution)
-    } else {
-      ap <- as.integer(object@aperture)
-      n_cells <- max_cell_id(object@resolution, ap)
-    }
+    n_cells <- aperture_n_cells(object@aperture, object@resolution)
     cat(sprintf("Total Cells: %.0f\n", n_cells))
   }
 
@@ -728,7 +730,7 @@ HexGridInfo_to_hexify_grid <- function(x) {
   }
 
   # Convert aperture to numeric for legacy
-  aperture_num <- if (ap == "4/3") 3L else as.integer(ap)
+  aperture_num <- aperture_to_int(ap)
 
   grid <- list(
     area = x@area_km2,
@@ -744,7 +746,9 @@ HexGridInfo_to_hexify_grid <- function(x) {
     pole_lon_deg = ISEA_VERT0_LON_DEG,
     pole_lat_deg = ISEA_VERT0_LAT_DEG,
     azimuth_deg = ISEA_AZIMUTH_DEG,
-    aperture_type = if (ap == "4/3") "MIXED43" else "SEQUENCE",
+    # MIXED43 is DGGRID's own name for the 4/3 arrangement; other sequences
+    # have no DGGRID aperture type, so they carry the generic label.
+    aperture_type = if (ap == "4/3") "MIXED43" else if (is_mixed_aperture(ap)) "MIXED" else "SEQUENCE",
     res_spec = x@resolution,
     precision = 7
   )

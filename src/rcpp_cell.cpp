@@ -214,10 +214,82 @@ static long long calc_max_grid_dim_ap4(int resolution) {
     return (1LL << resolution) - 1;  // 2^res - 1
 }
 
-// 2D cell index for aligned grid (aperture 3 even res, aperture 4 all res)
-// Simple row-major ordering where all (i,j) pairs are valid
-static uint64_t cell_index_2d_aligned(long long i, long long j, long long dim) {
-    return static_cast<uint64_t>(i) * dim + j;
+// ============================================================================
+// Substrate sublattice packing
+// ============================================================================
+// Cells sit on a sublattice of index N in the substrate. Writing a substrate
+// point as i + j*omega with omega = exp(2*pi*i/3), the cells are the multiples
+// of a generator of norm N, which is the single congruence
+//
+//   j = c * i   (mod N)
+//
+// N is 1 (the grid is the substrate), 3 (the 30-degree Class II lattice), 7 or
+// 21 (the lattices an odd number of aperture-7 levels leaves). A quad's
+// dimension is divisible by N, so each quad holds exactly dim * dim / N cells
+// and the numbering below is dense with no gaps.
+struct SubstrateLattice {
+    long long index;  // N
+    long long c;      // j = c * i (mod N)
+};
+
+static const SubstrateLattice kAlignedLattice = {1, 0};
+
+// Residue the cells of column i occupy
+static inline long long lattice_residue(long long i, const SubstrateLattice& lat) {
+    return ((lat.c * i) % lat.index + lat.index) % lat.index;
+}
+
+// 2D cell index within a quad
+static uint64_t cell_index_2d(long long i, long long j, long long dim,
+                              const SubstrateLattice& lat) {
+    if (lat.index == 1) {
+        return static_cast<uint64_t>(i) * dim + j;
+    }
+    return static_cast<uint64_t>(i) * (dim / lat.index) +
+           (j - lattice_residue(i, lat)) / lat.index;
+}
+
+// Inverse: 2D cell index back to (i, j)
+static void ij_from_cell_index(uint64_t idx, long long dim,
+                               const SubstrateLattice& lat,
+                               long long& i, long long& j) {
+    if (lat.index == 1) {
+        i = static_cast<long long>(idx / dim);
+        j = static_cast<long long>(idx % dim);
+        return;
+    }
+    long long per_column = dim / lat.index;
+    i = static_cast<long long>(idx / per_column);
+    j = static_cast<long long>(idx % per_column) * lat.index + lattice_residue(i, lat);
+}
+
+// Inverse of a mod N, for the N in {3, 7, 21} that occur here
+static long long lattice_mod_inverse(long long a, long long N) {
+    a = (a % N + N) % N;
+    for (long long k = 1; k < N; ++k) {
+        if ((a * k) % N == 1) return k;
+    }
+    Rcpp::stop("substrate lattice: " + std::to_string(a) +
+               " has no inverse modulo " + std::to_string(N));
+}
+
+// Sublattice of a grid form. Its generator m + n*w (w = exp(pi*i/3)) is
+// (m + n) + n*omega, and a substrate point is a multiple of it exactly when
+// j = n / (m + n) * i (mod N). Both m + n and n are invertible mod N: a factor
+// shared with N would divide the other as well and so square-divide N, which
+// is 3, 7 or 21.
+static SubstrateLattice sublattice_of(const hexify::HexGridForm& form) {
+    long long N = hexify::eisenstein_norm(form.m, form.n);
+    if (N == 1) return kAlignedLattice;
+    if (N != 3 && N != 7 && N != 21) {
+        Rcpp::stop("substrate lattice: unexpected lattice norm " + std::to_string(N));
+    }
+    long long b = (form.n % N + N) % N;
+    long long inv_a = lattice_mod_inverse(form.m + form.n, N);
+    SubstrateLattice lat;
+    lat.index = N;
+    lat.c = (b * inv_a) % N;
+    return lat;
 }
 
 // ============================================================================
@@ -255,7 +327,7 @@ static long long calc_sur_dim_ap7(int resolution) {
 static uint64_t encode_surrogate_ap7(
     long long sur_i, long long sur_j, int resolution, long long sur_dim) {
     long long sur_offset = calc_sur_offset_ap7(resolution);
-    return cell_index_2d_aligned(sur_i + sur_offset, sur_j + sur_offset, sur_dim);
+    return cell_index_2d(sur_i + sur_offset, sur_j + sur_offset, sur_dim, kAlignedLattice);
 }
 
 // Decode cell index to surrogate (i,j) directly
@@ -267,29 +339,15 @@ static void decode_surrogate_ap7(
     sur_j = static_cast<long long>(idx % sur_dim) - sur_offset;
 }
 
-// 2D cell index for offset grid (aperture 3 odd resolutions)
-// Only 1/3 of cells valid - those where (i+j) % 3 == 0
-// The modulo arithmetic compacts the sparse grid into dense numbering
-static uint64_t cell_index_2d_offset_ap3(long long i, long long j, long long dim) {
-    uint64_t idx = i * dim / 3;
-    switch (i % 3) {
-        case 0: idx += j / 3; break;
-        case 1: idx += (j - 2) / 3; break;
-        case 2: idx += (j - 1) / 3; break;
-    }
-    return idx;
-}
+// The 30-degree Class II lattice of aperture 3's odd resolutions: one substrate
+// point in three is a cell, those with (i + j) % 3 == 0.
+static const SubstrateLattice kOffsetLatticeAp3 = {3, 2};
 
-// Inverse: cell index to (i, j) for offset grid (aperture 3)
-static void ij_from_cell_index_offset_ap3(uint64_t idx, long long dim,
-                                      long long& i, long long& j) {
-    i = (idx * 3) / dim;
-    j = (idx * 3) % dim;
-    switch (i % 3) {
-        case 0: break;
-        case 1: j += 2; break;
-        case 2: j += 1; break;
-    }
+// Substrate lattice of a pure single-aperture grid. Aperture 7 stores
+// surrogates rather than substrate coordinates and packs them aligned.
+static SubstrateLattice lattice_for_aperture(int aperture, int resolution) {
+    if (aperture == 3 && !is_aligned_grid_ap3(resolution)) return kOffsetLatticeAp3;
+    return kAlignedLattice;
 }
 
 // Calculate cell count and offset per quad for any aperture
@@ -342,7 +400,7 @@ static long long grid_dim_for_aperture(int resolution, int aperture) {
 // dedup of this decode logic.
 static void decode_cell_id(double cell_id_raw, int resolution, int aperture,
                             long long dim, uint64_t offsetPerQuad, uint64_t nCells,
-                            bool use_offset_ap3, bool handle_ap7_south_pole,
+                            const SubstrateLattice& lat, bool handle_ap7_south_pole,
                             int& quad, long long& i, long long& j) {
     if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
         cell_id_raw > static_cast<double>(nCells)) {
@@ -372,14 +430,11 @@ static void decode_cell_id(double cell_id_raw, int resolution, int aperture,
         // South pole pentagon
         i = 0;
         j = 0;
-    } else if (use_offset_ap3) {
-        ij_from_cell_index_offset_ap3(idx, dim, i, j);
     } else if (aperture == 7) {
         // Decode to surrogate (i,j stored as surrogates for ap7)
         decode_surrogate_ap7(idx, resolution, dim, i, j);
     } else {
-        i = idx / dim;
-        j = idx % dim;
+        ij_from_cell_index(idx, dim, lat, i, j);
     }
 }
 
@@ -401,7 +456,7 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
     // Check if using offset grid (only aperture 3 odd resolutions)
-    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];
@@ -413,16 +468,10 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
             offset = 1 + (q - 1) * offsetPerQuad;
         }
 
-        // 2D cell index within quad
-        uint64_t bnd2D_idx;
-        if (use_offset) {
-            bnd2D_idx = cell_index_2d_offset_ap3(ii, jj, dim);
-        } else if (aperture == 7) {
-            // Input (i,j) are surrogate coords for ap7
-            bnd2D_idx = encode_surrogate_ap7(ii, jj, resolution, dim);
-        } else {
-            bnd2D_idx = cell_index_2d_aligned(ii, jj, dim);
-        }
+        // 2D cell index within quad. For ap7 the input (i,j) are surrogates.
+        uint64_t bnd2D_idx = (aperture == 7)
+            ? encode_surrogate_ap7(ii, jj, resolution, dim)
+            : cell_index_2d(ii, jj, dim, sub_lat);
 
         // Final cell ID (1-based)
         uint64_t cell_id = offset + bnd2D_idx + 1;
@@ -451,7 +500,7 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
     // Aperture 3 odd resolutions use offset grid; all others use aligned
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
@@ -474,11 +523,7 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
             long long i, j;
             hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
                                          aperture, resolution, quad, i, j);
-            if (use_offset_ap3) {
-                bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-            } else {
-                bnd2D_seq = cell_index_2d_aligned(i, j, dim);
-            }
+            bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
         }
 
         // Calculate cell ID offset within quad
@@ -512,13 +557,13 @@ DataFrame cpp_cell_to_lonlat(NumericVector cell_id, int resolution,
     // Grid dimension depends on aperture
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset_ap3, /*handle_ap7_south_pole=*/true,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/true,
                         quad, i, j);
 
         // Handle polar pentagons directly
@@ -591,13 +636,13 @@ DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
     // Grid dimension depends on aperture
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset_ap3, /*handle_ap7_south_pole=*/true,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/true,
                         quad, i, j);
 
         out_quad[k] = quad;
@@ -637,13 +682,13 @@ DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset_ap3, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Convert to Quad XY
@@ -691,7 +736,7 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];
@@ -715,11 +760,7 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
             long long i, j;
             hexify::icosa_tri_to_quad_ij(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y,
                                          aperture, resolution, out_quad, i, j);
-            if (use_offset_ap3) {
-                bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-            } else {
-                bnd2D_seq = cell_index_2d_aligned(i, j, dim);
-            }
+            bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
         }
 
         // Calculate cell ID
@@ -759,13 +800,13 @@ DataFrame cpp_cell_to_icosa_tri(NumericVector cell_id, int resolution,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset_ap3, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Convert to Quad XY
@@ -904,7 +945,7 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
     // Check if using offset grid (only aperture 3 odd resolutions)
-    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     // Determine grid class and select vertex offsets
     // Class I = flat-top hexagons, Class II = pointy-top (30° rotated)
@@ -947,7 +988,7 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Get cell center in Quad XY coordinates
@@ -1019,7 +1060,7 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
-    bool use_offset = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     // Determine grid class and select vertex offsets
     bool is_class1 = (aperture == 4) || (aperture == 3 && resolution % 2 == 0);
@@ -1057,7 +1098,7 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Check if this is a pentagon cell (at icosahedral vertex)
@@ -1163,16 +1204,19 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
 // Cell count: N = 10 * (product of the apertures) + 2
 // ============================================================================
 
-// Which 2D packing the substrate uses: the unrotated Class I lattice packs
-// aligned, the 30-degree Class II lattice packs on the offset sequence.
-static bool is_offset_grid_mixed(const std::vector<int>& ap_seq) {
-    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
-    long long norm = hexify::eisenstein_norm(form.m, form.n);
-    if (norm != 1 && norm != 3) {
-        Rcpp::stop("mixed aperture sequence: cell IDs are defined for the Class I "
-                   "and Class II substrates, got lattice norm " + std::to_string(norm));
+// Which substrate points a mixed sequence's cells sit on
+static SubstrateLattice lattice_for_mixed(const std::vector<int>& ap_seq) {
+    return sublattice_of(hexify::hex_form_sequence(ap_seq));
+}
+
+// An aperture sequence from R. Entry 0 names the base grid and entries 1.. are
+// the refinement steps, so the resolution is one less than the length; the
+// entries themselves are validated by hex_form_sequence().
+static std::vector<int> as_ap_seq(const IntegerVector& ap_seq, const char* fn) {
+    if (ap_seq.size() < 1) {
+        Rcpp::stop(std::string(fn) + ": ap_seq must name at least the base grid");
     }
-    return norm == 3;
+    return std::vector<int>(ap_seq.begin(), ap_seq.end());
 }
 
 // Cell count and per-quad offset for a mixed aperture sequence
@@ -1194,16 +1238,18 @@ static void calc_grid_params_mixed(const std::vector<int>& ap_seq,
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
-                                       int resolution, int mixed_aperture_level) {
-    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
-        stop("cpp_lonlat_to_cell_ap43: mixed_aperture_level must be between 0 and resolution");
-    }
+double cpp_ap_seq_edge_dim(IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_ap_seq_edge_dim");
+    return static_cast<double>(hexify::quad_edge_coord_mixed(ap_seq));
+}
+
+// [[Rcpp::export]]
+NumericVector cpp_lonlat_to_cell_seq(NumericVector lon, NumericVector lat,
+                                     IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_lonlat_to_cell_seq");
 
     int n = lon.size();
     NumericVector result(n);
-
-    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
 
     // Calculate grid parameters
     uint64_t nCells, offsetPerQuad;
@@ -1213,7 +1259,7 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
     long long dim = hexify::quad_edge_coord_mixed(ap_seq);
 
     // Check if using offset grid
-    bool use_offset = is_offset_grid_mixed(ap_seq);
+    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
@@ -1234,12 +1280,7 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
         }
 
         // Calculate 2D cell index based on grid pattern
-        uint64_t bnd2D_seq;
-        if (use_offset) {
-            bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-        } else {
-            bnd2D_seq = cell_index_2d_aligned(i, j, dim);
-        }
+        uint64_t bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
 
         uint64_t cid = offset + bnd2D_seq + 1;
         result[k] = static_cast<double>(cid);
@@ -1249,17 +1290,13 @@ NumericVector cpp_lonlat_to_cell_ap43(NumericVector lon, NumericVector lat,
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
-                                   int mixed_aperture_level) {
-    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
-        stop("cpp_cell_to_lonlat_ap43: mixed_aperture_level must be between 0 and resolution");
-    }
+DataFrame cpp_cell_to_lonlat_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_lonlat_seq");
+    int resolution = static_cast<int>(ap_seq.size()) - 1;
 
     int n = cell_id.size();
     NumericVector lon(n);
     NumericVector lat(n);
-
-    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
 
     // Calculate grid parameters
     uint64_t nCells, offsetPerQuad;
@@ -1269,15 +1306,15 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
     long long dim = hexify::quad_edge_coord_mixed(ap_seq);
 
     // Check if using offset grid
-    bool use_offset = is_offset_grid_mixed(ap_seq);
+    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        // aperture=3 here is a placeholder for decode_cell_id's ap7 branch,
-        // which mixed-aperture (4/3) grids never take.
+        // Any aperture other than 7 selects decode_cell_id's substrate branch,
+        // which is the one a mixed sequence stores its cells on.
         decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
-                        nCells, use_offset, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Convert quad IJ to lon/lat via quad_xy -> icosa triangle -> lon/lat
@@ -1300,30 +1337,26 @@ DataFrame cpp_cell_to_lonlat_ap43(NumericVector cell_id, int resolution,
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_quad_ij_ap43(NumericVector cell_id, int resolution,
-                                    int mixed_aperture_level) {
-    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
-        stop("cpp_cell_to_quad_ij_ap43: mixed_aperture_level must be between 0 and resolution");
-    }
+DataFrame cpp_cell_to_quad_ij_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_quad_ij_seq");
+    int resolution = static_cast<int>(ap_seq.size()) - 1;
 
     int n = cell_id.size();
     IntegerVector out_quad(n);
     NumericVector out_i(n);
     NumericVector out_j(n);
-
-    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
     uint64_t nCells, offsetPerQuad;
     calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
     long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-    bool use_offset = is_offset_grid_mixed(ap_seq);
+    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        // aperture=3 here is a placeholder for decode_cell_id's ap7 branch,
-        // which mixed-aperture (4/3) grids never take.
+        // Any aperture other than 7 selects decode_cell_id's substrate branch,
+        // which is the one a mixed sequence stores its cells on.
         decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
-                        nCells, use_offset, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
         out_quad[k] = quad;
         out_i[k] = static_cast<double>(i);
@@ -1338,40 +1371,30 @@ DataFrame cpp_cell_to_quad_ij_ap43(NumericVector cell_id, int resolution,
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_quad_ij_to_cell_ap43(IntegerVector quad, NumericVector i,
-                                        NumericVector j, int resolution,
-                                        int mixed_aperture_level) {
-    if (mixed_aperture_level < 0 || mixed_aperture_level > resolution) {
-        stop("cpp_quad_ij_to_cell_ap43: mixed_aperture_level must be between 0 and resolution");
-    }
+NumericVector cpp_quad_ij_to_cell_seq(IntegerVector quad, NumericVector i,
+                                      NumericVector j, IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_quad_ij_to_cell_seq");
 
     int n = quad.size();
     NumericVector result(n);
-
-    std::vector<int> ap_seq = hexify::ap43_sequence(resolution, mixed_aperture_level);
     uint64_t nCells, offsetPerQuad;
     calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
     long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-    bool use_offset = is_offset_grid_mixed(ap_seq);
+    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
 
     for (int k = 0; k < n; k++) {
         int q = quad[k];
         long long ii = static_cast<long long>(i[k]);
         long long jj = static_cast<long long>(j[k]);
 
-        // Mirror the cell-ID packing of cpp_lonlat_to_cell_ap43: offset by quad,
+        // Mirror the cell-ID packing of cpp_lonlat_to_cell_seq(): offset by quad,
         // then the 2D boundary sequence index within the quad's substrate.
         uint64_t offset = 0;
         if (q > 0) {
             offset = 1 + (q - 1) * offsetPerQuad;
         }
 
-        uint64_t bnd2D_seq;
-        if (use_offset) {
-            bnd2D_seq = cell_index_2d_offset_ap3(ii, jj, dim);
-        } else {
-            bnd2D_seq = cell_index_2d_aligned(ii, jj, dim);
-        }
+        uint64_t bnd2D_seq = cell_index_2d(ii, jj, dim, sub_lat);
 
         uint64_t cid = offset + bnd2D_seq + 1;
         result[k] = static_cast<double>(cid);
@@ -1388,21 +1411,15 @@ NumericVector cpp_quad_ij_to_cell_ap43(IntegerVector quad, NumericVector i,
 // For ap7: (i,j) are surrogates. For ap3/4: (i,j) are substrates.
 static double encode_cell_id(int quad, long long i, long long j,
                               uint64_t offsetPerQuad, long long dim,
-                              bool use_offset_ap3, int aperture, int resolution) {
+                              const SubstrateLattice& lat, int aperture, int resolution) {
     if (quad == 0 && i == 0 && j == 0) {
         return 1.0;
     }
 
     uint64_t offset = 1 + (quad - 1) * offsetPerQuad;
-    uint64_t bnd2D_seq;
-
-    if (use_offset_ap3) {
-        bnd2D_seq = cell_index_2d_offset_ap3(i, j, dim);
-    } else if (aperture == 7) {
-        bnd2D_seq = encode_surrogate_ap7(i, j, resolution, dim);
-    } else {
-        bnd2D_seq = cell_index_2d_aligned(i, j, dim);
-    }
+    uint64_t bnd2D_seq = (aperture == 7)
+        ? encode_surrogate_ap7(i, j, resolution, dim)
+        : cell_index_2d(i, j, dim, lat);
 
     return static_cast<double>(offset + bnd2D_seq + 1);
 }
@@ -1422,7 +1439,7 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
 
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     long long max_ij = hexify::get_max_ij(aperture, resolution);
 
@@ -1513,19 +1530,14 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
 
                     neighbor_ids.push_back(
                         encode_cell_id(final_quad, final_sur_i, final_sur_j,
-                                       offsetPerQuad, dim, use_offset_ap3,
+                                       offsetPerQuad, dim, sub_lat,
                                        aperture, resolution));
                 }
             }
         } else {
             // Aperture 3 and 4: standard hex offset approach
             long long i, j;
-            if (use_offset_ap3) {
-                ij_from_cell_index_offset_ap3(within_quad, dim, i, j);
-            } else {
-                i = within_quad / dim;
-                j = within_quad % dim;
-            }
+            ij_from_cell_index(within_quad, dim, sub_lat, i, j);
 
             for (int d = 0; d < 6; d++) {
                 long long ni = i + hex_offsets[d][0];
@@ -1536,7 +1548,7 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
                 if (in_bounds) {
                     neighbor_ids.push_back(
                         encode_cell_id(quad, ni, nj,
-                                       offsetPerQuad, dim, use_offset_ap3,
+                                       offsetPerQuad, dim, sub_lat,
                                        aperture, resolution));
                 } else {
                     double nbr_qx, nbr_qy;
@@ -1561,7 +1573,7 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
 
                     neighbor_ids.push_back(
                         encode_cell_id(final_quad, final_i, final_j,
-                                       offsetPerQuad, dim, use_offset_ap3,
+                                       offsetPerQuad, dim, sub_lat,
                                        aperture, resolution));
                 }
             }
@@ -1695,13 +1707,13 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
-    bool use_offset_ap3 = (aperture == 3) && !is_aligned_grid_ap3(resolution);
+    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
     for (int k = 0; k < n; k++) {
         int quad;
         long long i, j;
         decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, use_offset_ap3, /*handle_ap7_south_pole=*/false,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
         // Convert to Quad XY

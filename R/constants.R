@@ -250,32 +250,16 @@ index_type_for_aperture <- function(aperture) {
   else "zorder"
 }
 
-#' Integer aperture for C++ functions (mixed "4/3" uses base aperture 3)
-#' @param aperture Character or numeric aperture ("3", "4", "7", or "4/3")
+#' Integer aperture for the C++ functions that take a single one
+#'
+#' A mixed sequence has no single aperture; its cell IDs come from the sequence
+#' API instead, and the callers that still ask for an integer use it only to
+#' select an unrotated substrate branch, which aperture 3 gives.
+#' @param aperture Character or numeric aperture spelling
 #' @return Integer aperture (3L, 4L, or 7L)
 #' @noRd
 aperture_to_int <- function(aperture) {
-  if (aperture == "4/3") 3L else as.integer(aperture)
-}
-
-#' Number of aperture-4 levels for a mixed 4/3 (ISEA43H) grid
-#'
-#' Half the resolution (rounded down): odd resolutions get one more
-#' aperture-3 level than aperture-4 level.
-#' @param resolution Integer resolution value
-#' @return Integer number of aperture-4 levels
-#' @noRd
-ap43_level <- function(resolution) {
-  as.integer(resolution / 2)
-}
-
-#' Cell count for a mixed 4/3 (ISEA43H) grid at a given resolution
-#' @param resolution Integer resolution value
-#' @return Numeric cell count: 10 * 4^level * 3^(resolution - level) + 2
-#' @noRd
-ap43_n_cells <- function(resolution) {
-  level <- ap43_level(resolution)
-  10 * (4^level) * (3^(resolution - level)) + 2
+  if (is_mixed_aperture(aperture)) 3L else as.integer(aperture)
 }
 
 #' Calculate maximum cell ID for given resolution and aperture
