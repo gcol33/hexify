@@ -15,7 +15,8 @@
 //
 //   Aperture 7 (ISEA7H):
 //     - Scale factor: sqrt(7) per level
-//     - Uses Rotation Class III variants (rotated ~19.1 degrees)
+//     - Rotates by kAp7RotDeg per level in alternating directions, so even
+//       resolutions are Class I and odd resolutions sit at kAp7RotDeg
 //     - Cell count: 10 * 7^res + 2
 //
 // For mixed aperture sequences (e.g., ISEA43H), see aperture_sequence.h

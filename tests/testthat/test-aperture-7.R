@@ -2,7 +2,9 @@
 # tests/testthat/test-aperture-7.R
 # Tests for aperture 7 (ISEA7H) hexagonal grid quantization
 #
-# Aperture 7 alternates between Class III-I and Class III-II orientations.
+# Successive aperture-7 levels rotate by kAp7RotDeg in alternating directions,
+# so even resolutions are unrotated (Class I) and odd resolutions sit at
+# kAp7RotDeg on a sqrt(7) substrate.
 # Each resolution has 7x the cells of the previous (area ratio 7:1).
 
 # =============================================================================
@@ -63,13 +65,12 @@ test_that("aperture 7 batch round-trip succeeds", {
 })
 
 # =============================================================================
-# CLASS ALTERNATION
+# ORIENTATION ALTERNATION
 # =============================================================================
 
-test_that("aperture 7 alternates Class III-I and III-II", {
+test_that("aperture 7 keeps cell (0,0) at the origin at every resolution", {
   setup_icosa()
 
-  # Cell (0,0) should always be at origin regardless of class
   for (res in c(0, 1, 2, 3, 4)) {
     center <- cpp_hex_center_ap7(0, 0, res)
     expect_equal(as.numeric(center["cx"]), 0, tolerance = 1e-10)
@@ -81,34 +82,41 @@ test_that("aperture 7 alternates Class III-I and III-II", {
 # SCALING AND REFINEMENT
 # =============================================================================
 
-test_that("aperture 7 refines by factor of 7", {
+test_that("aperture 7 substrate divisor is 7^ceil(res/2)", {
   setup_icosa()
 
-  # Aperture 7 has asymmetric scaling due to Class III variants:
-  # - Class III-I (even) → Class III-II (odd): scale by sqrt(21)
-  # - Class III-II (odd) → Class III-I (even): scale by sqrt(7)/sqrt(3)
-  # Overall cumulative: sqrt(7)^res
+  # Cell centres are substrate coordinates divided by sqrt(7)^res times the
+  # substrate factor (1 at even resolutions, sqrt(7) at odd ones), so the
+  # divisor is the integer 7^ceil(res/2) that the exact aperture-7 route in
+  # coordinate_transforms.cpp uses.
 
-  sqrt7 <- sqrt(7)
-  sqrt3 <- sqrt(3)
-  sqrt21 <- sqrt(21)
+  for (res in 0:5) {
+    center <- cpp_hex_center_ap7(1, 0, res)
+    unit <- cpp_hex_center_ap7(1, 0, 0)
+    divisor <- as.numeric(unit["cx"]) / as.numeric(center["cx"])
 
-  for (res in 1:4) {
-    center_r <- cpp_hex_center_ap7(1, 0, res)
-    center_prev <- cpp_hex_center_ap7(1, 0, res - 1)
+    expect_equal(divisor, 7^ceiling(res / 2), tolerance = 1e-9,
+                 info = sprintf("res=%d substrate divisor", res))
+  }
+})
 
-    ratio_x <- abs(as.numeric(center_prev["cx"]) / as.numeric(center_r["cx"]))
+test_that("aperture 7 is centre-nested: a parent centre is also a child centre", {
+  setup_icosa()
 
-    is_prev_class3i <- ((res - 1) %% 2 == 0)
+  set.seed(707)
+  pts <- cbind(runif(30, -0.7, 0.7), runif(30, -0.7, 0.7))
 
-    if (is_prev_class3i) {
-      expected_ratio <- sqrt21
-    } else {
-      expected_ratio <- sqrt7 / sqrt3
+  for (res in 0:4) {
+    child_spacing <- 1 / sqrt(7)^(res + 1)
+    for (k in seq_len(nrow(pts))) {
+      cell <- cpp_hex_quantize_ap7(pts[k, 1], pts[k, 2], res)
+      p <- cpp_hex_center_ap7(cell["i"], cell["j"], res)
+      kid <- cpp_hex_quantize_ap7(p["cx"], p["cy"], res + 1L)
+      q <- cpp_hex_center_ap7(kid["i"], kid["j"], res + 1L)
+
+      d <- sqrt((p["cx"] - q["cx"])^2 + (p["cy"] - q["cy"])^2)
+      expect_lt(as.numeric(d), child_spacing * 1e-6)
     }
-
-    expect_equal(ratio_x, expected_ratio, tolerance = 0.01,
-                 info = sprintf("res=%d scaling ratio", res))
   }
 })
 

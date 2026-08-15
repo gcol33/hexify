@@ -61,24 +61,24 @@ cpp_cell_to_lonlat_ap7 <- function(face, i, j, resolution) {
     .Call(`_hexify_cpp_cell_to_lonlat_ap7`, face, i, j, resolution)
 }
 
-cpp_hex_quantize_ap34 <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
-    .Call(`_hexify_cpp_hex_quantize_ap34`, icosa_triangle_x, icosa_triangle_y, ap_seq)
+cpp_hex_quantize_mixed <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
+    .Call(`_hexify_cpp_hex_quantize_mixed`, icosa_triangle_x, icosa_triangle_y, ap_seq)
 }
 
-cpp_hex_center_ap34 <- function(i, j, ap_seq) {
-    .Call(`_hexify_cpp_hex_center_ap34`, i, j, ap_seq)
+cpp_hex_center_mixed <- function(i, j, ap_seq) {
+    .Call(`_hexify_cpp_hex_center_mixed`, i, j, ap_seq)
 }
 
-cpp_hex_corners_ap34 <- function(i, j, ap_seq, hex_radius = 1.0) {
-    .Call(`_hexify_cpp_hex_corners_ap34`, i, j, ap_seq, hex_radius)
+cpp_hex_corners_mixed <- function(i, j, ap_seq, hex_radius = 1.0) {
+    .Call(`_hexify_cpp_hex_corners_mixed`, i, j, ap_seq, hex_radius)
 }
 
-cpp_lonlat_to_cell_ap34 <- function(lon_deg, lat_deg, ap_seq) {
-    .Call(`_hexify_cpp_lonlat_to_cell_ap34`, lon_deg, lat_deg, ap_seq)
+cpp_lonlat_to_cell_mixed <- function(lon_deg, lat_deg, ap_seq) {
+    .Call(`_hexify_cpp_lonlat_to_cell_mixed`, lon_deg, lat_deg, ap_seq)
 }
 
-cpp_cell_to_lonlat_ap34 <- function(face, i, j, ap_seq) {
-    .Call(`_hexify_cpp_cell_to_lonlat_ap34`, face, i, j, ap_seq)
+cpp_cell_to_lonlat_mixed <- function(face, i, j, ap_seq) {
+    .Call(`_hexify_cpp_cell_to_lonlat_mixed`, face, i, j, ap_seq)
 }
 
 cpp_test_roundtrip_ap3 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {
@@ -93,8 +93,8 @@ cpp_test_roundtrip_ap7 <- function(icosa_triangle_x, icosa_triangle_y, resolutio
     .Call(`_hexify_cpp_test_roundtrip_ap7`, icosa_triangle_x, icosa_triangle_y, resolution)
 }
 
-cpp_test_roundtrip_ap34 <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
-    .Call(`_hexify_cpp_test_roundtrip_ap34`, icosa_triangle_x, icosa_triangle_y, ap_seq)
+cpp_test_roundtrip_mixed <- function(icosa_triangle_x, icosa_triangle_y, ap_seq) {
+    .Call(`_hexify_cpp_test_roundtrip_mixed`, icosa_triangle_x, icosa_triangle_y, ap_seq)
 }
 
 cpp_batch_test_roundtrip_ap3 <- function(tx_vec, ty_vec, resolution) {

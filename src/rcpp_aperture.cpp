@@ -5,13 +5,13 @@
 // - Aperture 3 quantization and center/corner computation
 // - Aperture 4 quantization and center/corner computation
 // - Aperture 7 quantization and center/corner computation
-// - Mixed aperture 3/4 support
+// - Mixed aperture sequence support
 // - Roundtrip testing functions
 //
 // The ap3/ap4/ap7 exported functions delegate to shared helpers parameterized
 // by aperture number, which call the unified hex_quantize/hex_center/hex_corners
-// API from aperture.h. The ap34 (mixed aperture) functions use the separate
-// aperture_sequence API and remain standalone.
+// API from aperture.h. The mixed-sequence functions take an aperture vector and
+// call the aperture_sequence API.
 
 #include <Rcpp.h>
 #include <array>
@@ -246,15 +246,15 @@ NumericVector cpp_cell_to_lonlat_ap7(int face, double i, double j,
 }
 
 // ============================================================================
-// Mixed Aperture 3/4 Bindings (separate API, not parameterizable by int)
+// Mixed Aperture Sequence Bindings (separate API, takes an aperture vector)
 // ============================================================================
 
 // [[Rcpp::export]]
-NumericVector cpp_hex_quantize_ap34(double icosa_triangle_x, double icosa_triangle_y,
-                                    IntegerVector ap_seq) {
+NumericVector cpp_hex_quantize_mixed(double icosa_triangle_x, double icosa_triangle_y,
+                                     IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   long long i = 0, j = 0;
-  hexify::hex_quantize_ap34(icosa_triangle_x, icosa_triangle_y, seq, i, j);
+  hexify::hex_quantize_mixed(icosa_triangle_x, icosa_triangle_y, seq, i, j);
   return NumericVector::create(
     _["i"] = static_cast<double>(i),
     _["j"] = static_cast<double>(j)
@@ -262,26 +262,26 @@ NumericVector cpp_hex_quantize_ap34(double icosa_triangle_x, double icosa_triang
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_hex_center_ap34(double i, double j,
-                                  IntegerVector ap_seq) {
+NumericVector cpp_hex_center_mixed(double i, double j,
+                                   IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center_ap34(checked_ij(i, "i"),
-                          checked_ij(j, "j"),
-                          seq, cx, cy);
+  hexify::hex_center_mixed(checked_ij(i, "i"),
+                           checked_ij(j, "j"),
+                           seq, cx, cy);
   return NumericVector::create(_["cx"] = cx, _["cy"] = cy);
 }
 
 // [[Rcpp::export]]
-List cpp_hex_corners_ap34(double i, double j,
-                          IntegerVector ap_seq,
-                          double hex_radius = 1.0) {
+List cpp_hex_corners_mixed(double i, double j,
+                           IntegerVector ap_seq,
+                           double hex_radius = 1.0) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   std::array<double, HEX_VERTICES> xs{};
   std::array<double, HEX_VERTICES> ys{};
-  hexify::hex_corners_ap34(checked_ij(i, "i"),
-                           checked_ij(j, "j"),
-                           seq, hex_radius, xs.data(), ys.data());
+  hexify::hex_corners_mixed(checked_ij(i, "i"),
+                            checked_ij(j, "j"),
+                            seq, hex_radius, xs.data(), ys.data());
   return List::create(
     _["x"] = NumericVector(xs.begin(), xs.end()),
     _["y"] = NumericVector(ys.begin(), ys.end())
@@ -289,12 +289,12 @@ List cpp_hex_corners_ap34(double i, double j,
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_lonlat_to_cell_ap34(double lon_deg, double lat_deg,
+NumericVector cpp_lonlat_to_cell_mixed(double lon_deg, double lat_deg,
                                        IntegerVector ap_seq) {
   auto fwd = hexify::snyder_forward(lon_deg, lat_deg);
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   long long i = 0, j = 0;
-  hexify::hex_quantize_ap34(fwd.icosa_triangle_x, fwd.icosa_triangle_y, seq, i, j);
+  hexify::hex_quantize_mixed(fwd.icosa_triangle_x, fwd.icosa_triangle_y, seq, i, j);
   return NumericVector::create(
     _["face"] = fwd.face,
     _["i"] = static_cast<double>(i),
@@ -303,13 +303,13 @@ NumericVector cpp_lonlat_to_cell_ap34(double lon_deg, double lat_deg,
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_cell_to_lonlat_ap34(int face, double i, double j,
+NumericVector cpp_cell_to_lonlat_mixed(int face, double i, double j,
                                        IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center_ap34(checked_ij(i, "i"),
-                          checked_ij(j, "j"),
-                          seq, cx, cy);
+  hexify::hex_center_mixed(checked_ij(i, "i"),
+                           checked_ij(j, "j"),
+                           seq, cx, cy);
   auto ll = hexify::face_xy_to_ll(cx, cy, face);
   return NumericVector::create(_["lon"] = ll.first, _["lat"] = ll.second);
 }
@@ -334,14 +334,14 @@ bool cpp_test_roundtrip_ap7(double icosa_triangle_x, double icosa_triangle_y, in
 }
 
 // [[Rcpp::export]]
-bool cpp_test_roundtrip_ap34(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq) {
+bool cpp_test_roundtrip_mixed(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq) {
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   long long i1 = 0, j1 = 0;
-  hexify::hex_quantize_ap34(icosa_triangle_x, icosa_triangle_y, seq, i1, j1);
+  hexify::hex_quantize_mixed(icosa_triangle_x, icosa_triangle_y, seq, i1, j1);
   double cx = 0.0, cy = 0.0;
-  hexify::hex_center_ap34(i1, j1, seq, cx, cy);
+  hexify::hex_center_mixed(i1, j1, seq, cx, cy);
   long long i2 = 0, j2 = 0;
-  hexify::hex_quantize_ap34(cx, cy, seq, i2, j2);
+  hexify::hex_quantize_mixed(cx, cy, seq, i2, j2);
   return (i1 == i2) && (j1 == j2);
 }
 

@@ -1,3 +1,34 @@
+# hexify (development version)
+
+## New features
+
+* Mixed aperture sequences accept aperture 7 alongside 3 and 4, in any order
+  (#55, requested by Christian Carey). Scale and lattice orientation now come
+  from one model shared by the pure-aperture and mixed-sequence code: refining
+  by aperture `a` multiplies the lattice generator by an Eisenstein integer of
+  norm `a` (`1 + w` for 3, `2` for 4, `2 + w` for 7), so orientation is the
+  product of the steps taken rather than a per-level Class I/II flag. The
+  C++ entry points are now `hex_quantize_mixed()`, `hex_center_mixed()` and
+  `hex_corners_mixed()`, replacing the `_ap34` names, which no longer describe
+  what they accept.
+
+## Bug fixes
+
+* The aperture-7 grids returned by the `hex_*_ap7()` helpers were not
+  centre-nested: each level applied a fixed `kAp7RotDeg` offset plus a 30-degree
+  alternation, which is not an aperture-7 refinement (the norm-7 Eisenstein
+  generators sit at +/- `kAp7RotDeg`, not 30 degrees), so a cell centre was
+  about 0.85 of a child cell spacing away from the nearest centre one level
+  down. Levels now alternate the two norm-7 generators, putting even
+  resolutions at 0 degrees and odd resolutions at `kAp7RotDeg` on a `sqrt(7)`
+  substrate -- the same convention as the exact-integer aperture-7 route used
+  for cell IDs, whose divisor is `7^ceil(res/2)`.
+
+* Mixed sequences computed orientation from the count of aperture-3 levels
+  including the base level, and treated any sequence ending in aperture 4 as
+  unrotated. A sequence such as `c(4, 4, 3)` was therefore 30 degrees away from
+  the grid it describes, and `c(4, 3, 4)` was not nested in `c(4, 3)`.
+
 # hexify 0.7.5
 
 ## Bug fixes

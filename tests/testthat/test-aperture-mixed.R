@@ -1,9 +1,10 @@
 
 # tests/testthat/test-aperture-mixed.R
-# Tests for mixed aperture 4/3 (ISEA43H) hexagonal grid
+# Tests for mixed aperture sequences
 #
-# Mixed aperture uses aperture 4 for the first few resolutions,
-# then switches to aperture 3. This is DGGRID's standard configuration.
+# An aperture sequence gives the aperture of every resolution level. ISEA43H is
+# aperture 4 for the first few levels then aperture 3, which is DGGRID's
+# standard configuration; apertures 3, 4 and 7 may appear in any order.
 
 # =============================================================================
 # SETUP
@@ -31,7 +32,7 @@ test_that("pure aperture 4 sequence matches ap4 implementation", {
       tx <- pt[1]
       ty <- pt[2]
 
-      cell_34 <- cpp_hex_quantize_ap34(tx, ty, ap_seq)
+      cell_34 <- cpp_hex_quantize_mixed(tx, ty, ap_seq)
       cell_4 <- cpp_hex_quantize_ap4(tx, ty, res)
 
       expect_equal(cell_34["i"], cell_4["i"],
@@ -60,7 +61,7 @@ test_that("pure aperture 3 sequence matches ap3 implementation", {
       tx <- pt[1]
       ty <- pt[2]
 
-      cell_34 <- cpp_hex_quantize_ap34(tx, ty, ap_seq)
+      cell_34 <- cpp_hex_quantize_mixed(tx, ty, ap_seq)
       cell_3 <- cpp_hex_quantize_ap3(tx, ty, res)
 
       expect_equal(cell_34["i"], cell_3["i"],
@@ -69,7 +70,7 @@ test_that("pure aperture 3 sequence matches ap3 implementation", {
                    info = sprintf("res=%d, pure ap3 j mismatch", res))
 
       # Compare centers
-      center_34 <- cpp_hex_center_ap34(cell_34["i"], cell_34["j"], ap_seq)
+      center_34 <- cpp_hex_center_mixed(cell_34["i"], cell_34["j"], ap_seq)
       center_3 <- cpp_hex_center_ap3(cell_3["i"], cell_3["j"], res)
 
       expect_equal(as.numeric(center_34["cx"]), as.numeric(center_3["cx"]),
@@ -78,6 +79,47 @@ test_that("pure aperture 3 sequence matches ap3 implementation", {
                    tolerance = 1e-10)
     }
   }
+})
+
+test_that("pure aperture 7 sequence matches ap7 implementation", {
+  skip_on_cran()  # Detailed consistency check
+  setup_icosa()
+
+  set.seed(77)
+  pts <- cbind(runif(40, -0.8, 0.8), runif(40, -0.8, 0.8))
+
+  for (res in 0:5) {
+    ap_seq <- rep(7, res + 1)
+
+    for (k in seq_len(nrow(pts))) {
+      tx <- pts[k, 1]
+      ty <- pts[k, 2]
+
+      cell_mixed <- cpp_hex_quantize_mixed(tx, ty, ap_seq)
+      cell_7 <- cpp_hex_quantize_ap7(tx, ty, res)
+
+      expect_equal(cell_mixed["i"], cell_7["i"],
+                   info = sprintf("res=%d, pure ap7 i mismatch", res))
+      expect_equal(cell_mixed["j"], cell_7["j"],
+                   info = sprintf("res=%d, pure ap7 j mismatch", res))
+
+      center_mixed <- cpp_hex_center_mixed(cell_mixed["i"], cell_mixed["j"], ap_seq)
+      center_7 <- cpp_hex_center_ap7(cell_7["i"], cell_7["j"], res)
+
+      expect_equal(as.numeric(center_mixed["cx"]), as.numeric(center_7["cx"]),
+                   tolerance = 1e-10)
+      expect_equal(as.numeric(center_mixed["cy"]), as.numeric(center_7["cy"]),
+                   tolerance = 1e-10)
+    }
+  }
+})
+
+test_that("aperture sequences reject unsupported apertures", {
+  setup_icosa()
+
+  expect_error(cpp_hex_quantize_mixed(0.1, 0.2, c(3, 5)), "aperture must be 3, 4, or 7")
+  expect_error(cpp_hex_quantize_mixed(0.1, 0.2, c(5, 3)), "aperture must be 3, 4, or 7")
+  expect_error(cpp_hex_quantize_mixed(0.1, 0.2, integer(0)), "cannot be empty")
 })
 
 # =============================================================================
@@ -104,9 +146,9 @@ test_that("mixed 43H pattern (DGGRID style) works", {
       tx <- pt[1]
       ty <- pt[2]
 
-      cell <- cpp_hex_quantize_ap34(tx, ty, ap_seq)
-      center <- cpp_hex_center_ap34(cell["i"], cell["j"], ap_seq)
-      cell2 <- cpp_hex_quantize_ap34(center["cx"], center["cy"], ap_seq)
+      cell <- cpp_hex_quantize_mixed(tx, ty, ap_seq)
+      center <- cpp_hex_center_mixed(cell["i"], cell["j"], ap_seq)
+      cell2 <- cpp_hex_quantize_mixed(center["cx"], center["cy"], ap_seq)
 
       expect_equal(cell["i"], cell2["i"],
                    info = sprintf("43H res=%d round-trip i", total_res))
@@ -144,9 +186,9 @@ test_that("mixed aperture round-trip works for various sequences", {
       tx <- pt[1]
       ty <- pt[2]
 
-      cell <- cpp_hex_quantize_ap34(tx, ty, seq)
-      center <- cpp_hex_center_ap34(cell["i"], cell["j"], seq)
-      cell2 <- cpp_hex_quantize_ap34(center["cx"], center["cy"], seq)
+      cell <- cpp_hex_quantize_mixed(tx, ty, seq)
+      center <- cpp_hex_center_mixed(cell["i"], cell["j"], seq)
+      cell2 <- cpp_hex_quantize_mixed(center["cx"], center["cy"], seq)
 
       seq_str <- paste(seq, collapse = ",")
       expect_equal(cell["i"], cell2["i"],
@@ -168,16 +210,121 @@ test_that("mixed aperture corners form valid hexagons", {
   sequences <- list(
     c(4, 4),
     c(4, 4, 3),
-    c(4, 4, 3, 3)
+    c(4, 4, 3, 3),
+    c(4, 7),
+    c(7, 4),
+    c(4, 7, 3, 7)
   )
 
   for (seq in sequences) {
-    corners <- cpp_hex_corners_ap34(0, 0, seq, 1.0)
+    corners <- cpp_hex_corners_mixed(0, 0, seq, 1.0)
 
     expect_equal(length(corners$x), 6)
     expect_equal(length(corners$y), 6)
     expect_true(all(is.finite(corners$x)))
     expect_true(all(is.finite(corners$y)))
+  }
+})
+
+# =============================================================================
+# APERTURE-7 SEQUENCES (issue #55)
+# =============================================================================
+#
+# Aperture 7 rotates the lattice by kAp7RotDeg per level rather than by a
+# multiple of 30 degrees, so it composes with apertures 3 and 4 through the
+# Eisenstein-generator model in grid_math.h rather than a Class I/II flag.
+
+test_that("sequences mixing aperture 7 with 3 and 4 round-trip", {
+  setup_icosa()
+
+  sequences <- list(
+    c(4, 7),
+    c(7, 4),
+    c(4, 4, 7),
+    c(7, 7, 4),
+    c(3, 7),
+    c(7, 3),
+    c(4, 7, 3),
+    c(7, 4, 3, 7),
+    c(4, 4, 7, 7, 3)
+  )
+
+  set.seed(755)
+  pts <- cbind(runif(25, -0.8, 0.8), runif(25, -0.8, 0.8))
+
+  for (seq in sequences) {
+    seq_str <- paste(seq, collapse = ",")
+    for (k in seq_len(nrow(pts))) {
+      cell <- cpp_hex_quantize_mixed(pts[k, 1], pts[k, 2], seq)
+      center <- cpp_hex_center_mixed(cell["i"], cell["j"], seq)
+      cell2 <- cpp_hex_quantize_mixed(center["cx"], center["cy"], seq)
+
+      expect_equal(cell["i"], cell2["i"], info = sprintf("seq=[%s] i", seq_str))
+      expect_equal(cell["j"], cell2["j"], info = sprintf("seq=[%s] j", seq_str))
+    }
+  }
+})
+
+test_that("every aperture sequence is centre-nested in its refinements", {
+  skip_on_cran()  # Detailed loop test
+  setup_icosa()
+
+  # A cell's centre must also be a centre in the next finer grid, whatever
+  # aperture that level uses. This is what breaks when the orientation of a
+  # level is computed independently of the levels above it.
+  parents <- list(
+    c(3), c(4), c(7),
+    c(3, 3), c(4, 4), c(7, 7),
+    c(4, 3), c(3, 4), c(4, 7), c(7, 4), c(3, 7), c(7, 3),
+    c(4, 4, 3), c(4, 4, 7), c(7, 7, 4), c(4, 7, 3),
+    c(4, 4, 3, 3), c(7, 4, 3, 7)
+  )
+
+  set.seed(756)
+  pts <- cbind(runif(25, -0.7, 0.7), runif(25, -0.7, 0.7))
+
+  for (parent in parents) {
+    for (nxt in c(3, 4, 7)) {
+      child <- c(parent, nxt)
+      child_spacing <- 1 / prod(sqrt(child[-1]))
+      seq_str <- paste(child, collapse = ",")
+
+      for (k in seq_len(nrow(pts))) {
+        cell <- cpp_hex_quantize_mixed(pts[k, 1], pts[k, 2], parent)
+        p <- cpp_hex_center_mixed(cell["i"], cell["j"], parent)
+        kid <- cpp_hex_quantize_mixed(p["cx"], p["cy"], child)
+        q <- cpp_hex_center_mixed(kid["i"], kid["j"], child)
+
+        d <- sqrt((p["cx"] - q["cx"])^2 + (p["cy"] - q["cy"])^2)
+        expect_lt(as.numeric(d), child_spacing * 1e-6,
+                  label = sprintf("seq=[%s] point %d centre offset", seq_str, k))
+      }
+    }
+  }
+})
+
+test_that("aperture order does not change the grid", {
+  setup_icosa()
+
+  # Scale is a product and orientation composes commutatively, so sequences
+  # that use the same multiset of apertures describe the same grid. Each pair
+  # swaps two adjacent steps, which leaves the accumulated scale bit-identical.
+  set.seed(757)
+  pts <- cbind(runif(25, -0.8, 0.8), runif(25, -0.8, 0.8))
+
+  pairs <- list(
+    list(c(4, 4, 3, 7), c(4, 3, 4, 7)),
+    list(c(3, 3, 4, 7), c(3, 4, 3, 7)),
+    list(c(7, 7, 4, 3), c(7, 4, 7, 3))
+  )
+
+  for (pr in pairs) {
+    for (k in seq_len(nrow(pts))) {
+      a <- cpp_hex_quantize_mixed(pts[k, 1], pts[k, 2], pr[[1]])
+      b <- cpp_hex_quantize_mixed(pts[k, 1], pts[k, 2], pr[[2]])
+      expect_equal(a["i"], b["i"])
+      expect_equal(a["j"], b["j"])
+    }
   }
 })
 
@@ -334,10 +481,10 @@ test_that("mixed aperture invalid level throws error", {
 })
 
 # =============================================================================
-# MIXED APERTURE LON/LAT WORKFLOW (ap34 functions)
+# MIXED APERTURE LON/LAT WORKFLOW
 # =============================================================================
 
-test_that("cpp_lonlat_to_cell_ap34 and cpp_cell_to_lonlat_ap34 work", {
+test_that("cpp_lonlat_to_cell_mixed and cpp_cell_to_lonlat_mixed work", {
   skip_on_cran()  # Detailed loop test
   setup_icosa()
 
@@ -352,20 +499,20 @@ test_that("cpp_lonlat_to_cell_ap34 and cpp_cell_to_lonlat_ap34 work", {
   )
 
   for (ap_seq in sequences) {
-    cell <- cpp_lonlat_to_cell_ap34(lon, lat, ap_seq)
+    cell <- cpp_lonlat_to_cell_mixed(lon, lat, ap_seq)
 
     expect_true(cell["face"] >= 0 && cell["face"] < 20)
     expect_true(is.numeric(cell["i"]))
     expect_true(is.numeric(cell["j"]))
 
-    ll <- cpp_cell_to_lonlat_ap34(cell["face"], cell["i"], cell["j"], ap_seq)
+    ll <- cpp_cell_to_lonlat_mixed(cell["face"], cell["i"], cell["j"], ap_seq)
 
     expect_true(ll["lon"] >= -180 && ll["lon"] <= 180)
     expect_true(ll["lat"] >= -90 && ll["lat"] <= 90)
   }
 })
 
-test_that("cpp_test_roundtrip_ap34 returns TRUE for valid points", {
+test_that("cpp_test_roundtrip_mixed returns TRUE for valid points", {
   skip_on_cran()  # Detailed loop test
   setup_icosa()
 
@@ -384,7 +531,7 @@ test_that("cpp_test_roundtrip_ap34 returns TRUE for valid points", {
 
   for (ap_seq in sequences) {
     for (pt in test_points) {
-      result <- cpp_test_roundtrip_ap34(pt[1], pt[2], ap_seq)
+      result <- cpp_test_roundtrip_mixed(pt[1], pt[2], ap_seq)
       expect_true(result, info = sprintf("ap_seq length=%d, pt=(%.2f, %.2f)",
                                           length(ap_seq), pt[1], pt[2]))
     }

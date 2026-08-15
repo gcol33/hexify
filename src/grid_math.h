@@ -5,30 +5,30 @@
 // previously duplicated across aperture-specific files.
 //
 // ============================================================================
-// HEXAGON ROTATION CLASSES
+// GRID ORIENTATION
 // ============================================================================
 //
-// Hexagonal grids come in different orientations called "Rotation Classes"
-// (terminology from Sahr et al. 2003):
+// Refining a hexagonal lattice by aperture a replaces it with a sublattice of
+// index a. For a hexagonal lattice such a sublattice exists only when a is the
+// norm of an Eisenstein integer z = m + n*w, where w = exp(i*pi/3) and the norm
+// is m^2 + m*n + n^2. The refinement scales lengths by sqrt(a) = |z| and
+// rotates the lattice by arg(z):
 //
-//   ROTATION CLASS I (0-degree, flat-top)
-//   --------------------------------------
-//   - Standard orientation (0 degrees)
-//   - Used by aperture-4 always
-//   - Flat edge on top
+//   aperture 3:  z = 1 + w     norm 3, arg 30 deg
+//   aperture 4:  z = 2         norm 4, arg 0 deg
+//   aperture 7:  z = 2 + w     norm 7, arg 19.106... deg  (kAp7RotDeg)
+//                z = 1 + 2w    norm 7, arg 40.894... deg  (the mirror generator)
 //
-//   ROTATION CLASS II (30-degree, pointy-top)
-//   ------------------------------------------
-//   - Rotated 30 degrees from Rotation Class I
-//   - Alternates with Rotation Class I in aperture-3
-//   - Pointed vertex on top
+// Refining sends a lattice L to z^-1 L, so a grid's orientation is the product
+// of the conjugates of its refinement steps' generators. The classical rotation
+// classes (Sahr et al. 2003) are the small cases: norm 1 is Class I (0 degrees,
+// flat-top), norm 3 is Class II (30 degrees, pointy-top).
 //
-//   ROTATION CLASS III (Aperture-7 only)
-//   -------------------------------------
-//   Rotated by arctan(sqrt(3/7)) = ~19.1 degrees from the base orientation.
-//   Two variants alternate by resolution:
-//     - Rotation Class III-A (even res): Rotation Class I + 19.1 deg = ~19 deg
-//     - Rotation Class III-B (odd res):  Rotation Class II + 19.1 deg = ~49 deg
+// Aperture-7 steps alternate between the two norm-7 generators. Their product
+// 7w is a rational integer times a unit, so orientation returns to the base
+// every two aperture-7 levels rather than drifting, and the substrate stays
+// bounded. Aperture 4's generator is the rational integer 2, which scales the
+// lattice without rotating it.
 //
 // ============================================================================
 // COORDINATE SYSTEMS
@@ -66,10 +66,8 @@
 //
 // This pattern produces coordinates compatible with hierarchical ISEA grids.
 //
-// Scale factors by rotation class:
-//   - Rotation Class II:     sqrt(3) = ~1.732  (from Rotation Class I surrogate)
-//   - Rotation Class III-A:  sqrt(7) = ~2.646  (aperture-7, even resolutions)
-//   - Rotation Class III-B:  sqrt(21) = ~4.583 (aperture-7, odd resolutions)
+// The substrate is sqrt(norm(z)) times finer than the grid itself, so the
+// factors that occur are 1, sqrt(3), sqrt(7) and sqrt(21).
 //
 // Copyright (c) 2024 hexify authors. MIT License.
 
@@ -79,6 +77,8 @@
 #include "cube_coordinates.h"
 #include "constants.h"
 #include <cmath>
+#include <stdexcept>
+#include <vector>
 
 namespace hexify {
 
@@ -188,144 +188,6 @@ inline void center_rotation_classI(long long i, long long j,
 }
 
 // ============================================================================
-// Rotation Class II (30-Degree, Pointy-Top) Hexagon Quantization
-// ============================================================================
-//
-// Rotation Class II hexagons are rotated 30 degrees from Rotation Class I.
-// Uses the surrogate-substrate pattern.
-
-/**
- * Quantize a point to the nearest Rotation Class II (30-degree, pointy-top) hexagon.
- *
- * Uses surrogate-substrate pattern:
- *   1. Rotate by -30 deg to align with Rotation Class I surrogate
- *   2. Quantize in Rotation Class I grid
- *   3. Get surrogate center, rotate back by +30 deg
- *   4. Scale by sqrt(3) to substrate, re-quantize in Rotation Class I grid
- *
- * @param x       X coordinate in hex grid space
- * @param y       Y coordinate in hex grid space
- * @param out_i   Output: column index in substrate coordinates
- * @param out_j   Output: row index in substrate coordinates
- */
-inline void quantize_rotation_classII(double x, double y,
-                                      long long& out_i, long long& out_j) {
-    // Pre-computed rotation constants for -30 degrees
-    constexpr double cos_neg30 = kCos30;   // cos(-30) = cos(30)
-    constexpr double sin_neg30 = -kSin30;  // sin(-30) = -sin(30) = -0.5
-
-    // Step 1: Rotate to Rotation Class I surrogate frame (-30 degrees)
-    double sur_x = x * cos_neg30 - y * sin_neg30;
-    double sur_y = x * sin_neg30 + y * cos_neg30;
-
-    // Step 2: Quantize in Rotation Class I surrogate
-    long long sur_i, sur_j;
-    quantize_rotation_classI(sur_x, sur_y, sur_i, sur_j);
-
-    // Step 3: Get surrogate center
-    double cen_x, cen_y;
-    center_rotation_classI(sur_i, sur_j, cen_x, cen_y);
-
-    // Step 4: Rotate center back to original frame (+30 degrees)
-    // Inverse rotation: cos same, sin negated
-    double back_x = cen_x * cos_neg30 + cen_y * sin_neg30;
-    double back_y = -cen_x * sin_neg30 + cen_y * cos_neg30;
-
-    // Step 5: Scale to substrate (sqrt(3) finer) and re-quantize
-    quantize_rotation_classI(back_x * kSqrt3, back_y * kSqrt3, out_i, out_j);
-}
-
-// ============================================================================
-// Rotation Class III (Aperture-7) Hexagon Quantization
-// ============================================================================
-//
-// Aperture-7 uses hexagons rotated by arctan(sqrt(3/7)) = ~19.1 degrees.
-// Two variants alternate by resolution:
-//   - Rotation Class III-A (~19 deg, even res): Rotation Class I + 19.1 deg
-//   - Rotation Class III-B (~49 deg, odd res):  Rotation Class II + 19.1 deg
-
-// Pre-computed constants for ~19.1 degree rotation
-namespace detail {
-    // arctan(sqrt(3)/5) in radians
-    constexpr double kAp7RotRad = kAp7RotDeg * kDegToRad;
-    constexpr double kCos19 = 0.9449111825230680440492389263705078;  // cos(19.106...°)
-    constexpr double kSin19 = 0.3273268353539885718950317563490135;  // sin(19.106...°)
-}
-
-/**
- * Quantize to Rotation Class III-A (~19-degree) hexagon (aperture-7, even resolutions).
- *
- * Surrogate: Rotation Class I grid rotated by -19.1 degrees
- * Substrate: sqrt(7) times finer than surrogate
- */
-inline void quantize_rotation_classIII_A(double x, double y,
-                                         long long& out_i, long long& out_j) {
-    using namespace detail;
-
-    // Step 1: Rotate to Rotation Class I surrogate frame (-19.1 degrees)
-    double sur_x = x * kCos19 + y * kSin19;   // cos(-a) = cos(a)
-    double sur_y = -x * kSin19 + y * kCos19;  // sin(-a) = -sin(a)
-
-    // Step 2: Quantize in Rotation Class I surrogate
-    long long sur_i, sur_j;
-    quantize_rotation_classI(sur_x, sur_y, sur_i, sur_j);
-
-    // Step 3: Get surrogate center
-    double cen_x, cen_y;
-    center_rotation_classI(sur_i, sur_j, cen_x, cen_y);
-
-    // Step 4: Rotate back to original frame (+19.1 degrees)
-    double back_x = cen_x * kCos19 - cen_y * kSin19;
-    double back_y = cen_x * kSin19 + cen_y * kCos19;
-
-    // Step 5: Scale to substrate (sqrt(7) finer) and re-quantize
-    quantize_rotation_classI(back_x * kSqrt7, back_y * kSqrt7, out_i, out_j);
-}
-
-/**
- * Quantize to Rotation Class III-B (~49-degree) hexagon (aperture-7, odd resolutions).
- *
- * Surrogate: Rotation Class II grid rotated by -19.1 degrees
- *            (equivalent to Rotation Class I grid rotated by -49.1 degrees)
- * Substrate: sqrt(21) times finer than surrogate
- */
-inline void quantize_rotation_classIII_B(double x, double y,
-                                         long long& out_i, long long& out_j) {
-    using namespace detail;
-
-    // Step 1: Rotate to surrogate frame (-19.1 degrees)
-    double sur_x = x * kCos19 + y * kSin19;
-    double sur_y = -x * kSin19 + y * kCos19;
-
-    // Step 2: The surrogate is Rotation Class II (rotated 30 deg from Rotation Class I).
-    // To quantize, first rotate to Rotation Class I orientation.
-    constexpr double cos_neg30 = kCos30;
-    constexpr double sin_neg30 = -0.5;
-
-    double rotated_x = sur_x * cos_neg30 - sur_y * sin_neg30;
-    double rotated_y = sur_x * sin_neg30 + sur_y * cos_neg30;
-
-    // Step 3: Quantize in Rotation Class I grid
-    long long sur_i, sur_j;
-    quantize_rotation_classI(rotated_x, rotated_y, sur_i, sur_j);
-
-    // Step 4: Get Rotation Class I center
-    double cen_x, cen_y;
-    center_rotation_classI(sur_i, sur_j, cen_x, cen_y);
-
-    // Step 5: Rotate back to Rotation Class II orientation (+30 degrees)
-    double rotated_back_x = cen_x * cos_neg30 + cen_y * sin_neg30;
-    double rotated_back_y = -cen_x * sin_neg30 + cen_y * cos_neg30;
-
-    // Step 6: Rotate back to original frame (+19.1 degrees)
-    double back_x = rotated_back_x * kCos19 - rotated_back_y * kSin19;
-    double back_y = rotated_back_x * kSin19 + rotated_back_y * kCos19;
-
-    // Step 7: Scale to substrate (sqrt(21) finer) and re-quantize
-    quantize_rotation_classI(back_x * kSqrt21, back_y * kSqrt21, out_i, out_j);
-}
-
-// ============================================================================
 // Hexagon Corner Generation
 // ============================================================================
 
@@ -357,6 +219,20 @@ inline void generate_hex_corners(double cx, double cy, double radius,
 // ============================================================================
 
 /**
+ * Linear scale factor contributed by one refinement step.
+ *
+ * @param aperture    Aperture type (3, 4, or 7)
+ */
+inline double aperture_linear_scale(int aperture) {
+    switch (aperture) {
+        case 3: return kSqrt3;
+        case 4: return 2.0;
+        case 7: return kSqrt7;
+        default: throw std::runtime_error("aperture_linear_scale: aperture must be 3, 4, or 7");
+    }
+}
+
+/**
  * Get the cumulative scale factor for a given aperture and resolution.
  *
  * @param aperture    Aperture type (3, 4, or 7)
@@ -364,64 +240,233 @@ inline void generate_hex_corners(double cx, double cy, double radius,
  * @return            Scale factor to multiply coordinates by
  */
 inline double aperture_scale(int aperture, int resolution) {
-    switch (aperture) {
-        case 3: return std::pow(kSqrt3, resolution);
-        case 4: return std::pow(2.0, resolution);
-        case 7: return std::pow(kSqrt7, resolution);
-        default: return 1.0;
+    return std::pow(aperture_linear_scale(aperture), resolution);
+}
+
+// ============================================================================
+// Grid Form (Scale + Lattice Orientation)
+// ============================================================================
+
+/**
+ * How far a grid has been refined from the base grid, and how its lattice sits
+ * relative to the Class I (unrotated) lattice.
+ *
+ * `scale` is the product of sqrt(aperture) over the refinement steps.
+ * (m, n) is the canonical generator z = m + n*w of the orientation.
+ */
+struct HexGridForm {
+    double scale;
+    long long m;
+    long long n;
+};
+
+/** Norm of the Eisenstein integer m + n*w. */
+inline long long eisenstein_norm(long long m, long long n) {
+    return m * m + m * n + n * n;
+}
+
+/** Multiply m + n*w by (c + d*w), using w^2 = w - 1. */
+inline void eisenstein_multiply(long long& m, long long& n, long long c, long long d) {
+    long long new_m = m * c - n * d;
+    long long new_n = m * d + n * c + n * d;
+    m = new_m;
+    n = new_n;
+}
+
+/**
+ * Reduce a generator to the unique associate representing its orientation:
+ * divide out the rational-integer content (which scales without rotating),
+ * then multiply by units until arg(z) lies in [0, 60) degrees.
+ *
+ * Multiplication by the unit w sends (m, n) to (-n, m + n).
+ */
+inline void eisenstein_canonical(long long& m, long long& n) {
+    long long a = m < 0 ? -m : m;
+    long long b = n < 0 ? -n : n;
+    while (b != 0) {
+        long long t = a % b;
+        a = b;
+        b = t;
+    }
+    if (a > 1) {
+        m /= a;
+        n /= a;
+    }
+
+    // arg(z) is in [0, 60) exactly when n >= 0 and m > 0; six units to try.
+    for (int k = 0; k < 6 && !(n >= 0 && m > 0); ++k) {
+        long long new_m = -n;
+        long long new_n = m + n;
+        m = new_m;
+        n = new_n;
     }
 }
 
 /**
- * Get the substrate scale multiplier for the current orientation class.
+ * Apply one refinement step to a grid orientation.
  *
- * @param aperture    Aperture type
- * @param resolution  Grid resolution level
- * @return            Additional scale factor for substrate coordinates
+ * Refining by a generator z sends the lattice L to z^-1 L, so orientation
+ * composes with the conjugate of z (conj(m + n*w) = (m + n) - n*w):
+ *
+ *   aperture 3:  conj(1 + w)  = 2 - w
+ *   aperture 4:  conj(2)      = 2
+ *   aperture 7:  conj(1 + 2w) = 3 - 2w   and   conj(2 + w) = 3 - w
+ *
+ * @param ap7_step  Number of aperture-7 steps already applied. Successive
+ *                  aperture-7 steps alternate between the two norm-7
+ *                  generators, so orientation returns to the base every two
+ *                  levels. The first step is the one that puts odd pure
+ *                  aperture-7 resolutions at kAp7RotDeg.
  */
-inline double substrate_multiplier(int aperture, int resolution) {
-    bool is_even = (resolution % 2 == 0);
-
+inline void orientation_refine(long long& m, long long& n, int aperture, int ap7_step) {
     switch (aperture) {
-        case 3:
-            // Rotation Class I (even): no extra scale
-            // Rotation Class II (odd): sqrt(3) substrate
-            return is_even ? 1.0 : kSqrt3;
-        case 4:
-            // Always Rotation Class I, no extra scale
-            return 1.0;
+        case 3: eisenstein_multiply(m, n, 2, -1); break;
+        case 4: eisenstein_multiply(m, n, 2, 0); break;
         case 7:
-            // Rotation Class III-A (even): sqrt(7) substrate
-            // Rotation Class III-B (odd): sqrt(21) substrate
-            return is_even ? kSqrt7 : kSqrt21;
+            if (ap7_step % 2 == 0) {
+                eisenstein_multiply(m, n, 3, -2);
+            } else {
+                eisenstein_multiply(m, n, 3, -1);
+            }
+            break;
         default:
-            return 1.0;
+            throw std::runtime_error("orientation_refine: aperture must be 3, 4, or 7");
     }
+    eisenstein_canonical(m, n);
+}
+
+/** Form of a pure single-aperture grid at the given resolution. */
+inline HexGridForm hex_form_pure(int aperture, int resolution) {
+    if (resolution < 0) {
+        throw std::runtime_error("hex_form_pure: resolution must be >= 0");
+    }
+    HexGridForm form;
+    form.scale = aperture_scale(aperture, resolution);
+    form.m = 1;
+    form.n = 0;
+    for (int r = 0; r < resolution; ++r) {
+        orientation_refine(form.m, form.n, aperture, r);
+    }
+    return form;
 }
 
 /**
- * Get the rotation offset in degrees for hexagon corners.
+ * Form of a grid built from a mixed aperture sequence.
  *
- * @param aperture    Aperture type
- * @param resolution  Grid resolution level
- * @return            Rotation offset in degrees
+ * ap_seq[0] names the base grid, which is not the result of a refinement;
+ * the refinement steps are ap_seq[1..].
  */
-inline double corner_rotation_deg(int aperture, int resolution) {
-    bool is_even = (resolution % 2 == 0);
-
-    switch (aperture) {
-        case 3:
-            // Rotation Class I: 0 deg, Rotation Class II: 30 deg
-            return is_even ? 0.0 : 30.0;
-        case 4:
-            // Always Rotation Class I
-            return 0.0;
-        case 7:
-            // Rotation Class III-A: ~19.1 deg, Rotation Class III-B: ~49.1 deg
-            return is_even ? kAp7RotDeg : (kAp7RotDeg + 30.0);
-        default:
-            return 0.0;
+inline HexGridForm hex_form_sequence(const std::vector<int>& ap_seq) {
+    if (ap_seq.empty()) {
+        throw std::runtime_error("hex_form_sequence: ap_seq cannot be empty");
     }
+    HexGridForm form;
+    form.scale = 1.0;
+    form.m = 1;
+    form.n = 0;
+    aperture_linear_scale(ap_seq[0]);  // validate the base entry
+    int ap7_step = 0;
+    for (size_t k = 1; k < ap_seq.size(); ++k) {
+        int aperture = ap_seq[k];
+        form.scale *= aperture_linear_scale(aperture);
+        orientation_refine(form.m, form.n, aperture, ap7_step);
+        if (aperture == 7) {
+            ap7_step++;
+        }
+    }
+    return form;
+}
+
+/** Cosine and sine of the lattice rotation. */
+inline void form_rotation(const HexGridForm& form, double& cos_a, double& sin_a) {
+    if (form.n == 0) {
+        cos_a = 1.0;
+        sin_a = 0.0;
+        return;
+    }
+    if (form.m == 1 && form.n == 1) {
+        cos_a = kCos30;
+        sin_a = kSin30;
+        return;
+    }
+    double re = static_cast<double>(form.m) + 0.5 * static_cast<double>(form.n);
+    double im = kSin60 * static_cast<double>(form.n);
+    double len = std::sqrt(re * re + im * im);
+    cos_a = re / len;
+    sin_a = im / len;
+}
+
+/** Lattice rotation in degrees, in [0, 60). */
+inline double form_rotation_deg(const HexGridForm& form) {
+    if (form.n == 0) return 0.0;
+    if (form.m == 1 && form.n == 1) return 30.0;
+    double re = static_cast<double>(form.m) + 0.5 * static_cast<double>(form.n);
+    double im = kSin60 * static_cast<double>(form.n);
+    return std::atan2(im, re) * kRadToDeg;
+}
+
+/** How much finer the Class I substrate is than the grid itself. */
+inline double form_substrate(const HexGridForm& form) {
+    long long norm = eisenstein_norm(form.m, form.n);
+    if (norm == 1) return 1.0;
+    return std::sqrt(static_cast<double>(norm));
+}
+
+/**
+ * Quantize a point to the nearest cell of a grid with the given form.
+ *
+ * Unrotated grids quantize directly. Rotated grids use the surrogate-substrate
+ * pattern: rotate into the Class I surrogate frame, quantize there, take the
+ * surrogate centre, rotate back, then re-quantize on the substrate.
+ *
+ * @param out_i  Output: column index in substrate coordinates
+ * @param out_j  Output: row index in substrate coordinates
+ */
+inline void quantize_form(const HexGridForm& form, double x, double y,
+                          long long& out_i, long long& out_j) {
+    double grid_x = x * form.scale;
+    double grid_y = y * form.scale;
+
+    if (form.n == 0) {
+        quantize_rotation_classI(grid_x, grid_y, out_i, out_j);
+        return;
+    }
+
+    double cos_a, sin_a;
+    form_rotation(form, cos_a, sin_a);
+
+    double sur_x = grid_x * cos_a + grid_y * sin_a;
+    double sur_y = -grid_x * sin_a + grid_y * cos_a;
+
+    long long sur_i, sur_j;
+    quantize_rotation_classI(sur_x, sur_y, sur_i, sur_j);
+
+    double cen_x, cen_y;
+    center_rotation_classI(sur_i, sur_j, cen_x, cen_y);
+
+    double back_x = cen_x * cos_a - cen_y * sin_a;
+    double back_y = cen_x * sin_a + cen_y * cos_a;
+
+    double substrate = form_substrate(form);
+    quantize_rotation_classI(back_x * substrate, back_y * substrate, out_i, out_j);
+}
+
+/** Centre of cell (i, j), whose coordinates are on the substrate. */
+inline void center_form(const HexGridForm& form, long long i, long long j,
+                        double& out_cx, double& out_cy) {
+    center_rotation_classI(i, j, out_cx, out_cy);
+    double total_scale = form.scale * form_substrate(form);
+    out_cx /= total_scale;
+    out_cy /= total_scale;
+}
+
+/** The 6 corners of cell (i, j). */
+inline void corners_form(const HexGridForm& form, long long i, long long j,
+                         double hex_radius, double* out_x, double* out_y) {
+    double cx, cy;
+    center_form(form, i, j, cx, cy);
+    generate_hex_corners(cx, cy, hex_radius / form.scale, form_rotation_deg(form),
+                         out_x, out_y);
 }
 
 } // namespace hexify

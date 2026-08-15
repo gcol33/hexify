@@ -211,35 +211,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex_quantize_ap34
-NumericVector cpp_hex_quantize_ap34(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_hex_quantize_ap34(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
+// cpp_hex_quantize_mixed
+NumericVector cpp_hex_quantize_mixed(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_hex_quantize_mixed(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type icosa_triangle_x(icosa_triangle_xSEXP);
     Rcpp::traits::input_parameter< double >::type icosa_triangle_y(icosa_triangle_ySEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_quantize_ap34(icosa_triangle_x, icosa_triangle_y, ap_seq));
+    rcpp_result_gen = Rcpp::wrap(cpp_hex_quantize_mixed(icosa_triangle_x, icosa_triangle_y, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex_center_ap34
-NumericVector cpp_hex_center_ap34(double i, double j, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_hex_center_ap34(SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP) {
+// cpp_hex_center_mixed
+NumericVector cpp_hex_center_mixed(double i, double j, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_hex_center_mixed(SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type i(iSEXP);
     Rcpp::traits::input_parameter< double >::type j(jSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_center_ap34(i, j, ap_seq));
+    rcpp_result_gen = Rcpp::wrap(cpp_hex_center_mixed(i, j, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex_corners_ap34
-List cpp_hex_corners_ap34(double i, double j, IntegerVector ap_seq, double hex_radius);
-RcppExport SEXP _hexify_cpp_hex_corners_ap34(SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP, SEXP hex_radiusSEXP) {
+// cpp_hex_corners_mixed
+List cpp_hex_corners_mixed(double i, double j, IntegerVector ap_seq, double hex_radius);
+RcppExport SEXP _hexify_cpp_hex_corners_mixed(SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP, SEXP hex_radiusSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -247,26 +247,26 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type j(jSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
     Rcpp::traits::input_parameter< double >::type hex_radius(hex_radiusSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_corners_ap34(i, j, ap_seq, hex_radius));
+    rcpp_result_gen = Rcpp::wrap(cpp_hex_corners_mixed(i, j, ap_seq, hex_radius));
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_lonlat_to_cell_ap34
-NumericVector cpp_lonlat_to_cell_ap34(double lon_deg, double lat_deg, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_lonlat_to_cell_ap34(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP ap_seqSEXP) {
+// cpp_lonlat_to_cell_mixed
+NumericVector cpp_lonlat_to_cell_mixed(double lon_deg, double lat_deg, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_lonlat_to_cell_mixed(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP ap_seqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type lon_deg(lon_degSEXP);
     Rcpp::traits::input_parameter< double >::type lat_deg(lat_degSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_cell_ap34(lon_deg, lat_deg, ap_seq));
+    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_cell_mixed(lon_deg, lat_deg, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_cell_to_lonlat_ap34
-NumericVector cpp_cell_to_lonlat_ap34(int face, double i, double j, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_cell_to_lonlat_ap34(SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP) {
+// cpp_cell_to_lonlat_mixed
+NumericVector cpp_cell_to_lonlat_mixed(int face, double i, double j, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_cell_to_lonlat_mixed(SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP ap_seqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -274,7 +274,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type i(iSEXP);
     Rcpp::traits::input_parameter< double >::type j(jSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_lonlat_ap34(face, i, j, ap_seq));
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_lonlat_mixed(face, i, j, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -317,16 +317,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_test_roundtrip_ap34
-bool cpp_test_roundtrip_ap34(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
-RcppExport SEXP _hexify_cpp_test_roundtrip_ap34(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
+// cpp_test_roundtrip_mixed
+bool cpp_test_roundtrip_mixed(double icosa_triangle_x, double icosa_triangle_y, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_test_roundtrip_mixed(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP ap_seqSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type icosa_triangle_x(icosa_triangle_xSEXP);
     Rcpp::traits::input_parameter< double >::type icosa_triangle_y(icosa_triangle_ySEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_test_roundtrip_ap34(icosa_triangle_x, icosa_triangle_y, ap_seq));
+    rcpp_result_gen = Rcpp::wrap(cpp_test_roundtrip_mixed(icosa_triangle_x, icosa_triangle_y, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1349,15 +1349,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_hex_corners_ap7", (DL_FUNC) &_hexify_cpp_hex_corners_ap7, 4},
     {"_hexify_cpp_lonlat_to_cell_ap7", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_ap7, 3},
     {"_hexify_cpp_cell_to_lonlat_ap7", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_ap7, 4},
-    {"_hexify_cpp_hex_quantize_ap34", (DL_FUNC) &_hexify_cpp_hex_quantize_ap34, 3},
-    {"_hexify_cpp_hex_center_ap34", (DL_FUNC) &_hexify_cpp_hex_center_ap34, 3},
-    {"_hexify_cpp_hex_corners_ap34", (DL_FUNC) &_hexify_cpp_hex_corners_ap34, 4},
-    {"_hexify_cpp_lonlat_to_cell_ap34", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_ap34, 3},
-    {"_hexify_cpp_cell_to_lonlat_ap34", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_ap34, 4},
+    {"_hexify_cpp_hex_quantize_mixed", (DL_FUNC) &_hexify_cpp_hex_quantize_mixed, 3},
+    {"_hexify_cpp_hex_center_mixed", (DL_FUNC) &_hexify_cpp_hex_center_mixed, 3},
+    {"_hexify_cpp_hex_corners_mixed", (DL_FUNC) &_hexify_cpp_hex_corners_mixed, 4},
+    {"_hexify_cpp_lonlat_to_cell_mixed", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_mixed, 3},
+    {"_hexify_cpp_cell_to_lonlat_mixed", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_mixed, 4},
     {"_hexify_cpp_test_roundtrip_ap3", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap3, 3},
     {"_hexify_cpp_test_roundtrip_ap4", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap4, 3},
     {"_hexify_cpp_test_roundtrip_ap7", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap7, 3},
-    {"_hexify_cpp_test_roundtrip_ap34", (DL_FUNC) &_hexify_cpp_test_roundtrip_ap34, 3},
+    {"_hexify_cpp_test_roundtrip_mixed", (DL_FUNC) &_hexify_cpp_test_roundtrip_mixed, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap3", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap3, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap4", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap4, 3},
     {"_hexify_cpp_batch_test_roundtrip_ap7", (DL_FUNC) &_hexify_cpp_batch_test_roundtrip_ap7, 3},
