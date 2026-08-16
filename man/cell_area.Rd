@@ -26,9 +26,10 @@ has a different geodesic area depending on its location.
 For ISEA grids the area is constant across all cells and is read directly
 from the grid specification.
 
-For H3 grids the area varies by latitude. This function computes geodesic
-area via \code{sf::st_area()} on H3 cell polygons, with results cached in a
-session-scoped environment so repeated calls for the same cells are fast.
+For H3 grids the area varies by latitude. The vendored 'H3' library computes
+each cell's spherical polygon area as a solid angle, which this function
+reads on the grid's body, so a grid built with \code{radius_km} reports that
+body's areas.
 }
 \examples{
 # ISEA: constant area

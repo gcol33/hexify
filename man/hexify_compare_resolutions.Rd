@@ -23,7 +23,7 @@ hexify_compare_resolutions(
 returns a data frame.}
 
 \item{radius_km}{Radius of the body, in kilometers, or a body name such as
-"mars" (default Earth). 'ISEA' only. See \code{\link{hex_grid}}.}
+"mars" (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 If print=FALSE: data frame with columns resolution, n_cells,

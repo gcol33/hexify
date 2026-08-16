@@ -39,8 +39,7 @@
 #' @param radius_km Radius of the body the grid covers, in kilometers, or the
 #'   name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 #'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
-#'   "enceladus", "titan", "uranus", "neptune", "pluto". 'ISEA' grids only;
-#'   'H3' is defined for Earth.
+#'   "enceladus", "titan", "uranus", "neptune", "pluto".
 #'
 #' @return A HexGridInfo object containing the grid specification.
 #'
@@ -57,21 +56,25 @@
 #'
 #' @section Other Bodies:
 #'
-#' An 'ISEA' grid is a partition of the sphere, and \code{radius_km} sets the
-#' sphere it is measured on. Cell geometry -- which cell a coordinate lands in,
-#' where cell centres and corners sit, the hierarchy, the neighbours -- is
-#' angular and identical on every body; the radius sets the kilometer figures:
-#' cell area, diagonal, spacing, and the resolution that \code{area_km2} picks.
-#' Earth's area comes from the 'WGS84' ellipsoid, every other radius gives the
-#' sphere area 4*pi*r^2.
+#' A grid is a partition of the sphere, and \code{radius_km} sets the sphere it
+#' is measured on. Cell geometry -- which cell a coordinate lands in, where cell
+#' centres and corners sit, the hierarchy, the neighbours -- is angular and
+#' identical on every body; the radius sets the kilometer figures: cell area,
+#' diagonal, spacing, and the resolution that \code{area_km2} picks. Earth's
+#' area comes from the 'WGS84' ellipsoid, every other radius gives the sphere
+#' area 4*pi*r^2.
 #'
 #' \preformatted{
 #' mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
 #' hex_grid(resolution = 8, radius_km = 3389.5)   # the same grid
 #' }
 #'
-#' 'H3' is defined for Earth's radius and its vendored 'C' library carries that
-#' constant, so \code{type = "h3"} takes Earth only.
+#' Both backends take a radius. 'H3' reports a cell's area as its solid angle
+#' times Earth's radius squared, so another radius scales those areas by the
+#' square of the radius ratio, exactly. One caveat carries: an 'H3' cell ID
+#' names a position in 'H3''s topology, which 'Uber''s 'H3' reads on Earth, so
+#' the IDs of a grid on another body are that topology on that body and are not
+#' interchangeable with Earth 'H3' data.
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
 #'   \code{\link{HexGridInfo-class}} for class documentation
@@ -159,10 +162,6 @@ hex_grid <- function(area_km2 = NULL,
       warning("aperture is ignored for H3 grids (H3 uses fixed aperture 7)")
     }
 
-    if (radius_km != EARTH_RADIUS_KM) {
-      stop("H3 is defined for Earth's radius only. Use type = 'isea' for other bodies.")
-    }
-
     # Validate: exactly one of area_km2 or resolution
     if (is.null(area_km2) && is.null(resolution)) {
       stop("Exactly one of 'area_km2' or 'resolution' must be provided")
@@ -176,10 +175,10 @@ hex_grid <- function(area_km2 = NULL,
         stop("area_km2 must be a positive number")
       }
       # Find closest H3 resolution by area
-      resolution <- closest_h3_resolution(area_km2)
+      resolution <- closest_h3_resolution(area_km2, radius_km)
       warning(sprintf(
         "H3 cells are not exactly equal-area. Closest resolution %d has average area ~%.3f km^2 (requested %.3f km^2)",
-        resolution, H3_AVG_AREA_KM2[resolution + 1L], area_km2
+        resolution, h3_avg_area_km2(resolution, radius_km), area_km2
       ))
     } else {
       if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
@@ -197,7 +196,19 @@ hex_grid <- function(area_km2 = NULL,
       )
     }
 
-    actual_area <- H3_AVG_AREA_KM2[resolution + 1L]
+    if (radius_km != EARTH_RADIUS_KM) {
+      rlang::inform(
+        paste0(
+          "H3 cell IDs name a position in H3's topology, which Uber's H3 reads ",
+          "on Earth. A grid on another body reuses that topology and its own ",
+          "radius for areas; the IDs are not interchangeable with Earth H3 data."
+        ),
+        .frequency = "once",
+        .frequency_id = "hexify_h3_other_body"
+      )
+    }
+
+    actual_area <- h3_avg_area_km2(resolution, radius_km)
     actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
 
     grid <- new("HexGridInfo",
@@ -207,7 +218,7 @@ hex_grid <- function(area_km2 = NULL,
                 diagonal_km = as.numeric(actual_diagonal),
                 crs = as.integer(crs),
                 grid_type = "h3",
-                radius_km = EARTH_RADIUS_KM)
+                radius_km = radius_km)
     return(grid)
   }
 

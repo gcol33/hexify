@@ -46,8 +46,7 @@ at 7).}
 \item{radius_km}{Radius of the body the grid covers, in kilometers, or the
 name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
-"enceladus", "titan", "uranus", "neptune", "pluto". 'ISEA' grids only;
-'H3' is defined for Earth.}
+"enceladus", "titan", "uranus", "neptune", "pluto".}
 }
 \value{
 A HexGridInfo object containing the grid specification.
@@ -71,21 +70,25 @@ location).
 \section{Other Bodies}{
 
 
-An 'ISEA' grid is a partition of the sphere, and \code{radius_km} sets the
-sphere it is measured on. Cell geometry -- which cell a coordinate lands in,
-where cell centres and corners sit, the hierarchy, the neighbours -- is
-angular and identical on every body; the radius sets the kilometer figures:
-cell area, diagonal, spacing, and the resolution that \code{area_km2} picks.
-Earth's area comes from the 'WGS84' ellipsoid, every other radius gives the
-sphere area 4\emph{pi}r^2.
+A grid is a partition of the sphere, and \code{radius_km} sets the sphere it
+is measured on. Cell geometry -- which cell a coordinate lands in, where cell
+centres and corners sit, the hierarchy, the neighbours -- is angular and
+identical on every body; the radius sets the kilometer figures: cell area,
+diagonal, spacing, and the resolution that \code{area_km2} picks. Earth's
+area comes from the 'WGS84' ellipsoid, every other radius gives the sphere
+area 4\emph{pi}r^2.
 
 \preformatted{
 mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
 hex_grid(resolution = 8, radius_km = 3389.5)   # the same grid
 }
 
-'H3' is defined for Earth's radius and its vendored 'C' library carries that
-constant, so \code{type = "h3"} takes Earth only.
+Both backends take a radius. 'H3' reports a cell's area as its solid angle
+times Earth's radius squared, so another radius scales those areas by the
+square of the radius ratio, exactly. One caveat carries: an 'H3' cell ID
+names a position in 'H3''s topology, which 'Uber''s 'H3' reads on Earth, so
+the IDs of a grid on another body are that topology on that body and are not
+interchangeable with Earth 'H3' data.
 }
 
 \section{One Grid, Many Datasets}{

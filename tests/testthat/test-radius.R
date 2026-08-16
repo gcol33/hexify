@@ -206,24 +206,106 @@ test_that("polygon export samples the same cells on every body", {
 })
 
 # =============================================================================
-# H3 IS EARTH ONLY
+# H3 ON ANOTHER BODY
 # =============================================================================
 
-test_that("H3 grids reject a non-Earth radius", {
-  expect_error(hex_grid(resolution = 5, type = "h3", radius_km = "mars"),
-               "Earth")
-  expect_error(hexify_compare_resolutions(type = "h3", radius_km = "mars"),
-               "Earth")
-  expect_error(
-    new("HexGridInfo", aperture = "7", resolution = 5L, area_km2 = 100,
-        diagonal_km = 10, crs = 4326L, grid_type = "h3",
-        radius_km = MARS_RADIUS_KM),
-    "Earth"
-  )
+# H3 measures areas against the WGS84 authalic radius, so that is the radius
+# divided back out when reading a cell on another body.
+MARS_AREA_SCALE <- (MARS_RADIUS_KM / hexify:::H3_EARTH_RADIUS_KM)^2
+
+test_that("H3 areas scale with the square of the radius ratio", {
+  expect_equal(hexify:::scale_area_to_body(100, hexify:::EARTH_RADIUS_KM), 100)
+  expect_equal(hexify:::scale_area_to_body(100, MARS_RADIUS_KM),
+               100 * MARS_AREA_SCALE)
 })
 
-test_that("h3_crosswalk rejects a non-Earth ISEA grid", {
-  mars <- hex_grid(resolution = 5, radius_km = "mars")
-  cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars)
-  expect_error(h3_crosswalk(cells, mars, direction = "isea_to_h3"), "Earth")
+test_that("an H3 area on a body is its solid angle times that radius squared", {
+  earth <- hex_grid(resolution = 5, type = "h3")
+  mars <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+  cells <- lonlat_to_cell(0, 45, earth)
+
+  steradians <- unname(cell_area(cells, earth)) / hexify:::H3_EARTH_RADIUS_KM^2
+  expect_equal(unname(cell_area(cells, mars)), steradians * MARS_RADIUS_KM^2)
+})
+
+test_that("an H3 grid takes a radius", {
+  earth <- hex_grid(resolution = 5, type = "h3")
+  mars <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+
+  expect_equal(hexify:::grid_radius_km(mars), MARS_RADIUS_KM)
+  expect_equal(mars@area_km2, earth@area_km2 * MARS_AREA_SCALE)
+  expect_equal(mars@diagonal_km, sqrt(mars@area_km2 * 2 / sqrt(3)))
+  expect_equal(mars@resolution, earth@resolution)
+})
+
+test_that("H3 cell geometry is the same on every body", {
+  earth <- hex_grid(resolution = 5, type = "h3")
+  mars <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+
+  lon <- c(0, 16.37, -70.5)
+  lat <- c(0, 48.21, -33.4)
+
+  expect_equal(lonlat_to_cell(lon, lat, mars), lonlat_to_cell(lon, lat, earth))
+  expect_equal(cell_to_lonlat(lonlat_to_cell(lon, lat, mars), mars),
+               cell_to_lonlat(lonlat_to_cell(lon, lat, earth), earth))
+})
+
+test_that("H3 per-cell areas follow the body", {
+  earth <- hex_grid(resolution = 5, type = "h3")
+  mars <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+  cells <- lonlat_to_cell(c(0, 10), c(45, 50), earth)
+
+  expect_equal(unname(cell_area(cells, mars)),
+               unname(cell_area(cells, earth)) * MARS_AREA_SCALE)
+})
+
+test_that("H3 statistics and tables follow the body", {
+  mars <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+  stats <- dgearthstat(mars)
+
+  expect_equal(stats$area_km, MARS_SURFACE_KM2)
+  expect_equal(stats$cell_area_km2, mars@area_km2)
+  expect_equal(stats$n_cells, 2 + 120 * 7^5)
+
+  cmp <- hexify_compare_resolutions(type = "h3", res_range = 0:5, radius_km = "mars")
+  earth_cmp <- hexify_compare_resolutions(type = "h3", res_range = 0:5)
+  expect_equal(cmp$cell_area_km2, earth_cmp$cell_area_km2 * MARS_AREA_SCALE)
+  expect_equal(cmp$n_cells, earth_cmp$n_cells)
+})
+
+test_that("an H3 target area picks the resolution for that body", {
+  mars <- suppressWarnings(suppressMessages(
+    hex_grid(area_km2 = 3000, type = "h3", radius_km = "mars")
+  ))
+  earth <- suppressWarnings(hex_grid(area_km2 = 3000, type = "h3"))
+
+  # A 3000 km^2 cell is a larger share of Mars, so it lands at a coarser
+  # resolution there.
+  expect_lt(mars@resolution, earth@resolution)
+  expect_equal(mars@area_km2, hexify:::h3_avg_area_km2(mars@resolution, MARS_RADIUS_KM))
+})
+
+test_that("import_h3 takes a radius", {
+  ids <- c("8528342bfffffff", "85283473fffffff")
+  g <- suppressMessages(import_h3(ids, radius_km = "mars"))
+  expect_equal(hexify:::grid_radius_km(g), MARS_RADIUS_KM)
+  expect_true(is_h3_grid(g))
+})
+
+test_that("h3_crosswalk needs both grids on the same body", {
+  mars_isea <- hex_grid(resolution = 5, radius_km = "mars")
+  mars_h3 <- suppressMessages(hex_grid(resolution = 5, type = "h3", radius_km = "mars"))
+  earth_isea <- hex_grid(resolution = 5)
+
+  cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars_isea)
+  xw <- h3_crosswalk(cells, mars_isea, direction = "isea_to_h3")
+  expect_equal(xw$isea_area_km2, rep(mars_isea@area_km2, nrow(xw)))
+  expect_equal(xw$area_ratio, xw$isea_area_km2 / xw$h3_area_km2)
+
+  h3_cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars_h3)
+  expect_error(
+    h3_crosswalk(h3_cells, mars_h3, isea_grid = earth_isea,
+                 direction = "h3_to_isea"),
+    "same body"
+  )
 })

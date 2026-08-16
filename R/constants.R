@@ -119,6 +119,22 @@ is_earth_grid <- function(x) {
   grid_radius_km(x) == EARTH_RADIUS_KM
 }
 
+#' 'H3' areas read on another body
+#'
+#' A cell covers the same solid angle on any sphere, and 'H3' reports an area as
+#' that solid angle times H3_EARTH_RADIUS_KM squared, so dividing that radius
+#' back out and multiplying by the body's leaves the solid angle times the
+#' body's radius squared. Earth returns H3's own figure untouched: hexify's
+#' Earth radius is the mean radius and H3's the authalic one, and rescaling
+#' between the two would move an Earth area no user asked to move.
+#' @param area_km2 Numeric vector of 'H3' areas, in km^2
+#' @param radius_km Radius in kilometers
+#' @noRd
+scale_area_to_body <- function(area_km2, radius_km) {
+  if (radius_km == EARTH_RADIUS_KM) return(area_km2)
+  area_km2 * (radius_km / H3_EARTH_RADIUS_KM)^2
+}
+
 # =============================================================================
 # Internal Helper Functions
 # =============================================================================
@@ -203,6 +219,13 @@ MIN_RESOLUTION <- 0L
 # H3 Grid Constants
 # =============================================================================
 
+#' Earth radius the vendored H3 library measures areas and lengths against
+#'
+#' The 'WGS84' authalic radius, from EARTH_RADIUS_KM in src/h3/constants.h.
+#' Distinct from EARTH_RADIUS_KM here, which is the 'WGS84' mean radius.
+#' @noRd
+H3_EARTH_RADIUS_KM <- 6371.007180918475
+
 #' Maximum H3 resolution
 #' @noRd
 H3_MAX_RESOLUTION <- 15L
@@ -234,10 +257,6 @@ H3_AVG_AREA_KM2 <- c(
 )
 
 # =============================================================================
-# Session-Scoped Cache
-# =============================================================================
-
-# =============================================================================
 # H3 Resolution Helpers
 # =============================================================================
 
@@ -247,11 +266,20 @@ H3_AVG_AREA_KM2 <- c(
 #' resolution-matching logic.
 #'
 #' @param area_km2 Target cell area in km^2
+#' @param radius_km Radius of the body, in kilometers
 #' @return Integer H3 resolution (0-15)
 #' @noRd
-closest_h3_resolution <- function(area_km2) {
-  diffs <- abs(H3_AVG_AREA_KM2 - area_km2)
+closest_h3_resolution <- function(area_km2, radius_km = EARTH_RADIUS_KM) {
+  diffs <- abs(scale_area_to_body(H3_AVG_AREA_KM2, radius_km) - area_km2)
   which.min(diffs) - 1L
+}
+
+#' Average area of an H3 cell at a resolution, on a given body
+#' @param resolution Integer H3 resolution (0-15)
+#' @param radius_km Radius of the body, in kilometers
+#' @noRd
+h3_avg_area_km2 <- function(resolution, radius_km = EARTH_RADIUS_KM) {
+  scale_area_to_body(H3_AVG_AREA_KM2[resolution + 1L], radius_km)
 }
 
 #' Check whether a grid is H3 type

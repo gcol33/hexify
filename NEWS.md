@@ -11,8 +11,17 @@
   exports, and the resolution a target `area_km2` picks. Cell geometry is
   angular and unchanged -- a coordinate lands in the same cell on every body --
   and Earth remains the default, sized against the WGS84 ellipsoid area as
-  before. This is the ISEA backend; H3 is defined for Earth's radius and takes
-  Earth only.
+  before.
+
+* Both backends take a radius. H3 reports a cell's area as its solid angle times
+  Earth's radius squared, so another radius scales those areas by the square of
+  the radius ratio, exactly; `cell_area()`, `dgearthstat()`,
+  `hexify_compare_resolutions(type = "h3")`, the resolution an `area_km2` picks
+  and `h3_crosswalk()` all follow. An H3 cell ID names a position in H3's
+  topology, which Uber's H3 reads on Earth, so the IDs of a grid on another body
+  are that topology on that body and are not interchangeable with Earth H3 data;
+  `hex_grid()` says so once per session and `h3_crosswalk()` needs both grids on
+  the same body.
 
 * `hex_grid()` takes any aperture sequence, so mixed grids beyond ISEA43H are
   reachable from R (#57). A family name splits the levels in two, as `"4/3"`

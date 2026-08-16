@@ -46,11 +46,11 @@ dgearthstat <- function(dggs) {
 
     if (gt == "h3") {
       h3_n_cells <- 2 + 120 * 7^g@resolution
-      cell_area_km2 <- H3_AVG_AREA_KM2[g@resolution + 1L]
+      cell_area_km2 <- h3_avg_area_km2(g@resolution, grid_radius_km(g))
       cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
       cls_km <- 2 * sqrt(cell_area_km2 / pi)
       return(list(
-        area_km = EARTH_SURFACE_KM2,
+        area_km = body_surface_km2(grid_radius_km(g)),
         n_cells = h3_n_cells,
         cell_area_km2 = cell_area_km2,
         cell_spacing_km = cell_spacing_km,
@@ -190,7 +190,7 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' @param print If TRUE, prints a formatted table to console. If FALSE (default),
 #'   returns a data frame.
 #' @param radius_km Radius of the body, in kilometers, or a body name such as
-#'   "mars" (default Earth). 'ISEA' only. See \code{\link{hex_grid}}.
+#'   "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return If print=FALSE: data frame with columns resolution, n_cells,
 #'   cell_area_km2, cell_spacing_km, cls_km.
@@ -219,13 +219,10 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
   radius_km <- resolve_radius_km(radius_km)
 
   if (type == "h3") {
-    if (radius_km != EARTH_RADIUS_KM) {
-      stop("H3 is defined for Earth's radius only. Use type = 'isea' for other bodies.")
-    }
     # H3 resolution table from pre-computed area values
     res_range <- res_range[res_range >= H3_MIN_RESOLUTION & res_range <= H3_MAX_RESOLUTION]
     results <- lapply(res_range, function(res) {
-      cell_area_km2 <- H3_AVG_AREA_KM2[res + 1L]
+      cell_area_km2 <- h3_avg_area_km2(res, radius_km)
       h3_n_cells <- 2 + 120 * 7^res
       cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
       cls_km <- 2 * sqrt(cell_area_km2 / pi)

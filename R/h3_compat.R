@@ -23,6 +23,8 @@
 #' @param validate If \code{TRUE} (default), checks that all cell IDs are valid
 #'   H3 cells at the same resolution before proceeding. Set to \code{FALSE} to
 #'   skip validation when cell IDs are known to be correct.
+#' @param radius_km Radius of the body the cells cover, in kilometers, or a body
+#'   name (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return If \code{data = NULL}, a HexGridInfo object for the inferred H3
 #'   resolution. If \code{data} is provided, a HexData object with data
@@ -49,7 +51,8 @@
 #' hd <- import_h3(h3_ids, data = df)
 #' hd
 #' }
-import_h3 <- function(cell_ids, data = NULL, validate = TRUE) {
+import_h3 <- function(cell_ids, data = NULL, validate = TRUE,
+                      radius_km = EARTH_RADIUS_KM) {
 
   if (!is.character(cell_ids)) {
     stop("cell_ids must be a character vector of H3 cell ID strings")
@@ -93,7 +96,7 @@ import_h3 <- function(cell_ids, data = NULL, validate = TRUE) {
   res <- unique_res[1L]
 
   # Build HexGridInfo
-  grid <- hex_grid(resolution = res, type = "h3")
+  grid <- hex_grid(resolution = res, type = "h3", radius_km = radius_km)
 
   # If no data, return grid only
   if (is.null(data)) {

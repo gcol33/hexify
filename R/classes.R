@@ -30,7 +30,7 @@ NULL
 #' @slot crs Integer. Coordinate reference system (default 4326 = 'WGS84').
 #' @slot grid_type Character. Grid system: "isea" (default) or "h3".
 #' @slot radius_km Numeric. Radius of the body the grid covers, in kilometers.
-#'   \code{NA} reads as Earth's mean radius. 'ISEA' grids only.
+#'   \code{NA} reads as Earth's mean radius.
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -137,9 +137,6 @@ setValidity("HexGridInfo", function(object) {
     }
     if (object@resolution < 0L || object@resolution > 15L) {
       errors <- c(errors, "H3 resolution must be between 0 and 15")
-    }
-    if (!is_earth_grid(object)) {
-      errors <- c(errors, "H3 grids are defined for Earth only; use type = 'isea' for other bodies")
     }
   } else {
     # ISEA validation
@@ -498,6 +495,10 @@ setMethod("show", "HexGridInfo", function(object) {
     }
 
     cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+
+    if (!is_earth_grid(object)) {
+      cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
+    }
 
     h3_n_cells <- 2 + 120 * 7^object@resolution
     cat(sprintf("Total Cells: %.0f\n", h3_n_cells))

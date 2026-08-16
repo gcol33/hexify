@@ -20,13 +20,19 @@ No additional grid backends needed.
 
 ## Bodies
 
-An ISEA grid is sized on any sphere: `hex_grid(radius_km = )` takes a radius in km
-or a body name (`"mars"`, `"moon"`, `"titan"`, ...). The grid object carries the
+A grid is sized on any sphere: `hex_grid(radius_km = )` takes a radius in km or a
+body name (`"mars"`, `"moon"`, `"titan"`, ...). The grid object carries the
 radius in its `radius_km` slot, and every function reporting kilometres reads it
 through `grid_radius_km()` rather than the Earth constant. Cell geometry is
 angular and radius-free, so only areas, diagonals, spacings and the
-resolution-for-area inversion change. H3 is fixed to Earth's radius by its
-vendored C library.
+resolution-for-area inversion change.
+
+Both backends take a radius. The vendored H3 C library computes a cell's area as
+its solid angle times `EARTH_RADIUS_KM` (`src/h3/area.c`), so hexify scales H3
+areas at the R boundary with `scale_area_to_body()` -- by the square of the
+radius ratio -- rather than touching vendored code. H3 cell IDs remain H3's
+Earth-read topology; a grid on another body is that topology on that body, and
+`h3_crosswalk()` needs both grids on the same body.
 
 ## Vendored H3 C Library
 

@@ -577,9 +577,10 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' For ISEA grids the area is constant across all cells and is read directly
 #' from the grid specification.
 #'
-#' For H3 grids the area varies by latitude. This function computes geodesic
-#' area via \code{sf::st_area()} on H3 cell polygons, with results cached in a
-#' session-scoped environment so repeated calls for the same cells are fast.
+#' For H3 grids the area varies by latitude. The vendored 'H3' library computes
+#' each cell's spherical polygon area as a solid angle, which this function
+#' reads on the grid's body, so a grid built with \code{radius_km} reports that
+#' body's areas.
 #'
 #' @seealso \code{\link{hex_grid}} for grid specifications,
 #'   \code{\link{h3_crosswalk}} for ISEA/H3 interoperability
@@ -615,17 +616,13 @@ cell_area <- function(cell_id = NULL, grid) {
   # ISEA: constant equal-area
   if (!is_h3_grid(g)) {
     areas <- rep(g@area_km2, length(cell_id))
-    if (is.numeric(cell_id)) {
-      names(areas) <- as.character(cell_id)
-    } else {
-      names(areas) <- as.character(cell_id)
-    }
+    names(areas) <- as.character(cell_id)
     return(areas)
   }
 
-  # H3: per-cell area via native C backend
+  # H3: per-cell area via native C backend, read on the grid's body
   cell_id <- as.character(cell_id)
-  areas <- cpp_h3_cellAreaKm2(cell_id)
+  areas <- scale_area_to_body(cpp_h3_cellAreaKm2(cell_id), grid_radius_km(g))
   names(areas) <- cell_id
   areas
 }

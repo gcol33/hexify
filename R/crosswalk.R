@@ -93,10 +93,6 @@ h3_crosswalk <- function(cell_id = NULL,
     if (is_h3_grid(g)) {
       stop("direction = 'isea_to_h3' requires an ISEA grid, got H3")
     }
-    if (!is_earth_grid(g)) {
-      stop("H3 is defined for Earth's radius only; 'grid' covers a body of radius ",
-           format(grid_radius_km(g)), " km")
-    }
   } else {
     if (!is_h3_grid(g)) {
       stop("direction = 'h3_to_isea' requires an H3 grid, got ISEA")
@@ -108,9 +104,11 @@ h3_crosswalk <- function(cell_id = NULL,
     if (is_h3_grid(isea_g)) {
       stop("isea_grid must be an ISEA grid, not H3")
     }
-    if (!is_earth_grid(isea_g)) {
-      stop("H3 is defined for Earth's radius only; 'isea_grid' covers a body of radius ",
-           format(grid_radius_km(isea_g)), " km")
+    if (grid_radius_km(isea_g) != grid_radius_km(g)) {
+      stop(sprintf(
+        "Both grids must cover the same body: 'grid' has radius %s km, 'isea_grid' %s km",
+        format(grid_radius_km(g)), format(grid_radius_km(isea_g))
+      ))
     }
   }
 
@@ -125,7 +123,7 @@ h3_crosswalk <- function(cell_id = NULL,
   if (direction == "isea_to_h3") {
     # Auto-select H3 resolution if not provided
     if (is.null(h3_resolution)) {
-      h3_resolution <- closest_h3_resolution(g@area_km2)
+      h3_resolution <- closest_h3_resolution(g@area_km2, grid_radius_km(g))
     } else {
       h3_resolution <- as.integer(h3_resolution)
       if (h3_resolution < H3_MIN_RESOLUTION || h3_resolution > H3_MAX_RESOLUTION) {
@@ -142,7 +140,7 @@ h3_crosswalk <- function(cell_id = NULL,
 
     # Compute areas
     isea_areas <- rep(g@area_km2, length(unique_ids))
-    h3_areas <- cpp_h3_cellAreaKm2(h3_ids)
+    h3_areas <- scale_area_to_body(cpp_h3_cellAreaKm2(h3_ids), grid_radius_km(g))
 
     data.frame(
       isea_cell_id = unique_ids,
@@ -177,7 +175,8 @@ h3_crosswalk <- function(cell_id = NULL,
     isea_ids <- lonlat_to_cell(center_df$lon, center_df$lat, isea_g)
 
     # Compute areas
-    h3_areas <- cpp_h3_cellAreaKm2(as.character(unique_ids))
+    h3_areas <- scale_area_to_body(cpp_h3_cellAreaKm2(as.character(unique_ids)),
+                                   grid_radius_km(g))
     isea_areas <- rep(isea_g@area_km2, length(unique_ids))
 
     data.frame(

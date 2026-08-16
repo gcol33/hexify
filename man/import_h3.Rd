@@ -4,7 +4,7 @@
 \alias{import_h3}
 \title{Import External H3 Cell IDs into hexify}
 \usage{
-import_h3(cell_ids, data = NULL, validate = TRUE)
+import_h3(cell_ids, data = NULL, validate = TRUE, radius_km = EARTH_RADIUS_KM)
 }
 \arguments{
 \item{cell_ids}{Character vector of H3 cell ID strings}
@@ -15,6 +15,9 @@ as \code{cell_ids}. If \code{NULL}, returns a HexGridInfo object.}
 \item{validate}{If \code{TRUE} (default), checks that all cell IDs are valid
 H3 cells at the same resolution before proceeding. Set to \code{FALSE} to
 skip validation when cell IDs are known to be correct.}
+
+\item{radius_km}{Radius of the body the cells cover, in kilometers, or a body
+name (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 If \code{data = NULL}, a HexGridInfo object for the inferred H3
