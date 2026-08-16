@@ -216,13 +216,14 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
 #' child-footprint sampling disk.
 #' @noRd
 mixed_spacing_deg <- function(resolution, aperture) {
-  # Mean cell area (km^2) from the grid's cell count over Earth's surface, then
-  # hexagon centre spacing s = sqrt(2 A / sqrt(3)); ~111 km per degree.
-  earth_area_km2 <- 5.10072e8
+  # Mean cell area (km^2) from the grid's cell count over the body's surface,
+  # then hexagon centre spacing s = sqrt(2 A / sqrt(3)) in degrees of arc. Area
+  # goes with r^2 and both the spacing and the km per degree with r, so the
+  # angle is the same on every body and Earth's figures give it.
   n <- aperture_n_cells(aperture, resolution)
-  area_km2 <- earth_area_km2 / n
+  area_km2 <- EARTH_SURFACE_KM2 / n
   spacing_km <- sqrt(2 * area_km2 / sqrt(3))
-  spacing_km / 111.0
+  spacing_km / KM_PER_DEGREE
 }
 
 # -----------------------------------------------------------------------------

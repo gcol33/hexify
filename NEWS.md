@@ -2,6 +2,18 @@
 
 ## New features
 
+* Grids cover any body, not just Earth (#56, requested by Christian Carey).
+  `hex_grid(radius_km = )` takes a radius in kilometres or a body name --
+  `"mars"`, `"moon"`, `"titan"`, `"europa"` and thirteen others, at the IAU mean
+  radii (Archinal et al. 2018) tabulated by JPL Solar System Dynamics. The grid
+  object carries the radius, so everything reporting kilometres follows it:
+  `dgearthstat()`, `cell_area()`, `hexify_compare_resolutions()`, the sf
+  exports, and the resolution a target `area_km2` picks. Cell geometry is
+  angular and unchanged -- a coordinate lands in the same cell on every body --
+  and Earth remains the default, sized against the WGS84 ellipsoid area as
+  before. This is the ISEA backend; H3 is defined for Earth's radius and takes
+  Earth only.
+
 * `hex_grid()` takes any aperture sequence, so mixed grids beyond ISEA43H are
   reachable from R (#57). A family name splits the levels in two, as `"4/3"`
   already did -- `"4/7"`, `"7/4"`, `"3/7"` -- and a vector names one aperture

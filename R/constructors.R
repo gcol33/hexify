@@ -36,6 +36,11 @@
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
 #' @param crs Coordinate reference system EPSG code (default 4326 = 'WGS84').
+#' @param radius_km Radius of the body the grid covers, in kilometers, or the
+#'   name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
+#'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
+#'   "enceladus", "titan", "uranus", "neptune", "pluto". 'ISEA' grids only;
+#'   'H3' is defined for Earth.
 #'
 #' @return A HexGridInfo object containing the grid specification.
 #'
@@ -49,6 +54,24 @@
 #' H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 #' H3 cells are NOT exactly equal-area (area varies by ~3-5\% depending on
 #' location).
+#'
+#' @section Other Bodies:
+#'
+#' An 'ISEA' grid is a partition of the sphere, and \code{radius_km} sets the
+#' sphere it is measured on. Cell geometry -- which cell a coordinate lands in,
+#' where cell centres and corners sit, the hierarchy, the neighbours -- is
+#' angular and identical on every body; the radius sets the kilometer figures:
+#' cell area, diagonal, spacing, and the resolution that \code{area_km2} picks.
+#' Earth's area comes from the 'WGS84' ellipsoid, every other radius gives the
+#' sphere area 4*pi*r^2.
+#'
+#' \preformatted{
+#' mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+#' hex_grid(resolution = 8, radius_km = 3389.5)   # the same grid
+#' }
+#'
+#' 'H3' is defined for Earth's radius and its vendored 'C' library carries that
+#' constant, so \code{type = "h3"} takes Earth only.
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
 #'   \code{\link{HexGridInfo-class}} for class documentation
@@ -105,6 +128,10 @@
 #' grid47 <- hex_grid(area_km2 = 1000, aperture = "4/7")
 #' grid_seq <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
 #'
+#' # Grid on another body, by name or by radius
+#' mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+#' titan <- hex_grid(resolution = 6, radius_km = 2574.76)
+#'
 #' # Use grid in hexify
 #' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", grid = grid)
@@ -113,7 +140,8 @@ hex_grid <- function(area_km2 = NULL,
                      aperture = 3,
                      type = c("isea", "h3"),
                      resround = "nearest",
-                     crs = 4326L) {
+                     crs = 4326L,
+                     radius_km = EARTH_RADIUS_KM) {
 
   type <- match.arg(type)
 
@@ -121,12 +149,18 @@ hex_grid <- function(area_km2 = NULL,
     stop("crs must be a single non-NA integer (EPSG code)")
   }
 
+  radius_km <- resolve_radius_km(radius_km)
+
   # =========================================================================
   # H3 grid path
   # =========================================================================
   if (type == "h3") {
     if (!missing(aperture) && aperture != 3) {
       warning("aperture is ignored for H3 grids (H3 uses fixed aperture 7)")
+    }
+
+    if (radius_km != EARTH_RADIUS_KM) {
+      stop("H3 is defined for Earth's radius only. Use type = 'isea' for other bodies.")
     }
 
     # Validate: exactly one of area_km2 or resolution
@@ -172,7 +206,8 @@ hex_grid <- function(area_km2 = NULL,
                 area_km2 = as.numeric(actual_area),
                 diagonal_km = as.numeric(actual_diagonal),
                 crs = as.integer(crs),
-                grid_type = "h3")
+                grid_type = "h3",
+                radius_km = EARTH_RADIUS_KM)
     return(grid)
   }
 
@@ -216,9 +251,9 @@ hex_grid <- function(area_km2 = NULL,
     }
 
     res_exact <- if (is_mixed_aperture(aperture_str)) {
-      calculate_resolution_for_area_mixed(area_km2, aperture_str)
+      calculate_resolution_for_area_mixed(area_km2, aperture_str, radius_km)
     } else {
-      calculate_resolution_for_area(area_km2, aperture_num)
+      calculate_resolution_for_area(area_km2, aperture_num, radius_km)
     }
 
     # Apply rounding
@@ -246,7 +281,7 @@ hex_grid <- function(area_km2 = NULL,
   # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
   n_cells <- aperture_n_cells(aperture_str, resolution)
-  actual_area <- EARTH_SURFACE_KM2 / n_cells
+  actual_area <- body_surface_km2(radius_km) / n_cells
   actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
 
   # -------------------------------------------------------------------------
@@ -263,7 +298,8 @@ hex_grid <- function(area_km2 = NULL,
               area_km2 = as.numeric(actual_area),
               diagonal_km = as.numeric(actual_diagonal),
               crs = as.integer(crs),
-              grid_type = "isea")
+              grid_type = "isea",
+              radius_km = radius_km)
 
   # Validation happens automatically via setValidity
   grid

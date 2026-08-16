@@ -11,7 +11,8 @@ hexify_grid_rect(
   maxlat,
   area,
   aperture = 3L,
-  resround = "nearest"
+  resround = "nearest",
+  radius_km = EARTH_RADIUS_KM
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ hexify_grid_rect(
 \item{aperture}{Grid aperture: 3, 4, or 7}
 
 \item{resround}{Resolution rounding: "nearest", "up", or "down"}
+
+\item{radius_km}{Radius of the body, in kilometers, or a body name such as
+"mars" (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 sf object with hexagon polygons covering the specified region

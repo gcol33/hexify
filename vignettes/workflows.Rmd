@@ -382,6 +382,49 @@ for (ap in c(3, 4, 7)) {
 | 7 | Rapid cell count growth, coarse analysis | Largest resolution jumps |
 | 4/3 | Balance of 4's fast start + 3's fine control | More complex indexing |
 
+## Grids on Other Bodies
+
+An ISEA grid partitions a sphere, and `radius_km` sets which sphere. Pass a
+radius in kilometres or the name of a body:
+
+```{r other-bodies}
+mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+mars
+
+# The same grid, by radius
+identical(mars@area_km2, hex_grid(resolution = mars@resolution, radius_km = 3389.5)@area_km2)
+```
+
+Cell geometry is angular: which cell a coordinate falls in, where centres and
+corners sit, the parent-child hierarchy and the neighbours are the same on
+every body. The radius sets the kilometre figures — cell area, diagonal,
+spacing, and the resolution that a target `area_km2` picks.
+
+```{r other-bodies-geometry}
+earth <- hex_grid(resolution = 5)
+moon  <- hex_grid(resolution = 5, radius_km = "moon")
+
+lon <- c(0, 16.37, -70.5)
+lat <- c(0, 48.21, -33.4)
+
+identical(lonlat_to_cell(lon, lat, moon), lonlat_to_cell(lon, lat, earth))
+c(earth = earth@area_km2, moon = moon@area_km2)
+```
+
+Areas come from the sphere of that radius, `4 * pi * r^2`; Earth keeps the
+WGS84 ellipsoid area. Named bodies carry the IAU mean radii (Archinal et al.
+2018) tabulated by JPL Solar System Dynamics: `mercury`, `venus`, `earth`,
+`moon`, `mars`, `ceres`, `jupiter`, `io`, `europa`, `ganymede`, `callisto`,
+`saturn`, `enceladus`, `titan`, `uranus`, `neptune`, `pluto`.
+
+`radius_km` reaches every function that reports kilometres, because the grid
+object carries it: `dgearthstat()`, `cell_area()`, `hexify_compare_resolutions()`
+and the sf exports all read the grid's radius.
+
+This is the ISEA backend. H3 is defined for Earth's radius, which its vendored
+C library carries as a constant, so `type = "h3"` takes Earth and `h3_crosswalk()`
+needs Earth grids on both sides.
+
 ## Working with sf
 
 ### Convert HexData to sf

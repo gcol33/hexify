@@ -17,13 +17,15 @@ NULL
 #'
 #' @param target_area_km2 Target area in square kilometers
 #' @param aperture Aperture (3, 4, or 7)
+#' @param radius_km Radius of the body, in kilometers
 #' @return Resolution level
 #' @keywords internal
-calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
-  n_cells <- EARTH_SURFACE_KM2 / target_area_km2
+calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
+                                          radius_km = EARTH_RADIUS_KM) {
+  n_cells <- body_surface_km2(radius_km) / target_area_km2
 
   # Solving N = 10 * aperture^res + 2 for res given target area:
-  # res = log((EARTH_SURFACE / area - 2) / 10) / log(aperture)
+  # res = log((surface / area - 2) / 10) / log(aperture)
   resolution <- log((n_cells - 2) / 10) / log(aperture)
 
   return(resolution)  # Return unrounded for caller to handle rounding mode
@@ -40,6 +42,8 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #' @param resround How to round resolution ("nearest", "up", "down")
 #' @param aperture Aperture sequence (3, 4, or 7)
 #' @param projection Projection type (only 'ISEA' supported currently)
+#' @param radius_km Radius of the body the grid covers, in kilometers, or a body
+#'   name such as "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return A hexify_grid object containing:
 #'   \item{area}{Target cell area}
@@ -47,6 +51,7 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
 #'   \item{aperture}{Grid aperture (3, 4, or 7)}
 #'   \item{topology}{Grid topology ("HEXAGON")}
 #'   \item{projection}{Map projection ("ISEA")}
+#'   \item{radius_km}{Radius of the body, in kilometers}
 #'   \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 #'
 #' @family hexify main
@@ -65,18 +70,21 @@ hexify_grid <- function(area,
                              metric = TRUE,
                              resround = "nearest",
                              aperture = 3,
-                             projection = "ISEA") {
-  
+                             projection = "ISEA",
+                             radius_km = EARTH_RADIUS_KM) {
+
   # Input validation
   if (topology != "HEXAGON") {
     stop("Only HEXAGON topology is supported")
   }
-  
+
   if (projection != "ISEA") {
     stop("Only ISEA projection is supported")
   }
-  
+
   validate_aperture(aperture)
+
+  radius_km <- resolve_radius_km(radius_km)
 
   if (!resround %in% c("nearest", "up", "down")) {
     stop("resround must be 'nearest', 'up', or 'down'")
@@ -87,7 +95,7 @@ hexify_grid <- function(area,
   }
 
   # Calculate resolution for target area
-  resolution <- calculate_resolution_for_area(area, aperture)
+  resolution <- calculate_resolution_for_area(area, aperture, radius_km)
   
   # Apply rounding
   if (resround == "up") {
@@ -122,8 +130,9 @@ hexify_grid <- function(area,
     topology = topology,
     projection = projection,
     metric = metric,
+    radius_km = radius_km,
     index_type = index_type,
-    
+
     # dggridR-compatible fields (for backwards compatibility)
     res = resolution,
     topology_family = topology,

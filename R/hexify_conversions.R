@@ -270,7 +270,7 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
   # Calculate distance
   if (units == "km") {
     # Haversine distance
-    R <- EARTH_RADIUS_KM
+    R <- grid_radius_km(grid)
     dlat <- (coords$lat - lat) * pi / 180
     dlon <- (coords$lon - lon) * pi / 180
     lat_rad <- lat * pi / 180

@@ -3,7 +3,7 @@
 # Centralizes magic numbers to avoid duplication and improve maintainability.
 
 # =============================================================================
-# Earth Geometry Constants
+# Body Geometry Constants
 # =============================================================================
 
 #' Total Earth surface area in square kilometers ('WGS84' ellipsoid)
@@ -18,6 +18,106 @@ EARTH_RADIUS_KM <- 6371.0088
 #' Approximate km per degree of latitude (at equator)
 #' @noRd
 KM_PER_DEGREE <- 111.0
+
+#' Mean radii of solar system bodies, in kilometers
+#'
+#' 'IAU' mean radii (Archinal et al. 2018, Report of the 'IAU' Working Group on
+#' Cartographic Coordinates and Rotational Elements: 2015) as tabulated by 'JPL'
+#' Solar System Dynamics. "earth" carries the 'WGS84' mean radius instead, so a
+#' grid built by name matches one built from the package default.
+#' @noRd
+BODY_RADII_KM <- c(
+  mercury   = 2439.4,
+  venus     = 6051.8,
+  earth     = EARTH_RADIUS_KM,
+  moon      = 1737.4,
+  mars      = 3389.50,
+  ceres     = 469.7,
+  jupiter   = 69911,
+  io        = 1821.49,
+  europa    = 1560.80,
+  ganymede  = 2631.20,
+  callisto  = 2410.30,
+  saturn    = 58232,
+  enceladus = 252.10,
+  titan     = 2574.76,
+  uranus    = 25362,
+  neptune   = 24622,
+  pluto     = 1188.3
+)
+
+# =============================================================================
+# Body Geometry Helpers
+# =============================================================================
+
+#' Radius of a body in km, from a number or a name
+#'
+#' @param radius_km Positive number, or a name from BODY_RADII_KM
+#' @return Radius in kilometers
+#' @noRd
+resolve_radius_km <- function(radius_km) {
+  if (is.character(radius_km)) {
+    if (length(radius_km) != 1L || is.na(radius_km)) {
+      stop("radius_km must be a single body name or a positive number of kilometers")
+    }
+    key <- tolower(trimws(radius_km))
+    if (!key %in% names(BODY_RADII_KM)) {
+      stop(sprintf(
+        "Unknown body \"%s\". Named bodies are: %s. Any other body takes its mean radius in km.",
+        radius_km, paste(names(BODY_RADII_KM), collapse = ", ")
+      ))
+    }
+    return(unname(BODY_RADII_KM[[key]]))
+  }
+
+  if (!is.numeric(radius_km) || length(radius_km) != 1L || is.na(radius_km) ||
+      !is.finite(radius_km) || radius_km <= 0) {
+    stop("radius_km must be a single positive number of kilometers, or a body name such as \"mars\"")
+  }
+
+  as.numeric(radius_km)
+}
+
+#' Surface area of a body in km^2
+#'
+#' The area of a sphere of the given radius. Earth's radius returns the 'WGS84'
+#' ellipsoid area, which is what an Earth grid is sized against; an ellipsoid
+#' has a slightly different area from the sphere of its mean radius, so the two
+#' part in the seventh significant figure.
+#' @param radius_km Radius in kilometers
+#' @noRd
+body_surface_km2 <- function(radius_km) {
+  if (radius_km == EARTH_RADIUS_KM) return(EARTH_SURFACE_KM2)
+  4 * pi * radius_km^2
+}
+
+#' Kilometers per degree of arc at a body's radius
+#' @param radius_km Radius in kilometers
+#' @noRd
+km_per_degree <- function(radius_km) {
+  KM_PER_DEGREE * radius_km / EARTH_RADIUS_KM
+}
+
+#' Radius a grid is sized against, in km
+#'
+#' A grid carrying neither the slot nor the field is an Earth grid.
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @noRd
+grid_radius_km <- function(x) {
+  r <- if (isS4(x)) {
+    if (.hasSlot(x, "radius_km")) x@radius_km else EARTH_RADIUS_KM
+  } else {
+    x$radius_km
+  }
+  if (is.null(r) || length(r) != 1L || is.na(r)) EARTH_RADIUS_KM else as.numeric(r)
+}
+
+#' Is this grid sized against Earth?
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @noRd
+is_earth_grid <- function(x) {
+  grid_radius_km(x) == EARTH_RADIUS_KM
+}
 
 # =============================================================================
 # Internal Helper Functions

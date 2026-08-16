@@ -9,15 +9,17 @@
 #' @name hexify-stats
 NULL
 
-#' Get grid statistics for Earth coverage
+#' Get grid statistics for whole-body coverage
 #'
 #' Calculates statistics about the hexagonal grid at the current resolution,
-#' including total number of cells, cell area, and cell spacing.
+#' including total number of cells, cell area, and cell spacing. Figures follow
+#' the radius the grid carries, so a grid built with \code{radius_km} reports
+#' that body's areas and distances.
 #'
 #' @param dggs Grid specification from hexify_grid()
 #'
 #' @return List with components:
-#'   \item{area_km}{Total Earth surface area in km^2}
+#'   \item{area_km}{Total surface area of the body in km^2}
 #'   \item{n_cells}{Total number of cells at this resolution}
 #'   \item{cell_area_km2}{Average cell area in km^2}
 #'   \item{cell_spacing_km}{Average distance between cell centers in km}
@@ -62,11 +64,12 @@ dgearthstat <- function(dggs) {
     # ISEA HexGridInfo
     n_cells <- aperture_n_cells(g@aperture, g@resolution)
     ap <- aperture_to_int(g@aperture)
-    cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
+    surface_km2 <- body_surface_km2(grid_radius_km(g))
+    cell_area_km2 <- surface_km2 / n_cells
     cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
     cls_km <- 2 * sqrt(cell_area_km2 / pi)
     return(list(
-      area_km = EARTH_SURFACE_KM2,
+      area_km = surface_km2,
       n_cells = n_cells,
       cell_area_km2 = cell_area_km2,
       cell_spacing_km = cell_spacing_km,
@@ -87,7 +90,8 @@ dgearthstat <- function(dggs) {
   n_cells <- max_cell_id(resolution, dggs$aperture)
 
   # Calculate cell area
-  cell_area_km2 <- EARTH_SURFACE_KM2 / n_cells
+  surface_km2 <- body_surface_km2(grid_radius_km(dggs))
+  cell_area_km2 <- surface_km2 / n_cells
 
   # Approximate cell spacing (distance between cell centers)
   # For hexagons: spacing approx  sqrt(2 * area / sqrt(3))
@@ -99,7 +103,7 @@ dgearthstat <- function(dggs) {
   cls_km <- 2 * sqrt(cell_area_km2 / pi)
 
   return(list(
-    area_km = EARTH_SURFACE_KM2,
+    area_km = surface_km2,
     n_cells = n_cells,
     cell_area_km2 = cell_area_km2,
     cell_spacing_km = cell_spacing_km,
@@ -143,7 +147,8 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
   }
   
   # Calculate resolution
-  resolution <- calculate_resolution_for_area(area, dggs$aperture)
+  resolution <- calculate_resolution_for_area(area, dggs$aperture,
+                                              grid_radius_km(dggs))
   
   # Apply rounding
   if (round == "up") {
@@ -184,6 +189,8 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #' @param type Grid type: "isea" (default) or "h3".
 #' @param print If TRUE, prints a formatted table to console. If FALSE (default),
 #'   returns a data frame.
+#' @param radius_km Radius of the body, in kilometers, or a body name such as
+#'   "mars" (default Earth). 'ISEA' only. See \code{\link{hex_grid}}.
 #'
 #' @return If print=FALSE: data frame with columns resolution, n_cells,
 #'   cell_area_km2, cell_spacing_km, cls_km.
@@ -201,12 +208,20 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #'
 #' # Find resolution with cells ~1000 km^2
 #' subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
+#'
+#' # Resolutions on another body
+#' hexify_compare_resolutions(aperture = 3, res_range = 0:6, radius_km = "mars")
 hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
                                        type = c("isea", "h3"),
-                                       print = FALSE) {
+                                       print = FALSE,
+                                       radius_km = EARTH_RADIUS_KM) {
   type <- match.arg(type)
+  radius_km <- resolve_radius_km(radius_km)
 
   if (type == "h3") {
+    if (radius_km != EARTH_RADIUS_KM) {
+      stop("H3 is defined for Earth's radius only. Use type = 'isea' for other bodies.")
+    }
     # H3 resolution table from pre-computed area values
     res_range <- res_range[res_range >= H3_MIN_RESOLUTION & res_range <= H3_MAX_RESOLUTION]
     results <- lapply(res_range, function(res) {
@@ -259,7 +274,8 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
   temp_grid <- list(
     aperture = aperture,
     topology = "HEXAGON",
-    projection = "ISEA"
+    projection = "ISEA",
+    radius_km = radius_km
   )
   class(temp_grid) <- c("hexify_grid", "dggs", "list")
 

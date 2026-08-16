@@ -4,12 +4,18 @@
 \alias{calculate_resolution_for_area}
 \title{Calculate resolution for target area}
 \usage{
-calculate_resolution_for_area(target_area_km2, aperture = 3)
+calculate_resolution_for_area(
+  target_area_km2,
+  aperture = 3,
+  radius_km = EARTH_RADIUS_KM
+)
 }
 \arguments{
 \item{target_area_km2}{Target area in square kilometers}
 
 \item{aperture}{Aperture (3, 4, or 7)}
+
+\item{radius_km}{Radius of the body, in kilometers}
 }
 \value{
 Resolution level

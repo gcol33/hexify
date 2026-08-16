@@ -13,14 +13,15 @@ hexify(
   diagonal = NULL,
   resolution = NULL,
   aperture = 3,
-  resround = "nearest"
+  resround = "nearest",
+  radius_km = EARTH_RADIUS_KM
 )
 }
 \arguments{
 \item{data}{A data.frame or sf object containing coordinates}
 
 \item{grid}{A HexGridInfo object from \code{hex_grid()}. If provided, overrides
-area_km2, resolution, and aperture parameters.}
+area_km2, resolution, aperture and radius_km parameters.}
 
 \item{lon}{Column name for longitude (ignored if data is sf)}
 
@@ -37,6 +38,9 @@ area_km2, resolution, and aperture parameters.}
 (default 3)}
 
 \item{resround}{How to round resolution: "nearest", "up", or "down"}
+
+\item{radius_km}{Radius of the body the grid covers, in kilometers, or a body
+name such as "mars" (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 A HexData object containing:

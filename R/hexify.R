@@ -12,7 +12,7 @@
 #'
 #' @param data A data.frame or sf object containing coordinates
 #' @param grid A HexGridInfo object from \code{hex_grid()}. If provided, overrides
-#'   area_km2, resolution, and aperture parameters.
+#'   area_km2, resolution, aperture and radius_km parameters.
 #' @param lon Column name for longitude (ignored if data is sf)
 #' @param lat Column name for latitude (ignored if data is sf)
 #' @param area_km2 Target cell area in km^2 (mutually exclusive with diagonal).
@@ -22,6 +22,8 @@
 #'   "4/7", or one aperture per resolution level, e.g. \code{c(4, 4, 7, 3)}
 #'   (default 3)
 #' @param resround How to round resolution: "nearest", "up", or "down"
+#' @param radius_km Radius of the body the grid covers, in kilometers, or a body
+#'   name such as "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return A HexData object containing:
 #'   \itemize{
@@ -98,7 +100,8 @@ hexify <- function(data,
                    diagonal = NULL,
                    resolution = NULL,
                    aperture = 3,
-                   resround = "nearest") {
+                   resround = "nearest",
+                   radius_km = EARTH_RADIUS_KM) {
 
   # -------------------------------------------------------------------------
   # Extract or build grid specification
@@ -132,7 +135,8 @@ hexify <- function(data,
       area_km2 = area_km2,
       resolution = resolution,
       aperture = aperture,
-      resround = resround
+      resround = resround,
+      radius_km = radius_km
     )
   }
 

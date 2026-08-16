@@ -29,6 +29,8 @@ NULL
 #' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
 #' @slot crs Integer. Coordinate reference system (default 4326 = 'WGS84').
 #' @slot grid_type Character. Grid system: "isea" (default) or "h3".
+#' @slot radius_km Numeric. Radius of the body the grid covers, in kilometers.
+#'   \code{NA} reads as Earth's mean radius. 'ISEA' grids only.
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -53,7 +55,8 @@ setClass(
     area_km2 = "numeric",
     diagonal_km = "numeric",
     crs = "integer",
-    grid_type = "character"
+    grid_type = "character",
+    radius_km = "numeric"
   ),
   prototype = list(
     aperture = "3",
@@ -61,7 +64,8 @@ setClass(
     area_km2 = NA_real_,
     diagonal_km = NA_real_,
     crs = 4326L,
-    grid_type = "isea"
+    grid_type = "isea",
+    radius_km = NA_real_
   )
 )
 
@@ -134,6 +138,9 @@ setValidity("HexGridInfo", function(object) {
     if (object@resolution < 0L || object@resolution > 15L) {
       errors <- c(errors, "H3 resolution must be between 0 and 15")
     }
+    if (!is_earth_grid(object)) {
+      errors <- c(errors, "H3 grids are defined for Earth only; use type = 'isea' for other bodies")
+    }
   } else {
     # ISEA validation
     ap_ok <- tryCatch({
@@ -162,6 +169,14 @@ setValidity("HexGridInfo", function(object) {
   # Validate crs (must be positive integer)
   if (object@crs <= 0L) {
     errors <- c(errors, "crs must be a positive integer EPSG code")
+  }
+
+  # Validate radius_km (must be a positive finite scalar if provided)
+  if (length(object@radius_km) != 1L) {
+    errors <- c(errors, "radius_km must be a single number")
+  } else if (!is.na(object@radius_km) &&
+             (!is.finite(object@radius_km) || object@radius_km <= 0)) {
+    errors <- c(errors, "radius_km must be positive")
   }
 
   if (length(errors) == 0) TRUE else errors
@@ -502,6 +517,10 @@ setMethod("show", "HexGridInfo", function(object) {
 
     cat(sprintf("CRS:         EPSG:%d\n", object@crs))
 
+    if (!is_earth_grid(object)) {
+      cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
+    }
+
     n_cells <- aperture_n_cells(object@aperture, object@resolution)
     cat(sprintf("Total Cells: %.0f\n", n_cells))
   }
@@ -611,7 +630,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
     area_km2 = x@area_km2,
     diagonal_km = x@diagonal_km,
     crs = x@crs,
-    grid_type = x@grid_type
+    grid_type = x@grid_type,
+    radius_km = grid_radius_km(x)
   )
 })
 
@@ -665,9 +685,12 @@ extract_grid <- function(x, allow_null = FALSE) {
   }
 
   if (is_hex_grid(x)) {
-    # Handle deserialized old objects without grid_type slot
+    # Handle deserialized old objects without grid_type / radius_km slots
     if (!.hasSlot(x, "grid_type")) {
       x@grid_type <- "isea"
+    }
+    if (!.hasSlot(x, "radius_km")) {
+      x@radius_km <- EARTH_RADIUS_KM
     }
     return(x)
   }
@@ -676,6 +699,9 @@ extract_grid <- function(x, allow_null = FALSE) {
     g <- x@grid
     if (!.hasSlot(g, "grid_type")) {
       g@grid_type <- "isea"
+    }
+    if (!.hasSlot(g, "radius_km")) {
+      g@radius_km <- EARTH_RADIUS_KM
     }
     return(g)
   }
@@ -702,7 +728,8 @@ hexify_grid_to_HexGridInfo <- function(x) {
       resolution = as.integer(x$resolution),
       area_km2 = area,
       diagonal_km = diagonal,
-      crs = 4326L)
+      crs = 4326L,
+      radius_km = grid_radius_km(x))
 }
 
 #' Convert HexGridInfo to legacy hexify_grid
@@ -739,6 +766,7 @@ HexGridInfo_to_hexify_grid <- function(x) {
     topology = "HEXAGON",
     projection = "ISEA",
     metric = TRUE,
+    radius_km = grid_radius_km(x),
     index_type = legacy_index,
     res = x@resolution,
     topology_family = "HEXAGON",

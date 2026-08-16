@@ -93,6 +93,10 @@ h3_crosswalk <- function(cell_id = NULL,
     if (is_h3_grid(g)) {
       stop("direction = 'isea_to_h3' requires an ISEA grid, got H3")
     }
+    if (!is_earth_grid(g)) {
+      stop("H3 is defined for Earth's radius only; 'grid' covers a body of radius ",
+           format(grid_radius_km(g)), " km")
+    }
   } else {
     if (!is_h3_grid(g)) {
       stop("direction = 'h3_to_isea' requires an H3 grid, got ISEA")
@@ -103,6 +107,10 @@ h3_crosswalk <- function(cell_id = NULL,
     isea_g <- extract_grid(isea_grid)
     if (is_h3_grid(isea_g)) {
       stop("isea_grid must be an ISEA grid, not H3")
+    }
+    if (!is_earth_grid(isea_g)) {
+      stop("H3 is defined for Earth's radius only; 'isea_grid' covers a body of radius ",
+           format(grid_radius_km(isea_g)), " km")
     }
   }
 

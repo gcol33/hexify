@@ -67,6 +67,7 @@ These properties make hexagonal grids the natural choice for unbiased spatial bi
 - **`hex_grid()`**: Define a grid by target cell area (km²) or resolution level
 - **`hexify()`**: Assign points to grid cells (data.frame or sf input)
 - **`plot()` / `hexify_heatmap()`**: Visualize results with base R or ggplot2
+- **Any body**: `hex_grid(area_km2 = 1000, radius_km = "mars")` sizes an ISEA grid on Mars, the Moon, Titan, or any radius you give
 
 ### Grid Generation
 

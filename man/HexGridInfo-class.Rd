@@ -34,6 +34,9 @@ as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").}
 \item{\code{crs}}{Integer. Coordinate reference system (default 4326 = 'WGS84').}
 
 \item{\code{grid_type}}{Character. Grid system: "isea" (default) or "h3".}
+
+\item{\code{radius_km}}{Numeric. Radius of the body the grid covers, in kilometers.
+\code{NA} reads as Earth's mean radius. 'ISEA' grids only.}
 }}
 
 \seealso{

@@ -302,7 +302,7 @@ grid_rect <- function(bbox, grid) {
 
   # Create sampling grid - use diagonal_km from grid if available
   diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
-  spacing_deg <- diagonal / KM_PER_DEGREE * 0.8
+  spacing_deg <- diagonal / km_per_degree(grid_radius_km(g)) * 0.8
 
   lons <- seq(minlon, maxlon, by = spacing_deg)
   lats <- seq(minlat, maxlat, by = spacing_deg)
@@ -382,7 +382,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
 
   # Dense sampling - use diagonal_km from grid if available
   diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
-  spacing_deg <- diagonal / KM_PER_DEGREE * 0.7
+  spacing_deg <- diagonal / km_per_degree(grid_radius_km(g)) * 0.7
 
   lons <- seq(-180, 180, by = spacing_deg)
   lats <- seq(-85, 85, by = spacing_deg)

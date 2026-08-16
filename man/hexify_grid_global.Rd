@@ -4,7 +4,12 @@
 \alias{hexify_grid_global}
 \title{Generate a global grid of hexagon polygons}
 \usage{
-hexify_grid_global(area, aperture = 3L, resround = "nearest")
+hexify_grid_global(
+  area,
+  aperture = 3L,
+  resround = "nearest",
+  radius_km = EARTH_RADIUS_KM
+)
 }
 \arguments{
 \item{area}{Target cell area in km^2}
@@ -12,12 +17,15 @@ hexify_grid_global(area, aperture = 3L, resround = "nearest")
 \item{aperture}{Grid aperture: 3, 4, or 7}
 
 \item{resround}{Resolution rounding: "nearest", "up", or "down"}
+
+\item{radius_km}{Radius of the body, in kilometers, or a body name such as
+"mars" (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 sf object with hexagon polygons covering the globe
 }
 \description{
-Creates hexagon polygons covering the entire Earth.
+Creates hexagon polygons covering a whole body.
 }
 \examples{
 library(hexify)

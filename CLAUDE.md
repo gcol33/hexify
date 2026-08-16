@@ -18,6 +18,16 @@ This covers every hexagonal grid system that matters:
 
 No additional grid backends needed.
 
+## Bodies
+
+An ISEA grid is sized on any sphere: `hex_grid(radius_km = )` takes a radius in km
+or a body name (`"mars"`, `"moon"`, `"titan"`, ...). The grid object carries the
+radius in its `radius_km` slot, and every function reporting kilometres reads it
+through `grid_radius_km()` rather than the Earth constant. Cell geometry is
+angular and radius-free, so only areas, diagonals, spacings and the
+resolution-for-area inversion change. H3 is fixed to Earth's radius by its
+vendored C library.
+
 ## Vendored H3 C Library
 
 The H3 backend uses vendored C source from Uber's H3 library in `src/h3/`. This is a direct copy of upstream code — **do not rewrite or restyle it**. Benefits:

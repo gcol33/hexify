@@ -10,7 +10,8 @@ hex_grid(
   aperture = 3,
   type = c("isea", "h3"),
   resround = "nearest",
-  crs = 4326L
+  crs = 4326L,
+  radius_km = EARTH_RADIUS_KM
 )
 }
 \arguments{
@@ -41,6 +42,12 @@ at 7).}
 "nearest" (default), "up", or "down".}
 
 \item{crs}{Coordinate reference system EPSG code (default 4326 = 'WGS84').}
+
+\item{radius_km}{Radius of the body the grid covers, in kilometers, or the
+name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
+"ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
+"enceladus", "titan", "uranus", "neptune", "pluto". 'ISEA' grids only;
+'H3' is defined for Earth.}
 }
 \value{
 A HexGridInfo object containing the grid specification.
@@ -61,6 +68,26 @@ H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 H3 cells are NOT exactly equal-area (area varies by ~3-5\\% depending on
 location).
 }
+\section{Other Bodies}{
+
+
+An 'ISEA' grid is a partition of the sphere, and \code{radius_km} sets the
+sphere it is measured on. Cell geometry -- which cell a coordinate lands in,
+where cell centres and corners sit, the hierarchy, the neighbours -- is
+angular and identical on every body; the radius sets the kilometer figures:
+cell area, diagonal, spacing, and the resolution that \code{area_km2} picks.
+Earth's area comes from the 'WGS84' ellipsoid, every other radius gives the
+sphere area 4\emph{pi}r^2.
+
+\preformatted{
+mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+hex_grid(resolution = 8, radius_km = 3389.5)   # the same grid
+}
+
+'H3' is defined for Earth's radius and its vendored 'C' library carries that
+constant, so \code{type = "h3"} takes Earth only.
+}
+
 \section{One Grid, Many Datasets}{
 
 
@@ -113,6 +140,10 @@ grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
 # Mix in aperture 7, either as a family or level by level
 grid47 <- hex_grid(area_km2 = 1000, aperture = "4/7")
 grid_seq <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
+
+# Grid on another body, by name or by radius
+mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+titan <- hex_grid(resolution = 6, radius_km = 2574.76)
 
 # Use grid in hexify
 df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))

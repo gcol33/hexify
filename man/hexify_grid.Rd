@@ -10,7 +10,8 @@ hexify_grid(
   metric = TRUE,
   resround = "nearest",
   aperture = 3,
-  projection = "ISEA"
+  projection = "ISEA",
+  radius_km = EARTH_RADIUS_KM
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ hexify_grid(
 \item{aperture}{Aperture sequence (3, 4, or 7)}
 
 \item{projection}{Projection type (only 'ISEA' supported currently)}
+
+\item{radius_km}{Radius of the body the grid covers, in kilometers, or a body
+name such as "mars" (default Earth). See \code{\link{hex_grid}}.}
 }
 \value{
 A hexify_grid object containing:
@@ -33,6 +37,7 @@ A hexify_grid object containing:
 \item{aperture}{Grid aperture (3, 4, or 7)}
 \item{topology}{Grid topology ("HEXAGON")}
 \item{projection}{Map projection ("ISEA")}
+\item{radius_km}{Radius of the body, in kilometers}
 \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 }
 \description{

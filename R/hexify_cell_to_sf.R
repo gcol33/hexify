@@ -147,6 +147,8 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 #' @param area Target cell area in km^2
 #' @param aperture Grid aperture: 3, 4, or 7
 #' @param resround Resolution rounding: "nearest", "up", or "down"
+#' @param radius_km Radius of the body, in kilometers, or a body name such as
+#'   "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return sf object with hexagon polygons covering the specified region
 #'
@@ -166,15 +168,18 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 #' )
 #' plot(st_geometry(grid), border = "gray")
 hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
-                             area, aperture = 3L, resround = "nearest") {
+                             area, aperture = 3L, resround = "nearest",
+                             radius_km = EARTH_RADIUS_KM) {
 
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
 
+  radius_km <- resolve_radius_km(radius_km)
+
   # Create grid of sample points
   diagonal <- sqrt(area * 2 / sqrt(3))
-  spacing_deg <- diagonal / KM_PER_DEGREE * 0.8
+  spacing_deg <- diagonal / km_per_degree(radius_km) * 0.8
 
   lons <- seq(minlon, maxlon, by = spacing_deg)
   lats <- seq(minlat, maxlat, by = spacing_deg)
@@ -182,18 +187,21 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 
   # Assign to hexes and get polygons
   result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
-                   aperture = aperture, resround = resround)
+                   aperture = aperture, resround = resround,
+                   radius_km = radius_km)
 
   cell_to_sf(grid = result)
 }
 
 #' Generate a global grid of hexagon polygons
 #'
-#' Creates hexagon polygons covering the entire Earth.
+#' Creates hexagon polygons covering a whole body.
 #'
 #' @param area Target cell area in km^2
 #' @param aperture Grid aperture: 3, 4, or 7
 #' @param resround Resolution rounding: "nearest", "up", or "down"
+#' @param radius_km Radius of the body, in kilometers, or a body name such as
+#'   "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
 #' @return sf object with hexagon polygons covering the globe
 #'
@@ -209,14 +217,17 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
 #' # Coarse global grid (~100,000 km^2 cells)
 #' global_grid <- hexify_grid_global(area = 100000)
 #' plot(st_geometry(global_grid), border = "gray")
-hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
+hexify_grid_global <- function(area, aperture = 3L, resround = "nearest",
+                               radius_km = EARTH_RADIUS_KM) {
 
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
 
-  # Estimate cell count (uses EARTH_SURFACE_KM2 from constants.R)
-  approx_cells <- EARTH_SURFACE_KM2 / area
+  radius_km <- resolve_radius_km(radius_km)
+
+  # Estimate cell count
+  approx_cells <- body_surface_km2(radius_km) / area
 
   if (approx_cells > 100000) {
     warning(sprintf(
@@ -227,14 +238,15 @@ hexify_grid_global <- function(area, aperture = 3L, resround = "nearest") {
 
   # Generate dense sample points
   diagonal <- sqrt(area * 2 / sqrt(3))
-  spacing_deg <- diagonal / KM_PER_DEGREE * 0.7
+  spacing_deg <- diagonal / km_per_degree(radius_km) * 0.7
 
   lons <- seq(-180, 180, by = spacing_deg)
   lats <- seq(-85, 85, by = spacing_deg)
   grid_pts <- expand.grid(lon = lons, lat = lats)
 
   result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
-                   aperture = aperture, resround = resround)
+                   aperture = aperture, resround = resround,
+                   radius_km = radius_km)
 
   cell_to_sf(grid = result)
 }

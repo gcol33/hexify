@@ -133,12 +133,15 @@ aperture_n_cells <- function(aperture, resolution) {
 #' aperture's closed form gives exactly.
 #' @param area_km2 Target cell area
 #' @param aperture Character aperture spelling
+#' @param radius_km Radius of the body, in kilometers
 #' @return Numeric resolution, not rounded
 #' @noRd
-calculate_resolution_for_area_mixed <- function(area_km2, aperture) {
+calculate_resolution_for_area_mixed <- function(area_km2, aperture,
+                                                radius_km = EARTH_RADIUS_KM) {
+  surface_km2 <- body_surface_km2(radius_km)
   res <- seq.int(MIN_RESOLUTION, MAX_RESOLUTION)
   log_area <- vapply(res, function(r) {
-    log(EARTH_SURFACE_KM2 / aperture_n_cells(aperture, r))
+    log(surface_km2 / aperture_n_cells(aperture, r))
   }, numeric(1))
   target <- log(area_km2)
 
