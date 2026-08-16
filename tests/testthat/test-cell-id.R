@@ -163,7 +163,7 @@ test_that("vertex-quad pentagons report their own centre", {
   vert_lon <- c(ISEA_VERT0_LON_DEG, ISEA_VERT0_LON_DEG - 180)
   vert_lat <- c(ISEA_VERT0_LAT_DEG, -ISEA_VERT0_LAT_DEG)
 
-  for (ap in c(3, 4)) {
+  for (ap in c(3, 4, 7)) {
     for (res in c(2, 5)) {
       cells <- hexify_lonlat_to_cell(vert_lon, vert_lat, res, aperture = ap)
       qij <- hexify_cell_to_quad_ij(cells, res, aperture = ap)
@@ -197,13 +197,47 @@ test_that("cell_to_quad_ij round-trips with quad_ij_to_cell", {
   cell_ids <- c(100, 1000, 5000, 10000)
   resolution <- 10
 
-  for (ap in c(3, 4)) {
+  for (ap in c(3, 4, 7)) {
     result <- hexify_cell_to_quad_ij(cell_ids, resolution, aperture = ap)
     recovered <- hexify_quad_ij_to_cell(result$quad, result$i, result$j,
                                          resolution, aperture = ap)
 
     expect_equal(recovered, cell_ids,
                  info = sprintf("aperture %d quad_ij round-trip", ap))
+  }
+})
+
+test_that("every cell ID in [1, 10 * aperture^res + 2] names one cell", {
+  for (ap in c(3, 4, 7)) {
+    for (res in 0:3) {
+      n_cells <- 10 * ap^res + 2
+      ids <- seq_len(n_cells)
+
+      qij <- hexify_cell_to_quad_ij(ids, res, aperture = ap)
+      recovered <- hexify_quad_ij_to_cell(qij$quad, qij$i, qij$j, res,
+                                          aperture = ap)
+
+      expect_equal(recovered, as.numeric(ids),
+                   info = sprintf("aperture %d res %d id round-trip", ap, res))
+      expect_equal(length(unique(paste(qij$quad, qij$i, qij$j))), n_cells,
+                   info = sprintf("aperture %d res %d distinct coords", ap, res))
+    }
+  }
+})
+
+test_that("assigned cell IDs stay inside the grid's ID range", {
+  set.seed(42)
+  n <- 500
+  lon <- runif(n, -180, 180)
+  lat <- asin(runif(n, -1, 1)) * 180 / pi
+
+  for (ap in c(3, 4, 7)) {
+    for (res in c(1, 2, 3, 6)) {
+      cells <- hexify_lonlat_to_cell(lon, lat, res, aperture = ap)
+
+      expect_true(all(cells >= 1 & cells <= 10 * ap^res + 2),
+                  info = sprintf("aperture %d res %d cell ID range", ap, res))
+    }
   }
 })
 

@@ -83,9 +83,7 @@ dgearthstat <- function(dggs) {
 
   resolution <- get_grid_resolution(dggs, require = TRUE)
 
-  # Cell count formula (matches calc_grid_params() in rcpp_cell.cpp); the
-  # aperture-7 case uses a surrogate bounding-box formula, not a clean power
-  # of aperture, so max_cell_id() special-cases it.
+  # Cell count formula (matches calc_grid_params() in rcpp_cell.cpp)
   n_cells <- max_cell_id(resolution, dggs$aperture)
 
   # Calculate cell area

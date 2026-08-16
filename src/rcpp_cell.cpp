@@ -299,45 +299,11 @@ static SubstrateLattice sublattice_of(const hexify::HexGridForm& form) {
 // Each ap7 cell corresponds to exactly one surrogate (i,j), unlike substrates
 // where the substrate grid has ~7x more positions than actual cells.
 //
-// The surrogate grid dimension is approximately sqrt(7)^res per axis.
-// Due to the 19.1° rotation between surrogate and quad frames, surrogate
-// coordinates can be negative. We add an offset to shift to non-negative range.
+// The 19.1 degree rotation between the surrogate and quad frames puts the
+// surrogates of one quad in a skewed patch rather than an axis-aligned box, so
+// the within-quad index comes from ap7_surrogate_to_quad_index(), which walks
+// the cell centres in the quad's substrate box. It spans [0, 7^res) exactly.
 // ============================================================================
-
-// Offset to shift minimum surrogate coordinate to >= 0
-// From rotation analysis: min surrogate ≈ -0.4 * sqrt(7)^res
-static long long calc_sur_offset_ap7(int resolution) {
-    if (resolution == 0) return 0;
-    double S = std::pow(2.6457513110645905905, resolution);  // sqrt(7)^res
-    return static_cast<long long>(0.45 * S) + 2;
-}
-
-// One-axis dimension of the shifted surrogate grid
-// After shifting by offset, surrogates range from [0, dim-1]
-// Max surrogate ≈ 1.15 * sqrt(7)^res, so dim = offset + ceil(1.15*S) + 1
-static long long calc_sur_dim_ap7(int resolution) {
-    if (resolution == 0) return 1;
-    double S = std::pow(2.6457513110645905905, resolution);  // sqrt(7)^res
-    long long offset = calc_sur_offset_ap7(resolution);
-    long long max_sur = static_cast<long long>(1.2 * S) + 2;
-    return offset + max_sur + 1;
-}
-
-// Encode surrogate (i,j) directly as cell index within a quad
-static uint64_t encode_surrogate_ap7(
-    long long sur_i, long long sur_j, int resolution, long long sur_dim) {
-    long long sur_offset = calc_sur_offset_ap7(resolution);
-    return cell_index_2d(sur_i + sur_offset, sur_j + sur_offset, sur_dim, kAlignedLattice);
-}
-
-// Decode cell index to surrogate (i,j) directly
-static void decode_surrogate_ap7(
-    uint64_t idx, int resolution, long long sur_dim,
-    long long& sur_i, long long& sur_j) {
-    long long sur_offset = calc_sur_offset_ap7(resolution);
-    sur_i = static_cast<long long>(idx / sur_dim) - sur_offset;
-    sur_j = static_cast<long long>(idx % sur_dim) - sur_offset;
-}
 
 // The 30-degree Class II lattice of aperture 3's odd resolutions: one substrate
 // point in three is a cell, those with (i + j) % 3 == 0.
@@ -350,41 +316,34 @@ static SubstrateLattice lattice_for_aperture(int aperture, int resolution) {
     return kAlignedLattice;
 }
 
-// Calculate cell count and offset per quad for any aperture
-// For apertures 3 and 4: nCells = 10 * aperture^res + 2
-// For aperture 7: we use surrogate-based encoding where each quad has
-// sur_dim² ID slots. Surrogates are the canonical ap7 cell coordinates
-// (one surrogate per cell), avoiding the substrate overcount problem.
+// Calculate cell count and offset per quad for any aperture: each of the 10
+// quads owns aperture^res cells and the two poles bring the total to
+// 10 * aperture^res + 2.
 static void calc_grid_params(int resolution, int aperture,
                              uint64_t& nCells, uint64_t& offsetPerQuad) {
     if (resolution < hexify::kMinResolution || resolution > hexify::kMaxResolution) {
         Rcpp::stop("resolution must be between %d and %d",
                    hexify::kMinResolution, hexify::kMaxResolution);
     }
-    if (aperture == 7) {
-        long long sur_dim = calc_sur_dim_ap7(resolution);
-        offsetPerQuad = static_cast<uint64_t>(sur_dim) * sur_dim;
-        nCells = 10 * offsetPerQuad + 2;
-    } else {
-        nCells = 10;
-        for (int r = 0; r < resolution; r++) {
-            nCells *= aperture;
-        }
-        nCells += 2;
-        offsetPerQuad = (nCells - 2) / 10;
+    nCells = 10;
+    for (int r = 0; r < resolution; r++) {
+        nCells *= aperture;
     }
+    nCells += 2;
+    offsetPerQuad = (nCells - 2) / 10;
 }
 
 // Grid dimension (per-axis) for a given resolution/aperture. Used by every
 // cell-ID <-> (quad,i,j) conversion below to select which calc_max_grid_dim_*
-// helper applies.
+// helper applies. Aperture 7 reports its Class I substrate scale; its cell
+// index comes from the surrogate rather than a row-major walk of that box.
 static long long grid_dim_for_aperture(int resolution, int aperture) {
     if (aperture == 3) {
         return calc_max_grid_dim_ap3(resolution) + 1;
     } else if (aperture == 4) {
         return calc_max_grid_dim_ap4(resolution) + 1;
     } else {
-        return calc_sur_dim_ap7(resolution);
+        return hexify::ap7_classI_scale(resolution);
     }
 }
 
@@ -432,7 +391,7 @@ static void decode_cell_id(double cell_id_raw, int resolution, int aperture,
         j = 0;
     } else if (aperture == 7) {
         // Decode to surrogate (i,j stored as surrogates for ap7)
-        decode_surrogate_ap7(idx, resolution, dim, i, j);
+        hexify::ap7_quad_index_to_surrogate(idx, resolution, i, j);
     } else {
         ij_from_cell_index(idx, dim, lat, i, j);
     }
@@ -470,7 +429,7 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
 
         // 2D cell index within quad. For ap7 the input (i,j) are surrogates.
         uint64_t bnd2D_idx = (aperture == 7)
-            ? encode_surrogate_ap7(ii, jj, resolution, dim)
+            ? hexify::ap7_surrogate_to_quad_index(ii, jj, resolution)
             : cell_index_2d(ii, jj, dim, sub_lat);
 
         // Final cell ID (1-based)
@@ -517,7 +476,7 @@ NumericVector cpp_lonlat_to_cell(NumericVector lon, NumericVector lat,
             hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
                                          fwd.icosa_triangle_y,
                                          7, resolution, quad, sur_i, sur_j);
-            bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
+            bnd2D_seq = hexify::ap7_surrogate_to_quad_index(sur_i, sur_j, resolution);
         } else {
             // AP3/AP4: standard substrate-based encoding
             long long i, j;
@@ -738,7 +697,7 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
             // AP7: exact-integer quantization straight to the surrogate.
             long long sur_i, sur_j;
             hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, sur_i, sur_j);
-            bnd2D_seq = encode_surrogate_ap7(sur_i, sur_j, resolution, dim);
+            bnd2D_seq = hexify::ap7_surrogate_to_quad_index(sur_i, sur_j, resolution);
         } else {
             // AP3/AP4: standard substrate path
             int icosa_triangle_face;
@@ -1406,11 +1365,30 @@ static double encode_cell_id(int quad, long long i, long long j,
 
     uint64_t offset = 1 + (quad - 1) * offsetPerQuad;
     uint64_t bnd2D_seq = (aperture == 7)
-        ? encode_surrogate_ap7(i, j, resolution, dim)
+        ? hexify::ap7_surrogate_to_quad_index(i, j, resolution)
         : cell_index_2d(i, j, dim, lat);
 
     return static_cast<double>(offset + bnd2D_seq + 1);
 }
+
+// Resolution 0 is the 12 base cells, one per icosahedron vertex. Every one of
+// them is a pentagon and each quad holds a single cell, so adjacency there is
+// the icosahedron's vertex graph rather than a step through a quad frame.
+// Row q lists the quads sharing an edge with quad q.
+static const int kBaseCellNeighbors[12][5] = {
+    { 1,  2,  3,  4,  5},
+    { 0,  2,  5,  6, 10},
+    { 0,  1,  3,  6,  7},
+    { 0,  2,  4,  7,  8},
+    { 0,  3,  5,  8,  9},
+    { 0,  1,  4,  9, 10},
+    { 1,  2,  7, 10, 11},
+    { 2,  3,  6,  8, 11},
+    { 3,  4,  7,  9, 11},
+    { 4,  5,  8, 10, 11},
+    { 1,  5,  6,  9, 11},
+    { 6,  7,  8,  9, 10}
+};
 
 // [[Rcpp::export]]
 Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
@@ -1431,15 +1409,21 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
 
     long long max_ij = hexify::get_max_ij(aperture, resolution);
 
-    // Standard hex neighbor offsets in axial coordinates (ap3, ap4)
-    static const long long hex_offsets[6][2] = {
-        { 1,  0}, { 0,  1}, {-1,  1},
-        {-1,  0}, { 0, -1}, { 1, -1}
+    // The aligned lattice writes (i, j) as x = i - j/2, y = j * sin60, so the
+    // six cells one unit away sit at +/-(1,0), +/-(0,1) and +/-(1,1). Aperture
+    // 4, aperture 3's even resolutions and aperture 7's surrogates all live on
+    // this lattice.
+    static const long long class1_offsets[6][2] = {
+        { 1,  0}, { 1,  1}, { 0,  1},
+        {-1,  0}, {-1, -1}, { 0, -1}
     };
 
-    // Aperture 7 surrogate neighbor offsets (hexify coordinate convention)
-    static const long long sur_offsets[6][2] = {
-        {1, 0}, {1, 1}, {0, 1}, {-1, 0}, {-1, -1}, {0, -1}
+    // Aperture 3's odd resolutions carry cells on the 30-degree Class II
+    // lattice, where one substrate point in three is a cell and adjacent cells
+    // stand sqrt(3) substrate units apart.
+    static const long long class2_offsets[6][2] = {
+        { 2,  1}, { 1,  2}, {-1,  1},
+        {-2, -1}, {-1, -2}, { 1, -1}
     };
 
     for (int k = 0; k < n; k++) {
@@ -1455,116 +1439,108 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
         std::vector<double> neighbor_ids;
         neighbor_ids.reserve(6);
 
-        if (idx == 0) {
-            // North pole: pentagon, skip for now
-            out[k] = Rcpp::NumericVector(0);
+        if (resolution == 0) {
+            Rcpp::NumericVector base(5);
+            for (int d = 0; d < 5; d++) {
+                base[d] = kBaseCellNeighbors[idx][d] + 1;
+            }
+            out[k] = base;
             continue;
         }
 
-        idx--;
-        int quad = static_cast<int>(idx / offsetPerQuad) + 1;
-        uint64_t within_quad = idx - (quad - 1) * offsetPerQuad;
+        int quad;
+        long long i, j;
 
-        if (aperture == 7) {
-            // Aperture 7: direct surrogate-integer approach.
-            // 1. Decode cell_id → surrogate (i,j) directly
-            // 2. Add ±1 neighbor offset in surrogate space
-            // 3. Encode directly (or cross-quad via forward pipeline)
-            long long sur_i, sur_j;
-            decode_surrogate_ap7(within_quad, resolution, dim, sur_i, sur_j);
-
-            for (int d = 0; d < 6; d++) {
-                long long nbr_sur_i = sur_i + sur_offsets[d][0];
-                long long nbr_sur_j = sur_j + sur_offsets[d][1];
-
-                // Bounds check: use surrogate offset/dim to detect cross-quad
-                long long sur_offset = calc_sur_offset_ap7(resolution);
-                long long shifted_i = nbr_sur_i + sur_offset;
-                long long shifted_j = nbr_sur_j + sur_offset;
-                bool in_bounds = (shifted_i >= 0 && shifted_j >= 0 &&
-                                   shifted_i < dim && shifted_j < dim);
-
-                if (in_bounds) {
-                    // Same quad: encode directly
-                    uint64_t nbr_offset = 1 + (quad - 1) * offsetPerQuad;
-                    uint64_t nbr_idx = encode_surrogate_ap7(
-                        nbr_sur_i, nbr_sur_j, resolution, dim);
-                    neighbor_ids.push_back(
-                        static_cast<double>(nbr_offset + nbr_idx + 1));
-                } else {
-                    // Cross-quad boundary: route through forward pipeline
-                    double nbr_qx, nbr_qy;
-                    hexify::surrogate_ij_to_quad_xy_ap7(
-                        nbr_sur_i, nbr_sur_j, resolution, nbr_qx, nbr_qy);
-
-                    int tri_face;
-                    double tri_x, tri_y;
-                    if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
-                                                           tri_face, tri_x, tri_y)) {
-                        continue;
-                    }
-
-                    auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
-                    auto fwd = hexify::snyder_forward(ll.first, ll.second);
-
-                    int final_quad;
-                    double final_qx, final_qy;
-                    hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x,
-                                                  fwd.icosa_triangle_y,
-                                                  final_quad, final_qx, final_qy);
-                    long long final_sur_i, final_sur_j;
-                    hexify::quad_xy_to_surrogate_ij_ap7(
-                        final_qx, final_qy, resolution, final_sur_i, final_sur_j);
-
-                    neighbor_ids.push_back(
-                        encode_cell_id(final_quad, final_sur_i, final_sur_j,
-                                       offsetPerQuad, dim, sub_lat,
-                                       aperture, resolution));
-                }
+        if (idx == 0 || idx == nCells - 1) {
+            // Quads 0 and 11 hold a single cell each -- the icosahedron vertex
+            // where five quads meet -- so their own frame carries no offsets to
+            // step through. Read the vertex from an adjacent quad, where it
+            // sits at the corner coordinate the edge tables fold into the pole,
+            // and take the six offsets from there.
+            long long edge = (aperture == 7)
+                ? hexify::ap7_classI_scale(resolution)
+                : hexify::get_max_ij(aperture, resolution) + 1;
+            bool north = (idx == 0);
+            long long ci = north ? 0 : edge;
+            long long cj = north ? edge : 0;
+            quad = north ? 1 : 6;
+            if (aperture == 7) {
+                hexify::ap7_substrate_to_surrogate_ijk(ci, cj, resolution, i, j);
+            } else {
+                i = ci;
+                j = cj;
             }
         } else {
-            // Aperture 3 and 4: standard hex offset approach
-            long long i, j;
-            ij_from_cell_index(within_quad, dim, sub_lat, i, j);
+            idx--;
+            quad = static_cast<int>(idx / offsetPerQuad) + 1;
+            uint64_t within_quad = idx - (quad - 1) * offsetPerQuad;
 
-            for (int d = 0; d < 6; d++) {
-                long long ni = i + hex_offsets[d][0];
-                long long nj = j + hex_offsets[d][1];
+            if (aperture == 7) {
+                hexify::ap7_quad_index_to_surrogate(within_quad, resolution, i, j);
+            } else {
+                ij_from_cell_index(within_quad, dim, sub_lat, i, j);
+            }
+        }
 
-                bool in_bounds = (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
+        const long long (*offsets)[2] =
+            (aperture == 3 && !is_aligned_grid_ap3(resolution))
+                ? class2_offsets
+                : class1_offsets;
 
-                if (in_bounds) {
+        for (int d = 0; d < 6; d++) {
+            long long ni = i + offsets[d][0];
+            long long nj = j + offsets[d][1];
+
+            bool in_bounds = (aperture == 7)
+                ? hexify::ap7_surrogate_in_quad(ni, nj, resolution)
+                : (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
+
+            if (in_bounds) {
+                neighbor_ids.push_back(
+                    encode_cell_id(quad, ni, nj,
+                                   offsetPerQuad, dim, sub_lat,
+                                   aperture, resolution));
+                continue;
+            }
+
+            // The neighbour sits in another quad: send its centre back through
+            // the forward pipeline, which names the quad that owns it.
+            double nbr_qx, nbr_qy;
+            hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution,
+                                   nbr_qx, nbr_qy);
+
+            int tri_face;
+            double tri_x, tri_y;
+            if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
+                                                   tri_face, tri_x, tri_y)) {
+                // Under-runs of a quad's own frame have no image in it, so the
+                // projection has nowhere to send them. Step to the owning quad
+                // through the edge table instead.
+                int alt_quad = quad;
+                long long alt_i = ni, alt_j = nj;
+                if (hexify::quad_ij_canonicalize(alt_quad, alt_i, alt_j,
+                                                  aperture, resolution)) {
                     neighbor_ids.push_back(
-                        encode_cell_id(quad, ni, nj,
-                                       offsetPerQuad, dim, sub_lat,
-                                       aperture, resolution));
-                } else {
-                    double nbr_qx, nbr_qy;
-                    hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution,
-                                           nbr_qx, nbr_qy);
-
-                    int tri_face;
-                    double tri_x, tri_y;
-                    if (!hexify::try_quad_xy_to_icosa_tri(quad, nbr_qx, nbr_qy,
-                                                           tri_face, tri_x, tri_y)) {
-                        continue;
-                    }
-
-                    auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
-                    auto fwd = hexify::snyder_forward(ll.first, ll.second);
-                    int final_quad;
-                    long long final_i, final_j;
-                    hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
-                                                  fwd.icosa_triangle_y,
-                                                  aperture, resolution,
-                                                  final_quad, final_i, final_j);
-
-                    neighbor_ids.push_back(
-                        encode_cell_id(final_quad, final_i, final_j,
+                        encode_cell_id(alt_quad, alt_i, alt_j,
                                        offsetPerQuad, dim, sub_lat,
                                        aperture, resolution));
                 }
+                continue;
             }
+
+            auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+            auto fwd = hexify::snyder_forward(ll.first, ll.second);
+            int final_quad;
+            long long final_i, final_j;
+            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                          fwd.icosa_triangle_y,
+                                          aperture, resolution,
+                                          final_quad, final_i, final_j);
+
+            neighbor_ids.push_back(
+                encode_cell_id(final_quad, final_i, final_j,
+                               offsetPerQuad, dim, sub_lat,
+                               aperture, resolution));
         }
 
         // Remove duplicates (can happen at pentagons / boundary)

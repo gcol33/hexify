@@ -449,13 +449,68 @@ void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolu
     sub_j = a.j();
 }
 
-void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
-                                  long long& sur_i, long long& sur_j) {
-    long long S = ap7_classI_scale(resolution);
-    long long sub_i, sub_j;
-    quantize_class1(quad_x * static_cast<double>(S), quad_y * static_cast<double>(S),
-                    sub_i, sub_j);
-    ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, sur_i, sur_j);
+uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution) {
+    const long long S = ap7_classI_scale(resolution);
+    long long u, v;
+    ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
+    if (resolution % 2 == 0) {
+        return static_cast<uint64_t>(u * S + v);
+    }
+    // v is fixed modulo 7 once u is known (2u + v = 0 mod 7), so v / 7 names the
+    // centre within its row on its own.
+    return static_cast<uint64_t>(u * (S / 7) + v / 7);
+}
+
+void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
+                                 long long& sur_i, long long& sur_j) {
+    const long long S = ap7_classI_scale(resolution);
+    const long long idx = static_cast<long long>(index);
+    long long u, v;
+    if (resolution % 2 == 0) {
+        u = idx / S;
+        v = idx % S;
+    } else {
+        const long long rows = S / 7;
+        u = idx / rows;
+        v = 7 * (idx % rows) + (((-2 * u) % 7) + 7) % 7;
+    }
+    ap7_substrate_to_surrogate_ijk(u, v, resolution, sur_i, sur_j);
+}
+
+bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
+                          int aperture, int resolution) {
+    long long top_edge;
+    long long ci, cj;
+    if (aperture == 7) {
+        top_edge = ap7_classI_scale(resolution);
+        ap7_surrogate_to_substrate_ijk(i, j, resolution, ci, cj);
+    } else {
+        top_edge = get_max_ij(aperture, resolution) + 1;
+        ci = i;
+        cj = j;
+    }
+
+    int q = quad;
+    dggrid_canonicalize_q2di(top_edge, q, ci, cj);
+    if (ci < 0 || ci >= top_edge || cj < 0 || cj >= top_edge) {
+        return false;
+    }
+
+    quad = q;
+    if (aperture == 7) {
+        ap7_substrate_to_surrogate_ijk(ci, cj, resolution, i, j);
+    } else {
+        i = ci;
+        j = cj;
+    }
+    return true;
+}
+
+bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution) {
+    const long long S = ap7_classI_scale(resolution);
+    long long u, v;
+    ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
+    return u >= 0 && u < S && v >= 0 && v < S;
 }
 
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
@@ -608,9 +663,19 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
         long long sub_i, sub_j;
         quantize_class1(quad_x * static_cast<double>(S), quad_y * static_cast<double>(S),
                         sub_i, sub_j);
+        // Coarsen to the cell, then canonicalize the cell CENTRE. At odd
+        // resolutions one cell covers seven substrate points, and a cell on a
+        // quad edge covers points on both sides of it, so canonicalizing the
+        // sampled point would give that one cell an address in either quad. Its
+        // centre lies in exactly one quad and so fixes the owner. At even
+        // resolutions the centre is the sampled point.
+        long long sur_i, sur_j;
+        ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, sur_i, sur_j);
+        long long ctr_i, ctr_j;
+        ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, ctr_i, ctr_j);
         out_quad = quad;
-        dggrid_canonicalize_q2di(S, out_quad, sub_i, sub_j);
-        ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, out_i, out_j);
+        dggrid_canonicalize_q2di(S, out_quad, ctr_i, ctr_j);
+        ap7_substrate_to_surrogate_ijk(ctr_i, ctr_j, resolution, out_i, out_j);
         return;
     }
 

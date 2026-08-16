@@ -28,6 +28,44 @@
 
 ## Bug fixes
 
+* Aperture-7 cell IDs ran outside the documented `[1, 10 * 7^res + 2]` range and
+  `validate_cell_id()` rejected them: a uniform sample at resolution 2 reached
+  2647 against a nominal count of 492, and at resolutions 1 and 2 the IDs also
+  overran the padded space the encoder itself allotted, so `cell_to_quad_ij()`
+  errored on ids the assignment had just produced. Aperture 7 stored each cell
+  in a square bounding box sized by a fitted constant, roughly three times the
+  cell count, because the surrogate lattice sits at 19.1 degrees to the quad
+  frame. Cells now index by walking the quad's own substrate box, where the
+  centres are the sublattice `2u + v = 0 (mod 7)` and a row holds one seventh of
+  the box, so the IDs of a quad span `[0, 7^res)` with no gaps and the cell count
+  is `10 * 7^res + 2` for every aperture.
+
+* Aperture 7 gave the same cell two addresses at odd resolutions, once from each
+  quad an edge cell straddles: a uniform sample at resolution 1 produced 122
+  distinct `(quad, i, j)` for a grid of 72 cells. One cell there covers seven
+  substrate points, and the quad was decided from the sampled point rather than
+  the cell, so a cell whose points fall on both sides of an edge belonged to
+  both. The cell centre now picks the quad, which puts each cell in exactly one:
+  every ID in `[1, 10 * 7^res + 2]` names one distinct cell and round-trips
+  through `cell_to_quad_ij()`.
+
+* ISEA neighbour offsets stepped along the wrong lattice directions. The aligned
+  lattice writes `(i, j)` as `x = i - j/2`, so `(-1, 1)` and `(1, -1)` stand
+  `sqrt(3)` units away rather than one, and aperture 3's odd resolutions carry
+  cells on the 30 degree lattice, where neighbours are `sqrt(3)` substrate units
+  apart. Aperture 3 at resolution 5 returned as few as two neighbours for a cell
+  and one ID past the end of the grid; apertures 3 and 4 reported second-ring
+  cells, at 1.6 to 2.4 times the cell spacing, as neighbours of the 12 pentagons.
+  A neighbour that under-runs its quad's frame has no image in it and used to be
+  dropped; it now steps to the owning quad through DGGRID's edge table. Both
+  poles are read from an adjacent quad's corner, where the offsets reach the
+  five surrounding cells, instead of from their own single-cell frame, which the
+  south pole overran into IDs past the end of the grid and the north pole left
+  empty. Resolution 0, where all 12 cells are pentagons and each quad holds one
+  cell, reads the icosahedron's vertex graph. Every aperture at resolutions 0-4
+  now reports exactly 12 pentagons, hexagons elsewhere, a symmetric adjacency,
+  and no neighbour centre further than 1.12 cell spacings.
+
 * `cell_to_lonlat()` reported the two vertex-quad pentagons (quads 0 and 11) at
   the geographic poles (#58). Those cells sit at icosahedron vertex 0 and its
   antipode, which are the poles only under a pole-aligned orientation; under the

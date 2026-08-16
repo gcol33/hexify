@@ -168,15 +168,11 @@ test_that("hexify_compare_resolutions values are monotonic", {
 # ADDITIONAL COVERAGE FOR HEXIFY_STATS
 # =============================================================================
 
-test_that("dgearthstat handles aperture 7 differently", {
+test_that("dgearthstat counts aperture 7 cells", {
   grid <- hexify_grid(area = 10000, aperture = 7)
   stats <- dgearthstat(grid)
 
-  # Aperture 7 doesn't grow as a clean power of the aperture (surrogate
-  # bounding-box encoding, see max_cell_id() in constants.R) -- 10*7^res+2
-  # undercounts (issue #52).
-  expected_cells <- max_cell_id(stats$resolution, 7)
-  expect_equal(stats$n_cells, expected_cells)
+  expect_equal(stats$n_cells, 10 * 7^stats$resolution + 2)
 })
 
 test_that("dg_closest_res_to_area handles non-metric input", {

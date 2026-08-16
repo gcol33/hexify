@@ -11,11 +11,9 @@ NULL
 
 #' Calculate resolution for target area
 #'
-#' For apertures 3 and 4, uses the 'ISEA3H'/'ISEA4H' cell count formula
+#' Uses the 'ISEA3H'/'ISEA4H'/'ISEA7H' cell count formula
 #' N = 10 * aperture^res + 2, which matches 'dggridR' resolution numbering
-#' exactly. Aperture 7 does not grow as a clean power of the aperture (see
-#' \code{max_cell_id()} in constants.R), so its resolution is found by
-#' inverting the asymptotic form of \code{calc_sur_dim_ap7()} instead.
+#' exactly.
 #'
 #' @param target_area_km2 Target area in square kilometers
 #' @param aperture Aperture (3, 4, or 7)
@@ -24,21 +22,9 @@ NULL
 calculate_resolution_for_area <- function(target_area_km2, aperture = 3) {
   n_cells <- EARTH_SURFACE_KM2 / target_area_km2
 
-  if (aperture == 7) {
-    # calc_sur_dim_ap7(res) ~= 1.65 * sqrt(7)^res + 5 for large res (offset
-    # ~= 0.45*S+2, max_sur ~= 1.2*S+2, dim = offset+max_sur+1), and
-    # n_cells = 10*dim^2 + 2. Invert that asymptotic form; the caller rounds
-    # to the nearest integer resolution and max_cell_id() recomputes the
-    # exact cell count there, so this only needs to land in the right
-    # rounding bucket (verified against max_cell_id() up to resolution 15).
-    sur_dim <- sqrt((n_cells - 2) / 10)
-    S <- (sur_dim - 5) / 1.65
-    resolution <- 2 * log(S) / log(7)
-  } else {
-    # Solving N = 10 * aperture^res + 2 for res given target area:
-    # res = log((EARTH_SURFACE / area - 2) / 10) / log(aperture)
-    resolution <- log((n_cells - 2) / 10) / log(aperture)
-  }
+  # Solving N = 10 * aperture^res + 2 for res given target area:
+  # res = log((EARTH_SURFACE / area - 2) / 10) / log(aperture)
+  resolution <- log((n_cells - 2) / 10) / log(aperture)
 
   return(resolution)  # Return unrounded for caller to handle rounding mode
 }

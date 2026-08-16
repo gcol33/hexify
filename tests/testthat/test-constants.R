@@ -169,13 +169,11 @@ test_that("max_cell_id increases with resolution", {
 })
 
 test_that("max_cell_id formula is correct", {
-  # Formula: 10 * aperture^res + 2 (for ap3, ap4)
+  # Formula: 10 * aperture^res + 2, one formula for every aperture
   expect_equal(hexify:::max_cell_id(1, 3), 10 * 3^1 + 2)
   expect_equal(hexify:::max_cell_id(2, 4), 10 * 4^2 + 2)
-  # AP7 uses surrogate bounding box: 2 + 10 * dim^2
-  # Must be >= 10 * 7^res + 2 (theoretical cell count)
-  expect_gte(hexify:::max_cell_id(1, 7), 10 * 7^1 + 2)
-  expect_gte(hexify:::max_cell_id(3, 7), 10 * 7^3 + 2)
+  expect_equal(hexify:::max_cell_id(1, 7), 10 * 7^1 + 2)
+  expect_equal(hexify:::max_cell_id(3, 7), 10 * 7^3 + 2)
 })
 
 # =============================================================================

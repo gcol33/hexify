@@ -15,10 +15,8 @@ calculate_resolution_for_area(target_area_km2, aperture = 3)
 Resolution level
 }
 \description{
-For apertures 3 and 4, uses the 'ISEA3H'/'ISEA4H' cell count formula
+Uses the 'ISEA3H'/'ISEA4H'/'ISEA7H' cell count formula
 N = 10 * aperture^res + 2, which matches 'dggridR' resolution numbering
-exactly. Aperture 7 does not grow as a clean power of the aperture (see
-\code{max_cell_id()} in constants.R), so its resolution is found by
-inverting the asymptotic form of \code{calc_sur_dim_ap7()} instead.
+exactly.
 }
 \keyword{internal}

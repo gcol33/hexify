@@ -42,6 +42,7 @@
 #define HEXIFY_COORDINATE_TRANSFORMS_H
 
 #include <vector>
+#include <cstdint>
 
 namespace hexify {
 
@@ -111,11 +112,32 @@ void ap7_substrate_to_surrogate_ijk(long long sub_i, long long sub_j, int resolu
 void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolution,
                                     long long& sub_i, long long& sub_j);
 
-// Aperture 7: Direct surrogate quantization (bypasses substrate round-trip).
-// Quantizes quad XY on the Class I substrate at 7^numClassI, then coarsens to
-// the resolution-r surrogate.
-void quad_xy_to_surrogate_ij_ap7(double quad_x, double quad_y, int resolution,
-                                  long long& sur_i, long long& sur_j);
+// Aperture 7: dense cell index within a quad, and its inverse.
+//
+// A quad owns exactly 7^resolution aperture-7 cells: those whose centre falls in
+// the half-open Class I substrate box [0, S)^2, S = ap7_classI_scale(). Even
+// resolutions store that centre directly, so the index is its row-major position
+// in the box. Odd resolutions store the coarsened surrogate, whose centre is a
+// point of the aperture-7 sublattice {(u, v) : 2u + v = 0 (mod 7)}; each row
+// therefore holds S/7 centres and the index counts those.
+//
+// The result spans [0, 7^resolution) with no gaps, so cell IDs run 1 ..
+// 10 * 7^resolution + 2 exactly as they do for apertures 3 and 4.
+uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution);
+void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
+                                 long long& sur_i, long long& sur_j);
+
+// Aperture 7: does this surrogate's centre lie in the given quad, i.e. inside
+// the substrate box [0, S)^2?
+bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution);
+
+// Re-express an (i, j) that has stepped outside its quad in the quad that owns
+// it, via DGGRID's edge table. Coordinates are the aperture's own cell
+// coordinate (the aperture-7 surrogate is expanded and coarsened around the
+// call). Returns false when the coordinate lands outside every adjacent quad,
+// which happens where the icosahedron folds at a vertex.
+bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
+                          int aperture, int resolution);
 
 // Aperture 7: Inverse - surrogate IJ back to quad XY coordinates.
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
