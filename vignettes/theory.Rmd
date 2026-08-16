@@ -583,7 +583,7 @@ The Z7 index represents each cell as a hierarchical path through the aperture-7 
 
 $$\texttt{BB}\underbrace{\texttt{D}_1\texttt{D}_2\cdots\texttt{D}_r}_{r \text{ digits}}$$
 
-where **BB** is the base cell (00--11) and each digit $D_k \in \{0, 1, \ldots, 6\}$ selects one of 7 children at level $k$. The digit meanings correspond to positions in the IVec3D cube coordinate system:
+where **BB** is the leading field and each digit $D_k \in \{0, 1, \ldots, 6\}$ selects one of 7 children at level $k$. The digit meanings correspond to positions in the IVec3D cube coordinate system:
 
 | Digit | Direction | Meaning |
 |-------|-----------|---------|
@@ -595,16 +595,24 @@ where **BB** is the base cell (00--11) and each digit $D_k \in \{0, 1, \ldots, 6
 | 5 | IK_AXES | IK-axis direction |
 | 6 | IJ_AXES | IJ-axis direction |
 
-The first two characters always identify the base cell, so the resolution is
+The leading field is always two characters, so the resolution is
 `nchar(index) - 2`. Dropping the final digit gives the parent; appending digits
 0--6 enumerates the seven positions in the next refinement level.
 
 hexify uses a **bijective Z7 variant**. DGGRID's base-cell reassignment and
 pentagon digit-skip rules can make its encoder non-injective near pentagons:
 distinct cells may receive the same string. hexify keeps the geographic quad
-fixed in those regions, giving every cell a distinct index and guaranteeing
-`index -> cell -> index` round-trips. Away from those pentagon-region cases,
-the strings follow the DGGRID Z7 layout. This distinction matters when
+fixed in those regions, so every cell has a distinct index and both
+`cell -> index -> cell` and `index -> cell -> index` round-trip.
+
+Holding the quad fixed is what the leading field pays for. A quad is a rhombus
+while the aperture-7 parents are hexagons, so the quad boundary cuts through
+the parents of the cells along it: walking such a cell up the hierarchy arrives
+at one of the six neighbours of the quad's own level-0 point rather than at the
+point itself. The leading field records which, as $\texttt{quad} + 12s$ with
+$s \in \{0, 1, \ldots, 6\}$, and a cell whose whole ancestry stays inside its
+quad has $s = 0$ and keeps the plain two-digit quad DGGRID writes. Recover the
+quad with `BB %% 12`, or with `hexify_index_to_cell()`. This matters when
 exchanging raw Z7 strings with DGGRID; geographic coordinates and cell geometry
 remain the safest interoperability layer.
 
@@ -614,8 +622,9 @@ g7 <- hex_grid(resolution = 4, aperture = 7)
 cell <- lonlat_to_cell(16.37, 48.21, g7)
 idx <- cell_to_index(cell, g7)
 cat(sprintf("Cell %d -> Z7 index: %s\n", cell, idx))
-cat(sprintf("  Base cell: %s, Digits: %s\n",
-            substr(idx, 1, 2), substr(idx, 3, nchar(idx))))
+cat(sprintf("  Leading field: %s (quad %d), Digits: %s\n",
+            substr(idx, 1, 2), as.integer(substr(idx, 1, 2)) %% 12L,
+            substr(idx, 3, nchar(idx))))
 
 # Hierarchical property: parent is obtained by dropping the last digit
 parent_idx <- substr(idx, 1, nchar(idx) - 1)

@@ -383,23 +383,35 @@ void decode(const std::string& z7_index, int resolution,
 // encoder collides. Input/output (i,j) are the Class I substrate coordinate
 // (the same convention encode()/decode() use).
 
-std::string encode_bijective(int quadNum, long long i, long long j, int resolution) {
-    std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(2) << quadNum;
-    if (resolution == 0) {
-        return oss.str();
-    }
+// The level-0 coordinate a walk arrives at. A cell whose whole ancestry lies
+// inside its quad arrives at the origin, and decoding from the origin recovers
+// it. The quad is a rhombus while the aperture-7 parents are hexagons, so the
+// quad boundary cuts through the parents of the cells along it; those arrive at
+// one of the six neighbours of the origin instead, which the walk alone does
+// not record. The arrival point is a unit digit, so the index carries it in its
+// leading field as quad + 12 * digit: two digits still, and the plain quad
+// DGGRID writes whenever the cell does not spill.
+static IVec3D z7_seed_coord(int digit) {
+    IVec3D ijk(0, 0, 0);
+    ijk.neighbor((IVec3D::Direction) digit);
+    return ijk;
+}
 
+// Walk the aperture-7 hierarchy from a Class I substrate coordinate up to
+// resolution 0, recording the child ordinal of each level in digits[1..res].
+// The return value is the coordinate the walk arrives at: the origin when every
+// ancestor of the cell lies in the same quad, and a neighbouring lattice point
+// when the quad's rhombic boundary cuts through one of them.
+static IVec3D z7_walk_up(long long i, long long j, int resolution,
+                         std::vector<IVec3D::Direction>& digits) {
     IVec3D ijk(i, j, 0);
-    int res = resolution;
-    bool isClassIII = (res % 2);
-    int effectiveRes = isClassIII ? res + 1 : res;
+    const bool isClassIII = (resolution % 2);
+    const int effectiveRes = isClassIII ? resolution + 1 : resolution;
 
-    std::vector<IVec3D::Direction> digits_vec(res + 1, IVec3D::INVALID_DIGIT);
-    IVec3D::Direction* digits = digits_vec.data();
+    digits.assign(resolution + 1, IVec3D::INVALID_DIGIT);
 
     bool first = true;
-    for (int r = effectiveRes; r >= 0; r--) {
+    for (int r = effectiveRes; r >= 1; r--) {
         IVec3D lastIJK = ijk;
         IVec3D lastCenter;
         if (r % 2) {
@@ -418,9 +430,28 @@ std::string encode_bijective(int quadNum, long long i, long long j, int resoluti
         IVec3D diff = lastIJK.diffVec(lastCenter);
         digits[r] = diff.unitIjkPlusToDigit();
     }
+    return ijk;
+}
 
+std::string encode_bijective(int quadNum, long long i, long long j, int resolution) {
+    if (resolution == 0) {
+        std::ostringstream oss;
+        oss << std::setfill('0') << std::setw(2) << quadNum;
+        return oss.str();
+    }
+
+    std::vector<IVec3D::Direction> digits;
+    const IVec3D::Direction seed =
+        z7_walk_up(i, j, resolution, digits).unitIjkPlusToDigit();
+    if (seed >= IVec3D::NUM_DIGITS) {
+        throw std::runtime_error(
+            "Z7 encode: coordinate does not lie in the given quad");
+    }
+
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(2) << (quadNum + 12 * seed);
     std::string out = oss.str();
-    for (int r = 1; r <= res; r++) {
+    for (int r = 1; r <= resolution; r++) {
         out += std::to_string((int) digits[r]);
     }
     return out;
@@ -431,12 +462,10 @@ void decode_bijective(const std::string& index, int resolution,
     if (index.length() < 2) {
         throw std::runtime_error("Z7 index too short");
     }
-    std::string bcStr = index.substr(0, 2);
-    if (bcStr[0] == '0') {
-        bcStr = bcStr.substr(1, 1);
-    }
-    quadNum = std::stoi(bcStr);
-    if (quadNum < 0 || quadNum > 11) {
+    const int lead = std::stoi(index.substr(0, 2));
+    quadNum = lead % 12;
+    const int seed = lead / 12;
+    if (lead < 0 || seed >= IVec3D::NUM_DIGITS) {
         throw std::runtime_error("Invalid base cell number");
     }
 
@@ -452,7 +481,7 @@ void decode_bijective(const std::string& index, int resolution,
         res++;
     }
 
-    IVec3D ijk(0, 0, 0);
+    IVec3D ijk = z7_seed_coord(seed);
     for (int r = 0; r < res; r++) {
         if ((r + 1) % 2) {
             ijk.downAp7();

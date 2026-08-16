@@ -186,22 +186,21 @@ test_that("Z7: Edge cases are handled correctly", {
 })
 
 test_that("Z7: Resolution progression works correctly", {
-  # Test that resolution scaling works (factor of 7 per level)
-  
-  # Start at resolution 1 with simple coordinates
-  idx_r1 <- hexify_cell_to_index(5L, 1L, 1L, 1L, 7L, "z7")
-  
-  # At resolution 2, same cell center should be at (7, 7)
-  idx_r2 <- hexify_cell_to_index(5L, 7L, 7L, 2L, 7L, "z7")
-  
-  # At resolution 3, same cell center should be at (49, 49)
-  idx_r3 <- hexify_cell_to_index(5L, 49L, 49L, 3L, 7L, "z7")
-  
-  # These indices represent the same logical cell at different resolutions
-  # Their string representations will be different lengths
-  expect_equal(nchar(idx_r1), 2L + 1L)  # Face + 1 digit
-  expect_equal(nchar(idx_r2), 2L + 2L)  # Face + 2 digits
-  expect_equal(nchar(idx_r3), 2L + 3L)  # Face + 3 digits
+  # The cells covering one point, at three resolutions: the index carries the
+  # two-digit leading field and one digit per level.
+  for (res in 1:3) {
+    cell <- hexify_lonlat_to_cell(10, 45, res, 7L)
+    qij <- hexify_cell_to_quad_ij(cell, res, 7L)
+    idx <- hexify_cell_to_index(qij$quad, qij$i, qij$j, res, 7L, "z7")
+    expect_equal(nchar(idx), 2L + res)
+  }
+})
+
+test_that("Z7: a coordinate outside its quad is rejected", {
+  # (49, 49) at resolution 3 lies outside quad 5's substrate box, so no cell of
+  # that quad carries it and the hierarchy walk leaves the quad's own base cell.
+  expect_error(hexify_cell_to_index(5L, 49L, 49L, 3L, 7L, "z7"),
+               "does not lie in the given quad")
 })
 
 test_that("Z7: Former DGGRID problem indices are stable", {
@@ -226,5 +225,45 @@ test_that("Z7: Canonical forms provide stability", {
     canonical2 <- hexify_z7_canonical(re_encoded)
     expect_equal(canonical2, canonical,
                  info = sprintf("Canonical form of %s should be stable", idx))
+  }
+})
+
+test_that("Z7: every cell round-trips through its index (#53)", {
+  set.seed(53)
+  for (res in 1:5) {
+    n_cells <- 10 * 7^res + 2
+    ids <- if (n_cells <= 600) seq_len(n_cells) else sample.int(n_cells, 600)
+
+    qij <- hexify_cell_to_quad_ij(ids, res, 7L)
+    idx <- vapply(seq_along(ids), function(k) {
+      hexify_cell_to_index(qij$quad[k], qij$i[k], qij$j[k], res, 7L, "z7")
+    }, character(1))
+
+    back <- vapply(idx, function(s) {
+      r <- hexify_index_to_cell(s, 7L, "z7")
+      hexify_quad_ij_to_cell(r$face, r$i, r$j, r$resolution, 7L)
+    }, numeric(1), USE.NAMES = FALSE)
+
+    expect_equal(back, as.numeric(ids),
+                 info = sprintf("resolution %d round-trip", res))
+    expect_equal(length(unique(idx)), length(idx),
+                 info = sprintf("resolution %d indices are distinct", res))
+    expect_true(all(nchar(idx) == 2L + res),
+                info = sprintf("resolution %d index length", res))
+  }
+})
+
+test_that("Z7: the two cells DGGRID's encoder merges keep distinct indices (#53)", {
+  # DgZ7StringRF sends both of these to "0045310"; they are distinct cells in
+  # distinct quads, so a bijective index has to separate them.
+  for (res in c(5, 6)) {
+    cells <- hexify_lonlat_to_cell(c(5, -34.9), c(45, 60.2), res, 7L)
+    qij <- hexify_cell_to_quad_ij(cells, res, 7L)
+    idx <- vapply(1:2, function(k) {
+      hexify_cell_to_index(qij$quad[k], qij$i[k], qij$j[k], res, 7L, "z7")
+    }, character(1))
+
+    expect_false(cells[1] == cells[2])
+    expect_false(idx[1] == idx[2])
   }
 })

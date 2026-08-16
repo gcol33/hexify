@@ -28,6 +28,25 @@
 
 ## Bug fixes
 
+* Aperture-7 cells now round-trip through their Z7 index (#53). A cell was
+  encoded by walking it up the aperture-7 hierarchy to resolution 0, and decoded
+  by walking the digits back down from the origin, but the walk does not arrive
+  at the origin for every cell: a quad is a rhombus while the aperture-7 parents
+  are hexagons, so the quad boundary cuts through the parents of the cells along
+  it, and those arrive at one of the six neighbours of the origin instead. Two
+  thirds of all cells do, and the encoder discarded where it landed, so
+  `cell_to_index()` followed by `cell_to_quad_ij()` returned the starting cell
+  for only 33 to 54 per cent of them. The index now carries the arrival point in
+  its leading field as `quad + 12 * seed`, with `seed` one of the seven unit
+  digits, and decoding seeds the walk from it. Every cell round-trips at
+  resolutions 1 to 9, distinct cells keep distinct indices, and the index length
+  is unchanged at `2 + resolution`. A cell whose ancestry stays inside its quad
+  has `seed = 0` and keeps the plain two-digit quad, so the two cells DGGRID's
+  own encoder merges onto `0045310` now read `2752310` and `2545310`. Read the
+  quad from an index with `BB %% 12` or `hexify_index_to_cell()`. A coordinate
+  that lies outside the quad it is given is now rejected rather than encoded to
+  a string that names a different cell.
+
 * Aperture-7 cell IDs ran outside the documented `[1, 10 * 7^res + 2]` range and
   `validate_cell_id()` rejected them: a uniform sample at resolution 2 reached
   2647 against a nominal count of 492, and at resolutions 1 and 2 the IDs also

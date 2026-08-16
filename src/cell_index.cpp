@@ -20,9 +20,12 @@ namespace hexify {
 // bijective hierarchical encoding of it (z7::encode_bijective/decode_bijective):
 // the surrogate is expanded to its Class I substrate IJK (exact integer, one
 // aperture-7 level at odd resolutions), encoded, and coarsened back on decode.
-// This deviates from DGGRID's DgZ7StringRF only for the pentagon-region cells
-// where DGGRID's own encoder is non-injective (collides distinct cells); there
+// The digits follow DGGRID's DgZ7StringRF except in the pentagon regions where
+// DGGRID's own encoder is non-injective (it collides distinct cells); there
 // hexify keeps a distinct, round-tripping index instead of the colliding one.
+// The leading field is quad + 12 * seed rather than the bare quad, seed naming
+// the level-0 point the hierarchy walk arrives at, which is the origin only for
+// a cell whose whole ancestry lies inside its quad.
 // ---------------------------------------------------------------------------
 namespace {
   const int MAX_RES_AP3 = 30;
@@ -188,13 +191,15 @@ uint64_t index_to_uint64(const std::string& index, int aperture,
                          IndexType index_type) {
   // Pack index string into a 64-bit integer:
   // Bits 60-63: face/quad (4 bits, 0-11)
+  // Bits 57-59: aperture-7 Z7 hierarchy seed (3 bits), 0 for every other index
   // Remaining bits: resolution digits packed per aperture
   if (index.length() < 2) {
     throw std::runtime_error("hex_index: index too short for uint64 conversion");
   }
 
-  int face = parse_quad(index);
-  uint64_t result = static_cast<uint64_t>(face) << 60;
+  int lead = parse_quad(index);
+  uint64_t result = (static_cast<uint64_t>(lead % 12) << 60) |
+                    (static_cast<uint64_t>(lead / 12) << 57);
 
   if (index.length() == 2) return result;
 
@@ -205,14 +210,16 @@ uint64_t index_to_uint64(const std::string& index, int aperture,
   else if (aperture == 7) bits_per_digit = 3;   // 0-6 needs 3 bits
   else throw std::runtime_error("hex_index: unsupported aperture for uint64");
 
-  // Check we don't overflow (60 bits available for digits)
-  if (static_cast<int>(digits.length()) * bits_per_digit > 60) {
+  // Aperture 7 spends three bits on the hierarchy seed; the others start at 60.
+  const int digit_base = (aperture == 7) ? 57 : 60;
+
+  if (static_cast<int>(digits.length()) * bits_per_digit > digit_base) {
     throw std::runtime_error("hex_index: index too long for uint64 (overflow)");
   }
 
   for (size_t r = 0; r < digits.length(); r++) {
     int digit = digits[r] - '0';
-    int shift = 60 - static_cast<int>((r + 1) * bits_per_digit);
+    int shift = digit_base - static_cast<int>((r + 1) * bits_per_digit);
     result |= (static_cast<uint64_t>(digit) << shift);
   }
 
@@ -223,7 +230,8 @@ std::string uint64_to_index(uint64_t value, int resolution, int aperture,
                             IndexType index_type) {
   // Unpack uint64 back to index string
   int face = static_cast<int>((value >> 60) & 0xF);
-  std::string result = format_quad(face);
+  int seed = static_cast<int>((value >> 57) & 0x7);
+  std::string result = format_quad(face + 12 * seed);
 
   if (resolution == 0) return result;
 
@@ -234,10 +242,11 @@ std::string uint64_to_index(uint64_t value, int resolution, int aperture,
   else if (aperture == 7) { bits_per_digit = 3; max_digit = 6; }
   else throw std::runtime_error("hex_index: unsupported aperture for uint64");
 
+  const int digit_base = (aperture == 7) ? 57 : 60;
   uint64_t mask = (1ULL << bits_per_digit) - 1;
 
   for (int r = 0; r < resolution; r++) {
-    int shift = 60 - (r + 1) * bits_per_digit;
+    int shift = digit_base - (r + 1) * bits_per_digit;
     int digit = static_cast<int>((value >> shift) & mask);
     if (digit > max_digit) {
       throw std::runtime_error("hex_index: uint64 value has an out-of-range digit for this aperture");

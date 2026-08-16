@@ -89,9 +89,12 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
       grid$index_type
     )
     
-    # Extract face number from index (first 2 characters)
-    # Index format: "FF..." where FF is 2-digit face number
-    faces[i] <- as.integer(substr(cell_indices[i], 1, 2))
+    # The leading field of an index is not always the face on its own -- the
+    # aperture-7 Z7 index packs its hierarchy seed in there too -- so read the
+    # face back through the decoder that owns the format.
+    faces[i] <- as.integer(
+      cpp_index_to_cell(cell_indices[i], grid$aperture, grid$index_type)$face
+    )
   }
   
   return(data.frame(

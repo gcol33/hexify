@@ -17,6 +17,7 @@ test_that("hex_browse creates a leaflet map", {
 test_that("hex_browse with value column works", {
   skip_if_not_installed("leaflet")
 
+  set.seed(1)
   df <- data.frame(
     lon = runif(10, 5, 15),
     lat = runif(10, 45, 55),
@@ -28,10 +29,12 @@ test_that("hex_browse with value column works", {
 
   # The value= mapping must actually reach the widget's polygon fill colors
   # (not just build *a* map): fillColor should vary across cells, and a map
-  # built without value= should use the flat default fill instead.
+  # built without value= should use the flat default fill instead. The map
+  # carries one polygon per cell, while the hexified data carries one row per
+  # point, and several points can share a cell.
   poly_call <- Filter(function(c) c$method == "addPolygons", m$x$calls)[[1]]
   fill_colors <- poly_call$args[[4]]$fillColor
-  expect_length(fill_colors, nrow(as.data.frame(hd)))
+  expect_length(fill_colors, length(unique(as.data.frame(hd)$cell_id)))
   expect_gt(length(unique(fill_colors)), 1)
 
   m_default <- hex_browse(hd)
