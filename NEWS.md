@@ -1,4 +1,23 @@
-# hexify (development version)
+# hexify 0.8.0
+
+## Breaking changes
+
+* Aperture-7 cell IDs and Z7 index strings change. The IDs now span `[0, 7^res)`
+  within a quad and the index carries the hierarchy seed in its leading field,
+  both of which the Bug fixes below explain. Aperture-7 IDs and indices stored
+  from an earlier version do not name the same cells and need regenerating from
+  the coordinates. Aperture-3 and aperture-4 cell IDs are unchanged.
+
+* `hexify_assign()` assigns about a third of points to a different cell, at every
+  aperture and effective resolution, because the quantizer built its cube triple
+  from the wrong pair of axes. The cell it used to name sits 0.68 to 0.87 cell
+  spacings from the point, further than the circumradius, so the point fell
+  outside it. Its `id` is now the Z3 index string and its `face` the quad, and
+  the `match_dggrid_parity` argument is gone; it was never wired to an effect.
+
+* `cell_to_lonlat()` returns the centres of the two vertex-quad pentagons at
+  (11.25, 58.28) and (-168.75, -58.28), where those cells are under the ISEA
+  default orientation, rather than at the geographic poles.
 
 ## New features
 
@@ -136,9 +155,11 @@
   that corrects the coordinate with the largest rounding error corrected the
   wrong one: against brute-force nearest-centre over 3000 points, the quantizer
   returned a cell other than the nearest for 1026 of them. The triple is
-  `(i - j, j, -i)`. This reached `hex_quantize_ap3/4/7()`, the mixed-sequence
-  quantizer and `hexify_assign()`, whose cell assignment changes for about 35%
-  of points at every effective resolution. Cell IDs and hierarchical indices are
+  `(i - j, j, -i)`, which now matches brute-force nearest-centre on every
+  sampled point. This reached `hex_quantize_ap3/4/7()`, the mixed-sequence
+  quantizer and `hexify_assign()`, whose cell assignment changes for about a
+  third of points; the quantization is scale-free, so the share is the same at
+  every effective resolution. Cell IDs and hierarchical indices are
   unaffected -- they quantize through `quad_xy_to_ij()`, which uses the exact
   region-classifying quantizer.
 
@@ -172,8 +193,7 @@
 
 * `hexify_index_to_lonlat()` returned the icosahedron vertex instead of the
   pole for cells in the polar pentagon quads, at every aperture. It now answers
-  those directly, as `cell_to_lonlat()` does. Aperture-7 indices remain limited
-  by the upstream Z7 encoding collision tracked in #53.
+  those directly, as `cell_to_lonlat()` does.
 
 # hexify 0.7.5
 
