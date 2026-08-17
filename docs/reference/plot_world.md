@@ -29,7 +29,7 @@ NULL invisibly. Creates a plot as side effect.
 ## See also
 
 Other visualization:
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 
 ## Examples
 

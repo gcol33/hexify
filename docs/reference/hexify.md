@@ -17,7 +17,8 @@ hexify(
   diagonal = NULL,
   resolution = NULL,
   aperture = 3,
-  resround = "nearest"
+  resround = "nearest",
+  radius_km = EARTH_RADIUS_KM
 )
 ```
 
@@ -30,8 +31,9 @@ hexify(
 - grid:
 
   A HexGridInfo object from
-  [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md).
-  If provided, overrides area_km2, resolution, and aperture parameters.
+  [`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md).
+  If provided, overrides area_km2, resolution, aperture and radius_km
+  parameters.
 
 - lon:
 
@@ -55,11 +57,18 @@ hexify(
 
 - aperture:
 
-  Grid aperture: 3, 4, 7, or "4/3" for mixed (default 3)
+  Grid aperture: 3, 4, 7, a mixed family such as "4/3" or "4/7", or one
+  aperture per resolution level, e.g. `c(4, 4, 7, 3)` (default 3)
 
 - resround:
 
   How to round resolution: "nearest", "up", or "down"
+
+- radius_km:
+
+  Radius of the body the grid covers, in kilometers, or a body name such
+  as "mars" (default Earth). See
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md).
 
 ## Value
 
@@ -82,13 +91,13 @@ cell IDs. Use `result@cell_center` to get cell center coordinates.
 For sf objects, coordinates are automatically extracted and transformed
 to 'WGS84' (EPSG:4326) if needed. The geometry column is preserved.
 
-Either `area_km2` (or `area`), `diagonal`, or `resolution` must be
-provided unless a `grid` object is supplied.
+Either `area_km2`, `diagonal`, or `resolution` must be provided unless a
+`grid` object is supplied.
 
 The HexData return type (default) stores the grid specification so
 downstream functions like
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_cell_to_sf()`](https://gillescolling.com/hexify/reference/hexify_cell_to_sf.md),
 etc. don't need grid parameters repeated.
 
 ## Grid Specification
@@ -102,15 +111,15 @@ You can create a grid specification once and reuse it:
 
 ## See also
 
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 grid specification,
-[`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+[`HexData-class`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for return object details,
-[`as_sf`](https://gcol33.github.io/hexify/reference/as_sf.md) for
+[`as_sf`](https://gillescolling.com/hexify/reference/as_sf.md) for
 converting to sf
 
 Other hexify main:
-[`hexify_grid()`](https://gcol33.github.io/hexify/reference/hexify_grid.md)
+[`hexify_grid()`](https://gillescolling.com/hexify/reference/hexify_grid.md)
 
 ## Examples
 

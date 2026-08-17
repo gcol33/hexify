@@ -35,7 +35,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='252.00' y='19.55' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='235.14px' lengthAdjust='spacingAndGlyphs'>Hexagonal Subdivision of Triangle</text>
+<text x='252.00' y='19.55' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Hexagonal Subdivision of Triangle</text>
 </g>
 <defs>
   <clipPath id='cpMTQuNDB8NDg5LjYwfDI4LjgwfDM0NS42MA=='>
@@ -72,14 +72,14 @@
 <polygon points='236.72,124.71 218.15,114.00 199.59,124.71 199.59,146.15 218.15,156.87 236.72,146.15 236.72,124.71 ' style='stroke-width: 0.60; stroke: #264653; fill: #F4A261; fill-opacity: 0.40;' />
 <polygon points='270.56,124.71 252.00,114.00 233.44,124.71 233.44,146.15 252.00,156.87 270.56,146.15 270.56,124.71 ' style='stroke-width: 0.60; stroke: #264653; fill: #2A9D8F; fill-opacity: 0.40;' />
 <polygon points='253.64,95.40 235.08,84.69 216.51,95.40 216.51,116.84 235.08,127.56 253.64,116.84 253.64,95.40 ' style='stroke-width: 0.60; stroke: #264653; fill: #E9C46A; fill-opacity: 0.40;' />
-<circle cx='268.92' cy='223.37' r='1.62' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='268.92' cy='281.99' r='1.62' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='133.54' cy='281.99' r='1.62' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='268.92' cy='164.74' r='1.62' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='218.15' cy='252.68' r='1.62' style='stroke-width: 0.75; fill: #000000;' />
-<text x='240.72' y='332.15' text-anchor='middle' style='font-size: 10.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='194.05px' lengthAdjust='spacingAndGlyphs'>Triangle face with hexagonal tessellation</text>
-<text x='376.10' y='83.34' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='61.30px' lengthAdjust='spacingAndGlyphs'>Each hexagon</text>
-<text x='376.10' y='94.86' style='font-size: 9.60px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='70.61px' lengthAdjust='spacingAndGlyphs'>= equal area cell</text>
+<circle class='theme-fill-fg' cx='268.92' cy='223.37' r='1.62' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='268.92' cy='281.99' r='1.62' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='133.54' cy='281.99' r='1.62' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='268.92' cy='164.74' r='1.62' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='218.15' cy='252.68' r='1.62' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<text x='240.72' y='332.15' text-anchor='middle' style='font-size: 1.08em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Triangle face with hexagonal tessellation</text>
+<text x='376.10' y='83.34' style='font-size: 0.96em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Each hexagon</text>
+<text x='376.10' y='94.86' style='font-size: 0.96em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>= equal area cell</text>
 </g>
 </g>
 </svg>

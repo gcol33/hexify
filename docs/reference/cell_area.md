@@ -31,17 +31,16 @@ Named numeric vector of areas in km², one per `cell_id`.
 For ISEA grids the area is constant across all cells and is read
 directly from the grid specification.
 
-For H3 grids the area varies by latitude. This function computes
-geodesic area via
-[`sf::st_area()`](https://r-spatial.github.io/sf/reference/geos_measures.html)
-on H3 cell polygons, with results cached in a session-scoped environment
-so repeated calls for the same cells are fast.
+For H3 grids the area varies by latitude. The vendored 'H3' library
+computes each cell's spherical polygon area as a solid angle, which this
+function reads on the grid's body, so a grid built with `radius_km`
+reports that body's areas.
 
 ## See also
 
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 grid specifications,
-[`h3_crosswalk`](https://gcol33.github.io/hexify/reference/h3_crosswalk.md)
+[`h3_crosswalk`](https://gillescolling.com/hexify/reference/h3_crosswalk.md)
 for ISEA/H3 interoperability
 
 ## Examples

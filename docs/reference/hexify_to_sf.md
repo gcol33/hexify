@@ -1,7 +1,7 @@
 # Convert hexify result to sf object
 
 Converts the output of
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md) to an
+[`hexify()`](https://gillescolling.com/hexify/reference/hexify.md) to an
 sf spatial object. Can return either point geometries (cell centers) or
 polygon geometries (cell boundaries).
 
@@ -16,7 +16,7 @@ hexify_to_sf(data, geometry = c("point", "polygon"), aperture = 3L, crs = 4326)
 - data:
 
   Data frame returned by
-  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+  [`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
   containing cell_id, cell_cen_lon, cell_cen_lat columns
 
 - geometry:
@@ -54,17 +54,17 @@ automatically handled (each cell boundary appears once).
 
 ## See also
 
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for the
+[`hexify`](https://gillescolling.com/hexify/reference/hexify.md) for the
 main function,
-[`hexify_to_polygons`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+[`hexify_to_polygons`](https://gillescolling.com/hexify/reference/hexify_to_polygons.md)
 for polygon-only conversion
 
 Other sf conversion:
-[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
-[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
-[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
-[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md),
-[`hexify_to_polygons()`](https://gcol33.github.io/hexify/reference/hexify_to_polygons.md)
+[`hex_corners_to_sf()`](https://gillescolling.com/hexify/reference/hex_corners_to_sf.md),
+[`hexify_cell_to_sf()`](https://gillescolling.com/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_grid_global()`](https://gillescolling.com/hexify/reference/hexify_grid_global.md),
+[`hexify_grid_rect()`](https://gillescolling.com/hexify/reference/hexify_grid_rect.md),
+[`hexify_to_polygons()`](https://gillescolling.com/hexify/reference/hexify_to_polygons.md)
 
 ## Examples
 

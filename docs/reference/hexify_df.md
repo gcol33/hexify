@@ -15,7 +15,7 @@ hexify_df(x)
 - x:
 
   Result from
-  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+  [`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
 
 ## Value
 

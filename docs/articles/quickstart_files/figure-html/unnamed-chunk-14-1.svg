@@ -45,7 +45,7 @@
 <rect class='legend-bg' x='59.04' y='59.04' width='414.72' height='227.52' style='stroke-width: 0.75; stroke: #F5F6F8; fill: #F5F6F8;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 14.40px; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='254.83px' lengthAdjust='spacingAndGlyphs'>Hexagonal Grid over Western Europe</text>
+<text x='266.40' y='34.67' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Hexagonal Grid over Western Europe</text>
 </g>
 <g clip-path='url(#cpNTkuMDR8NDczLjc2fDU5LjA0fDI4Ni41Ng==)'>
 <path d='M 164.06 265.72 L 158.51 262.95 L 153.91 266.28 L 154.85 272.43 L 160.35 275.17 L 164.96 271.80 L 164.06 265.72 Z' style='fill-rule: evenodd; stroke-width: 0.75; stroke: #BEBEBE;' />

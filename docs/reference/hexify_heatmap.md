@@ -37,7 +37,7 @@ hexify_heatmap(
 - data:
 
   A HexData object from
-  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md), a
+  [`hexify()`](https://gillescolling.com/hexify/reference/hexify.md), a
   data frame with cell_id and cell_area columns, or an sf object with
   hexagon polygons.
 
@@ -202,13 +202,13 @@ Common projections:
 
 ## See also
 
-[`plot_grid`](https://gcol33.github.io/hexify/reference/plot_grid.md)
+[`plot_grid`](https://gillescolling.com/hexify/reference/plot_grid.md)
 for base R plotting,
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 to generate polygons manually
 
 Other visualization:
-[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
+[`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md)
 
 ## Examples
 

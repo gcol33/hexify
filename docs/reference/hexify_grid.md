@@ -13,7 +13,8 @@ hexify_grid(
   metric = TRUE,
   resround = "nearest",
   aperture = 3,
-  projection = "ISEA"
+  projection = "ISEA",
+  radius_km = EARTH_RADIUS_KM
 )
 ```
 
@@ -43,6 +44,12 @@ hexify_grid(
 
   Projection type (only 'ISEA' supported currently)
 
+- radius_km:
+
+  Radius of the body the grid covers, in kilometers, or a body name such
+  as "mars" (default Earth). See
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md).
+
 ## Value
 
 A hexify_grid object containing:
@@ -67,19 +74,23 @@ A hexify_grid object containing:
 
   Map projection ("ISEA")
 
+- radius_km:
+
+  Radius of the body, in kilometers
+
 - index_type:
 
   Index encoding type ("z3", "z7", or "zorder")
 
 ## See also
 
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for the
+[`hexify`](https://gillescolling.com/hexify/reference/hexify.md) for the
 main user function,
-[`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
+[`hexify_grid_to_cell`](https://gillescolling.com/hexify/reference/hexify_grid_to_cell.md)
 for coordinate conversion
 
 Other hexify main:
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+[`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
 
 ## Examples
 

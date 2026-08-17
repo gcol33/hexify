@@ -13,7 +13,8 @@ hex_grid(
   aperture = 3,
   type = c("isea", "h3"),
   resround = "nearest",
-  crs = 4326L
+  crs = 4326L,
+  radius_km = EARTH_RADIUS_KM
 )
 ```
 
@@ -39,8 +40,13 @@ hex_grid(
 
 - aperture:
 
-  Grid aperture: 3 (default), 4, 7, or "4/3" for mixed. Ignored for H3
-  grids (fixed at 7).
+  Grid aperture: 3 (default), 4, 7, a mixed family such as "4/3", "4/7"
+  or "7/4", or one aperture per resolution level as a vector, e.g.
+  `c(4, 4, 7, 3)`. A family name refines by the first aperture for the
+  first `floor(resolution / 2)` levels and by the second for the rest,
+  which is how DGGRID arranges ISEA43H. A per-level vector needs
+  `resolution` rather than `area_km2`. Ignored for H3 grids (fixed at
+  7).
 
 - type:
 
@@ -54,6 +60,13 @@ hex_grid(
 - crs:
 
   Coordinate reference system EPSG code (default 4326 = 'WGS84').
+
+- radius_km:
+
+  Radius of the body the grid covers, in kilometers, or the name of a
+  body: "mercury", "venus", "earth" (default), "moon", "mars", "ceres",
+  "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
+  "enceladus", "titan", "uranus", "neptune", "pluto".
 
 ## Value
 
@@ -70,6 +83,27 @@ matching the closest H3 resolution.
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA
 grids, H3 cells are NOT exactly equal-area (area varies by ~3-5\\
 location).
+
+## Other Bodies
+
+A grid is a partition of the sphere, and `radius_km` sets the sphere it
+is measured on. Cell geometry – which cell a coordinate lands in, where
+cell centres and corners sit, the hierarchy, the neighbours – is angular
+and identical on every body; the radius sets the kilometer figures: cell
+area, diagonal, spacing, and the resolution that `area_km2` picks.
+Earth's area comes from the 'WGS84' ellipsoid, every other radius gives
+the sphere area 4*pi*r^2.
+
+
+    mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+    hex_grid(resolution = 8, radius_km = 3389.5)   # the same grid
+
+Both backends take a radius. 'H3' reports a cell's area as its solid
+angle times Earth's radius squared, so another radius scales those areas
+by the square of the radius ratio, exactly. One caveat carries: an 'H3'
+cell ID names a position in 'H3”s topology, which 'Uber”s 'H3' reads on
+Earth, so the IDs of a grid on another body are that topology on that
+body and are not interchangeable with Earth 'H3' data.
 
 ## One Grid, Many Datasets
 
@@ -105,9 +139,9 @@ datasets without repeating parameters:
 
 ## See also
 
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for
+[`hexify`](https://gillescolling.com/hexify/reference/hexify.md) for
 assigning points to cells,
-[`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+[`HexGridInfo-class`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 for class documentation
 
 ## Examples
@@ -125,6 +159,14 @@ grid4 <- hex_grid(area_km2 = 500, aperture = 4)
 
 # Create mixed aperture grid
 grid43 <- hex_grid(area_km2 = 1000, aperture = "4/3")
+
+# Mix in aperture 7, either as a family or level by level
+grid47 <- hex_grid(area_km2 = 1000, aperture = "4/7")
+grid_seq <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
+
+# Grid on another body, by name or by radius
+mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+titan <- hex_grid(resolution = 6, radius_km = 2574.76)
 
 # Use grid in hexify
 df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))

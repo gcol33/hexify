@@ -28,6 +28,6 @@ TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 ## See also
 
 Other 'dggridR' compatibility:
-[`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md),
-[`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
-[`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
+[`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md),
+[`dggrid_43h_sequence()`](https://gillescolling.com/hexify/reference/dggrid_43h_sequence.md),
+[`from_dggrid()`](https://gillescolling.com/hexify/reference/from_dggrid.md)

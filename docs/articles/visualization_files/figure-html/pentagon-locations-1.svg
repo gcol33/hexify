@@ -1695,8 +1695,8 @@
 <path d='M 250.26 193.71 L 246.28 188.78 L 240.31 188.93 L 237.96 193.86 L 241.79 198.58 L 248.18 198.47 L 250.26 193.71 Z' style='fill-rule: evenodd; fill: #A020F0; fill-opacity: 0.60; stroke-width: 1.71; stroke: #A020F0; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA=)'>
-<text x='41.17' y='31.05' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='334.45px' lengthAdjust='spacingAndGlyphs'>12 pentagonal cells at icosahedron vertices (area = 5/6 of hexagons)</text>
-<text x='41.17' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='142.89px' lengthAdjust='spacingAndGlyphs'>Pentagon Cell Locations</text>
+<text x='41.17' y='31.05' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>12 pentagonal cells at icosahedron vertices (area = 5/6 of hexagons)</text>
+<text x='41.17' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Pentagon Cell Locations</text>
 </g>
 </g>
 </svg>

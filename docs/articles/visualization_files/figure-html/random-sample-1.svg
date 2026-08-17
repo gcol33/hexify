@@ -1732,7 +1732,7 @@
 <path d='M 340.95 122.08 L 344.76 122.67 L 347.56 120.25 L 346.50 117.18 L 342.61 116.51 L 339.85 119.00 L 340.95 122.08 Z' style='fill-rule: evenodd; fill: #228B22; fill-opacity: 0.50; stroke-width: 0.85; stroke: #006400; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA=)'>
-<text x='19.46' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='289.03px' lengthAdjust='spacingAndGlyphs'>Random Sample of 50 Cells (~209731 km2 each)</text>
+<text x='19.46' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Random Sample of 50 Cells (~209731 km2 each)</text>
 </g>
 </g>
 </svg>

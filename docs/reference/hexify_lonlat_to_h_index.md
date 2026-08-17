@@ -39,9 +39,9 @@ Data frame with columns:
 ## Details
 
 Most users should use
-[`hexify_lonlat_to_cell`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_cell.md)
+[`hexify_lonlat_to_cell`](https://gillescolling.com/hexify/reference/hexify_lonlat_to_cell.md)
 or
-[`hexify_grid_to_cell`](https://gcol33.github.io/hexify/reference/hexify_grid_to_cell.md)
+[`hexify_grid_to_cell`](https://gillescolling.com/hexify/reference/hexify_grid_to_cell.md)
 which return DGGRID-compatible integer cell IDs.
 
 This function returns hierarchical index strings useful for:

@@ -811,8 +811,8 @@
 <path d='M 380.43 370.95 L 375.34 371.03 L 371.96 375.65 L 373.62 379.95 L 378.76 379.65 L 382.19 375.28 L 380.43 370.95 Z' style='fill-rule: evenodd; fill: #DEF5E5; stroke-width: 0.64; stroke: #FFFFFF; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHw0MzIuMDA=)'>
-<text x='429.31' y='184.74' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='39.16px' lengthAdjust='spacingAndGlyphs'>Species</text>
-<text x='429.31' y='196.62' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='45.25px' lengthAdjust='spacingAndGlyphs'>Richness</text>
+<text x='429.31' y='184.74' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Species</text>
+<text x='429.31' y='196.62' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Richness</text>
 <image width='17.28' height='86.40' x='429.31' y='203.26' preserveAspectRatio='none' xlink:href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAEsCAYAAAACUNnVAAAAvElEQVQ4ja1PyxIDIQhLaHvq/38ve3BFQNSdTi9MXgTF9/1RIQVtiKExQELYhnSErmEYoA/DInfYqpAicdetVRvhBen4OpK1gq7vBgqGAjgtfp9Su+PNSxd2corY3ezKogqV0TV90hLeotvc1AeP2Cgm46TNBgtN8Y9mPYe1MLTYqKqSpvYZwlD85T0Y6CG8MpA0bgqShu3JE2Vd9bRlICEhL7AjEiJAR43yRP2uGY5i6xb0aa6k+LmUu9wF6sEQDhgmSYEAAAAASUVORK5CYII='/>
 <polyline points='443.13,289.52 446.59,289.52 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='443.13,267.99 446.59,267.99 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
@@ -824,13 +824,13 @@
 <polyline points='432.76,246.46 429.31,246.46 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='432.76,224.94 429.31,224.94 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='432.76,203.41 429.31,203.41 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
-<text x='452.07' y='292.67' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='452.07' y='271.14' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>2</text>
-<text x='452.07' y='249.61' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='452.07' y='228.09' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>4</text>
-<text x='452.07' y='206.56' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>5</text>
-<text x='95.96' y='31.05' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='290.03px' lengthAdjust='spacingAndGlyphs'>Number of unique species observed in each equal-area cell</text>
-<text x='95.96' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='182.45px' lengthAdjust='spacingAndGlyphs'>Species Richness per Grid Cell</text>
+<text x='452.07' y='292.67' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>1</text>
+<text x='452.07' y='271.14' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>2</text>
+<text x='452.07' y='249.61' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>3</text>
+<text x='452.07' y='228.09' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>4</text>
+<text x='452.07' y='206.56' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>5</text>
+<text x='95.96' y='31.05' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Number of unique species observed in each equal-area cell</text>
+<text x='95.96' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Species Richness per Grid Cell</text>
 </g>
 </g>
 </svg>

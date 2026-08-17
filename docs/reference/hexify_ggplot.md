@@ -32,7 +32,7 @@ hexify_ggplot(
 - x:
 
   A HexData object from
-  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+  [`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
 
 - basemap:
 
@@ -110,7 +110,7 @@ standard ggplot2 functions like `+`,
 
 ## See also
 
-[`plot,HexData,missing-method`](https://gcol33.github.io/hexify/reference/plot-HexData-missing-method.md)
+[`plot,HexData,missing-method`](https://gillescolling.com/hexify/reference/plot-HexData-missing-method.md)
 for base R plotting
 
 ## Examples

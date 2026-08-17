@@ -322,12 +322,123 @@ city_weather
 #> 10    2240    Warsaw     7.30659
 ```
 
+## Cell-Level Aggregation and Neighbors
+
+[`hex_summarize()`](https://gillescolling.com/hexify/reference/hex_summarize.md)
+aggregates data per cell without manually splitting and merging, and
+[`get_neighbors()`](https://gillescolling.com/hexify/reference/get_neighbors.md)
+finds the ring of cells surrounding a given cell — useful for smoothing,
+spatial lag features, or checking what surrounds a hotspot.
+
+``` r
+
+# Aggregate the station data straight from the HexData object
+hex_summarize(stations_hex, mean_temp = mean(temperature), n_stations = length(temperature))
+#>    cell_id cell_cen_lon cell_cen_lat cell_area_km2 n_points   mean_temp
+#> 1     1486    8.8605921     56.44133      69948.66        1  4.33327138
+#> 2     1617   11.2500000     37.27999      69948.66        3 13.86698499
+#> 3      756    2.7876081     59.40683      69948.66        1 14.78591715
+#> 4     1702   23.6524007     40.11980      69948.66        1 22.07036539
+#> 5     1533    0.9055244     38.03217      69948.66        2 15.79263349
+#> 6      784    3.8134141     56.73586      69948.66        2 17.33034539
+#> 7      891   -6.9845461     48.48206      69948.66        1 19.34760702
+#> 8     2240   22.3252813     52.74188      69948.66        1  7.30659018
+#> 9     1562    5.9134033     39.97473      69948.66        1 13.69252087
+#> 10     836   -8.8840946     52.56766      69948.66        2 19.77801460
+#> 11     918   -8.1917714     46.29966      69948.66        1 12.47700445
+#> 12    2941   28.7694285     59.95664      69948.66        1 17.23507876
+#> 13    2211   21.3956718     48.53188      69948.66        2  8.61959723
+#> 14    1756   26.2563977     35.79230      69948.66        1  7.72706532
+#> 15    1588    6.1897627     35.80560      69948.66        1 16.79208370
+#> 16    1566   13.2634952     47.96291      69948.66        2 14.03583407
+#> 17     864   -5.7057188     50.63018      69948.66        1 20.44733536
+#> 18     919   -4.3481495     46.43340      69948.66        1  0.09218036
+#> 19    2242   18.6865859     56.73586      69948.66        1 23.30899470
+#> 20    1589    7.7872318     37.75542      69948.66        1 14.54380966
+#> 21    2943   19.7123917     59.40683      69948.66        2 16.62937840
+#> 22    2235   29.4014718     42.06641      69948.66        1 18.96105332
+#> 23    1564    9.3676906     43.78074      69948.66        1  9.41982974
+#> 24    1567   15.4482390     50.29623      69948.66        1 11.60462511
+#> 25    1534    2.3674390     40.11958      69948.66        1  6.70912517
+#> 26    2267   26.8454720     52.74001      69948.66        1 14.80152001
+#> 27    1645   14.7127682     37.75542      69948.66        1 13.94307721
+#> 28    1618   13.0258784     39.62728      69948.66        1 10.48546862
+#> 29    1619   14.9098954     41.91219      69948.66        1 12.45167799
+#> 30    2268   25.3924346     54.80755      69948.66        1  5.79488808
+#> 31    1537    7.3499007     46.08969      69948.66        1 10.36833374
+#> 32    1560    2.8450855     35.92015      69948.66        1 19.41016981
+#> 33    1477   -5.8644255     37.80961      69948.66        1 21.22466440
+#> 34    1509    3.4280982     46.36031      69948.66        2 10.81345455
+#> 35     809   -6.7691252     55.02709      69948.66        1 18.67035320
+#> 36    1594   17.3249995     48.35421      69948.66        1 12.45533116
+#> 37    2206   28.3644255     37.80961      69948.66        1 12.86376434
+#> 38    1481   -0.4835992     46.44662      69948.66        1 11.88084926
+#> 39     946   -5.6635964     44.26334      69948.66        1 15.98975606
+#> 40    1538    9.2365048     47.96291      69948.66        1 22.04184729
+#> 41    2944   15.3912479     58.91103      69948.66        1 16.88313865
+#>    n_stations
+#> 1           1
+#> 2           3
+#> 3           1
+#> 4           1
+#> 5           2
+#> 6           2
+#> 7           1
+#> 8           1
+#> 9           1
+#> 10          2
+#> 11          1
+#> 12          1
+#> 13          2
+#> 14          1
+#> 15          1
+#> 16          2
+#> 17          1
+#> 18          1
+#> 19          1
+#> 20          1
+#> 21          2
+#> 22          1
+#> 23          1
+#> 24          1
+#> 25          1
+#> 26          1
+#> 27          1
+#> 28          1
+#> 29          1
+#> 30          1
+#> 31          1
+#> 32          1
+#> 33          1
+#> 34          2
+#> 35          1
+#> 36          1
+#> 37          1
+#> 38          1
+#> 39          1
+#> 40          1
+#> 41          1
+```
+
+``` r
+
+# The 6 cells surrounding a given cell (k = 1), or a wider ring with k > 1
+some_cell <- stations_hex@cell_id[1]
+get_neighbors(some_cell, grid)
+#> [[1]]
+#> [1]    1  757  784 1485 1513 2215
+get_neighbors(some_cell, grid, k = 2)
+#> [[1]]
+#>  [1]    1  757  784 1485 1513 2215   28 2944   55  756  783  811 1484 1512 1540
+#> [16] 2214 2242
+```
+
 ## Choosing Resolution
 
 ### By Target Area
 
 Use
-[`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+[`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)
 with `area_km2` to get the closest available resolution:
 
 ``` r
@@ -400,6 +511,90 @@ for (ap in c(3, 4, 7)) {
 | 4 | Power-of-2 scaling, GIS workflows | Moderate resolution steps |
 | 7 | Rapid cell count growth, coarse analysis | Largest resolution jumps |
 | 4/3 | Balance of 4’s fast start + 3’s fine control | More complex indexing |
+
+## Grids on Other Bodies
+
+A grid partitions a sphere, and `radius_km` sets which sphere. Pass a
+radius in kilometres or the name of a body:
+
+``` r
+
+mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
+mars
+#> HexGridInfo Specification
+#> -------------------------
+#> Aperture:    3
+#> Resolution:  9
+#> Area:        733.48 km^2
+#> Diagonal:    29.10 km
+#> CRS:         EPSG:4326
+#> Radius:      3389.50 km
+#> Total Cells: 196832
+
+# The same grid, by radius
+identical(mars@area_km2, hex_grid(resolution = mars@resolution, radius_km = 3389.5)@area_km2)
+#> [1] TRUE
+```
+
+Cell geometry is angular: which cell a coordinate falls in, where
+centres and corners sit, the parent-child hierarchy and the neighbours
+are the same on every body. The radius sets the kilometre figures — cell
+area, diagonal, spacing, and the resolution that a target `area_km2`
+picks.
+
+``` r
+
+earth <- hex_grid(resolution = 5)
+moon  <- hex_grid(resolution = 5, radius_km = "moon")
+
+lon <- c(0, 16.37, -70.5)
+lat <- c(0, 48.21, -33.4)
+
+identical(lonlat_to_cell(lon, lat, moon), lonlat_to_cell(lon, lat, earth))
+#> [1] TRUE
+c(earth = earth@area_km2, moon = moon@area_km2)
+#>     earth      moon 
+#> 209730.93  15597.17
+```
+
+Areas come from the sphere of that radius, `4 * pi * r^2`; Earth keeps
+the WGS84 ellipsoid area. Named bodies carry the IAU mean radii
+(Archinal et al. 2018) tabulated by JPL Solar System Dynamics:
+`mercury`, `venus`, `earth`, `moon`, `mars`, `ceres`, `jupiter`, `io`,
+`europa`, `ganymede`, `callisto`, `saturn`, `enceladus`, `titan`,
+`uranus`, `neptune`, `pluto`.
+
+`radius_km` reaches every function that reports kilometres, because the
+grid object carries it:
+[`dgearthstat()`](https://gillescolling.com/hexify/reference/dgearthstat.md),
+[`cell_area()`](https://gillescolling.com/hexify/reference/cell_area.md),
+[`hexify_compare_resolutions()`](https://gillescolling.com/hexify/reference/hexify_compare_resolutions.md)
+and the sf exports all read the grid’s radius.
+
+Both backends take a radius. H3 reports a cell’s area as its solid angle
+times Earth’s radius squared, so another radius scales those areas by
+the square of the radius ratio:
+
+``` r
+
+h3_mars <- hex_grid(resolution = 5, type = "h3", radius_km = "mars")
+#> H3 cells are not exactly equal-area; area varies ~3-5% by latitude.
+#> H3 cell IDs name a position in H3's topology, which Uber's H3 reads on Earth. A grid on another body reuses that topology and its own radius for areas; the IDs are not interchangeable with Earth H3 data.
+#> This message is displayed once per session.
+h3_mars@area_km2 / hex_grid(resolution = 5, type = "h3")@area_km2
+#> [1] 0.2830447
+
+# H3 measures against the WGS84 authalic radius, so that is what divides out
+(3389.5 / 6371.007180918475)^2
+#> [1] 0.2830447
+```
+
+One caveat rides along with H3. A cell ID names a position in H3’s
+topology, which Uber’s H3 reads on Earth. A grid on another body reuses
+that topology and its own radius for areas, so its IDs are that topology
+on that body, not interchangeable with Earth H3 data.
+[`h3_crosswalk()`](https://gillescolling.com/hexify/reference/h3_crosswalk.md)
+needs both grids on the same body for the same reason.
 
 ## Working with sf
 
@@ -479,7 +674,7 @@ result <- hexify(data_with_na, lon = "lon", lat = "lat", grid = grid)
 
 # Check which rows have valid cell assignments
 cat("Cell IDs:", result@cell_id, "\n")
-#> Cell IDs: 126594 2 2 122466
+#> Cell IDs: 126594 122466
 cat("NA indicates invalid coordinates\n")
 #> NA indicates invalid coordinates
 ```
@@ -492,7 +687,7 @@ remains valid, but polygon visualization can be distorted near poles.
 ### Date Line
 
 Polygons crossing the date line (lon = ±180°) are handled automatically.
-[`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf()`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 applies
 [`sf::st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
 internally, so flat map projections render correctly without manual
@@ -512,18 +707,26 @@ intervention.
 | Generate polygons | `cell_to_sf(cell_ids, grid)` |
 | Grid over region | `grid_rect(bbox, grid)` |
 | Global grid | `grid_global(grid)` |
-| Coordinate conversion | [`lonlat_to_cell()`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md), [`cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md) |
-| Compare resolutions | [`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md) |
+| Coordinate conversion | [`lonlat_to_cell()`](https://gillescolling.com/hexify/reference/lonlat_to_cell.md), [`cell_to_lonlat()`](https://gillescolling.com/hexify/reference/cell_to_lonlat.md) |
+| Compare resolutions | [`hexify_compare_resolutions()`](https://gillescolling.com/hexify/reference/hexify_compare_resolutions.md) |
+| Aggregate data per cell | `hex_summarize(result, ...)` |
+| Find neighboring cells | `get_neighbors(cell_id, grid, k = ...)` |
+| Merge/split multi-resolution cells | [`hex_compact()`](https://gillescolling.com/hexify/reference/hex_compact.md), [`hex_uncompact()`](https://gillescolling.com/hexify/reference/hex_uncompact.md) |
+| Distance between cells | `hex_distance(cell_id1, cell_id2, grid)` |
+| Extract raster values at cell centers | `hex_extract(raster, grid)` |
+| Zonal statistics over cell polygons | `hex_zonal(raster, grid)` |
+| Map ISEA cells to H3 (or vice versa) | [`h3_crosswalk()`](https://gillescolling.com/hexify/reference/h3_crosswalk.md) |
+| Per-cell area | `cell_area(cell_ids, grid)` |
 
 ## See Also
 
-- [`vignette("quickstart")`](https://gcol33.github.io/hexify/articles/quickstart.md) -
+- [`vignette("quickstart")`](https://gillescolling.com/hexify/articles/quickstart.md) -
   Getting started with hexify
 
-- [`vignette("visualization")`](https://gcol33.github.io/hexify/articles/visualization.md) -
+- [`vignette("visualization")`](https://gillescolling.com/hexify/articles/visualization.md) -
   Plotting with
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-  [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+  [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 
-- `vignette("theory")` - Mathematical foundations (ISEA projection,
-  apertures)
+- [`vignette("theory")`](https://gillescolling.com/hexify/articles/theory.md) -
+  Mathematical foundations (ISEA projection, apertures)

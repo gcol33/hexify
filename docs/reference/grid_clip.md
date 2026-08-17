@@ -44,9 +44,9 @@ boundary are returned.
 
 ## See also
 
-[`grid_rect`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+[`grid_rect`](https://gillescolling.com/hexify/reference/grid_rect.md)
 for rectangular grids,
-[`grid_global`](https://gcol33.github.io/hexify/reference/grid_global.md)
+[`grid_global`](https://gillescolling.com/hexify/reference/grid_global.md)
 for global grids
 
 ## Examples

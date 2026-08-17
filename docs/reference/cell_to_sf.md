@@ -39,9 +39,9 @@ plotting.
 
 ## See also
 
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 grid specifications,
-[`as_sf`](https://gcol33.github.io/hexify/reference/as_sf.md) for
+[`as_sf`](https://gillescolling.com/hexify/reference/as_sf.md) for
 converting HexData to sf
 
 ## Examples

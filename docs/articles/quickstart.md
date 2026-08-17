@@ -285,6 +285,7 @@ error-free:
 | `area_km2`    | numeric   | Cell area in km²                        |
 | `diagonal_km` | numeric   | Cell diagonal in km                     |
 | `crs`         | integer   | Coordinate reference system (EPSG code) |
+| `grid_type`   | character | Backend: `"isea"` or `"h3"`             |
 
 #### HexData Slots
 
@@ -326,14 +327,15 @@ types for very high resolutions.
 
 ### See Also
 
-- [`vignette("visualization")`](https://gcol33.github.io/hexify/articles/visualization.md) -
+- [`vignette("visualization")`](https://gillescolling.com/hexify/articles/visualization.md) -
   Plotting options:
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-  [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+  [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 
-- [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
+- [`vignette("workflows")`](https://gillescolling.com/hexify/articles/workflows.md) -
   Grid generation, multi-resolution analysis, spatial joins, choosing
   resolution
 
-- `vignette("theory")` - Mathematical foundations (ISEA projection,
-  apertures, space-filling curves)
+- [`vignette("theory")`](https://gillescolling.com/hexify/articles/theory.md) -
+  Mathematical foundations (ISEA projection, apertures, space-filling
+  curves)

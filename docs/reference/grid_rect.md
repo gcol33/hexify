@@ -26,7 +26,7 @@ sf object with hexagon polygons
 
 ## See also
 
-[`grid_global`](https://gcol33.github.io/hexify/reference/grid_global.md)
+[`grid_global`](https://gillescolling.com/hexify/reference/grid_global.md)
 for global grids
 
 ## Examples

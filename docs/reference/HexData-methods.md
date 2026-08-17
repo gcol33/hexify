@@ -114,3 +114,10 @@ as.list(x, ...)
 - `as.data.frame`: Data frame with original data plus cell columns
 
 - `as.list`: Named list containing data, grid, cell_id, and cell_center
+
+## Details
+
+Unlike `[.data.frame`, `drop` defaults to `FALSE`: selecting a single
+column returns a `HexData` object (preserving `grid`/
+`cell_id`/`cell_center`) rather than dropping to a bare vector. Pass
+`drop = TRUE` explicitly to get data.frame-style dropping.

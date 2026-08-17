@@ -1,7 +1,7 @@
 # Visualization
 
 Base R [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for ggplot2, and building custom maps from scratch.
 
 ## Sample Data
@@ -153,14 +153,6 @@ plot(result,
      grid_fill = "lightyellow",
      grid_border = "orange",
      main = "Custom Point Styling")
-#> Warning in plot.window(...): "point_alpha" is not a graphical parameter
-#> Warning in plot.xy(xy, type, ...): "point_alpha" is not a graphical parameter
-#> Warning in axis(side = side, at = at, labels = labels, ...): "point_alpha" is
-#> not a graphical parameter
-#> Warning in axis(side = side, at = at, labels = labels, ...): "point_alpha" is
-#> not a graphical parameter
-#> Warning in box(...): "point_alpha" is not a graphical parameter
-#> Warning in title(...): "point_alpha" is not a graphical parameter
 ```
 
 ![](visualization_files/figure-html/plot-points-custom-1.svg)
@@ -178,14 +170,6 @@ plot(result,
      jitter = FALSE,
      point_color = "red",
      main = "Points at Cell Centers (No Jitter)")
-#> Warning in plot.window(...): "jitter" is not a graphical parameter
-#> Warning in plot.xy(xy, type, ...): "jitter" is not a graphical parameter
-#> Warning in axis(side = side, at = at, labels = labels, ...): "jitter" is not a
-#> graphical parameter
-#> Warning in axis(side = side, at = at, labels = labels, ...): "jitter" is not a
-#> graphical parameter
-#> Warning in box(...): "jitter" is not a graphical parameter
-#> Warning in title(...): "jitter" is not a graphical parameter
 ```
 
 ![](visualization_files/figure-html/plot-no-jitter-1.svg)
@@ -195,7 +179,7 @@ plot(result,
 ## ggplot2 with hexify_heatmap()
 
 For ggplot2 users,
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 returns a ggplot object that can be further customized.
 
 ### Basic ggplot
@@ -212,7 +196,7 @@ hexify_heatmap(result, basemap = "world", title = "European Cities")
 ### Customizing with ggplot2
 
 Since
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 returns a ggplot object, you can add layers and modify themes:
 
 ``` r
@@ -260,7 +244,7 @@ hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
 
 For choropleth-style visualizations with aggregated data, pass a `value`
 column to
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md).
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md).
 
 ### Creating Aggregated Data
 
@@ -394,7 +378,7 @@ hexify_heatmap(
 
 ## World Map Helper
 
-[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
+[`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md)
 provides a quick way to draw a world basemap:
 
 ``` r
@@ -539,14 +523,14 @@ ggplot() +
 | Function | Description |
 |----|----|
 | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Base R plot method for HexData objects |
-| [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md) | ggplot2 visualization, returns modifiable ggplot object |
-| [`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md) | Quick world basemap |
-| [`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md) | Generate sf polygons from cell IDs |
+| [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md) | ggplot2 visualization, returns modifiable ggplot object |
+| [`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md) | Quick world basemap |
+| [`cell_to_sf()`](https://gillescolling.com/hexify/reference/cell_to_sf.md) | Generate sf polygons from cell IDs |
 
 ## See Also
 
-- [`vignette("quickstart")`](https://gcol33.github.io/hexify/articles/quickstart.md) -
+- [`vignette("quickstart")`](https://gillescolling.com/hexify/articles/quickstart.md) -
   Getting started with hexify
 
-- [`vignette("workflows")`](https://gcol33.github.io/hexify/articles/workflows.md) -
+- [`vignette("workflows")`](https://gillescolling.com/hexify/articles/workflows.md) -
   Complete analysis workflows

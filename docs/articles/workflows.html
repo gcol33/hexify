@@ -7,11 +7,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Practical Workflows • hexify</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <meta property="og:title" content="Practical Workflows">
+<script>
+(function () {
+  var D = String.fromCharCode(36);
+  window.MathJax = {
+    tex: {
+      inlineMath: [[D, D], ["\\(", "\\)"]],
+      displayMath: [[D + D, D + D], ["\\[", "\\]"]]
+    },
+    chtml: { linebreaks: { automatic: true, width: "90% container" } },
+    svg: { linebreaks: { automatic: true, width: "90% container" } },
+    options: { renderActions: { addMenu: [] } }
+  };
+})();
+</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -21,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +52,7 @@
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
+    <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
   </ul>
 </li>
       </ul>
@@ -231,7 +246,7 @@ visualization and analysis.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Hexagonal Grid (~%.0f km² cells)"</span>, <span class="va">grid</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="width:100%;height:auto;">
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -1616,48 +1631,48 @@ visualization and analysis.</p>
 <path d='M 388.25 37.84 L 389.37 44.12 L 395.75 46.70 L 401.07 43.05 L 400.15 36.78 L 393.72 34.14 L 388.25 37.84 Z' style='fill-rule: evenodd; stroke-width: 0.85; stroke: #4682B4; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='89.30' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>35</text>
-<text x='99.08' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='89.30' y='272.09' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>40</text>
-<text x='99.08' y='272.09' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='272.09' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='89.30' y='214.26' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>45</text>
-<text x='99.08' y='214.26' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='214.26' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='89.30' y='156.44' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>50</text>
-<text x='99.08' y='156.44' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='156.44' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='89.30' y='98.61' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>55</text>
-<text x='99.08' y='98.61' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='98.61' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='89.30' y='40.78' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>60</text>
-<text x='99.08' y='40.78' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='102.60' y='40.78' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='116.76' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='126.54' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='130.06' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='157.05' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 5</text>
-<text x='164.38' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='167.90' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='200.27' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 0</text>
-<text x='207.60' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='236.40' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 5</text>
-<text x='243.73' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='247.25' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='274.24' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='284.02' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='287.54' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='313.31' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>15</text>
-<text x='323.09' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='326.61' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='352.37' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
-<text x='362.16' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='365.68' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='391.44' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>25</text>
-<text x='401.22' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='404.74' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='113.88' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='196.72px' lengthAdjust='spacingAndGlyphs'>Hexagonal Grid (~7774 km² cells)</text>
+<text x='89.30' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>35</text>
+<text x='99.08' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='89.30' y='272.09' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>40</text>
+<text x='99.08' y='272.09' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='272.09' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='89.30' y='214.26' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>45</text>
+<text x='99.08' y='214.26' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='214.26' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='89.30' y='156.44' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
+<text x='99.08' y='156.44' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='156.44' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='89.30' y='98.61' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>55</text>
+<text x='99.08' y='98.61' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='98.61' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='89.30' y='40.78' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>60</text>
+<text x='99.08' y='40.78' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='102.60' y='40.78' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='116.76' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='126.54' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='130.06' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='157.05' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 5</text>
+<text x='164.38' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='167.90' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='200.27' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 0</text>
+<text x='207.60' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='236.40' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 5</text>
+<text x='243.73' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='247.25' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='274.24' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='284.02' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='287.54' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='313.31' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>15</text>
+<text x='323.09' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='326.61' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='352.37' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>20</text>
+<text x='362.16' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='365.68' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='391.44' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>25</text>
+<text x='401.22' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='404.74' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='113.88' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Hexagonal Grid (~7774 km² cells)</text>
 </g>
 </g>
 </svg></div></p>
@@ -1687,7 +1702,7 @@ visualization and analysis.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Hexagonal Grid Clipped to France (~%.0f km² cells)"</span>, <span class="va">grid</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='432.00pt' height='432.00pt' viewBox='0 0 432.00 432.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='432.00pt' height='432.00pt' viewBox='0 0 432.00 432.00' class="r-plt inline-svg" style="width:100%;height:auto;">
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -2032,48 +2047,48 @@ visualization and analysis.</p>
 <path d='M 240.42 80.41 L 245.74 87.39 L 247.98 87.55 L 241.76 80.25 L 240.42 80.41 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.30; stroke-width: 0.64; stroke: #4682B4; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw0MzIuMDB8MC4wMHw0MzIuMDA=)'>
-<text x='20.65' y='366.46' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>42</text>
-<text x='30.43' y='366.46' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='366.46' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='20.65' y='301.99' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>44</text>
-<text x='30.43' y='301.99' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='301.99' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='20.65' y='237.47' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>46</text>
-<text x='30.43' y='237.47' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='237.47' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='20.65' y='173.00' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>48</text>
-<text x='30.43' y='173.00' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='173.00' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='20.65' y='108.53' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>50</text>
-<text x='30.43' y='108.53' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='108.53' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='20.65' y='44.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>52</text>
-<text x='30.43' y='44.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='33.95' y='44.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='74.49' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 4</text>
-<text x='81.81' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='85.34' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='118.87' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 2</text>
-<text x='126.19' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='129.71' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='167.39' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 0</text>
-<text x='174.72' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='208.84' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 2</text>
-<text x='216.17' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='219.69' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='253.22' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 4</text>
-<text x='260.55' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='264.07' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='297.60' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 6</text>
-<text x='304.92' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='308.44' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='341.97' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 8</text>
-<text x='349.30' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='352.82' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='385.13' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='394.91' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='398.43' y='424.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='45.23' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='304.42px' lengthAdjust='spacingAndGlyphs'>Hexagonal Grid Clipped to France (~2591 km² cells)</text>
+<text x='20.65' y='366.46' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>42</text>
+<text x='30.43' y='366.46' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='366.46' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='20.65' y='301.99' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>44</text>
+<text x='30.43' y='301.99' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='301.99' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='20.65' y='237.47' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>46</text>
+<text x='30.43' y='237.47' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='237.47' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='20.65' y='173.00' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>48</text>
+<text x='30.43' y='173.00' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='173.00' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='20.65' y='108.53' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
+<text x='30.43' y='108.53' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='108.53' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='20.65' y='44.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>52</text>
+<text x='30.43' y='44.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='33.95' y='44.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='74.49' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 4</text>
+<text x='81.81' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='85.34' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='118.87' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 2</text>
+<text x='126.19' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='129.71' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='167.39' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 0</text>
+<text x='174.72' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='208.84' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 2</text>
+<text x='216.17' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='219.69' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='253.22' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 4</text>
+<text x='260.55' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='264.07' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='297.60' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 6</text>
+<text x='304.92' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='308.44' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='341.97' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 8</text>
+<text x='349.30' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='352.82' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='385.13' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='394.91' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='398.43' y='424.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='45.23' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Hexagonal Grid Clipped to France (~2591 km² cells)</text>
 </g>
 </g>
 </svg></div></p>
@@ -2093,7 +2108,7 @@ visualization and analysis.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, axis.ticks <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='576.00pt' height='288.00pt' viewBox='0 0 576.00 288.00' class="r-plt inline-svg" style="width:100%;height:auto;">
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -4617,7 +4632,7 @@ visualization and analysis.</p>
 <path d='M 278.96 41.96 L 326.89 41.96 L 372.18 39.73 L 422.34 34.97 L 183.51 34.97 L 233.68 39.73 L 278.96 41.96 Z' style='fill-rule: evenodd; stroke-width: 0.64; stroke: #006400; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA=)'>
-<text x='25.29' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='253.14px' lengthAdjust='spacingAndGlyphs'>Global Hexagonal Grid (~628160 km² cells)</text>
+<text x='25.29' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Global Hexagonal Grid (~628160 km² cells)</text>
 </g>
 </g>
 </svg></div></p>
@@ -4733,6 +4748,111 @@ areas.</p>
 <span><span class="co">#&gt; 10    2240    Warsaw     7.30659</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="cell-level-aggregation-and-neighbors">Cell-Level Aggregation and Neighbors<a class="anchor" aria-label="anchor" href="#cell-level-aggregation-and-neighbors"></a>
+</h2>
+<p><code><a href="../reference/hex_summarize.html">hex_summarize()</a></code> aggregates data per cell without
+manually splitting and merging, and <code><a href="../reference/get_neighbors.html">get_neighbors()</a></code> finds
+the ring of cells surrounding a given cell — useful for smoothing,
+spatial lag features, or checking what surrounds a hotspot.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Aggregate the station data straight from the HexData object</span></span>
+<span><span class="fu"><a href="../reference/hex_summarize.html">hex_summarize</a></span><span class="op">(</span><span class="va">stations_hex</span>, mean_temp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">temperature</span><span class="op">)</span>, n_stations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">temperature</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    cell_id cell_cen_lon cell_cen_lat cell_area_km2 n_points   mean_temp</span></span>
+<span><span class="co">#&gt; 1     1486    8.8605921     56.44133      69948.66        1  4.33327138</span></span>
+<span><span class="co">#&gt; 2     1617   11.2500000     37.27999      69948.66        3 13.86698499</span></span>
+<span><span class="co">#&gt; 3      756    2.7876081     59.40683      69948.66        1 14.78591715</span></span>
+<span><span class="co">#&gt; 4     1702   23.6524007     40.11980      69948.66        1 22.07036539</span></span>
+<span><span class="co">#&gt; 5     1533    0.9055244     38.03217      69948.66        2 15.79263349</span></span>
+<span><span class="co">#&gt; 6      784    3.8134141     56.73586      69948.66        2 17.33034539</span></span>
+<span><span class="co">#&gt; 7      891   -6.9845461     48.48206      69948.66        1 19.34760702</span></span>
+<span><span class="co">#&gt; 8     2240   22.3252813     52.74188      69948.66        1  7.30659018</span></span>
+<span><span class="co">#&gt; 9     1562    5.9134033     39.97473      69948.66        1 13.69252087</span></span>
+<span><span class="co">#&gt; 10     836   -8.8840946     52.56766      69948.66        2 19.77801460</span></span>
+<span><span class="co">#&gt; 11     918   -8.1917714     46.29966      69948.66        1 12.47700445</span></span>
+<span><span class="co">#&gt; 12    2941   28.7694285     59.95664      69948.66        1 17.23507876</span></span>
+<span><span class="co">#&gt; 13    2211   21.3956718     48.53188      69948.66        2  8.61959723</span></span>
+<span><span class="co">#&gt; 14    1756   26.2563977     35.79230      69948.66        1  7.72706532</span></span>
+<span><span class="co">#&gt; 15    1588    6.1897627     35.80560      69948.66        1 16.79208370</span></span>
+<span><span class="co">#&gt; 16    1566   13.2634952     47.96291      69948.66        2 14.03583407</span></span>
+<span><span class="co">#&gt; 17     864   -5.7057188     50.63018      69948.66        1 20.44733536</span></span>
+<span><span class="co">#&gt; 18     919   -4.3481495     46.43340      69948.66        1  0.09218036</span></span>
+<span><span class="co">#&gt; 19    2242   18.6865859     56.73586      69948.66        1 23.30899470</span></span>
+<span><span class="co">#&gt; 20    1589    7.7872318     37.75542      69948.66        1 14.54380966</span></span>
+<span><span class="co">#&gt; 21    2943   19.7123917     59.40683      69948.66        2 16.62937840</span></span>
+<span><span class="co">#&gt; 22    2235   29.4014718     42.06641      69948.66        1 18.96105332</span></span>
+<span><span class="co">#&gt; 23    1564    9.3676906     43.78074      69948.66        1  9.41982974</span></span>
+<span><span class="co">#&gt; 24    1567   15.4482390     50.29623      69948.66        1 11.60462511</span></span>
+<span><span class="co">#&gt; 25    1534    2.3674390     40.11958      69948.66        1  6.70912517</span></span>
+<span><span class="co">#&gt; 26    2267   26.8454720     52.74001      69948.66        1 14.80152001</span></span>
+<span><span class="co">#&gt; 27    1645   14.7127682     37.75542      69948.66        1 13.94307721</span></span>
+<span><span class="co">#&gt; 28    1618   13.0258784     39.62728      69948.66        1 10.48546862</span></span>
+<span><span class="co">#&gt; 29    1619   14.9098954     41.91219      69948.66        1 12.45167799</span></span>
+<span><span class="co">#&gt; 30    2268   25.3924346     54.80755      69948.66        1  5.79488808</span></span>
+<span><span class="co">#&gt; 31    1537    7.3499007     46.08969      69948.66        1 10.36833374</span></span>
+<span><span class="co">#&gt; 32    1560    2.8450855     35.92015      69948.66        1 19.41016981</span></span>
+<span><span class="co">#&gt; 33    1477   -5.8644255     37.80961      69948.66        1 21.22466440</span></span>
+<span><span class="co">#&gt; 34    1509    3.4280982     46.36031      69948.66        2 10.81345455</span></span>
+<span><span class="co">#&gt; 35     809   -6.7691252     55.02709      69948.66        1 18.67035320</span></span>
+<span><span class="co">#&gt; 36    1594   17.3249995     48.35421      69948.66        1 12.45533116</span></span>
+<span><span class="co">#&gt; 37    2206   28.3644255     37.80961      69948.66        1 12.86376434</span></span>
+<span><span class="co">#&gt; 38    1481   -0.4835992     46.44662      69948.66        1 11.88084926</span></span>
+<span><span class="co">#&gt; 39     946   -5.6635964     44.26334      69948.66        1 15.98975606</span></span>
+<span><span class="co">#&gt; 40    1538    9.2365048     47.96291      69948.66        1 22.04184729</span></span>
+<span><span class="co">#&gt; 41    2944   15.3912479     58.91103      69948.66        1 16.88313865</span></span>
+<span><span class="co">#&gt;    n_stations</span></span>
+<span><span class="co">#&gt; 1           1</span></span>
+<span><span class="co">#&gt; 2           3</span></span>
+<span><span class="co">#&gt; 3           1</span></span>
+<span><span class="co">#&gt; 4           1</span></span>
+<span><span class="co">#&gt; 5           2</span></span>
+<span><span class="co">#&gt; 6           2</span></span>
+<span><span class="co">#&gt; 7           1</span></span>
+<span><span class="co">#&gt; 8           1</span></span>
+<span><span class="co">#&gt; 9           1</span></span>
+<span><span class="co">#&gt; 10          2</span></span>
+<span><span class="co">#&gt; 11          1</span></span>
+<span><span class="co">#&gt; 12          1</span></span>
+<span><span class="co">#&gt; 13          2</span></span>
+<span><span class="co">#&gt; 14          1</span></span>
+<span><span class="co">#&gt; 15          1</span></span>
+<span><span class="co">#&gt; 16          2</span></span>
+<span><span class="co">#&gt; 17          1</span></span>
+<span><span class="co">#&gt; 18          1</span></span>
+<span><span class="co">#&gt; 19          1</span></span>
+<span><span class="co">#&gt; 20          1</span></span>
+<span><span class="co">#&gt; 21          2</span></span>
+<span><span class="co">#&gt; 22          1</span></span>
+<span><span class="co">#&gt; 23          1</span></span>
+<span><span class="co">#&gt; 24          1</span></span>
+<span><span class="co">#&gt; 25          1</span></span>
+<span><span class="co">#&gt; 26          1</span></span>
+<span><span class="co">#&gt; 27          1</span></span>
+<span><span class="co">#&gt; 28          1</span></span>
+<span><span class="co">#&gt; 29          1</span></span>
+<span><span class="co">#&gt; 30          1</span></span>
+<span><span class="co">#&gt; 31          1</span></span>
+<span><span class="co">#&gt; 32          1</span></span>
+<span><span class="co">#&gt; 33          1</span></span>
+<span><span class="co">#&gt; 34          2</span></span>
+<span><span class="co">#&gt; 35          1</span></span>
+<span><span class="co">#&gt; 36          1</span></span>
+<span><span class="co">#&gt; 37          1</span></span>
+<span><span class="co">#&gt; 38          1</span></span>
+<span><span class="co">#&gt; 39          1</span></span>
+<span><span class="co">#&gt; 40          1</span></span>
+<span><span class="co">#&gt; 41          1</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The 6 cells surrounding a given cell (k = 1), or a wider ring with k &gt; 1</span></span>
+<span><span class="va">some_cell</span> <span class="op">&lt;-</span> <span class="va">stations_hex</span><span class="op">@</span><span class="va">cell_id</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/get_neighbors.html">get_neighbors</a></span><span class="op">(</span><span class="va">some_cell</span>, <span class="va">grid</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1]    1  757  784 1485 1513 2215</span></span>
+<span><span class="fu"><a href="../reference/get_neighbors.html">get_neighbors</a></span><span class="op">(</span><span class="va">some_cell</span>, <span class="va">grid</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt;  [1]    1  757  784 1485 1513 2215   28 2944   55  756  783  811 1484 1512 1540</span></span>
+<span><span class="co">#&gt; [16] 2214 2242</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="choosing-resolution">Choosing Resolution<a class="anchor" aria-label="anchor" href="#choosing-resolution"></a>
 </h2>
 <div class="section level3">
@@ -4740,7 +4860,7 @@ areas.</p>
 </h3>
 <p>Use <code><a href="../reference/hex_grid.html">hex_grid()</a></code> with <code>area_km2</code> to get the
 closest available resolution:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Target: 100 km² cells</span></span>
 <span><span class="va">grid_100</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">100</span>, aperture <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Target ~100 km²: resolution %d (actual: %.1f km²)\n"</span>,</span>
@@ -4873,7 +4993,7 @@ closest available resolution:</p>
 <h3 id="comparing-apertures">Comparing Apertures<a class="anchor" aria-label="anchor" href="#comparing-apertures"></a>
 </h3>
 <p>Different apertures offer different resolution steps:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target_area</span> <span class="op">&lt;-</span> <span class="fl">1000</span>  <span class="co"># km²</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Target: ~%d km² cells\n\n"</span>, <span class="va">target_area</span><span class="op">)</span><span class="op">)</span></span>
@@ -4925,12 +5045,85 @@ closest available resolution:</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="grids-on-other-bodies">Grids on Other Bodies<a class="anchor" aria-label="anchor" href="#grids-on-other-bodies"></a>
+</h2>
+<p>A grid partitions a sphere, and <code>radius_km</code> sets which
+sphere. Pass a radius in kilometres or the name of a body:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">1000</span>, radius_km <span class="op">=</span> <span class="st">"mars"</span><span class="op">)</span></span>
+<span><span class="va">mars</span></span>
+<span><span class="co">#&gt; HexGridInfo Specification</span></span>
+<span><span class="co">#&gt; -------------------------</span></span>
+<span><span class="co">#&gt; Aperture:    3</span></span>
+<span><span class="co">#&gt; Resolution:  9</span></span>
+<span><span class="co">#&gt; Area:        733.48 km^2</span></span>
+<span><span class="co">#&gt; Diagonal:    29.10 km</span></span>
+<span><span class="co">#&gt; CRS:         EPSG:4326</span></span>
+<span><span class="co">#&gt; Radius:      3389.50 km</span></span>
+<span><span class="co">#&gt; Total Cells: 196832</span></span>
+<span></span>
+<span><span class="co"># The same grid, by radius</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">mars</span><span class="op">@</span><span class="va">area_km2</span>, <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="va">mars</span><span class="op">@</span><span class="va">resolution</span>, radius_km <span class="op">=</span> <span class="fl">3389.5</span><span class="op">)</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>Cell geometry is angular: which cell a coordinate falls in, where
+centres and corners sit, the parent-child hierarchy and the neighbours
+are the same on every body. The radius sets the kilometre figures — cell
+area, diagonal, spacing, and the resolution that a target
+<code>area_km2</code> picks.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">earth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">moon</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span>, radius_km <span class="op">=</span> <span class="st">"moon"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">lon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">16.37</span>, <span class="op">-</span><span class="fl">70.5</span><span class="op">)</span></span>
+<span><span class="va">lat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">48.21</span>, <span class="op">-</span><span class="fl">33.4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="../reference/lonlat_to_cell.html">lonlat_to_cell</a></span><span class="op">(</span><span class="va">lon</span>, <span class="va">lat</span>, <span class="va">moon</span><span class="op">)</span>, <span class="fu"><a href="../reference/lonlat_to_cell.html">lonlat_to_cell</a></span><span class="op">(</span><span class="va">lon</span>, <span class="va">lat</span>, <span class="va">earth</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>earth <span class="op">=</span> <span class="va">earth</span><span class="op">@</span><span class="va">area_km2</span>, moon <span class="op">=</span> <span class="va">moon</span><span class="op">@</span><span class="va">area_km2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     earth      moon </span></span>
+<span><span class="co">#&gt; 209730.93  15597.17</span></span></code></pre></div>
+<p>Areas come from the sphere of that radius, <code>4 * pi * r^2</code>;
+Earth keeps the WGS84 ellipsoid area. Named bodies carry the IAU mean
+radii (Archinal et al. 2018) tabulated by JPL Solar System Dynamics:
+<code>mercury</code>, <code>venus</code>, <code>earth</code>,
+<code>moon</code>, <code>mars</code>, <code>ceres</code>,
+<code>jupiter</code>, <code>io</code>, <code>europa</code>,
+<code>ganymede</code>, <code>callisto</code>, <code>saturn</code>,
+<code>enceladus</code>, <code>titan</code>, <code>uranus</code>,
+<code>neptune</code>, <code>pluto</code>.</p>
+<p><code>radius_km</code> reaches every function that reports
+kilometres, because the grid object carries it:
+<code><a href="../reference/dgearthstat.html">dgearthstat()</a></code>, <code><a href="../reference/cell_area.html">cell_area()</a></code>,
+<code><a href="../reference/hexify_compare_resolutions.html">hexify_compare_resolutions()</a></code> and the sf exports all read
+the grid’s radius.</p>
+<p>Both backends take a radius. H3 reports a cell’s area as its solid
+angle times Earth’s radius squared, so another radius scales those areas
+by the square of the radius ratio:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">h3_mars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span>, type <span class="op">=</span> <span class="st">"h3"</span>, radius_km <span class="op">=</span> <span class="st">"mars"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; H3 cells are not exactly equal-area; area varies ~3-5% by latitude.</span></span>
+<span><span class="co">#&gt; H3 cell IDs name a position in H3's topology, which Uber's H3 reads on Earth. A grid on another body reuses that topology and its own radius for areas; the IDs are not interchangeable with Earth H3 data.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This message is displayed once per session.</span></span></span>
+<span><span class="va">h3_mars</span><span class="op">@</span><span class="va">area_km2</span> <span class="op">/</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span>, type <span class="op">=</span> <span class="st">"h3"</span><span class="op">)</span><span class="op">@</span><span class="va">area_km2</span></span>
+<span><span class="co">#&gt; [1] 0.2830447</span></span>
+<span></span>
+<span><span class="co"># H3 measures against the WGS84 authalic radius, so that is what divides out</span></span>
+<span><span class="op">(</span><span class="fl">3389.5</span> <span class="op">/</span> <span class="fl">6371.007180918475</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span><span class="co">#&gt; [1] 0.2830447</span></span></code></pre></div>
+<p>One caveat rides along with H3. A cell ID names a position in H3’s
+topology, which Uber’s H3 reads on Earth. A grid on another body reuses
+that topology and its own radius for areas, so its IDs are that topology
+on that body, not interchangeable with Earth H3 data.
+<code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code> needs both grids on the same body for the
+same reason.</p>
+</div>
+<div class="section level2">
 <h2 id="working-with-sf">Working with sf<a class="anchor" aria-label="anchor" href="#working-with-sf"></a>
 </h2>
 <div class="section level3">
 <h3 id="convert-hexdata-to-sf">Convert HexData to sf<a class="anchor" aria-label="anchor" href="#convert-hexdata-to-sf"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Hexify some data</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
@@ -4952,7 +5145,7 @@ closest available resolution:</p>
 <div class="section level3">
 <h3 id="visualize-with-ggplot2">Visualize with ggplot2<a class="anchor" aria-label="anchor" href="#visualize-with-ggplot2"></a>
 </h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">europe</span> <span class="op">&lt;-</span> <span class="va">hexify_world</span><span class="op">[</span><span class="va">hexify_world</span><span class="op">$</span><span class="va">continent</span> <span class="op">==</span> <span class="st">"Europe"</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -4962,7 +5155,7 @@ closest available resolution:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"European Cities - Hexagonal Grid"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><div class="svg-container"><button type="button" class="btn btn-primary btn-copy-svg" title="Copy SVG to clipboard" aria-label="Copy SVG to clipboard" data-bs-toggle="tooltip" data-bs-placement="left"><i class="fa fa-copy"></i></button>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="max-width:100%;width:100%;height:auto;">
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='504.00pt' height='360.00pt' viewBox='0 0 504.00 360.00' class="r-plt inline-svg" style="width:100%;height:auto;">
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -5381,45 +5574,45 @@ closest available resolution:</p>
 <path d='M 226.85 104.84 L 234.28 114.06 L 246.86 115.25 L 252.52 107.07 L 245.40 97.46 L 232.25 96.48 L 226.85 104.84 Z' style='fill-rule: evenodd; fill: #4682B4; fill-opacity: 0.50; stroke-width: 0.43; stroke: #00008B; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='73.13' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>35</text>
-<text x='82.91' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='86.43' y='329.92' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='73.13' y='267.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>40</text>
-<text x='82.91' y='267.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='86.43' y='267.06' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='73.13' y='204.21' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>45</text>
-<text x='82.91' y='204.21' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='86.43' y='204.21' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='73.13' y='141.35' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>50</text>
-<text x='82.91' y='141.35' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='86.43' y='141.35' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='73.13' y='78.50' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>55</text>
-<text x='82.91' y='78.50' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='86.43' y='78.50' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='6.36px' lengthAdjust='spacingAndGlyphs'>N</text>
-<text x='102.06' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='111.84' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='115.36' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='146.55' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 5</text>
-<text x='153.88' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='157.40' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='8.30px' lengthAdjust='spacingAndGlyphs'>W</text>
-<text x='193.97' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 0</text>
-<text x='201.30' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='234.30' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='7.33px' lengthAdjust='spacingAndGlyphs'> 5</text>
-<text x='241.63' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='245.15' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='276.34' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='286.12' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='289.64' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='319.61' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>15</text>
-<text x='329.39' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='332.91' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='362.87' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
-<text x='372.65' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='376.17' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='406.14' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>25</text>
-<text x='415.92' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='3.52px' lengthAdjust='spacingAndGlyphs'>°</text>
-<text x='419.44' y='352.56' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='5.88px' lengthAdjust='spacingAndGlyphs'>E</text>
-<text x='97.72' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='197.09px' lengthAdjust='spacingAndGlyphs'>European Cities - Hexagonal Grid</text>
+<text x='73.13' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>35</text>
+<text x='82.91' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='86.43' y='329.92' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='73.13' y='267.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>40</text>
+<text x='82.91' y='267.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='86.43' y='267.06' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='73.13' y='204.21' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>45</text>
+<text x='82.91' y='204.21' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='86.43' y='204.21' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='73.13' y='141.35' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
+<text x='82.91' y='141.35' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='86.43' y='141.35' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='73.13' y='78.50' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>55</text>
+<text x='82.91' y='78.50' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='86.43' y='78.50' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
+<text x='102.06' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='111.84' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='115.36' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='146.55' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 5</text>
+<text x='153.88' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='157.40' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
+<text x='193.97' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 0</text>
+<text x='201.30' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='234.30' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 5</text>
+<text x='241.63' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='245.15' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='276.34' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='286.12' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='289.64' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='319.61' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>15</text>
+<text x='329.39' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='332.91' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='362.87' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>20</text>
+<text x='372.65' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='376.17' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='406.14' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>25</text>
+<text x='415.92' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
+<text x='419.44' y='352.56' style='font-size: 0.88em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
+<text x='97.72' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>European Cities - Hexagonal Grid</text>
 </g>
 </g>
 </svg></div></p>
@@ -5430,7 +5623,7 @@ closest available resolution:</p>
 </h2>
 <p>Use sf’s <code><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">st_write()</a></code> to export grids for use in external
 GIS software:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate a grid</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="va">europe</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_rect.html">grid_rect</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">35</span>, <span class="fl">25</span>, <span class="fl">60</span><span class="op">)</span>, <span class="va">grid</span><span class="op">)</span></span>
@@ -5447,7 +5640,7 @@ GIS software:</p>
 <div class="section level3">
 <h3 id="handling-na-coordinates">Handling NA Coordinates<a class="anchor" aria-label="anchor" href="#handling-na-coordinates"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_with_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="cn">NA</span>, <span class="fl">2.35</span>, <span class="fl">13.40</span><span class="op">)</span>,</span>
 <span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">48.21</span>, <span class="fl">48.86</span>, <span class="cn">NA</span>, <span class="fl">52.52</span><span class="op">)</span></span>
@@ -5460,7 +5653,7 @@ GIS software:</p>
 <span></span>
 <span><span class="co"># Check which rows have valid cell assignments</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Cell IDs:"</span>, <span class="va">result</span><span class="op">@</span><span class="va">cell_id</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Cell IDs: 126594 2 2 122466</span></span>
+<span><span class="co">#&gt; Cell IDs: 126594 122466</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"NA indicates invalid coordinates\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NA indicates invalid coordinates</span></span></code></pre></div>
 </div>
@@ -5484,6 +5677,10 @@ render correctly without manual intervention.</p>
 <h2 id="function-summary">Function Summary<a class="anchor" aria-label="anchor" href="#function-summary"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="37%">
+<col width="62%">
+</colgroup>
 <thead><tr class="header">
 <th>Task</th>
 <th>Function</th>
@@ -5539,6 +5736,40 @@ render correctly without manual intervention.</p>
 <td>Compare resolutions</td>
 <td><code><a href="../reference/hexify_compare_resolutions.html">hexify_compare_resolutions()</a></code></td>
 </tr>
+<tr class="odd">
+<td>Aggregate data per cell</td>
+<td><code>hex_summarize(result, ...)</code></td>
+</tr>
+<tr class="even">
+<td>Find neighboring cells</td>
+<td><code>get_neighbors(cell_id, grid, k = ...)</code></td>
+</tr>
+<tr class="odd">
+<td>Merge/split multi-resolution cells</td>
+<td>
+<code><a href="../reference/hex_compact.html">hex_compact()</a></code>, <code><a href="../reference/hex_uncompact.html">hex_uncompact()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td>Distance between cells</td>
+<td><code>hex_distance(cell_id1, cell_id2, grid)</code></td>
+</tr>
+<tr class="odd">
+<td>Extract raster values at cell centers</td>
+<td><code>hex_extract(raster, grid)</code></td>
+</tr>
+<tr class="even">
+<td>Zonal statistics over cell polygons</td>
+<td><code>hex_zonal(raster, grid)</code></td>
+</tr>
+<tr class="odd">
+<td>Map ISEA cells to H3 (or vice versa)</td>
+<td><code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code></td>
+</tr>
+<tr class="even">
+<td>Per-cell area</td>
+<td><code>cell_area(cell_ids, grid)</code></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -5550,7 +5781,7 @@ render correctly without manual intervention.</p>
 hexify</p></li>
 <li><p><code><a href="../articles/visualization.html">vignette("visualization")</a></code> - Plotting with
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, <code><a href="../reference/hexify_heatmap.html">hexify_heatmap()</a></code></p></li>
-<li><p><code>vignette("theory")</code> - Mathematical foundations (ISEA
+<li><p><code><a href="../articles/theory.html">vignette("theory")</a></code> - Mathematical foundations (ISEA
 projection, apertures)</p></li>
 </ul>
 </div>

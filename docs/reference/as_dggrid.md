@@ -55,6 +55,6 @@ A list with 'dggridR'-compatible fields:
 ## See also
 
 Other 'dggridR' compatibility:
-[`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
-[`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md),
-[`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)
+[`dggrid_43h_sequence()`](https://gillescolling.com/hexify/reference/dggrid_43h_sequence.md),
+[`dggrid_is_compatible()`](https://gillescolling.com/hexify/reference/dggrid_is_compatible.md),
+[`from_dggrid()`](https://gillescolling.com/hexify/reference/from_dggrid.md)

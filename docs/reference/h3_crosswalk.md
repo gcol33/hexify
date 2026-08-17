@@ -33,9 +33,12 @@ h3_crosswalk(
 
 - h3_resolution:
 
-  Target H3 resolution for `"isea_to_h3"`, or the source H3 resolution
-  for `"h3_to_isea"`. When `NULL` (default), the closest H3 resolution
-  matching the ISEA cell area is selected automatically.
+  Target H3 resolution for `"isea_to_h3"`. When `NULL` (default), the
+  closest H3 resolution matching the ISEA cell area is selected
+  automatically. For `"h3_to_isea"`, the source H3 resolution is always
+  inferred from `grid`; if `h3_resolution` is supplied for that
+  direction it is validated against `grid`'s resolution rather than used
+  to select one.
 
 - isea_grid:
 
@@ -83,9 +86,9 @@ chosen automatically. This gives the best 1:1 correspondence.
 
 ## See also
 
-[`cell_area`](https://gcol33.github.io/hexify/reference/cell_area.md)
+[`cell_area`](https://gillescolling.com/hexify/reference/cell_area.md)
 for per-cell area computation,
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 creating grids
 
 ## Examples

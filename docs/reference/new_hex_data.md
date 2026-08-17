@@ -1,7 +1,7 @@
 # Create a HexData Object (Internal)
 
 Internal constructor for HexData objects. Users should use
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+[`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
 instead.
 
 ## Usage

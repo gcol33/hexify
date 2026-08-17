@@ -23,6 +23,8 @@ plot(
   show_points = FALSE,
   point_size = "auto",
   point_color = "red",
+  point_alpha = 1,
+  jitter = TRUE,
   crop = TRUE,
   crop_expand = 0.1,
   main = NULL,
@@ -35,7 +37,7 @@ plot(
 - x:
 
   A HexData object from
-  [`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)
+  [`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)
 
 - y:
 
@@ -106,6 +108,16 @@ plot(
 
   Color of points (default "red")
 
+- point_alpha:
+
+  Transparency for points (0-1, default 1)
+
+- jitter:
+
+  If TRUE (default), points are randomly scattered within their assigned
+  hexagon. If FALSE, all points in a cell are plotted at the cell
+  centroid instead.
+
 - crop:
 
   Crop to data extent (default TRUE)
@@ -134,7 +146,7 @@ minimize memory usage.
 
 ## See also
 
-[`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for ggplot2 plotting
 
 ## Examples

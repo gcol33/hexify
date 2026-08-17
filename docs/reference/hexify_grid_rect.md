@@ -12,7 +12,8 @@ hexify_grid_rect(
   maxlat,
   area,
   aperture = 3L,
-  resround = "nearest"
+  resround = "nearest",
+  radius_km = EARTH_RADIUS_KM
 )
 ```
 
@@ -38,21 +39,27 @@ hexify_grid_rect(
 
   Resolution rounding: "nearest", "up", or "down"
 
+- radius_km:
+
+  Radius of the body, in kilometers, or a body name such as "mars"
+  (default Earth). See
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md).
+
 ## Value
 
 sf object with hexagon polygons covering the specified region
 
 ## See also
 
-[`grid_rect`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+[`grid_rect`](https://gillescolling.com/hexify/reference/grid_rect.md)
 for the recommended S4 interface,
-[`hexify_grid_global`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md)
+[`hexify_grid_global`](https://gillescolling.com/hexify/reference/hexify_grid_global.md)
 for global grids
 
 Other sf conversion:
-[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
-[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
-[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md)
+[`hex_corners_to_sf()`](https://gillescolling.com/hexify/reference/hex_corners_to_sf.md),
+[`hexify_cell_to_sf()`](https://gillescolling.com/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_grid_global()`](https://gillescolling.com/hexify/reference/hexify_grid_global.md)
 
 ## Examples
 

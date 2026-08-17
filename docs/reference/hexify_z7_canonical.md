@@ -1,8 +1,10 @@
 # Get canonical form of Z7 index
 
-For Z7 indices that form cycles during decode/encode, returns the
-lexicographically smallest index in the cycle. Provides stable unique
-identifiers for aperture 7 grids.
+Decodes and re-encodes a Z7 index until it reaches a stable form.
+Current Z7 indices are bijective, so every valid index is already
+canonical and this function normally returns its input unchanged. It
+remains available for validating or normalizing indices created by older
+hexify versions.
 
 ## Usage
 
@@ -14,34 +16,42 @@ hexify_z7_canonical(index, max_iterations = 128L)
 
 - index:
 
-  Z7 index string
+  A length-one Z7 index string.
 
 - max_iterations:
 
-  Maximum iterations for cycle detection (default 128)
+  Maximum number of decode/encode iterations. This is a safety bound for
+  legacy indices; the default is 128.
 
 ## Value
 
-Canonical form (lexicographically smallest in cycle)
+A length-one character string containing the stable index.
 
 ## See also
 
 Other hierarchical index:
-[`hexify_cell_to_index()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_index.md),
-[`hexify_compare_indices()`](https://gcol33.github.io/hexify/reference/hexify_compare_indices.md),
-[`hexify_default_index_type()`](https://gcol33.github.io/hexify/reference/hexify_default_index_type.md),
-[`hexify_get_children()`](https://gcol33.github.io/hexify/reference/hexify_get_children.md),
-[`hexify_get_parent()`](https://gcol33.github.io/hexify/reference/hexify_get_parent.md),
-[`hexify_get_resolution()`](https://gcol33.github.io/hexify/reference/hexify_get_resolution.md),
-[`hexify_index_to_cell()`](https://gcol33.github.io/hexify/reference/hexify_index_to_cell.md),
-[`hexify_index_to_lonlat()`](https://gcol33.github.io/hexify/reference/hexify_index_to_lonlat.md),
-[`hexify_is_valid_index_type()`](https://gcol33.github.io/hexify/reference/hexify_is_valid_index_type.md),
-[`hexify_lonlat_to_index()`](https://gcol33.github.io/hexify/reference/hexify_lonlat_to_index.md)
+[`hexify_cell_to_index()`](https://gillescolling.com/hexify/reference/hexify_cell_to_index.md),
+[`hexify_compare_indices()`](https://gillescolling.com/hexify/reference/hexify_compare_indices.md),
+[`hexify_default_index_type()`](https://gillescolling.com/hexify/reference/hexify_default_index_type.md),
+[`hexify_get_children()`](https://gillescolling.com/hexify/reference/hexify_get_children.md),
+[`hexify_get_parent()`](https://gillescolling.com/hexify/reference/hexify_get_parent.md),
+[`hexify_get_resolution()`](https://gillescolling.com/hexify/reference/hexify_get_resolution.md),
+[`hexify_index_to_cell()`](https://gillescolling.com/hexify/reference/hexify_index_to_cell.md),
+[`hexify_index_to_lonlat()`](https://gillescolling.com/hexify/reference/hexify_index_to_lonlat.md),
+[`hexify_is_valid_index_type()`](https://gillescolling.com/hexify/reference/hexify_is_valid_index_type.md),
+[`hexify_lonlat_to_index()`](https://gillescolling.com/hexify/reference/hexify_lonlat_to_index.md)
 
 ## Examples
 
 ``` r
-# These all return the same canonical form
+# Valid Z7 indices are stable
 hexify_z7_canonical("110001")
-hexify_z7_canonical("110002")
+
+cell <- hexify_index_to_cell("110001", aperture = 7)
+identical(
+  hexify_cell_to_index(cell$face, cell$i, cell$j,
+    cell$resolution, aperture = 7
+  ),
+  "110001"
+)
 ```

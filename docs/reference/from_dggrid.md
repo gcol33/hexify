@@ -35,6 +35,6 @@ The function validates that the 'dggridR' grid uses compatible settings:
 ## See also
 
 Other 'dggridR' compatibility:
-[`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md),
-[`dggrid_43h_sequence()`](https://gcol33.github.io/hexify/reference/dggrid_43h_sequence.md),
-[`dggrid_is_compatible()`](https://gcol33.github.io/hexify/reference/dggrid_is_compatible.md)
+[`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md),
+[`dggrid_43h_sequence()`](https://gillescolling.com/hexify/reference/dggrid_43h_sequence.md),
+[`dggrid_is_compatible()`](https://gillescolling.com/hexify/reference/dggrid_is_compatible.md)

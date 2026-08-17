@@ -2,7 +2,7 @@
 
 Low-level helper to create a single hexagon polygon from corner
 coordinates. Most users should use
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 instead.
 
 ## Usage
@@ -32,6 +32,6 @@ sf object with one POLYGON geometry
 ## See also
 
 Other sf conversion:
-[`hexify_cell_to_sf()`](https://gcol33.github.io/hexify/reference/hexify_cell_to_sf.md),
-[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
-[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md)
+[`hexify_cell_to_sf()`](https://gillescolling.com/hexify/reference/hexify_cell_to_sf.md),
+[`hexify_grid_global()`](https://gillescolling.com/hexify/reference/hexify_grid_global.md),
+[`hexify_grid_rect()`](https://gillescolling.com/hexify/reference/hexify_grid_rect.md)

@@ -2492,7 +2492,7 @@
 <path d='M 422.34 34.97 L 372.18 39.73 L 393.96 45.20 L 422.34 47.32 L 450.72 45.20 L 472.51 39.73 L 422.34 34.97 Z' style='fill-rule: evenodd; stroke-width: 0.64; stroke: #006400; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHwyODguMDA=)'>
-<text x='25.29' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='256.08px' lengthAdjust='spacingAndGlyphs'>Global Hexagonal Grid (~628160 km2 cells)</text>
+<text x='25.29' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Global Hexagonal Grid (~628160 km2 cells)</text>
 </g>
 </g>
 </svg>

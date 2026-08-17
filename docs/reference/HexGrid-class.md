@@ -28,7 +28,7 @@ as.list(x, ...)
 ## Details
 
 Create HexGrid objects using the
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md)
 constructor function. Do not use `new("HexGrid", ...)` directly.
 
 The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
@@ -68,7 +68,7 @@ aperture grids that start with aperture 4 and switch to aperture 3.
 
 ## See also
 
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 the constructor function,
-[`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+[`HexData-class`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for hexified data objects

@@ -30,17 +30,17 @@ Numeric vector of cell IDs
 ## Details
 
 This function accepts either a HexGridInfo object from
-[`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md) or
-a HexData object from
-[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md). If a
+[`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)
+or a HexData object from
+[`hexify()`](https://gillescolling.com/hexify/reference/hexify.md). If a
 HexData object is provided, its grid specification is extracted
 automatically.
 
 ## See also
 
-[`cell_to_lonlat`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)
+[`cell_to_lonlat`](https://gillescolling.com/hexify/reference/cell_to_lonlat.md)
 for the inverse operation,
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 creating grid specifications
 
 ## Examples

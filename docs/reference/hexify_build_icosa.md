@@ -39,15 +39,15 @@ needed. Manual call is only required for non-standard orientations.
 ## See also
 
 Other projection:
-[`hexify_face_centers()`](https://gcol33.github.io/hexify/reference/hexify_face_centers.md),
-[`hexify_forward()`](https://gcol33.github.io/hexify/reference/hexify_forward.md),
-[`hexify_forward_to_face()`](https://gcol33.github.io/hexify/reference/hexify_forward_to_face.md),
-[`hexify_get_precision()`](https://gcol33.github.io/hexify/reference/hexify_get_precision.md),
-[`hexify_inverse()`](https://gcol33.github.io/hexify/reference/hexify_inverse.md),
-[`hexify_projection_stats()`](https://gcol33.github.io/hexify/reference/hexify_projection_stats.md),
-[`hexify_set_precision()`](https://gcol33.github.io/hexify/reference/hexify_set_precision.md),
-[`hexify_set_verbose()`](https://gcol33.github.io/hexify/reference/hexify_set_verbose.md),
-[`hexify_which_face()`](https://gcol33.github.io/hexify/reference/hexify_which_face.md)
+[`hexify_face_centers()`](https://gillescolling.com/hexify/reference/hexify_face_centers.md),
+[`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md),
+[`hexify_forward_to_face()`](https://gillescolling.com/hexify/reference/hexify_forward_to_face.md),
+[`hexify_get_precision()`](https://gillescolling.com/hexify/reference/hexify_get_precision.md),
+[`hexify_inverse()`](https://gillescolling.com/hexify/reference/hexify_inverse.md),
+[`hexify_projection_stats()`](https://gillescolling.com/hexify/reference/hexify_projection_stats.md),
+[`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md),
+[`hexify_set_verbose()`](https://gillescolling.com/hexify/reference/hexify_set_verbose.md),
+[`hexify_which_face()`](https://gillescolling.com/hexify/reference/hexify_which_face.md)
 
 ## Examples
 

@@ -59,6 +59,8 @@ articles:
   - workflows
   - visualization
   - h3
+- title: Mathematical Foundations
+  contents: theory
 reference:
 - title: Core
   desc: Create grids and assign points to cells
@@ -78,6 +80,9 @@ reference:
   - as_tibble.HexData
   - is_hex_grid
   - is_hex_data
+  - hex_summarize
+  - hex_zonal
+  - hex_extract
 - title: Grid Generation
   desc: Create grids over regions
   contents:
@@ -89,11 +94,20 @@ reference:
   - cell_to_lonlat
   - get_parent
   - get_children
+- title: Cell Operations
+  desc: Relations between cells and cell sets
+  contents:
+  - get_neighbors
+  - hex_distance
+  - is_pentagon
+  - hex_compact
+  - hex_uncompact
 - title: H3 Interoperability
   desc: Cross-grid mapping and per-cell area
   contents:
   - h3_crosswalk
   - cell_area
+  - import_h3
 - title: Visualization
   desc: Plotting functions
   contents:
@@ -103,6 +117,7 @@ reference:
   - plot_globe
   - hexify_world
   - globe_centers
+  - hex_browse
   - starts_with("plot,HexData")
 - title: dggridR Compatibility
   desc: Interoperability with dggridR
@@ -163,7 +178,6 @@ reference:
   - HexData-methods
   - new_hex_data
   - extract_grid
-  - index_to_cell_internal
   - calculate_resolution_for_area
   - hexify_grid_to_HexGridInfo
   - HexGridInfo_to_hexify_grid

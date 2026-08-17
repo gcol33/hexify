@@ -6,11 +6,13 @@ parameters needed for grid operations.
 ## Details
 
 Create HexGridInfo objects using the
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md)
 constructor function. Do not use `new("HexGridInfo", ...)` directly.
 
-The aperture can be "3", "4", "7" for standard grids, or "4/3" for mixed
-aperture grids that start with aperture 4 and switch to aperture 3.
+The aperture can be "3", "4", "7" for grids that refine by one aperture
+at every level; a family name such as "4/3" or "4/7", which refines by
+the first aperture for the first floor(resolution / 2) levels and by the
+second for the rest; or one aperture per level, "4/4/7/3".
 
 For H3 grids, the aperture is fixed at "7" and resolution ranges from 0
 to 15.
@@ -19,7 +21,8 @@ to 15.
 
 - `aperture`:
 
-  Character. Grid aperture: "3", "4", "7", or "4/3" for mixed.
+  Character. Grid aperture: "3", "4", "7", a mixed family such as "4/3"
+  or "4/7", or one aperture per resolution level ("4/4/7/3").
 
 - `resolution`:
 
@@ -41,9 +44,14 @@ to 15.
 
   Character. Grid system: "isea" (default) or "h3".
 
+- `radius_km`:
+
+  Numeric. Radius of the body the grid covers, in kilometers. `NA` reads
+  as Earth's mean radius.
+
 ## See also
 
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 the constructor function,
-[`HexData-class`](https://gcol33.github.io/hexify/reference/HexData-class.md)
+[`HexData-class`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for hexified data objects

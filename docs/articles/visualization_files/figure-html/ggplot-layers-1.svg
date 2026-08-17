@@ -1692,19 +1692,19 @@
 <circle cx='167.59' cy='169.09' r='2.49' style='stroke-width: 0.71; stroke: #FF0000; stroke-linecap: butt; fill: #FF0000;' />
 <circle cx='175.80' cy='133.76' r='2.49' style='stroke-width: 0.71; stroke: #FF0000; stroke-linecap: butt; fill: #FF0000;' />
 <circle cx='-33.96' cy='451.04' r='2.49' style='stroke-width: 0.71; stroke: #FF0000; stroke-linecap: butt; fill: #FF0000;' />
-<text x='347.17' y='214.92' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='26.42px' lengthAdjust='spacingAndGlyphs'>Vienna</text>
-<text x='137.70' y='199.81' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='19.44px' lengthAdjust='spacingAndGlyphs'>Paris</text>
-<text x='47.31' y='395.98' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='26.09px' lengthAdjust='spacingAndGlyphs'>Madrid</text>
-<text x='302.80' y='114.74' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='21.81px' lengthAdjust='spacingAndGlyphs'>Berlin</text>
-<text x='289.35' y='361.58' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='22.77px' lengthAdjust='spacingAndGlyphs'>Rome</text>
-<text x='416.50' y='121.48' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='30.50px' lengthAdjust='spacingAndGlyphs'>Warsaw</text>
-<text x='318.04' y='171.45' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='27.53px' lengthAdjust='spacingAndGlyphs'>Prague</text>
-<text x='167.59' y='153.55' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='32.72px' lengthAdjust='spacingAndGlyphs'>Brussels</text>
-<text x='175.80' y='118.22' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='43.64px' lengthAdjust='spacingAndGlyphs'>Amsterdam</text>
-<text x='-33.96' y='435.50' text-anchor='middle' style='font-size: 8.54px;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='25.16px' lengthAdjust='spacingAndGlyphs'>Lisbon</text>
+<text x='347.17' y='214.92' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Vienna</text>
+<text x='137.70' y='199.81' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Paris</text>
+<text x='47.31' y='395.98' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Madrid</text>
+<text x='302.80' y='114.74' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Berlin</text>
+<text x='289.35' y='361.58' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Rome</text>
+<text x='416.50' y='121.48' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Warsaw</text>
+<text x='318.04' y='171.45' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Prague</text>
+<text x='167.59' y='153.55' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Brussels</text>
+<text x='175.80' y='118.22' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Amsterdam</text>
+<text x='-33.96' y='435.50' text-anchor='middle' style='font-size: 0.854em;fill: #A9A9A9; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Lisbon</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='5.48' y='52.76' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='102.59px' lengthAdjust='spacingAndGlyphs'>Cities with Labels</text>
+<text x='5.48' y='52.76' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Cities with Labels</text>
 </g>
 </g>
 </svg>

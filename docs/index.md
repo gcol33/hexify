@@ -19,8 +19,8 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 `hexify` assigns geographic coordinates to equal-area hexagonal grid
 cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every
 cell has the same area regardless of latitude, eliminating the sampling
-bias inherent in rectangular lat-lon grids. H3 (Uber’s hierarchical hex
-system) is also supported for interoperability with industry platforms.
+bias inherent in rectangular lat-lon grids. H3 is supported for
+compatibility with existing H3 workflows.
 
 ## Quick Start
 
@@ -69,50 +69,70 @@ Equal-area grids are directly applicable to:
 - Environmental monitoring and remote sensing aggregation
 - Any analysis requiring unbiased spatial binning
 
+## Why Hexagonal Grids?
+
+Hexagons tile the sphere with three properties that squares and
+triangles lack:
+
+1.  **Equal area** — every cell covers the same surface area, from
+    equator to pole
+2.  **Uniform adjacency** — all six neighbors share an edge (no
+    ambiguous diagonal neighbors)
+3.  **Low shape distortion** — hexagons approximate circles better than
+    any other regular polygon, minimizing edge effects in spatial
+    statistics
+
+These properties make hexagonal grids the natural choice for unbiased
+spatial binning. Rectangular lat-lon grids, by contrast, shrink toward
+the poles: a 1° cell at 60°N has half the area of the same cell at the
+equator.
+
 ## Features
 
 ### Core Workflow
 
-- **[`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)**:
+- **[`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)**:
   Define a grid by target cell area (km²) or resolution level
-- **[`hexify()`](https://gcol33.github.io/hexify/reference/hexify.md)**:
+- **[`hexify()`](https://gillescolling.com/hexify/reference/hexify.md)**:
   Assign points to grid cells (data.frame or sf input)
 - **[`plot()`](https://rdrr.io/r/graphics/plot.default.html) /
-  [`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)**:
+  [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)**:
   Visualize results with base R or ggplot2
+- **Any body**: `hex_grid(area_km2 = 1000, radius_km = "mars")` sizes a
+  grid on Mars, the Moon, Titan, or any radius you give — both backends
 
 ### Grid Generation
 
-- **[`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md)**:
+- **[`grid_rect()`](https://gillescolling.com/hexify/reference/grid_rect.md)**:
   Generate cell polygons for a bounding box
-- **[`grid_global()`](https://gcol33.github.io/hexify/reference/grid_global.md)**:
+- **[`grid_global()`](https://gillescolling.com/hexify/reference/grid_global.md)**:
   Generate a complete global grid (all cells)
-- **[`grid_clip()`](https://gcol33.github.io/hexify/reference/grid_clip.md)**:
+- **[`grid_clip()`](https://gillescolling.com/hexify/reference/grid_clip.md)**:
   Clip grid to a polygon boundary (country, region, etc.)
 
 ### Cell Operations
 
-- **[`cell_to_sf()`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)**:
+- **[`cell_to_sf()`](https://gillescolling.com/hexify/reference/cell_to_sf.md)**:
   Convert cell IDs to sf polygon geometries
-- **[`cell_to_lonlat()`](https://gcol33.github.io/hexify/reference/cell_to_lonlat.md)**:
+- **[`cell_to_lonlat()`](https://gillescolling.com/hexify/reference/cell_to_lonlat.md)**:
   Get cell center coordinates
-- **[`get_parent()`](https://gcol33.github.io/hexify/reference/get_parent.md)
+- **[`get_parent()`](https://gillescolling.com/hexify/reference/get_parent.md)
   /
-  [`get_children()`](https://gcol33.github.io/hexify/reference/get_children.md)**:
+  [`get_children()`](https://gillescolling.com/hexify/reference/get_children.md)**:
   Navigate grid hierarchy
 
 ### Interoperability
 
-- **[`as_dggrid()`](https://gcol33.github.io/hexify/reference/as_dggrid.md)
+- **[`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md)
   /
-  [`from_dggrid()`](https://gcol33.github.io/hexify/reference/from_dggrid.md)**:
+  [`from_dggrid()`](https://gillescolling.com/hexify/reference/from_dggrid.md)**:
   Convert to/from dggridR format
-- **[`as_sf()`](https://gcol33.github.io/hexify/reference/as_sf.md)**:
+- **[`as_sf()`](https://gillescolling.com/hexify/reference/as_sf.md)**:
   Export HexData to sf object
 - **[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)**:
   Extract data with cell assignments
-- **H3 support**: `hex_grid(resolution = 8, type = "h3")` — requires
-  `h3o` package
+- **H3 support**: `hex_grid(resolution = 8, type = "h3")` — vendored H3
+  C library, no extra install needed
 
 ## Installation
 
@@ -137,7 +157,14 @@ library(hexify)
 # Define grid: ~10,000 km² cells
 grid <- hex_grid(area_km2 = 10000)
 grid
-#> HexGridInfo: aperture=3, resolution=5, area=12364.17 km²
+#> HexGridInfo Specification
+#> -------------------------
+#> Aperture:    3
+#> Resolution:  8
+#> Area:        7773.97 km^2
+#> Diagonal:    94.74 km
+#> CRS:         EPSG:4326
+#> Total Cells: 65612
 
 # Assign coordinates to cells
 coords <- data.frame(
@@ -227,6 +254,22 @@ ggplot(cell_polys) +
   scale_fill_viridis_c() +
   theme_minimal()
 ```
+
+## Known Limitations
+
+- **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells).
+  ISEA grids support apertures 3, 4, 7, and mixed 4/3 up to resolution
+  30.
+- **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12
+  pentagonal cells (at icosahedron vertices). These cells have 5
+  neighbors instead of 6. Use
+  [`is_pentagon()`](https://gillescolling.com/hexify/reference/is_pentagon.md)
+  to detect them.
+- **Projection precision**: The inverse Snyder projection uses iterative
+  Newton-Raphson convergence. Default precision is sufficient for
+  sub-meter accuracy; use
+  [`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md)
+  to adjust the speed/accuracy trade-off.
 
 ## Documentation
 

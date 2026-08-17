@@ -100,7 +100,7 @@ NULL invisibly. Creates a plot as side effect.
 
 This function provides a simple way to visualize hexagonal grids with
 geographic context. For more sophisticated visualizations, use
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 to get an sf object and plot with ggplot2, tmap, or other mapping
 packages.
 
@@ -131,14 +131,14 @@ The function automatically:
 
 ## See also
 
-[`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for ggplot2-based heatmaps,
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 to generate polygons manually
 
 Other visualization:
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
-[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md),
+[`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md)
 
 ## Examples
 

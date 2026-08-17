@@ -35,7 +35,7 @@ Data frame with columns:
 ## Details
 
 Most users should use
-[`hexify_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_cell_to_lonlat.md)
+[`hexify_cell_to_lonlat`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md)
 or
-[`hexify_grid_cell_to_lonlat`](https://gcol33.github.io/hexify/reference/hexify_grid_cell_to_lonlat.md)
+[`hexify_grid_cell_to_lonlat`](https://gillescolling.com/hexify/reference/hexify_grid_cell_to_lonlat.md)
 which work with DGGRID-compatible integer cell IDs.

@@ -29,12 +29,12 @@ sf object with hexagon polygons
 This function generates a complete global grid by sampling points
 densely across the globe. For large grids (many small cells), consider
 using
-[`grid_rect()`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+[`grid_rect()`](https://gillescolling.com/hexify/reference/grid_rect.md)
 to generate regional subsets.
 
 ## See also
 
-[`grid_rect`](https://gcol33.github.io/hexify/reference/grid_rect.md)
+[`grid_rect`](https://gillescolling.com/hexify/reference/grid_rect.md)
 for regional grids
 
 ## Examples

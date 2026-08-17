@@ -31,7 +31,7 @@ plot_grid(
 - grid:
 
   A HexGridInfo object from
-  [`hex_grid()`](https://gcol33.github.io/hexify/reference/hex_grid.md)
+  [`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)
 
 - crop:
 
@@ -81,15 +81,15 @@ A ggplot object that can be further customized
 ## Details
 
 This is a convenience wrapper around
-[`grid_clip()`](https://gcol33.github.io/hexify/reference/grid_clip.md)
+[`grid_clip()`](https://gillescolling.com/hexify/reference/grid_clip.md)
 that handles the common use case of visualizing a hexagonal grid over a
 geographic region.
 
 ## See also
 
-[`grid_clip`](https://gcol33.github.io/hexify/reference/grid_clip.md)
+[`grid_clip`](https://gillescolling.com/hexify/reference/grid_clip.md)
 for the underlying clipping function,
-[`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md) for
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 grid specification
 
 ## Examples

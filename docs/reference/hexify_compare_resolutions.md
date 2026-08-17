@@ -10,7 +10,8 @@ hexify_compare_resolutions(
   aperture = 3,
   res_range = 0:15,
   type = c("isea", "h3"),
-  print = FALSE
+  print = FALSE,
+  radius_km = EARTH_RADIUS_KM
 )
 ```
 
@@ -33,6 +34,12 @@ hexify_compare_resolutions(
   If TRUE, prints a formatted table to console. If FALSE (default),
   returns a data frame.
 
+- radius_km:
+
+  Radius of the body, in kilometers, or a body name such as "mars"
+  (default Earth). See
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md).
+
 ## Value
 
 If print=FALSE: data frame with columns resolution, n_cells,
@@ -42,12 +49,12 @@ the data frame after printing.
 ## See also
 
 Other grid statistics:
-[`dg_closest_res_to_area()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_area.md),
-[`dgearthstat()`](https://gcol33.github.io/hexify/reference/dgearthstat.md),
-[`hexify_area_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_area_to_eff_res.md),
-[`hexify_eff_res_to_area()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_area.md),
-[`hexify_eff_res_to_resolution()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_resolution.md),
-[`hexify_resolution_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_resolution_to_eff_res.md)
+[`dg_closest_res_to_area()`](https://gillescolling.com/hexify/reference/dg_closest_res_to_area.md),
+[`dgearthstat()`](https://gillescolling.com/hexify/reference/dgearthstat.md),
+[`hexify_area_to_eff_res()`](https://gillescolling.com/hexify/reference/hexify_area_to_eff_res.md),
+[`hexify_eff_res_to_area()`](https://gillescolling.com/hexify/reference/hexify_eff_res_to_area.md),
+[`hexify_eff_res_to_resolution()`](https://gillescolling.com/hexify/reference/hexify_eff_res_to_resolution.md),
+[`hexify_resolution_to_eff_res()`](https://gillescolling.com/hexify/reference/hexify_resolution_to_eff_res.md)
 
 ## Examples
 
@@ -61,4 +68,7 @@ hexify_compare_resolutions(aperture = 3, res_range = 0:10, print = TRUE)
 
 # Find resolution with cells ~1000 km^2
 subset(comparison, cell_area_km2 > 900 & cell_area_km2 < 1100)
+
+# Resolutions on another body
+hexify_compare_resolutions(aperture = 3, res_range = 0:6, radius_km = "mars")
 ```

@@ -1,8 +1,9 @@
-# Get grid statistics for Earth coverage
+# Get grid statistics for whole-body coverage
 
 Calculates statistics about the hexagonal grid at the current
 resolution, including total number of cells, cell area, and cell
-spacing.
+spacing. Figures follow the radius the grid carries, so a grid built
+with `radius_km` reports that body's areas and distances.
 
 ## Usage
 
@@ -22,7 +23,7 @@ List with components:
 
 - area_km:
 
-  Total Earth surface area in km^2
+  Total surface area of the body in km^2
 
 - n_cells:
 
@@ -47,12 +48,12 @@ List with components:
 ## See also
 
 Other grid statistics:
-[`dg_closest_res_to_area()`](https://gcol33.github.io/hexify/reference/dg_closest_res_to_area.md),
-[`hexify_area_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_area_to_eff_res.md),
-[`hexify_compare_resolutions()`](https://gcol33.github.io/hexify/reference/hexify_compare_resolutions.md),
-[`hexify_eff_res_to_area()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_area.md),
-[`hexify_eff_res_to_resolution()`](https://gcol33.github.io/hexify/reference/hexify_eff_res_to_resolution.md),
-[`hexify_resolution_to_eff_res()`](https://gcol33.github.io/hexify/reference/hexify_resolution_to_eff_res.md)
+[`dg_closest_res_to_area()`](https://gillescolling.com/hexify/reference/dg_closest_res_to_area.md),
+[`hexify_area_to_eff_res()`](https://gillescolling.com/hexify/reference/hexify_area_to_eff_res.md),
+[`hexify_compare_resolutions()`](https://gillescolling.com/hexify/reference/hexify_compare_resolutions.md),
+[`hexify_eff_res_to_area()`](https://gillescolling.com/hexify/reference/hexify_eff_res_to_area.md),
+[`hexify_eff_res_to_resolution()`](https://gillescolling.com/hexify/reference/hexify_eff_res_to_resolution.md),
+[`hexify_resolution_to_eff_res()`](https://gillescolling.com/hexify/reference/hexify_resolution_to_eff_res.md)
 
 ## Examples
 

@@ -24,7 +24,7 @@ Data frame with lon_deg and lat_deg columns
 
 ## See also
 
-[`lonlat_to_cell`](https://gcol33.github.io/hexify/reference/lonlat_to_cell.md)
+[`lonlat_to_cell`](https://gillescolling.com/hexify/reference/lonlat_to_cell.md)
 for the forward operation
 
 ## Examples

@@ -1,7 +1,7 @@
 # Globe center presets
 
 Named list of lon/lat coordinates for common globe views. Used by
-[`plot_globe`](https://gcol33.github.io/hexify/reference/plot_globe.md)
+[`plot_globe`](https://gillescolling.com/hexify/reference/plot_globe.md)
 when center is specified as a string.
 
 ## Usage

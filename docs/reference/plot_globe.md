@@ -32,13 +32,13 @@ plot_globe(
 - area:
 
   Cell area in km^2 (passed to
-  [`hex_grid`](https://gcol33.github.io/hexify/reference/hex_grid.md))
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md))
 
 - center:
 
   Globe center: either a preset name (e.g., "europe") or numeric vector
   c(lon, lat). See
-  [`globe_centers`](https://gcol33.github.io/hexify/reference/globe_centers.md)
+  [`globe_centers`](https://gillescolling.com/hexify/reference/globe_centers.md)
   for presets.
 
 - clip_to_land:
@@ -121,9 +121,9 @@ The function handles several technical challenges:
 
 ## See also
 
-[`globe_centers`](https://gcol33.github.io/hexify/reference/globe_centers.md)
+[`globe_centers`](https://gillescolling.com/hexify/reference/globe_centers.md)
 for available presets,
-[`grid_global`](https://gcol33.github.io/hexify/reference/grid_global.md)
+[`grid_global`](https://gillescolling.com/hexify/reference/grid_global.md)
 for generating global grids without plotting
 
 ## Examples

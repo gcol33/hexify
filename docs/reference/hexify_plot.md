@@ -48,15 +48,15 @@ NULL (invisibly). Creates a plot as side effect.
 
 ## See also
 
-[`hexify_map`](https://gcol33.github.io/hexify/reference/hexify_map.md)
+[`hexify_map`](https://gillescolling.com/hexify/reference/hexify_map.md)
 for basemap support,
-[`hexify_heatmap`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md)
+[`hexify_heatmap`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for ggplot2-based heatmaps
 
 Other visualization:
-[`hexify_heatmap()`](https://gcol33.github.io/hexify/reference/hexify_heatmap.md),
-[`hexify_map()`](https://gcol33.github.io/hexify/reference/hexify_map.md),
-[`plot_world()`](https://gcol33.github.io/hexify/reference/plot_world.md)
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md),
+[`hexify_map()`](https://gillescolling.com/hexify/reference/hexify_map.md),
+[`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md)
 
 ## Examples
 

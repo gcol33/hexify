@@ -85,18 +85,18 @@ faster than 'dggridR' polygon generation, especially for large numbers
 of cells.
 
 For the recommended S4 interface, use
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 instead.
 
 ## See also
 
-[`cell_to_sf`](https://gcol33.github.io/hexify/reference/cell_to_sf.md)
+[`cell_to_sf`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
 for the recommended S4 interface
 
 Other sf conversion:
-[`hex_corners_to_sf()`](https://gcol33.github.io/hexify/reference/hex_corners_to_sf.md),
-[`hexify_grid_global()`](https://gcol33.github.io/hexify/reference/hexify_grid_global.md),
-[`hexify_grid_rect()`](https://gcol33.github.io/hexify/reference/hexify_grid_rect.md)
+[`hex_corners_to_sf()`](https://gillescolling.com/hexify/reference/hex_corners_to_sf.md),
+[`hexify_grid_global()`](https://gillescolling.com/hexify/reference/hexify_grid_global.md),
+[`hexify_grid_rect()`](https://gillescolling.com/hexify/reference/hexify_grid_rect.md)
 
 ## Examples
 

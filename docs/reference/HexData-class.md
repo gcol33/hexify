@@ -6,7 +6,7 @@ plus cell assignments from the hexification process.
 ## Details
 
 HexData objects are created by
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md). The
+[`hexify`](https://gillescolling.com/hexify/reference/hexify.md). The
 original data is preserved in the `data` slot, while cell assignments
 are stored separately in `cell_id` and `cell_center`.
 
@@ -34,7 +34,7 @@ get a combined data frame with cell columns.
 
 ## See also
 
-[`hexify`](https://gcol33.github.io/hexify/reference/hexify.md) for
+[`hexify`](https://gillescolling.com/hexify/reference/hexify.md) for
 creating HexData objects,
-[`HexGridInfo-class`](https://gcol33.github.io/hexify/reference/HexGridInfo-class.md)
+[`HexGridInfo-class`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 for grid specifications

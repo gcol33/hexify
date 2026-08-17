@@ -452,7 +452,7 @@
 <path d='M 404.93 81.71 L 418.71 80.76 L 424.66 68.87 L 416.33 57.77 L 401.77 58.70 L 396.33 70.74 L 404.93 81.71 Z' style='fill-rule: evenodd; fill: #FFF2EE; stroke-width: 0.43; stroke: #FFFFFF; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1NzYuMDB8MC4wMHw0MzIuMDA=)'>
-<text x='478.19' y='190.68' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='49.62px' lengthAdjust='spacingAndGlyphs'>Temp (°C)</text>
+<text x='478.19' y='190.68' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Temp (°C)</text>
 <image width='17.28' height='86.40' x='478.19' y='197.32' preserveAspectRatio='none' xlink:href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAEsCAYAAAACUNnVAAAAp0lEQVQ4jaWPQQ5CIQxEp3MVD+L9L2SiQuvCYIQMUPI3ZNq+vgbE/RYEDQSJLg2lgTCB2BKxZRo2THEJ5JcsKT2fjr0EIqSyl1QZD3yb48tvrQdKMB/M/nGm31oiDIQDjAAYIq2nGaRPSHKZ3QuqS4K+9OMbvoeniLqmYJ+uCcsUPkoufD6bfnsCkYO+rC5StPLvqS0VB1hqS+/anlcB+CwAHwUAEPEBmd87c1SZTjUAAAAASUVORK5CYII='/>
 <polyline points='492.02,278.45 495.47,278.45 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='492.02,258.31 495.47,258.31 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
@@ -464,13 +464,13 @@
 <polyline points='481.65,238.17 478.19,238.17 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='481.65,218.02 478.19,218.02 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='481.65,197.88 478.19,197.88 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
-<text x='500.95' y='281.60' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>5</text>
-<text x='500.95' y='261.46' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='500.95' y='241.32' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>15</text>
-<text x='500.95' y='221.17' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
-<text x='500.95' y='201.03' style='font-size: 8.80px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>25</text>
-<text x='42.70' y='31.05' style='font-size: 11.00px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='187.94px' lengthAdjust='spacingAndGlyphs'>Diverging color scale centered at 15°C</text>
-<text x='42.70' y='14.93' style='font-size: 13.20px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;' textLength='182.91px' lengthAdjust='spacingAndGlyphs'>Mean Temperature by Grid Cell</text>
+<text x='500.95' y='281.60' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>5</text>
+<text x='500.95' y='261.46' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>10</text>
+<text x='500.95' y='241.32' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>15</text>
+<text x='500.95' y='221.17' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>20</text>
+<text x='500.95' y='201.03' style='font-size: 0.88em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>25</text>
+<text x='42.70' y='31.05' style='font-size: 1.1em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Diverging color scale centered at 15°C</text>
+<text x='42.70' y='14.93' style='font-size: 1.32em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Mean Temperature by Grid Cell</text>
 </g>
 </g>
 </svg>
