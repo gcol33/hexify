@@ -120,7 +120,7 @@ a hex cell a single point covers:
 
 ``` r
 
-oldpar <- par(mfrow = c(2, 2))
+oldpar <- par(mfrow = c(2, 2), cex = 1, cex.main = 1)
 
 plot(result, show_points = TRUE, point_size = "small",
      point_color = "red", main = "small (~5%)")
@@ -207,7 +207,7 @@ hexify_heatmap(result, basemap = "world") +
     subtitle = "Assigned to ISEA hexagonal grid cells",
     caption = "Data: Sample cities"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(
     plot.title = element_text(face = "bold", size = 14),
     panel.grid = element_blank()
@@ -228,7 +228,7 @@ city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
   geom_sf(data = city_points, color = "red", size = 2) +
   geom_sf_text(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 3, color = "darkgray") +
+               nudge_y = 0.8, size = 5, color = "darkgray") +
   coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
 #> Spherical geometry (s2) switched off
 #> Spherical geometry (s2) switched on
@@ -428,9 +428,9 @@ ggplot() +
           color = "purple", linewidth = 0.8) +
   labs(
     title = "Pentagon Cell Locations",
-    subtitle = "12 pentagonal cells at icosahedron vertices (area = 5/6 of hexagons)"
+    subtitle = "12 pentagonal cells at icosahedron vertices\n(area = 5/6 of hexagons)"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
@@ -458,8 +458,9 @@ ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
   geom_sf(data = sample_polys, fill = alpha("forestgreen", 0.5),
           color = "darkgreen", linewidth = 0.4) +
-  labs(title = sprintf("Random Sample of %d Cells (~%.0f km2 each)", N, grid@area_km2)) +
-  theme_minimal() +
+  labs(title = sprintf("Random Sample of %d Cells", N),
+       subtitle = sprintf("~%.0f km2 each", grid@area_km2)) +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
@@ -508,7 +509,7 @@ ggplot() +
     title = "Mean Temperature by Grid Cell",
     subtitle = "Diverging color scale centered at 15°C"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),

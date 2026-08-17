@@ -228,11 +228,11 @@ ggplot() +
   scale_fill_viridis_c(option = "plasma", name = "Observations", trans = "sqrt") +
   coord_sf(xlim = c(-30, 60), ylim = c(-35, 70)) +
   labs(
-    title = "Bird Observations in Equal-Area Hexagonal Cells",
+    title = "Bird Observations in Equal-Area Cells",
     subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km² cells)",
                        grid@resolution, grid@area_km2)
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
@@ -253,9 +253,9 @@ ggplot() +
   coord_sf(xlim = c(-30, 60), ylim = c(-35, 70)) +
   labs(
     title = "Species Richness per Grid Cell",
-    subtitle = "Number of unique species observed in each equal-area cell"
+    subtitle = "Unique species per equal-area cell"
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),

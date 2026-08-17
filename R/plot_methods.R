@@ -12,11 +12,14 @@
 #'
 #' Wraps \code{ggplot2::theme_minimal()} with grid lines removed so that
 #' plots render cleanly on pkgdown sites regardless of background colour.
+#' The base font size follows the \code{hexify.base_size} option. A document
+#' whose figures are scaled to the reader's column width sets it, so the text
+#' arrives at a legible size once the figure has been scaled.
 #'
 #' @return A ggplot2 theme object.
 #' @noRd
 .theme_clean <- function() {
-  ggplot2::theme_minimal() +
+  ggplot2::theme_minimal(base_size = getOption("hexify.base_size", 11)) +
     ggplot2::theme(panel.grid = ggplot2::element_blank())
 }
 

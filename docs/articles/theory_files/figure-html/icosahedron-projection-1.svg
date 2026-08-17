@@ -35,31 +35,31 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHw0MzIuMDA=)'>
-<text x='252.00' y='19.55' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Icosahedron Face Projection</text>
+<text x='252.00' y='26.07' text-anchor='middle' style='font-size: 1.92em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Icosahedron Face Projection</text>
 </g>
 <defs>
-  <clipPath id='cpMTQuNDB8NDg5LjYwfDI4LjgwfDQxNy42MA=='>
-    <rect x='14.40' y='28.80' width='475.20' height='388.80' />
+  <clipPath id='cpMTkuMjB8NDg0LjgwfDM4LjQwfDQxMi44MA=='>
+    <rect x='19.20' y='38.40' width='465.60' height='374.40' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMTQuNDB8NDg5LjYwfDI4LjgwfDQxNy42MA==)'>
-<polyline points='407.05,373.02 404.04,365.36 400.66,357.86 396.91,350.54 392.79,343.41 388.33,336.50 383.53,329.82 378.40,323.39 372.95,317.22 367.21,311.33 361.18,305.74 354.88,300.45 348.32,295.48 341.52,290.85 334.50,286.56 327.27,282.62 319.86,279.05 312.28,275.86 304.55,273.04 296.69,270.62 288.72,268.59 280.65,266.96 272.52,265.73 264.33,264.91 256.11,264.50 247.89,264.50 239.67,264.91 231.48,265.73 223.35,266.96 215.28,268.59 207.31,270.62 199.45,273.04 191.72,275.86 184.14,279.05 176.73,282.62 169.50,286.56 162.48,290.85 155.68,295.48 149.12,300.45 142.82,305.74 136.79,311.33 131.05,317.22 125.60,323.39 120.47,329.82 115.67,336.50 111.21,343.41 107.09,350.54 103.34,357.86 99.96,365.36 96.95,373.02 ' style='stroke-width: 1.50; stroke: #666666;' />
-<text x='73.25' y='157.15' style='font-size: 1.02em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Sphere surface</text>
-<polygon points='97.20,360.70 406.80,360.70 252.00,126.95 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E5E5E5; fill-opacity: 0.60;' />
-<text x='80.70' y='381.08' text-anchor='middle' style='font-size: 1.08em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V1</text>
-<text x='423.30' y='381.08' text-anchor='middle' style='font-size: 1.08em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V2</text>
-<text x='252.00' y='114.27' text-anchor='middle' style='font-size: 1.08em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V3</text>
-<circle class='theme-fill-fg' cx='252.00' cy='282.78' r='2.70' style='stroke-width: 0.75; fill: #3E3F3A;' />
-<text x='224.50' y='297.16' text-anchor='middle' style='font-size: 0.96em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Face center</text>
-<circle cx='320.75' cy='175.08' r='3.24' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
-<text x='337.25' y='168.80' text-anchor='middle' style='font-size: 1.32em; font-weight: bold;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>P</text>
-<circle cx='320.75' cy='243.83' r='3.24' style='stroke-width: 0.75; stroke: #457B9D; fill: #457B9D;' />
-<text x='337.25' y='255.42' text-anchor='middle' style='font-size: 1.32em; font-weight: bold;fill: #457B9D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>P'</text>
-<polyline points='320.75,175.08 320.75,243.83 ' style='stroke-width: 1.50; stroke: #2A9D8F; stroke-dasharray: 8.00,8.00;' />
-<text x='252.00' y='384.02' text-anchor='middle' style='font-size: 1.02em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Each of 20 faces covers ~1/20 of sphere surface</text>
-<text x='417.00' y='207.12' style='font-size: 0.96em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Tangent plane</text>
-<text x='417.00' y='218.64' style='font-size: 0.96em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(icosa face)</text>
-<text x='252.00' y='411.16' text-anchor='middle' style='font-size: 0.9em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Snyder (1992, p. 10-12)</text>
+<g clip-path='url(#cpMTkuMjB8NDg0LjgwfDM4LjQwfDQxMi44MA==)'>
+<polyline points='403.92,372.39 400.97,364.89 397.66,357.54 393.98,350.37 389.95,343.38 385.58,336.61 380.87,330.07 375.84,323.77 370.51,317.72 364.88,311.95 358.97,306.47 352.80,301.29 346.37,296.42 339.71,291.88 332.83,287.68 325.75,283.82 318.49,280.32 311.06,277.19 303.49,274.44 295.79,272.06 287.97,270.07 280.07,268.47 272.10,267.27 264.08,266.47 256.03,266.07 247.97,266.07 239.92,266.47 231.90,267.27 223.93,268.47 216.03,270.07 208.21,272.06 200.51,274.44 192.94,277.19 185.51,280.32 178.25,283.82 171.17,287.68 164.29,291.88 157.63,296.42 151.20,301.29 145.03,306.47 139.12,311.95 133.49,317.72 128.16,323.77 123.13,330.07 118.42,336.61 114.05,343.38 110.02,350.37 106.34,357.54 103.03,364.89 100.08,372.39 ' style='stroke-width: 1.50; stroke: #666666;' />
+<text x='76.86' y='162.05' style='font-size: 1.44em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Sphere surface</text>
+<polygon points='100.33,360.32 403.67,360.32 252.00,131.29 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E5E5E5; fill-opacity: 0.60;' />
+<text x='84.16' y='381.66' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V1</text>
+<text x='419.84' y='381.66' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V2</text>
+<text x='252.00' y='120.21' text-anchor='middle' style='font-size: 1.44em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>V3</text>
+<circle class='theme-fill-fg' cx='252.00' cy='283.98' r='3.60' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<text x='225.06' y='299.83' text-anchor='middle' style='font-size: 1.44em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Face center</text>
+<circle cx='319.36' cy='178.45' r='4.32' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
+<text x='335.53' y='173.97' text-anchor='middle' style='font-size: 1.76em; font-weight: bold;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>P</text>
+<circle cx='319.36' cy='245.81' r='4.32' style='stroke-width: 0.75; stroke: #457B9D; fill: #457B9D;' />
+<text x='335.53' y='258.84' text-anchor='middle' style='font-size: 1.76em; font-weight: bold;fill: #457B9D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>P'</text>
+<polyline points='319.36,178.45 319.36,245.81 ' style='stroke-width: 1.50; stroke: #2A9D8F; stroke-dasharray: 8.00,8.00;' />
+<text x='252.00' y='384.34' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Each face covers ~1/20 of the sphere</text>
+<text x='460.82' y='208.64' text-anchor='end' style='font-size: 1.44em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Tangent plane</text>
+<text x='460.82' y='225.92' text-anchor='end' style='font-size: 1.44em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(icosa face)</text>
+<text x='252.00' y='411.20' text-anchor='middle' style='font-size: 1.44em;fill: #7F7F7F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Snyder (1992, p. 10-12)</text>
 </g>
 </g>
 </svg>

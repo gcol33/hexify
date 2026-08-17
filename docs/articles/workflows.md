@@ -157,7 +157,7 @@ ggplot() +
   geom_sf(data = europe_hexes, fill = NA, color = "steelblue", linewidth = 0.4) +
   coord_sf(xlim = c(-10, 25), ylim = c(35, 60)) +
   labs(title = sprintf("Hexagonal Grid (~%.0f km² cells)", grid@area_km2)) +
-  theme_minimal()
+  theme_minimal(base_size = FIG_BASE_SIZE)
 ```
 
 ![](workflows_files/figure-html/grid-rect-1.svg)
@@ -185,8 +185,9 @@ ggplot() +
   geom_sf(data = france_grid_clipped, fill = alpha("steelblue", 0.3),
           color = "steelblue", linewidth = 0.3) +
   coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
-  labs(title = sprintf("Hexagonal Grid Clipped to France (~%.0f km² cells)", grid@area_km2)) +
-  theme_minimal()
+  labs(title = "Hexagonal Grid Clipped to France",
+       subtitle = sprintf("~%.0f km² cells", grid@area_km2)) +
+  theme_minimal(base_size = FIG_BASE_SIZE)
 ```
 
 ![](workflows_files/figure-html/grid-polygon-1.svg)
@@ -203,7 +204,7 @@ ggplot() +
   geom_sf(data = hexify_world, fill = "gray90", color = "gray70", linewidth = 0.2) +
   geom_sf(data = global_hexes, fill = NA, color = "darkgreen", linewidth = 0.3) +
   labs(title = sprintf("Global Hexagonal Grid (~%.0f km² cells)", grid@area_km2)) +
-  theme_minimal() +
+  theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
@@ -632,7 +633,7 @@ ggplot() +
   geom_sf(data = cell_polys, fill = "steelblue", alpha = 0.5, color = "darkblue") +
   coord_sf(xlim = c(-10, 25), ylim = c(35, 58)) +
   labs(title = "European Cities - Hexagonal Grid") +
-  theme_minimal()
+  theme_minimal(base_size = FIG_BASE_SIZE)
 ```
 
 ![](workflows_files/figure-html/sf-plot-1.svg)
