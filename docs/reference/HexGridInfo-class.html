@@ -22,7 +22,7 @@ parameters needed for grid operations."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,7 +99,9 @@ as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").</p></dd>
 
 
 <dt><code>crs</code></dt>
-<dd><p>Integer. Coordinate reference system (default 4326 = 'WGS84').</p></dd>
+<dd><p>Integer or character. Coordinate reference system: an EPSG code,
+or a 'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat
+CRS on the sphere of <code>radius_km</code> on any other body.</p></dd>
 
 
 <dt><code>grid_type</code></dt>

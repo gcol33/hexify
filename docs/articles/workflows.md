@@ -528,7 +528,7 @@ mars
 #> Resolution:  9
 #> Area:        733.48 km^2
 #> Diagonal:    29.10 km
-#> CRS:         EPSG:4326
+#> CRS:         +proj=longlat +R=3389500 +no_defs
 #> Radius:      3389.50 km
 #> Total Cells: 196832
 
@@ -571,6 +571,44 @@ grid object carries it:
 [`cell_area()`](https://gillescolling.com/hexify/reference/cell_area.md),
 [`hexify_compare_resolutions()`](https://gillescolling.com/hexify/reference/hexify_compare_resolutions.md)
 and the sf exports all read the grid’s radius.
+
+### Coordinates on another body
+
+EPSG codes name Earth reference systems, so a grid built on another
+radius carries a longlat CRS on the sphere of that radius:
+
+``` r
+
+mars@crs
+#> [1] "+proj=longlat +R=3389500 +no_defs"
+```
+
+Every sf object built from that grid carries it, so cells, centres and
+hexified data come back in the body’s own coordinates. A planet of your
+own works the same way through a radius in kilometres:
+
+``` r
+
+world <- hex_grid(area_km2 = 5000, radius_km = 4200)
+world@crs
+#> [1] "+proj=longlat +R=4200000 +no_defs"
+```
+
+`crs` also takes a value of your own, as an EPSG code or a PROJ or WKT
+string, which is how a projected system for the body reaches the grid:
+
+``` r
+
+hex_grid(area_km2 = 5000, radius_km = 4200,
+         crs = "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs")@crs
+#> [1] "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs"
+```
+
+A basemap for such a body is any file sf or terra reads:
+[`sf::st_read()`](https://r-spatial.github.io/sf/reference/st_read.html)
+takes a shapefile, GeoJSON or GeoPackage of coastlines,
+[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html)
+takes a GeoTIFF. Both go to `hexify_heatmap(basemap = )`.
 
 Both backends take a radius. H3 reports a cell’s area as its solid angle
 times Earth’s radius squared, so another radius scales those areas by

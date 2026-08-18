@@ -24,7 +24,7 @@ downstream functions."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ downstream functions.</p>
 <span>  aperture <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"isea"</span>, <span class="st">"h3"</span><span class="op">)</span>,</span>
 <span>  resround <span class="op">=</span> <span class="st">"nearest"</span>,</span>
-<span>  crs <span class="op">=</span> <span class="fl">4326L</span>,</span>
+<span>  crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  radius_km <span class="op">=</span> <span class="va">EARTH_RADIUS_KM</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -121,7 +121,9 @@ at 7).</p></dd>
 
 
 <dt id="arg-crs">crs<a class="anchor" aria-label="anchor" href="#arg-crs"></a></dt>
-<dd><p>Coordinate reference system EPSG code (default 4326 = 'WGS84').</p></dd>
+<dd><p>Coordinate reference system: an EPSG code, or a 'PROJ' or 'WKT'
+string. Defaults to 'WGS84' on Earth, and to a longlat CRS on the sphere of
+<code>radius_km</code> on any other body, which has no EPSG code to name it.</p></dd>
 
 
 <dt id="arg-radius-km">radius_km<a class="anchor" aria-label="anchor" href="#arg-radius-km"></a></dt>

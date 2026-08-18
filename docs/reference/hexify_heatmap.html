@@ -24,7 +24,7 @@ projection transformation, and customizable styling."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,7 +115,10 @@ are drawn with a uniform fill color. If not specified but data has a
 <dd><p>Optional basemap. Can be:</p><ul><li><p><code>NULL</code>: No basemap (default)</p></li>
 <li><p><code>"world"</code>: Use built-in <code>hexify_world</code> map (low resolution)</p></li>
 <li><p><code>"world_hires"</code>: Use high-resolution map from rnaturalearth (requires package)</p></li>
-<li><p>An sf object: User-supplied vector map</p></li>
+<li><p>An sf object: User-supplied vector map, from any format
+<code><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">sf::st_read()</a></code> reads, such as a shapefile, 'GeoJSON' or 'GeoPackage'</p></li>
+<li><p>A SpatRaster: User-supplied raster, from any format
+<code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code> reads, such as a 'GeoTIFF', drawn in grayscale</p></li>
 </ul></dd>
 
 

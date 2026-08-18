@@ -35,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Gilles
 Colling</h4>
             
-            <h4 data-toc-skip class="date">2026-08-17</h4>
+            <h4 data-toc-skip class="date">2026-08-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/vignettes/quickstart.Rmd" class="external-link"><code>vignettes/quickstart.Rmd</code></a></small>
       <div class="d-none name"><code>quickstart.Rmd</code></div>
@@ -2840,6 +2840,11 @@ the equator to the Arctic.</p>
 <div class="section level4">
 <h4 id="with-sf-objects">With sf Objects<a class="anchor" aria-label="anchor" href="#with-sf-objects"></a>
 </h4>
+<p>The sf package holds spatial data as simple features: a data frame
+with a geometry column of points, lines or polygons, and a CRS that says
+how to read their coordinates. hexify takes an sf object wherever it
+takes a data frame, and transforms the coordinates itself when the CRS
+differs from the grid’s.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
@@ -4696,8 +4701,8 @@ work.”</p></li>
 </tr>
 <tr class="odd">
 <td><code>crs</code></td>
-<td>integer</td>
-<td>Coordinate reference system (EPSG code)</td>
+<td>integer or character</td>
+<td>EPSG code, or a PROJ or WKT string</td>
 </tr>
 <tr class="even">
 <td><code>grid_type</code></td>

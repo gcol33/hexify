@@ -74,6 +74,7 @@ reference:
   desc: Extract and convert HexData
   contents:
   - grid_info
+  - st_crs.HexGridInfo
   - cells
   - n_cells
   - as_sf

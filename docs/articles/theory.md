@@ -652,7 +652,7 @@ h3_areas <- cell_area(h3_cells, g_h3)
 isea_rel <- isea_areas / mean(isea_areas)
 h3_rel <- h3_areas / mean(h3_areas)
 
-par(mar = c(4, 4, 2, 1), bg = "white")
+oldpar <- par(mar = c(4, 4, 2, 1), bg = "white")
 plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
      xlab = "Latitude (degrees)", ylab = "Relative cell area",
      main = "Cell Area Variation by Latitude",
@@ -664,6 +664,11 @@ legend("topright", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
 ```
 
 ![](theory_files/figure-html/h3-area-variation-1.svg)
+
+``` r
+
+par(oldpar)
+```
 
 For ecological and statistical applications where equal-area cells are
 important (species density estimation, spatial sampling), ISEA is the
@@ -760,7 +765,10 @@ for (ap in c(3, 4, 7)) {
 ## References
 
 - Brodsky, I. (2018). H3: Uber’s Hexagonal Hierarchical Spatial Index.
-  *Uber Engineering Blog*. <https://eng.uber.com/h3/>
+  *Uber Engineering Blog*.
+
+- H3 documentation (2024). *H3: A Hexagonal Hierarchical Geospatial
+  Indexing System*. <https://h3geo.org/>
 
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover
   Publications.

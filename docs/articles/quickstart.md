@@ -118,6 +118,12 @@ head(as.data.frame(result))
 
 #### With sf Objects
 
+The sf package holds spatial data as simple features: a data frame with
+a geometry column of points, lines or polygons, and a CRS that says how
+to read their coordinates. hexify takes an sf object wherever it takes a
+data frame, and transforms the coordinates itself when the CRS differs
+from the grid’s.
+
 ``` r
 
 library(sf)
@@ -278,14 +284,14 @@ error-free:
 
 #### HexGridInfo Slots
 
-| Slot          | Type      | Description                             |
-|---------------|-----------|-----------------------------------------|
-| `aperture`    | character | Grid aperture (“3”, “4”, “7”, or “4/3”) |
-| `resolution`  | integer   | Resolution level (0-30)                 |
-| `area_km2`    | numeric   | Cell area in km²                        |
-| `diagonal_km` | numeric   | Cell diagonal in km                     |
-| `crs`         | integer   | Coordinate reference system (EPSG code) |
-| `grid_type`   | character | Backend: `"isea"` or `"h3"`             |
+| Slot          | Type                 | Description                             |
+|---------------|----------------------|-----------------------------------------|
+| `aperture`    | character            | Grid aperture (“3”, “4”, “7”, or “4/3”) |
+| `resolution`  | integer              | Resolution level (0-30)                 |
+| `area_km2`    | numeric              | Cell area in km²                        |
+| `diagonal_km` | numeric              | Cell diagonal in km                     |
+| `crs`         | integer or character | EPSG code, or a PROJ or WKT string      |
+| `grid_type`   | character            | Backend: `"isea"` or `"h3"`             |
 
 #### HexData Slots
 

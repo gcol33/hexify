@@ -35,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -5060,7 +5060,7 @@ sphere. Pass a radius in kilometres or the name of a body:</p>
 <span><span class="co">#&gt; Resolution:  9</span></span>
 <span><span class="co">#&gt; Area:        733.48 km^2</span></span>
 <span><span class="co">#&gt; Diagonal:    29.10 km</span></span>
-<span><span class="co">#&gt; CRS:         EPSG:4326</span></span>
+<span><span class="co">#&gt; CRS:         +proj=longlat +R=3389500 +no_defs</span></span>
 <span><span class="co">#&gt; Radius:      3389.50 km</span></span>
 <span><span class="co">#&gt; Total Cells: 196832</span></span>
 <span></span>
@@ -5098,10 +5098,36 @@ kilometres, because the grid object carries it:
 <code><a href="../reference/dgearthstat.html">dgearthstat()</a></code>, <code><a href="../reference/cell_area.html">cell_area()</a></code>,
 <code><a href="../reference/hexify_compare_resolutions.html">hexify_compare_resolutions()</a></code> and the sf exports all read
 the grid’s radius.</p>
+<div class="section level3">
+<h3 id="coordinates-on-another-body">Coordinates on another body<a class="anchor" aria-label="anchor" href="#coordinates-on-another-body"></a>
+</h3>
+<p>EPSG codes name Earth reference systems, so a grid built on another
+radius carries a longlat CRS on the sphere of that radius:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mars</span><span class="op">@</span><span class="va">crs</span></span>
+<span><span class="co">#&gt; [1] "+proj=longlat +R=3389500 +no_defs"</span></span></code></pre></div>
+<p>Every sf object built from that grid carries it, so cells, centres
+and hexified data come back in the body’s own coordinates. A planet of
+your own works the same way through a radius in kilometres:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">world</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">5000</span>, radius_km <span class="op">=</span> <span class="fl">4200</span><span class="op">)</span></span>
+<span><span class="va">world</span><span class="op">@</span><span class="va">crs</span></span>
+<span><span class="co">#&gt; [1] "+proj=longlat +R=4200000 +no_defs"</span></span></code></pre></div>
+<p><code>crs</code> also takes a value of your own, as an EPSG code or a
+PROJ or WKT string, which is how a projected system for the body reaches
+the grid:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">5000</span>, radius_km <span class="op">=</span> <span class="fl">4200</span>,</span>
+<span>         crs <span class="op">=</span> <span class="st">"+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs"</span><span class="op">)</span><span class="op">@</span><span class="va">crs</span></span>
+<span><span class="co">#&gt; [1] "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs"</span></span></code></pre></div>
+<p>A basemap for such a body is any file sf or terra reads:
+<code><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">sf::st_read()</a></code> takes a shapefile, GeoJSON or GeoPackage of
+coastlines, <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code> takes a GeoTIFF. Both go to
+<code>hexify_heatmap(basemap = )</code>.</p>
 <p>Both backends take a radius. H3 reports a cell’s area as its solid
 angle times Earth’s radius squared, so another radius scales those areas
 by the square of the radius ratio:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h3_mars</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span>, type <span class="op">=</span> <span class="st">"h3"</span>, radius_km <span class="op">=</span> <span class="st">"mars"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; H3 cells are not exactly equal-area; area varies ~3-5% by latitude.</span></span>
 <span><span class="co">#&gt; H3 cell IDs name a position in H3's topology, which Uber's H3 reads on Earth. A grid on another body reuses that topology and its own radius for areas; the IDs are not interchangeable with Earth H3 data.</span></span>
@@ -5119,13 +5145,14 @@ on that body, not interchangeable with Earth H3 data.
 <code><a href="../reference/h3_crosswalk.html">h3_crosswalk()</a></code> needs both grids on the same body for the
 same reason.</p>
 </div>
+</div>
 <div class="section level2">
 <h2 id="working-with-sf">Working with sf<a class="anchor" aria-label="anchor" href="#working-with-sf"></a>
 </h2>
 <div class="section level3">
 <h3 id="convert-hexdata-to-sf">Convert HexData to sf<a class="anchor" aria-label="anchor" href="#convert-hexdata-to-sf"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Hexify some data</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">cities</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
@@ -5147,7 +5174,7 @@ same reason.</p>
 <div class="section level3">
 <h3 id="visualize-with-ggplot2">Visualize with ggplot2<a class="anchor" aria-label="anchor" href="#visualize-with-ggplot2"></a>
 </h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">europe</span> <span class="op">&lt;-</span> <span class="va">hexify_world</span><span class="op">[</span><span class="va">hexify_world</span><span class="op">$</span><span class="va">continent</span> <span class="op">==</span> <span class="st">"Europe"</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -5625,7 +5652,7 @@ same reason.</p>
 </h2>
 <p>Use sf’s <code><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">st_write()</a></code> to export grids for use in external
 GIS software:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate a grid</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="va">europe</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grid_rect.html">grid_rect</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">35</span>, <span class="fl">25</span>, <span class="fl">60</span><span class="op">)</span>, <span class="va">grid</span><span class="op">)</span></span>
@@ -5642,7 +5669,7 @@ GIS software:</p>
 <div class="section level3">
 <h3 id="handling-na-coordinates">Handling NA Coordinates<a class="anchor" aria-label="anchor" href="#handling-na-coordinates"></a>
 </h3>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_with_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16.37</span>, <span class="cn">NA</span>, <span class="fl">2.35</span>, <span class="fl">13.40</span><span class="op">)</span>,</span>
 <span>  lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">48.21</span>, <span class="fl">48.86</span>, <span class="cn">NA</span>, <span class="fl">52.52</span><span class="op">)</span></span>

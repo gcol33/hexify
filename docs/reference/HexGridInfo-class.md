@@ -38,7 +38,9 @@ to 15.
 
 - `crs`:
 
-  Integer. Coordinate reference system (default 4326 = 'WGS84').
+  Integer or character. Coordinate reference system: an EPSG code, or a
+  'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat
+  CRS on the sphere of `radius_km` on any other body.
 
 - `grid_type`:
 

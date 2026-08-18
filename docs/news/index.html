@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,6 +58,20 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.1" id="hexify-081">hexify 0.8.1<a class="anchor" aria-label="anchor" href="#hexify-081"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-8-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-8-1"></a></h3>
+<ul><li><p><code>crs</code> takes any coordinate reference system sf reads: an EPSG code as before, or a ‘PROJ’ or ‘WKT’ string. A grid left to its default is read on its own body, so a grid built with <code>radius_km</code> carries a longlat CRS on the sphere of that radius and an Earth grid keeps EPSG:4326. EPSG codes name Earth reference systems, so a grid on another body had no code to name it and was reported in ‘WGS84’.</p></li>
+<li><p>Every function that hands out coordinates reads the grid’s CRS through <code>grid_crs()</code>, the way kilometres go through <code>grid_radius_km()</code>. <code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code>, <code><a href="../reference/as_sf.html">as_sf()</a></code>, <code>hex_summarize(geometry = TRUE)</code> and <code><a href="../reference/hex_extract.html">hex_extract()</a></code> all return a grid’s own coordinates rather than assuming Earth.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-8-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-1"></a></h3>
+<ul><li><p><code><a href="../reference/hexify_heatmap.html">hexify_heatmap()</a></code> documents the basemap formats it takes, including the rasters it already accepted, and names <code><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">sf::st_read()</a></code> and <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code> as the way a file becomes one.</p></li>
+<li><p>The quickstart says what an sf object is where it first uses one, and the bodies section of <code><a href="../articles/workflows.html">vignette("workflows")</a></code> covers coordinates on another body.</p></li>
+<li><p>Reported by Christian Carey.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="hexify-080">hexify 0.8.0<a class="anchor" aria-label="anchor" href="#hexify-080"></a></h2>
 <div class="section level3">

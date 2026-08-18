@@ -13,7 +13,7 @@ hex_grid(
   aperture = 3,
   type = c("isea", "h3"),
   resround = "nearest",
-  crs = 4326L,
+  crs = NULL,
   radius_km = EARTH_RADIUS_KM
 )
 ```
@@ -59,7 +59,10 @@ hex_grid(
 
 - crs:
 
-  Coordinate reference system EPSG code (default 4326 = 'WGS84').
+  Coordinate reference system: an EPSG code, or a 'PROJ' or 'WKT'
+  string. Defaults to 'WGS84' on Earth, and to a longlat CRS on the
+  sphere of `radius_km` on any other body, which has no EPSG code to
+  name it.
 
 - radius_km:
 

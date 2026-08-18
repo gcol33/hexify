@@ -58,7 +58,13 @@ hexify_heatmap(
   - `"world_hires"`: Use high-resolution map from rnaturalearth
     (requires package)
 
-  - An sf object: User-supplied vector map
+  - An sf object: User-supplied vector map, from any format
+    [`sf::st_read()`](https://r-spatial.github.io/sf/reference/st_read.html)
+    reads, such as a shapefile, 'GeoJSON' or 'GeoPackage'
+
+  - A SpatRaster: User-supplied raster, from any format
+    [`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html)
+    reads, such as a 'GeoTIFF', drawn in grayscale
 
 - crs:
 

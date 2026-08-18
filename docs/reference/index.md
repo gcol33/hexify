@@ -21,6 +21,9 @@ Extract and convert HexData
 
 - [`grid_info()`](https://gillescolling.com/hexify/reference/grid_info.md)
   : Get Grid Specification
+- [`st_crs(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/st_crs.HexGridInfo.md)
+  [`st_crs(`*`<HexData>`*`)`](https://gillescolling.com/hexify/reference/st_crs.HexGridInfo.md)
+  : Coordinate reference system of a grid
 - [`cells()`](https://gillescolling.com/hexify/reference/cells.md) : Get
   Cell IDs
 - [`n_cells()`](https://gillescolling.com/hexify/reference/n_cells.md) :
