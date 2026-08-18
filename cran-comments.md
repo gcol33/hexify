@@ -1,6 +1,14 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+The note comes from the incoming feasibility check, which lists ISEA,
+Icosahedral, Icosahedron, Kimerling, Sahr and Uber in DESCRIPTION as possibly
+misspelled. ISEA is the Icosahedral Snyder Equal Area projection, spelled out
+in the Description. Icosahedral and icosahedron name the geometry the grids
+are built on. Kimerling and Sahr are authors of the cited 2003 paper, and Uber
+Technologies holds the copyright on the H3 C library included in src/h3. All
+six are spelled as intended.
 
 ## Submission (v0.8.1)
 
