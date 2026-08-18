@@ -829,7 +829,9 @@ for (ap in c(3, 4, 7)) {
 
 ## References
 
-- Brodsky, I. (2018). H3: Uber's Hexagonal Hierarchical Spatial Index. *Uber Engineering Blog*. https://eng.uber.com/h3/
+- Brodsky, I. (2018). H3: Uber's Hexagonal Hierarchical Spatial Index. *Uber Engineering Blog*.
+
+- H3 documentation (2024). *H3: A Hexagonal Hierarchical Geospatial Indexing System*. https://h3geo.org/
 
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover Publications.
 

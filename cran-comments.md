@@ -1,39 +1,32 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-The installed size NOTE (~6 MB) is expected: the package includes a C++
-core for the ISEA projection engine and the H3 v4.4.1 C library compiled
-from source. Debug symbols are now stripped in Makevars to minimize size.
+## Submission (v0.8.1)
 
-## Resubmission (v0.6.5)
+The version on CRAN is 0.6.5. This release carries the work published on GitHub
+since then, which NEWS.md lists in full. The parts that reach a user's stored
+results:
 
-Fixes for issues flagged in v0.6.4 incoming checks:
+* Aperture-7 cell IDs and 'Z7' index strings changed, and `hexify_assign()` now
+  names the cell a point falls in. Aperture-3 and aperture-4 cell IDs are
+  unchanged. NEWS.md lists these under Breaking changes.
 
-5. Fixed empty translation unit WARNING in `h3Assert.c` (clang 21
-   `-Wempty-translation-unit` on Debian)
+* A grid is sized on any body: `hex_grid(radius_km = )` takes a radius in
+  kilometres or a body name, and the grid carries the coordinate reference
+  system of the body it sits on.
 
-Fixes carried from v0.6.4:
+* Apertures 3, 4 and 7 in any sequence, named as a family ("4/7") or one
+  aperture per resolution level.
 
-1. Removed compiled object files (`.o`) from source tarball — caused
-   installation ERROR on Debian and NOTE on all platforms
-2. Wrapped `plot_globe()` examples in `\donttest{}` — was 608s on win-builder
-3. Reworded DESCRIPTION to avoid "vendored" spelling flag
-4. Added `strip -S` in Makevars to reduce installed library size (NOTE)
-
-## Changes in v0.6.3 (carried forward)
-
-1. `cell_to_sf()` now applies `st_wrap_dateline()` automatically for correct
-   antimeridian rendering on flat map projections
-2. Fixed antimeridian gaps in `plot_globe()` orthographic projection
-3. Fixed `sprintf` → `snprintf` in H3 C code (compiled code WARNING)
-4. `as_sf(geometry = "polygon")` routes all grids through `cell_to_sf()` for
-   consistent antimeridian handling
+Uber Technologies, Inc. is now recorded in Authors@R as contributor and
+copyright holder for the H3 C library included in src/h3, which inst/COPYRIGHTS
+documents with its file paths and license.
 
 ## Test environments
 
-* local Windows 11 / WSL2, R 4.5.2
-* GitHub Actions (ubuntu-latest release/devel/oldrel, macOS-latest, windows-latest)
+* local: Windows 11, R 4.6.0, R CMD check --as-cran
+* GitHub Actions: ubuntu-latest (release, devel), macos-latest (release)
 
 ## Downstream dependencies
 
