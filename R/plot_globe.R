@@ -283,34 +283,13 @@ prepare_globe_data <- function(
   # Fix invalid geometries using st_make_valid
   # MULTIPOLYGON cells (from dateline crossing) often become invalid after
   # orthographic transform due to self-intersecting parts - st_make_valid fixes this
-  # Some cells may become degenerate (2-point rings) and fail st_make_valid
+  # Cells on the hemisphere edge collapse to rings of two points, which GEOS
+  # rejects for the whole set, so drop those before repairing the rest
+  hex_ortho <- hex_ortho[has_closable_rings(sf::st_geometry(hex_ortho)), ]
   hex_ortho <- tryCatch({
     sf::st_make_valid(hex_ortho)
   }, error = function(e) {
-    # Batch st_make_valid failed - process cells individually
-    # Mark cells for removal if they can't be fixed
-    keep_mask <- rep(TRUE, nrow(hex_ortho))
-
-    for (i in seq_len(nrow(hex_ortho))) {
-      fixed <- tryCatch({
-        sf::st_make_valid(hex_ortho[i, ])
-      }, error = function(e2) {
-        # Try buffer as fallback
-        tryCatch({
-          sf::st_buffer(hex_ortho[i, ], 0)
-        }, error = function(e3) {
-          NULL  # Mark for removal
-        })
-      })
-
-      if (is.null(fixed) || sf::st_is_empty(fixed)) {
-        keep_mask[i] <- FALSE
-      } else {
-        hex_ortho[i, ] <- fixed
-      }
-    }
-
-    hex_ortho[keep_mask, ]
+    make_valid_per_cell(hex_ortho)
   })
 
   # Remove empty and degenerate geometries
@@ -379,6 +358,43 @@ prepare_globe_data <- function(
     crs = crs_string,
     center = center
   )
+}
+
+#' Which geometries have rings that can close into a polygon
+#'
+#' A closed linear ring needs four positions, so a ring carrying fewer is a
+#' cell the projection squashed onto the hemisphere edge.
+#' @noRd
+has_closable_rings <- function(geoms) {
+  vapply(geoms, function(g) {
+    rings <- if (inherits(g, "MULTIPOLYGON")) unlist(g, recursive = FALSE) else g
+    length(rings) > 0L && all(vapply(rings, nrow, integer(1)) >= 4L)
+  }, logical(1))
+}
+
+#' Repair geometries one cell at a time (fallback for batch failures)
+#' @noRd
+make_valid_per_cell <- function(sf_obj) {
+  geoms <- sf::st_geometry(sf_obj)
+  fixed <- vector("list", length(geoms))
+  keep <- logical(length(geoms))
+
+  for (i in seq_along(geoms)) {
+    repaired <- tryCatch({
+      sf::st_make_valid(geoms[i])
+    }, error = function(e) {
+      tryCatch(sf::st_buffer(geoms[i], 0), error = function(e2) NULL)
+    })
+
+    if (!is.null(repaired) && !sf::st_is_empty(repaired)[1]) {
+      fixed[[i]] <- repaired[[1]]
+      keep[i] <- TRUE
+    }
+  }
+
+  out <- sf_obj[keep, ]
+  sf::st_geometry(out) <- sf::st_sfc(fixed[keep], crs = sf::st_crs(geoms))
+  out
 }
 
 #' Transform geometries individually (fallback for batch failures)

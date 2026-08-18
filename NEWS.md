@@ -14,6 +14,16 @@
   `as_sf()`, `hex_summarize(geometry = TRUE)` and `hex_extract()` all return a
   grid's own coordinates rather than assuming Earth.
 
+## Bug fixes
+
+* `plot_globe()` returns in about a second on the grids its own examples use,
+  where it took eleven minutes. Cells on the hemisphere edge come out of the
+  orthographic transform as rings of two points, which GEOS rejects for the
+  whole set, so every call fell through to a per-cell repair loop that rewrote
+  the whole table once per cell. Those cells are now dropped before the repair,
+  which lets the batch call through, and the loop that remains as a fallback
+  assembles its geometries once. The cells the function returns are unchanged.
+
 ## Documentation
 
 * `hexify_heatmap()` documents the basemap formats it takes, including the
