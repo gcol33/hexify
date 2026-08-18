@@ -47,13 +47,13 @@ Only make minimal targeted fixes when R CMD check flags specific symbols (e.g., 
 
 Use Windows R (not WSL R):
 ```bash
-"/mnt/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'devtools::document()'
-"/mnt/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'devtools::check(args = "--no-manual")'
+"/mnt/c/Program Files/R/R-4.6.0/bin/Rscript.exe" -e 'devtools::document()'
+"/mnt/c/Program Files/R/R-4.6.0/bin/Rscript.exe" -e 'devtools::check(args = "--no-manual")'
 ```
 
 pkgdown site:
 ```bash
-"/mnt/c/Program Files/R/R-4.5.2/bin/Rscript.exe" -e 'source("~/.R/build_pkgdown.R"); build_pkgdown_site()'
+"/mnt/c/Program Files/R/R-4.6.0/bin/Rscript.exe" -e 'source("~/.R/build_pkgdown.R"); build_pkgdown_site()'
 ```
 
 ## Git Push
