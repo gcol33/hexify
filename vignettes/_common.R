@@ -25,4 +25,7 @@ knitr::opts_chunk$set(
 
 # ggplot text is absolute points carried by the theme, so the device point size
 # above does not reach it. hexify's own plots read this option for their base.
-options(hexify.base_size = FIG_BASE_SIZE)
+old_base_size <- options(hexify.base_size = FIG_BASE_SIZE)
+
+# Put the option back once the article has been knit.
+knitr::knit_hooks$set(document = function(x) { options(old_base_size); x })

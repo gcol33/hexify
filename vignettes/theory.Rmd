@@ -54,7 +54,7 @@ This is **not** a perspective projection and has no simple geometric interpretat
 # the equal-area constraint, not from geometric chord distance.
 # This diagram shows the geometric relationship that yields the same formula.
 
-par(mar = c(1, 1, 2, 1), bg = "white")
+oldpar <- par(mar = c(1, 1, 2, 1), bg = "white")
 plot(NULL, xlim = c(-1.5, 2.2), ylim = c(-1.5, 1.7), asp = 1,
      axes = FALSE, xlab = "", ylab = "",
      main = "Lambert Azimuthal Equal-Area Projection Geometry")
@@ -122,6 +122,7 @@ text(1.47, -1.15, expression(rho == italic(d)), cex = 1.1)
 
 # Add reference note
 text(1.47, -1.45, "Snyder (1987, p. 182)", cex = 0.9, col = "gray50")
+par(oldpar)
 ```
 
 ### Forward Formulas
@@ -144,7 +145,7 @@ Therefore $h' \cdot k' = \cos(c/2) \cdot \sec(c/2) = 1$, confirming the equal-ar
 
 ```{r lambert-area-preservation, echo=FALSE, fig.width=7, fig.height=3.5}
 # Show equal-area property with concentric rings
-par(mfrow = c(1, 2), mar = c(2, 1, 3, 1), bg = "white", cex = 1, cex.main = 1)
+oldpar <- par(mfrow = c(1, 2), mar = c(2, 1, 3, 1), bg = "white", cex = 1, cex.main = 1)
 
 R <- 1
 
@@ -210,6 +211,7 @@ lines(r_eq * cos(theta), r_eq * sin(theta), lwd = 2, lty = 2, col = "gray50")
 
 points(0, 0, pch = 19, cex = 1.2)
 text(0, -1.35, "Same bands after projection\n(areas preserved)", cex = 0.9)
+par(oldpar)
 ```
 
 Each colored band has equal area on the sphere. After Lambert projection, shapes change (outer bands stretch radially, compress tangentially) but areas remain equal.
@@ -263,7 +265,7 @@ A regular icosahedron has:
 #
 # Shows how points on the sphere project onto an icosahedral face tangent plane
 
-par(mar = c(1, 1, 2, 1), bg = "white")
+oldpar <- par(mar = c(1, 1, 2, 1), bg = "white")
 plot(NULL, xlim = c(-1.6, 1.6), ylim = c(-0.6, 1.8), asp = 1,
      axes = FALSE, xlab = "", ylab = "",
      main = "Icosahedron Face Projection")
@@ -315,6 +317,7 @@ text(1.55, 0.7, "Tangent plane\n(icosa face)", cex = 0.9, col = "gray50", adj = 
 
 # Reference note
 text(0, -0.75, "Snyder (1992, p. 10-12)", cex = 0.9, col = "gray50")
+par(oldpar)
 ```
 
 ### Vertex Latitude Derivation
@@ -459,7 +462,7 @@ for (res in 0:8) {
 ## Orientation Classes
 
 ```{r orientation-classes, echo=FALSE, fig.width=7, fig.height=4}
-par(mfrow = c(1, 3), mar = c(1, 0.2, 3, 0.2), bg = "white", cex = 1, cex.main = 1)
+oldpar <- par(mfrow = c(1, 3), mar = c(1, 0.2, 3, 0.2), bg = "white", cex = 1, cex.main = 1)
 
 hex_v <- function(cx, cy, r, rotation = 0) {
   angles <- seq(rotation, 2*pi + rotation, length.out = 7)
@@ -497,6 +500,7 @@ arc_theta <- seq(0, rot_angle, length.out = 20)
 lines(arc_r * cos(arc_theta), arc_r * sin(arc_theta), col = "#E63946", lwd = 2)
 text(0.6, 0.15, "19.1°", cex = 0.9, col = "#E63946")
 text(0, -1.35, "Ap. 7 (all res)\nRotation accumulates", cex = 0.9)
+par(oldpar)
 ```
 
 For **aperture 3**, orientation alternates between Class I (flat-top) and Class II (pointy-top) at each resolution.
@@ -748,7 +752,7 @@ h3_areas <- cell_area(h3_cells, g_h3)
 isea_rel <- isea_areas / mean(isea_areas)
 h3_rel <- h3_areas / mean(h3_areas)
 
-par(mar = c(4, 4, 2, 1), bg = "white")
+oldpar <- par(mar = c(4, 4, 2, 1), bg = "white")
 plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
      xlab = "Latitude (degrees)", ylab = "Relative cell area",
      main = "Cell Area Variation by Latitude",
@@ -757,6 +761,7 @@ lines(lats, isea_rel, col = "#457B9D", lwd = 2.5)
 abline(h = 1, lty = 2, col = "gray50")
 legend("topright", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
        col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
+par(oldpar)
 ```
 
 For ecological and statistical applications where equal-area cells are important (species density estimation, spatial sampling), ISEA is the correct choice. For applications where hierarchical indexing speed matters more than area equality (ride-sharing, logistics), H3 may be preferable.
