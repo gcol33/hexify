@@ -146,7 +146,7 @@ hex_summarize <- function(hex_data, ..., .fns = NULL, geometry = FALSE) {
     }
     result <- sf::st_as_sf(result,
                             coords = c("cell_cen_lon", "cell_cen_lat"),
-                            crs = hex_data@grid@crs)
+                            crs = grid_crs(hex_data@grid))
   }
 
   result

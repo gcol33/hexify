@@ -309,3 +309,94 @@ test_that("h3_crosswalk needs both grids on the same body", {
     "same body"
   )
 })
+
+# =============================================================================
+# COORDINATE REFERENCE SYSTEM
+# =============================================================================
+
+test_that("an Earth grid stores the WGS84 EPSG code", {
+  g <- hex_grid(resolution = 5)
+  expect_type(g@crs, "integer")
+  expect_equal(g@crs, 4326L)
+  expect_equal(sf::st_crs(hexify:::grid_crs(g)), sf::st_crs(4326))
+})
+
+test_that("a grid on another body stores a longlat CRS on its own sphere", {
+  g <- hex_grid(resolution = 5, radius_km = "mars")
+  expect_type(g@crs, "character")
+
+  crs <- hexify:::grid_crs(g)
+  expect_false(is.na(crs))
+  expect_false(sf::st_crs(crs) == sf::st_crs(4326))
+  expect_match(sf::st_crs(crs)$proj4string, "+proj=longlat", fixed = TRUE)
+  expect_match(sf::st_crs(crs)$proj4string,
+               sprintf("+R=%d", as.integer(MARS_RADIUS_KM * 1000)), fixed = TRUE)
+})
+
+test_that("the body CRS carries no trailing zeros", {
+  expect_equal(hexify:::body_crs_string(3389.5),
+               "+proj=longlat +R=3389500 +no_defs")
+  expect_equal(hexify:::body_crs_string(1188.3),
+               "+proj=longlat +R=1188300 +no_defs")
+})
+
+test_that("an explicit crs is kept as given", {
+  expect_equal(hex_grid(resolution = 5, crs = 3035)@crs, 3035L)
+
+  proj <- "+proj=longlat +R=3000000 +no_defs"
+  g <- hex_grid(resolution = 5, radius_km = 3000, crs = proj)
+  expect_equal(g@crs, proj)
+
+  # An EPSG code on another body is the user's call to make
+  expect_equal(hex_grid(resolution = 5, radius_km = "mars", crs = 4326L)@crs, 4326L)
+})
+
+test_that("a crs sf cannot read is rejected", {
+  expect_error(hex_grid(resolution = 5, crs = "not a crs"), "sf can read")
+  expect_error(hex_grid(resolution = 5, crs = ""), "non-empty")
+  expect_error(hex_grid(resolution = 5, crs = -1), "positive EPSG code")
+  expect_error(hex_grid(resolution = 5, crs = c(4326, 3035)), "positive EPSG code")
+})
+
+test_that("validity accepts both CRS forms and rejects a broken one", {
+  expect_s4_class(
+    new("HexGridInfo", aperture = "3", resolution = 5L,
+        crs = "+proj=longlat +R=3389500 +no_defs"),
+    "HexGridInfo"
+  )
+  expect_error(
+    new("HexGridInfo", aperture = "3", resolution = 5L, crs = "not a crs"),
+    "sf can read"
+  )
+  expect_error(
+    new("HexGridInfo", aperture = "3", resolution = 5L, crs = 0L),
+    "positive integer EPSG code"
+  )
+})
+
+test_that("sf output carries the grid's own CRS", {
+  mars <- hex_grid(resolution = 5, radius_km = "mars")
+  earth <- hex_grid(resolution = 5)
+  cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars)
+
+  mars_sf <- cell_to_sf(cells, mars)
+  expect_equal(sf::st_crs(mars_sf), sf::st_crs(hexify:::grid_crs(mars)))
+  expect_false(sf::st_crs(mars_sf) == sf::st_crs(cell_to_sf(cells, earth)))
+
+  df <- data.frame(lon = c(0, 10), lat = c(45, 50))
+  hd <- hexify(df, lon = "lon", lat = "lat", grid = mars)
+  expect_equal(sf::st_crs(as_sf(hd)), sf::st_crs(hexify:::grid_crs(mars)))
+})
+
+test_that("a grid prints its CRS in either form", {
+  expect_output(show(hex_grid(resolution = 5)), "CRS: +EPSG:4326")
+  expect_output(show(hex_grid(resolution = 5, radius_km = "mars")),
+                "CRS: +[+]proj=longlat")
+})
+
+test_that("a legacy grid list without a crs converts on its own body", {
+  lst <- list(aperture = "3", resolution = 5L, radius_km = MARS_RADIUS_KM)
+  g <- hexify:::hexify_grid_to_HexGridInfo(lst)
+  expect_type(g@crs, "character")
+  expect_match(g@crs, "+R=3389500", fixed = TRUE)
+})

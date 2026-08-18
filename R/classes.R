@@ -17,6 +17,9 @@ NULL
 # so downstream functions don't need them repeated.
 # =============================================================================
 
+# A grid CRS: an 'EPSG' code, or a 'PROJ' or 'WKT' string
+setClassUnion("HexCRS", c("integer", "character"))
+
 #' HexGridInfo Class
 #'
 #' An S4 class representing a hexagonal grid specification. Stores all
@@ -27,7 +30,9 @@ NULL
 #' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
-#' @slot crs Integer. Coordinate reference system (default 4326 = 'WGS84').
+#' @slot crs Integer or character. Coordinate reference system: an EPSG code,
+#'   or a 'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat
+#'   CRS on the sphere of \code{radius_km} on any other body.
 #' @slot grid_type Character. Grid system: "isea" (default) or "h3".
 #' @slot radius_km Numeric. Radius of the body the grid covers, in kilometers.
 #'   \code{NA} reads as Earth's mean radius.
@@ -54,7 +59,7 @@ setClass(
     resolution = "integer",
     area_km2 = "numeric",
     diagonal_km = "numeric",
-    crs = "integer",
+    crs = "HexCRS",
     grid_type = "character",
     radius_km = "numeric"
   ),
@@ -163,8 +168,17 @@ setValidity("HexGridInfo", function(object) {
     errors <- c(errors, "diagonal_km must be positive")
   }
 
-  # Validate crs (must be positive integer)
-  if (object@crs <= 0L) {
+  # Validate crs (an EPSG code, or a CRS string sf can read)
+  if (is.character(object@crs)) {
+    if (length(object@crs) != 1L || is.na(object@crs) || !nzchar(object@crs)) {
+      errors <- c(errors, "crs must be a single non-empty CRS string")
+    } else if (is.na(parse_crs(object@crs))) {
+      errors <- c(errors, sprintf(
+        "crs \"%s\" is not a coordinate reference system sf can read",
+        object@crs
+      ))
+    }
+  } else if (length(object@crs) != 1L || is.na(object@crs) || object@crs <= 0L) {
     errors <- c(errors, "crs must be a positive integer EPSG code")
   }
 
@@ -494,7 +508,7 @@ setMethod("show", "HexGridInfo", function(object) {
       cat(sprintf("Avg Diagonal:%.2f km\n", object@diagonal_km))
     }
 
-    cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+    cat(sprintf("CRS:         %s\n", format_crs(object@crs)))
 
     if (!is_earth_grid(object)) {
       cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
@@ -516,7 +530,7 @@ setMethod("show", "HexGridInfo", function(object) {
       cat(sprintf("Diagonal:    %.2f km\n", object@diagonal_km))
     }
 
-    cat(sprintf("CRS:         EPSG:%d\n", object@crs))
+    cat(sprintf("CRS:         %s\n", format_crs(object@crs)))
 
     if (!is_earth_grid(object)) {
       cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
@@ -729,7 +743,7 @@ hexify_grid_to_HexGridInfo <- function(x) {
       resolution = as.integer(x$resolution),
       area_km2 = area,
       diagonal_km = diagonal,
-      crs = 4326L,
+      crs = resolve_crs(x$crs, grid_radius_km(x)),
       radius_km = grid_radius_km(x))
 }
 

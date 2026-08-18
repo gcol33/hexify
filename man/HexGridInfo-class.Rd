@@ -31,7 +31,9 @@ as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").}
 
 \item{\code{diagonal_km}}{Numeric. Cell diagonal (long diagonal) in kilometers.}
 
-\item{\code{crs}}{Integer. Coordinate reference system (default 4326 = 'WGS84').}
+\item{\code{crs}}{Integer or character. Coordinate reference system: an EPSG code,
+or a 'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat
+CRS on the sphere of \code{radius_km} on any other body.}
 
 \item{\code{grid_type}}{Character. Grid system: "isea" (default) or "h3".}
 

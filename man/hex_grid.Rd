@@ -10,7 +10,7 @@ hex_grid(
   aperture = 3,
   type = c("isea", "h3"),
   resround = "nearest",
-  crs = 4326L,
+  crs = NULL,
   radius_km = EARTH_RADIUS_KM
 )
 }
@@ -41,7 +41,9 @@ at 7).}
 \item{resround}{Resolution rounding when using \code{area_km2}:
 "nearest" (default), "up", or "down".}
 
-\item{crs}{Coordinate reference system EPSG code (default 4326 = 'WGS84').}
+\item{crs}{Coordinate reference system: an EPSG code, or a 'PROJ' or 'WKT'
+string. Defaults to 'WGS84' on Earth, and to a longlat CRS on the sphere of
+\code{radius_km} on any other body, which has no EPSG code to name it.}
 
 \item{radius_km}{Radius of the body the grid covers, in kilometers, or the
 name of a body: "mercury", "venus", "earth" (default), "moon", "mars",

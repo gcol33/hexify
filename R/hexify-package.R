@@ -22,3 +22,7 @@ utils::globalVariables(c(
   "cpp_h3_isPentagon", "cpp_h3_gridDistance",
   "cpp_get_neighbors_isea", "cpp_get_neighbors_z7"
 ))
+
+#' @importFrom sf st_crs
+#' @export
+sf::st_crs

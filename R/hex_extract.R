@@ -81,7 +81,7 @@ hex_extract <- function(raster, grid, cells = NULL, boundary = NULL) {
   u_centers <- centers[uid, , drop = FALSE]
 
   # Extract raster values at cell centers
-  pts <- terra::vect(u_centers, crs = paste0("EPSG:", g@crs))
+  pts <- terra::vect(u_centers, crs = grid_crs_wkt(g))
   extracted <- terra::extract(raster, pts)
 
   # Build result

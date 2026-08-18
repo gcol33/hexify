@@ -35,7 +35,9 @@
 #' @param type Grid type: "isea" (default) or "h3".
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
-#' @param crs Coordinate reference system EPSG code (default 4326 = 'WGS84').
+#' @param crs Coordinate reference system: an EPSG code, or a 'PROJ' or 'WKT'
+#'   string. Defaults to 'WGS84' on Earth, and to a longlat CRS on the sphere of
+#'   \code{radius_km} on any other body, which has no EPSG code to name it.
 #' @param radius_km Radius of the body the grid covers, in kilometers, or the
 #'   name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 #'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
@@ -143,16 +145,13 @@ hex_grid <- function(area_km2 = NULL,
                      aperture = 3,
                      type = c("isea", "h3"),
                      resround = "nearest",
-                     crs = 4326L,
+                     crs = NULL,
                      radius_km = EARTH_RADIUS_KM) {
 
   type <- match.arg(type)
 
-  if (!is.numeric(crs) || length(crs) != 1 || is.na(crs)) {
-    stop("crs must be a single non-NA integer (EPSG code)")
-  }
-
   radius_km <- resolve_radius_km(radius_km)
+  crs <- resolve_crs(crs, radius_km)
 
   # =========================================================================
   # H3 grid path
@@ -216,7 +215,7 @@ hex_grid <- function(area_km2 = NULL,
                 resolution = as.integer(resolution),
                 area_km2 = as.numeric(actual_area),
                 diagonal_km = as.numeric(actual_diagonal),
-                crs = as.integer(crs),
+                crs = crs,
                 grid_type = "h3",
                 radius_km = radius_km)
     return(grid)
@@ -308,7 +307,7 @@ hex_grid <- function(area_km2 = NULL,
               resolution = as.integer(resolution),
               area_km2 = as.numeric(actual_area),
               diagonal_km = as.numeric(actual_diagonal),
-              crs = as.integer(crs),
+              crs = crs,
               grid_type = "isea",
               radius_km = radius_km)
 
@@ -456,7 +455,7 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
     sf::st_as_sf(
       df_with_coords,
       coords = c("cell_cen_lon", "cell_cen_lat"),
-      crs = grid@crs
+      crs = grid_crs(grid)
     )
 
   } else {
@@ -477,4 +476,32 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
 #' @export
 as_sf.default <- function(x, ...) {
   stop("as_sf() is not defined for objects of class ", class(x)[1])
+}
+
+#' Coordinate reference system of a grid
+#'
+#' Reads the CRS a grid's coordinates are in, as \code{sf::st_crs()} does for
+#' any spatial object. An Earth grid returns 'WGS84'; a grid built on another
+#' body returns a longlat CRS on the sphere of its radius.
+#'
+#' @param x A HexGridInfo or HexData object
+#' @param ... Passed on to \code{sf::st_crs()}
+#' @return An object of class \code{crs}, as \code{sf::st_crs()} returns:
+#'   a list carrying the reference system in 'PROJ' and 'WKT' form. It says how
+#'   to read the coordinates that the grid's cells, centres and sf exports come
+#'   back in.
+#'
+#' @importFrom sf st_crs
+#' @export
+#' @examples
+#' st_crs(hex_grid(resolution = 5))
+#' st_crs(hex_grid(resolution = 5, radius_km = "mars"))
+st_crs.HexGridInfo <- function(x, ...) {
+  grid_crs(x)
+}
+
+#' @rdname st_crs.HexGridInfo
+#' @export
+st_crs.HexData <- function(x, ...) {
+  grid_crs(x@grid)
 }

@@ -417,6 +417,36 @@ WGS84 ellipsoid area. Named bodies carry the IAU mean radii (Archinal et al.
 object carries it: `dgearthstat()`, `cell_area()`, `hexify_compare_resolutions()`
 and the sf exports all read the grid's radius.
 
+### Coordinates on another body
+
+EPSG codes name Earth reference systems, so a grid built on another radius
+carries a longlat CRS on the sphere of that radius:
+
+```{r other-bodies-crs}
+mars@crs
+```
+
+Every sf object built from that grid carries it, so cells, centres and hexified
+data come back in the body's own coordinates. A planet of your own works the
+same way through a radius in kilometres:
+
+```{r other-bodies-crs-custom}
+world <- hex_grid(area_km2 = 5000, radius_km = 4200)
+world@crs
+```
+
+`crs` also takes a value of your own, as an EPSG code or a PROJ or WKT string,
+which is how a projected system for the body reaches the grid:
+
+```{r other-bodies-crs-explicit}
+hex_grid(area_km2 = 5000, radius_km = 4200,
+         crs = "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs")@crs
+```
+
+A basemap for such a body is any file sf or terra reads: `sf::st_read()` takes a
+shapefile, GeoJSON or GeoPackage of coastlines, `terra::rast()` takes a GeoTIFF.
+Both go to `hexify_heatmap(basemap = )`.
+
 Both backends take a radius. H3 reports a cell's area as its solid angle times
 Earth's radius squared, so another radius scales those areas by the square of
 the radius ratio:

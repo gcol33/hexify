@@ -119,6 +119,93 @@ is_earth_grid <- function(x) {
   grid_radius_km(x) == EARTH_RADIUS_KM
 }
 
+# =============================================================================
+# Body CRS Helpers
+# =============================================================================
+
+#' Longlat CRS on the sphere of a body's radius, as a 'PROJ' string
+#'
+#' 'EPSG' codes name Earth reference systems, so a grid on another body carries
+#' a longlat CRS on the sphere of its own radius instead.
+#' @param radius_km Radius in kilometers
+#' @noRd
+body_crs_string <- function(radius_km) {
+  metres <- sub("[.]?0+$", "", sprintf("%.4f", radius_km * 1000))
+  sprintf("+proj=longlat +R=%s +no_defs", metres)
+}
+
+#' A CRS specification read by sf, or NA_crs_ if sf cannot read it
+#' @param crs An 'EPSG' code or a 'PROJ' or 'WKT' string
+#' @noRd
+parse_crs <- function(crs) {
+  tryCatch(sf::st_crs(crs), error = function(e) sf::NA_crs_)
+}
+
+#' The CRS a new grid stores
+#'
+#' NULL takes 'WGS84' on Earth and the body's own sphere elsewhere. An 'EPSG'
+#' code stores as an integer, any other CRS as the string sf reads it from.
+#' @param crs NULL, an 'EPSG' code, or a 'PROJ' or 'WKT' string
+#' @param radius_km Radius the grid is sized against, in kilometers
+#' @noRd
+resolve_crs <- function(crs, radius_km) {
+  if (is.null(crs)) {
+    if (radius_km == EARTH_RADIUS_KM) return(4326L)
+    return(body_crs_string(radius_km))
+  }
+
+  if (is.character(crs)) {
+    if (length(crs) != 1L || is.na(crs) || !nzchar(crs)) {
+      stop("crs must be a single non-empty CRS string, or an EPSG code")
+    }
+    if (is.na(parse_crs(crs))) {
+      stop(sprintf(
+        "crs \"%s\" is not a coordinate reference system sf can read", crs
+      ))
+    }
+    return(crs)
+  }
+
+  if (!is.numeric(crs) || length(crs) != 1L || is.na(crs) ||
+      !is.finite(crs) || crs <= 0) {
+    stop("crs must be a single positive EPSG code, or a PROJ or WKT string")
+  }
+
+  as.integer(crs)
+}
+
+#' CRS a grid's coordinates are read in
+#'
+#' A grid carrying no CRS is read on its own body: 'WGS84' on Earth, and a
+#' longlat CRS on the sphere of the radius elsewhere.
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @noRd
+grid_crs <- function(x) {
+  crs <- if (isS4(x)) {
+    if (.hasSlot(x, "crs")) x@crs else NULL
+  } else {
+    x$crs
+  }
+  if (is.null(crs) || length(crs) != 1L || is.na(crs)) {
+    crs <- resolve_crs(NULL, grid_radius_km(x))
+  }
+  parse_crs(crs)
+}
+
+#' A grid's CRS as 'WKT', for the packages that take a string
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @noRd
+grid_crs_wkt <- function(x) {
+  grid_crs(x)$wkt
+}
+
+#' A CRS as it prints in a grid specification
+#' @param crs An 'EPSG' code or a 'PROJ' or 'WKT' string
+#' @noRd
+format_crs <- function(crs) {
+  if (is.character(crs)) crs else sprintf("EPSG:%d", as.integer(crs))
+}
+
 #' 'H3' areas read on another body
 #'
 #' A cell covers the same solid angle on any sphere, and 'H3' reports an area as

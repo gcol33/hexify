@@ -453,7 +453,10 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'     \item \code{NULL}: No basemap (default)
 #'     \item \code{"world"}: Use built-in \code{hexify_world} map (low resolution)
 #'     \item \code{"world_hires"}: Use high-resolution map from rnaturalearth (requires package)
-#'     \item An sf object: User-supplied vector map
+#'     \item An sf object: User-supplied vector map, from any format
+#'       \code{sf::st_read()} reads, such as a shapefile, 'GeoJSON' or 'GeoPackage'
+#'     \item A SpatRaster: User-supplied raster, from any format
+#'       \code{terra::rast()} reads, such as a 'GeoTIFF', drawn in grayscale
 #'   }
 #' @param crs Target CRS for the map projection. Can be:
 #'   \itemize{
@@ -600,9 +603,9 @@ hexify_heatmap <- function(data,
   # Resolve value column (NULL means uniform fill)
   value <- resolve_value_column(hex_sf, value, require = FALSE)
 
-  # Setup CRS
-  crs <- if (is.null(crs)) 4326 else crs
+  # Setup CRS: a map with no projection asked for stays on the grid's own body
   if (is.na(sf::st_crs(hex_sf))) sf::st_crs(hex_sf) <- 4326
+  crs <- if (is.null(crs)) sf::st_crs(hex_sf) else crs
   hex_sf <- sf::st_transform(hex_sf, crs)
 
   # Resolve and transform basemap (supports sf and SpatRaster)
@@ -643,7 +646,7 @@ hexify_heatmap <- function(data,
   # Add raster basemap if provided (rendered as grayscale annotation)
   if (!is.null(basemap_raster)) {
     if (requireNamespace("terra", quietly = TRUE)) {
-      rast_proj <- terra::project(basemap_raster, paste0("EPSG:", crs))
+      rast_proj <- terra::project(basemap_raster, parse_crs(crs)$wkt)
       ext <- as.vector(terra::ext(rast_proj))
       # Convert to matrix for annotation_raster
       vals <- terra::values(rast_proj[[1]])

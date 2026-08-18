@@ -23,4 +23,9 @@ Authors:
   \item Gilles Colling \email{gilles.colling051@gmail.com} (\href{https://orcid.org/0000-0003-3070-6066}{ORCID}) [copyright holder]
 }
 
+Other contributors:
+\itemize{
+  \item Uber Technologies, Inc. (H3 C library, src/h3 (Apache-2.0)) [contributor, copyright holder]
+}
+
 }

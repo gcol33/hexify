@@ -1,3 +1,30 @@
+# hexify 0.8.1
+
+## New features
+
+* `crs` takes any coordinate reference system sf reads: an EPSG code as before,
+  or a 'PROJ' or 'WKT' string. A grid left to its default is read on its own
+  body, so a grid built with `radius_km` carries a longlat CRS on the sphere of
+  that radius and an Earth grid keeps EPSG:4326. EPSG codes name Earth
+  reference systems, so a grid on another body had no code to name it and was
+  reported in 'WGS84'.
+
+* Every function that hands out coordinates reads the grid's CRS through
+  `grid_crs()`, the way kilometres go through `grid_radius_km()`. `cell_to_sf()`,
+  `as_sf()`, `hex_summarize(geometry = TRUE)` and `hex_extract()` all return a
+  grid's own coordinates rather than assuming Earth.
+
+## Documentation
+
+* `hexify_heatmap()` documents the basemap formats it takes, including the
+  rasters it already accepted, and names `sf::st_read()` and `terra::rast()` as
+  the way a file becomes one.
+
+* The quickstart says what an sf object is where it first uses one, and the
+  bodies section of `vignette("workflows")` covers coordinates on another body.
+
+* Reported by Christian Carey.
+
 # hexify 0.8.0
 
 ## Breaking changes

@@ -46,7 +46,7 @@ normalize_antimeridian_coords <- function(coords) {
 #' @param cell_id Numeric vector of cell IDs
 #' @param resolution Grid resolution level
 #' @param aperture Grid aperture: 3, 4, or 7
-#' @param crs Integer CRS
+#' @param crs CRS the polygons carry, as sf reads it
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
 isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
@@ -222,7 +222,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
       coords <- normalize_antimeridian_coords(coords)
       sf::st_polygon(list(coords))
     })
-    sfc <- sf::st_sfc(polygons, crs = g@crs)
+    sfc <- sf::st_sfc(polygons, crs = grid_crs(g))
     sfc <- suppressWarnings(sf::st_make_valid(sfc))
     result_sf <- sf::st_sf(cell_id = as.character(cell_id), geometry = sfc)
     if (wrap_dateline) {
@@ -235,7 +235,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   # ISEA path: generate polygons using C++ function. For globe/orthographic
   # projections, pass wrap_dateline = FALSE to keep cells intact.
   sfc <- isea_cells_to_sfc(cell_id, g@resolution, aperture_to_int(g@aperture),
-                           crs = g@crs)
+                           crs = grid_crs(g))
 
   result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
   if (wrap_dateline) {

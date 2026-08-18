@@ -41,7 +41,10 @@ are drawn with a uniform fill color. If not specified but data has a
 \item \code{NULL}: No basemap (default)
 \item \code{"world"}: Use built-in \code{hexify_world} map (low resolution)
 \item \code{"world_hires"}: Use high-resolution map from rnaturalearth (requires package)
-\item An sf object: User-supplied vector map
+\item An sf object: User-supplied vector map, from any format
+\code{sf::st_read()} reads, such as a shapefile, 'GeoJSON' or 'GeoPackage'
+\item A SpatRaster: User-supplied raster, from any format
+\code{terra::rast()} reads, such as a 'GeoTIFF', drawn in grayscale
 }}
 
 \item{crs}{Target CRS for the map projection. Can be:
