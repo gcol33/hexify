@@ -721,7 +721,7 @@ hexify supports Uber's H3 system as a first-class alternative to the ISEA backen
 |----------|---------------------|-----------|
 | **Projection** | Snyder ISEA (equal-area) | Face-centered gnomonic |
 | **Polyhedron** | Icosahedron (20 faces) | Icosahedron (20 faces) |
-| **Aperture** | 3, 4, 7, or mixed 4/3 | 7 (fixed) |
+| **Aperture** | 3, 4 and 7 in any sequence | 7 (fixed) |
 | **Cell area** | Exactly equal | Varies by location |
 | **Resolutions** | 0--30 | 0--15 |
 | **Cell IDs** | Integer SEQNUM | 64-bit hex string |

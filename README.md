@@ -41,7 +41,7 @@ plot(result_h3)
 
 Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.
 
-Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify's primary backend is **ISEA** (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports **H3** grids via a vendored C library.
+Discrete Global Grid Systems (DGGS) solve this by partitioning Earth's surface into cells of uniform area. hexify's primary backend is **ISEA** (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4 and 7 in any sequence, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports **H3** grids via a vendored C library.
 
 Equal-area grids are directly applicable to:
 
@@ -205,7 +205,7 @@ ggplot(cell_polys) +
 
 ## Known Limitations
 
-- **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4, 7, and mixed 4/3 up to resolution 30.
+- **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4 and 7 in any sequence up to resolution 30.
 - **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use `is_pentagon()` to detect them.
 - **Projection precision**: The inverse Snyder projection uses iterative Newton-Raphson convergence. Default precision is sufficient for sub-meter accuracy; use `hexify_set_precision()` to adjust the speed/accuracy trade-off.
 
