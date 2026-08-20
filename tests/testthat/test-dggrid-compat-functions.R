@@ -85,7 +85,7 @@ test_that("from_dggrid warns on non-default orientation", {
   dggs$pole_lat_deg <- 0
   expect_warning(from_dggrid(dggs), "Non-default pole_lat_deg")
 
-  dggs$pole_lat_deg <- 58.28252559
+  dggs$pole_lat_deg <- 58.282525588538995
   dggs$azimuth_deg <- 45
   expect_warning(from_dggrid(dggs), "Non-default azimuth_deg")
 })

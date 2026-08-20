@@ -21,7 +21,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 void cpp_build_icosa(double vert0_lon_deg = 11.25,
-                     double vert0_lat_deg = 58.28252559,
+                     double vert0_lat_deg = 58.282525588538995,
                      double azimuth_deg   = 0.0) {
   hexify::build_icosa_full(vert0_lon_deg, vert0_lat_deg, azimuth_deg);
 }

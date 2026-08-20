@@ -17,11 +17,11 @@ test_that("icosahedron builds successfully with default orientation", {
 
 test_that("icosahedron builds with custom orientation", {
   # ISEA3H default orientation
-  expect_no_error(hexify_build_icosa(11.25, 58.28252559, 0))
+  expect_no_error(hexify_build_icosa(11.25, 58.282525588538995, 0))
 
   # Alternative orientations
-  expect_no_error(hexify_build_icosa(0, 58.28252559, 0))
-  expect_no_error(hexify_build_icosa(11.25, 58.28252559, 45))
+  expect_no_error(hexify_build_icosa(0, 58.282525588538995, 0))
+  expect_no_error(hexify_build_icosa(11.25, 58.282525588538995, 45))
 })
 
 # =============================================================================
@@ -49,7 +49,7 @@ test_that("face_centers returns 20 faces with valid coordinates", {
 test_that("face_centers returns the exact standard ISEA orientation", {
   # The 20 icosahedron face centers are a fixed, closed-form geometric
   # structure for the default ISEA3H orientation (pole_lon=11.25,
-  # pole_lat=58.28252559, azimuth=0) - not just "some finite value".
+  # pole_lat=58.282525588538995, azimuth=0) - not just "some finite value".
   hexify_build_icosa()
   centers <- hexify_face_centers()
 

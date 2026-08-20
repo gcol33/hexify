@@ -29,7 +29,7 @@ double wrap_lon(double lon_rad);
 
 // ---- Icosahedron construction and queries ----
 void build_icosa_full(double vert0_lon_deg = 11.25,
-                      double vert0_lat_deg = 58.28252559,
+                      double vert0_lat_deg = 58.282525588538995,
                       double azimuth_deg   = 0.0);
 
 // Identify which icosahedral face a point (lon_deg, lat_deg) belongs to

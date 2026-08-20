@@ -335,7 +335,7 @@ The latitude $\arctan(1/2)$ arises from the golden ratio geometry. An icosahedro
 
 ### Standard ISEA Orientation
 
-The default orientation places vertex 0 at longitude 11.25°, latitude 58.28252559°, with azimuth 0°. This places icosahedron vertices (pentagon cells) predominantly over oceans (Sahr et al., 2003, p. 123).
+The default orientation places vertex 0 at longitude 11.25°, latitude $\arctan(\varphi) \approx 58.2825°$, with azimuth 0°. This places icosahedron vertices (pentagon cells) predominantly over oceans (Sahr et al., 2003, p. 123).
 
 ```{r face-centers, echo=FALSE, fig.width=7, fig.height=3.5}
 library(sf)

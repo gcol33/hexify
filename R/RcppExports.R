@@ -353,7 +353,7 @@ cpp_z7_canonical_form <- function(index, max_iterations = 128L) {
     .Call(`_hexify_cpp_z7_canonical_form`, index, max_iterations)
 }
 
-cpp_build_icosa <- function(vert0_lon_deg = 11.25, vert0_lat_deg = 58.28252559, azimuth_deg = 0.0) {
+cpp_build_icosa <- function(vert0_lon_deg = 11.25, vert0_lat_deg = 58.282525588538995, azimuth_deg = 0.0) {
     invisible(.Call(`_hexify_cpp_build_icosa`, vert0_lon_deg, vert0_lat_deg, azimuth_deg))
 }
 

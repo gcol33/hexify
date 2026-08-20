@@ -24,6 +24,12 @@
   which lets the batch call through, and the loop that remains as a fallback
   assembles its geometries once. The cells the function returns are unchanged.
 
+* The default ISEA orientation carries `atan(phi)` at full double precision,
+  with `phi = (1 + sqrt(5)) / 2`, placing vertex 0 at latitude
+  58.282525588538995 degrees. The constant was stored rounded at the eighth
+  decimal, 1.5e-09 degrees from the analytic value, which is 0.16 mm on Earth
+  and reaches the assignment of a point that close to a cell boundary.
+
 ## Documentation
 
 * `hexify_heatmap()` documents the basemap formats it takes, including the

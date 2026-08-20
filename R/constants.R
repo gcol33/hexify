@@ -279,8 +279,10 @@ ISEA3H_RES10_AREA_KM2 <- 863.8006
 ISEA_VERT0_LON_DEG <- 11.25
 
 #' Default latitude for ISEA vertex 0 (degrees)
+#'
+#' atan(phi) in degrees, where phi = (1 + sqrt(5)) / 2.
 #' @noRd
-ISEA_VERT0_LAT_DEG <- 58.28252559
+ISEA_VERT0_LAT_DEG <- 58.282525588538995
 
 #' Default azimuth for ISEA orientation (degrees)
 #' @noRd
