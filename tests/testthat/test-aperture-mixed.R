@@ -608,6 +608,25 @@ test_that("mixed 4/3 cell_to_index round-trips to the original cell", {
   }
 })
 
+test_that("mixed 4/3 point lookup stays in range for a slipped cell centre", {
+  setup_icosa()
+  # A centre sitting on a quad corner quantizes to a tie, and the twelve
+  # icosahedron vertices put such corners at the poles. A sub-microdegree slip
+  # either way still has to name a cell of the grid.
+  for (res in 1:4) {
+    n <- hexify:::aperture_n_cells("4/3", res)
+    ll <- hexify:::mixed_cell_center(seq_len(n), res, "4/3")
+    for (e in c(0, 1e-11, 1e-9, 1e-7, 1e-5)) {
+      for (d in list(c(e, 0), c(-e, 0), c(0, e), c(0, -e))) {
+        got <- hexify:::mixed_point_to_cell(ll$lon_deg + d[1], ll$lat_deg + d[2],
+                                            res, "4/3")
+        expect_true(all(is.finite(got) & got >= 1 & got <= n),
+                    info = sprintf("res=%d eps=%g", res, e))
+      }
+    }
+  }
+})
+
 test_that("mixed 4/3 get_children is exactly the geometric-parent inverse", {
   skip_on_cran()  # brute-force ground-truth comparison
   setup_icosa()

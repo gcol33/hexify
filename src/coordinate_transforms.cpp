@@ -774,12 +774,15 @@ void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
     long long edge_coord = quad_edge_coord_mixed(ap_seq);
 
     // A rotated lattice quantizes through a rotate/requantize chain (see
-    // quantize_form()) that can overshoot edge_coord by a tie-breaking unit
+    // quantize_form()) that can leave [0, edge_coord] by a tie-breaking unit
     // near a quad boundary, since the substrate factor sqrt(norm) is not exact
     // in floating point. handle_upper_edge()/handle_lower_edge() below match on
-    // exact equality, so clamp any overshoot back onto the boundary they expect.
+    // exact equality, and the cell index reads the pair as an unsigned offset
+    // from the quad origin, so clamp either slip back onto the boundary.
     if (out_i > edge_coord) out_i = edge_coord;
     if (out_j > edge_coord) out_j = edge_coord;
+    if (out_i < 0) out_i = 0;
+    if (out_j < 0) out_j = 0;
 
     if ((out_i == edge_coord || out_j == edge_coord) && out_quad >= 1 && out_quad <= 10) {
         const QuadAdjacency& adj = kQuadAdjacency[out_quad];

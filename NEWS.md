@@ -24,6 +24,13 @@
   which lets the batch call through, and the loop that remains as a fallback
   assembles its geometries once. The cells the function returns are unchanged.
 
+* `lonlat_to_cell()` on a mixed-aperture grid names a cell for a point that
+  sits on a quad corner, which is where the twelve icosahedron vertices put the
+  poles. The rotate/requantize chain can leave the quad's coordinate range by a
+  tie-breaking unit there, and the cell index reads the pair as an unsigned
+  offset from the quad origin, so such a point came back out of range and
+  `cell_to_index()` stopped on it.
+
 * The default ISEA orientation carries `atan(phi)` at full double precision,
   with `phi = (1 + sqrt(5)) / 2`, placing vertex 0 at latitude
   58.282525588538995 degrees. The constant was stored rounded at the eighth
