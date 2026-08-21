@@ -1,28 +1,6 @@
-# hexify 0.8.1
-
-## New features
-
-* `crs` takes any coordinate reference system sf reads: an EPSG code as before,
-  or a 'PROJ' or 'WKT' string. A grid left to its default is read on its own
-  body, so a grid built with `radius_km` carries a longlat CRS on the sphere of
-  that radius and an Earth grid keeps EPSG:4326. EPSG codes name Earth
-  reference systems, so a grid on another body had no code to name it and was
-  reported in 'WGS84'.
-
-* Every function that hands out coordinates reads the grid's CRS through
-  `grid_crs()`, the way kilometres go through `grid_radius_km()`. `cell_to_sf()`,
-  `as_sf()`, `hex_summarize(geometry = TRUE)` and `hex_extract()` all return a
-  grid's own coordinates rather than assuming Earth.
+# hexify 0.8.2
 
 ## Bug fixes
-
-* `plot_globe()` returns in about a second on the grids its own examples use,
-  where it took eleven minutes. Cells on the hemisphere edge come out of the
-  orthographic transform as rings of two points, which GEOS rejects for the
-  whole set, so every call fell through to a per-cell repair loop that rewrote
-  the whole table once per cell. Those cells are now dropped before the repair,
-  which lets the batch call through, and the loop that remains as a fallback
-  assembles its geometries once. The cells the function returns are unchanged.
 
 * `lonlat_to_cell()` on a mixed-aperture grid names a cell for a point that
   sits on a quad corner, which is where the twelve icosahedron vertices put the
@@ -82,6 +60,44 @@
   quad in the quad that owns it, and returns `NA` where the icosahedron folds
   at a vertex and no quad does. Such a pair was packed as it stood, giving cell
   IDs past the end of the grid.
+
+* The compiled entry points all carry the `cpp_` prefix. Five unprefixed
+  duplicates at the foot of `rcpp_index.cpp` had no callers, and
+  `compileAttributes()` wrote each one into `R/RcppExports.R`, where
+  `cell_to_index()` collided with the exported `cell_to_index(cell_id, grid)`,
+  and which definition survived came down to the order R sources `R/`.
+
+## Documentation
+
+* The README and the theory vignette say ISEA takes apertures 3, 4 and 7 in any
+  sequence, which has held since 0.8.0. They named 4/3 as the one mixed sequence
+  ISEA reads.
+
+# hexify 0.8.1
+
+## New features
+
+* `crs` takes any coordinate reference system sf reads: an EPSG code as before,
+  or a 'PROJ' or 'WKT' string. A grid left to its default is read on its own
+  body, so a grid built with `radius_km` carries a longlat CRS on the sphere of
+  that radius and an Earth grid keeps EPSG:4326. EPSG codes name Earth
+  reference systems, so a grid on another body had no code to name it and was
+  reported in 'WGS84'.
+
+* Every function that hands out coordinates reads the grid's CRS through
+  `grid_crs()`, the way kilometres go through `grid_radius_km()`. `cell_to_sf()`,
+  `as_sf()`, `hex_summarize(geometry = TRUE)` and `hex_extract()` all return a
+  grid's own coordinates rather than assuming Earth.
+
+## Bug fixes
+
+* `plot_globe()` returns in about a second on the grids its own examples use,
+  where it took eleven minutes. Cells on the hemisphere edge come out of the
+  orthographic transform as rings of two points, which GEOS rejects for the
+  whole set, so every call fell through to a per-cell repair loop that rewrote
+  the whole table once per cell. Those cells are now dropped before the repair,
+  which lets the batch call through, and the loop that remains as a fallback
+  assembles its geometries once. The cells the function returns are unchanged.
 
 ## Documentation
 

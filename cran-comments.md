@@ -10,7 +10,7 @@ are built on. Kimerling and Sahr are authors of the cited 2003 paper, and Uber
 Technologies holds the copyright on the H3 C library included in src/h3. All
 six are spelled as intended.
 
-## Submission (v0.8.1)
+## Submission (v0.8.2)
 
 The version on CRAN is 0.6.5. This release carries the work published on GitHub
 since then, which NEWS.md lists in full. The parts that reach a user's stored
@@ -19,6 +19,12 @@ results:
 * Aperture-7 cell IDs and 'Z7' index strings changed, and `hexify_assign()` now
   names the cell a point falls in. Aperture-3 and aperture-4 cell IDs are
   unchanged. NEWS.md lists these under Breaking changes.
+
+* An aperture-7 hexagon is drawn on the orientation of its own lattice, so its
+  boundary differs from 0.6.5. Cell centres and cell IDs are unaffected.
+
+* `get_parent()` and `get_children()` honour their `levels` argument and are
+  inverse to each other on ISEA grids.
 
 * A grid is sized on any body: `hex_grid(radius_km = )` takes a radius in
   kilometres or a body name, and the grid carries the coordinate reference
@@ -34,6 +40,7 @@ documents with its file paths and license.
 ## Test environments
 
 * local: Windows 11, R 4.6.0, R CMD check --as-cran
+* win-builder: R-devel, R-release
 * GitHub Actions: ubuntu-latest (release, devel), macos-latest (release)
 
 ## Downstream dependencies
