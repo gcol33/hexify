@@ -632,6 +632,38 @@ cell_area <- function(cell_id = NULL, grid) {
 # HIERARCHICAL INDEX HELPERS
 # =============================================================================
 
+#' Hierarchical index string of one cell on a pure-aperture grid
+#'
+#' The index encoders work on (quad, i, j), so a cell ID makes the round trip
+#' through `cpp_cell_to_quad_ij()` first. `cell_to_index()`, `get_parent()` and
+#' `get_children()` all enter the hierarchy this way.
+#'
+#' @param cell_id One cell ID
+#' @param resolution Resolution the cell ID belongs to
+#' @param aperture_int Integer aperture (3, 4 or 7)
+#' @param index_type One of "z3", "z7", "zorder"
+#' @return Index string
+#' @noRd
+isea_cell_to_index_one <- function(cell_id, resolution, aperture_int, index_type) {
+  qij <- cpp_cell_to_quad_ij(cell_id, resolution, aperture_int)
+  cpp_cell_to_index(qij$quad, qij$i, qij$j, resolution, aperture_int, index_type)
+}
+
+#' Cell ID of one hierarchical index string on a pure-aperture grid
+#'
+#' Inverse of [isea_cell_to_index_one()]. The index carries its own resolution,
+#' which is the one the returned cell ID belongs to.
+#'
+#' @param index One index string
+#' @param aperture_int Integer aperture (3, 4 or 7)
+#' @param index_type One of "z3", "z7", "zorder"
+#' @return Cell ID
+#' @noRd
+isea_index_to_cell_one <- function(index, aperture_int, index_type) {
+  cell <- cpp_index_to_cell(index, aperture_int, index_type)
+  cpp_quad_ij_to_cell(cell$face, cell$i, cell$j, cell$resolution, aperture_int)
+}
+
 #' Convert cell ID to hierarchical index string
 #'
 #' Advanced function for working with hierarchical index strings.
@@ -664,15 +696,9 @@ cell_to_index <- function(cell_id, grid) {
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
 
-  sapply(cell_id, function(id) {
-    # Get quad/ij coordinates
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
-    # Encode to index
-    cpp_cell_to_index(
-      qij$quad, qij$i, qij$j,
-      g@resolution, aperture_int, index_type
-    )
-  })
+  vapply(as.numeric(cell_id), isea_cell_to_index_one, character(1),
+         resolution = g@resolution, aperture_int = aperture_int,
+         index_type = index_type, USE.NAMES = FALSE)
 }
 
 #' Get parent cell
@@ -715,27 +741,17 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
+  levels <- as.integer(levels)
 
-  # Get index, get parent, convert back
-  parent_res <- g@resolution - levels
-
-  sapply(cell_id, function(id) {
-    # Get quad/ij at current resolution
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
-
-    # Get index string
-    idx <- cpp_cell_to_index(qij$quad, qij$i, qij$j,
-                             g@resolution, aperture_int, index_type)
-
-    # Get parent index
-    parent_idx <- cpp_get_parent_index(idx, aperture_int, index_type)
-
-    # Convert back to cell ID at parent resolution
-    # cpp_index_to_cell returns face, i, j, resolution - not cell_id
-    result <- cpp_index_to_cell(parent_idx, aperture_int, index_type)
-    # Convert quad/ij coordinates to cell ID
-    cpp_quad_ij_to_cell(result$face, result$i, result$j, result$resolution, aperture_int)
-  })
+  # cpp_get_parent_index() strips one level off the index string, so `levels`
+  # levels up is that many strips.
+  vapply(as.numeric(cell_id), function(id) {
+    idx <- isea_cell_to_index_one(id, g@resolution, aperture_int, index_type)
+    for (step in seq_len(levels)) {
+      idx <- cpp_get_parent_index(idx, aperture_int, index_type)
+    }
+    isea_index_to_cell_one(idx, aperture_int, index_type)
+  }, numeric(1), USE.NAMES = FALSE)
 }
 
 #' Get children cells
@@ -776,21 +792,19 @@ get_children <- function(cell_id, grid, levels = 1L) {
 
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
+  levels <- as.integer(levels)
 
-  lapply(cell_id, function(id) {
-    qij <- cpp_cell_to_quad_ij(id, g@resolution, aperture_int)
-    idx <- cpp_cell_to_index(qij$quad, qij$i, qij$j,
-                             g@resolution, aperture_int, index_type)
-
-    # Get children indices
-    children_idx <- cpp_get_children_indices(idx, aperture_int, index_type)
-
-    # Convert to cell IDs
-    # cpp_index_to_cell returns face, i, j, resolution - not cell_id
-    sapply(children_idx, function(child_idx) {
-      result <- cpp_index_to_cell(child_idx, aperture_int, index_type)
-      # Convert quad/ij coordinates to cell ID
-      cpp_quad_ij_to_cell(result$face, result$i, result$j, result$resolution, aperture_int)
-    })
+  # cpp_get_children_indices() expands one level, so `levels` levels down is
+  # that many expansions of the whole front.
+  lapply(as.numeric(cell_id), function(id) {
+    idx <- isea_cell_to_index_one(id, g@resolution, aperture_int, index_type)
+    for (step in seq_len(levels)) {
+      idx <- unlist(lapply(idx, cpp_get_children_indices,
+                           aperture = aperture_int, index_type = index_type),
+                    use.names = FALSE)
+    }
+    vapply(idx, isea_index_to_cell_one, numeric(1),
+           aperture_int = aperture_int, index_type = index_type,
+           USE.NAMES = FALSE)
   })
 }

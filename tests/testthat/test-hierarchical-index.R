@@ -119,3 +119,65 @@ test_that("get_children errors at maximum resolution", {
     "Cannot get children"
   )
 })
+
+test_that("get_parent honours levels on pure ISEA grids", {
+  for (ap in c(3, 4, 7)) {
+    g <- hex_grid(resolution = 4, aperture = ap)
+    coarse <- hex_grid(resolution = 3, aperture = ap)
+
+    cells <- lonlat_to_cell(
+      lon = c(0, 10, -60, 120, -140),
+      lat = c(45, 50, -20, 5, -65),
+      grid = g
+    )
+
+    expect_equal(
+      get_parent(cells, g, levels = 2),
+      get_parent(get_parent(cells, g), coarse)
+    )
+  }
+})
+
+test_that("get_children honours levels on pure ISEA grids", {
+  for (ap in c(3, 4, 7)) {
+    g <- hex_grid(resolution = 2, aperture = ap)
+    mid <- hex_grid(resolution = 3, aperture = ap)
+
+    cells <- lonlat_to_cell(lon = c(0, 120), lat = c(45, -20), grid = g)
+
+    twice <- lapply(get_children(cells, g), function(kids) {
+      sort(unique(unlist(get_children(kids, mid), use.names = FALSE)))
+    })
+    direct <- lapply(get_children(cells, g, levels = 2), sort)
+
+    expect_equal(direct, twice)
+    expect_length(direct[[1]], ap * ap)
+  }
+})
+
+test_that("a cell is among the children of its two-level ancestor", {
+  for (ap in c(3, 4, 7)) {
+    g <- hex_grid(resolution = 3, aperture = ap)
+    coarse <- hex_grid(resolution = 1, aperture = ap)
+
+    cells <- lonlat_to_cell(
+      lon = seq(-170, 170, by = 20),
+      lat = rep(c(-55, -20, 15, 50), length.out = 18),
+      grid = g
+    )
+    ancestors <- get_parent(cells, g, levels = 2)
+
+    if (ap == 7) {
+      # A pentagon has six aperture-7 children, so a Z7 index does not name
+      # seven distinct descendants below one.
+      keep <- !is_pentagon(ancestors, coarse)
+      cells <- cells[keep]
+      ancestors <- ancestors[keep]
+    }
+
+    expect_gt(length(cells), 0)
+
+    kids <- get_children(ancestors, coarse, levels = 2)
+    expect_true(all(mapply(function(cell, k) cell %in% k, cells, kids)))
+  }
+})

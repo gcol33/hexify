@@ -422,6 +422,18 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
         long long ii = static_cast<long long>(i[k]);
         long long jj = static_cast<long long>(j[k]);
 
+        // A coordinate that has stepped outside its quad names a cell of a
+        // neighbouring quad, so re-express it there before packing. The walk
+        // up and down the cell hierarchy reaches these: an ancestor of a cell
+        // near a quad edge need not lie in the same quad. Coordinates already
+        // inside their quad pass through unchanged.
+        if (!hexify::quad_ij_canonicalize(q, ii, jj, aperture, resolution)) {
+            // Outside every adjacent quad, which is where the icosahedron
+            // folds at a vertex. No cell owns the coordinate.
+            result[k] = NA_REAL;
+            continue;
+        }
+
         uint64_t offset = 0;
         if (q > 0) {
             offset = 1 + (q - 1) * offsetPerQuad;
