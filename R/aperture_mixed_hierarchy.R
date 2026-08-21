@@ -28,6 +28,10 @@ mixed_cell_center <- function(cell_id, resolution, aperture) {
   cpp_cell_to_lonlat_seq(as.numeric(cell_id), mixed_ap_seq(aperture, resolution))
 }
 
+mixed_cell_corners <- function(cell_id, resolution, aperture) {
+  cpp_cell_to_corners_seq(as.numeric(cell_id), mixed_ap_seq(aperture, resolution))
+}
+
 mixed_point_to_cell <- function(lon, lat, resolution, aperture) {
   cpp_lonlat_to_cell_seq(as.numeric(lon), as.numeric(lat),
                          mixed_ap_seq(aperture, resolution))

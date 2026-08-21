@@ -165,12 +165,12 @@ cpp_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, quad, i, j, resolution, aperture)
 }
 
-cpp_cell_to_polygon <- function(cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_polygon`, cell_id, resolution, aperture)
-}
-
 cpp_cell_to_corners <- function(cell_id, resolution, aperture) {
     .Call(`_hexify_cpp_cell_to_corners`, cell_id, resolution, aperture)
+}
+
+cpp_cell_to_polygon <- function(cell_id, resolution, aperture) {
+    .Call(`_hexify_cpp_cell_to_polygon`, cell_id, resolution, aperture)
 }
 
 cpp_ap_seq_edge_dim <- function(ap_seq_in) {
@@ -191,6 +191,14 @@ cpp_cell_to_quad_ij_seq <- function(cell_id, ap_seq_in) {
 
 cpp_quad_ij_to_cell_seq <- function(quad, i, j, ap_seq_in) {
     .Call(`_hexify_cpp_quad_ij_to_cell_seq`, quad, i, j, ap_seq_in)
+}
+
+cpp_cell_to_corners_seq <- function(cell_id, ap_seq_in) {
+    .Call(`_hexify_cpp_cell_to_corners_seq`, cell_id, ap_seq_in)
+}
+
+cpp_cell_to_polygon_seq <- function(cell_id, ap_seq_in) {
+    .Call(`_hexify_cpp_cell_to_polygon_seq`, cell_id, ap_seq_in)
 }
 
 cpp_get_neighbors_isea <- function(cell_id, resolution, aperture) {

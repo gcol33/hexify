@@ -22,13 +22,20 @@ test_that("hexify_cell_to_sf returns data frame with return_sf=FALSE", {
   expect_true(all(c("cell_id", "lon", "lat", "order") %in% names(result)))
 })
 
-test_that("hexify_cell_to_sf returns 7 vertices per cell (closed polygon)", {
+test_that("hexify_cell_to_sf returns 7 vertices per hexagon (closed polygon)", {
   hex_ids <- c(12847, 12532, 22178)
 
   result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_equal(nrow(result), length(hex_ids) * 7)
   expect_equal(unique(result$order), 1:7)
+})
+
+test_that("hexify_cell_to_sf returns 6 vertices for a cell at an icosahedral vertex", {
+  result <- hexify_cell_to_sf(1, resolution = 3, aperture = 3, return_sf = FALSE)
+
+  expect_equal(nrow(result), 6)
+  expect_equal(result$order, 1:6)
 })
 
 test_that("hexify_cell_to_sf returns valid coordinates", {

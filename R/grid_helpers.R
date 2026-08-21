@@ -45,16 +45,20 @@ normalize_antimeridian_coords <- function(coords) {
 #'
 #' @param cell_id Numeric vector of cell IDs
 #' @param resolution Grid resolution level
-#' @param aperture Grid aperture: 3, 4, or 7
+#' @param aperture Grid aperture: 3, 4, 7, or a mixed sequence spelling
 #' @param crs CRS the polygons carry, as sf reads it
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
 isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
-  corners_list <- cpp_cell_to_corners(
-    as.numeric(cell_id),
-    as.integer(resolution),
-    as.integer(aperture)
-  )
+  corners_list <- if (is_mixed_aperture(aperture)) {
+    mixed_cell_corners(cell_id, resolution, aperture)
+  } else {
+    cpp_cell_to_corners(
+      as.numeric(cell_id),
+      as.integer(resolution),
+      as.integer(aperture)
+    )
+  }
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(normalize_antimeridian_coords(coords)))
@@ -234,7 +238,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
 
   # ISEA path: generate polygons using C++ function. For globe/orthographic
   # projections, pass wrap_dateline = FALSE to keep cells intact.
-  sfc <- isea_cells_to_sfc(cell_id, g@resolution, aperture_to_int(g@aperture),
+  sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture,
                            crs = grid_crs(g))
 
   result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)

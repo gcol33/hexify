@@ -469,9 +469,12 @@ index_type_for_aperture <- function(aperture) {
 
 #' Integer aperture for the C++ functions that take a single one
 #'
-#' A mixed sequence has no single aperture; its cell IDs come from the sequence
-#' API instead, and the callers that still ask for an integer use it only to
-#' select an unrotated substrate branch, which aperture 3 gives.
+#' A mixed sequence has no single aperture, and the 3 it reports names only
+#' decode_cell_id()'s substrate branch, which is the one a mixed sequence
+#' stores its cells on. Anything that reads the aperture as a refinement
+#' factor -- cell geometry, hierarchy, cell counts -- is wrong on a mixed grid
+#' with this integer and belongs on the sequence API, which takes one aperture
+#' per level.
 #' @param aperture Character or numeric aperture spelling
 #' @return Integer aperture (3L, 4L, or 7L)
 #' @noRd

@@ -48,7 +48,10 @@ is_pentagon <- function(cell_id, grid) {
   }
 
   # Pentagon cells are exactly the (i, j) = (0, 0) cell of each quad.
-  ap <- aperture_to_int(g@aperture)
-  qij <- cpp_cell_to_quad_ij(cell_id, g@resolution, ap)
+  qij <- if (is_mixed_aperture(g@aperture)) {
+    mixed_cell_qij(cell_id, g@resolution, g@aperture)
+  } else {
+    cpp_cell_to_quad_ij(cell_id, g@resolution, aperture_to_int(g@aperture))
+  }
   qij$i == 0 & qij$j == 0
 }

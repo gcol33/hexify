@@ -842,158 +842,128 @@ DataFrame cpp_quad_ij_to_icosa_tri(IntegerVector quad, NumericVector i,
 }
 
 // ============================================================================
-// Polygon Corner Generation from Cell ID
+// Cell Boundary Generation from Cell ID
 // ============================================================================
-// Generates hexagon corner coordinates for a vector of cell ID values.
-// Uses the same coordinate transformation:
-// 1. Compute vertex offsets in quad 2D space
-// 2. Convert each vertex through quad_xy → face coords → lon/lat
+// A cell's boundary is its centre in quad XY plus six corners one circumradius
+// out, turned by the lattice rotation the grid's form carries. Each corner is
+// projected on its own, and one that lands outside the quad's valid region is
+// carried through the centre's face instead.
 // ============================================================================
 
-// Class I (flat-top) hex vertex offsets in unscaled 2D grid coordinates
-// r_ = 1/sqrt(3), r2 = r_/2
-// Vertices counter-clockwise from top: (0, r_), (-0.5, r2), (-0.5, -r2), (0, -r_), (0.5, -r2), (0.5, r2)
-constexpr double kHexR = 0.57735026918962576451;  // 1/sqrt(3)
-constexpr double kHexR2 = 0.28867513459481288225; // 1/(2*sqrt(3))
+// Circumradius of a hexagon on the unscaled grid, 1/sqrt(3).
+constexpr double kHexCircumradius = 0.57735026918962576451;
 
-// Class I vertex offsets (flat-top hexagon)
-static const double kClass1VertexX[6] = { 0.0, -0.5, -0.5,  0.0,  0.5, 0.5};
-static const double kClass1VertexY[6] = {kHexR, kHexR2, -kHexR2, -kHexR, -kHexR2, kHexR2};
+// Which corner a cell at an icosahedral vertex drops. Five quads meet there, so
+// one of the six sectors around such a cell is the icosahedron's angular
+// deficit and the cell is a pentagon. Counting counter-clockwise from the
+// lattice's first corner, the deficit takes the fourth corner in the northern
+// quads and the third in the southern ones.
+constexpr int kPentagonSkipNorth = 3;
+constexpr int kPentagonSkipSouth = 2;
 
-// Class II vertex offsets (Class I rotated 30° CCW for pointy-top hexagon)
-// These offsets work correctly for quad 3 (face 2 with dazh=0).
-// TODO: Other quads may need rotation adjustment based on face azimuth.
-// Vertex winding order for polygon construction (counter-clockwise)
-static const double kClass2VertexX[6] = {-kHexR2, kHexR2, kHexR, kHexR2, -kHexR2, -kHexR};
-static const double kClass2VertexY[6] = {-0.5, -0.5, 0.0, 0.5, 0.5, 0.0};
+// The boundary of one cell in lon/lat, counter-clockwise and left open: five
+// points for a cell at an icosahedral vertex, six for every other cell. A
+// corner within two degrees of a pole is snapped onto the pole, which the
+// projection reaches only in the limit and where every longitude names the
+// same point.
+static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
+                                 double radius, double rotation_deg,
+                                 bool at_icosa_vertex,
+                                 std::vector<double>& out_lon,
+                                 std::vector<double>& out_lat) {
+    double vx[6], vy[6];
+    hexify::generate_hex_corners(qx_center, qy_center, radius, rotation_deg,
+                                 vx, vy);
 
-// Pentagon vertex skip indices for icosahedral vertex cells
-// All cells at (i=0, j=0) in any quad are pentagon cells (12 total, one per icosahedral vertex)
-// The invalid region depends on the quad:
-//   Quads 0-5: Region 3 is invalid -> skip vertex 3
-//   Quads 6-11: Region 4 is invalid -> skip vertex 2
-// These indices are based on the Class I vertex layout where vertices map to regions:
-//   Vertex 0 -> Region 0 (upper), Vertex 1 -> Region 5 (upper-left)
-//   Vertex 2 -> Region 4 (lower-left), Vertex 3 -> Region 3 (lower)
-//   Vertex 4 -> Region 2 (lower-right), Vertex 5 -> Region 1 (upper-right)
-constexpr int kPentagonSkipVertexRegion3 = 3;  // Skip vertex 3 for quads 0-5 (region 3 invalid)
-constexpr int kPentagonSkipVertexRegion4 = 2;  // Skip vertex 2 for quads 6-11 (region 4 invalid)
-
-// [[Rcpp::export]]
-DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
-                               int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_polygon: aperture must be 3, 4, or 7");
+    int skip = -1;
+    if (at_icosa_vertex) {
+        skip = (quad <= 5) ? kPentagonSkipNorth : kPentagonSkipSouth;
     }
 
-    int n = cell_id.size();
+    out_lon.clear();
+    out_lat.clear();
 
-    // Each cell has 7 vertices (6 corners + 1 to close the polygon)
-    int total_vertices = n * 7;
+    for (int c = 0; c < 6; c++) {
+        if (c == skip) continue;
 
-    NumericVector out_cell_id(total_vertices);
-    NumericVector out_lon(total_vertices);
-    NumericVector out_lat(total_vertices);
-    IntegerVector out_order(total_vertices);
+        double lon = NA_REAL;
+        double lat = NA_REAL;
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    // Grid dimension depends on aperture
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    // Check if using offset grid (only aperture 3 odd resolutions)
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    // Determine grid class and select vertex offsets
-    // Class I = flat-top hexagons, Class II = pointy-top (30° rotated)
-    bool is_class1 = (aperture == 4) || (aperture == 3 && resolution % 2 == 0);
-    const double* vertexX = is_class1 ? kClass1VertexX : kClass2VertexX;
-    const double* vertexY = is_class1 ? kClass1VertexY : kClass2VertexY;
-
-    // Calculate scale factors:
-    // For Class II, the grid (i,j) indices are in substrate coordinates (scaled by sqrt(3))
-    // relative to the backFrame. Vertex offsets are in backFrame coordinates.
-    // So we need two scales: one for the center, one for the vertex offsets.
-    double center_scale;   // Scale to convert (i,j) grid coords to Quad XY
-    double vertex_scale;   // Scale to convert vertex offsets to Quad XY
-    if (aperture == 3) {
-        if (is_class1) {
-            center_scale = std::pow(hexify::kSqrt3, resolution);
-            vertex_scale = center_scale;
+        int face;
+        double tx, ty;
+        if (hexify::try_quad_xy_to_icosa_tri(quad, vx[c], vy[c], face, tx, ty)) {
+            auto ll = hexify::face_xy_to_ll(tx, ty, face);
+            lon = ll.first;
+            lat = ll.second;
         } else {
-            // Class II: substrate scale for center, backFrame scale for vertices
-            center_scale = std::pow(hexify::kSqrt3, resolution + 1);  // sqrt(3)^(res+1)
-            vertex_scale = std::pow(hexify::kSqrt3, resolution);      // sqrt(3)^res
+            int center_face;
+            double center_tx, center_ty;
+            if (hexify::try_quad_xy_to_icosa_tri(quad, qx_center, qy_center,
+                                                 center_face, center_tx,
+                                                 center_ty)) {
+                auto ll = hexify::face_xy_to_ll(center_tx + (vx[c] - qx_center),
+                                                center_ty + (vy[c] - qy_center),
+                                                center_face);
+                lon = ll.first;
+                lat = ll.second;
+            }
         }
-    } else if (aperture == 4) {
-        center_scale = std::pow(2.0, resolution);
-        vertex_scale = center_scale;
-    } else {  // aperture == 7
-        // Substrate scale for center coords (decoded substrate i,j)
-        double base_scale = std::pow(std::sqrt(7.0), resolution);
-        bool is_class3i = (resolution % 2 == 0);
-        double substrate_mult = is_class3i ? hexify::kSqrt7 : hexify::kSqrt21;
-        center_scale = base_scale * substrate_mult;
-        vertex_scale = base_scale;
+
+        if (!NumericVector::is_na(lat)) {
+            if (lat > 88.0) {
+                lat = 90.0;
+                lon = 0.0;
+            } else if (lat < -88.0) {
+                lat = -90.0;
+                lon = 0.0;
+            }
+        }
+
+        out_lon.push_back(lon);
+        out_lat.push_back(lat);
     }
+}
+
+// A boundary as an (n + 1) x 2 lon/lat matrix, the first point repeated last.
+static NumericMatrix closed_ring(const std::vector<double>& lon,
+                                 const std::vector<double>& lat) {
+    int n = static_cast<int>(lon.size());
+    NumericMatrix coords(n + 1, 2);
+    for (int v = 0; v < n; v++) {
+        coords(v, 0) = lon[v];
+        coords(v, 1) = lat[v];
+    }
+    coords(n, 0) = lon[0];
+    coords(n, 1) = lat[0];
+    colnames(coords) = CharacterVector::create("lon", "lat");
+    return coords;
+}
+
+// The same boundaries as one long data frame, numbering the points of each
+// ring from 1.
+static DataFrame rings_to_frame(NumericVector cell_id, const List& rings) {
+    int n = rings.size();
+
+    int total = 0;
+    for (int k = 0; k < n; k++) {
+        total += NumericMatrix(rings[k]).nrow();
+    }
+
+    NumericVector out_cell_id(total);
+    NumericVector out_lon(total);
+    NumericVector out_lat(total);
+    IntegerVector out_order(total);
 
     int out_idx = 0;
-
     for (int k = 0; k < n; k++) {
-        double orig_cell_id = cell_id[k];
-
-        int quad;
-        long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
-
-        // Get cell center in Quad XY coordinates
-        double qx_center, qy_center;
-        if (aperture == 7) {
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, qx_center, qy_center);
-        } else {
-            double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
-            double grid_y = static_cast<double>(j) * hexify::kSin60;
-            qx_center = grid_x / center_scale;
-            qy_center = grid_y / center_scale;
-        }
-
-        // Generate 6 corners: add vertex offsets (which are in backFrame scale)
-        double first_lon = 0.0, first_lat = 0.0;
-        for (int c = 0; c < 6; c++) {
-            // Vertex offsets are in backFrame coordinates, normalize to quad_xy
-            double qx_vertex = qx_center + vertexX[c] / vertex_scale;
-            double qy_vertex = qy_center + vertexY[c] / vertex_scale;
-
-            // Convert quad_xy to icosa triangle coords
-            int icosa_triangle_face;
-            double icosa_triangle_x, icosa_triangle_y;
-            hexify::quad_xy_to_icosa_tri(quad, qx_vertex, qy_vertex, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y);
-
-            // Convert to lon/lat
-            auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
-
-            out_cell_id[out_idx] = orig_cell_id;
-            out_lon[out_idx] = ll.first;
-            out_lat[out_idx] = ll.second;
-            out_order[out_idx] = c + 1;
-
-            if (c == 0) {
-                first_lon = ll.first;
-                first_lat = ll.second;
-            }
+        NumericMatrix coords(rings[k]);
+        for (int v = 0; v < coords.nrow(); v++) {
+            out_cell_id[out_idx] = cell_id[k];
+            out_lon[out_idx] = coords(v, 0);
+            out_lat[out_idx] = coords(v, 1);
+            out_order[out_idx] = v + 1;
             out_idx++;
         }
-
-        // Close the polygon by repeating the first vertex
-        out_cell_id[out_idx] = orig_cell_id;
-        out_lon[out_idx] = first_lon;
-        out_lat[out_idx] = first_lat;
-        out_order[out_idx] = 7;
-        out_idx++;
     }
 
     return DataFrame::create(
@@ -1004,7 +974,6 @@ DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
     );
 }
 
-// Vectorized version that returns a list of coordinate matrices for efficiency
 // [[Rcpp::export]]
 List cpp_cell_to_corners(NumericVector cell_id, int resolution,
                           int aperture) {
@@ -1012,46 +981,19 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
         stop("cpp_cell_to_corners: aperture must be 3, 4, or 7");
     }
 
-    int n = cell_id.size();
-
-    // Calculate grid parameters
     uint64_t nCells, offsetPerQuad;
     calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
 
     long long dim = grid_dim_for_aperture(resolution, aperture);
     SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
 
-    // Determine grid class and select vertex offsets
-    bool is_class1 = (aperture == 4) || (aperture == 3 && resolution % 2 == 0);
-    const double* vertexX = is_class1 ? kClass1VertexX : kClass2VertexX;
-    const double* vertexY = is_class1 ? kClass1VertexY : kClass2VertexY;
+    hexify::HexGridForm form = hexify::hex_form_pure(aperture, resolution);
+    double radius = kHexCircumradius / form.scale;
+    double rotation_deg = hexify::form_rotation_deg(form);
 
-    // Calculate scale factors (same logic as cpp_cell_to_polygon)
-    double center_scale;
-    double vertex_scale;
-    if (aperture == 3) {
-        if (is_class1) {
-            center_scale = std::pow(hexify::kSqrt3, resolution);
-            vertex_scale = center_scale;
-        } else {
-            center_scale = std::pow(hexify::kSqrt3, resolution + 1);
-            vertex_scale = std::pow(hexify::kSqrt3, resolution);
-        }
-    } else if (aperture == 4) {
-        center_scale = std::pow(2.0, resolution);
-        vertex_scale = center_scale;
-    } else {  // aperture == 7
-        double base_scale = std::pow(std::sqrt(7.0), resolution);
-        bool is_class3i = (resolution % 2 == 0);
-        double substrate_mult = is_class3i ? hexify::kSqrt7 : hexify::kSqrt21;
-        center_scale = base_scale * substrate_mult;
-        vertex_scale = base_scale;
-    }
-
-    // Return a list of n elements, each element is a Nx2 matrix (lon, lat)
-    // Hexagons: 7 rows (6 vertices + closing)
-    // Pentagons: 6 rows (5 vertices + closing) - at icosahedral vertices
+    int n = cell_id.size();
     List result(n);
+    std::vector<double> lon, lat;
 
     for (int k = 0; k < n; k++) {
         int quad;
@@ -1060,97 +1002,24 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
                         nCells, sub_lat, /*handle_ap7_south_pole=*/false,
                         quad, i, j);
 
-        // Check if this is a pentagon cell (at icosahedral vertex)
-        bool is_pentagon = (i == 0 && j == 0);
-        int skip_vertex = -1;
-        if (is_pentagon) {
-            skip_vertex = (quad <= 5) ? kPentagonSkipVertexRegion3 : kPentagonSkipVertexRegion4;
-        }
-
-        // Get cell center in Quad XY coordinates
         double qx_center, qy_center;
-        if (aperture == 7) {
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, qx_center, qy_center);
-        } else {
-            double grid_x = static_cast<double>(i) - 0.5 * static_cast<double>(j);
-            double grid_y = static_cast<double>(j) * hexify::kSin60;
-            qx_center = grid_x / center_scale;
-            qy_center = grid_y / center_scale;
-        }
+        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution,
+                              qx_center, qy_center);
 
-        // Pentagon: 6 rows (5 vertices + closing)
-        // Hexagon: 7 rows (6 vertices + closing)
-        int n_vertices = is_pentagon ? 5 : 6;
-        int n_rows = n_vertices + 1;  // +1 for closing vertex
-        NumericMatrix coords(n_rows, 2);
+        cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
+                             /*at_icosa_vertex=*/(i == 0 && j == 0), lon, lat);
 
-        int out_idx = 0;  // Output index (may differ from c if skipping a vertex)
-        for (int c = 0; c < 6; c++) {
-            // Skip the invalid vertex for pentagon cells
-            if (c == skip_vertex) {
-                continue;
-            }
-
-            // Vertex offsets are in backFrame coordinates, normalize to quad_xy
-            double qx_vertex = qx_center + vertexX[c] / vertex_scale;
-            double qy_vertex = qy_center + vertexY[c] / vertex_scale;
-
-            // Try to convert quad_xy to icosa triangle coords
-            int icosa_triangle_face;
-            double icosa_triangle_x, icosa_triangle_y;
-            if (hexify::try_quad_xy_to_icosa_tri(quad, qx_vertex, qy_vertex, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)) {
-                // Normal case: convert to lon/lat via Snyder inverse
-                auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
-                coords(out_idx, 0) = ll.first;
-                coords(out_idx, 1) = ll.second;
-            } else {
-                // Edge case: vertex is in invalid region (quad boundary)
-                // Fall back to using the center's face and projecting vertex offset
-                // This is an approximation but works for edge cells
-                int center_icosa_triangle_face;
-                double center_icosa_triangle_x, center_icosa_triangle_y;
-                if (hexify::try_quad_xy_to_icosa_tri(quad, qx_center, qy_center,
-                                                     center_icosa_triangle_face, center_icosa_triangle_x, center_icosa_triangle_y)) {
-                    // Project vertex through center's face
-                    double vertex_icosa_triangle_x = center_icosa_triangle_x + (qx_vertex - qx_center);
-                    double vertex_icosa_triangle_y = center_icosa_triangle_y + (qy_vertex - qy_center);
-                    auto ll = hexify::face_xy_to_ll(vertex_icosa_triangle_x, vertex_icosa_triangle_y, center_icosa_triangle_face);
-                    coords(out_idx, 0) = ll.first;
-                    coords(out_idx, 1) = ll.second;
-                } else {
-                    // Both center and vertex are invalid - use NaN
-                    coords(out_idx, 0) = NA_REAL;
-                    coords(out_idx, 1) = NA_REAL;
-                }
-            }
-            out_idx++;
-        }
-
-        // Close polygon
-        coords(n_vertices, 0) = coords(0, 0);
-        coords(n_vertices, 1) = coords(0, 1);
-
-        // Extend polar cells to reach 90°N or 90°S
-        // Find ALL vertices above 88° and extend them to the pole
-        // Also normalize longitude to 0° at poles (all longitudes = same point)
-        for (int v = 0; v <= n_vertices; v++) {
-            double lat = coords(v, 1);
-            if (!NumericVector::is_na(lat)) {
-                if (lat > 88.0) {
-                    coords(v, 1) = 90.0;   // Extend to North Pole
-                    coords(v, 0) = 0.0;    // Normalize lon (all lons same at pole)
-                } else if (lat < -88.0) {
-                    coords(v, 1) = -90.0;  // Extend to South Pole
-                    coords(v, 0) = 0.0;    // Normalize lon
-                }
-            }
-        }
-
-        colnames(coords) = CharacterVector::create("lon", "lat");
-        result[k] = coords;
+        result[k] = closed_ring(lon, lat);
     }
 
     return result;
+}
+
+// [[Rcpp::export]]
+DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
+                               int aperture) {
+    return rings_to_frame(cell_id,
+                          cpp_cell_to_corners(cell_id, resolution, aperture));
 }
 
 // ============================================================================
@@ -1360,6 +1229,52 @@ NumericVector cpp_quad_ij_to_cell_seq(IntegerVector quad, NumericVector i,
     }
 
     return result;
+}
+
+// [[Rcpp::export]]
+List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq");
+    int resolution = static_cast<int>(ap_seq.size()) - 1;
+
+    uint64_t nCells, offsetPerQuad;
+    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
+
+    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
+    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
+
+    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
+    double radius = kHexCircumradius / form.scale;
+    double rotation_deg = hexify::form_rotation_deg(form);
+
+    int n = cell_id.size();
+    List result(n);
+    std::vector<double> lon, lat;
+
+    for (int k = 0; k < n; k++) {
+        int quad;
+        long long i, j;
+        // Any aperture other than 7 selects decode_cell_id's substrate branch,
+        // which is the one a mixed sequence stores its cells on.
+        decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
+                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
+                        quad, i, j);
+
+        double qx_center, qy_center;
+        hexify::quad_ij_to_xy_mixed(quad, i, j, ap_seq, qx_center, qy_center);
+
+        cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
+                             /*at_icosa_vertex=*/(i == 0 && j == 0), lon, lat);
+
+        result[k] = closed_ring(lon, lat);
+    }
+
+    return result;
+}
+
+// [[Rcpp::export]]
+DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
+                                   IntegerVector ap_seq_in) {
+    return rings_to_frame(cell_id, cpp_cell_to_corners_seq(cell_id, ap_seq_in));
 }
 
 // ============================================================================
