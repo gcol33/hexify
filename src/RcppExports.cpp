@@ -1074,74 +1074,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cell_to_index
-std::string cell_to_index(int face, Rcpp::NumericVector i, Rcpp::NumericVector j, int resolution, int aperture, std::string index_type);
-RcppExport SEXP _hexify_cell_to_index(SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type face(faceSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type i(iSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type j(jSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(cell_to_index(face, i, j, resolution, aperture, index_type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// index_to_cell
-Rcpp::List index_to_cell(std::string index, int aperture, std::string index_type);
-RcppExport SEXP _hexify_index_to_cell(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(index_to_cell(index, aperture, index_type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_parent_index
-std::string get_parent_index(std::string index, int aperture, std::string index_type);
-RcppExport SEXP _hexify_get_parent_index(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_parent_index(index, aperture, index_type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_children_indices
-std::vector<std::string> get_children_indices(std::string index, int aperture, std::string index_type);
-RcppExport SEXP _hexify_get_children_indices(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_children_indices(index, aperture, index_type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_index_resolution
-int get_index_resolution(std::string index, int aperture, std::string index_type);
-RcppExport SEXP _hexify_get_index_resolution(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_index_resolution(index, aperture, index_type));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_z7_canonical_form
 std::string cpp_z7_canonical_form(std::string index, int max_iterations);
 RcppExport SEXP _hexify_cpp_z7_canonical_form(SEXP indexSEXP, SEXP max_iterationsSEXP) {
@@ -1383,11 +1315,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_lonlat_to_index_ap7", (DL_FUNC) &_hexify_cpp_lonlat_to_index_ap7, 4},
     {"_hexify_cpp_lonlat_to_index", (DL_FUNC) &_hexify_cpp_lonlat_to_index, 5},
     {"_hexify_cpp_index_to_lonlat", (DL_FUNC) &_hexify_cpp_index_to_lonlat, 3},
-    {"_hexify_cell_to_index", (DL_FUNC) &_hexify_cell_to_index, 6},
-    {"_hexify_index_to_cell", (DL_FUNC) &_hexify_index_to_cell, 3},
-    {"_hexify_get_parent_index", (DL_FUNC) &_hexify_get_parent_index, 3},
-    {"_hexify_get_children_indices", (DL_FUNC) &_hexify_get_children_indices, 3},
-    {"_hexify_get_index_resolution", (DL_FUNC) &_hexify_get_index_resolution, 3},
     {"_hexify_cpp_z7_canonical_form", (DL_FUNC) &_hexify_cpp_z7_canonical_form, 2},
     {"_hexify_cpp_build_icosa", (DL_FUNC) &_hexify_cpp_build_icosa, 3},
     {"_hexify_cpp_which_face", (DL_FUNC) &_hexify_cpp_which_face, 2},

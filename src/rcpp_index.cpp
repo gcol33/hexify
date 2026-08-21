@@ -220,57 +220,6 @@ Rcpp::NumericVector cpp_index_to_lonlat(std::string index, int aperture,
 }
 
 // ============================================================================
-// Legacy exports (for backwards compatibility)
-// ============================================================================
-
-// [[Rcpp::export]]
-std::string cell_to_index(int face, Rcpp::NumericVector i, Rcpp::NumericVector j,
-                          int resolution, int aperture, std::string index_type = "AUTO") {
-  hexify::IndexType type = parse_index_type(index_type);
-
-  long long i_val = static_cast<long long>(i[0]);
-  long long j_val = static_cast<long long>(j[0]);
-
-  return hexify::cell_to_index(face, i_val, j_val, resolution, aperture, type);
-}
-
-// [[Rcpp::export]]
-Rcpp::List index_to_cell(std::string index, int aperture, std::string index_type = "AUTO") {
-  hexify::IndexType type = parse_index_type(index_type);
-
-  int face, resolution;
-  long long i, j;
-
-  hexify::index_to_cell(index, aperture, type, face, i, j, resolution);
-
-  return Rcpp::List::create(
-    Rcpp::Named("face") = face,
-    Rcpp::Named("i") = static_cast<double>(i),
-    Rcpp::Named("j") = static_cast<double>(j),
-    Rcpp::Named("resolution") = resolution
-  );
-}
-
-// [[Rcpp::export]]
-std::string get_parent_index(std::string index, int aperture, std::string index_type = "AUTO") {
-  hexify::IndexType type = parse_index_type(index_type);
-  return hexify::get_parent_index(index, aperture, type);
-}
-
-// [[Rcpp::export]]
-std::vector<std::string> get_children_indices(std::string index, int aperture,
-                                               std::string index_type = "AUTO") {
-  hexify::IndexType type = parse_index_type(index_type);
-  return hexify::get_children_indices(index, aperture, type);
-}
-
-// [[Rcpp::export]]
-int get_index_resolution(std::string index, int aperture, std::string index_type = "AUTO") {
-  hexify::IndexType type = parse_index_type(index_type);
-  return hexify::get_index_resolution(index, aperture, type);
-}
-
-// ============================================================================
 // Z7 Canonical Form
 // ============================================================================
 

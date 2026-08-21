@@ -329,26 +329,6 @@ cpp_index_to_lonlat <- function(index, aperture, index_type = "auto") {
     .Call(`_hexify_cpp_index_to_lonlat`, index, aperture, index_type)
 }
 
-cell_to_index <- function(face, i, j, resolution, aperture, index_type = "AUTO") {
-    .Call(`_hexify_cell_to_index`, face, i, j, resolution, aperture, index_type)
-}
-
-index_to_cell <- function(index, aperture, index_type = "AUTO") {
-    .Call(`_hexify_index_to_cell`, index, aperture, index_type)
-}
-
-get_parent_index <- function(index, aperture, index_type = "AUTO") {
-    .Call(`_hexify_get_parent_index`, index, aperture, index_type)
-}
-
-get_children_indices <- function(index, aperture, index_type = "AUTO") {
-    .Call(`_hexify_get_children_indices`, index, aperture, index_type)
-}
-
-get_index_resolution <- function(index, aperture, index_type = "AUTO") {
-    .Call(`_hexify_get_index_resolution`, index, aperture, index_type)
-}
-
 cpp_z7_canonical_form <- function(index, max_iterations = 128L) {
     .Call(`_hexify_cpp_z7_canonical_form`, index, max_iterations)
 }
