@@ -656,7 +656,7 @@ isea_cell_to_index_one <- function(cell_id, resolution, aperture_int, index_type
 
 #' Cell ID of one hierarchical index string on a pure-aperture grid
 #'
-#' Inverse of [isea_cell_to_index_one()]. The index carries its own resolution,
+#' Inverse of `isea_cell_to_index_one()`. The index carries its own resolution,
 #' which is the one the returned cell ID belongs to.
 #'
 #' @param index One index string
