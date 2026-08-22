@@ -7,7 +7,7 @@ hexify supports **all** major hexagonal DGGS through two backends:
 - **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30.
   `hex_grid(aperture = "4/3")` / `"4/7"` / `"7/4"` name a family (first `floor(res/2)` levels
   take the first aperture), and `aperture = c(4, 4, 7, 3)` names one aperture per level.
-- **H3** (via h3o): fixed aperture 7 — resolutions 0-15
+- **H3** (vendored H3 v4.4.1 C source in `src/h3`): fixed aperture 7 — resolutions 0-15
 
 This covers every hexagonal grid system that matters:
 - ISEA3H, ISEA4H, ISEA7H, ISEA43H = ISEA backend with different aperture settings
