@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,11 +59,36 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.2" id="hexify-082">hexify 0.8.2<a class="anchor" aria-label="anchor" href="#hexify-082"></a></h2><p class="text-muted">CRAN release: 2026-08-22</p>
+<div class="section level3">
+<h3 id="bug-fixes-0-8-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-8-2"></a></h3>
+<ul><li><p><code><a href="../reference/lonlat_to_cell.html">lonlat_to_cell()</a></code> on a mixed-aperture grid names a cell for a point that sits on a quad corner, which is where the twelve icosahedron vertices put the poles. The rotate/requantize chain can leave the quad’s coordinate range by a tie-breaking unit there, and the cell index reads the pair as an unsigned offset from the quad origin, so such a point came back out of range and <code><a href="../reference/cell_to_index.html">cell_to_index()</a></code> stopped on it.</p></li>
+<li><p>The default ISEA orientation carries <code>atan(phi)</code> at full double precision, with <code>phi = (1 + sqrt(5)) / 2</code>, placing vertex 0 at latitude 58.282525588538995 degrees. The constant was stored rounded at the eighth decimal, 1.5e-09 degrees from the analytic value, which is 0.16 mm on Earth and reaches the assignment of a point that close to a cell boundary.</p></li>
+<li><p><code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code> on a mixed-aperture grid reads its cells with the aperture sequence the grid was built from. The polygon path took a single aperture, which a mixed sequence does not have, and decoded every mixed grid as aperture 3: cell IDs past that grid’s range stopped the call and the rest named different cells. <code><a href="../reference/is_pentagon.html">is_pentagon()</a></code> read the same collapsed aperture and is on the sequence path as well.</p></li>
+<li><p>Aperture-7 hexagons carry the orientation of their own lattice, unrotated at even resolutions and turned 19.1 degrees at odd ones. The corners were placed 30 degrees off the lattice at every resolution, which aimed them at the neighbouring cell centres rather than the points between them. Corner positions now come from the grid form, so every aperture reads its rotation and scale from one place.</p></li>
+<li><p>A cell at an icosahedral vertex drops the corner that falls in the icosahedron’s angular deficit on a rotated lattice too. The dropped corner was fixed to the unrotated layout, so aperture-7 pentagons and aperture-3 pentagons at odd resolutions kept a corner no neighbour reaches and dropped one they share.</p></li>
+<li><p><code><a href="../reference/hexify_cell_to_sf.html">hexify_cell_to_sf()</a></code> returns the same boundary whichever way <code>return_sf</code> is set. The data frame path was a second implementation, without the pentagon handling, the fallback for a corner outside its quad, or the extension of polar cells to the pole, so it stopped on every pentagon and drew edge cells differently. Both paths read one boundary routine now, and the data frame gives a pentagon six rows rather than seven.</p></li>
+<li><p><code><a href="../reference/get_parent.html">get_parent()</a></code> and <code><a href="../reference/get_children.html">get_children()</a></code> honour <code>levels</code> on pure ISEA grids, where they moved one level whatever was asked for.</p></li>
+<li><p><code>get_children(get_parent(x))</code> contains <code>x</code>. <code>get_parent_index()</code> stripped two levels off a Z3 or aperture-3 z-order index whenever its digit count was even, and one instead of two off an aperture-7 z-order index; <code>get_children_indices()</code> rebuilt aperture-3 and aperture-4 children from a coordinate box rather than appending the child digit, which is not the inverse of stripping one. Over every cell ID the round trip goes from 4.3 per cent to 100 per cent for aperture 3 at resolution 2, and from an error to 98.2 per cent for aperture 7, where the cells below a pentagon remain: a pentagon has six aperture-7 children, so a Z7 index does not name seven distinct descendants there.</p></li>
+<li><p><code>quad_ij_to_cell()</code> re-expresses a coordinate that has stepped outside its quad in the quad that owns it, and returns <code>NA</code> where the icosahedron folds at a vertex and no quad does. Such a pair was packed as it stood, giving cell IDs past the end of the grid.</p></li>
+<li><p>The compiled entry points all carry the <code>cpp_</code> prefix. Five unprefixed duplicates at the foot of <code>rcpp_index.cpp</code> had no callers, and <code>compileAttributes()</code> wrote each one into <code>R/RcppExports.R</code>, where <code><a href="../reference/cell_to_index.html">cell_to_index()</a></code> collided with the exported <code>cell_to_index(cell_id, grid)</code>, and which definition survived came down to the order R sources <code>R/</code>.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-8-2">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-2"></a></h3>
+<ul><li>The README and the theory vignette say ISEA takes apertures 3, 4 and 7 in any sequence, which has held since 0.8.0. They named 4/3 as the one mixed sequence ISEA reads.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.1" id="hexify-081">hexify 0.8.1<a class="anchor" aria-label="anchor" href="#hexify-081"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-8-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-8-1"></a></h3>
 <ul><li><p><code>crs</code> takes any coordinate reference system sf reads: an EPSG code as before, or a ‘PROJ’ or ‘WKT’ string. A grid left to its default is read on its own body, so a grid built with <code>radius_km</code> carries a longlat CRS on the sphere of that radius and an Earth grid keeps EPSG:4326. EPSG codes name Earth reference systems, so a grid on another body had no code to name it and was reported in ‘WGS84’.</p></li>
 <li><p>Every function that hands out coordinates reads the grid’s CRS through <code>grid_crs()</code>, the way kilometres go through <code>grid_radius_km()</code>. <code><a href="../reference/cell_to_sf.html">cell_to_sf()</a></code>, <code><a href="../reference/as_sf.html">as_sf()</a></code>, <code>hex_summarize(geometry = TRUE)</code> and <code><a href="../reference/hex_extract.html">hex_extract()</a></code> all return a grid’s own coordinates rather than assuming Earth.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-8-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-8-1"></a></h3>
+<ul><li>
+<code><a href="../reference/plot_globe.html">plot_globe()</a></code> returns in about a second on the grids its own examples use, where it took eleven minutes. Cells on the hemisphere edge come out of the orthographic transform as rings of two points, which GEOS rejects for the whole set, so every call fell through to a per-cell repair loop that rewrote the whole table once per cell. Those cells are now dropped before the repair, which lets the batch call through, and the loop that remains as a fallback assembles its geometries once. The cells the function returns are unchanged.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-0-8-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-8-1"></a></h3>

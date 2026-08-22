@@ -26,7 +26,7 @@ A list with 'dggridR'-compatible fields:
 
 - pole_lat_deg:
 
-  Latitude of grid pole (default 58.28252559)
+  Latitude of grid pole (default 58.282525588538995)
 
 - azimuth_deg:
 

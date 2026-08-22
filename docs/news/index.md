@@ -1,5 +1,94 @@
 # Changelog
 
+## hexify 0.8.2
+
+CRAN release: 2026-08-22
+
+### Bug fixes
+
+- [`lonlat_to_cell()`](https://gillescolling.com/hexify/reference/lonlat_to_cell.md)
+  on a mixed-aperture grid names a cell for a point that sits on a quad
+  corner, which is where the twelve icosahedron vertices put the poles.
+  The rotate/requantize chain can leave the quad’s coordinate range by a
+  tie-breaking unit there, and the cell index reads the pair as an
+  unsigned offset from the quad origin, so such a point came back out of
+  range and
+  [`cell_to_index()`](https://gillescolling.com/hexify/reference/cell_to_index.md)
+  stopped on it.
+
+- The default ISEA orientation carries `atan(phi)` at full double
+  precision, with `phi = (1 + sqrt(5)) / 2`, placing vertex 0 at
+  latitude 58.282525588538995 degrees. The constant was stored rounded
+  at the eighth decimal, 1.5e-09 degrees from the analytic value, which
+  is 0.16 mm on Earth and reaches the assignment of a point that close
+  to a cell boundary.
+
+- [`cell_to_sf()`](https://gillescolling.com/hexify/reference/cell_to_sf.md)
+  on a mixed-aperture grid reads its cells with the aperture sequence
+  the grid was built from. The polygon path took a single aperture,
+  which a mixed sequence does not have, and decoded every mixed grid as
+  aperture 3: cell IDs past that grid’s range stopped the call and the
+  rest named different cells.
+  [`is_pentagon()`](https://gillescolling.com/hexify/reference/is_pentagon.md)
+  read the same collapsed aperture and is on the sequence path as well.
+
+- Aperture-7 hexagons carry the orientation of their own lattice,
+  unrotated at even resolutions and turned 19.1 degrees at odd ones. The
+  corners were placed 30 degrees off the lattice at every resolution,
+  which aimed them at the neighbouring cell centres rather than the
+  points between them. Corner positions now come from the grid form, so
+  every aperture reads its rotation and scale from one place.
+
+- A cell at an icosahedral vertex drops the corner that falls in the
+  icosahedron’s angular deficit on a rotated lattice too. The dropped
+  corner was fixed to the unrotated layout, so aperture-7 pentagons and
+  aperture-3 pentagons at odd resolutions kept a corner no neighbour
+  reaches and dropped one they share.
+
+- [`hexify_cell_to_sf()`](https://gillescolling.com/hexify/reference/hexify_cell_to_sf.md)
+  returns the same boundary whichever way `return_sf` is set. The data
+  frame path was a second implementation, without the pentagon handling,
+  the fallback for a corner outside its quad, or the extension of polar
+  cells to the pole, so it stopped on every pentagon and drew edge cells
+  differently. Both paths read one boundary routine now, and the data
+  frame gives a pentagon six rows rather than seven.
+
+- [`get_parent()`](https://gillescolling.com/hexify/reference/get_parent.md)
+  and
+  [`get_children()`](https://gillescolling.com/hexify/reference/get_children.md)
+  honour `levels` on pure ISEA grids, where they moved one level
+  whatever was asked for.
+
+- `get_children(get_parent(x))` contains `x`. `get_parent_index()`
+  stripped two levels off a Z3 or aperture-3 z-order index whenever its
+  digit count was even, and one instead of two off an aperture-7 z-order
+  index; `get_children_indices()` rebuilt aperture-3 and aperture-4
+  children from a coordinate box rather than appending the child digit,
+  which is not the inverse of stripping one. Over every cell ID the
+  round trip goes from 4.3 per cent to 100 per cent for aperture 3 at
+  resolution 2, and from an error to 98.2 per cent for aperture 7, where
+  the cells below a pentagon remain: a pentagon has six aperture-7
+  children, so a Z7 index does not name seven distinct descendants
+  there.
+
+- `quad_ij_to_cell()` re-expresses a coordinate that has stepped outside
+  its quad in the quad that owns it, and returns `NA` where the
+  icosahedron folds at a vertex and no quad does. Such a pair was packed
+  as it stood, giving cell IDs past the end of the grid.
+
+- The compiled entry points all carry the `cpp_` prefix. Five unprefixed
+  duplicates at the foot of `rcpp_index.cpp` had no callers, and
+  `compileAttributes()` wrote each one into `R/RcppExports.R`, where
+  [`cell_to_index()`](https://gillescolling.com/hexify/reference/cell_to_index.md)
+  collided with the exported `cell_to_index(cell_id, grid)`, and which
+  definition survived came down to the order R sources `R/`.
+
+### Documentation
+
+- The README and the theory vignette say ISEA takes apertures 3, 4 and 7
+  in any sequence, which has held since 0.8.0. They named 4/3 as the one
+  mixed sequence ISEA reads.
+
 ## hexify 0.8.1
 
 ### New features
@@ -18,6 +107,18 @@
   `hex_summarize(geometry = TRUE)` and
   [`hex_extract()`](https://gillescolling.com/hexify/reference/hex_extract.md)
   all return a grid’s own coordinates rather than assuming Earth.
+
+### Bug fixes
+
+- [`plot_globe()`](https://gillescolling.com/hexify/reference/plot_globe.md)
+  returns in about a second on the grids its own examples use, where it
+  took eleven minutes. Cells on the hemisphere edge come out of the
+  orthographic transform as rings of two points, which GEOS rejects for
+  the whole set, so every call fell through to a per-cell repair loop
+  that rewrote the whole table once per cell. Those cells are now
+  dropped before the repair, which lets the batch call through, and the
+  loop that remains as a fallback assembles its geometries once. The
+  cells the function returns are unchanged.
 
 ### Documentation
 

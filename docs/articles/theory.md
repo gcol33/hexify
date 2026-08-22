@@ -184,8 +184,9 @@ $`s = \sqrt{1 + \varphi^2}`$, yielding $`\tan\phi = 1/2`$.
 ### Standard ISEA Orientation
 
 The default orientation places vertex 0 at longitude 11.25°, latitude
-58.28252559°, with azimuth 0°. This places icosahedron vertices
-(pentagon cells) predominantly over oceans (Sahr et al., 2003, p. 123).
+$`\arctan(\varphi) \approx 58.2825°`$, with azimuth 0°. This places
+icosahedron vertices (pentagon cells) predominantly over oceans (Sahr et
+al., 2003, p. 123).
 
     #> Linking to GEOS 3.14.1, GDAL 3.12.1, PROJ 9.7.1; sf_use_s2() is TRUE
     #> Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
@@ -609,15 +610,15 @@ trade-offs.
 
 ### Architecture
 
-| Property              | ISEA (hexify native)     | H3 (Uber)              |
-|-----------------------|--------------------------|------------------------|
-| **Projection**        | Snyder ISEA (equal-area) | Face-centered gnomonic |
-| **Polyhedron**        | Icosahedron (20 faces)   | Icosahedron (20 faces) |
-| **Aperture**          | 3, 4, 7, or mixed 4/3    | 7 (fixed)              |
-| **Cell area**         | Exactly equal            | Varies by location     |
-| **Resolutions**       | 0–30                     | 0–15                   |
-| **Cell IDs**          | Integer SEQNUM           | 64-bit hex string      |
-| **Pentagon handling** | 12 per resolution        | 12 per resolution      |
+| Property              | ISEA (hexify native)       | H3 (Uber)              |
+|-----------------------|----------------------------|------------------------|
+| **Projection**        | Snyder ISEA (equal-area)   | Face-centered gnomonic |
+| **Polyhedron**        | Icosahedron (20 faces)     | Icosahedron (20 faces) |
+| **Aperture**          | 3, 4 and 7 in any sequence | 7 (fixed)              |
+| **Cell area**         | Exactly equal              | Varies by location     |
+| **Resolutions**       | 0–30                       | 0–15                   |
+| **Cell IDs**          | Integer SEQNUM             | 64-bit hex string      |
+| **Pentagon handling** | 12 per resolution          | 12 per resolution      |
 
 Both systems tile the sphere with hexagons on an icosahedral framework,
 but the projection and subdivision choices lead to different properties.

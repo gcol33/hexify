@@ -35,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -539,9 +539,9 @@ yielding
 <h3 id="standard-isea-orientation">Standard ISEA Orientation<a class="anchor" aria-label="anchor" href="#standard-isea-orientation"></a>
 </h3>
 <p>The default orientation places vertex 0 at longitude 11.25°, latitude
-58.28252559°, with azimuth 0°. This places icosahedron vertices
-(pentagon cells) predominantly over oceans (Sahr et al., 2003,
-p. 123).</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">arctan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>φ</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>58.2825</mn><mi>°</mi></mrow><annotation encoding="application/x-tex">\arctan(\varphi) \approx 58.2825°</annotation></semantics></math>,
+with azimuth 0°. This places icosahedron vertices (pentagon cells)
+predominantly over oceans (Sahr et al., 2003, p. 123).</p>
 <pre><code><span><span class="co">#&gt; Linking to GEOS 3.14.1, GDAL 3.12.1, PROJ 9.7.1; sf_use_s2() is TRUE</span></span>
 <span><span class="co">#&gt; Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not</span></span>
 <span><span class="co">#&gt; give correct results for longitude/latitude data</span></span></code></pre>
@@ -4757,7 +4757,7 @@ trade-offs.</p>
 </tr>
 <tr class="odd">
 <td><strong>Aperture</strong></td>
-<td>3, 4, 7, or mixed 4/3</td>
+<td>3, 4 and 7 in any sequence</td>
 <td>7 (fixed)</td>
 </tr>
 <tr class="even">

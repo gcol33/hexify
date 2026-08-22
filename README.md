@@ -52,13 +52,13 @@ Equal-area grids are directly applicable to:
 
 ## Why Hexagonal Grids?
 
-Hexagons tile the sphere with three properties that squares and triangles lack:
+Equal-area hexagonal grids bring three properties to spatial binning:
 
-1. **Equal area** — every cell covers the same surface area, from equator to pole
-2. **Uniform adjacency** — all six neighbors share an edge (no ambiguous diagonal neighbors)
-3. **Low shape distortion** — hexagons approximate circles better than any other regular polygon, minimizing edge effects in spatial statistics
+1. **Equal area** — hexify places ISEA cells with the Snyder equal-area projection, so every cell covers the same surface area from equator to pole
+2. **Uniform adjacency** — all six neighbors share an edge and sit at the same distance from the cell center, so neighborhood statistics carry no directional bias
+3. **Compactness** — the hexagonal tiling minimizes perimeter per unit area among all equal-area partitions of a plane (Hales' honeycomb theorem), which keeps edge effects small
 
-These properties make hexagonal grids the natural choice for unbiased spatial binning. Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.
+Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.
 
 ## Features
 
@@ -189,8 +189,8 @@ names(richness)[2] <- "n_species"
 # Quick plot
 plot(result)
 
-# Heatmap with basemap
-hexify_heatmap(occ_hex, value = "n_records", basemap = TRUE)
+# Heatmap of records per cell, with a world basemap
+hexify_heatmap(occ_hex, basemap = "world")
 
 # Custom ggplot
 library(ggplot2)
@@ -206,6 +206,7 @@ ggplot(cell_polys) +
 ## Known Limitations
 
 - **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4 and 7 in any sequence up to resolution 30.
+- **H3 cell area**: H3 cells are gnomonic rather than equal-area, and hexagon area varies by about a factor of 2 within a resolution (about 2.4 including the pentagons). Use ISEA where equal area matters, and `cell_area()` to read the area of a given H3 cell.
 - **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use `is_pentagon()` to detect them.
 - **Projection precision**: The inverse Snyder projection uses iterative Newton-Raphson convergence. Default precision is sufficient for sub-meter accuracy; use `hexify_set_precision()` to adjust the speed/accuracy trade-off.
 
@@ -214,6 +215,8 @@ ggplot(cell_polys) +
 - [Quick Start](https://gillescolling.com/hexify/articles/quickstart.html) - Basic concepts and workflow
 - [Visualization](https://gillescolling.com/hexify/articles/visualization.html) - Plotting with base R and ggplot2
 - [Workflows](https://gillescolling.com/hexify/articles/workflows.html) - Grid generation, clipping, multi-resolution analysis
+- [H3 Grids](https://gillescolling.com/hexify/articles/h3.html) - Working with the H3 backend and crosswalking to ISEA
+- [Mathematical Foundations](https://gillescolling.com/hexify/articles/theory.html) - Snyder projection, aperture quantization, indexing
 
 ## Support
 

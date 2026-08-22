@@ -421,6 +421,10 @@ grid <- hex_grid(area_km2 = 500000)
 pentagon_cells <- lonlat_to_cell(pentagon_coords$lon, pentagon_coords$lat, grid)
 
 pentagon_polys <- cell_to_sf(pentagon_cells, grid)
+#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
+#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
+#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
+#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +

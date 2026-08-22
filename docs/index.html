@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,7 +112,7 @@
 <h2 id="statement-of-need">Statement of Need<a class="anchor" aria-label="anchor" href="#statement-of-need"></a>
 </h2>
 <p>Spatial binning is fundamental to ecological modeling, epidemiology, and geographic analysis. Standard approaches using rectangular lat-lon grids introduce severe area distortions: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a fraction of that area. This violates the equal-sampling assumption underlying most spatial statistics.</p>
-<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify’s primary backend is <strong>ISEA</strong> (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4, 7, or mixed 4/3, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports <strong>H3</strong> grids via a vendored C library.</p>
+<p>Discrete Global Grid Systems (DGGS) solve this by partitioning Earth’s surface into cells of uniform area. hexify’s primary backend is <strong>ISEA</strong> (Icosahedral Snyder Equal Area): true equal-area hexagonal grids with apertures 3, 4 and 7 in any sequence, implemented in C++ with no external dependencies. For interoperability with industry ecosystems (FCC, Foursquare, DuckDB), hexify also supports <strong>H3</strong> grids via a vendored C library.</p>
 <p>Equal-area grids are directly applicable to:</p>
 <ul>
 <li>Species distribution modeling and biodiversity assessments</li>
@@ -124,16 +124,16 @@
 <div class="section level2">
 <h2 id="why-hexagonal-grids">Why Hexagonal Grids?<a class="anchor" aria-label="anchor" href="#why-hexagonal-grids"></a>
 </h2>
-<p>Hexagons tile the sphere with three properties that squares and triangles lack:</p>
+<p>Equal-area hexagonal grids bring three properties to spatial binning:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>Equal area</strong> — every cell covers the same surface area, from equator to pole</li>
+<strong>Equal area</strong> — hexify places ISEA cells with the Snyder equal-area projection, so every cell covers the same surface area from equator to pole</li>
 <li>
-<strong>Uniform adjacency</strong> — all six neighbors share an edge (no ambiguous diagonal neighbors)</li>
+<strong>Uniform adjacency</strong> — all six neighbors share an edge and sit at the same distance from the cell center, so neighborhood statistics carry no directional bias</li>
 <li>
-<strong>Low shape distortion</strong> — hexagons approximate circles better than any other regular polygon, minimizing edge effects in spatial statistics</li>
+<strong>Compactness</strong> — the hexagonal tiling minimizes perimeter per unit area among all equal-area partitions of a plane (Hales’ honeycomb theorem), which keeps edge effects small</li>
 </ol>
-<p>These properties make hexagonal grids the natural choice for unbiased spatial binning. Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.</p>
+<p>Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.</p>
 </div>
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
@@ -294,8 +294,8 @@
 <code class="sourceCode R"><span><span class="co"># Quick plot</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Heatmap with basemap</span></span>
-<span><span class="fu"><a href="reference/hexify_heatmap.html">hexify_heatmap</a></span><span class="op">(</span><span class="va">occ_hex</span>, value <span class="op">=</span> <span class="st">"n_records"</span>, basemap <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co"># Heatmap of records per cell, with a world basemap</span></span>
+<span><span class="fu"><a href="reference/hexify_heatmap.html">hexify_heatmap</a></span><span class="op">(</span><span class="va">occ_hex</span>, basemap <span class="op">=</span> <span class="st">"world"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Custom ggplot</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -313,7 +313,9 @@
 </h2>
 <ul>
 <li>
-<strong>H3 grids</strong>: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4, 7, and mixed 4/3 up to resolution 30.</li>
+<strong>H3 grids</strong>: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4 and 7 in any sequence up to resolution 30.</li>
+<li>
+<strong>H3 cell area</strong>: H3 cells are gnomonic rather than equal-area, and hexagon area varies by about a factor of 2 within a resolution (about 2.4 including the pentagons). Use ISEA where equal area matters, and <code><a href="reference/cell_area.html">cell_area()</a></code> to read the area of a given H3 cell.</li>
 <li>
 <strong>Pentagons</strong>: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use <code><a href="reference/is_pentagon.html">is_pentagon()</a></code> to detect them.</li>
 <li>
@@ -330,6 +332,10 @@
 <a href="https://gillescolling.com/hexify/articles/visualization.html">Visualization</a> - Plotting with base R and ggplot2</li>
 <li>
 <a href="https://gillescolling.com/hexify/articles/workflows.html">Workflows</a> - Grid generation, clipping, multi-resolution analysis</li>
+<li>
+<a href="https://gillescolling.com/hexify/articles/h3.html">H3 Grids</a> - Working with the H3 backend and crosswalking to ISEA</li>
+<li>
+<a href="https://gillescolling.com/hexify/articles/theory.html">Mathematical Foundations</a> - Snyder projection, aperture quantization, indexing</li>
 </ul>
 </div>
 <div class="section level2">
