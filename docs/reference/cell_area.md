@@ -31,10 +31,11 @@ Named numeric vector of areas in km², one per `cell_id`.
 For ISEA grids the area is constant across all cells and is read
 directly from the grid specification.
 
-For H3 grids the area varies by latitude. The vendored 'H3' library
-computes each cell's spherical polygon area as a solid angle, which this
-function reads on the grid's body, so a grid built with `radius_km`
-reports that body's areas.
+For H3 grids the area varies from cell to cell, by about a factor of 2
+across the hexagons of a resolution. The vendored 'H3' library computes
+each cell's spherical polygon area as a solid angle, which this function
+reads on the grid's body, so a grid built with `radius_km` reports that
+body's areas.
 
 ## See also
 

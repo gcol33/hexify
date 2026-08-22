@@ -53,8 +53,10 @@
 #' matching the closest H3 resolution.
 #'
 #' H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
-#' H3 cells are NOT exactly equal-area (area varies by ~3-5\% depending on
-#' location).
+#' H3 cells are NOT exactly equal-area: hexagon area varies by about a factor
+#' of 2 within a resolution, and by about 2.4 once the twelve pentagons are
+#' counted. The variation follows position on the icosahedron rather than
+#' latitude, with the smallest cells near face centres.
 #'
 #' @section Other Bodies:
 #'
@@ -189,7 +191,7 @@ hex_grid <- function(area_km2 = NULL,
                      H3_MIN_RESOLUTION, H3_MAX_RESOLUTION))
       }
       rlang::inform(
-        "H3 cells are not exactly equal-area; area varies ~3-5% by latitude.",
+        "H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.",
         .frequency = "once",
         .frequency_id = "hexify_h3_not_equal_area"
       )

@@ -131,7 +131,7 @@
 <li>
 <strong>Uniform adjacency</strong> — all six neighbors share an edge and sit at the same distance from the cell center, so neighborhood statistics carry no directional bias</li>
 <li>
-<strong>Compactness</strong> — the hexagonal tiling minimizes perimeter per unit area among all equal-area partitions of a plane (Hales’ honeycomb theorem), which keeps edge effects small</li>
+<strong>Compactness</strong> — the hexagonal tiling minimizes perimeter per unit area among all equal-area partitions of a plane (<a href="https://doi.org/10.1007/s004540010071" class="external-link">Hales 2001</a>), which keeps edge effects small</li>
 </ol>
 <p>Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 60°N has half the area of the same cell at the equator.</p>
 </div>
@@ -315,7 +315,7 @@
 <li>
 <strong>H3 grids</strong>: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4 and 7 in any sequence up to resolution 30.</li>
 <li>
-<strong>H3 cell area</strong>: H3 cells are gnomonic rather than equal-area, and hexagon area varies by about a factor of 2 within a resolution (about 2.4 including the pentagons). Use ISEA where equal area matters, and <code><a href="reference/cell_area.html">cell_area()</a></code> to read the area of a given H3 cell.</li>
+<strong>H3 cell area</strong>: H3 cells are not equal-area. Hexagon area varies by about a factor of 2 within a resolution, and about 2.4 once the twelve pentagons are counted. The variation follows position on the icosahedron rather than latitude, with the smallest cells near face centers. Use ISEA where equal area matters, and <code><a href="reference/cell_area.html">cell_area()</a></code> to read the area of a given H3 cell.</li>
 <li>
 <strong>Pentagons</strong>: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use <code><a href="reference/is_pentagon.html">is_pentagon()</a></code> to detect them.</li>
 <li>

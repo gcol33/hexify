@@ -617,7 +617,7 @@ the square of the radius ratio:
 ``` r
 
 h3_mars <- hex_grid(resolution = 5, type = "h3", radius_km = "mars")
-#> H3 cells are not exactly equal-area; area varies ~3-5% by latitude.
+#> H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.
 #> H3 cell IDs name a position in H3's topology, which Uber's H3 reads on Earth. A grid on another body reuses that topology and its own radius for areas; the IDs are not interchangeable with Earth H3 data.
 #> This message is displayed once per session.
 h3_mars@area_km2 / hex_grid(resolution = 5, type = "h3")@area_km2

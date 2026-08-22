@@ -4806,7 +4806,7 @@ This causes cell areas to vary by latitude:</p>
 <span></span>
 <span><span class="co"># H3: resolution 4 (~1,770 km² cells — different scale, but shows the pattern)</span></span>
 <span><span class="va">g_h3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">4</span>, type <span class="op">=</span> <span class="st">"h3"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; H3 cells are not exactly equal-area; area varies ~3-5% by latitude.</span></span>
+<span><span class="co">#&gt; H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.</span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">This message is displayed once per session.</span></span></span>
 <span><span class="va">h3_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lonlat_to_cell.html">lonlat_to_cell</a></span><span class="op">(</span><span class="va">lons</span>, <span class="va">lats</span>, <span class="va">g_h3</span><span class="op">)</span></span>
 <span><span class="va">h3_areas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell_area.html">cell_area</a></span><span class="op">(</span><span class="va">h3_cells</span>, <span class="va">g_h3</span><span class="op">)</span></span>

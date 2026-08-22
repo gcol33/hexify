@@ -113,11 +113,17 @@ strings (e.g., <code>"8528342bfffffff"</code>).</p>
 Foursquare for POI analytics, and DuckDB/BigQuery both have native H3
 extensions.</p>
 <p><strong>Key difference from ISEA</strong>: H3 cells are <em>not</em>
-equal-area. Cell area varies by
-~1.6<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
-between the largest and smallest hexagons at any given resolution,
-depending on latitude. For rigorous equal-area analysis, use ISEA. For
-interoperability with H3 ecosystems, use <code>type = "h3"</code>.</p>
+equal-area. Hexagon area varies by about a factor of 2 between the
+largest and smallest cell at any given resolution, and by about 2.4 once
+the twelve pentagons are counted. The variation follows position on the
+icosahedron rather than latitude: at resolution 3 the hexagons within 5
+degrees of a face centre average 9308
+km<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^2</annotation></semantics></math>,
+against 12406
+km<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mn>2</mn></msup><annotation encoding="application/x-tex">^2</annotation></semantics></math>
+for those more than 30 degrees away. For rigorous equal-area analysis,
+use ISEA. For interoperability with H3 ecosystems, use
+<code>type = "h3"</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
@@ -131,7 +137,7 @@ interoperability with H3 ecosystems, use <code>type = "h3"</code>.</p>
 <span></span>
 <span><span class="co"># Create an H3 grid specification</span></span>
 <span><span class="va">grid_h3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">5</span>, type <span class="op">=</span> <span class="st">"h3"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; H3 cells are not exactly equal-area; area varies ~3-5% by latitude.</span></span>
+<span><span class="co">#&gt; H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.</span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">This message is displayed once per session.</span></span></span>
 <span><span class="va">grid_h3</span></span>
 <span><span class="co">#&gt; HexGridInfo Specification [H3]</span></span>
@@ -2917,8 +2923,10 @@ compare; values close to 1 mean the resolutions are well-matched.</p>
 <tr class="odd">
 <td><strong>Cell area</strong></td>
 <td>Exactly equal</td>
-<td>~1.6<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
-variation</td>
+<td>~2<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+variation
+(~2.4<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>×</mi><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+with pentagons)</td>
 </tr>
 <tr class="even">
 <td><strong>Cell IDs</strong></td>

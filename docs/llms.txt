@@ -80,8 +80,9 @@ Equal-area hexagonal grids bring three properties to spatial binning:
     the same distance from the cell center, so neighborhood statistics
     carry no directional bias
 3.  **Compactness** — the hexagonal tiling minimizes perimeter per unit
-    area among all equal-area partitions of a plane (Hales’ honeycomb
-    theorem), which keeps edge effects small
+    area among all equal-area partitions of a plane ([Hales
+    2001](https://doi.org/10.1007/s004540010071)), which keeps edge
+    effects small
 
 Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1°
 cell at 60°N has half the area of the same cell at the equator.
@@ -259,9 +260,11 @@ ggplot(cell_polys) +
 - **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells).
   ISEA grids support apertures 3, 4 and 7 in any sequence up to
   resolution 30.
-- **H3 cell area**: H3 cells are gnomonic rather than equal-area, and
-  hexagon area varies by about a factor of 2 within a resolution (about
-  2.4 including the pentagons). Use ISEA where equal area matters, and
+- **H3 cell area**: H3 cells are not equal-area. Hexagon area varies by
+  about a factor of 2 within a resolution, and about 2.4 once the twelve
+  pentagons are counted. The variation follows position on the
+  icosahedron rather than latitude, with the smallest cells near face
+  centers. Use ISEA where equal area matters, and
   [`cell_area()`](https://gillescolling.com/hexify/reference/cell_area.md)
   to read the area of a given H3 cell.
 - **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12

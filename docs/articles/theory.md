@@ -644,7 +644,7 @@ isea_areas <- cell_area(isea_cells, g_isea)
 
 # H3: resolution 4 (~1,770 km² cells — different scale, but shows the pattern)
 g_h3 <- hex_grid(resolution = 4, type = "h3")
-#> H3 cells are not exactly equal-area; area varies ~3-5% by latitude.
+#> H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.
 #> This message is displayed once per session.
 h3_cells <- lonlat_to_cell(lons, lats, g_h3)
 h3_areas <- cell_area(h3_cells, g_h3)
