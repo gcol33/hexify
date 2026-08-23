@@ -17,7 +17,8 @@ fraction of that.
 
 The ISEA projection solves this by:
 
-1.  Inscribing a regular icosahedron in the sphere
+1.  Choosing a regular icosahedron with the same surface area as the
+    sphere
 
 2.  Projecting each spherical “cap” onto its corresponding flat
     triangular face using a modified Lambert equal-area projection
@@ -91,9 +92,11 @@ the equal-area property.
 
 ![](theory_files/figure-html/lambert-area-preservation-1.svg)
 
-Each colored band has equal area on the sphere. After Lambert
-projection, shapes change (outer bands stretch radially, compress
-tangentially) but areas remain equal.
+Each colored band has equal area on the sphere (the band boundaries are
+at $`\cos\phi_i = 1 - i/5`$). After Lambert projection the outer bands
+stretch radially and compress tangentially, and every annulus still has
+the same area: $`\rho_i^2 = 2R^2(1 - \cos\phi_i)`$ grows linearly with
+$`i`$.
 
 ### Inverse Formulas
 
@@ -148,8 +151,8 @@ center.
 
 Lambert’s projection works for a single tangent plane covering at most a
 hemisphere. To cover the entire globe with minimal distortion, Snyder
-used **20 tangent planes**—one for each face of a regular icosahedron
-(Snyder, 1992, p. 10).
+used **20 planar faces**—one for each face of a regular icosahedron with
+the same surface area as the sphere (Snyder, 1992, p. 10).
 
 ### Geometry
 
@@ -163,6 +166,16 @@ A regular icosahedron has:
 - **30 edges**
 
 ![](theory_files/figure-html/icosahedron-projection-1.svg)
+
+Left: the icosahedron has the same surface area as the sphere, so its
+face plane lies at the inradius $`R_1 = 0.9104R`$ from the centre O,
+inside the sphere, and the vertex V of the planar face lies on the ray
+through the sphere point at angular distance $`g = 37.38°`$ from the
+face centre C. A point P at angular distance $`z`$ from C maps to P’ on
+the face plane at radial distance $`\rho`$ from C. Right: on the planar
+face the azimuth Az’ is measured from the centre-to-vertex ray, and the
+three-fold symmetry of the face reduces every azimuth to one 120°
+sector.
 
 ### Vertex Latitude Derivation
 
@@ -188,10 +201,6 @@ $`\arctan(\varphi) \approx 58.2825°`$, with azimuth 0°. This places
 icosahedron vertices (pentagon cells) predominantly over oceans (Sahr et
 al., 2003, p. 123).
 
-    #> Linking to GEOS 3.14.1, GDAL 3.12.1, PROJ 9.7.1; sf_use_s2() is TRUE
-    #> Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
-    #> give correct results for longitude/latitude data
-
 ![](theory_files/figure-html/face-centers-1.svg)
 
 ## Snyder’s ISEA Projection
@@ -205,7 +214,7 @@ between adjacent faces while maintaining the equal-area property
 
 | Constant | Symbol | Value | Source |
 |----|----|----|----|
-| Edge-to-center angle | $`E_l`$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
+| Face center to vertex angle | $`E_l`$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
 | Geometric angle | $`G`$ | 36° | 360°/10 (icosahedral 5-fold symmetry) |
 | Scale factor | $`R_1`$ | 0.9103832815 | Snyder (1992, Table 1, p. 14) |
 
@@ -268,10 +277,7 @@ f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0
 where
 $`h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)`$.
 
-![Newton-Raphson iteration for inverse
-projection](figures/newton_raphson.png)
-
-Newton-Raphson iteration for inverse projection
+![](theory_files/figure-html/newton-raphson-1.svg)
 
 The iteration exhibits **quadratic convergence**, typically reaching
 machine precision in 3-5 iterations. hexify provides four precision
@@ -290,19 +296,16 @@ modes:
 the ratio of parent cell area to child cell area (Sahr et al., 2003,
 p. 124).
 
-![Aperture 3: Triangular (30°
-rotation)](figures/aperture3_subdivision.png)
+![](theory_files/figure-html/aperture-subdivision-1.svg)
 
-Aperture 3: Triangular (30° rotation)
-
-![Aperture 4: Rhombic (no rotation)](figures/aperture4_subdivision.png)
-
-Aperture 4: Rhombic (no rotation)
-
-![Aperture 7: Rosette (19.1°
-rotation)](figures/aperture7_subdivision.png)
-
-Aperture 7: Rosette (19.1° rotation)
+The dashed outline is the parent cell; the darker child shares its
+centre. For apertures 3 and 4 the parent boundary cuts through the ring
+children: each of the six vertex children of aperture 3 lies one third
+inside the parent, and each of the six edge children of aperture 4 lies
+half inside it, so the parent area equals $`1 + 6/3 = 3`$ or
+$`1 + 6/2 = 4`$ child areas. The seven aperture-7 children form a
+rosette with exactly the parent’s area, and its ragged boundary does not
+follow the parent’s edges.
 
 ### Aperture Properties
 
@@ -310,11 +313,14 @@ Aperture 7: Rosette (19.1° rotation)
 |----|----|----|----|----|
 | 3 | 1:3 | $`\sqrt{3} \approx 1.73`$ | 30° | Alternates Class I/II |
 | 4 | 1:4 | $`2.0`$ | 0° | Always Class I |
-| 7 | 1:7 | $`\sqrt{7} \approx 2.65`$ | $`\arctan(\sqrt{3/7}) \approx 19.1°`$ | Class III |
+| 7 | 1:7 | $`\sqrt{7} \approx 2.65`$ | $`\arctan(\sqrt{3}/5) \approx 19.1°`$ | Class III |
 
-The aperture 7 rotation angle $`\arctan(\sqrt{3/7})`$ arises from the
-geometric constraint that 7 hexagons in a rosette pattern (1 center + 6
-ring) must maintain lattice consistency (DGGRID Manual, 2023).
+The aperture 7 rotation angle follows from the child lattice: the
+parent’s nearest neighbour sits at two steps along one child lattice
+axis plus one step along the next, a vector of length $`\sqrt{7}`$ child
+spacings at angle
+$`\arctan\!\big(\tfrac{\sqrt{3}/2}{2 + 1/2}\big) = \arctan(\sqrt{3}/5) \approx 19.107°`$
+to the axis (DGGRID Manual, 2023).
 
 ### Cell Count Growth
 
@@ -351,7 +357,7 @@ for (res in 0:8) {
 
 For **aperture 3**, orientation alternates between Class I (flat-top)
 and Class II (pointy-top) at each resolution. For **aperture 7**, each
-level adds a rotation of $`\arctan(\sqrt{3/7}) \approx 19.1°`$ (Sahr,
+level adds a rotation of $`\arctan(\sqrt{3}/5) \approx 19.1°`$ (Sahr,
 2008, p. 176).
 
 ## Pentagon Cells
@@ -660,7 +666,7 @@ plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
      ylim = range(c(isea_rel, h3_rel)))
 lines(lats, isea_rel, col = "#457B9D", lwd = 2.5)
 abline(h = 1, lty = 2, col = "gray50")
-legend("topright", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
+legend("bottomleft", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
        col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
 ```
 

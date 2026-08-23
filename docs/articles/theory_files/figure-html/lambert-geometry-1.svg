@@ -58,8 +58,8 @@
 <polyline points='214.08,128.10 297.07,166.80 ' style='stroke-width: 1.88; stroke: #E63946;' />
 <polyline points='214.08,128.10 305.65,128.10 ' style='stroke-width: 1.88; stroke: #457B9D;' />
 <polyline points='214.08,198.52 215.22,198.53 216.36,198.59 217.50,198.67 218.64,198.79 219.77,198.95 220.89,199.13 222.01,199.35 223.12,199.61 224.23,199.90 225.32,200.22 226.41,200.57 227.48,200.96 228.54,201.38 229.59,201.83 230.62,202.31 231.64,202.83 232.65,203.37 233.63,203.94 234.60,204.55 235.55,205.18 236.48,205.84 237.39,206.53 238.28,207.24 239.15,207.98 239.99,208.75 240.81,209.54 241.61,210.36 242.38,211.20 243.13,212.06 ' style='stroke-width: 1.50; stroke: #2A9D8F;' />
-<text x='269.95' y='195.91' style='font-size: 1.92em; font-style: italic;fill: #2A9D8F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>c</text>
-<text x='237.24' y='145.54' style='font-size: 1.92em; font-style: italic;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>d</text>
+<text x='233.09' y='190.35' style='font-size: 1.92em; font-style: italic;fill: #2A9D8F; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>c</text>
+<text x='243.83' y='167.95' style='font-size: 1.92em; font-style: italic;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>d</text>
 <text x='254.41' y='115.03' style='font-size: 1.92em;fill: #457B9D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>ρ</text>
 <rect rx='4' x='300.75' y='312.27' width='146.25' height='65.00' style='stroke-width: 0.75; stroke: #B3B3B3; fill: #F5F6F8;' />
 <text x='312.97' y='334.21' style='font-size: 1.76em; font-style: italic; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>d</text>

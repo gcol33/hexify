@@ -22,7 +22,7 @@ Any projection from a sphere to a plane must distort *something*. For spatial st
 
 The ISEA projection solves this by:
 
-1. Inscribing a regular icosahedron in the sphere
+1. Choosing a regular icosahedron with the same surface area as the sphere
 
 2. Projecting each spherical "cap" onto its corresponding flat triangular face using a modified Lambert equal-area projection
 
@@ -101,16 +101,19 @@ lines(c(0, P_x), c(R, P_y), lwd = 2.5, col = "#E63946")
 # Draw projected distance on tangent plane
 lines(c(0, Pprime_x), c(R, R), lwd = 2.5, col = "#457B9D")
 
-# Draw arc showing angle φ at center
+# Draw arc showing angle c at center, labelled on the arc's bisector
 arc_r <- 0.35
 arc_theta <- seq(pi/2, pi/2 - phi, length.out = 30)
 lines(arc_r * cos(arc_theta), arc_r * sin(arc_theta), lwd = 2, col = "#2A9D8F")
-text(arc_r * 1.6, arc_r * 1.2, expression(italic(c)), cex = 1.2, col = "#2A9D8F")
+bisector <- pi/2 - phi/2
+text(0.52 * cos(bisector), 0.52 * sin(bisector), expression(italic(c)),
+     cex = 1.2, col = "#2A9D8F")
 
-# Label the chord d
-mid_chord_x <- (0 + P_x)/2 - 0.12
-mid_chord_y <- (R + P_y)/2 + 0.08
-text(mid_chord_x, mid_chord_y, expression(italic(d)), cex = 1.2, col = "#E63946")
+# Label the chord d on its inner side, between the chord and the radius O-P
+chord_mid <- c(P_x, R + P_y) / 2
+chord_normal <- c(R - P_y, P_x) / sqrt((R - P_y)^2 + P_x^2)
+text(chord_mid[1] - 0.14 * chord_normal[1], chord_mid[2] - 0.14 * chord_normal[2],
+     expression(italic(d)), cex = 1.2, col = "#E63946")
 
 # Label the projected distance ρ
 text(Pprime_x/2, R + 0.15, expression(rho), cex = 1.2, col = "#457B9D")
@@ -144,77 +147,43 @@ $$h' = \cos\left(\frac{c}{2}\right), \quad k' = \sec\left(\frac{c}{2}\right)$$
 Therefore $h' \cdot k' = \cos(c/2) \cdot \sec(c/2) = 1$, confirming the equal-area property.
 
 ```{r lambert-area-preservation, echo=FALSE, fig.width=7, fig.height=3.5}
-# Show equal-area property with concentric rings
-oldpar <- par(mfrow = c(1, 2), mar = c(2, 1, 3, 1), bg = "white", cex = 1, cex.main = 1)
+# Five bands of equal area on the hemisphere around S. A spherical cap of
+# angular radius phi has area 2*pi*R^2*(1 - cos(phi)), so equal-area bands
+# have cos(phi_i) = 1 - i/n, and the Lambert radius 2*sin(phi_i/2) then has
+# squared length 2*i/n: the projected annuli are equal-area as well.
+oldpar <- par(mfrow = c(1, 2), mar = c(1, 1, 3, 1), bg = "white", cex = 1, cex.main = 1)
 
-R <- 1
-
-# Left: Sphere view (orthographic, looking from above at tangent point)
-plot(NULL, xlim = c(-1.3, 1.3), ylim = c(-1.3, 1.3), asp = 1,
-     axes = FALSE, xlab = "", ylab = "",
-     main = "Sphere (view from above S)")
-
-# Draw outer circle (equator as seen from S)
-theta <- seq(0, 2*pi, length.out = 100)
-lines(cos(theta), sin(theta), lwd = 2)
-
-# Draw concentric latitude circles and shade bands
 n_bands <- 5
+phi_bands <- acos(1 - (0:n_bands) / n_bands)
 cols <- c("#264653", "#2A9D8F", "#E9C46A", "#F4A261", "#E76F51")
+theta <- seq(0, 2*pi, length.out = 200)
 
-for (i in n_bands:1) {
-  phi_outer <- (i / n_bands) * (pi/2)
-  phi_inner <- ((i-1) / n_bands) * (pi/2)
-
-  r_outer <- sin(phi_outer)
-  r_inner <- sin(phi_inner)
-
-  theta_seq <- seq(0, 2*pi, length.out = 100)
-  if (i == 1) {
-    polygon(r_outer * cos(theta_seq), r_outer * sin(theta_seq),
-            col = adjustcolor(cols[i], 0.5), border = "gray40")
-  } else {
-    polygon(c(r_outer * cos(theta_seq), rev(r_inner * cos(theta_seq))),
-            c(r_outer * sin(theta_seq), rev(r_inner * sin(theta_seq))),
-            col = adjustcolor(cols[i], 0.5), border = "gray40")
+draw_bands <- function(radius, main, caption, lim) {
+  plot(NULL, xlim = c(-lim, lim), ylim = c(-lim - 0.45, lim), asp = 1,
+       axes = FALSE, xlab = "", ylab = "", main = main)
+  for (i in seq_len(n_bands)) {
+    r_outer <- radius(phi_bands[i + 1])
+    r_inner <- radius(phi_bands[i])
+    polygon(c(r_outer * cos(theta), rev(r_inner * cos(theta))),
+            c(r_outer * sin(theta), rev(r_inner * sin(theta))),
+            col = adjustcolor(cols[i], 0.5), border = NA)
   }
-}
-points(0, 0, pch = 19, cex = 1.2)
-text(0, -1.2, "Equal-area bands on sphere", cex = 0.9)
-
-# Right: Lambert projection
-plot(NULL, xlim = c(-1.6, 1.6), ylim = c(-1.6, 1.6), asp = 1,
-     axes = FALSE, xlab = "", ylab = "",
-     main = "Lambert Projection")
-
-for (i in n_bands:1) {
-  phi_outer <- (i / n_bands) * (pi/2)
-  phi_inner <- ((i-1) / n_bands) * (pi/2)
-
-  # Lambert projection: r = 2*sin(phi/2)
-  r_outer <- 2 * sin(phi_outer / 2)
-  r_inner <- 2 * sin(phi_inner / 2)
-
-  theta_seq <- seq(0, 2*pi, length.out = 100)
-  if (i == 1) {
-    polygon(r_outer * cos(theta_seq), r_outer * sin(theta_seq),
-            col = adjustcolor(cols[i], 0.5), border = "gray40")
-  } else {
-    polygon(c(r_outer * cos(theta_seq), rev(r_inner * cos(theta_seq))),
-            c(r_outer * sin(theta_seq), rev(r_inner * sin(theta_seq))),
-            col = adjustcolor(cols[i], 0.5), border = "gray40")
-  }
+  for (r in radius(phi_bands[-1])) lines(r * cos(theta), r * sin(theta), col = "gray40")
+  points(0, 0, pch = 19, cex = 1.2)
+  text(0, -lim - 0.25, caption, cex = 0.9)
 }
 
-r_eq <- 2 * sin(pi/4)
-lines(r_eq * cos(theta), r_eq * sin(theta), lwd = 2, lty = 2, col = "gray50")
+# Left: the hemisphere seen from above S (orthographic, r = R sin(phi))
+draw_bands(function(phi) sin(phi), "Sphere (view from above S)",
+           "Five equal-area bands", lim = 1.1)
 
-points(0, 0, pch = 19, cex = 1.2)
-text(0, -1.35, "Same bands after projection\n(areas preserved)", cex = 0.9)
+# Right: the same bands after Lambert projection, r = 2R sin(phi/2)
+draw_bands(function(phi) 2 * sin(phi / 2), "Lambert projection",
+           "Same bands, areas preserved", lim = 1.5)
 par(oldpar)
 ```
 
-Each colored band has equal area on the sphere. After Lambert projection, shapes change (outer bands stretch radially, compress tangentially) but areas remain equal.
+Each colored band has equal area on the sphere (the band boundaries are at $\cos\phi_i = 1 - i/5$). After Lambert projection the outer bands stretch radially and compress tangentially, and every annulus still has the same area: $\rho_i^2 = 2R^2(1 - \cos\phi_i)$ grows linearly with $i$.
 
 ### Inverse Formulas
 
@@ -246,7 +215,7 @@ At $c = 90°$, distortion reaches $\omega \approx 70.5°$. ISEA grids limit this
 
 ## The Icosahedron
 
-Lambert's projection works for a single tangent plane covering at most a hemisphere. To cover the entire globe with minimal distortion, Snyder used **20 tangent planes**---one for each face of a regular icosahedron (Snyder, 1992, p. 10).
+Lambert's projection works for a single tangent plane covering at most a hemisphere. To cover the entire globe with minimal distortion, Snyder used **20 planar faces**---one for each face of a regular icosahedron with the same surface area as the sphere (Snyder, 1992, p. 10).
 
 ### Geometry
 
@@ -258,67 +227,92 @@ A regular icosahedron has:
 
 - **30 edges**
 
-```{r icosahedron-projection, echo=FALSE, fig.width=7, fig.height=6}
-# Icosahedron Face Projection Geometry
-# Reference: Snyder (1992), "An equal-area map projection for polyhedral globes", p. 10-12
-# Reference: Coxeter (1973), "Regular Polytopes", p. 52-53
-#
-# Shows how points on the sphere project onto an icosahedral face tangent plane
+```{r icosahedron-projection, echo=FALSE, fig.width=7, fig.height=4}
+# Icosahedron face geometry, Snyder (1992, p. 10-14), unit sphere.
+# The icosahedron has the same surface area as the sphere, so its face plane
+# lies at the inradius R1 = 0.9103832815 from the centre and its vertices at
+# angular distance g = 37.37736814 degrees from the face centre. Along the
+# azimuth of a vertex the radial distance reduces to
+# rho = 2 R1 f sin(z/2) with f = tan(g) / (2 sin(g/2)).
+g  <- 37.37736814 * pi/180
+R1 <- 0.9103832815
+rv <- R1 * tan(g)
+f  <- tan(g) / (2 * sin(g/2))
+red <- "#E63946"; blue <- "#457B9D"; teal <- "#2A9D8F"
+oldpar <- par(mfrow = c(1, 2), mar = c(0.5, 0.5, 2.5, 0.5), bg = "white",
+              cex = 1, cex.main = 1)
 
-oldpar <- par(mar = c(1, 1, 2, 1), bg = "white")
-plot(NULL, xlim = c(-1.6, 1.6), ylim = c(-0.6, 1.8), asp = 1,
-     axes = FALSE, xlab = "", ylab = "",
-     main = "Icosahedron Face Projection")
+# Left: cross-section through the centre O, the face centre C and a vertex V,
+# showing the upper part of the sphere; P lies on the side opposite to V
+plot(NULL, xlim = c(-0.9, 0.9), ylim = c(-0.2, 1.25), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Cross-section through O, C, V")
+theta <- seq(0, 2*pi, length.out = 200)
+lines(cos(theta), sin(theta), lwd = 2, col = "gray30")
 
-# Sphere cross-section (arc visible above the face)
-R <- 1.2
-theta_arc <- seq(20*pi/180, 160*pi/180, length.out = 50)
-sphere_y_offset <- 0.3
-lines(R * cos(theta_arc), R * sin(theta_arc) + sphere_y_offset - R,
-      lwd = 2, col = "gray40")
-text(-1.3, 1.1, "Sphere surface", cex = 0.9, col = "gray50", adj = 0)
+# Face plane and the planar face itself
+lines(c(-0.9, 0.9), c(R1, R1), lty = 3, col = "gray60")
+lines(c(-rv, rv), c(R1, R1), lwd = 4, col = "gray20")
 
-# Draw triangular face (equilateral, base at bottom)
-face_scale <- 1.3
-v1 <- c(-face_scale * 0.866, -0.4)   # bottom-left vertex
-v2 <- c(face_scale * 0.866, -0.4)    # bottom-right vertex
-v3 <- c(0, face_scale * 1.0)          # top vertex
+# Ray from O through the sphere vertex to the planar vertex V
+lines(c(0, rv), c(0, R1), lty = 2, col = "gray50")
+points(sin(g), cos(g), pch = 19, cex = 0.9, col = "gray30")
+points(rv, R1, pch = 19, cex = 1.1)
+text(rv + 0.06, R1 + 0.11, "V", font = 2, cex = 1)
 
-polygon(c(v1[1], v2[1], v3[1]), c(v1[2], v2[2], v3[2]),
-        col = adjustcolor("gray90", 0.6), border = "gray30", lwd = 2)
+# Centre, face centre and the face inradius R1
+points(0, 0, pch = 19, cex = 1.1)
+text(0.09, -0.08, "O", font = 2, cex = 1, adj = 0)
+lines(c(0, 0), c(0, 1), col = "gray50")
+points(0, 1, pch = 19, cex = 1.1)
+text(0, 1.13, "C", font = 2, cex = 1)
+text(0.06, 0.72, expression(italic(R)[1]), adj = 0, cex = 0.9, col = "gray40")
 
-# Label vertices
-text(v1[1] - 0.12, v1[2] - 0.12, "V1", cex = 0.9, font = 2)
-text(v2[1] + 0.12, v2[2] - 0.12, "V2", cex = 0.9, font = 2)
-text(v3[1], v3[2] + 0.12, "V3", cex = 0.9, font = 2)
+# Angle g from C to V, drawn at O
+arc <- seq(pi/2, pi/2 - g, length.out = 30)
+lines(0.3 * cos(arc), 0.3 * sin(arc), lwd = 2, col = "gray40")
+text(0.42 * cos(pi/2 - g/2), 0.42 * sin(pi/2 - g/2), expression(italic(g)), cex = 1)
 
-# Mark face center
-face_center <- c((v1[1] + v2[1] + v3[1])/3, (v1[2] + v2[2] + v3[2])/3)
-points(face_center[1], face_center[2], pch = 19, cex = 1)
-text(face_center[1] - 0.2, face_center[2] - 0.08, "Face center", cex = 0.9, col = "gray50")
+# A point P at angular distance z from C, and its image P' on the face
+z <- 30 * pi/180
+rho <- 2 * R1 * f * sin(z/2)
+lines(c(0, -sin(z)), c(0, cos(z)), lty = 2, col = red)
+points(-sin(z), cos(z), pch = 19, cex = 1.2, col = red)
+text(-sin(z) - 0.08, cos(z) - 0.1, "P", font = 2, cex = 1, col = red)
+points(-rho, R1, pch = 19, cex = 1.2, col = blue)
+text(-rho - 0.08, R1 + 0.11, "P'", font = 2, cex = 1, col = blue)
+lines(c(-sin(z), -rho), c(cos(z), R1), lwd = 2, lty = 3, col = teal)
+arc <- seq(pi/2, pi/2 + z, length.out = 20)
+lines(0.62 * cos(arc), 0.62 * sin(arc), lwd = 2, col = red)
+text(0.8 * cos(pi/2 + z/2), 0.8 * sin(pi/2 + z/2), expression(italic(z)),
+     cex = 1, col = red)
 
-# A point P on sphere surface
-P_sphere <- c(0.5, 0.95)
-points(P_sphere[1], P_sphere[2], pch = 19, cex = 1.2, col = "#E63946")
-text(P_sphere[1] + 0.12, P_sphere[2] + 0.08, "P", cex = 1.1, font = 2, col = "#E63946")
+# Right: the planar face seen from above, azimuth measured from the vertex ray
+plot(NULL, xlim = c(-0.85, 0.85), ylim = c(-0.65, 0.9), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Planar face, view from above")
+va <- pi/2 + c(0, 2, 4) * pi/3
+vx <- rv * cos(va); vy <- rv * sin(va)
+polygon(c(0, vx[1], vx[3]), c(0, vy[1], vy[3]),
+        col = adjustcolor(teal, 0.15), border = NA)
+polygon(vx, vy, col = NA, border = "gray20", lwd = 2)
+for (k in 1:3) lines(c(0, vx[k]), c(0, vy[k]), lty = 2, col = "gray50")
+points(0, 0, pch = 19, cex = 1.1)
+text(-0.08, -0.06, "C", font = 2, cex = 1)
+text(vx[1], vy[1] + 0.09, "V", font = 2, cex = 1)
 
-# Projected point P' on face
-P_proj <- c(0.5, 0.45)
-points(P_proj[1], P_proj[2], pch = 19, cex = 1.2, col = "#457B9D")
-text(P_proj[1] + 0.12, P_proj[2] - 0.05, "P'", cex = 1.1, font = 2, col = "#457B9D")
-
-# Draw projection line (dashed)
-lines(c(P_sphere[1], P_proj[1]), c(P_sphere[2], P_proj[2]),
-      lwd = 2, lty = 2, col = "#2A9D8F")
-
-# Add text explanation
-text(0, -0.55, "Each face covers ~1/20 of the sphere", cex = 0.9)
-text(1.55, 0.7, "Tangent plane\n(icosa face)", cex = 0.9, col = "gray50", adj = 1)
-
-# Reference note
-text(0, -0.75, "Snyder (1992, p. 10-12)", cex = 0.9, col = "gray50")
+az <- 45 * pi/180
+rq <- 0.33
+points(rq * cos(pi/2 - az), rq * sin(pi/2 - az), pch = 19, cex = 1.2, col = blue)
+text(rq * cos(pi/2 - az) + 0.1, rq * sin(pi/2 - az) - 0.02, "P'",
+     font = 2, cex = 1, col = blue)
+lines(c(0, rq * cos(pi/2 - az)), c(0, rq * sin(pi/2 - az)), col = blue)
+arc <- seq(pi/2, pi/2 - az, length.out = 20)
+lines(0.17 * cos(arc), 0.17 * sin(arc), lwd = 2, col = blue)
+text(0.3 * cos(pi/2 - az/2), 0.3 * sin(pi/2 - az/2), "Az'", cex = 0.9, col = blue)
+text(0.38, -0.05, "120° sector", cex = 0.8, col = teal, adj = 0)
 par(oldpar)
 ```
+
+Left: the icosahedron has the same surface area as the sphere, so its face plane lies at the inradius $R_1 = 0.9104R$ from the centre O, inside the sphere, and the vertex V of the planar face lies on the ray through the sphere point at angular distance $g = 37.38°$ from the face centre C. A point P at angular distance $z$ from C maps to P' on the face plane at radial distance $\rho$ from C. Right: on the planar face the azimuth Az' is measured from the centre-to-vertex ray, and the three-fold symmetry of the face reduces every azimuth to one 120° sector.
 
 ### Vertex Latitude Derivation
 
@@ -337,7 +331,7 @@ The latitude $\arctan(1/2)$ arises from the golden ratio geometry. An icosahedro
 
 The default orientation places vertex 0 at longitude 11.25°, latitude $\arctan(\varphi) \approx 58.2825°$, with azimuth 0°. This places icosahedron vertices (pentagon cells) predominantly over oceans (Sahr et al., 2003, p. 123).
 
-```{r face-centers, echo=FALSE, fig.width=7, fig.height=3.5}
+```{r face-centers, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=3.5}
 library(sf)
 library(ggplot2)
 
@@ -350,10 +344,11 @@ center_pts <- st_as_sf(
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
-  geom_sf(data = center_pts, color = "#E63946", size = 3) +
-  geom_sf_text(data = center_pts, aes(label = face), nudge_y = 6, size = 5) +
+  geom_sf(data = center_pts, color = "#E63946", size = 2.5) +
+  geom_sf_text(data = center_pts, aes(label = face), nudge_y = 9, size = 4.5) +
+  coord_sf(expand = FALSE) +
   labs(title = "ISEA Icosahedron Face Centers",
-       subtitle = "20 triangular faces, numbered 0-19") +
+       subtitle = "20 triangular faces, numbered 0-19", x = NULL, y = NULL) +
   theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
@@ -366,7 +361,7 @@ Snyder extended the Lambert projection to the icosahedron by introducing an azim
 
 | Constant | Symbol | Value | Source |
 |----------|--------|-------|--------|
-| Edge-to-center angle | $E_l$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
+| Face center to vertex angle | $E_l$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
 | Geometric angle | $G$ | 36° | 360°/10 (icosahedral 5-fold symmetry) |
 | Scale factor | $R_1$ | 0.9103832815 | Snyder (1992, Table 1, p. 14) |
 
@@ -405,7 +400,46 @@ $$f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0$$
 
 where $h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)$.
 
-![Newton-Raphson iteration for inverse projection](figures/newton_raphson.png){width=80%}
+```{r newton-raphson, echo=FALSE, fig.width=7, fig.height=4.5}
+# Newton-Raphson on f(Az) = agh - Az - G + (pi - h(Az)) for one planar
+# azimuth, with agh chosen so that the root is Az = 40 degrees.
+G  <- 36 * pi/180
+El <- 37.37736814 * pi/180
+h_of <- function(az) acos(sin(az) * sin(G) * cos(El) - cos(az) * cos(G))
+az_root <- 40 * pi/180
+agh <- az_root + G - pi + h_of(az_root)
+f  <- function(az) agh - az - G + pi - h_of(az)
+fp <- function(az) (f(az + 1e-6) - f(az - 1e-6)) / 2e-6
+
+iter <- 110 * pi/180
+for (k in 1:5) iter <- c(iter, iter[k] - f(iter[k]) / fp(iter[k]))
+deg <- 180/pi
+
+oldpar <- par(mar = c(4, 4.5, 1, 1), bg = "white")
+az_seq <- seq(0, 120, length.out = 300) * pi/180
+plot(az_seq * deg, f(az_seq) * deg, type = "l", lwd = 2.5, col = "gray30",
+     xlab = "Az (degrees)", ylab = "f(Az) (degrees)", xlim = c(0, 125))
+abline(h = 0, col = "gray60")
+
+# Tangent lines of the first two steps
+for (k in 1:2) {
+  x0 <- iter[k]; x1 <- iter[k + 1]
+  lines(c(x0, x1) * deg, c(f(x0), 0) * deg, lty = 2, lwd = 1.5, col = "#E63946")
+  lines(c(x1, x1) * deg, c(0, f(x1)) * deg, lty = 3, col = "gray50")
+}
+points(iter[1:3] * deg, f(iter[1:3]) * deg, pch = 19, cex = 1.3, col = "#E63946")
+text(iter[1:3] * deg, f(iter[1:3]) * deg,
+     labels = c(expression(Az[0]), expression(Az[1]), expression(Az[2])),
+     pos = c(2, 2, 3), offset = 0.8, col = "#E63946")
+points(az_root * deg, 0, pch = 4, cex = 1.8, lwd = 3)
+text(az_root * deg, 0, "root", pos = 1, offset = 0.8)
+
+# Error after each step, in the empty upper-right region
+err <- abs(iter - az_root) * deg
+legend("topright", bty = "n", cex = 0.85, title = "Error after step k (degrees)",
+       legend = sprintf("k = %d:  %.1e", 0:5, err))
+par(oldpar)
+```
 
 The iteration exhibits **quadratic convergence**, typically reaching machine precision in 3-5 iterations. hexify provides four precision modes:
 
@@ -420,17 +454,45 @@ The iteration exhibits **quadratic convergence**, typically reaching machine pre
 
 **Aperture** defines how cells subdivide at each resolution level---it's the ratio of parent cell area to child cell area (Sahr et al., 2003, p. 124).
 
-<div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-<div style="text-align: center; flex: 1; min-width: 250px;">
-![Aperture 3: Triangular (30° rotation)](figures/aperture3_subdivision.png){width=100%}
-</div>
-<div style="text-align: center; flex: 1; min-width: 250px;">
-![Aperture 4: Rhombic (no rotation)](figures/aperture4_subdivision.png){width=100%}
-</div>
-<div style="text-align: center; flex: 1; min-width: 250px;">
-![Aperture 7: Rosette (19.1° rotation)](figures/aperture7_subdivision.png){width=100%}
-</div>
-</div>
+```{r aperture-subdivision, echo=FALSE, fig.width=7, fig.height=3}
+# One parent cell (dashed, flat-top, circumradius 1) and the child cells of
+# the next resolution for each aperture. Child centres sit on the child
+# lattice, whose spacing is the parent spacing sqrt(3) divided by sqrt(a).
+hex_xy <- function(cx, cy, r, rot = 0) {
+  a <- rot + (0:5) * pi/3
+  list(x = cx + r * cos(a), y = cy + r * sin(a))
+}
+draw_children <- function(main, child_r, child_rot, ring_r, ring_start, col) {
+  plot(NULL, xlim = c(-1.35, 1.35), ylim = c(-1.35, 1.35), asp = 1,
+       axes = FALSE, xlab = "", ylab = "", main = main)
+  ring_angles <- ring_start + (0:5) * pi/3
+  cx <- c(0, ring_r * cos(ring_angles))
+  cy <- c(0, ring_r * sin(ring_angles))
+  for (k in seq_along(cx)) {
+    h <- hex_xy(cx[k], cy[k], child_r, child_rot)
+    polygon(h$x, h$y, col = adjustcolor(col, if (k == 1) 0.6 else 0.25),
+            border = "gray30", lwd = 1.5)
+  }
+  p <- hex_xy(0, 0, 1, 0)
+  polygon(p$x, p$y, col = NA, border = "black", lwd = 2.5, lty = 2)
+}
+
+oldpar <- par(mfrow = c(1, 3), mar = c(0.2, 0.2, 2.5, 0.2), bg = "white",
+              cex = 1, cex.main = 1)
+# Aperture 3: children rotated 30 degrees, centred on the parent's vertices
+draw_children("Aperture 3", child_r = 1/sqrt(3), child_rot = pi/6,
+              ring_r = 1, ring_start = 0, col = "#457B9D")
+# Aperture 4: same orientation, centred on the parent's edge midpoints
+draw_children("Aperture 4", child_r = 1/2, child_rot = 0,
+              ring_r = sqrt(3)/2, ring_start = pi/6, col = "#2A9D8F")
+# Aperture 7: rotated by arctan(sqrt(3)/5), a rosette around the centre child
+rot7 <- atan(sqrt(3)/5)
+draw_children("Aperture 7", child_r = 1/sqrt(7), child_rot = rot7,
+              ring_r = sqrt(3/7), ring_start = pi/6 + rot7, col = "#E9C46A")
+par(oldpar)
+```
+
+The dashed outline is the parent cell; the darker child shares its centre. For apertures 3 and 4 the parent boundary cuts through the ring children: each of the six vertex children of aperture 3 lies one third inside the parent, and each of the six edge children of aperture 4 lies half inside it, so the parent area equals $1 + 6/3 = 3$ or $1 + 6/2 = 4$ child areas. The seven aperture-7 children form a rosette with exactly the parent's area, and its ragged boundary does not follow the parent's edges.
 
 ### Aperture Properties
 
@@ -438,9 +500,9 @@ The iteration exhibits **quadratic convergence**, typically reaching machine pre
 |----------|------------|--------------|-------------------|-------------|
 | 3 | 1:3 | $\sqrt{3} \approx 1.73$ | 30° | Alternates Class I/II |
 | 4 | 1:4 | $2.0$ | 0° | Always Class I |
-| 7 | 1:7 | $\sqrt{7} \approx 2.65$ | $\arctan(\sqrt{3/7}) \approx 19.1°$ | Class III |
+| 7 | 1:7 | $\sqrt{7} \approx 2.65$ | $\arctan(\sqrt{3}/5) \approx 19.1°$ | Class III |
 
-The aperture 7 rotation angle $\arctan(\sqrt{3/7})$ arises from the geometric constraint that 7 hexagons in a rosette pattern (1 center + 6 ring) must maintain lattice consistency (DGGRID Manual, 2023).
+The aperture 7 rotation angle follows from the child lattice: the parent's nearest neighbour sits at two steps along one child lattice axis plus one step along the next, a vector of length $\sqrt{7}$ child spacings at angle $\arctan\!\big(\tfrac{\sqrt{3}/2}{2 + 1/2}\big) = \arctan(\sqrt{3}/5) \approx 19.107°$ to the axis (DGGRID Manual, 2023).
 
 ### Cell Count Growth
 
@@ -462,49 +524,52 @@ for (res in 0:8) {
 ## Orientation Classes
 
 ```{r orientation-classes, echo=FALSE, fig.width=7, fig.height=4}
-oldpar <- par(mfrow = c(1, 3), mar = c(1, 0.2, 3, 0.2), bg = "white", cex = 1, cex.main = 1)
+oldpar <- par(mfrow = c(1, 3), mar = c(0.2, 0.2, 3, 0.2), bg = "white", cex = 1, cex.main = 1)
 
 hex_v <- function(cx, cy, r, rotation = 0) {
-  angles <- seq(rotation, 2*pi + rotation, length.out = 7)
+  angles <- rotation + (0:6) * pi/3
   list(x = cx + r * cos(angles), y = cy + r * sin(angles))
 }
+lim <- c(-1.55, 1.55)
+ylim <- c(-1.7, 1.2)
 
-# Class I: Flat-top
-plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), asp = 1,
+# Class I: flat-top, vertices at 0, 60, ..., 300 degrees; the top edge is marked
+plot(NULL, xlim = lim, ylim = ylim, asp = 1,
      axes = FALSE, xlab = "", ylab = "", main = "Class I\n(flat-top, 0°)")
-h <- hex_v(0, 0, 1.2, rotation = 0)
+h <- hex_v(0, 0, 1, rotation = 0)
 polygon(h$x, h$y, col = adjustcolor("#457B9D", 0.4), border = "gray30", lwd = 2)
-lines(h$x[1:2], h$y[1:2], col = "#E63946", lwd = 3)
-text(0, -1.35, "Ap. 4 (all res)\nAp. 3 (even res)", cex = 0.9)
+lines(h$x[2:3], h$y[2:3], col = "#E63946", lwd = 4)
+text(0, -1.4, "Ap. 4 (all res)\nAp. 3 (even res)", cex = 0.9)
 
-# Class II: Pointy-top (30° rotation)
-plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), asp = 1,
+# Class II: pointy-top, the Class I hexagon rotated by 30 degrees; the top vertex is marked
+plot(NULL, xlim = lim, ylim = ylim, asp = 1,
      axes = FALSE, xlab = "", ylab = "", main = "Class II\n(pointy-top, 30°)")
-h <- hex_v(0, 0, 1.2, rotation = pi/6)
+h <- hex_v(0, 0, 1, rotation = pi/6)
 polygon(h$x, h$y, col = adjustcolor("#2A9D8F", 0.4), border = "gray30", lwd = 2)
-points(h$x[1], h$y[1], pch = 19, cex = 1.5, col = "#E63946")
-text(0, -1.35, "Ap. 3 (odd res)", cex = 0.9)
+points(h$x[2], h$y[2], pch = 19, cex = 1.5, col = "#E63946")
+text(0, -1.4, "Ap. 3 (odd res)", cex = 0.9)
 
-# Class III: Skewed
-plot(NULL, xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), asp = 1,
-     axes = FALSE, xlab = "", ylab = "", main = "Class III\n(skewed, ~19.1°)")
-h_parent <- hex_v(0, 0, 1.2, rotation = 0)
+# Class III: the Class I hexagon rotated by arctan(sqrt(3)/5), with the
+# rotation angle drawn outside the hexagons between the two vertex rays
+plot(NULL, xlim = c(-1.3, 1.8), ylim = ylim, asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Class III\n(skewed, 19.1°)")
+rot_angle <- atan(sqrt(3)/5)
+h_parent <- hex_v(0, 0, 1, rotation = 0)
 polygon(h_parent$x, h_parent$y, col = NA, border = "gray50", lwd = 2, lty = 2)
-# Correct rotation: arctan(sqrt(3/7))
-rot_angle <- atan(sqrt(3/7))
-h_child <- hex_v(0, 0, 0.8, rotation = rot_angle)
+h_child <- hex_v(0, 0, 1, rotation = rot_angle)
 polygon(h_child$x, h_child$y, col = adjustcolor("#E9C46A", 0.4),
         border = "gray30", lwd = 2)
-arc_r <- 0.5
+lines(c(0, 1.25), c(0, 0), col = "gray50", lty = 2)
+lines(c(0, 1.25 * cos(rot_angle)), c(0, 1.25 * sin(rot_angle)), col = "#E63946")
 arc_theta <- seq(0, rot_angle, length.out = 20)
-lines(arc_r * cos(arc_theta), arc_r * sin(arc_theta), col = "#E63946", lwd = 2)
-text(0.6, 0.15, "19.1°", cex = 0.9, col = "#E63946")
-text(0, -1.35, "Ap. 7 (all res)\nRotation accumulates", cex = 0.9)
+lines(1.15 * cos(arc_theta), 1.15 * sin(arc_theta), col = "#E63946", lwd = 2)
+text(1.05, 0.62, "19.1°", cex = 0.9, col = "#E63946")
+text(0, -1.4, "Ap. 7 (all res)\nRotation accumulates", cex = 0.9)
 par(oldpar)
 ```
 
 For **aperture 3**, orientation alternates between Class I (flat-top) and Class II (pointy-top) at each resolution.
-For **aperture 7**, each level adds a rotation of $\arctan(\sqrt{3/7}) \approx 19.1°$ (Sahr, 2008, p. 176).
+For **aperture 7**, each level adds a rotation of $\arctan(\sqrt{3}/5) \approx 19.1°$ (Sahr, 2008, p. 176).
 
 ## Pentagon Cells
 
@@ -517,12 +582,15 @@ For a tiling with $h$ hexagons and $p$ pentagons on a sphere:
 
 Substituting into Euler's formula and simplifying yields $p = 12$, independent of $h$.
 
-```{r pentagon-locations, echo=FALSE, fig.width=7, fig.height=3.5}
+```{r pentagon-locations, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=3.5}
 pentagon_coords <- data.frame(
-  type = c("Pole", "Pole", rep("Upper ring", 5), rep("Lower ring", 5)),
+  type = factor(c("Pole", "Pole", rep("Upper ring", 5), rep("Lower ring", 5)),
+                levels = c("Pole", "Upper ring", "Lower ring")),
   lon = c(0, 0, 0, 72, 144, 216, 288, 36, 108, 180, 252, 324),
   lat = c(90, -90, rep(26.57, 5), rep(-26.57, 5))
 )
+# Wrap longitudes above 180 into the map's -180..180 range
+pentagon_coords$lon <- pentagon_coords$lon - 360 * (pentagon_coords$lon > 180)
 
 pentagon_pts <- st_as_sf(pentagon_coords, coords = c("lon", "lat"), crs = 4326)
 
@@ -534,7 +602,7 @@ ggplot() +
                                  "Lower ring" = "#2A9D8F")) +
   labs(title = "Pentagon Cell Locations",
        subtitle = "12 pentagonal cells at icosahedron vertices\n(area = 5/6 of hexagons)",
-       color = "Location") +
+       color = "Location", x = NULL, y = NULL) +
   theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
@@ -759,7 +827,7 @@ plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
      ylim = range(c(isea_rel, h3_rel)))
 lines(lats, isea_rel, col = "#457B9D", lwd = 2.5)
 abline(h = 1, lty = 2, col = "gray50")
-legend("topright", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
+legend("bottomleft", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
        col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
 par(oldpar)
 ```

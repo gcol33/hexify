@@ -46,22 +46,22 @@
 <text x='84.00' y='44.13' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(flat-top, 0°)</text>
 </g>
 <defs>
-  <clipPath id='cpMy44NHwxNjQuMTZ8NTcuNjB8MjY4Ljgw'>
-    <rect x='3.84' y='57.60' width='160.32' height='211.20' />
+  <clipPath id='cpMy44NHwxNjQuMTZ8NTcuNjB8Mjg0LjE2'>
+    <rect x='3.84' y='57.60' width='160.32' height='226.56' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMy44NHwxNjQuMTZ8NTcuNjB8MjY4Ljgw)'>
-<polygon points='143.38,163.20 113.69,111.78 54.31,111.78 24.62,163.20 54.31,214.62 113.69,214.62 143.38,163.20 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
-<polyline points='143.38,163.20 113.69,111.78 ' style='stroke-width: 2.25; stroke: #E63946;' />
-<text x='84.00' y='226.51' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 4 (all res)</text>
-<text x='84.00' y='243.79' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 3 (even res)</text>
+<g clip-path='url(#cpMy44NHwxNjQuMTZ8NTcuNjB8Mjg0LjE2)'>
+<polygon points='131.89,158.91 107.94,117.44 60.06,117.44 36.11,158.91 60.06,200.38 107.94,200.38 131.89,158.91 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #457B9D; fill-opacity: 0.40;' />
+<polyline points='107.94,117.44 60.06,117.44 ' style='stroke-width: 3.00; stroke: #E63946;' />
+<text x='84.00' y='222.46' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 4 (all res)</text>
+<text x='84.00' y='239.74' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 3 (even res)</text>
 </g>
 <defs>
-  <clipPath id='cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyNjguODA='>
-    <rect x='171.84' y='57.60' width='160.32' height='211.20' />
+  <clipPath id='cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyODQuMTY='>
+    <rect x='171.84' y='57.60' width='160.32' height='226.56' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyNjguODA=)'>
+<g clip-path='url(#cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyODQuMTY=)'>
 </g>
 <defs>
   <clipPath id='cpMTY4LjAwfDMzNi4wMHwwLjAwfDI4OC4wMA=='>
@@ -72,17 +72,17 @@
 <text x='252.00' y='24.93' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Class II</text>
 <text x='252.00' y='44.13' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(pointy-top, 30°)</text>
 </g>
-<g clip-path='url(#cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyNjguODA=)'>
-<polygon points='303.42,133.51 252.00,103.82 200.58,133.51 200.58,192.89 252.00,222.58 303.42,192.89 303.42,133.51 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
-<circle cx='303.42' cy='133.51' r='5.40' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
-<text x='252.00' y='233.73' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 3 (odd res)</text>
+<g clip-path='url(#cpMTcxLjg0fDMzMi4xNnw1Ny42MHwyODQuMTY=)'>
+<polygon points='293.47,134.97 252.00,111.02 210.53,134.97 210.53,182.85 252.00,206.79 293.47,182.85 293.47,134.97 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #2A9D8F; fill-opacity: 0.40;' />
+<circle cx='252.00' cy='111.02' r='5.40' style='stroke-width: 0.75; stroke: #E63946; fill: #E63946;' />
+<text x='252.00' y='229.67' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 3 (odd res)</text>
 </g>
 <defs>
-  <clipPath id='cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyNjguODA='>
-    <rect x='339.84' y='57.60' width='160.32' height='211.20' />
+  <clipPath id='cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyODQuMTY='>
+    <rect x='339.84' y='57.60' width='160.32' height='226.56' />
   </clipPath>
 </defs>
-<g clip-path='url(#cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyNjguODA=)'>
+<g clip-path='url(#cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyODQuMTY=)'>
 </g>
 <defs>
   <clipPath id='cpMzM2LjAwfDUwNC4wMHwwLjAwfDI4OC4wMA=='>
@@ -91,15 +91,17 @@
 </defs>
 <g clip-path='url(#cpMzM2LjAwfDUwNC4wMHwwLjAwfDI4OC4wMA==)'>
 <text x='420.00' y='24.93' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Class III</text>
-<text x='420.00' y='44.13' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(skewed, ~19.1°)</text>
+<text x='420.00' y='44.13' text-anchor='middle' style='font-size: 1.6em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>(skewed, 19.1°)</text>
 </g>
-<g clip-path='url(#cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyNjguODA=)'>
-<polygon points='479.38,163.20 449.69,111.78 390.31,111.78 360.62,163.20 390.31,214.62 449.69,214.62 479.38,163.20 ' style='stroke-width: 1.50; stroke: #7F7F7F; stroke-dasharray: 8.00,8.00;' />
-<polygon points='453.12,141.52 417.78,123.68 384.66,145.36 386.88,184.88 422.22,202.72 455.34,181.04 453.12,141.52 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
-<polyline points='444.74,163.20 444.73,162.45 444.69,161.69 444.64,160.94 444.56,160.19 444.45,159.44 444.33,158.70 444.18,157.96 444.01,157.22 443.81,156.49 443.60,155.77 443.36,155.05 443.10,154.34 442.82,153.64 442.52,152.95 442.20,152.27 441.85,151.60 441.49,150.94 441.10,150.29 440.70,149.65 ' style='stroke-width: 1.50; stroke: #E63946;' />
-<text x='449.69' y='160.93' text-anchor='middle' style='font-size: 1.44em;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>19.1°</text>
-<text x='420.00' y='226.51' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 7 (all res)</text>
-<text x='420.00' y='243.79' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Rotation accumulates</text>
+<g clip-path='url(#cpMzM5Ljg0fDUwMC4xNnw1Ny42MHwyODQuMTY=)'>
+<polygon points='455.91,158.91 431.97,117.44 384.09,117.44 360.14,158.91 384.09,200.38 431.97,200.38 455.91,158.91 ' style='stroke-width: 1.50; stroke: #7F7F7F; stroke-dasharray: 8.00,8.00;' />
+<polygon points='453.28,143.23 417.08,111.89 371.83,127.56 362.78,174.58 398.98,205.93 444.23,190.26 453.28,143.23 ' style='stroke-width: 1.50; stroke: #4D4D4D; fill: #E9C46A; fill-opacity: 0.40;' />
+<polyline points='408.03,158.91 467.89,158.91 ' style='stroke-width: 0.75; stroke: #7F7F7F; stroke-dasharray: 4.00,4.00;' />
+<polyline points='408.03,158.91 464.59,139.32 ' style='stroke-width: 0.75; stroke: #E63946;' />
+<polyline points='463.10,158.91 463.09,157.94 463.06,156.98 463.02,156.01 462.96,155.05 462.88,154.08 462.79,153.12 462.68,152.16 462.55,151.20 462.41,150.25 462.25,149.29 462.07,148.34 461.88,147.40 461.67,146.45 461.44,145.51 461.20,144.58 460.94,143.65 460.66,142.72 460.37,141.80 460.06,140.88 ' style='stroke-width: 1.50; stroke: #E63946;' />
+<text x='458.31' y='134.37' text-anchor='middle' style='font-size: 1.44em;fill: #E63946; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>19.1°</text>
+<text x='408.03' y='222.46' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Ap. 7 (all res)</text>
+<text x='408.03' y='239.74' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Rotation accumulates</text>
 </g>
 </g>
 </svg>
