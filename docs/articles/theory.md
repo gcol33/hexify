@@ -171,11 +171,12 @@ Left: the icosahedron has the same surface area as the sphere, so its
 face plane lies at the inradius $`R_1 = 0.9104R`$ from the centre O,
 inside the sphere, and the vertex V of the planar face lies on the ray
 through the sphere point at angular distance $`g = 37.38°`$ from the
-face centre C. A point P at angular distance $`z`$ from C maps to P’ on
-the face plane at radial distance $`\rho`$ from C. Right: on the planar
-face the azimuth Az’ is measured from the centre-to-vertex ray, and the
-three-fold symmetry of the face reduces every azimuth to one 120°
-sector.
+face centre C. In this cross-section the face extends from V on one side
+to the midpoint of the opposite edge on the other. A point P at angular
+distance $`z`$ from C maps to P’ on the face plane at radial distance
+$`\rho`$ from C. Right: on the planar face the azimuth Az’ is measured
+from the centre-to-vertex ray, and the three-fold symmetry of the face
+reduces every azimuth to one 120° sector.
 
 ### Vertex Latitude Derivation
 
