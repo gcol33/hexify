@@ -356,7 +356,7 @@ lines(c(0, rq * cos(pi/2 - az)), c(0, rq * sin(pi/2 - az)), col = blue)
 arc <- seq(pi/2, pi/2 - az, length.out = 20)
 lines(0.17 * cos(arc), 0.17 * sin(arc), lwd = 2, col = blue)
 text(0.3 * cos(pi/2 - az/2), 0.3 * sin(pi/2 - az/2), "Az'", cex = 0.9, col = blue)
-text(0.38, -0.05, "120° sector", cex = 0.8, col = teal, adj = 0)
+text(0.3, -0.5, "120° sector", cex = 0.8, col = teal)
 par(oldpar)
 ```
 
