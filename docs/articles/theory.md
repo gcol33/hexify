@@ -372,7 +372,7 @@ for (lat in seq(-75, 75, by = 15))
 xy <- st_coordinates(st_cast(st_geometry(hexify_world), "MULTIPOLYGON"))
 for (ring in split(seq_len(nrow(xy)),
                    interaction(xy[, "L1"], xy[, "L2"], xy[, "L3"], drop = TRUE)))
-  draw_path(xy[ring, 1], xy[ring, 2], "gray30", 0.8)
+  draw_path(xy[ring, 1], xy[ring, 2], GREY, 0.8)
 ```
 
 ![](theory_files/figure-html/unfolded-projection-1.svg)
@@ -763,7 +763,7 @@ plot(lats, h3_rel, type = "l", col = "#E63946", lwd = 2.5,
      main = "Cell Area Variation by Latitude",
      ylim = range(c(isea_rel, h3_rel)))
 lines(lats, isea_rel, col = "#457B9D", lwd = 2.5)
-abline(h = 1, lty = 2, col = "gray50")
+abline(h = 1, lty = 2, col = GREY)
 legend("bottomleft", legend = c("H3 (gnomonic)", "ISEA (equal-area)"),
        col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
 ```

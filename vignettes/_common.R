@@ -29,3 +29,8 @@ old_base_size <- options(hexify.base_size = FIG_BASE_SIZE)
 
 # Put the option back once the article has been knit.
 knitr::knit_hooks$set(document = function(x) { options(old_base_size); x })
+
+# Neutral grey for secondary strokes and annotations. This is the grey of the
+# site figure palette, which the stylesheet swaps for a lighter tint in dark
+# mode; the fixed R greys stay invisible against the dark background.
+GREY <- "#5C6166"

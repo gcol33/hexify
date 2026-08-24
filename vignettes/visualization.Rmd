@@ -180,8 +180,8 @@ city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
 
 hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
   geom_sf(data = city_points, color = "red", size = 2) +
-  geom_sf_text(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 5, color = "darkgray") +
+  geom_sf_label(data = city_points, aes(label = name),
+               nudge_y = 0.8, size = 5) +
   coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
 ```
 
