@@ -20,6 +20,53 @@ hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete global g
 
 Any projection from a sphere to a plane must distort *something*. For spatial statistics, we need cells of equal area regardless of location. Standard latitude-longitude grids fail badly: a 1° cell at the equator covers ~12,300 km², while the same cell near the poles covers a tiny fraction of that.
 
+```{r latlon-area-distortion, echo=FALSE, fig.width=7, fig.height=3.8}
+# A lat-lon cell spans a fixed lon x lat interval, so its area scales with
+# cos(latitude); an ISEA cell has the same area everywhere.
+oldpar <- par(mfrow = c(1, 2), mar = c(4, 4, 2, 1), bg = "white")
+
+# Left: orthographic hemisphere with a 15-degree graticule; the same
+# lon x lat cell is shaded at the equator and at 60 degrees north
+ortho_x <- function(lon, lat) cos(lat * pi/180) * sin(lon * pi/180)
+ortho_y <- function(lon, lat) sin(lat * pi/180) + 0 * lon
+
+par(mar = c(1, 1, 2, 1))
+plot(NULL, xlim = c(-1.05, 1.05), ylim = c(-1.05, 1.05), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Lat-lon grid")
+theta <- seq(0, 2*pi, length.out = 200)
+lines(cos(theta), sin(theta), lwd = 2, col = "gray30")
+for (lat in seq(-75, 75, by = 15)) {
+  lon <- seq(-90, 90, length.out = 100)
+  lines(ortho_x(lon, lat), ortho_y(lon, lat), col = "gray70")
+}
+for (lon in seq(-90, 90, by = 15)) {
+  lat <- seq(-90, 90, length.out = 100)
+  lines(ortho_x(lon, lat), ortho_y(lon, lat), col = "gray70")
+}
+shade_cell <- function(lon0, lon1, lat0, lat1) {
+  edge <- rbind(
+    cbind(seq(lon0, lon1, length.out = 25), lat0),
+    cbind(lon1, seq(lat0, lat1, length.out = 25)),
+    cbind(seq(lon1, lon0, length.out = 25), lat1),
+    cbind(lon0, seq(lat1, lat0, length.out = 25)))
+  polygon(ortho_x(edge[, 1], edge[, 2]), ortho_y(edge[, 1], edge[, 2]),
+          col = adjustcolor("#E63946", 0.5), border = "#E63946", lwd = 1.5)
+}
+shade_cell(0, 15, 0, 15)
+shade_cell(0, 15, 60, 75)
+
+# Right: relative area of a 1-degree cell by latitude
+par(mar = c(4, 4, 2, 1))
+lat <- seq(-85, 85, by = 1)
+plot(lat, cos(lat * pi/180), type = "l", col = "#E63946", lwd = 2.5,
+     xlab = "Latitude (degrees)", ylab = "Relative cell area",
+     main = "Cell area vs latitude", ylim = c(0, 1.05))
+lines(lat, rep(1, length(lat)), col = "#457B9D", lwd = 2.5)
+legend("bottom", legend = c("Lat-lon grid", "ISEA grid"),
+       col = c("#E63946", "#457B9D"), lwd = 2.5, bty = "n")
+par(oldpar)
+```
+
 The ISEA projection solves this by:
 
 1. Choosing a regular icosahedron with the same surface area as the sphere
@@ -358,17 +405,21 @@ ggplot() +
 
 Snyder extended the Lambert projection to the icosahedron by introducing an azimuth-adjustment transformation that ensures seamless transitions between adjacent faces while maintaining the equal-area property (Snyder, 1992, p. 12).
 
+Bradley (1946) published an approximate equal-area graticule for the icosahedron, and an editorial footnote to that paper described an exact construction by Irving Fisher. Snyder rederived Fisher's approach and generalized it to the five Platonic solids after White, Kimerling, and Overton (1992) chose a truncated-icosahedron grid for the U.S. EPA's EMAP global sampling design (Snyder, 1992, p. 10). ISEA is the icosahedral member of this family.
+
 ### Key Constants
 
 | Constant | Symbol | Value | Source |
 |----------|--------|-------|--------|
-| Face center to vertex angle | $E_l$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
-| Geometric angle | $G$ | 36° | 360°/10 (icosahedral 5-fold symmetry) |
-| Scale factor | $R_1$ | 0.9103832815 | Snyder (1992, Table 1, p. 14) |
+| Face center to vertex angle | $E_l$ | 37.37736814° | Snyder (1992, Table 1, p. 12) |
+| Geometric angle | $G$ | 36° | Snyder (1992, Table 1, p. 12) |
+| Scale factor | $R_1$ | 0.9103832815 | Snyder (1992, eq. 5, p. 11) |
+
+The vertex angle has the closed form $\tan E_l = \sqrt{14 - 6\sqrt{5}}$ (Snyder, 1992, p. 17). $R_1$ is the radius of the icosahedron whose surface area equals that of the unit sphere: equating $20 \cdot \frac{3\sqrt{3}}{4} R_1^2 \tan^2 E_l = 4\pi$ gives $R_1 = \frac{2}{\tan E_l}\sqrt{\frac{\pi}{15\sqrt{3}}}$.
 
 ### Forward Projection Steps
 
-The complete algorithm comprises seven steps (Snyder, 1992, p. 13-15):
+The complete algorithm comprises seven steps (Snyder, 1992, p. 12-13):
 
 **Step 1: Compute angular distance and azimuth** from face center $(\lambda_0, \phi_0)$ to point $(\lambda, \phi)$:
 
@@ -377,17 +428,17 @@ $$\text{Az} = \arctan2(\cos\phi \sin(\lambda - \lambda_0), \cos\phi_0 \sin\phi -
 
 **Step 2: Reduce azimuth** to [0°, 120°) by exploiting 3-fold symmetry.
 
-**Step 3: Compute auxiliary angle** $\delta_z$ (Snyder, 1992, eq. 8, p. 14):
+**Step 3: Compute auxiliary angle** $\delta_z$ (Snyder, 1992, eq. 9, p. 13):
 $$\delta_z = \arctan\left(\frac{\tan E_l}{\cos \text{Az} + \cot 30° \cdot \sin \text{Az}}\right)$$
 
-**Step 4: Compute auxiliary angle** $h$ (Snyder, 1992, eq. 9, p. 14):
+**Step 4: Compute auxiliary angle** $h$ (Snyder, 1992, eq. 6, p. 12):
 $$h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)$$
 
-**Step 5: Compute adjusted azimuth** $\text{Az}'$ (Snyder, 1992, eq. 10-11, p. 14):
+**Step 5: Compute adjusted azimuth** $\text{Az}'$ (Snyder, 1992, eq. 7-8, p. 12):
 $$A_G = \text{Az} + G + h - \pi$$
 $$\text{Az}' = \arctan\left(\frac{2 A_G}{R_1^2 \tan^2 E_l - 2 A_G \cot 30°}\right)$$
 
-**Step 6: Compute radial distance** (Snyder, 1992, eq. 12-13, p. 14-15):
+**Step 6: Compute radial distance** (Snyder, 1992, eq. 10-12, p. 13):
 $$f = \frac{\tan E_l}{2(\cos \text{Az}' + \cot 30° \cdot \sin \text{Az}') \sin(\delta_z / 2)}$$
 $$\rho = 2 R_1 f \sin(z / 2)$$
 
@@ -395,7 +446,7 @@ $$\rho = 2 R_1 f \sin(z / 2)$$
 
 ### The Inverse Projection
 
-The inverse projection cannot be solved analytically because the azimuth adjustment contains transcendental functions. A Newton-Raphson iteration finds the spherical azimuth Az from the planar azimuth Az':
+The inverse projection cannot be solved analytically because the azimuth adjustment contains transcendental functions. A Newton-Raphson iteration finds the spherical azimuth Az from the planar azimuth Az' (Snyder, 1992, eq. 20-22, p. 13):
 
 $$f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0$$
 
@@ -450,6 +501,178 @@ The iteration exhibits **quadratic convergence**, typically reaching machine pre
 | default | $10^{-12}$ | 4-5 | General applications (~1 m accuracy) |
 | high | $10^{-14}$ | 5-6 | High-precision geodesy |
 | ultra | $10^{-15}$ | 6-7 | Research |
+
+### Distortion
+
+The projection is exactly equal-area, so its distortion falls on angles and local scale. On an icosahedron face the maximum angular deformation is $\omega = 17.27°$, with linear scale factors between 0.860 and 1.163 (Snyder, 1992, Table 1, p. 12). The azimuth adjustment concentrates this deformation along the three radii from the face center to its vertices, where the graticule shows visible cusps (Snyder, 1992, p. 11).
+
+```{r face-distortion, echo=FALSE, fig.width=7, fig.height=5.2}
+# Maximum angular deformation omega over one icosahedron face, computed from
+# the forward projection's Jacobian (Snyder, 1992, eq. A17-A23). The face is
+# drawn with the pole at its center and a 5-degree graticule.
+G  <- 36 * pi/180
+El <- 37.37736814 * pi/180
+R1 <- 0.9103832815
+cot30 <- 1 / tan(30 * pi/180)
+
+fwd_sector <- function(Az, z) {
+  H   <- acos(sin(Az) * sin(G) * cos(El) - cos(Az) * cos(G))
+  AG  <- Az + G + H - pi
+  Azp <- atan2(2 * AG, R1^2 * tan(El)^2 - 2 * AG * cot30)
+  q   <- atan2(tan(El), cos(Az) + sin(Az) * cot30)
+  dp  <- R1 * tan(El) / (cos(Azp) + sin(Azp) * cot30)
+  f   <- dp / (2 * R1 * sin(q / 2))
+  rho <- 2 * R1 * f * sin(z / 2)
+  list(x = rho * sin(Azp), y = rho * cos(Azp))
+}
+fwd <- function(Az, z) {
+  Az <- Az %% (2 * pi)
+  k  <- floor(Az / (2 * pi / 3))
+  p  <- fwd_sector(Az - k * 2 * pi / 3, z)
+  a  <- k * 2 * pi / 3
+  list(x = p$x * cos(a) + p$y * sin(a), y = p$y * cos(a) - p$x * sin(a))
+}
+
+# Tissot scale factors from a numerical Jacobian in the orthonormal frame;
+# for an equal-area projection a * b = 1 and sin(omega/2) = (a - b)/(a + b)
+distortion <- function(Az, z, h = 1e-6) {
+  p1 <- fwd(Az, z + h); p0 <- fwd(Az, z - h)
+  q1 <- fwd(Az + h, z); q0 <- fwd(Az - h, z)
+  e11 <- (p1$x - p0$x) / (2 * h);  e21 <- (p1$y - p0$y) / (2 * h)
+  e12 <- (q1$x - q0$x) / (2 * h) / sin(z)
+  e22 <- (q1$y - q0$y) / (2 * h) / sin(z)
+  tt <- e11^2 + e21^2 + e12^2 + e22^2
+  dd <- abs(e11 * e22 - e12 * e21)
+  s  <- sqrt(pmax(tt^2 - 4 * dd^2, 0))
+  a  <- sqrt((tt + s) / 2); b <- sqrt(pmax((tt - s) / 2, 0))
+  2 * asin((a - b) / (a + b)) * 180/pi
+}
+
+# Inverse of the azimuth adjustment: plane (x, y) -> (Az, z). Az' determines
+# the target spherical area A_G directly; Newton iteration recovers Az.
+inverse_az <- function(x, y) {
+  azp_full <- atan2(x, y) %% (2 * pi)
+  k <- floor(azp_full / (2 * pi / 3))
+  azp <- azp_full - k * 2 * pi / 3
+  rho <- sqrt(x^2 + y^2)
+  AG_t <- R1^2 * tan(El)^2 * sin(azp) / (2 * cos(azp) + 2 * cot30 * sin(azp))
+  Az <- azp
+  for (it in 1:25) {
+    u  <- sin(Az) * sin(G) * cos(El) - cos(Az) * cos(G)
+    H  <- acos(pmin(pmax(u, -1), 1))
+    Fv <- (Az + G + H - pi) - AG_t
+    du <- cos(Az) * sin(G) * cos(El) + sin(Az) * cos(G)
+    Fp <- 1 - du / sqrt(pmax(1 - u^2, 1e-12))
+    Az <- Az - Fv / Fp
+  }
+  q  <- atan2(tan(El), cos(Az) + sin(Az) * cot30)
+  dp <- R1 * tan(El) / (cos(azp) + sin(azp) * cot30)
+  f  <- dp / (2 * R1 * sin(q / 2))
+  z  <- 2 * asin(pmin(rho / (2 * R1 * f), 1))
+  list(Az = Az + k * 2 * pi / 3, z = z)
+}
+
+oldpar <- par(mar = c(0.5, 0.5, 2, 0.5), bg = "white")
+rv <- R1 * tan(El)
+tri_x <- rv * sin(c(0, 2, 4) * pi/3); tri_y <- rv * cos(c(0, 2, 4) * pi/3)
+plot(NULL, xlim = c(-0.66, 0.95), ylim = c(-0.39, 0.75), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "Angular deformation on one face")
+
+in_tri <- function(x, y, tol = 1e-9) {
+  s <- rep(TRUE, length(x))
+  for (k in 1:3) {
+    j <- k %% 3 + 1
+    cr <- (tri_x[j] - tri_x[k]) * (y - tri_y[k]) -
+          (tri_y[j] - tri_y[k]) * (x - tri_x[k])
+    s <- s & (cr <= tol)
+  }
+  s
+}
+
+nx <- 420; ny <- 380
+gx <- seq(-0.62, 0.62, length.out = nx)
+gy <- seq(-0.36, 0.71, length.out = ny)
+px <- rep(gx, times = ny); py <- rep(gy, each = nx)
+inside <- in_tri(px, py) & (px^2 + py^2) > 1e-4
+om <- rep(NA_real_, nx * ny)
+iv <- inverse_az(px[inside], py[inside])
+om[inside] <- distortion(iv$Az, iv$z)
+ramp <- colorRampPalette(c("#FFFFFF", "#E9C46A", "#F4A261", "#E76F51",
+                           "#E63946"))(64)
+image(gx, gy, matrix(om, nrow = nx), zlim = c(0, 17.5), col = ramp,
+      add = TRUE, useRaster = TRUE)
+
+# 5-degree parallels and 10-degree meridians, pole at the face center
+for (z_deg in seq(5, 35, by = 5)) {
+  az <- seq(0, 2 * pi, length.out = 721)
+  p <- fwd(az, z_deg * pi/180)
+  ok <- in_tri(p$x, p$y)
+  lines(ifelse(ok, p$x, NA), ifelse(ok, p$y, NA), col = "gray40", lwd = 0.7)
+}
+for (az_deg in seq(0, 355, by = 10)) {
+  z <- seq(2.5, 37.37, length.out = 120) * pi/180
+  p <- fwd(rep(az_deg * pi/180, length(z)), z)
+  ok <- in_tri(p$x, p$y)
+  lines(ifelse(ok, p$x, NA), ifelse(ok, p$y, NA), col = "gray40", lwd = 0.7)
+}
+polygon(tri_x, tri_y, border = "black", lwd = 2)
+
+bx0 <- 0.78; bx1 <- 0.85; by0 <- -0.30; by1 <- 0.60
+yy <- seq(by0, by1, length.out = 65)
+rect(bx0, yy[-65], bx1, yy[-1], col = ramp, border = NA)
+rect(bx0, by0, bx1, by1, border = "gray30")
+for (v in c(0, 5, 10, 15)) {
+  yv <- by0 + (by1 - by0) * v / 17.5
+  lines(c(bx1, bx1 + 0.02), c(yv, yv), col = "gray30")
+  text(bx1 + 0.04, yv, sprintf("%d°", v), adj = 0, cex = 0.8)
+}
+text((bx0 + bx1) / 2, by1 + 0.08, expression(omega), cex = 1.1)
+par(oldpar)
+```
+
+Deformation is smallest, about 5°, in the ring around the face center toward the edge midpoints, and largest along the three vertex radii, where the parallels kink as they cross. The 17.27° maximum is reached at the face center approached along a vertex radius. The Jacobian determinant of the projection equals 1 everywhere on the face, which is the equal-area property in differential form.
+
+### The Unfolded Projection
+
+Applying the per-face projection to all 20 faces and unfolding them into a plane maps the whole sphere onto a strip of triangles (compare Snyder, 1992, Figure 12, p. 18). `hexify_lonlat_to_plane()` performs the composite transformation, in the same PLANE layout as dggridR's `dgGEO_to_PLANE()`. Coastlines and graticule continue across every shared edge and are interrupted elsewhere:
+
+```{r unfolded-projection, fig.width=7, fig.height=3.9}
+draw_path <- function(lon, lat, col, lwd) {
+  p <- hexify_lonlat_to_plane(lon, lat)
+  jump <- c(FALSE, sqrt(diff(p$plane_x)^2 + diff(p$plane_y)^2) > 0.2)
+  p$plane_x[jump] <- NA
+  lines(p$plane_x, p$plane_y, col = col, lwd = lwd)
+}
+
+oldpar <- par(mar = c(0.5, 0.5, 2, 0.5), bg = "white")
+plot(NULL, xlim = c(-0.1, 5.6), ylim = c(-0.05, 2.65), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Unfolded ISEA Projection")
+
+# face outlines: side-1 triangles around each projected face centroid
+centers <- hexify_face_centers()
+pc <- hexify_lonlat_to_plane(centers$lon * 180/pi, centers$lat * 180/pi)
+s3 <- sqrt(3)
+for (f in 1:20) {
+  base <- floor(pc$plane_y[f] / (s3/2)) * s3/2
+  up <- (pc$plane_y[f] - base) < s3/4
+  yy <- if (up) base + c(0, 0, s3/2) else base + c(s3/2, s3/2, 0)
+  polygon(pc$plane_x[f] + c(-0.5, 0.5, 0), yy, border = "gray60", lwd = 0.8)
+}
+
+# 15-degree graticule
+for (lon in seq(-180, 165, by = 15))
+  draw_path(rep(lon, 181), seq(-90, 90, by = 1), "gray75", 0.6)
+for (lat in seq(-75, 75, by = 15))
+  draw_path(seq(-180, 180, by = 0.5), rep(lat, 721), "gray75", 0.6)
+
+# coastlines
+xy <- st_coordinates(st_cast(st_geometry(hexify_world), "MULTIPOLYGON"))
+for (ring in split(seq_len(nrow(xy)),
+                   interaction(xy[, "L1"], xy[, "L2"], xy[, "L3"], drop = TRUE)))
+  draw_path(xy[ring, 1], xy[ring, 2], "gray30", 0.8)
+par(oldpar)
+```
 
 ## Aperture and Resolution
 
@@ -583,6 +806,53 @@ For a tiling with $h$ hexagons and $p$ pentagons on a sphere:
 
 Substituting into Euler's formula and simplifying yields $p = 12$, independent of $h$.
 
+Hexagons have six neighbors; pentagons have five.
+
+```{r pentagon-neighbors, echo=FALSE, fig.width=7, fig.height=3.8}
+# Local topology around a pentagon cell and an ordinary hexagon cell.
+# All cells share the same edge length; around a pentagon the neighbor
+# ring leaves angular gaps that close up on the curved sphere.
+oldpar <- par(mfrow = c(1, 2), mar = c(0.5, 0.5, 2, 0.5), bg = "white")
+
+ngon <- function(cx, cy, r, n, start) {
+  a <- start + (0:(n - 1)) * 2 * pi / n
+  cbind(cx + r * cos(a), cy + r * sin(a))
+}
+
+# Pentagon: five hexagons, one on each edge (edge length 1 throughout)
+plot(NULL, xlim = c(-2.85, 2.85), ylim = c(-2.85, 2.85), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Pentagon: 5 neighbors")
+apothem_p <- cos(pi/5) / (2 * sin(pi/5))
+apothem_h <- sqrt(3) / 2
+for (k in 0:4) {
+  mid_ang <- pi/2 + (2 * k + 1) * pi/5
+  cx <- (apothem_p + apothem_h) * cos(mid_ang)
+  cy <- (apothem_p + apothem_h) * sin(mid_ang)
+  h <- ngon(cx, cy, 1, 6, mid_ang + pi/6)
+  polygon(h[, 1], h[, 2], col = adjustcolor("#457B9D", 0.25),
+          border = "gray30", lwd = 1.5)
+}
+p <- ngon(0, 0, 1 / (2 * sin(pi/5)), 5, pi/2)
+polygon(p[, 1], p[, 2], col = adjustcolor("#E63946", 0.5),
+        border = "gray30", lwd = 2)
+text(0, 0, "5", font = 2, cex = 1.2)
+
+# Hexagon: six hexagons tile around it exactly
+plot(NULL, xlim = c(-2.85, 2.85), ylim = c(-2.85, 2.85), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Hexagon: 6 neighbors")
+for (k in 0:5) {
+  ang <- pi/6 + k * pi/3
+  h <- ngon(sqrt(3) * cos(ang), sqrt(3) * sin(ang), 1, 6, 0)
+  polygon(h[, 1], h[, 2], col = adjustcolor("#457B9D", 0.25),
+          border = "gray30", lwd = 1.5)
+}
+h0 <- ngon(0, 0, 1, 6, 0)
+polygon(h0[, 1], h0[, 2], col = adjustcolor("#2A9D8F", 0.5),
+        border = "gray30", lwd = 2)
+text(0, 0, "6", font = 2, cex = 1.2)
+par(oldpar)
+```
+
 ```{r pentagon-locations, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=3.5}
 pentagon_coords <- data.frame(
   type = factor(c("Pole", "Pole", rep("Upper ring", 5), rep("Lower ring", 5)),
@@ -632,6 +902,47 @@ hexify uses a multi-stage coordinate pipeline (Sahr, 2008, p. 178):
 ### Triangle to Quad
 
 The 20 triangular faces are paired into 12 "quads" (diamond-shaped regions). Each quad contains two adjacent triangular faces sharing an edge. This pairing transforms 20 triangles into 10 diamond-shaped quads plus 2 polar quads, simplifying grid indexing because a diamond admits a rectangular $(i, j)$ lattice (DGGRID Manual, 2023).
+
+```{r triangle-quad-pairing, echo=FALSE, fig.width=7, fig.height=4.7}
+# Unfolded icosahedron as the 12 quads: each rhombus pairs an upper and a
+# lower triangle; quads 0 and 11 hold only the polar pentagon cell.
+oldpar <- par(mar = c(0.5, 0.5, 2, 0.5), bg = "white")
+plot(NULL, xlim = c(-1.2, 10.2), ylim = c(-2.4, 5.2), asp = 1,
+     axes = FALSE, xlab = "", ylab = "",
+     main = "20 Triangles Paired into 12 Quads")
+
+hw <- 1     # rhombus half-width
+hh <- 1.4   # rhombus half-height
+draw_quad <- function(cx, cy, q, tri_top, tri_bot, fill) {
+  polygon(c(cx, cx + hw, cx, cx - hw), c(cy + hh, cy, cy - hh, cy),
+          col = fill, border = "gray30", lwd = 1.5)
+  lines(c(cx - hw, cx + hw), c(cy, cy), col = "gray50")
+  text(cx, cy + 0.62, tri_top, cex = 0.75, col = "gray40")
+  text(cx, cy - 0.62, tri_bot, cex = 0.75, col = "gray40")
+  text(cx, cy, paste0("Q", q), font = 2, cex = 0.9)
+}
+for (q in 1:5)
+  draw_quad(2 * (q - 1), 2, q, q - 1, q + 4, adjustcolor("#457B9D", 0.15))
+for (q in 6:10)
+  draw_quad(2 * (q - 6) + 1, 0.6, q, q + 4, q + 9, adjustcolor("#2A9D8F", 0.15))
+
+pentagon <- function(cx, cy, r) {
+  a <- pi/2 + (0:4) * 2 * pi/5
+  cbind(cx + r * cos(a), cy + r * sin(a))
+}
+p0 <- pentagon(4, 4.4, 0.45)
+polygon(p0[, 1], p0[, 2], col = adjustcolor("#E63946", 0.4),
+        border = "gray30", lwd = 1.5)
+text(4.65, 4.4, "Q0: north pole", adj = 0, cex = 0.85)
+p11 <- pentagon(5, -1.75, 0.45)
+polygon(p11[, 1], p11[, 2], col = adjustcolor("#E63946", 0.4),
+        border = "gray30", lwd = 1.5)
+text(5.65, -1.75, "Q11: south pole", adj = 0, cex = 0.85)
+
+text(-1.2, -2.2, "gray: triangle index (0-19)", adj = 0,
+     cex = 0.8, col = "gray40")
+par(oldpar)
+```
 
 ### Quad IJ: The Integer Lattice
 
@@ -907,6 +1218,8 @@ for (ap in c(3, 4, 7)) {
 
 - H3 documentation (2024). *H3: A Hexagonal Hierarchical Geospatial Indexing System*. https://h3geo.org/
 
+- Bradley, A.D. (1946). Equal-area projection on the icosahedron. *Geographical Review*, 36(1), 101-104.
+
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover Publications.
 
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*. https://github.com/sahrk/DGGRID
@@ -922,3 +1235,5 @@ for (ap in c(3, 4, 7)) {
 - Snyder, J.P. (1987). *Map Projections: A Working Manual*. U.S. Geological Survey Professional Paper 1395.
 
 - Snyder, J.P. (1992). An equal-area map projection for polyhedral globes. *Cartographica*, 29(1), 10-21.
+
+- White, D., Kimerling, A.J., & Overton, W.S. (1992). Cartographic and geometric components of a global sampling design for environmental monitoring. *Cartography and Geographic Information Systems*, 19(1), 5-22.
