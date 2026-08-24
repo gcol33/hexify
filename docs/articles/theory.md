@@ -15,6 +15,8 @@ Standard latitude-longitude grids fail badly: a 1° cell at the equator
 covers ~12,300 km², while the same cell near the poles covers a tiny
 fraction of that.
 
+![](theory_files/figure-html/latlon-area-distortion-1.svg)
+
 The ISEA projection solves this by:
 
 1.  Choosing a regular icosahedron with the same surface area as the
@@ -211,17 +213,32 @@ an azimuth-adjustment transformation that ensures seamless transitions
 between adjacent faces while maintaining the equal-area property
 (Snyder, 1992, p. 12).
 
+Bradley (1946) published an approximate equal-area graticule for the
+icosahedron, and an editorial footnote to that paper described an exact
+construction by Irving Fisher. Snyder rederived Fisher’s approach and
+generalized it to the five Platonic solids after White, Kimerling, and
+Overton (1992) chose a truncated-icosahedron grid for the U.S. EPA’s
+EMAP global sampling design (Snyder, 1992, p. 10). ISEA is the
+icosahedral member of this family.
+
 ### Key Constants
 
 | Constant | Symbol | Value | Source |
 |----|----|----|----|
-| Face center to vertex angle | $`E_l`$ | 37.37736814° | Snyder (1992, Table 1, p. 14) |
-| Geometric angle | $`G`$ | 36° | 360°/10 (icosahedral 5-fold symmetry) |
-| Scale factor | $`R_1`$ | 0.9103832815 | Snyder (1992, Table 1, p. 14) |
+| Face center to vertex angle | $`E_l`$ | 37.37736814° | Snyder (1992, Table 1, p. 12) |
+| Geometric angle | $`G`$ | 36° | Snyder (1992, Table 1, p. 12) |
+| Scale factor | $`R_1`$ | 0.9103832815 | Snyder (1992, eq. 5, p. 11) |
+
+The vertex angle has the closed form
+$`\tan E_l = \sqrt{14 - 6\sqrt{5}}`$ (Snyder, 1992, p. 17). $`R_1`$ is
+the radius of the icosahedron whose surface area equals that of the unit
+sphere: equating
+$`20 \cdot \frac{3\sqrt{3}}{4} R_1^2 \tan^2 E_l = 4\pi`$ gives
+$`R_1 = \frac{2}{\tan E_l}\sqrt{\frac{\pi}{15\sqrt{3}}}`$.
 
 ### Forward Projection Steps
 
-The complete algorithm comprises seven steps (Snyder, 1992, p. 13-15):
+The complete algorithm comprises seven steps (Snyder, 1992, p. 12-13):
 
 **Step 1: Compute angular distance and azimuth** from face center
 $`(\lambda_0, \phi_0)`$ to point $`(\lambda, \phi)`$:
@@ -235,19 +252,19 @@ z = \arccos(\sin\phi_0 \sin\phi + \cos\phi_0 \cos\phi \cos(\lambda - \lambda_0))
 
 **Step 2: Reduce azimuth** to \[0°, 120°) by exploiting 3-fold symmetry.
 
-**Step 3: Compute auxiliary angle** $`\delta_z`$ (Snyder, 1992, eq. 8,
-p. 14):
+**Step 3: Compute auxiliary angle** $`\delta_z`$ (Snyder, 1992, eq. 9,
+p. 13):
 ``` math
 \delta_z = \arctan\left(\frac{\tan E_l}{\cos \text{Az} + \cot 30° \cdot \sin \text{Az}}\right)
 ```
 
-**Step 4: Compute auxiliary angle** $`h`$ (Snyder, 1992, eq. 9, p. 14):
+**Step 4: Compute auxiliary angle** $`h`$ (Snyder, 1992, eq. 6, p. 12):
 ``` math
 h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)
 ```
 
 **Step 5: Compute adjusted azimuth** $`\text{Az}'`$ (Snyder, 1992, eq.
-10-11, p. 14):
+7-8, p. 12):
 ``` math
 A_G = \text{Az} + G + h - \pi
 ```
@@ -255,7 +272,7 @@ A_G = \text{Az} + G + h - \pi
 \text{Az}' = \arctan\left(\frac{2 A_G}{R_1^2 \tan^2 E_l - 2 A_G \cot 30°}\right)
 ```
 
-**Step 6: Compute radial distance** (Snyder, 1992, eq. 12-13, p. 14-15):
+**Step 6: Compute radial distance** (Snyder, 1992, eq. 10-12, p. 13):
 ``` math
 f = \frac{\tan E_l}{2(\cos \text{Az}' + \cot 30° \cdot \sin \text{Az}') \sin(\delta_z / 2)}
 ```
@@ -269,7 +286,8 @@ f = \frac{\tan E_l}{2(\cos \text{Az}' + \cot 30° \cdot \sin \text{Az}') \sin(\d
 
 The inverse projection cannot be solved analytically because the azimuth
 adjustment contains transcendental functions. A Newton-Raphson iteration
-finds the spherical azimuth Az from the planar azimuth Az’:
+finds the spherical azimuth Az from the planar azimuth Az’ (Snyder,
+1992, eq. 20-22, p. 13):
 
 ``` math
 f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0
@@ -290,6 +308,79 @@ modes:
 | default | $`10^{-12}`$ | 4-5 | General applications (~1 m accuracy) |
 | high | $`10^{-14}`$ | 5-6 | High-precision geodesy |
 | ultra | $`10^{-15}`$ | 6-7 | Research |
+
+### Distortion
+
+The projection is exactly equal-area, so its distortion falls on angles
+and local scale. On an icosahedron face the maximum angular deformation
+is $`\omega = 17.27°`$, with linear scale factors between 0.860 and
+1.163 (Snyder, 1992, Table 1, p. 12). The azimuth adjustment
+concentrates this deformation along the three radii from the face center
+to its vertices, where the graticule shows visible cusps (Snyder, 1992,
+p. 11).
+
+![](theory_files/figure-html/face-distortion-1.svg)
+
+Deformation is smallest, about 5°, in the ring around the face center
+toward the edge midpoints, and largest along the three vertex radii,
+where the parallels kink as they cross. The 17.27° maximum is reached at
+the face center approached along a vertex radius. The Jacobian
+determinant of the projection equals 1 everywhere on the face, which is
+the equal-area property in differential form.
+
+### The Unfolded Projection
+
+Applying the per-face projection to all 20 faces and unfolding them into
+a plane maps the whole sphere onto a strip of triangles (compare Snyder,
+1992, Figure 12, p. 18).
+[`hexify_lonlat_to_plane()`](https://gillescolling.com/hexify/reference/hexify_lonlat_to_plane.md)
+performs the composite transformation, in the same PLANE layout as
+dggridR’s `dgGEO_to_PLANE()`. Coastlines and graticule continue across
+every shared edge and are interrupted elsewhere:
+
+``` r
+
+draw_path <- function(lon, lat, col, lwd) {
+  p <- hexify_lonlat_to_plane(lon, lat)
+  jump <- c(FALSE, sqrt(diff(p$plane_x)^2 + diff(p$plane_y)^2) > 0.2)
+  p$plane_x[jump] <- NA
+  lines(p$plane_x, p$plane_y, col = col, lwd = lwd)
+}
+
+oldpar <- par(mar = c(0.5, 0.5, 2, 0.5), bg = "white")
+plot(NULL, xlim = c(-0.1, 5.6), ylim = c(-0.05, 2.65), asp = 1,
+     axes = FALSE, xlab = "", ylab = "", main = "Unfolded ISEA Projection")
+
+# face outlines: side-1 triangles around each projected face centroid
+centers <- hexify_face_centers()
+pc <- hexify_lonlat_to_plane(centers$lon * 180/pi, centers$lat * 180/pi)
+s3 <- sqrt(3)
+for (f in 1:20) {
+  base <- floor(pc$plane_y[f] / (s3/2)) * s3/2
+  up <- (pc$plane_y[f] - base) < s3/4
+  yy <- if (up) base + c(0, 0, s3/2) else base + c(s3/2, s3/2, 0)
+  polygon(pc$plane_x[f] + c(-0.5, 0.5, 0), yy, border = "gray60", lwd = 0.8)
+}
+
+# 15-degree graticule
+for (lon in seq(-180, 165, by = 15))
+  draw_path(rep(lon, 181), seq(-90, 90, by = 1), "gray75", 0.6)
+for (lat in seq(-75, 75, by = 15))
+  draw_path(seq(-180, 180, by = 0.5), rep(lat, 721), "gray75", 0.6)
+
+# coastlines
+xy <- st_coordinates(st_cast(st_geometry(hexify_world), "MULTIPOLYGON"))
+for (ring in split(seq_len(nrow(xy)),
+                   interaction(xy[, "L1"], xy[, "L2"], xy[, "L3"], drop = TRUE)))
+  draw_path(xy[ring, 1], xy[ring, 2], "gray30", 0.8)
+```
+
+![](theory_files/figure-html/unfolded-projection-1.svg)
+
+``` r
+
+par(oldpar)
+```
 
 ## Aperture and Resolution
 
@@ -377,6 +468,10 @@ $`V = (6h + 5p)/3`$, $`E = (6h + 5p)/2`$, $`F = h + p`$
 Substituting into Euler’s formula and simplifying yields $`p = 12`$,
 independent of $`h`$.
 
+Hexagons have six neighbors; pentagons have five.
+
+![](theory_files/figure-html/pentagon-neighbors-1.svg)
+
 ![](theory_files/figure-html/pentagon-locations-1.svg)
 
 | Location   | Latitude                          | Longitudes                  |
@@ -408,6 +503,8 @@ regions). Each quad contains two adjacent triangular faces sharing an
 edge. This pairing transforms 20 triangles into 10 diamond-shaped quads
 plus 2 polar quads, simplifying grid indexing because a diamond admits a
 rectangular $`(i, j)`$ lattice (DGGRID Manual, 2023).
+
+![](theory_files/figure-html/triangle-quad-pairing-1.svg)
 
 ### Quad IJ: The Integer Lattice
 
@@ -778,6 +875,9 @@ for (ap in c(3, 4, 7)) {
 - H3 documentation (2024). *H3: A Hexagonal Hierarchical Geospatial
   Indexing System*. <https://h3geo.org/>
 
+- Bradley, A.D. (1946). Equal-area projection on the icosahedron.
+  *Geographical Review*, 36(1), 101-104.
+
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover
   Publications.
 
@@ -804,3 +904,8 @@ for (ap in c(3, 4, 7)) {
 
 - Snyder, J.P. (1992). An equal-area map projection for polyhedral
   globes. *Cartographica*, 29(1), 10-21.
+
+- White, D., Kimerling, A.J., & Overton, W.S. (1992). Cartographic and
+  geometric components of a global sampling design for environmental
+  monitoring. *Cartography and Geographic Information Systems*, 19(1),
+  5-22.
