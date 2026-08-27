@@ -131,7 +131,8 @@ P_y <- R * cos(phi)
 points(P_x, P_y, pch = 19, cex = 1.2, col = "#E63946")
 text(P_x + 0.1, P_y + 0.08, "P", cex = 1.1, font = 2, col = "#E63946")
 
-# Draw radius to P
+# Draw the radii O-S and O-P that subtend the angle c
+lines(c(0, 0), c(0, R), lwd = 1.5, lty = 2, col = GREY)
 lines(c(0, P_x), c(0, P_y), lwd = 1.5, lty = 2, col = GREY)
 
 # Project P to tangent plane (perpendicular projection gives P')
@@ -147,6 +148,10 @@ lines(c(0, P_x), c(R, P_y), lwd = 2.5, col = "#E63946")
 
 # Draw projected distance on tangent plane
 lines(c(0, Pprime_x), c(R, R), lwd = 2.5, col = "#457B9D")
+
+# Rotate the chord about S into the tangent plane, so |SP| = |SP'| = rho
+swing <- seq(-phi/2, 0, length.out = 60)
+lines(rho * cos(swing), R + rho * sin(swing), lwd = 1.5, lty = 3, col = GREY)
 
 # Draw arc showing angle c at center, labelled on the arc's bisector
 arc_r <- 0.35
