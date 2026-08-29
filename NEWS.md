@@ -31,6 +31,18 @@
   child grid once, and an aperture-7 pentagon has six children rather than five
   and two `NA`s.
 
+* `hex_compact()` and `hex_uncompact()` refused every ISEA grid but aperture 7,
+  and did their arithmetic on the index strings. Both read cells now, so all
+  three pure apertures compact: cells are grouped by `get_parent()`, and a
+  group holding as many distinct cells as the parent has children replaces
+  them, which reads the six children of a cell at an icosahedron vertex rather
+  than assuming seven. Uncompaction expands through `get_children()` for the
+  same reason, so the children spelled under a neighbouring quad are reached.
+  An index string that names no cell of the grid, which appending a digit to a
+  vertex cell writes, is refused by name rather than reported as a cell number
+  the caller never wrote. Aperture 7 stops one level above resolution 0, where
+  its hierarchy is inconsistent (#75).
+
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the
   conversion warns and names the radius being dropped. `from_dggrid()` is the

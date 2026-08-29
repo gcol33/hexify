@@ -20,18 +20,17 @@ test_that("H3 compact/uncompact roundtrip", {
 })
 
 test_that("ISEA Z7 compact/uncompact roundtrip", {
-  g <- hex_grid(resolution = 3, aperture = 7)
+  parent_grid <- hex_grid(resolution = 1, aperture = 7)
+  child_grid <- hex_grid(resolution = 2, aperture = 7)
 
-  # Create 7 Z7 children of a parent
-  parent <- "010"  # quad 01, digit 0 (res 1)
-  children <- paste0(parent, 0:6)
+  parent <- 8L
+  children <- cell_to_index(get_children(parent, parent_grid)[[1]], child_grid)
 
-  compacted <- hex_compact(children, g)
-  expect_true(parent %in% compacted)
+  compacted <- hex_compact(children, child_grid)
+  expect_equal(compacted, cell_to_index(parent, parent_grid))
 
-  uncompacted <- hex_uncompact(compacted, g, target_resolution = 3L)
-  # Should have 7^1 = 7 cells at target res relative to the single res-2 parent
-  expect_true(all(nchar(uncompacted) == 5))  # "01" + 3 digits
+  uncompacted <- hex_uncompact(compacted, child_grid, target_resolution = 2L)
+  expect_equal(sort(uncompacted), sort(children))
 })
 
 test_that("hex_compact with no full parents returns unchanged", {
@@ -42,7 +41,67 @@ test_that("hex_compact with no full parents returns unchanged", {
   expect_equal(length(compacted), length(cells))
 })
 
-test_that("hex_compact errors for non-aperture-7 ISEA", {
-  g <- hex_grid(resolution = 3, aperture = 3)
-  expect_error(hex_compact(c("0100", "0101", "0102"), g), "aperture 7")
+test_that("compaction works on every pure ISEA aperture", {
+  for (aperture in c(3L, 4L, 7L)) {
+    label <- sprintf("aperture %d", aperture)
+    resolution <- 3L
+    grid <- hex_grid(resolution = resolution, aperture = aperture)
+    n_cells <- 2 + 10 * aperture^resolution
+
+    all_cells <- cell_to_index(seq_len(n_cells), grid)
+    compacted <- hex_compact(all_cells, grid)
+
+    expect_lt(length(compacted), n_cells)
+    expect_equal(sort(hex_uncompact(compacted, grid, resolution)),
+                 sort(all_cells), info = label)
+  }
+})
+
+test_that("a full sibling set compacts to its parent, at any aperture", {
+  for (aperture in c(3L, 4L, 7L)) {
+    parent_grid <- hex_grid(resolution = 2, aperture = aperture)
+    child_grid <- hex_grid(resolution = 3, aperture = aperture)
+    label <- sprintf("aperture %d", aperture)
+
+    # A cell away from the icosahedron vertices
+    parent <- which(!is_pentagon(seq_len(2 + 10 * aperture^2), parent_grid))[10]
+    children <- cell_to_index(get_children(parent, parent_grid)[[1]], child_grid)
+
+    expect_equal(hex_compact(children, parent_grid),
+                 cell_to_index(parent, parent_grid), info = label)
+
+    # One child short is not a sibling set
+    expect_equal(sort(hex_compact(children[-1], parent_grid)),
+                 sort(children[-1]), info = label)
+  }
+})
+
+test_that("uncompaction expands to the cells the hierarchy holds", {
+  for (aperture in c(3L, 4L, 7L)) {
+    parent_grid <- hex_grid(resolution = 2, aperture = aperture)
+    child_grid <- hex_grid(resolution = 3, aperture = aperture)
+    n_parent <- 2 + 10 * aperture^2
+    label <- sprintf("aperture %d", aperture)
+
+    parents <- seq_len(n_parent)
+    expanded <- hex_uncompact(cell_to_index(parents, parent_grid),
+                              parent_grid, target_resolution = 3L)
+
+    # Every cell of the child grid, named once
+    expect_equal(sort(expanded),
+                 sort(cell_to_index(seq_len(2 + 10 * aperture^3), child_grid)),
+                 info = label)
+  }
+})
+
+test_that("an index naming no cell is refused by name", {
+  grid <- hex_grid(resolution = 3, aperture = 3)
+
+  # A digit appended to the vertex cell "1100" writes a string that names
+  # cell 278 of a grid holding 272
+  expect_error(hex_compact(c("11000", "11001"), grid),
+               "name no cell of the grid")
+  expect_error(hex_uncompact("11001", grid, target_resolution = 4L),
+               "name no cell of the grid")
+  expect_error(hex_compact("1", grid), "shorter than that")
 })

@@ -23,9 +23,11 @@ share the same resolution.
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{uncompactCells} function.
 
-\strong{ISEA backend (aperture 7, Z7 index):} Appends digits 0-6 to expand
-each cell to its 7 children, repeating until the target resolution is
-reached.
+\strong{ISEA backend:} Appends each digit of the aperture to expand a cell into
+its children, a level at a time, until the target resolution is reached. A
+cell at one of the twelve icosahedron vertices is expanded through
+\code{\link[=get_children]{get_children()}} instead, since its children carry index spellings in the
+several quads meeting at the vertex.
 }
 \examples{
 \donttest{
@@ -33,6 +35,10 @@ g <- hex_grid(resolution = 3, type = "h3")
 parent <- "832830fffffffff"
 hex_uncompact(parent, g, target_resolution = 4L)
 }
+
+# ISEA, on the default aperture
+g <- hex_grid(resolution = 2, aperture = 3)
+hex_uncompact(cell_to_index(40L, g), g, target_resolution = 3L)
 }
 \seealso{
 \code{\link[=hex_compact]{hex_compact()}} for the inverse operation

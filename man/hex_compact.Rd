@@ -8,7 +8,8 @@ hex_compact(cell_ids, grid)
 }
 \arguments{
 \item{cell_ids}{Cell IDs to compact. For H3 grids, a character vector.
-For ISEA grids, a character vector of hierarchical index strings.}
+For ISEA grids, a character vector of hierarchical index strings, as
+\code{\link{cell_to_index}} returns for apertures 3, 4 and 7.}
 
 \item{grid}{A HexGridInfo object specifying the grid.}
 }
@@ -17,16 +18,29 @@ A character vector of compacted cell IDs. Cells that could be
 merged into parents appear as parent IDs at coarser resolution.
 }
 \description{
-Merges child cells into their parent when all children are present.
-This is a lossless compression — no spatial information is lost.
-The compact representation uses fewer cells to cover the same area.
+Merges child cells into their parent when all children are present, so that
+the same set of cells is named by fewer of them.
 }
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{compactCells} function.
 
-\strong{ISEA backend (aperture 7, Z7 index):} Groups cells by parent index
-(dropping the last digit). If all 7 children are present, replaces them
-with the parent. Iterates until no further compaction is possible.
+\strong{ISEA backend:} Every ISEA index spells a refinement level as one digit, so
+cells are grouped by parent index (dropping the last digit) and a parent
+whose full set of distinct child digits is present replaces them, until no
+further compaction is possible. The number of digits is the aperture: 3, 4
+or 7.
+
+Cells at the twelve icosahedron vertices are left uncompacted. A vertex sits
+at the corner of several quads and carries an index spelling in each, so the
+children of one spelling are neither all of its children nor only its
+children, and merging them into the parent would move cells that belong
+elsewhere.
+
+What is preserved is the set of cells: uncompacting the result at the
+original resolution returns the input. The covered area is not identical,
+because a hexagonal hierarchy is not congruent at any aperture -- a parent
+does not tile exactly into its children -- so an area computed on the
+compacted set differs from one computed on the original.
 }
 \examples{
 \donttest{
@@ -37,6 +51,12 @@ children <- get_children(parent, g)[[1]]
 compact <- hex_compact(children, g)
 compact  # Should return the parent
 }
+
+# ISEA, on the default aperture
+g <- hex_grid(resolution = 2, aperture = 3)
+children <- cell_to_index(get_children(40L, g)[[1]],
+                          hex_grid(resolution = 3, aperture = 3))
+hex_compact(children, g)
 }
 \seealso{
 \code{\link[=hex_uncompact]{hex_uncompact()}} for the inverse operation,
