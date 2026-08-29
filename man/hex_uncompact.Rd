@@ -23,11 +23,11 @@ share the same resolution.
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{uncompactCells} function.
 
-\strong{ISEA backend:} Appends each digit of the aperture to expand a cell into
-its children, a level at a time, until the target resolution is reached. A
-cell at one of the twelve icosahedron vertices is expanded through
-\code{\link[=get_children]{get_children()}} instead, since its children carry index spellings in the
-several quads meeting at the vertex.
+\strong{ISEA backend:} Cells are expanded through \code{\link[=get_children]{get_children()}}, a level at a
+time, until the target resolution is reached. Appending each digit of the
+aperture names the children of a cell whose whole ancestry lies inside one
+quad, but not those of a cell at an icosahedron vertex, whose children carry
+index spellings in the several quads meeting there.
 }
 \examples{
 \donttest{

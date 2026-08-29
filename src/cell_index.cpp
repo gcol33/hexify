@@ -164,6 +164,12 @@ void index_to_cell(const std::string& index, int aperture,
     resolution = 0;
     i = 0;
     j = 0;
+    // A Z7 index spells its leading field as quad + 12 * seed, so a
+    // two-character one is not a bare quad: the seed names which of the base
+    // cells meeting at the quad's corner the index reaches.
+    if (index_type == IndexType::Z7) {
+      z7::decode_bijective(index, 0, face, i, j);
+    }
     return;
   }
   

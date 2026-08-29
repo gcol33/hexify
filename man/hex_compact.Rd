@@ -24,17 +24,13 @@ the same set of cells is named by fewer of them.
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{compactCells} function.
 
-\strong{ISEA backend:} Every ISEA index spells a refinement level as one digit, so
-cells are grouped by parent index (dropping the last digit) and a parent
-whose full set of distinct child digits is present replaces them, until no
-further compaction is possible. The number of digits is the aperture: 3, 4
-or 7.
-
-Cells at the twelve icosahedron vertices are left uncompacted. A vertex sits
-at the corner of several quads and carries an index spelling in each, so the
-children of one spelling are neither all of its children nor only its
-children, and merging them into the parent would move cells that belong
-elsewhere.
+\strong{ISEA backend:} Cells are grouped by \code{\link[=get_parent]{get_parent()}}, and a group holding as
+many distinct cells as its parent has children replaces them, from the finest
+resolution up until no further compaction is possible. That count is the
+aperture away from the twelve icosahedron vertices and fewer at one, and it
+is read rather than assumed: a vertex cell sits at the corner of several
+quads and carries an index spelling in each, so appending a digit to any one
+spelling names neither all of its children nor only its children.
 
 What is preserved is the set of cells: uncompacting the result at the
 original resolution returns the input. The covered area is not identical,

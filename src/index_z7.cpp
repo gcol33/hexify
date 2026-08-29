@@ -397,6 +397,25 @@ static IVec3D z7_seed_coord(int digit) {
     return ijk;
 }
 
+// The base cell a seed names.
+//
+// The seed is the lattice point the hierarchy walk arrives at, at resolution 0.
+// The quad's own origin means the whole ancestry lies inside the quad; any
+// other arrival has crossed the quad's rhombic boundary into one of the three
+// base cells it shares an edge with, which is the step encode() takes through
+// the same table on the same coordinate.
+static int seed_base_cell(int quadNum, int seed) {
+    const IVec3D arrival = z7_seed_coord(seed);
+    if (arrival.i() == 1) {
+        return (arrival.j() == 0) ? adjacentBaseCellTable[quadNum][1]
+                                  : adjacentBaseCellTable[quadNum][2];
+    }
+    if (arrival.j() == 1) {
+        return adjacentBaseCellTable[quadNum][3];
+    }
+    return quadNum;
+}
+
 // Walk the aperture-7 hierarchy from a Class I substrate coordinate up to
 // resolution 0, recording the child ordinal of each level in digits[1..res].
 // The return value is the coordinate the walk arrives at: the origin when every
@@ -472,6 +491,11 @@ void decode_bijective(const std::string& index, int resolution,
     std::string z7str = index.substr(2);
     int res = (int) z7str.length();
     if (res == 0) {
+        // Resolution 0 is one cell per icosahedron vertex, so the seed is all
+        // that says which of the base cells meeting at the quad's corner the
+        // index names. encode_bijective() writes the quad's own, and stripping
+        // a digit off a deeper index leaves whichever the ancestry came from.
+        quadNum = seed_base_cell(quadNum, seed);
         i = 0;
         j = 0;
         return;

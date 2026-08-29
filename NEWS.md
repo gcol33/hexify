@@ -45,8 +45,21 @@
   same reason, so the children spelled under a neighbouring quad are reached.
   An index string that names no cell of the grid, which appending a digit to a
   vertex cell writes, is refused by name rather than reported as a cell number
-  the caller never wrote. Aperture 7 stops one level above resolution 0, where
-  its hierarchy is inconsistent (#75).
+  the caller never wrote. A full grid compacts to the twelve resolution-0 cells
+  at every aperture.
+
+* `get_parent()` on an aperture-7 grid at resolution 1 returned cell IDs past
+  the end of the resolution-0 grid -- up to 83, where resolution 0 holds 12 --
+  and only 42 distinct ones, so `get_children()` at resolution 0 came back in
+  threes rather than sixes. A Z7 index spells its leading field as
+  `quad + 12 * seed`, the seed naming the point the hierarchy walk arrives at,
+  and a two-character index was read as a bare quad number. It is decoded now:
+  the seed says which of the base cells meeting at the quad's corner the index
+  reaches, through the same adjacency the encoder walks. Every resolution-0 cell
+  sits on an icosahedron vertex and now has the six children that make up
+  resolution 1's 72, at every aperture the parents of a resolution claim each
+  cell of the finer one exactly once, and a full grid compacts to the twelve
+  resolution-0 cells at apertures 3, 4 and 7 rather than stopping at 52.
 
 * `hexify_lonlat_to_index()` documented itself as vectorised over `lon` and
   `lat` and took one point, and nothing that consumes an index string accepted

@@ -91,17 +91,13 @@ isea_child_indices <- function(indices, resolution, g) {
 #' @details
 #' **H3 backend:** Uses the vendored H3 `compactCells` function.
 #'
-#' **ISEA backend:** Every ISEA index spells a refinement level as one digit, so
-#' cells are grouped by parent index (dropping the last digit) and a parent
-#' whose full set of distinct child digits is present replaces them, until no
-#' further compaction is possible. The number of digits is the aperture: 3, 4
-#' or 7.
-#'
-#' Cells at the twelve icosahedron vertices are left uncompacted. A vertex sits
-#' at the corner of several quads and carries an index spelling in each, so the
-#' children of one spelling are neither all of its children nor only its
-#' children, and merging them into the parent would move cells that belong
-#' elsewhere.
+#' **ISEA backend:** Cells are grouped by [get_parent()], and a group holding as
+#' many distinct cells as its parent has children replaces them, from the finest
+#' resolution up until no further compaction is possible. That count is the
+#' aperture away from the twelve icosahedron vertices and fewer at one, and it
+#' is read rather than assumed: a vertex cell sits at the corner of several
+#' quads and carries an index spelling in each, so appending a digit to any one
+#' spelling names neither all of its children nor only its children.
 #'
 #' What is preserved is the set of cells: uncompacting the result at the
 #' original resolution returns the input. The covered area is not identical,
@@ -157,24 +153,18 @@ hex_compact <- function(cell_ids, grid) {
     groups <- split(cells, get_parent(cells, isea_grid_at(g, level)))
     candidates <- as.numeric(names(groups))
 
-    # A parent outside the coarser grid is no parent: aperture 7 reads one at
-    # resolution 0 (gcol33/hexify#75), and merging into it would name a cell
-    # that does not exist.
-    exists <- candidates >= 1 &
-      candidates <= aperture_n_cells(g@aperture, level - 1L)
-
     # Every cell in a group has this parent, so a group holding as many
     # distinct cells as the parent has children holds all of them. That is the
-    # aperture, one fewer at the twelve icosahedron vertices, which are read
-    # rather than assumed.
+    # aperture, fewer at the twelve icosahedron vertices, which are read rather
+    # than assumed.
     expected <- rep(ap, length(candidates))
-    vertex <- exists & is_pentagon(candidates, parent_grid)
+    vertex <- is_pentagon(candidates, parent_grid)
     if (any(vertex)) {
       expected[vertex] <- lengths(get_children(candidates[vertex], parent_grid))
     }
 
     sizes <- vapply(groups, function(cells) length(unique(cells)), integer(1))
-    full <- exists & sizes == expected
+    full <- sizes == expected
     if (!any(full)) next
 
     merged <- cell_to_index(candidates[full], parent_grid)
@@ -212,11 +202,11 @@ hex_compact <- function(cell_ids, grid) {
 #' @details
 #' **H3 backend:** Uses the vendored H3 `uncompactCells` function.
 #'
-#' **ISEA backend:** Appends each digit of the aperture to expand a cell into
-#' its children, a level at a time, until the target resolution is reached. A
-#' cell at one of the twelve icosahedron vertices is expanded through
-#' [get_children()] instead, since its children carry index spellings in the
-#' several quads meeting at the vertex.
+#' **ISEA backend:** Cells are expanded through [get_children()], a level at a
+#' time, until the target resolution is reached. Appending each digit of the
+#' aperture names the children of a cell whose whole ancestry lies inside one
+#' quad, but not those of a cell at an icosahedron vertex, whose children carry
+#' index spellings in the several quads meeting there.
 #'
 #' @seealso [hex_compact()] for the inverse operation
 #'

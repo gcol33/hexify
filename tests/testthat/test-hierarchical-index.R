@@ -246,3 +246,52 @@ test_that("the round trip in both directions holds at a pentagon", {
   expect_no_error(back <- get_parent(kids, child_grid))
   expect_equal(unique(back), 92)
 })
+
+test_that("resolution 0 holds twelve cells and every aperture reaches them", {
+  for (aperture in c(3L, 4L, 7L)) {
+    label <- sprintf("aperture %d", aperture)
+    base <- hex_grid(resolution = 0, aperture = aperture)
+    first <- hex_grid(resolution = 1, aperture = aperture)
+    n_first <- 2 + 10 * aperture
+
+    parents <- get_parent(seq_len(n_first), first)
+    expect_true(all(parents >= 1 & parents <= 12), info = label)
+    expect_equal(length(unique(parents)), 12L, info = label)
+
+    children <- get_children(seq_len(12), base)
+    expect_equal(sort(unlist(children, use.names = FALSE)),
+                 as.numeric(seq_len(n_first)), info = label)
+    expect_equal(get_parent(unlist(children, use.names = FALSE), first),
+                 as.numeric(rep(seq_len(12), lengths(children))), info = label)
+  }
+})
+
+test_that("every aperture-7 base cell has six children", {
+  # All twelve resolution-0 cells sit on an icosahedron vertex, so each is a
+  # pentagon: 12 * 6 is resolution 1's 72 cells exactly
+  base <- hex_grid(resolution = 0, aperture = 7)
+  expect_equal(lengths(get_children(seq_len(12), base)), rep(6L, 12))
+
+  # The leading field of a Z7 index is quad + 12 * seed, so a two-character
+  # index is not a bare quad: "25" is quad 1 reached from base cell 0
+  expect_equal(hexify_index_to_cell("25", aperture = 7)$face, 0L)
+  expect_equal(hexify_index_to_cell("00", aperture = 7)$face, 0L)
+  expect_equal(hexify_index_to_cell("01", aperture = 7)$face, 1L)
+})
+
+test_that("compaction reaches resolution 0 at every aperture", {
+  for (aperture in c(3L, 4L, 7L)) {
+    for (resolution in 2:3) {
+      label <- sprintf("aperture %d resolution %d", aperture, resolution)
+      grid <- hex_grid(resolution = resolution, aperture = aperture)
+      n_cells <- 2 + 10 * aperture^resolution
+
+      all_cells <- cell_to_index(seq_len(n_cells), grid)
+      compacted <- hex_compact(all_cells, grid)
+
+      expect_equal(length(compacted), 12L, info = label)
+      expect_equal(sort(hex_uncompact(compacted, grid, resolution)),
+                   sort(all_cells), info = label)
+    }
+  }
+})
