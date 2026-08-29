@@ -4,10 +4,14 @@
 \alias{from_dggrid}
 \title{Convert 'dggridR' grid object to hexify_grid}
 \usage{
-from_dggrid(dggs)
+from_dggrid(dggs, radius_km = EARTH_RADIUS_KM)
 }
 \arguments{
 \item{dggs}{A 'dggridR' grid object from dgconstruct()}
+
+\item{radius_km}{Radius the grid is sized on, in km or as a body name. A dggs
+carries no radius, so the default is Earth's; pass this when the dggs
+describes a grid on another body.}
 }
 \value{
 A hexify_grid object
@@ -19,6 +23,11 @@ using hexify functions with grids created by 'dggridR' dgconstruct().
 \details{
 Only 'ISEA' projection with HEXAGON topology is fully supported.
 Other configurations will generate warnings.
+
+A dggs has no field for the body it is sized on, so the resolution is all
+that carries over and the result is an Earth grid unless \code{radius_km}
+says otherwise. Cell area follows from the radius, so it is read from the
+radius given rather than from the dggs.
 
 The function validates that the 'dggridR' grid uses compatible settings:
 \itemize{

@@ -25,6 +25,11 @@ Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
 The resulting object can be used with 'dggridR' functions that accept a dggs
 object.
 }
+\details{
+A dggs carries no body radius, so a grid built on another body cannot be
+expressed as one: 'dggridR' reads every dggs on Earth's radius, and its areas,
+spacings and CLS come back on Earth. Converting such a grid warns.
+}
 \seealso{
 Other 'dggridR' compatibility:
 \code{\link[=dggrid_43h_sequence]{dggrid_43h_sequence()}},

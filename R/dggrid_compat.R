@@ -16,6 +16,11 @@
 #'
 #' @param grid A hexify_grid object from hexify_grid()
 #'
+#' @details
+#' A dggs carries no body radius, so a grid built on another body cannot be
+#' expressed as one: 'dggridR' reads every dggs on Earth's radius, and its areas,
+#' spacings and CLS come back on Earth. Converting such a grid warns.
+#'
 #' @return A list with 'dggridR'-compatible fields:
 #'   \item{pole_lon_deg}{Longitude of grid pole (default 11.25)}
 #'   \item{pole_lat_deg}{Latitude of grid pole (default 58.282525588538995)}
@@ -44,6 +49,12 @@ as_dggrid <- function(grid) {
     stop("grid must be a hexify_grid object from hexify_grid()")
   }
 
+  if (!is_earth_grid(grid)) {
+    warning("A dggs carries no body radius: this grid is sized on a radius of ",
+            format(grid_radius_km(grid)), " km, and 'dggridR' will read it on ",
+            "Earth's ", format(EARTH_RADIUS_KM), " km.", call. = FALSE)
+  }
+
   dggs <- list(
     pole_lon_deg = ISEA_VERT0_LON_DEG,
     pole_lat_deg = ISEA_VERT0_LAT_DEG,
@@ -65,12 +76,20 @@ as_dggrid <- function(grid) {
 #' using hexify functions with grids created by 'dggridR' dgconstruct().
 #'
 #' @param dggs A 'dggridR' grid object from dgconstruct()
+#' @param radius_km Radius the grid is sized on, in km or as a body name. A dggs
+#'   carries no radius, so the default is Earth's; pass this when the dggs
+#'   describes a grid on another body.
 #'
 #' @return A hexify_grid object
 #'
 #' @details
 #' Only 'ISEA' projection with HEXAGON topology is fully supported.
 #' Other configurations will generate warnings.
+#'
+#' A dggs has no field for the body it is sized on, so the resolution is all
+#' that carries over and the result is an Earth grid unless \code{radius_km}
+#' says otherwise. Cell area follows from the radius, so it is read from the
+#' radius given rather than from the dggs.
 #'
 #' The function validates that the 'dggridR' grid uses compatible settings:
 #' - Projection must be 'ISEA' (FULLER not supported)
@@ -79,7 +98,7 @@ as_dggrid <- function(grid) {
 #'
 #' @family 'dggridR' compatibility
 #' @export
-from_dggrid <- function(dggs) {
+from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
   # Validate dggridR object
 
   if (!is.list(dggs)) {
@@ -127,7 +146,8 @@ from_dggrid <- function(dggs) {
     metric = TRUE,
     resround = "nearest",
     aperture = as.integer(dggs$aperture),
-    projection = "ISEA"
+    projection = "ISEA",
+    radius_km = radius_km
   ) -> grid
 
   # Override resolution to match dggridR exactly

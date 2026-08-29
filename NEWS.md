@@ -19,6 +19,12 @@
 
 ## Bug fixes
 
+* `as_dggrid()` on a grid built for another body returned a dggs that read as
+  an Earth grid, and said nothing. A dggs has no field for the radius, so the
+  conversion warns and names the radius being dropped. `from_dggrid()` is the
+  same boundary in reverse and takes a `radius_km` argument, defaulting to
+  Earth, so a grid on another body round-trips.
+
 * `hexify_heatmap()` handled an RColorBrewer palette only between three levels
   and the palette's own length. A `breaks` argument with ten or more bins passed
   fewer colours than the scale needed and stopped in ggplot2, naming ggplot2

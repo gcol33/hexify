@@ -143,3 +143,34 @@ test_that("round-trip: hexify_grid -> dggridR -> hexify_grid", {
   expect_equal(original$resolution, recovered$resolution)
   expect_equal(original$aperture, recovered$aperture)
 })
+
+test_that("as_dggrid warns that a dggs cannot carry a body radius", {
+  grid <- hex_grid(area_km2 = 100000, radius_km = "mars")
+
+  expect_warning(dggs <- as_dggrid(grid), "carries no body radius")
+  expect_warning(as_dggrid(grid), "3389.5")
+
+  # The rest of the conversion still happens
+  expect_s3_class(dggs, "dggs")
+  expect_equal(dggs$res, grid@resolution)
+})
+
+test_that("as_dggrid converts an Earth grid without warning", {
+  expect_no_warning(as_dggrid(hex_grid(area_km2 = 100000)))
+  expect_no_warning(as_dggrid(hexify_grid(area = 1000, aperture = 3)))
+})
+
+test_that("from_dggrid reads Earth unless told otherwise", {
+  dggs <- suppressWarnings(as_dggrid(hex_grid(area_km2 = 100000, radius_km = "mars")))
+
+  earth <- from_dggrid(dggs)
+  expect_equal(hexify:::grid_radius_km(earth), hexify:::EARTH_RADIUS_KM)
+
+  mars <- from_dggrid(dggs, radius_km = "mars")
+  expect_equal(hexify:::grid_radius_km(mars), 3389.5)
+
+  # Cell area follows the radius given, so the grid round-trips
+  original <- hex_grid(area_km2 = 100000, radius_km = "mars")
+  expect_equal(mars$area, original@area_km2, tolerance = 1e-8)
+  expect_gt(earth$area, mars$area)
+})
