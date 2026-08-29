@@ -199,7 +199,10 @@ jitter_points_in_cells <- function(cell_ids, hex_sf, jitter = TRUE) {
 #'   \itemize{
 #'     \item \code{TRUE} or \code{"world"}: Use built-in world map
 #'     \item \code{FALSE} or \code{NULL}: No basemap
-#'     \item sf object: Custom basemap
+#'     \item \code{"world_hires"}: High-resolution map from 'rnaturalearth'
+#'       (requires the package)
+#'     \item An sf object: User-supplied vector map
+#'     \item A SpatRaster: User-supplied raster, drawn in grayscale
 #'   }
 #' @param clip_basemap Clip basemap to data extent (default TRUE). Clipping
 #'   temporarily disables S2 spherical geometry to avoid edge-crossing errors.
@@ -316,18 +319,25 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
     asp <- 1 / cos(mean_lat * pi / 180)
 
     # Resolve basemap
-    basemap_sf <- NULL
-    if (isTRUE(basemap) || identical(basemap, "world")) {
-      basemap_sf <- hexify_world
-    } else if (inherits(basemap, c("sf", "sfc"))) {
-      basemap_sf <- basemap
-    }
+    basemap_info <- resolve_basemap(basemap)
+    basemap_sf <- basemap_info$sf
+    basemap_raster <- basemap_info$raster
 
     # Initialize plot
     plot(xlim, ylim, type = "n",
          xlim = xlim, ylim = ylim,
          xlab = "Longitude", ylab = "Latitude",
          asp = asp, main = main, ...)
+
+    # Draw raster basemap in grayscale
+    if (!is.null(basemap_raster)) {
+      rast_layer <- basemap_raster[[1]]
+      if (isFALSE(terra::is.lonlat(rast_layer))) {
+        rast_layer <- terra::project(rast_layer, "EPSG:4326")
+      }
+      terra::plot(rast_layer, add = TRUE, legend = FALSE,
+                  col = grDevices::gray.colors(64, start = 0.2, end = 0.95))
+    }
 
     # Draw basemap
     if (!is.null(basemap_sf)) {
@@ -349,7 +359,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
           sf::st_intersection(sf::st_make_valid(basemap_sf), clip_poly)
         ))
 
-        if (nrow(basemap_clipped) > 0) {
+        if (length(sf::st_geometry(basemap_clipped)) > 0) {
           plot(sf::st_geometry(basemap_clipped),
                col = basemap_fill, border = basemap_border,
                lwd = basemap_lwd, add = TRUE)

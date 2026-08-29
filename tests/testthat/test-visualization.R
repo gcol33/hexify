@@ -185,23 +185,36 @@ test_that("prepare_fill_column applies breaks to continuous data", {
   expect_true(result$is_discrete)
 })
 
-test_that("resolve_basemap returns NULL for NULL input", {
-  result <- hexify:::resolve_basemap(NULL)
-  expect_null(result)
+test_that("resolve_basemap returns empty parts for NULL and FALSE", {
+  for (spec in list(NULL, FALSE)) {
+    result <- hexify:::resolve_basemap(spec)
+
+    expect_type(result, "list")
+    expect_true("sf" %in% names(result))
+    expect_true("raster" %in% names(result))
+    expect_null(result$sf)
+    expect_null(result$raster)
+  }
 })
 
-test_that("resolve_basemap returns hexify_world for 'world'", {
+test_that("resolve_basemap returns hexify_world for 'world' and TRUE", {
   skip_if_not_installed("sf")
 
-  result <- hexify:::resolve_basemap("world")
-  expect_s3_class(result, "sf")
+  for (spec in list("world", TRUE)) {
+    result <- hexify:::resolve_basemap(spec)
+
+    expect_s3_class(result$sf, "sf")
+    expect_null(result$raster)
+  }
 })
 
 test_that("resolve_basemap returns sf for sf input", {
   skip_if_not_installed("sf")
 
   result <- hexify:::resolve_basemap(hexify_world)
-  expect_s3_class(result, "sf")
+
+  expect_s3_class(result$sf, "sf")
+  expect_null(result$raster)
 })
 
 test_that("resolve_basemap errors on invalid input", {
@@ -209,50 +222,20 @@ test_that("resolve_basemap errors on invalid input", {
   expect_error(hexify:::resolve_basemap("invalid"), "basemap must be")
 })
 
-test_that("resolve_basemap_with_raster returns correct structure", {
-  result <- hexify:::resolve_basemap_with_raster(NULL)
-
-  expect_type(result, "list")
-  expect_true("sf" %in% names(result))
-  expect_true("raster" %in% names(result))
-  expect_null(result$sf)
-  expect_null(result$raster)
-})
-
-test_that("resolve_basemap_with_raster handles world basemap", {
-  result <- hexify:::resolve_basemap_with_raster("world")
-
-  expect_s3_class(result$sf, "sf")
-  expect_null(result$raster)
-})
-
-test_that("resolve_basemap_with_raster handles sf input", {
-  skip_if_not_installed("sf")
-
-  result <- hexify:::resolve_basemap_with_raster(hexify_world)
-
-  expect_s3_class(result$sf, "sf")
-  expect_null(result$raster)
-})
-
-test_that("resolve_basemap_with_raster errors on invalid input", {
-  expect_error(hexify:::resolve_basemap_with_raster(123), "basemap must be")
-})
-
-test_that("resolve_basemap_with_raster handles SpatRaster input", {
+test_that("resolve_basemap handles SpatRaster input", {
   skip_if_not_installed("terra")
 
   r <- terra::rast(nrows = 5, ncols = 5, xmin = -10, xmax = 10, ymin = 40, ymax = 55)
   terra::values(r) <- seq_len(25)
 
-  result <- hexify:::resolve_basemap_with_raster(r)
+  result <- hexify:::resolve_basemap(r)
 
   expect_null(result$sf)
   expect_s4_class(result$raster, "SpatRaster")
   expect_identical(result$raster, r)
 })
 
-test_that("resolve_basemap_with_raster handles RasterLayer input", {
+test_that("resolve_basemap converts RasterLayer input to SpatRaster", {
   skip_if_not_installed("raster")
   skip_if_not_installed("terra")
 
@@ -260,10 +243,10 @@ test_that("resolve_basemap_with_raster handles RasterLayer input", {
   terra::values(r) <- seq_len(25)
   r_legacy <- raster::raster(r)
 
-  result <- hexify:::resolve_basemap_with_raster(r_legacy)
+  result <- hexify:::resolve_basemap(r_legacy)
 
   expect_null(result$sf)
-  expect_s4_class(result$raster, "RasterLayer")
+  expect_s4_class(result$raster, "SpatRaster")
 })
 
 test_that("hexify_heatmap renders a SpatRaster basemap as an annotation layer", {
@@ -287,6 +270,41 @@ test_that("hexify_heatmap renders a SpatRaster basemap as an annotation layer", 
   expect_gt(length(p_with_raster$layers), length(p_without$layers))
   raster_layer_geoms <- vapply(p_with_raster$layers, function(l) class(l$geom)[1], character(1))
   expect_true(any(grepl("Custom|Annotation|Raster", raster_layer_geoms)))
+})
+
+test_that("hexify_heatmap renders a legacy RasterLayer basemap", {
+  skip_if_not_installed("raster")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  r <- terra::rast(nrows = 10, ncols = 10, xmin = -10, xmax = 10, ymin = 40, ymax = 55,
+                    crs = "EPSG:4326")
+  terra::values(r) <- runif(100)
+  r_legacy <- raster::raster(r)
+
+  df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  p_with_raster <- hexify_heatmap(result, basemap = r_legacy)
+  p_without <- hexify_heatmap(result)
+
+  expect_s3_class(p_with_raster, "ggplot")
+  expect_gt(length(p_with_raster$layers), length(p_without$layers))
+})
+
+test_that("hexify_heatmap accepts the world_hires basemap", {
+  skip_if_not_installed("rnaturalearth")
+  skip_if_not_installed("rnaturalearthdata")
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  p <- hexify_heatmap(result, basemap = "world_hires")
+
+  expect_s3_class(p, "ggplot")
 })
 
 test_that("prepare_hex_sf_simple validates input", {
@@ -788,11 +806,11 @@ test_that("resolve_basemap handles world_hires without package", {
   )
 })
 
-test_that("resolve_basemap_with_raster handles sfc input", {
+test_that("resolve_basemap handles sfc input", {
   skip_if_not_installed("sf")
 
   sfc <- sf::st_sfc(sf::st_point(c(0, 0)), crs = 4326)
-  result <- hexify:::resolve_basemap_with_raster(sfc)
+  result <- hexify:::resolve_basemap(sfc)
 
   expect_s3_class(result$sf, "sfc")
   expect_null(result$raster)

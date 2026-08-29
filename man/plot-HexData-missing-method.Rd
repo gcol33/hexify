@@ -37,7 +37,10 @@
 \itemize{
 \item \code{TRUE} or \code{"world"}: Use built-in world map
 \item \code{FALSE} or \code{NULL}: No basemap
-\item sf object: Custom basemap
+\item \code{"world_hires"}: High-resolution map from 'rnaturalearth'
+(requires the package)
+\item An sf object: User-supplied vector map
+\item A SpatRaster: User-supplied raster, drawn in grayscale
 }}
 
 \item{clip_basemap}{Clip basemap to data extent (default TRUE). Clipping

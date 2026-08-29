@@ -95,6 +95,55 @@ test_that("plot.HexData works with custom sf basemap", {
   })
 })
 
+test_that("plot.HexData works with an sfc basemap", {
+  skip_if_not_installed("sf")
+
+  df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  # Geometry column only: no rows to count when clipping
+  custom_basemap <- sf::st_geometry(hexify_world)
+
+  expect_no_error({
+    pdf(NULL)
+    on.exit(dev.off())
+    suppressMessages(plot(result, basemap = custom_basemap))
+  })
+})
+
+test_that("plot.HexData works with a SpatRaster basemap", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  r <- terra::rast(nrows = 20, ncols = 20,
+                   xmin = -10, xmax = 15, ymin = 40, ymax = 55)
+  terra::values(r) <- seq_len(400)
+
+  expect_no_error({
+    pdf(NULL)
+    on.exit(dev.off())
+    suppressMessages(plot(result, basemap = r))
+  })
+})
+
+test_that("plot.HexData works with the world_hires basemap", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("rnaturalearth")
+  skip_if_not_installed("rnaturalearthdata")
+
+  df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
+  result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 10000)
+
+  expect_no_error({
+    pdf(NULL)
+    on.exit(dev.off())
+    suppressMessages(plot(result, basemap = "world_hires"))
+  })
+})
+
 test_that("plot.HexData works with show_points", {
   skip_if_not_installed("sf")
 

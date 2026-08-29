@@ -143,28 +143,59 @@ prepare_hex_sf <- function(data, aperture) {
   stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()).")
 }
 
-#' Resolve basemap specification to sf object
+#' Resolve a basemap specification to its vector and raster parts
+#'
+#' Returns a list with an `sf` and a `raster` element, either of which may be
+#' NULL. Legacy Raster* objects are converted to SpatRaster so that callers
+#' only ever handle one raster class.
+#'
 #' @noRd
 resolve_basemap <- function(basemap) {
-  if (is.null(basemap)) return(NULL)
+  none <- list(sf = NULL, raster = NULL)
 
-  if (is.character(basemap) && basemap == "world") {
-    return(hexify_world)
+  if (is.null(basemap) || isFALSE(basemap)) {
+    return(none)
   }
 
-  if (is.character(basemap) && basemap == "world_hires") {
-    if (!requireNamespace("rnaturalearth", quietly = TRUE)) {
-      stop("Package 'rnaturalearth' is required for basemap = 'world_hires'. ",
-           "Install with: install.packages('rnaturalearth')")
+  if (isTRUE(basemap)) {
+    return(list(sf = hexify_world, raster = NULL))
+  }
+
+  if (is.character(basemap) && length(basemap) == 1L) {
+    if (basemap == "world") {
+      return(list(sf = hexify_world, raster = NULL))
     }
-    return(rnaturalearth::ne_countries(scale = "medium", returnclass = "sf"))
+
+    if (basemap == "world_hires") {
+      if (!requireNamespace("rnaturalearth", quietly = TRUE)) {
+        stop("Package 'rnaturalearth' is required for basemap = 'world_hires'. ",
+             "Install with: install.packages('rnaturalearth')")
+      }
+      hires <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+      return(list(sf = hires, raster = NULL))
+    }
   }
 
-  if (inherits(basemap, "sf") || inherits(basemap, "sfc")) {
-    return(basemap)
+  if (inherits(basemap, c("sf", "sfc"))) {
+    return(list(sf = basemap, raster = NULL))
   }
 
-  stop("basemap must be 'world', 'world_hires', or an sf object")
+  if (inherits(basemap, "SpatRaster")) {
+    if (!requireNamespace("terra", quietly = TRUE)) {
+      stop("Package 'terra' is required for raster basemaps")
+    }
+    return(list(sf = NULL, raster = basemap))
+  }
+
+  if (inherits(basemap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+    if (!requireNamespace("terra", quietly = TRUE)) {
+      stop("Package 'terra' is required for raster basemaps")
+    }
+    return(list(sf = NULL, raster = terra::rast(basemap)))
+  }
+
+  stop("basemap must be TRUE, FALSE, 'world', 'world_hires', an sf object, ",
+       "or a raster")
 }
 
 #' Create mask for areas outside basemap
@@ -369,41 +400,6 @@ generate_bin_labels <- function(breaks) {
   labels
 }
 
-#' Resolve basemap specification including raster support
-#' @noRd
-resolve_basemap_with_raster <- function(basemap) {
-  result <- list(sf = NULL, raster = NULL)
-  if (is.null(basemap)) return(result)
-
-  if (is.character(basemap) && basemap == "world") {
-    result$sf <- hexify_world
-    return(result)
-  }
-
-  if (inherits(basemap, "sf") || inherits(basemap, "sfc")) {
-    result$sf <- basemap
-    return(result)
-  }
-
-  if (inherits(basemap, "SpatRaster")) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
-      stop("Package 'terra' is required for SpatRaster basemaps")
-    }
-    result$raster <- basemap
-    return(result)
-  }
-
-  if (inherits(basemap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
-    if (!requireNamespace("raster", quietly = TRUE)) {
-      stop("Package 'raster' is required for Raster* basemaps")
-    }
-    result$raster <- basemap
-    return(result)
-  }
-
-stop("basemap must be 'world', an sf object, or a SpatRaster (terra)")
-}
-
 # =============================================================================
 # PUBLIC FUNCTIONS
 # =============================================================================
@@ -450,8 +446,9 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #'   'count' or 'n' column, that will be used automatically.
 #' @param basemap Optional basemap. Can be:
 #'   \itemize{
-#'     \item \code{NULL}: No basemap (default)
-#'     \item \code{"world"}: Use built-in \code{hexify_world} map (low resolution)
+#'     \item \code{NULL} or \code{FALSE}: No basemap (default)
+#'     \item \code{"world"} or \code{TRUE}: Use built-in \code{hexify_world} map
+#'       (low resolution)
 #'     \item \code{"world_hires"}: Use high-resolution map from rnaturalearth (requires package)
 #'     \item An sf object: User-supplied vector map, from any format
 #'       \code{sf::st_read()} reads, such as a shapefile, 'GeoJSON' or 'GeoPackage'
@@ -609,7 +606,7 @@ hexify_heatmap <- function(data,
   hex_sf <- sf::st_transform(hex_sf, crs)
 
   # Resolve and transform basemap (supports sf and SpatRaster)
-  basemap_info <- resolve_basemap_with_raster(basemap)
+  basemap_info <- resolve_basemap(basemap)
   basemap_sf <- basemap_info$sf
   basemap_raster <- basemap_info$raster
   if (!is.null(basemap_sf)) {
