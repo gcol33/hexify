@@ -355,7 +355,7 @@ test_that("Z3: parent/child relationships", {
   expect_true(substr(child, 1, nchar(parent)) == parent)
   
   # Get children
-  children <- cpp_get_children_indices(parent, 3, "z3")
+  children <- cpp_get_children_indices(parent, 3, "z3")[[1]]
   
   # Original child should be in list
   expect_true(child %in% children)

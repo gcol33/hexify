@@ -7,13 +7,13 @@
 hexify_z7_canonical(index, max_iterations = 128L)
 }
 \arguments{
-\item{index}{A length-one Z7 index string.}
+\item{index}{Character vector of Z7 index strings.}
 
 \item{max_iterations}{Maximum number of decode/encode iterations. This is a
 safety bound for legacy indices; the default is 128.}
 }
 \value{
-A length-one character string containing the stable index.
+A character vector of stable indices.
 }
 \description{
 Decodes and re-encodes a Z7 index until it reaches a stable form. Current Z7

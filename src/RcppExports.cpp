@@ -926,14 +926,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_cell_to_index
-std::string cpp_cell_to_index(int face, double i, double j, int resolution, int aperture, std::string index_type);
+CharacterVector cpp_cell_to_index(IntegerVector face, NumericVector i, NumericVector j, int resolution, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_cell_to_index(SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type face(faceSEXP);
-    Rcpp::traits::input_parameter< double >::type i(iSEXP);
-    Rcpp::traits::input_parameter< double >::type j(jSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type face(faceSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type i(iSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type j(jSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
@@ -942,12 +942,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_index_to_cell
-Rcpp::List cpp_index_to_cell(std::string index, int aperture, std::string index_type);
+DataFrame cpp_index_to_cell(CharacterVector index, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_index_to_cell(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_index_to_cell(index, aperture, index_type));
@@ -955,12 +955,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_get_parent_index
-std::string cpp_get_parent_index(std::string index, int aperture, std::string index_type);
+CharacterVector cpp_get_parent_index(CharacterVector index, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_get_parent_index(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_parent_index(index, aperture, index_type));
@@ -968,12 +968,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_get_children_indices
-Rcpp::StringVector cpp_get_children_indices(std::string index, int aperture, std::string index_type);
+List cpp_get_children_indices(CharacterVector index, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_get_children_indices(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_children_indices(index, aperture, index_type));
@@ -981,12 +981,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_get_index_resolution
-int cpp_get_index_resolution(std::string index, int aperture, std::string index_type);
+IntegerVector cpp_get_index_resolution(CharacterVector index, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_get_index_resolution(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_index_resolution(index, aperture, index_type));
@@ -994,13 +994,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_compare_indices
-int cpp_compare_indices(std::string idx1, std::string idx2);
+IntegerVector cpp_compare_indices(CharacterVector idx1, CharacterVector idx2);
 RcppExport SEXP _hexify_cpp_compare_indices(SEXP idx1SEXP, SEXP idx2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type idx1(idx1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type idx2(idx2SEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type idx1(idx1SEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type idx2(idx2SEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_compare_indices(idx1, idx2));
     return rcpp_result_gen;
 END_RCPP
@@ -1029,13 +1029,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_lonlat_to_index_ap3
-std::string cpp_lonlat_to_index_ap3(double lon_deg, double lat_deg, int resolution, std::string index_type);
+CharacterVector cpp_lonlat_to_index_ap3(NumericVector lon_deg, NumericVector lat_deg, int resolution, std::string index_type);
 RcppExport SEXP _hexify_cpp_lonlat_to_index_ap3(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP resolutionSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type lon_deg(lon_degSEXP);
-    Rcpp::traits::input_parameter< double >::type lat_deg(lat_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lon_deg(lon_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat_deg(lat_degSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_index_ap3(lon_deg, lat_deg, resolution, index_type));
@@ -1043,13 +1043,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_lonlat_to_index_ap4
-std::string cpp_lonlat_to_index_ap4(double lon_deg, double lat_deg, int resolution, std::string index_type);
+CharacterVector cpp_lonlat_to_index_ap4(NumericVector lon_deg, NumericVector lat_deg, int resolution, std::string index_type);
 RcppExport SEXP _hexify_cpp_lonlat_to_index_ap4(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP resolutionSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type lon_deg(lon_degSEXP);
-    Rcpp::traits::input_parameter< double >::type lat_deg(lat_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lon_deg(lon_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat_deg(lat_degSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_index_ap4(lon_deg, lat_deg, resolution, index_type));
@@ -1057,13 +1057,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_lonlat_to_index_ap7
-std::string cpp_lonlat_to_index_ap7(double lon_deg, double lat_deg, int resolution, std::string index_type);
+CharacterVector cpp_lonlat_to_index_ap7(NumericVector lon_deg, NumericVector lat_deg, int resolution, std::string index_type);
 RcppExport SEXP _hexify_cpp_lonlat_to_index_ap7(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP resolutionSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type lon_deg(lon_degSEXP);
-    Rcpp::traits::input_parameter< double >::type lat_deg(lat_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lon_deg(lon_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat_deg(lat_degSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_lonlat_to_index_ap7(lon_deg, lat_deg, resolution, index_type));
@@ -1071,13 +1071,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_lonlat_to_index
-std::string cpp_lonlat_to_index(double lon_deg, double lat_deg, int resolution, int aperture, std::string index_type);
+CharacterVector cpp_lonlat_to_index(NumericVector lon_deg, NumericVector lat_deg, int resolution, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_lonlat_to_index(SEXP lon_degSEXP, SEXP lat_degSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type lon_deg(lon_degSEXP);
-    Rcpp::traits::input_parameter< double >::type lat_deg(lat_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lon_deg(lon_degSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat_deg(lat_degSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
@@ -1086,12 +1086,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_index_to_lonlat
-Rcpp::NumericVector cpp_index_to_lonlat(std::string index, int aperture, std::string index_type);
+DataFrame cpp_index_to_lonlat(CharacterVector index, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_index_to_lonlat(SEXP indexSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< std::string >::type index_type(index_typeSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_index_to_lonlat(index, aperture, index_type));
@@ -1099,12 +1099,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_z7_canonical_form
-std::string cpp_z7_canonical_form(std::string index, int max_iterations);
+CharacterVector cpp_z7_canonical_form(CharacterVector index, int max_iterations);
 RcppExport SEXP _hexify_cpp_z7_canonical_form(SEXP indexSEXP, SEXP max_iterationsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type index(indexSEXP);
     Rcpp::traits::input_parameter< int >::type max_iterations(max_iterationsSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_z7_canonical_form(index, max_iterations));
     return rcpp_result_gen;

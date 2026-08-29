@@ -13,9 +13,9 @@ hexify_lonlat_to_index(
 )
 }
 \arguments{
-\item{lon}{Longitude in degrees}
+\item{lon}{Longitudes in degrees}
 
-\item{lat}{Latitude in degrees}
+\item{lat}{Latitudes in degrees}
 
 \item{resolution}{Resolution level}
 
@@ -24,7 +24,8 @@ hexify_lonlat_to_index(
 \item{index_type}{Index encoding: "auto" (default), "z3", "z7", or "zorder"}
 }
 \value{
-A character vector of index strings.
+A character vector of index strings, one per point. \code{lon} and \code{lat}
+must be the same length.
 }
 \description{
 Projects geographic coordinates to grid cells and returns their hierarchical

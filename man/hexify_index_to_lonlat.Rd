@@ -11,14 +11,15 @@ hexify_index_to_lonlat(
 )
 }
 \arguments{
-\item{index}{Index string}
+\item{index}{Character vector of index strings}
 
 \item{aperture}{Aperture (3, 4, or 7)}
 
 \item{index_type}{Index encoding. Default "auto" infers from aperture.}
 }
 \value{
-A named numeric vector with \code{lon} and \code{lat} in degrees.
+A data frame with \code{lon} and \code{lat} columns in degrees, one row per
+index.
 }
 \description{
 Returns the geographic coordinates of an indexed cell's center. This is a

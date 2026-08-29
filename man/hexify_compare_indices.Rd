@@ -7,12 +7,13 @@
 hexify_compare_indices(idx1, idx2)
 }
 \arguments{
-\item{idx1}{First index string}
+\item{idx1}{First index strings}
 
-\item{idx2}{Second index string}
+\item{idx2}{Second index strings}
 }
 \value{
-Integer: -1 if idx1 < idx2, 0 if equal, 1 if idx1 > idx2
+Integer vector: -1 where idx1 < idx2, 0 where equal, 1 where
+idx1 > idx2. The two are read in step, and either may be length one.
 }
 \description{
 Lexicographic comparison of two index strings.

@@ -14,11 +14,11 @@ hexify_cell_to_index(
 )
 }
 \arguments{
-\item{face}{Face/quad number (0-19)}
+\item{face}{Face/quad numbers (0-19)}
 
-\item{i}{I coordinate}
+\item{i}{I coordinates}
 
-\item{j}{J coordinate}
+\item{j}{J coordinates}
 
 \item{resolution}{Resolution level}
 
@@ -27,7 +27,8 @@ hexify_cell_to_index(
 \item{index_type}{Index encoding: "auto" (default), "z3", "z7", or "zorder"}
 }
 \value{
-A character vector of index strings.
+A character vector of index strings, one per cell. \code{face}, \code{i} and
+\code{j} are read in step and must be the same length.
 }
 \description{
 Converts cell coordinates (\code{face}, \code{i}, \code{j}) to a hierarchical index string.

@@ -11,14 +11,15 @@ hexify_index_to_cell(
 )
 }
 \arguments{
-\item{index}{Index string}
+\item{index}{Character vector of index strings}
 
 \item{aperture}{Aperture (3, 4, or 7)}
 
 \item{index_type}{Index encoding used. Default "auto" infers from aperture.}
 }
 \value{
-A list with \code{face}, \code{i}, \code{j}, and \code{resolution}.
+A data frame with columns \code{face}, \code{i}, \code{j} and \code{resolution}, one row
+per index.
 }
 \description{
 Decodes a hierarchical index string back to its cell coordinates and

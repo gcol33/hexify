@@ -61,41 +61,23 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
     warning("Some latitude values are outside valid range [-90, 90]")
   }
   
-  n <- length(lon)
-  
-  # Preallocate result vectors
-  cell_indices <- character(n)
-  faces <- integer(n)
-  
-  # Process each point
-  for (i in seq_along(lon)) {
-    # Handle NA values
-    if (is.na(lon[i]) || is.na(lat[i])) {
-      cell_indices[i] <- NA_character_
-      faces[i] <- NA_integer_
-      next
-    }
-    
-    # Call unified C++ conversion function
-    # This function:
-    # 1. Projects lon/lat to icosahedron face
-    # 2. Converts to face plane coordinates
-    # 3. Finds hex cell containing the point
-    # 4. Encodes cell as index string
-    cell_indices[i] <- cpp_lonlat_to_index(
-      lon[i], lat[i], 
-      grid$resolution,
-      grid$aperture,
-      grid$index_type
-    )
-    
-    # The leading field of an index is not always the face on its own -- the
-    # aperture-7 Z7 index packs its hierarchy seed in there too -- so read the
-    # face back through the decoder that owns the format.
-    faces[i] <- as.integer(
-      cpp_index_to_cell(cell_indices[i], grid$aperture, grid$index_type)$face
-    )
-  }
+  # Projects lon/lat to the icosahedron, quantizes to the cell containing each
+  # point, and encodes it as an index string. A missing coordinate gives a
+  # missing index.
+  cell_indices <- cpp_lonlat_to_index(
+    as.numeric(lon), as.numeric(lat),
+    as.integer(grid$resolution),
+    as.integer(grid$aperture),
+    grid$index_type
+  )
+
+  # The leading field of an index is not always the face on its own -- the
+  # aperture-7 Z7 index packs its hierarchy seed in there too -- so read the
+  # face back through the decoder that owns the format.
+  faces <- as.integer(
+    cpp_index_to_cell(cell_indices, as.integer(grid$aperture),
+                      grid$index_type)$face
+  )
   
   return(data.frame(
     h_index = cell_indices,
@@ -134,41 +116,14 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
     stop("h_index must be a character vector")
   }
 
-  n <- length(h_index)
-
-  # Preallocate result vectors
-  lon <- numeric(n)
-  lat <- numeric(n)
-  
-  # Process each cell index
-  for (i in seq_along(h_index)) {
-    # Handle NA values
-    if (is.na(h_index[i])) {
-      lon[i] <- NA_real_
-      lat[i] <- NA_real_
-      next
-    }
-
-    # Call C++ conversion function
-    # This function:
-    # 1. Decodes the index string to face, i, j, resolution
-    # 2. Calculates hex center in face plane coordinates
-    # 3. Projects back to lon/lat using inverse ISEA projection
-    result <- cpp_index_to_lonlat(
-      h_index[i],
-      grid$aperture,
-      grid$index_type
-    )
-
-    # Extract lon/lat from named vector
-    lon[i] <- result["lon"]
-    lat[i] <- result["lat"]
-  }
-
-  return(data.frame(
-    lon = lon,
-    lat = lat
-  ))
+  # Decodes each index string to face, i, j and resolution, takes the cell
+  # center in face plane coordinates and projects it back through the inverse
+  # ISEA projection. A missing index gives a missing coordinate.
+  cpp_index_to_lonlat(
+    h_index,
+    as.integer(grid$aperture),
+    grid$index_type
+  )
 }
 
 # =============================================================================

@@ -56,7 +56,7 @@ test_that("hexify_get_parent of child produces shorter index", {
   parent <- hexify_lonlat_to_index(10, 50, resolution = 3, aperture = 3)
 
   # Get children
-  children <- hexify_get_children(parent, aperture = 3)
+  children <- hexify_get_children(parent, aperture = 3)[[1]]
 
   # Verify each child's parent is shorter than the child
   for (child in children) {
@@ -73,7 +73,7 @@ test_that("hexify_get_children returns correct number for aperture 3", {
   setup_icosa()
 
   index <- hexify_lonlat_to_index(10, 50, resolution = 3, aperture = 3)
-  children <- hexify_get_children(index, aperture = 3)
+  children <- hexify_get_children(index, aperture = 3)[[1]]
 
   # Aperture 3 should have 3 children
   expect_equal(length(children), 3)
@@ -83,7 +83,7 @@ test_that("hexify_get_children returns correct number for aperture 4", {
   setup_icosa()
 
   index <- hexify_lonlat_to_index(10, 50, resolution = 3, aperture = 4)
-  children <- hexify_get_children(index, aperture = 4, index_type = "zorder")
+  children <- hexify_get_children(index, aperture = 4, index_type = "zorder")[[1]]
 
   # Aperture 4 should have 4 children
   expect_equal(length(children), 4)
@@ -93,7 +93,7 @@ test_that("hexify_get_children returns correct number for aperture 7", {
   setup_icosa()
 
   index <- hexify_lonlat_to_index(10, 50, resolution = 3, aperture = 7)
-  children <- hexify_get_children(index, aperture = 7, index_type = "z7")
+  children <- hexify_get_children(index, aperture = 7, index_type = "z7")[[1]]
 
   # Aperture 7 should have 7 children
   expect_equal(length(children), 7)
@@ -103,7 +103,7 @@ test_that("hexify_get_children returns longer indices", {
   setup_icosa()
 
   index <- hexify_lonlat_to_index(10, 50, resolution = 3, aperture = 3)
-  children <- hexify_get_children(index, aperture = 3)
+  children <- hexify_get_children(index, aperture = 3)[[1]]
 
   for (child in children) {
     expect_true(nchar(child) > nchar(index))
@@ -333,4 +333,108 @@ test_that("hexify_index_to_lonlat agrees with cell_to_lonlat for apertures 3 and
       }
     }
   }
+})
+
+# =============================================================================
+# VECTORISED INPUT
+# =============================================================================
+
+test_that("hexify_lonlat_to_index takes a vector of points", {
+  setup_icosa()
+
+  lon <- c(0, 10, 20, -175, 0)
+  lat <- c(45, 50, 55, -60, 89.5)
+
+  for (ap in c(3, 4, 7)) {
+    label <- sprintf("aperture %d", ap)
+    vec <- hexify_lonlat_to_index(lon, lat, resolution = 3, aperture = ap)
+
+    expect_type(vec, "character")
+    expect_length(vec, length(lon))
+
+    one_by_one <- vapply(seq_along(lon), function(k) {
+      hexify_lonlat_to_index(lon[k], lat[k], resolution = 3, aperture = ap)
+    }, character(1))
+    expect_identical(vec, one_by_one, info = label)
+  }
+})
+
+test_that("the index consumers take the vector cell_to_index returns", {
+  for (ap in c(3, 4, 7)) {
+    label <- sprintf("aperture %d", ap)
+    g <- hex_grid(resolution = 3, aperture = ap)
+    ix <- cell_to_index(1:5, g)
+
+    cells <- hexify_index_to_cell(ix, aperture = ap)
+    expect_s3_class(cells, "data.frame")
+    expect_equal(nrow(cells), 5L, info = label)
+    expect_named(cells, c("face", "i", "j", "resolution"))
+
+    coords <- hexify_index_to_lonlat(ix, aperture = ap)
+    expect_s3_class(coords, "data.frame")
+    expect_equal(nrow(coords), 5L, info = label)
+    expect_equal(coords$lon, cell_to_lonlat(1:5, g)$lon_deg,
+                 tolerance = 1e-6, info = label)
+
+    expect_equal(hexify_get_resolution(ix, aperture = ap), rep(3L, 5),
+                 info = label)
+    expect_length(hexify_get_parent(ix, aperture = ap), 5L)
+
+    kids <- hexify_get_children(ix, aperture = ap)
+    expect_type(kids, "list")
+    expect_length(kids, 5L)
+
+    # Every index compares equal to itself and orders against a fixed one
+    expect_equal(hexify_compare_indices(ix, ix), rep(0L, 5), info = label)
+    expect_length(hexify_compare_indices(ix, ix[1]), 5L)
+  }
+
+  g7 <- hex_grid(resolution = 3, aperture = 7)
+  ix7 <- cell_to_index(1:5, g7)
+  expect_identical(hexify_z7_canonical(ix7), ix7)
+})
+
+test_that("hexify_cell_to_index reads face, i and j in step", {
+  g <- hex_grid(resolution = 3, aperture = 3)
+  qij <- cpp_cell_to_quad_ij(1:5, 3L, 3L)
+
+  expect_identical(
+    hexify_cell_to_index(qij$quad, qij$i, qij$j, resolution = 3, aperture = 3),
+    cell_to_index(1:5, g)
+  )
+})
+
+test_that("a missing coordinate or index carries through as missing", {
+  setup_icosa()
+
+  idx <- hexify_lonlat_to_index(c(0, NA, 20), c(45, 50, NA),
+                                resolution = 3, aperture = 3)
+  expect_equal(is.na(idx), c(FALSE, TRUE, TRUE))
+
+  with_na <- c(idx[1], NA)
+  expect_equal(is.na(hexify_get_resolution(with_na, aperture = 3)),
+               c(FALSE, TRUE))
+  expect_equal(is.na(hexify_index_to_lonlat(with_na, aperture = 3)$lon),
+               c(FALSE, TRUE))
+  expect_equal(is.na(hexify_index_to_cell(with_na, aperture = 3)$face),
+               c(FALSE, TRUE))
+  expect_equal(is.na(hexify_get_parent(with_na, aperture = 3)),
+               c(FALSE, TRUE))
+})
+
+test_that("arguments read in step are named when their lengths differ", {
+  lonlat <- tryCatch(
+    hexify_lonlat_to_index(c(0, 10), 45, resolution = 3, aperture = 3),
+    error = conditionMessage
+  )
+  expect_match(lonlat, "hexify_lonlat_to_index", fixed = TRUE)
+  expect_match(lonlat, "`lon` and `lat` are read in step", fixed = TRUE)
+  expect_match(lonlat, "lon = 2, lat = 1", fixed = TRUE)
+
+  cell <- tryCatch(
+    hexify_cell_to_index(c(0, 1), 0, 0, resolution = 3, aperture = 3),
+    error = conditionMessage
+  )
+  expect_match(cell, "hexify_cell_to_index", fixed = TRUE)
+  expect_match(cell, "`face` and `i` and `j` are read in step", fixed = TRUE)
 })

@@ -11,10 +11,8 @@ isea_grid_at <- function(g, resolution) {
 #' The cells an ISEA index string names
 #' @noRd
 isea_index_cells <- function(indices, g) {
-  vapply(indices, isea_index_to_cell_one, numeric(1),
-         aperture_int = aperture_to_int(g@aperture),
-         index_type = index_type_for_aperture(g@aperture),
-         USE.NAMES = FALSE)
+  isea_index_to_cells(indices, aperture_to_int(g@aperture),
+                      index_type_for_aperture(g@aperture))
 }
 
 #' Stop unless every index names a cell of the grid

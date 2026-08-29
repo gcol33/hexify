@@ -18,14 +18,15 @@
 #' Converts cell coordinates (`face`, `i`, `j`) to a hierarchical index string.
 #' The index type is selected from `aperture` when `index_type = "auto"`.
 #'
-#' @param face Face/quad number (0-19)
-#' @param i I coordinate
-#' @param j J coordinate
+#' @param face Face/quad numbers (0-19)
+#' @param i I coordinates
+#' @param j J coordinates
 #' @param resolution Resolution level
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding: "auto" (default), "z3", "z7", or "zorder"
 #'
-#' @return A character vector of index strings.
+#' @return A character vector of index strings, one per cell. `face`, `i` and
+#'   `j` are read in step and must be the same length.
 #'
 #' @details
 #' Default index types by aperture:
@@ -54,6 +55,7 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
   index_type <- match.arg(index_type)
   validate_resolution(resolution)
   validate_aperture(aperture)
+  validate_same_length(list(face = face, i = i, j = j), "hexify_cell_to_index")
   cpp_cell_to_index(
     as.integer(face), as.numeric(i), as.numeric(j),
     as.integer(resolution), as.integer(aperture), index_type
@@ -66,11 +68,12 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
 #' resolution. For Z7, valid indices round-trip exactly through
 #' [hexify_cell_to_index()].
 #'
-#' @param index Index string
+#' @param index Character vector of index strings
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding used. Default "auto" infers from aperture.
 #'
-#' @return A list with `face`, `i`, `j`, and `resolution`.
+#' @return A data frame with columns `face`, `i`, `j` and `resolution`, one row
+#'   per index.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -94,13 +97,14 @@ hexify_index_to_cell <- function(index, aperture = 3L,
 #' Projects geographic coordinates to grid cells and returns their hierarchical
 #' index strings. Inputs are vectorized over `lon` and `lat`.
 #'
-#' @param lon Longitude in degrees
-#' @param lat Latitude in degrees
+#' @param lon Longitudes in degrees
+#' @param lat Latitudes in degrees
 #' @param resolution Resolution level
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding: "auto" (default), "z3", "z7", or "zorder"
 #'
-#' @return A character vector of index strings.
+#' @return A character vector of index strings, one per point. `lon` and `lat`
+#'   must be the same length.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -115,7 +119,8 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
   index_type <- match.arg(index_type)
   validate_resolution(resolution)
   validate_aperture(aperture)
-  cpp_lonlat_to_index(lon, lat, as.integer(resolution),
+  validate_same_length(list(lon = lon, lat = lat), "hexify_lonlat_to_index")
+  cpp_lonlat_to_index(as.numeric(lon), as.numeric(lat), as.integer(resolution),
                       as.integer(aperture), index_type)
 }
 
@@ -125,11 +130,12 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
 #' cell-level inverse of [hexify_lonlat_to_index()]: the returned point is the
 #' center, not necessarily the original input point.
 #'
-#' @param index Index string
+#' @param index Character vector of index strings
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding. Default "auto" infers from aperture.
 #'
-#' @return A named numeric vector with `lon` and `lat` in degrees.
+#' @return A data frame with `lon` and `lat` columns in degrees, one row per
+#'   index.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -151,11 +157,11 @@ hexify_index_to_lonlat <- function(index, aperture = 3L,
 #'
 #' Returns the parent index (one resolution coarser).
 #'
-#' @param index Index string
+#' @param index Character vector of index strings
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding. Default "auto".
 #'
-#' @return Parent index string
+#' @return Character vector of parent index strings
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -171,11 +177,11 @@ hexify_get_parent <- function(index, aperture = 3L,
 #'
 #' Returns all children indices (one resolution finer).
 #'
-#' @param index Index string
+#' @param index Character vector of index strings
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding. Default "auto".
 #'
-#' @return Character vector of child indices
+#' @return A list of character vectors, the child indices of each input index
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -191,11 +197,11 @@ hexify_get_children <- function(index, aperture = 3L,
 #'
 #' Returns the resolution level encoded in an index string.
 #'
-#' @param index Index string
+#' @param index Character vector of index strings
 #' @param aperture Aperture (3, 4, or 7)
 #' @param index_type Index encoding. Default "auto".
 #'
-#' @return Integer resolution level
+#' @return Integer vector of resolution levels
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -211,10 +217,11 @@ hexify_get_resolution <- function(index, aperture = 3L,
 #'
 #' Lexicographic comparison of two index strings.
 #'
-#' @param idx1 First index string
-#' @param idx2 Second index string
+#' @param idx1 First index strings
+#' @param idx2 Second index strings
 #'
-#' @return Integer: -1 if idx1 < idx2, 0 if equal, 1 if idx1 > idx2
+#' @return Integer vector: -1 where idx1 < idx2, 0 where equal, 1 where
+#'   idx1 > idx2. The two are read in step, and either may be length one.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -321,11 +328,11 @@ hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
 #' function normally returns its input unchanged. It remains available for
 #' validating or normalizing indices created by older hexify versions.
 #'
-#' @param index A length-one Z7 index string.
+#' @param index Character vector of Z7 index strings.
 #' @param max_iterations Maximum number of decode/encode iterations. This is a
 #'   safety bound for legacy indices; the default is 128.
 #'
-#' @return A length-one character string containing the stable index.
+#' @return A character vector of stable indices.
 #'
 #' @family hierarchical index
 #' @keywords internal

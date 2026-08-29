@@ -11,14 +11,14 @@ hexify_get_children(
 )
 }
 \arguments{
-\item{index}{Index string}
+\item{index}{Character vector of index strings}
 
 \item{aperture}{Aperture (3, 4, or 7)}
 
 \item{index_type}{Index encoding. Default "auto".}
 }
 \value{
-Character vector of child indices
+A list of character vectors, the child indices of each input index
 }
 \description{
 Returns all children indices (one resolution finer).

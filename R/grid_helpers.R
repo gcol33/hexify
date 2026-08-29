@@ -786,36 +786,45 @@ cell_area <- function(cell_id = NULL, grid) {
 # HIERARCHICAL INDEX HELPERS
 # =============================================================================
 
-#' Hierarchical index string of one cell on a pure-aperture grid
+#' Hierarchical index strings of cells on a pure-aperture grid
 #'
-#' The index encoders work on (quad, i, j), so a cell ID makes the round trip
+#' The index encoders work on (quad, i, j), so cell IDs make the round trip
 #' through `cpp_cell_to_quad_ij()` first. `cell_to_index()`, `get_parent()` and
 #' `get_children()` all enter the hierarchy this way.
 #'
-#' @param cell_id One cell ID
-#' @param resolution Resolution the cell ID belongs to
+#' @param cell_id Numeric vector of cell IDs
+#' @param resolution Resolution the cell IDs belong to
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
-#' @return Index string
+#' @return Character vector of index strings
 #' @noRd
-isea_cell_to_index_one <- function(cell_id, resolution, aperture_int, index_type) {
-  qij <- cpp_cell_to_quad_ij(cell_id, resolution, aperture_int)
+isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type) {
+  qij <- cpp_cell_to_quad_ij(as.numeric(cell_id), resolution, aperture_int)
   cpp_cell_to_index(qij$quad, qij$i, qij$j, resolution, aperture_int, index_type)
 }
 
-#' Cell ID of one hierarchical index string on a pure-aperture grid
+#' Cell IDs of hierarchical index strings on a pure-aperture grid
 #'
-#' Inverse of `isea_cell_to_index_one()`. The index carries its own resolution,
-#' which is the one the returned cell ID belongs to.
+#' Inverse of `isea_cells_to_index()`. Each index carries its own resolution,
+#' which is the one its cell ID belongs to, so the strings are packed back into
+#' cell IDs one resolution at a time.
 #'
-#' @param index One index string
+#' @param index Character vector of index strings
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
-#' @return Cell ID
+#' @return Numeric vector of cell IDs
 #' @noRd
-isea_index_to_cell_one <- function(index, aperture_int, index_type) {
-  cell <- cpp_index_to_cell(index, aperture_int, index_type)
-  cpp_quad_ij_to_cell(cell$face, cell$i, cell$j, cell$resolution, aperture_int)
+isea_index_to_cells <- function(index, aperture_int, index_type) {
+  cell <- cpp_index_to_cell(as.character(index), aperture_int, index_type)
+  out <- rep(NA_real_, nrow(cell))
+
+  for (resolution in unique(stats::na.omit(cell$resolution))) {
+    at_res <- !is.na(cell$resolution) & cell$resolution == resolution
+    out[at_res] <- cpp_quad_ij_to_cell(cell$face[at_res], cell$i[at_res],
+                                       cell$j[at_res], resolution, aperture_int)
+  }
+
+  out
 }
 
 #' Convert cell ID to hierarchical index string
@@ -850,9 +859,7 @@ cell_to_index <- function(cell_id, grid) {
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
 
-  vapply(as.numeric(cell_id), isea_cell_to_index_one, character(1),
-         resolution = g@resolution, aperture_int = aperture_int,
-         index_type = index_type, USE.NAMES = FALSE)
+  isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type)
 }
 
 #' Get parent cell
@@ -899,13 +906,11 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   # cpp_get_parent_index() strips one level off the index string, so `levels`
   # levels up is that many strips.
-  vapply(as.numeric(cell_id), function(id) {
-    idx <- isea_cell_to_index_one(id, g@resolution, aperture_int, index_type)
-    for (step in seq_len(levels)) {
-      idx <- cpp_get_parent_index(idx, aperture_int, index_type)
-    }
-    isea_index_to_cell_one(idx, aperture_int, index_type)
-  }, numeric(1), USE.NAMES = FALSE)
+  idx <- isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type)
+  for (step in seq_len(levels)) {
+    idx <- cpp_get_parent_index(idx, aperture_int, index_type)
+  }
+  isea_index_to_cells(idx, aperture_int, index_type)
 }
 
 #' Get children cells
@@ -990,14 +995,13 @@ isea_children_one_level <- function(front, resolution, g) {
                          radius_km = radius)
   n_child <- aperture_n_cells(g@aperture, child_res)
 
-  expansion <- lapply(parents, function(id) {
-    idx <- isea_cell_to_index_one(id, resolution, aperture_int, index_type)
-    kids <- cpp_get_children_indices(idx, aperture = aperture_int,
-                                     index_type = index_type)
-    vapply(kids, isea_index_to_cell_one, numeric(1),
-           aperture_int = aperture_int, index_type = index_type,
-           USE.NAMES = FALSE)
-  })
+  parent_idx <- isea_cells_to_index(parents, resolution, aperture_int, index_type)
+  kids <- cpp_get_children_indices(parent_idx, aperture = aperture_int,
+                                   index_type = index_type)
+  flat <- isea_index_to_cells(unlist(kids, use.names = FALSE), aperture_int,
+                              index_type)
+  expansion <- unname(split(flat, factor(rep(seq_along(kids), lengths(kids)),
+                                         levels = seq_along(kids))))
 
   centre <- cell_to_lonlat(parents, parent_grid)
   central <- lonlat_to_cell(centre$lon_deg, centre$lat_deg, child_grid)

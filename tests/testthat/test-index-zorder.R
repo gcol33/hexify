@@ -344,7 +344,7 @@ test_that("Z-Order: parent/child relationships", {
                 label = sprintf("ap=%d", tc$ap))
     
     # Get children
-    children <- cpp_get_children_indices(parent_idx, tc$ap, "zorder")
+    children <- cpp_get_children_indices(parent_idx, tc$ap, "zorder")[[1]]
     
     # Child should be in children list
     expect_true(child_idx %in% children,

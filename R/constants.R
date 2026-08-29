@@ -421,6 +421,28 @@ validate_lat <- function(lat, warn = TRUE) {
   valid
 }
 
+#' Validate that vectors read in step carry the same length
+#'
+#' Names the calling function and the arguments, so a caller passing three
+#' longitudes and one latitude reads which of its own arguments is short.
+#'
+#' @param values Named list of the vectors read in step
+#' @param what The calling function, for the message
+#' @return TRUE if valid, otherwise throws error
+#' @noRd
+validate_same_length <- function(values, what) {
+  n <- lengths(values)
+  if (length(unique(n)) > 1L) {
+    stop(sprintf(
+      "%s(): %s are read in step and must be the same length; got %s",
+      what,
+      paste(sprintf("`%s`", names(values)), collapse = " and "),
+      paste(sprintf("%s = %d", names(values), n), collapse = ", ")
+    ), call. = FALSE)
+  }
+  TRUE
+}
+
 #' Validate resolution value
 #' @param resolution Integer resolution value
 #' @return TRUE if valid, otherwise throws error

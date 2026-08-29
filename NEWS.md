@@ -9,6 +9,11 @@
   The `geometry` argument follows `...`, as the generic's signature requires, so
   name it: `st_as_sf(x, geometry = "polygon")`.
 
+* The index entry points that returned one value now return one per index:
+  `hexify_index_to_cell()` and `hexify_index_to_lonlat()` a data frame with a
+  row per index, `hexify_get_children()` a list with an element per index.
+  Reading a single index out of them takes `[[1]]` or `[1, ]`.
+
 ## New features
 
 * `summary()` on a grid or on gridded data returns what printing it reports, as
@@ -42,6 +47,18 @@
   vertex cell writes, is refused by name rather than reported as a cell number
   the caller never wrote. Aperture 7 stops one level above resolution 0, where
   its hierarchy is inconsistent (#75).
+
+* `hexify_lonlat_to_index()` documented itself as vectorised over `lon` and
+  `lat` and took one point, and nothing that consumes an index string accepted
+  the vector `cell_to_index()` returns: `hexify_index_to_cell()`,
+  `hexify_index_to_lonlat()`, `hexify_get_parent()`, `hexify_get_children()`,
+  `hexify_get_resolution()`, `hexify_compare_indices()` and
+  `hexify_z7_canonical()` each stopped on Rcpp's own scalar-coercion message,
+  which named no hexify function and no argument. Every index entry point takes
+  vectors now and loops in C++, so a caller pays one call rather than one per
+  element, and a missing coordinate or index carries through as a missing
+  result. Arguments read in step whose lengths differ are named, with the
+  function they were passed to.
 
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the

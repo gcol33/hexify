@@ -36,10 +36,7 @@ hexify_assign <- function(lon, lat, effective_res, make_polygons = FALSE) {
   quad_ij <- cpp_cell_to_quad_ij(cell_id, res, 3L)
 
   df <- data.frame(
-    id = vapply(seq_along(cell_id), function(k) {
-      cpp_cell_to_index(quad_ij$quad[k], quad_ij$i[k], quad_ij$j[k],
-                        res, 3L, "z3")
-    }, character(1)),
+    id = cpp_cell_to_index(quad_ij$quad, quad_ij$i, quad_ij$j, res, 3L, "z3"),
     face = quad_ij$quad,
     effective_res = res,
     center_lon = center$lon_deg,
