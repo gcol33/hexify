@@ -77,6 +77,17 @@
   stopped on a coerced-aperture message naming neither the grid nor the reason.
   They say plainly that the sequence has no adjacency (#76).
 
+* `grid_clip()`, `hex_zonal()` and `hex_extract()` stopped on a grid built for
+  another body, with sf's own `st_crs(x) == st_crs(y) is not TRUE`, which names
+  neither the function nor the boundary nor the radius that separates them. A
+  boundary and a grid on two bodies are now reconciled in one place: two CRSs on
+  the same body reproject as before, and where the bodies differ, longitude and
+  latitude name the same region on either sphere, so a lon/lat boundary is read
+  in the grid's own CRS and the caller is told which two CRSs met. A projected
+  CRS carries lengths that do not carry over, and is refused with both named.
+  `hexify()` read sf coordinates the same way, transforming them to WGS84
+  whatever body the grid was on, and now reads them on the grid's own.
+
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the
   conversion warns and names the radius being dropped. `from_dggrid()` is the

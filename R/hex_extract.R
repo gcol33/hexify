@@ -80,9 +80,12 @@ hex_extract <- function(raster, grid, cells = NULL, boundary = NULL) {
   u_cell_ids <- cell_ids[uid]
   u_centers <- centers[uid, , drop = FALSE]
 
-  # Extract raster values at cell centers
-  pts <- terra::vect(u_centers, crs = grid_crs_wkt(g))
-  extracted <- terra::extract(raster, pts)
+  # Extract raster values at cell centers, read in the raster's own CRS
+  pts <- sf::st_as_sf(as.data.frame(u_centers), coords = c("lon", "lat"),
+                      crs = grid_crs(g))
+  pts <- geometry_in_crs(pts, raster_crs(raster), "hex_extract",
+                         "the cell-center geometry", "raster")
+  extracted <- terra::extract(raster, terra::vect(pts))
 
   # Build result
   result <- data.frame(cell_id = u_cell_ids, stringsAsFactors = FALSE)

@@ -620,6 +620,8 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
   }
 
   g <- extract_grid(grid)
+  boundary <- geometry_in_crs(boundary, grid_crs(g), "grid_clip",
+                              "the boundary", "grid")
 
   # H3 path: fill boundary polygon using native C backend
   if (is_h3_grid(g)) {

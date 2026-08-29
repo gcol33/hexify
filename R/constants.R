@@ -206,6 +206,90 @@ format_crs <- function(crs) {
   if (is.character(crs)) crs else sprintf("EPSG:%d", as.integer(crs))
 }
 
+#' A CRS as it reads in a message
+#'
+#' The SRID where there is one, and whatever sf was given otherwise.
+#' @param crs An object of class crs
+#' @noRd
+crs_label <- function(crs) {
+  for (field in c("srid", "input", "proj4string")) {
+    label <- crs[[field]]
+    if (!is.null(label) && length(label) == 1L && !is.na(label) &&
+        nzchar(label)) {
+      return(label)
+    }
+  }
+  "an unnamed CRS"
+}
+
+#' Are two CRSs on the same body?
+#'
+#' The semi-major axis is the body: Earth's reference systems all carry the
+#' same one, and a grid on another body carries that body's radius. A CRS that
+#' does not report one is taken as being on the same body, leaving the question
+#' to 'PROJ'.
+#' @param a,b Objects of class crs
+#' @noRd
+same_body_crs <- function(a, b) {
+  radii <- suppressWarnings(c(as.numeric(a$SemiMajor), as.numeric(b$SemiMajor)))
+  if (length(radii) != 2L || !all(is.finite(radii))) {
+    return(TRUE)
+  }
+  isTRUE(all.equal(radii[1], radii[2], tolerance = 1e-6))
+}
+
+#' Geometry read in another CRS
+#'
+#' A grid on another body carries a longlat CRS on that body's sphere, so the
+#' boundary a caller supplies, or the raster a caller extracts from, sits under
+#' a CRS 'PROJ' will not reach: it holds no operation between two celestial
+#' bodies. Longitude and latitude are the same angles on either sphere, though,
+#' and name the same region there, so lon/lat geometry is read in the target
+#' CRS and the caller is told. Anything else carries lengths, which are not the
+#' same, and is refused with both CRSs named. Two CRSs on one body reproject as
+#' they always have.
+#'
+#' @param x An sf or sfc object
+#' @param target The CRS to read it in, as sf reads a CRS
+#' @param what The calling function, for the messages
+#' @param subject What `x` is, for the messages
+#' @param counterpart What `target` belongs to, for the messages
+#' @return `x`, in `target`
+#' @noRd
+geometry_in_crs <- function(x, target, what, subject, counterpart) {
+  source <- sf::st_crs(x)
+
+  if (is.na(source) || is.na(target) || source == target) {
+    return(x)
+  }
+
+  if (same_body_crs(source, target)) {
+    return(sf::st_transform(x, target))
+  }
+
+  if (!isTRUE(sf::st_is_longlat(source)) || !isTRUE(sf::st_is_longlat(target))) {
+    stop(what, "(): ", subject, " is in ", crs_label(source), " and the ",
+         counterpart, " in ", crs_label(target),
+         ", which are on different bodies, and a projected CRS carries lengths ",
+         "that do not carry over. Give both in longitude and latitude, which ",
+         "names the same region on either body.", call. = FALSE)
+  }
+
+  message(what, "(): ", subject, " is in ", crs_label(source), " and the ",
+          counterpart, " in ", crs_label(target), ". Longitude and latitude ",
+          "name the same region on both, so ", subject, " is read in the ",
+          counterpart, "'s CRS.")
+  # sf warns that replacing a CRS does not reproject, which is the point
+  suppressWarnings(sf::st_set_crs(x, target))
+}
+
+#' CRS of a terra raster, as sf reads a CRS
+#' @param raster A terra SpatRaster
+#' @noRd
+raster_crs <- function(raster) {
+  parse_crs(terra::crs(raster))
+}
+
 #' 'H3' areas read on another body
 #'
 #' A cell covers the same solid angle on any sphere, and 'H3' reports an area as

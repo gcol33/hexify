@@ -64,11 +64,11 @@ hex_zonal <- function(raster, grid, fun = "mean", boundary = NULL,
     stop("Provide a HexData object, cell IDs via 'cells', or a 'boundary' polygon")
   }
 
-  # Generate hex polygons
+  # Generate hex polygons, read in the raster's own CRS
   hex_sf <- cell_to_sf(cell_ids, g)
-
-  # Convert to terra SpatVector
-  hex_vect <- terra::vect(hex_sf)
+  hex_vect <- terra::vect(geometry_in_crs(hex_sf, raster_crs(raster),
+                                          "hex_zonal", "the grid's cell geometry",
+                                          "raster"))
 
   # Extract zonal statistics. terra::extract() has no built-in "count"
   # function, so translate it to a count of non-NA pixels per cell.

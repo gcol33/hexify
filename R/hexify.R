@@ -150,17 +150,12 @@ hexify <- function(data,
       stop("Package 'sf' is required to process sf objects")
     }
 
-    # Get coordinates, transforming to WGS84 if needed. A missing CRS (not
-    # merely one without a mapped EPSG code) can't be transformed from, so
-    # treat it as already lon/lat rather than erroring; otherwise compare
-    # full CRS objects (not just $epsg, which is NA for many valid CRS built
-    # from WKT/proj4 strings) and transform when they differ.
-    data_crs <- sf::st_crs(data)
-    if (is.na(data_crs) || data_crs == sf::st_crs(4326)) {
-      coords_sf <- data
-    } else {
-      coords_sf <- sf::st_transform(data, 4326)
-    }
+    # The quantizer reads longitude and latitude on the grid's own body, so
+    # that is the frame the coordinates are put in: WGS84 for an Earth grid,
+    # and the body's own sphere elsewhere. Data carrying no CRS is taken as
+    # already being in it.
+    coords_sf <- geometry_in_crs(data, grid_crs(hex_grid_obj), "hexify",
+                                 "the data", "grid")
 
     coords <- sf::st_coordinates(coords_sf)
     lon_vec <- coords[, 1]
