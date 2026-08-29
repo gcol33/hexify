@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Gilles
 Colling</h4>
             
-            <h4 data-toc-skip class="date">2026-08-24</h4>
+            <h4 data-toc-skip class="date">2026-08-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/vignettes/quickstart.Rmd" class="external-link"><code>vignettes/quickstart.Rmd</code></a></small>
       <div class="d-none name"><code>quickstart.Rmd</code></div>
@@ -2743,9 +2743,20 @@ latitude. hexify implements the ISEA (Icosahedral Snyder Equal Area)
 projection, providing hexagonal cells that are all the same size from
 the equator to the Arctic.</p>
 <div class="section level3">
-<h3 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+<h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"hexify"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Development version</span></span>
+<span><span class="co"># pak::pak("gcol33/hexify")</span></span>
+<span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gillescolling.com/hexify/">hexify</a></span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Sample data: European cities</span></span>
 <span><span class="va">cities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Vienna"</span>, <span class="st">"Paris"</span>, <span class="st">"Madrid"</span>, <span class="st">"Berlin"</span>, <span class="st">"Rome"</span><span class="op">)</span>,</span>
@@ -2789,7 +2800,7 @@ the equator to the Arctic.</p>
 <div class="section level4">
 <h4 id="accessing-hexdata">Accessing HexData<a class="anchor" aria-label="anchor" href="#accessing-hexdata"></a>
 </h4>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get the grid specification</span></span>
 <span><span class="fu"><a href="../reference/grid_info.html">grid_info</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; HexGridInfo Specification</span></span>
@@ -2845,7 +2856,7 @@ with a geometry column of points, lines or polygons, and a CRS that says
 how to read their coordinates. hexify takes an sf object wherever it
 takes a data frame, and transforms the coordinates itself when the CRS
 differs from the grid’s.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create sf object (any CRS works - hexify transforms automatically)</span></span>
@@ -2864,7 +2875,7 @@ differs from the grid’s.</p>
 </h3>
 <p>This example demonstrates the typical workflow: loading point data,
 assigning to grid cells, aggregating, and visualizing.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
@@ -2898,7 +2909,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="assign-points-to-grid-cells">Assign Points to Grid Cells<a class="anchor" aria-label="anchor" href="#assign-points-to-grid-cells"></a>
 </h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create grid and assign observations (coarser grid for faster build)</span></span>
 <span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">50000</span><span class="op">)</span></span>
 <span><span class="va">birds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">birds</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
@@ -2936,7 +2947,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="generate-cell-polygons-and-visualize">Generate Cell Polygons and Visualize<a class="anchor" aria-label="anchor" href="#generate-cell-polygons-and-visualize"></a>
 </h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate polygons for cells with data</span></span>
 <span><span class="va">cell_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cell_to_sf.html">cell_to_sf</a></span><span class="op">(</span><span class="va">obs_counts</span><span class="op">$</span><span class="va">cell_id</span>, <span class="va">grid</span><span class="op">)</span></span>
 <span><span class="va">cell_polys</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">cell_polys</span>, <span class="va">obs_counts</span>, by <span class="op">=</span> <span class="st">"cell_id"</span><span class="op">)</span></span>
@@ -3802,7 +3813,7 @@ assigning to grid cells, aggregating, and visualizing.</p>
 <div class="section level4">
 <h4 id="species-richness-map">Species Richness Map<a class="anchor" aria-label="anchor" href="#species-richness-map"></a>
 </h4>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">region</span>, fill <span class="op">=</span> <span class="st">"gray95"</span>, color <span class="op">=</span> <span class="st">"gray70"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">cell_polys</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">n_species</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>

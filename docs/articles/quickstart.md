@@ -18,6 +18,18 @@ cells of **equal area**, regardless of latitude. hexify implements the
 ISEA (Icosahedral Snyder Equal Area) projection, providing hexagonal
 cells that are all the same size from the equator to the Arctic.
 
+### Installation
+
+``` r
+
+install.packages("hexify")
+
+# Development version
+# pak::pak("gcol33/hexify")
+
+library(hexify)
+```
+
 ### Basic Usage
 
 ``` r
