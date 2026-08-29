@@ -7,11 +7,20 @@
 n_cells(x)
 }
 \arguments{
-\item{x}{A HexData object}
+\item{x}{A HexData or HexGridInfo object}
 }
 \value{
-Integer count of unique cells
+For a HexData, the number of distinct cells its rows fall in. For a
+HexGridInfo, the number of cells the grid divides the body into, which runs
+past integer range at fine resolutions and so comes back as a double.
 }
 \description{
-Get the number of unique cells in a HexData object.
+Counts cells: those a dataset occupies, or those a grid contains.
+}
+\examples{
+grid <- hex_grid(area_km2 = 100000)
+n_cells(grid)
+
+df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
+n_cells(hexify(df, lon = "lon", lat = "lat", grid = grid))
 }

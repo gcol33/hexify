@@ -265,13 +265,39 @@ setGeneric("cells", function(x) standardGeneric("cells"))
 
 #' Get Number of Cells
 #'
-#' Get the number of unique cells in a HexData object.
+#' Counts cells: those a dataset occupies, or those a grid contains.
 #'
-#' @param x A HexData object
-#' @return Integer count of unique cells
+#' @param x A HexData or HexGridInfo object
+#' @return For a HexData, the number of distinct cells its rows fall in. For a
+#'   HexGridInfo, the number of cells the grid divides the body into, which runs
+#'   past integer range at fine resolutions and so comes back as a double.
 #'
 #' @export
+#' @examples
+#' grid <- hex_grid(area_km2 = 100000)
+#' n_cells(grid)
+#'
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
+#' n_cells(hexify(df, lon = "lon", lat = "lat", grid = grid))
 setGeneric("n_cells", function(x) standardGeneric("n_cells"))
+
+#' Number of cells a grid contains
+#'
+#' Read by both `n_cells()` and the grid's own `summary()`, so the number a grid
+#' reports and the number it prints are the same one.
+#'
+#' @param grid A HexGridInfo object
+#' @return The cell count, as a double
+#' @noRd
+grid_n_cells <- function(grid) {
+  gt <- tryCatch(grid@grid_type, error = function(e) "isea")
+
+  if (gt == "h3") {
+    2 + 120 * 7^grid@resolution
+  } else {
+    aperture_n_cells(grid@aperture, grid@resolution)
+  }
+}
 
 # =============================================================================
 # ACCESSORS FOR HexGridInfo
@@ -290,6 +316,7 @@ setGeneric("n_cells", function(x) standardGeneric("n_cells"))
 #' @return
 #' - `$`: The value of the requested slot
 #' - `names`: Character vector of slot names
+#' - `n_cells`: The number of cells the grid contains
 #' - `show`: The object, invisibly (called for side effect of printing)
 #' - `as.list`: A named list of slot values
 #' @keywords internal
@@ -299,6 +326,13 @@ NULL
 #' @export
 setMethod("$", "HexGridInfo", function(x, name) {
   slot(x, name)
+})
+
+#' @rdname HexGridInfo-methods
+#' @keywords internal
+#' @export
+setMethod("n_cells", "HexGridInfo", function(x) {
+  grid_n_cells(x)
 })
 
 #' @rdname HexGridInfo-methods
@@ -493,116 +527,186 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 #' @keywords internal
 #' @export
 setMethod("show", "HexGridInfo", function(object) {
+  print(summary(object))
+  invisible(object)
+})
+
+#' Summary of a grid or of gridded data
+#'
+#' Reports what printing the object reports, as a list, so that a caller can
+#' read the cell count, area, diagonal or column names without reaching into
+#' slots. Printing an object prints its summary, so the two agree.
+#'
+#' @param object A HexGridInfo or HexData object
+#' @param x A summary, as \code{summary()} returns one
+#' @param ... Ignored
+#'
+#' @return For a HexGridInfo, a list of class \code{hexify_grid_summary}
+#'   carrying \code{grid_type}, \code{aperture}, \code{resolution},
+#'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
+#'   \code{earth} and \code{n_cells}. For a HexData, a list of class
+#'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
+#'   \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
+#'   and a \code{preview} of the first rows. The print methods return their
+#'   input invisibly.
+#'
+#' @name hexify-summary
+#' @examples
+#' grid <- hex_grid(area_km2 = 100000)
+#' summary(grid)$n_cells
+#'
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
+#' summary(hexify(df, lon = "lon", lat = "lat", grid = grid))$column_names
+NULL
+
+#' @rdname hexify-summary
+#' @export
+setMethod("summary", "HexGridInfo", function(object, ...) {
   gt <- tryCatch(object@grid_type, error = function(e) "isea")
 
-  if (gt == "h3") {
+  structure(
+    list(
+      grid_type = gt,
+      aperture = if (gt == "h3") NA_character_ else as.character(object@aperture),
+      resolution = object@resolution,
+      area_km2 = object@area_km2,
+      diagonal_km = object@diagonal_km,
+      crs = object@crs,
+      radius_km = grid_radius_km(object),
+      earth = is_earth_grid(object),
+      n_cells = grid_n_cells(object)
+    ),
+    class = "hexify_grid_summary"
+  )
+})
+
+#' @rdname hexify-summary
+#' @export
+print.hexify_grid_summary <- function(x, ...) {
+  if (x$grid_type == "h3") {
     cat("HexGridInfo Specification [H3]\n")
     cat("-------------------------------\n")
     cat(sprintf("Grid Type:   H3 (Uber)\n"))
-    cat(sprintf("Resolution:  %d\n", object@resolution))
+    cat(sprintf("Resolution:  %d\n", x$resolution))
 
-    if (!is.na(object@area_km2)) {
-      cat(sprintf("Avg Area:    %.4f km^2 (varies by location)\n", object@area_km2))
+    if (!is.na(x$area_km2)) {
+      cat(sprintf("Avg Area:    %.4f km^2 (varies by location)\n", x$area_km2))
     }
-    if (!is.na(object@diagonal_km)) {
-      cat(sprintf("Avg Diagonal:%.2f km\n", object@diagonal_km))
+    if (!is.na(x$diagonal_km)) {
+      cat(sprintf("Avg Diagonal:%.2f km\n", x$diagonal_km))
     }
-
-    cat(sprintf("CRS:         %s\n", format_crs(object@crs)))
-
-    if (!is_earth_grid(object)) {
-      cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
-    }
-
-    h3_n_cells <- 2 + 120 * 7^object@resolution
-    cat(sprintf("Total Cells: %.0f\n", h3_n_cells))
-    cat("Note: H3 cells are NOT exactly equal-area\n")
   } else {
     cat("HexGridInfo Specification\n")
     cat("-------------------------\n")
-    cat(sprintf("Aperture:    %s\n", object@aperture))
-    cat(sprintf("Resolution:  %d\n", object@resolution))
+    cat(sprintf("Aperture:    %s\n", x$aperture))
+    cat(sprintf("Resolution:  %d\n", x$resolution))
 
-    if (!is.na(object@area_km2)) {
-      cat(sprintf("Area:        %.2f km^2\n", object@area_km2))
+    if (!is.na(x$area_km2)) {
+      cat(sprintf("Area:        %.2f km^2\n", x$area_km2))
     }
-    if (!is.na(object@diagonal_km)) {
-      cat(sprintf("Diagonal:    %.2f km\n", object@diagonal_km))
+    if (!is.na(x$diagonal_km)) {
+      cat(sprintf("Diagonal:    %.2f km\n", x$diagonal_km))
     }
-
-    cat(sprintf("CRS:         %s\n", format_crs(object@crs)))
-
-    if (!is_earth_grid(object)) {
-      cat(sprintf("Radius:      %.2f km\n", grid_radius_km(object)))
-    }
-
-    n_cells <- aperture_n_cells(object@aperture, object@resolution)
-    cat(sprintf("Total Cells: %.0f\n", n_cells))
   }
 
-  invisible(object)
-})
+  cat(sprintf("CRS:         %s\n", format_crs(x$crs)))
+
+  if (!x$earth) {
+    cat(sprintf("Radius:      %.2f km\n", x$radius_km))
+  }
+
+  cat(sprintf("Total Cells: %.0f\n", x$n_cells))
+
+  if (x$grid_type == "h3") {
+    cat("Note: H3 cells are NOT exactly equal-area\n")
+  }
+
+  invisible(x)
+}
 
 #' @rdname HexData-methods
 #' @keywords internal
 #' @export
 setMethod("show", "HexData", function(object) {
+  print(summary(object))
+  invisible(object)
+})
+
+#' @rdname hexify-summary
+#' @export
+setMethod("summary", "HexData", function(object, ...) {
+  preview <- NULL
+  if (nrow(object@data) > 0) {
+    rows <- seq_len(min(3, nrow(object@data)))
+    preview <- data.frame(
+      object@data[rows, seq_len(min(3, ncol(object@data))), drop = FALSE],
+      cell_id = object@cell_id[rows],
+      check.names = FALSE
+    )
+  }
+
+  structure(
+    list(
+      rows = nrow(object@data),
+      columns = ncol(object@data),
+      column_names = names(object@data),
+      n_cells = n_cells(object),
+      type = if (inherits(object@data, "sf")) "sf" else "data.frame",
+      grid = summary(object@grid),
+      preview = preview
+    ),
+    class = "hexify_data_summary"
+  )
+})
+
+#' @rdname hexify-summary
+#' @export
+print.hexify_data_summary <- function(x, ...) {
   cat("HexData Object\n")
   cat("--------------\n")
-  cat(sprintf("Rows:    %d\n", nrow(object@data)))
-  cat(sprintf("Columns: %d\n", ncol(object@data)))
-  cat(sprintf("Cells:   %d unique\n", n_cells(object)))
+  cat(sprintf("Rows:    %d\n", x$rows))
+  cat(sprintf("Columns: %d\n", x$columns))
+  cat(sprintf("Cells:   %d unique\n", x$n_cells))
 
-  if (inherits(object@data, "sf")) {
+  if (x$type == "sf") {
     cat("Type:    sf (spatial features)\n")
   } else {
     cat("Type:    data.frame\n")
   }
 
   cat("\nGrid:\n")
-  gt <- tryCatch(object@grid@grid_type, error = function(e) "isea")
-  if (gt == "h3") {
-    cat(sprintf("  H3 Resolution %d", object@grid@resolution))
-    if (!is.na(object@grid@area_km2)) {
-      cat(sprintf(" (~%.4f km^2 avg)", object@grid@area_km2))
+  if (x$grid$grid_type == "h3") {
+    cat(sprintf("  H3 Resolution %d", x$grid$resolution))
+    if (!is.na(x$grid$area_km2)) {
+      cat(sprintf(" (~%.4f km^2 avg)", x$grid$area_km2))
     }
   } else {
     cat(sprintf("  Aperture %s, Resolution %d",
-                object@grid@aperture, object@grid@resolution))
-    if (!is.na(object@grid@area_km2)) {
-      cat(sprintf(" (~%.1f km^2)", object@grid@area_km2))
+                x$grid$aperture, x$grid$resolution))
+    if (!is.na(x$grid$area_km2)) {
+      cat(sprintf(" (~%.1f km^2)", x$grid$area_km2))
     }
   }
   cat("\n")
 
-  # Show column preview
   cat("\nColumns: ")
-  col_names <- names(object@data)
-  if (length(col_names) > 8) {
-    cat(paste(col_names[1:8], collapse = ", "), ", ...\n")
+  if (length(x$column_names) > 8) {
+    cat(paste(x$column_names[1:8], collapse = ", "), ", ...\n")
   } else {
-    cat(paste(col_names, collapse = ", "), "\n")
+    cat(paste(x$column_names, collapse = ", "), "\n")
   }
 
-  # Show first few rows with cell info
-
-  if (nrow(object@data) > 0) {
+  if (!is.null(x$preview)) {
     cat("\nData preview (with cell assignments):\n")
-    # Combine data with cell info for preview
-    preview_df <- data.frame(
-      object@data[1:min(3, nrow(object@data)), 1:min(3, ncol(object@data)), drop = FALSE],
-      cell_id = object@cell_id[1:min(3, length(object@cell_id))],
-      check.names = FALSE
-    )
-    print(preview_df, row.names = FALSE)
+    print(x$preview, row.names = FALSE)
 
-    if (nrow(object@data) > 3) {
-      cat(sprintf("... with %d more rows\n", nrow(object@data) - 3))
+    if (x$rows > 3) {
+      cat(sprintf("... with %d more rows\n", x$rows - 3))
     }
   }
 
-  invisible(object)
-})
+  invisible(x)
+}
 
 # =============================================================================
 # COERCION METHODS

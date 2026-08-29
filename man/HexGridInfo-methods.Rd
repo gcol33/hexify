@@ -3,12 +3,15 @@
 \name{HexGridInfo-methods}
 \alias{HexGridInfo-methods}
 \alias{$,HexGridInfo-method}
+\alias{n_cells,HexGridInfo-method}
 \alias{names,HexGridInfo-method}
 \alias{show,HexGridInfo-method}
 \alias{as.list,HexGridInfo-method}
 \title{HexGridInfo S4 Methods}
 \usage{
 \S4method{$}{HexGridInfo}(x, name)
+
+\S4method{n_cells}{HexGridInfo}(x)
 
 \S4method{names}{HexGridInfo}(x)
 
@@ -29,6 +32,7 @@
 \itemize{
 \item \code{$}: The value of the requested slot
 \item \code{names}: Character vector of slot names
+\item \code{n_cells}: The number of cells the grid contains
 \item \code{show}: The object, invisibly (called for side effect of printing)
 \item \code{as.list}: A named list of slot values
 }

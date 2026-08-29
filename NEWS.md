@@ -9,7 +9,20 @@
   The `geometry` argument follows `...`, as the generic's signature requires, so
   name it: `st_as_sf(x, geometry = "polygon")`.
 
+## New features
+
+* `summary()` on a grid or on gridded data returns what printing it reports, as
+  a list: grid type, aperture, resolution, area, diagonal, CRS, radius and cell
+  count for a grid; row and column counts, column names, cell count, storage
+  type and the grid's own summary for data. Printing an object prints this
+  summary, so what it shows and what it returns are the same thing.
+
 ## Bug fixes
+
+* `n_cells()` had no `HexGridInfo` method, so asking a grid how many cells it
+  holds stopped on dispatch while printing the grid reported exactly that
+  number. Both read one function now. On a `HexData` the count is still the
+  number of distinct cells its rows fall in.
 
 * `tibble::as_tibble()` on a `HexData` reached tibble's default method and
   stopped there, unable to coerce an S4 object. `as_tibble.HexData()` was
