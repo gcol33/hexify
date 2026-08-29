@@ -60,7 +60,7 @@
 #' @family hexify main
 #' @seealso \code{\link{hex_grid}} for grid specification,
 #'   \code{\link{HexData-class}} for return object details,
-#'   \code{\link{as_sf}} for converting to sf
+#'   \code{\link[=st_as_sf.HexData]{st_as_sf}} for converting to sf
 #' @export
 #' @examples
 #' # Simple data.frame

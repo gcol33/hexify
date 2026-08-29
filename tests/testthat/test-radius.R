@@ -385,7 +385,7 @@ test_that("sf output carries the grid's own CRS", {
 
   df <- data.frame(lon = c(0, 10), lat = c(45, 50))
   hd <- hexify(df, lon = "lon", lat = "lat", grid = mars)
-  expect_equal(sf::st_crs(as_sf(hd)), sf::st_crs(hexify:::grid_crs(mars)))
+  expect_equal(sf::st_crs(st_as_sf(hd)), sf::st_crs(hexify:::grid_crs(mars)))
 })
 
 test_that("a grid prints its CRS in either form", {

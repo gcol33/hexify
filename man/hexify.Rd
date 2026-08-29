@@ -117,7 +117,7 @@ result_mixed <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000, aperture =
 \seealso{
 \code{\link{hex_grid}} for grid specification,
 \code{\link{HexData-class}} for return object details,
-\code{\link{as_sf}} for converting to sf
+\code{\link[=st_as_sf.HexData]{st_as_sf}} for converting to sf
 
 Other hexify main:
 \code{\link[=hexify_grid]{hexify_grid()}}

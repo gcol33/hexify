@@ -252,7 +252,7 @@ test_that("hexify_cell_to_sf errors on all NA input", {
 # AS_SF METHOD
 # =============================================================================
 
-test_that("as_sf creates point geometry from HexData object", {
+test_that("st_as_sf creates point geometry from HexData object", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -262,14 +262,14 @@ test_that("as_sf creates point geometry from HexData object", {
   )
 
   hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-  result <- as_sf(hex_data, geometry = "point")
+  result <- st_as_sf(hex_data, geometry = "point")
 
   expect_s3_class(result, "sf")
   expect_equal(nrow(result), 2)
   expect_true(all(sf::st_geometry_type(result) == "POINT"))
 })
 
-test_that("as_sf creates polygon geometry from HexData object", {
+test_that("st_as_sf creates polygon geometry from HexData object", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -279,7 +279,7 @@ test_that("as_sf creates polygon geometry from HexData object", {
   )
 
   hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-  result <- as_sf(hex_data, geometry = "polygon")
+  result <- st_as_sf(hex_data, geometry = "polygon")
 
   expect_s3_class(result, "sf")
   expect_true(all(sf::st_geometry_type(result) == "POLYGON"))
@@ -404,7 +404,7 @@ test_that("hexify_cell_to_sf with return_sf=FALSE produces correct structure", {
 # AS_SF ADDITIONAL TESTS
 # =============================================================================
 
-test_that("as_sf preserves all columns", {
+test_that("st_as_sf preserves all columns", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -415,13 +415,13 @@ test_that("as_sf preserves all columns", {
   )
 
   hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-  result <- as_sf(hex_data, geometry = "point")
+  result <- st_as_sf(hex_data, geometry = "point")
 
   expect_true("name" %in% names(result))
   expect_true("custom_col" %in% names(result))
 })
 
-test_that("as_sf polygon geometry preserves attributes", {
+test_that("st_as_sf polygon geometry preserves attributes", {
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -431,7 +431,7 @@ test_that("as_sf polygon geometry preserves attributes", {
   )
 
   hex_data <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-  result <- as_sf(hex_data, geometry = "polygon")
+  result <- st_as_sf(hex_data, geometry = "polygon")
 
   expect_s3_class(result, "sf")
   expect_true("value" %in% names(result))

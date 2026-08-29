@@ -475,11 +475,11 @@ grid <- hex_grid(area_km2 = 20000)
 result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
 
 # Convert to sf points (uses cell centers)
-sf_points <- as_sf(result, geometry = "point")
+sf_points <- st_as_sf(result, geometry = "point")
 class(sf_points)
 
 # Convert to sf polygons (for choropleth maps)
-sf_polys <- as_sf(result, geometry = "polygon")
+sf_polys <- st_as_sf(result, geometry = "polygon")
 class(sf_polys)
 
 # Or generate polygons directly from cell IDs
@@ -554,7 +554,7 @@ projections render correctly without manual intervention.
 | Get unique cell IDs | `cells(result)` |
 | Count cells | `n_cells(result)` |
 | Extract data frame | `as.data.frame(result)` |
-| Convert to sf | `as_sf(result, geometry = "polygon")` |
+| Convert to sf | `st_as_sf(result, geometry = "polygon")` |
 | Generate polygons | `cell_to_sf(cell_ids, grid)` |
 | Grid over region | `grid_rect(bbox, grid)` |
 | Global grid | `grid_global(grid)` |

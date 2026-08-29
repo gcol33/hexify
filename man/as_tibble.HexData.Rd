@@ -4,7 +4,7 @@
 \alias{as_tibble.HexData}
 \title{Convert HexData to tibble}
 \usage{
-as_tibble.HexData(x, ...)
+\method{as_tibble}{HexData}(x, ...)
 }
 \arguments{
 \item{x}{A HexData object}

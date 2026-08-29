@@ -379,7 +379,7 @@ new_hex_data <- function(data,
 #' @param ... Additional arguments (ignored)
 #' @return A tibble
 #'
-#' @export
+#' @exportS3Method tibble::as_tibble
 as_tibble.HexData <- function(x, ...) {
   if (!requireNamespace("tibble", quietly = TRUE)) {
     stop("Package 'tibble' is required for as_tibble(). ",
@@ -398,14 +398,15 @@ as_tibble.HexData <- function(x, ...) {
 # SF COERCION
 # =============================================================================
 
-#' Convert HexData to sf Object
+#' Convert gridded data or a grid to sf
 #'
-#' Converts a HexData object to an sf spatial features object. Can create
-#' either point geometries (cell centers) or polygon geometries (cell boundaries).
+#' Methods for \code{sf::st_as_sf()}. Gridded data comes back as one feature per
+#' row, carrying either the centre of the cell each row fell in or that cell's
+#' boundary. A grid specification comes back as its global cell set.
 #'
-#' @param x A HexData object
+#' @param x A HexData or HexGridInfo object
+#' @param ... For a HexGridInfo, passed on to \code{\link{grid_global}}
 #' @param geometry Type of geometry: "point" (default) or "polygon"
-#' @param ... Additional arguments (ignored)
 #'
 #' @return An sf object
 #'
@@ -413,22 +414,23 @@ as_tibble.HexData <- function(x, ...) {
 #' For point geometry, cell centers (cell_cen_lon, cell_cen_lat) are used.
 #' For polygon geometry, cell boundaries are computed using the grid specification.
 #'
+#' @seealso \code{\link{cell_to_sf}} for the cells of named cell IDs,
+#'   \code{\link{grid_global}} for every cell of a grid
+#'
 #' @export
 #' @examples
 #' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #'
 #' # Get sf points
-#' sf_pts <- as_sf(result)
+#' sf_pts <- st_as_sf(result)
 #'
 #' # Get sf polygons
-#' sf_poly <- as_sf(result, geometry = "polygon")
-as_sf <- function(x, geometry = c("point", "polygon"), ...) {
-  UseMethod("as_sf")
-}
-
-#' @export
-as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
+#' sf_poly <- st_as_sf(result, geometry = "polygon")
+#'
+#' # Every cell of a coarse grid
+#' cells <- st_as_sf(hex_grid(resolution = 2))
+st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon")) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
@@ -475,9 +477,10 @@ as_sf.HexData <- function(x, geometry = c("point", "polygon"), ...) {
   }
 }
 
+#' @rdname st_as_sf.HexData
 #' @export
-as_sf.default <- function(x, ...) {
-  stop("as_sf() is not defined for objects of class ", class(x)[1])
+st_as_sf.HexGridInfo <- function(x, ...) {
+  grid_global(x, ...)
 }
 
 #' Coordinate reference system of a grid

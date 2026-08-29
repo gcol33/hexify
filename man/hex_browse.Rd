@@ -34,7 +34,7 @@ information on click.
 }
 \details{
 Requires the \code{leaflet} package (in Suggests). The map is built using
-\code{\link[=as_sf]{as_sf()}} to generate polygon geometries, then rendered as a leaflet
+\code{\link[sf:st_as_sf]{st_as_sf()}} to generate polygon geometries, then rendered as a leaflet
 choropleth.
 }
 \examples{
@@ -52,5 +52,5 @@ if (requireNamespace("leaflet", quietly = TRUE)) {
 }
 \seealso{
 \code{\link[=hexify_heatmap]{hexify_heatmap()}} for static ggplot2 maps,
-\code{\link[=as_sf]{as_sf()}} for sf conversion
+\code{\link[sf:st_as_sf]{st_as_sf()}} for sf conversion
 }

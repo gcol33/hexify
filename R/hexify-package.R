@@ -26,3 +26,7 @@ utils::globalVariables(c(
 #' @importFrom sf st_crs
 #' @export
 sf::st_crs
+
+#' @importFrom sf st_as_sf
+#' @export
+sf::st_as_sf

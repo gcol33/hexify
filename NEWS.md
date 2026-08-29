@@ -1,6 +1,20 @@
 # hexify 0.8.2.9000
 
+## Breaking changes
+
+* `as_sf()` is now `sf::st_as_sf()`. sf owns the verb, so hexify registers
+  methods on it for `HexData` and `HexGridInfo` and re-exports it, and an sf
+  pipeline reaches a hexify object without knowing hexify's own name for the
+  conversion. `st_as_sf()` on a grid specification returns its global cell set.
+  The `geometry` argument follows `...`, as the generic's signature requires, so
+  name it: `st_as_sf(x, geometry = "polygon")`.
+
 ## Bug fixes
+
+* `tibble::as_tibble()` on a `HexData` reached tibble's default method and
+  stopped there, unable to coerce an S4 object. `as_tibble.HexData()` was
+  exported rather than registered, so dispatch never found it. It is registered
+  on tibble's generic now, and tibble stays in Suggests.
 
 * `cell_to_sf()` returned an empty polygon for every cell whose boundary lay
   within two degrees of a pole, which from resolution 4 at aperture 7 and

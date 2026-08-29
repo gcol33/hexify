@@ -4,6 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{st_crs}
+\alias{st_as_sf}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -11,6 +12,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{sf}{\code{\link[sf:st_crs]{st_crs()}}}
+  \item{sf}{\code{\link[sf:st_as_sf]{st_as_sf()}}, \code{\link[sf:st_crs]{st_crs()}}}
 }}
 

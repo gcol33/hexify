@@ -18,11 +18,11 @@
 #'
 #' @details
 #' Requires the `leaflet` package (in Suggests). The map is built using
-#' [as_sf()] to generate polygon geometries, then rendered as a leaflet
+#' [st_as_sf()] to generate polygon geometries, then rendered as a leaflet
 #' choropleth.
 #'
 #' @seealso [hexify_heatmap()] for static ggplot2 maps,
-#'   [as_sf()] for sf conversion
+#'   [st_as_sf()] for sf conversion
 #'
 #' @export
 #' @examples

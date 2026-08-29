@@ -41,5 +41,5 @@ polys <- cell_to_sf(grid = result)
 }
 \seealso{
 \code{\link{hex_grid}} for grid specifications,
-\code{\link{as_sf}} for converting HexData to sf
+\code{\link[=st_as_sf.HexData]{st_as_sf}} for converting HexData to sf
 }

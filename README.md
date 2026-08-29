@@ -84,7 +84,7 @@ Rectangular lat-lon grids, by contrast, shrink toward the poles: a 1° cell at 6
 ### Interoperability
 
 - **`as_dggrid()` / `from_dggrid()`**: Convert to/from dggridR format
-- **`as_sf()`**: Export HexData to sf object
+- **`st_as_sf()`**: Export HexData to sf object
 - **`as.data.frame()`**: Extract data with cell assignments
 - **H3 support**: `hex_grid(resolution = 8, type = "h3")` — vendored H3 C library, no extra install needed
 
@@ -139,7 +139,7 @@ points_sf <- st_as_sf(coords, coords = c("lon", "lat"), crs = 4326)
 result <- hexify(points_sf, area_km2 = 10000)
 
 # Export back to sf
-result_sf <- as_sf(result)
+result_sf <- st_as_sf(result)
 ```
 
 ### Generating Grid Polygons

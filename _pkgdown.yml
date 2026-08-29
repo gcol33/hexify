@@ -77,7 +77,7 @@ reference:
   - st_crs.HexGridInfo
   - cells
   - n_cells
-  - as_sf
+  - st_as_sf.HexData
   - as_tibble.HexData
   - is_hex_grid
   - is_hex_data
