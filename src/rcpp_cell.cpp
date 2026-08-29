@@ -862,10 +862,9 @@ constexpr int kPentagonSkipNorth = 3;
 constexpr int kPentagonSkipSouth = 2;
 
 // The boundary of one cell in lon/lat, counter-clockwise and left open: five
-// points for a cell at an icosahedral vertex, six for every other cell. A
-// corner within two degrees of a pole is snapped onto the pole, which the
-// projection reaches only in the limit and where every longitude names the
-// same point.
+// points for a cell at an icosahedral vertex, six for every other cell. A pole
+// falls inside a cell or on a cell edge, never on a corner, so every corner
+// keeps the position the inverse projection gives it.
 static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                  double radius, double rotation_deg,
                                  bool at_icosa_vertex,
@@ -906,16 +905,6 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                                 center_face);
                 lon = ll.first;
                 lat = ll.second;
-            }
-        }
-
-        if (!NumericVector::is_na(lat)) {
-            if (lat > 88.0) {
-                lat = 90.0;
-                lon = 0.0;
-            } else if (lat < -88.0) {
-                lat = -90.0;
-                lon = 0.0;
             }
         }
 

@@ -5,42 +5,79 @@
 # to accept grid specifications, eliminating the need to repeat
 # aperture/resolution parameters.
 
-#' Normalize antimeridian-crossing polygon coordinates
+#' Make a ring's longitudes continuous
 #'
-#' Shifts longitudes of a ring's coordinate matrix so an antimeridian-crossing
-#' polygon becomes contiguous instead of spanning nearly the full -180 to 180
-#' range. Downstream `sf::st_wrap_dateline()` then splits it correctly for
-#' flat-map rendering.
+#' Adds or drops whole turns so that consecutive corners stay less than half a
+#' turn apart, which is how far apart they are on the sphere, and centres the
+#' result on the map. A ring crossing the antimeridian then runs past +/-180
+#' in one piece rather than jumping the width of the map, and
+#' `sf::st_wrap_dateline()` splits it at the seam.
 #'
-#' @param coords A 2+ column matrix whose first column is longitude
-#' @return The same matrix, with the longitude column normalized if the ring
-#'   crosses the antimeridian
+#' @param coords A 2+ column matrix whose first column is longitude, the first
+#'   corner repeated last
+#' @return The same matrix, with continuous longitudes
 #' @noRd
-normalize_antimeridian_coords <- function(coords) {
+unwrap_ring_longitudes <- function(coords) {
   lons <- coords[, 1]
-  lon_range <- max(lons, na.rm = TRUE) - min(lons, na.rm = TRUE)
-
-  if (lon_range > 180) {
-    # Polygon crosses antimeridian - normalize to be contiguous.
-    # Shift negative lons to 0-360 range.
-    lons[lons < 0] <- lons[lons < 0] + 360
-    coords[, 1] <- lons
-
-    # Now shift back to standard range, but keeping contiguity: if the
-    # centroid ends up > 180, shift everything by -360.
-    mean_lon <- mean(lons)
-    if (mean_lon > 180) {
-      coords[, 1] <- coords[, 1] - 360
-    }
+  n <- length(lons)
+  if (n < 2 || anyNA(lons)) {
+    return(coords)
   }
 
+  steps <- diff(lons)
+
+  # A step over a pole is half a turn either way. Take the way that closes the
+  # ring; the cell lies beside the pole rather than around it.
+  over_pole <- abs(abs(steps) - 180) < 1e-6
+  wrapped <- !over_pole & abs(steps) > 180
+  steps[wrapped] <- steps[wrapped] - 360 * sign(steps[wrapped])
+  if (sum(over_pole) == 1L) {
+    steps[over_pole] <- -sum(steps[!over_pole])
+  }
+
+  lons <- c(lons[1], lons[1] + cumsum(steps))
+
+  # A cell holding a pole comes back winding once around the globe, which no
+  # lon/lat ring can close; its corners stay as the projection gives them.
+  if (abs(lons[n] - lons[1]) > 1e-6) {
+    return(coords)
+  }
+  # Otherwise the last corner is the first one, placed exactly so that
+  # accumulated rounding cannot leave the ring open.
+  lons[n] <- lons[1]
+
+  center <- (max(lons) + min(lons)) / 2
+  coords[, 1] <- lons - 360 * round(center / 360)
   coords
+}
+
+#' Split cells at the antimeridian
+#'
+#' Only cells reaching past +/-180 are handed to `sf::st_wrap_dateline()`, which
+#' cuts any segment half a turn wide and would otherwise also split a cell whose
+#' edge runs over a pole rather than over the seam.
+#'
+#' @param x An sf object of cell polygons with continuous longitudes
+#' @return The same object, with seam-crossing cells split in two
+#' @noRd
+wrap_cells_at_dateline <- function(x) {
+  crossing <- vapply(sf::st_geometry(x), function(g) {
+    lons <- sf::st_coordinates(g)[, 1]
+    length(lons) > 0 && (min(lons) < -180 || max(lons) > 180)
+  }, logical(1))
+
+  if (any(crossing)) {
+    wrapped <- sf::st_wrap_dateline(x[crossing, ],
+      options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+    sf::st_geometry(x)[crossing] <- sf::st_geometry(wrapped)
+  }
+  x
 }
 
 #' Build hexagon polygons for ISEA cell IDs
 #'
-#' Antimeridian-crossing rings are normalized so each polygon is contiguous;
-#' callers that render on a flat map pass the result through
+#' Rings are prepared with `unwrap_ring_longitudes()` so each polygon is
+#' contiguous; callers that render on a flat map pass the result through
 #' `sf::st_wrap_dateline()` to split them at +/-180.
 #'
 #' @param cell_id Numeric vector of cell IDs
@@ -61,12 +98,12 @@ isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
   }
 
   polygons <- lapply(corners_list, function(coords) {
-    sf::st_polygon(list(normalize_antimeridian_coords(coords)))
+    sf::st_polygon(list(unwrap_ring_longitudes(coords)))
   })
 
-  # suppressWarnings: antimeridian normalization may temporarily produce
-  # out-of-range longitudes that st_wrap_dateline corrects downstream
-  suppressWarnings(sf::st_make_valid(sf::st_sfc(polygons, crs = crs)))
+  # A ring that crosses the antimeridian or runs over a pole carries longitudes
+  # outside -180..180; st_wrap_dateline() brings those back inside the map.
+  sf::st_sfc(polygons, crs = crs)
 }
 
 # =============================================================================
@@ -223,15 +260,13 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
     boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
     polygons <- lapply(boundaries, function(coords) {
       if (nrow(coords) == 0) return(sf::st_polygon())
-      coords <- normalize_antimeridian_coords(coords)
+      coords <- unwrap_ring_longitudes(coords)
       sf::st_polygon(list(coords))
     })
     sfc <- sf::st_sfc(polygons, crs = grid_crs(g))
-    sfc <- suppressWarnings(sf::st_make_valid(sfc))
     result_sf <- sf::st_sf(cell_id = as.character(cell_id), geometry = sfc)
     if (wrap_dateline) {
-      result_sf <- sf::st_wrap_dateline(result_sf,
-        options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+      result_sf <- wrap_cells_at_dateline(result_sf)
     }
     return(result_sf)
   }
@@ -243,8 +278,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
 
   result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
   if (wrap_dateline) {
-    result_sf <- sf::st_wrap_dateline(result_sf,
-      options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+    result_sf <- wrap_cells_at_dateline(result_sf)
   }
   result_sf
 }

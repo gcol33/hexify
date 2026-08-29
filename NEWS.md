@@ -1,3 +1,21 @@
+# hexify 0.8.2.9000
+
+## Bug fixes
+
+* `cell_to_sf()` returned an empty polygon for every cell whose boundary lay
+  within two degrees of a pole, which from resolution 4 at aperture 7 and
+  resolution 5 at aperture 4 is each cell nearest the poles. Corners inside
+  that band were snapped onto the pole, so once a cell was narrower than the
+  band all of its corners landed on one point. A pole falls inside a cell or on
+  a cell edge, never on a corner, and corners now keep the position the inverse
+  projection gives them.
+
+* Cell rings cross the antimeridian by carrying their longitudes on
+  continuously rather than by shifting the negative ones, which placed a ring
+  spanning exactly half the globe on both sides of the map at once. Only cells
+  reaching past +/-180 go to `sf::st_wrap_dateline()`, which cuts any segment
+  half a turn wide and so also split the edge a cell runs over a pole.
+
 # hexify 0.8.2
 
 ## Bug fixes

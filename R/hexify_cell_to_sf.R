@@ -119,8 +119,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
     sfc <- isea_cells_to_sfc(cell_id, resolution, aperture)
     result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
     if (wrap_dateline) {
-      result_sf <- sf::st_wrap_dateline(result_sf,
-        options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"), quiet = TRUE)
+      result_sf <- wrap_cells_at_dateline(result_sf)
     }
     result_sf
 

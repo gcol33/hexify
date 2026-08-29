@@ -107,3 +107,48 @@ test_that("grid_rect produces all valid geometries", {
     info = sprintf("%d invalid geometries in Europe grid", sum(!validity))
   )
 })
+
+test_that("near-polar cells stay non-degenerate across apertures", {
+  skip_on_cran()
+  skip_if_not_installed("sf")
+
+  # One resolution per aperture fine enough that a whole cell fits inside a
+  # couple of degrees of the pole.
+  cases <- list(
+    list(aperture = 3L, resolution = 5L),
+    list(aperture = 4L, resolution = 5L),
+    list(aperture = 7L, resolution = 4L)
+  )
+
+  for (case in cases) {
+    label <- sprintf("aperture %d, resolution %d", case$aperture, case$resolution)
+    grid <- hex_grid(resolution = case$resolution, aperture = case$aperture)
+
+    n_total <- 2 + 10 * case$aperture^case$resolution
+    centers <- cell_to_lonlat(seq_len(n_total), grid)
+    polar <- which(abs(centers$lat_deg) > 80)
+    expect_gt(length(polar), 0)
+
+    polys <- cell_to_sf(polar, grid)
+
+    empty <- sf::st_is_empty(polys)
+    expect_false(any(empty),
+      info = sprintf("%s: %d empty polar geometries", label, sum(empty))
+    )
+    expect_true(all(sf::st_is_valid(polys)),
+      info = sprintf("%s: invalid polar geometries", label)
+    )
+
+    unique_vertices <- vapply(sf::st_geometry(polys), function(g) {
+      nrow(unique(sf::st_coordinates(g)[, 1:2, drop = FALSE]))
+    }, integer(1))
+    expect_true(all(unique_vertices >= 5),
+      info = sprintf("%s: %d cells with fewer than 5 distinct corners",
+                     label, sum(unique_vertices < 5))
+    )
+
+    # A pole falls inside a cell or on a cell edge, never on a corner
+    corners <- hexify_cell_to_sf(polar, grid = grid, return_sf = FALSE)
+    expect_lt(max(abs(corners$lat)), 90)
+  }
+})
