@@ -19,6 +19,18 @@
 
 ## Bug fixes
 
+* `get_children()` returned cell IDs past the end of the child grid on apertures
+  3 and 4, and `NA`s on aperture 7, at the twelve icosahedron vertices, so
+  `get_parent()` stopped on its own output there. A vertex sits at the corner of
+  several quads and has an index spelling in each, and appending a digit to one
+  spelling names cells the other quads hold: some digits named nothing, and the
+  children spelled under another quad were never reached. Children are now read
+  back from `get_parent()` over candidates drawn from both the index expansion
+  and the ring of child cells around the parent, so they invert `get_parent()`
+  exactly. Between them the parents of a resolution now claim every cell of the
+  child grid once, and an aperture-7 pentagon has six children rather than five
+  and two `NA`s.
+
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the
   conversion warns and names the radius being dropped. `from_dggrid()` is the

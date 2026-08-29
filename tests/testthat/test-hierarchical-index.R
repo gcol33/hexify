@@ -181,3 +181,68 @@ test_that("a cell is among the children of its two-level ancestor", {
     expect_true(all(mapply(function(cell, k) cell %in% k, cells, kids)))
   }
 })
+
+# =============================================================================
+# Children at the twelve icosahedron vertices
+# =============================================================================
+
+test_that("get_children returns cells that exist in the child grid", {
+  for (aperture in c(3L, 4L, 7L)) {
+    for (resolution in 1:3) {
+      grid <- hex_grid(resolution = resolution, aperture = aperture)
+      n_parent <- 2 + 10 * aperture^resolution
+      n_child <- 2 + 10 * aperture^(resolution + 1)
+      label <- sprintf("aperture %d, resolution %d", aperture, resolution)
+
+      kids <- unlist(get_children(seq_len(n_parent), grid))
+
+      expect_false(anyNA(kids), info = label)
+      expect_true(all(kids >= 1 & kids <= n_child), info = label)
+    }
+  }
+})
+
+test_that("get_children inverts get_parent, pentagons included", {
+  for (aperture in c(3L, 4L, 7L)) {
+    resolution <- 2L
+    grid <- hex_grid(resolution = resolution, aperture = aperture)
+    child_grid <- hex_grid(resolution = resolution + 1L, aperture = aperture)
+    n_parent <- 2 + 10 * aperture^resolution
+    n_child <- 2 + 10 * aperture^(resolution + 1)
+    label <- sprintf("aperture %d", aperture)
+
+    kids <- get_children(seq_len(n_parent), grid)
+
+    # Every child names its parent back
+    for (k in seq_len(n_parent)) {
+      expect_equal(unique(get_parent(kids[[k]], child_grid)), k,
+                   info = sprintf("%s, parent %d", label, k))
+    }
+
+    # And between them the parents claim the whole child grid, once each
+    claimed <- unlist(kids)
+    expect_equal(sort(claimed), seq_len(n_child), info = label)
+  }
+})
+
+test_that("a pentagon has one child fewer than the aperture allows", {
+  # Aperture 7 refines a hexagon into seven cells; the vertex deficit takes one
+  grid <- hex_grid(resolution = 2, aperture = 7)
+  n_parent <- 2 + 10 * 7^2
+  counts <- lengths(get_children(seq_len(n_parent), grid))
+  pentagons <- is_pentagon(seq_len(n_parent), grid)
+
+  expect_equal(sum(pentagons), 12L)
+  expect_true(all(counts[pentagons] == 6L))
+  expect_true(all(counts[!pentagons] == 7L))
+})
+
+test_that("the round trip in both directions holds at a pentagon", {
+  parent_grid <- hex_grid(resolution = 2, aperture = 3)
+  child_grid <- hex_grid(resolution = 3, aperture = 3)
+
+  kids <- get_children(92L, parent_grid)[[1]]
+  expect_true(all(kids <= 272))
+  expect_no_error(back <- get_parent(kids, child_grid))
+  expect_equal(unique(back), 92)
+})

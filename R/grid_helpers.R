@@ -944,21 +944,80 @@ get_children <- function(cell_id, grid, levels = 1L) {
       mixed_get_children_one(id, g@resolution, child_res, g@aperture, ncc)))
   }
 
-  index_type <- index_type_for_aperture(g@aperture)
-  aperture_int <- aperture_to_int(g@aperture)
   levels <- as.integer(levels)
 
-  # cpp_get_children_indices() expands one level, so `levels` levels down is
-  # that many expansions of the whole front.
-  lapply(as.numeric(cell_id), function(id) {
-    idx <- isea_cell_to_index_one(id, g@resolution, aperture_int, index_type)
-    for (step in seq_len(levels)) {
-      idx <- unlist(lapply(idx, cpp_get_children_indices,
-                           aperture = aperture_int, index_type = index_type),
-                    use.names = FALSE)
-    }
-    vapply(idx, isea_index_to_cell_one, numeric(1),
+  # One level at a time, so each level's children are read at their own
+  # resolution.
+  front <- lapply(as.numeric(cell_id), identity)
+  for (step in seq_len(levels)) {
+    front <- isea_children_one_level(front, g@resolution + step - 1L, g)
+  }
+  front
+}
+
+#' Children of ISEA cells, one resolution down
+#'
+#' A child is a cell whose parent is this one, so the children are read back
+#' from `get_parent()` over a candidate set. Two things generate candidates.
+#' Appending a digit to the parent's index names the children directly, which is
+#' what makes the two operations inverse, but the twelve icosahedron vertices sit
+#' at the corner of several quads and so have an index spelling in each: the
+#' children spelled under the other quads are not reached from the one spelling
+#' `cell_to_index()` returns, and a digit that names no cell at all comes back
+#' out of range or NA. The ring of child cells around the parent's centre reaches
+#' those, since neighbours are found on the sphere rather than in one quad's
+#' lattice. The parent test then decides which candidates are children.
+#'
+#' @param front List of numeric vectors of cell IDs, one per requested cell
+#' @param resolution Resolution the cells in `front` are at
+#' @param g The grid the cells came from
+#' @return A list of the same length, each element the children, sorted
+#' @noRd
+isea_children_one_level <- function(front, resolution, g) {
+  parents <- unique(unlist(front, use.names = FALSE))
+  if (length(parents) == 0) {
+    return(front)
+  }
+
+  index_type <- index_type_for_aperture(g@aperture)
+  aperture_int <- aperture_to_int(g@aperture)
+  child_res <- resolution + 1L
+  radius <- grid_radius_km(g)
+
+  parent_grid <- hex_grid(resolution = resolution, aperture = g@aperture,
+                          radius_km = radius)
+  child_grid <- hex_grid(resolution = child_res, aperture = g@aperture,
+                         radius_km = radius)
+  n_child <- aperture_n_cells(g@aperture, child_res)
+
+  expansion <- lapply(parents, function(id) {
+    idx <- isea_cell_to_index_one(id, resolution, aperture_int, index_type)
+    kids <- cpp_get_children_indices(idx, aperture = aperture_int,
+                                     index_type = index_type)
+    vapply(kids, isea_index_to_cell_one, numeric(1),
            aperture_int = aperture_int, index_type = index_type,
            USE.NAMES = FALSE)
+  })
+
+  centre <- cell_to_lonlat(parents, parent_grid)
+  central <- lonlat_to_cell(centre$lon_deg, centre$lat_deg, child_grid)
+  ring <- get_neighbors(central, child_grid)
+
+  candidates <- lapply(seq_along(parents), function(k) {
+    cand <- unique(c(expansion[[k]], central[k], ring[[k]]))
+    cand[!is.na(cand) & cand >= 1 & cand <= n_child]
+  })
+
+  pool <- unique(unlist(candidates, use.names = FALSE))
+  parent_of <- stats::setNames(get_parent(pool, child_grid), as.character(pool))
+
+  children <- lapply(seq_along(parents), function(k) {
+    cand <- candidates[[k]]
+    sort(cand[parent_of[as.character(cand)] == parents[k]])
+  })
+  names(children) <- as.character(parents)
+
+  lapply(front, function(ids) {
+    sort(unique(unlist(children[as.character(ids)], use.names = FALSE)))
   })
 }
