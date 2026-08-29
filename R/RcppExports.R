@@ -133,6 +133,10 @@ cpp_lonlat_to_quad_ij <- function(lon_deg, lat_deg, aperture, resolution) {
     .Call(`_hexify_cpp_lonlat_to_quad_ij`, lon_deg, lat_deg, aperture, resolution)
 }
 
+cpp_cell_lattice_generator <- function(aperture, resolution) {
+    .Call(`_hexify_cpp_cell_lattice_generator`, aperture, resolution)
+}
+
 cpp_quad_ij_to_cell <- function(quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_cell`, quad, i, j, resolution, aperture)
 }

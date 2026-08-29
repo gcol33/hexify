@@ -113,7 +113,12 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
 
 # --- ISEA backend ---
 .get_neighbors_isea <- function(cell_id, grid, k, include_self, distances) {
-  ap <- as.integer(grid@aperture)
+  if (is_mixed_aperture(grid@aperture)) {
+    stop("get_neighbors() has no adjacency for the mixed aperture sequence \"",
+         grid@aperture, "\" (gcol33/hexify#76)", call. = FALSE)
+  }
+
+  ap <- aperture_to_int(grid@aperture)
   res <- grid@resolution
 
   # Use k=1 fast path helper (C++ handles all apertures including ap7)

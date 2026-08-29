@@ -316,6 +316,48 @@ static SubstrateLattice lattice_for_aperture(int aperture, int resolution) {
     return kAlignedLattice;
 }
 
+// The same sublattice written as its generator a + b*omega, in the (i, j)
+// coordinates cpp_cell_to_quad_ij() returns. The cells of a quad are its
+// multiples over the Eisenstein integers, so multiplying by the six units
+// gives the six neighbours, and dividing a difference of two cells by it
+// reads that difference in cell steps.
+struct LatticeGenerator {
+    long long a;
+    long long b;
+};
+
+static const LatticeGenerator kAlignedGenerator = {1, 0};
+static const LatticeGenerator kOffsetGeneratorAp3 = {2, 1};
+
+static LatticeGenerator generator_for_aperture(int aperture, int resolution) {
+    if (aperture == 3 && !is_aligned_grid_ap3(resolution)) return kOffsetGeneratorAp3;
+    return kAlignedGenerator;
+}
+
+// The six cells one step away, as offsets in (i, j): the generator times each
+// unit of the Eisenstein integers, using omega^2 = -1 - omega.
+static void lattice_unit_steps(const LatticeGenerator& g, long long steps[6][2]) {
+    static const long long units[6][2] = {
+        { 1,  0}, { 1,  1}, { 0,  1},
+        {-1,  0}, {-1, -1}, { 0, -1}
+    };
+    for (int k = 0; k < 6; k++) {
+        long long p = units[k][0], q = units[k][1];
+        steps[k][0] = p * g.a - q * g.b;
+        steps[k][1] = p * g.b + q * g.a - q * g.b;
+    }
+}
+
+// [[Rcpp::export]]
+NumericVector cpp_cell_lattice_generator(int aperture, int resolution) {
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        stop("cpp_cell_lattice_generator: aperture must be 3, 4, or 7");
+    }
+    LatticeGenerator g = generator_for_aperture(aperture, resolution);
+    return NumericVector::create(static_cast<double>(g.a),
+                                 static_cast<double>(g.b));
+}
+
 // Calculate cell count and offset per quad for any aperture: each of the 10
 // quads owns aperture^res cells and the two poles bring the total to
 // 10 * aperture^res + 2.
@@ -1328,19 +1370,11 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
     // The aligned lattice writes (i, j) as x = i - j/2, y = j * sin60, so the
     // six cells one unit away sit at +/-(1,0), +/-(0,1) and +/-(1,1). Aperture
     // 4, aperture 3's even resolutions and aperture 7's surrogates all live on
-    // this lattice.
-    static const long long class1_offsets[6][2] = {
-        { 1,  0}, { 1,  1}, { 0,  1},
-        {-1,  0}, {-1, -1}, { 0, -1}
-    };
-
-    // Aperture 3's odd resolutions carry cells on the 30-degree Class II
-    // lattice, where one substrate point in three is a cell and adjacent cells
-    // stand sqrt(3) substrate units apart.
-    static const long long class2_offsets[6][2] = {
-        { 2,  1}, { 1,  2}, {-1,  1},
-        {-2, -1}, {-1, -2}, { 1, -1}
-    };
+    // this lattice; aperture 3's odd resolutions carry cells on the 30-degree
+    // Class II lattice, where one substrate point in three is a cell and
+    // adjacent cells stand sqrt(3) substrate units apart.
+    long long offsets[6][2];
+    lattice_unit_steps(generator_for_aperture(aperture, resolution), offsets);
 
     for (int k = 0; k < n; k++) {
         double cell_id_raw = cell_id[k];
@@ -1397,11 +1431,6 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
                 ij_from_cell_index(within_quad, dim, sub_lat, i, j);
             }
         }
-
-        const long long (*offsets)[2] =
-            (aperture == 3 && !is_aligned_grid_ap3(resolution))
-                ? class2_offsets
-                : class1_offsets;
 
         for (int d = 0; d < 6; d++) {
             long long ni = i + offsets[d][0];

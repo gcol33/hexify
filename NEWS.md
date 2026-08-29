@@ -60,6 +60,23 @@
   result. Arguments read in step whose lengths differ are named, with the
   function they were passed to.
 
+* `hex_distance()` over-reported the hop count between cells of one quad, by up
+  to three times, and at aperture 7 also under-reported it by half. It read the
+  difference of the two cells straight off the substrate the cell IDs are packed
+  on, which is the cell lattice only some of the time: at aperture 3's odd
+  resolutions one substrate point in three is a cell and the six neighbours
+  stand `sqrt(3)` substrate units apart, so a step was counted as three. The
+  handedness of the axial formula was wrong as well. The difference is now
+  divided by the lattice generator first, which reads it in cell steps, and the
+  six neighbours are the six units there. Every adjacent pair of cells is one
+  hop apart at apertures 3, 4 and 7, and the distances agree with breadth-first
+  search over `get_neighbors()`.
+
+* `hex_distance()` and `get_neighbors()` on a grid built from a mixed aperture
+  sequence read the sequence spelling as a single number, which is `NA`, and
+  stopped on a coerced-aperture message naming neither the grid nor the reason.
+  They say plainly that the sequence has no adjacency (#76).
+
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the
   conversion warns and names the radius being dropped. `from_dggrid()` is the
