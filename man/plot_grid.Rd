@@ -58,8 +58,12 @@ common use case of visualizing a hexagonal grid over a geographic region.
 }
 \examples{
 \donttest{
-# Plot grid over France
-france <- hexify_world[hexify_world$name == "France", ]
+# Metropolitan France: the world map also carries the overseas departements,
+# and grid_clip() covers the bounding box of whatever it is given.
+france <- sf::st_crop(
+  sf::st_geometry(hexify_world[hexify_world$name == "France", ]),
+  c(xmin = -5, ymin = 41, xmax = 10, ymax = 52)
+)
 grid <- hex_grid(area_km2 = 2000)
 plot_grid(france, grid)
 

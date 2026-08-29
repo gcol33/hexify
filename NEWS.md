@@ -106,6 +106,14 @@
   `hexify()` read sf coordinates the same way, transforming them to WGS84
   whatever body the grid was on, and now reads them on the grid's own.
 
+* The `grid_clip()` and `plot_grid()` examples asked for France and got a third
+  of the globe: the world map's France carries the overseas departements, and
+  both functions cover the bounding box of what they are given, which for all of
+  France runs from -62 to 56 degrees of longitude. That built 36707 cells to
+  draw metropolitan France. The examples crop to the metropolitan extent, which
+  is what they meant, and together they now take under a second rather than
+  fifty.
+
 * `as_dggrid()` on a grid built for another body returned a dggs that read as
   an Earth grid, and said nothing. A dggs has no field for the radius, so the
   conversion warns and names the radius being dropped. `from_dggrid()` is the
