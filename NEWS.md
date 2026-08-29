@@ -19,6 +19,18 @@
 
 ## Bug fixes
 
+* `hexify_heatmap()` handled an RColorBrewer palette only between three levels
+  and the palette's own length. A `breaks` argument with ten or more bins passed
+  fewer colours than the scale needed and stopped in ggplot2, naming ggplot2
+  rather than the palette; fewer than three bins let RColorBrewer's own warning
+  through. The palette is now taken at exactly the number of levels asked for,
+  by interpolating over its full range past its length, and it matches
+  `RColorBrewer::brewer.pal()` colour for colour within it.
+
+* A `colors` name in neither the viridis nor the RColorBrewer family was passed
+  to viridisLite, which drew the default palette and warned about its own
+  argument. It is an error now, naming both families.
+
 * `n_cells()` had no `HexGridInfo` method, so asking a grid how many cells it
   holds stopped on dispatch while printing the grid reported exactly that
   number. Both read one function now. On a `HexData` the count is still the

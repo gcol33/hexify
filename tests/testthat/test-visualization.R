@@ -828,3 +828,94 @@ test_that("hexify_heatmap handles data with NA CRS", {
   result <- hexify_heatmap(hex_sf, value = "count")
   expect_s3_class(result, "ggplot")
 })
+
+# =============================================================================
+# Palette resolution
+# =============================================================================
+
+test_that("brewer_colors matches brewer.pal over the range it defines", {
+  skip_if_not_installed("RColorBrewer")
+
+  for (n in 3:9) {
+    expect_equal(hexify:::brewer_colors("YlOrRd", n),
+                 RColorBrewer::brewer.pal(n, "YlOrRd"),
+                 info = sprintf("%d levels", n))
+  }
+})
+
+test_that("brewer_colors gives one colour per level outside that range", {
+  skip_if_not_installed("RColorBrewer")
+
+  # YlOrRd holds nine; a binned scale can ask for more or fewer
+  for (n in c(1, 2, 10, 12, 30)) {
+    colours <- hexify:::brewer_colors("YlOrRd", n)
+    expect_length(colours, n)
+    expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", colours)),
+                info = sprintf("%d levels", n))
+  }
+
+  # The ends of the palette are kept when interpolating past its length
+  wide <- hexify:::brewer_colors("YlOrRd", 12)
+  full <- RColorBrewer::brewer.pal(9, "YlOrRd")
+  expect_equal(wide[1], full[1])
+  expect_equal(wide[12], full[9])
+})
+
+test_that("a binned brewer scale takes more bins than the palette holds", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("RColorBrewer")
+
+  df <- data.frame(
+    cell_id = c(12847, 12532, 12533),
+    cell_area = rep(863.94, 3),
+    count = c(1, 20, 40)
+  )
+
+  # Twelve bins against a nine-colour palette
+  breaks <- seq(0, 48, length.out = 13)
+  expect_no_error(
+    hexify_heatmap(df, value = "count", colors = "YlOrRd", breaks = breaks)
+  )
+})
+
+test_that("a binned brewer scale takes fewer bins than brewer.pal defines", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("RColorBrewer")
+
+  df <- data.frame(
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
+    count = c(1, 20)
+  )
+
+  expect_no_warning(
+    hexify_heatmap(df, value = "count", colors = "YlOrRd", breaks = c(0, 3, 40))
+  )
+})
+
+test_that("an unknown palette name is an error naming the families", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("ggplot2")
+
+  df <- data.frame(
+    cell_id = c(12847, 12532),
+    cell_area = c(863.94, 863.94),
+    count = c(10, 20)
+  )
+
+  expect_error(hexify_heatmap(df, value = "count", colors = "NotAPalette"),
+               "not a palette name hexify knows")
+  expect_error(hexify_heatmap(df, value = "count", colors = "NotAPalette"),
+               "viridis")
+})
+
+test_that("resolve_palette_name names the family a palette belongs to", {
+  skip_if_not_installed("RColorBrewer")
+
+  expect_equal(hexify:::resolve_palette_name("turbo")$kind, "viridis")
+  expect_equal(hexify:::resolve_palette_name("Magma")$name, "magma")
+  expect_equal(hexify:::resolve_palette_name("YlOrRd")$kind, "brewer")
+  expect_equal(hexify:::resolve_palette_name("YlOrRd")$name, "YlOrRd")
+})

@@ -32,6 +32,63 @@ is_brewer_palette <- function(palette_name) {
     palette_name %in% row.names(RColorBrewer::brewer.pal.info)
 }
 
+#' The viridis palettes, by name and by the letter viridisLite also takes
+#' @noRd
+viridis_palettes <- c("magma", "inferno", "plasma", "viridis", "cividis",
+                      "rocket", "mako", "turbo", letters[1:8])
+
+#' Which palette a name asks for
+#'
+#' A name that matches neither family stops here, where the message can name the
+#' families, rather than downstream in viridisLite, which reports the default it
+#' fell back to.
+#'
+#' @param colors A single palette name
+#' @return A list with the family in `kind` and the name to pass on in `name`
+#' @noRd
+resolve_palette_name <- function(colors) {
+  if (tolower(colors) %in% viridis_palettes) {
+    return(list(kind = "viridis", name = tolower(colors)))
+  }
+
+  if (is_brewer_palette(colors)) {
+    return(list(kind = "brewer", name = colors))
+  }
+
+  viridis <- paste(setdiff(viridis_palettes, letters), collapse = ", ")
+  if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+    stop("'", colors, "' is not one of the viridis palettes (", viridis,
+         "). For an RColorBrewer palette, install RColorBrewer with: ",
+         "install.packages('RColorBrewer')", call. = FALSE)
+  }
+
+  stop("'", colors, "' is not a palette name hexify knows. The viridis ",
+       "palettes are ", viridis, "; the RColorBrewer palettes are the row ",
+       "names of RColorBrewer::brewer.pal.info.", call. = FALSE)
+}
+
+#' A brewer palette at any number of levels
+#'
+#' `RColorBrewer::brewer.pal()` is defined from three colours up to the palette's
+#' own length. Below that it warns and returns three; above it a scale needs more
+#' colours than the palette holds, which interpolating over its full range gives.
+#'
+#' @param palette_name An RColorBrewer palette name
+#' @param n How many colours the scale needs
+#' @return A character vector of n colours
+#' @noRd
+brewer_colors <- function(palette_name, n) {
+  max_colors <- RColorBrewer::brewer.pal.info[palette_name, "maxcolors"]
+
+  if (n <= max_colors) {
+    return(RColorBrewer::brewer.pal(max(3L, n), palette_name)[seq_len(n)])
+  }
+
+  grDevices::colorRampPalette(
+    RColorBrewer::brewer.pal(max_colors, palette_name)
+  )(n)
+}
+
 #' Apply discrete color scale to ggplot
 #' @noRd
 apply_discrete_scale <- function(p, colors, legend_title, na_color, n_levels) {
@@ -47,17 +104,17 @@ apply_discrete_scale <- function(p, colors, legend_title, na_color, n_levels) {
     ))
   }
 
-  if (is_brewer_palette(colors)) {
-    max_colors <- RColorBrewer::brewer.pal.info[colors, "maxcolors"]
-    pal_colors <- RColorBrewer::brewer.pal(min(n_levels, max_colors), colors)
+  palette <- resolve_palette_name(colors)
+
+  if (palette$kind == "brewer") {
     return(p + ggplot2::scale_fill_manual(
-      values = pal_colors, name = legend_title, na.value = na_color
+      values = brewer_colors(palette$name, n_levels),
+      name = legend_title, na.value = na_color
     ))
   }
 
-  # Fallback: treat as viridis option name
   p + ggplot2::scale_fill_viridis_d(
-    option = tolower(colors), name = legend_title, na.value = na_color
+    option = palette$name, name = legend_title, na.value = na_color
   )
 }
 
@@ -76,16 +133,17 @@ apply_continuous_scale <- function(p, colors, legend_title, na_color) {
     ))
   }
 
-  if (is_brewer_palette(colors)) {
+  palette <- resolve_palette_name(colors)
+
+  if (palette$kind == "brewer") {
     return(p + ggplot2::scale_fill_distiller(
-      palette = colors, direction = 1,
+      palette = palette$name, direction = 1,
       name = legend_title, na.value = na_color
     ))
   }
 
-  # Fallback: treat as viridis option name
   p + ggplot2::scale_fill_viridis_c(
-    option = tolower(colors), name = legend_title, na.value = na_color
+    option = palette$name, name = legend_title, na.value = na_color
   )
 }
 
@@ -465,9 +523,13 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' @param colors Color palette for the heatmap. Can be:
 #'   \itemize{
 #'     \item A character vector of colors (for manual scale)
-#'     \item A single RColorBrewer palette name (e.g., "YlOrRd", "Greens")
+#'     \item A single RColorBrewer palette name (e.g., "YlOrRd", "Greens"),
+#'       interpolated over its own range when a binned scale asks for more
+#'       levels than the palette holds
+#'     \item A viridis palette name ("viridis", "magma", "turbo", ...)
 #'     \item NULL to use viridis
 #'   }
+#'   A name in neither family is an error naming the families.
 #' @param breaks Numeric vector of break points for binning continuous values,
 #'   or NULL for continuous scale. Use \code{Inf} and \code{-Inf} for open-ended bins.
 #' @param labels Labels for the breaks (length should be one less than breaks).

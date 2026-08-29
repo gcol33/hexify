@@ -59,9 +59,13 @@ are drawn with a uniform fill color. If not specified but data has a
 \item{colors}{Color palette for the heatmap. Can be:
 \itemize{
 \item A character vector of colors (for manual scale)
-\item A single RColorBrewer palette name (e.g., "YlOrRd", "Greens")
+\item A single RColorBrewer palette name (e.g., "YlOrRd", "Greens"),
+interpolated over its own range when a binned scale asks for more
+levels than the palette holds
+\item A viridis palette name ("viridis", "magma", "turbo", ...)
 \item NULL to use viridis
-}}
+}
+A name in neither family is an error naming the families.}
 
 \item{breaks}{Numeric vector of break points for binning continuous values,
 or NULL for continuous scale. Use \code{Inf} and \code{-Inf} for open-ended bins.}
