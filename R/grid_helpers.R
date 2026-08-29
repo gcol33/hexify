@@ -37,18 +37,133 @@ unwrap_ring_longitudes <- function(coords) {
 
   lons <- c(lons[1], lons[1] + cumsum(steps))
 
-  # A cell holding a pole comes back winding once around the globe, which no
-  # lon/lat ring can close; its corners stay as the projection gives them.
-  if (abs(lons[n] - lons[1]) > 1e-6) {
-    return(coords)
-  }
-  # Otherwise the last corner is the first one, placed exactly so that
+  # The last corner is the first one, whole turns on: place it exactly, so that
   # accumulated rounding cannot leave the ring open.
-  lons[n] <- lons[1]
+  lons[n] <- lons[1] + 360 * round((lons[n] - lons[1]) / 360)
 
   center <- (max(lons) + min(lons)) / 2
   coords[, 1] <- lons - 360 * round(center / 360)
   coords
+}
+
+#' Latitude where a cell edge meets a meridian
+#'
+#' The edge is the great-circle arc between two corners. Defined for corners
+#' that are neither on the same meridian nor half a turn apart, which is every
+#' edge that meets a meridian at one point.
+#'
+#' @param lon1,lat1,lon2,lat2 The two corners, in degrees
+#' @param lon The meridian, in degrees on the same continuous scale
+#' @return The latitude in degrees
+#' @noRd
+edge_lat_at_lon <- function(lon1, lat1, lon2, lat2, lon) {
+  rad <- pi / 180
+  atan((tan(lat1 * rad) * sin((lon2 - lon) * rad) +
+        tan(lat2 * rad) * sin((lon - lon1) * rad)) /
+       sin((lon2 - lon1) * rad)) / rad
+}
+
+#' Close a ring that encircles a pole
+#'
+#' The corners of a cell holding a pole run once around the globe, so no lon/lat
+#' ring closes on them. Cutting the ring at the antimeridian and carrying the two
+#' ends up to the pole closes it around the cap the cell covers, within the map
+#' and without the seam-crossing a whole-globe ring would otherwise need.
+#'
+#' @param coords A 2+ column matrix with continuous longitudes, the first corner
+#'   repeated last
+#' @return The same matrix when the ring closes on its own, otherwise the ring
+#'   from -180 to 180 with its two polar corners
+#' @noRd
+close_ring_over_pole <- function(coords) {
+  n <- nrow(coords)
+  if (n < 4 || anyNA(coords[, 1])) {
+    return(coords)
+  }
+
+  lons <- coords[, 1]
+  winding <- lons[n] - lons[1]
+  pole <- sign(mean(coords[, 2]))
+  if (abs(abs(winding) - 360) > 1e-6 || pole == 0) {
+    return(coords)
+  }
+
+  # The one antimeridian the ring spans, and the edge that meets it
+  seam <- 180 + 360 * round((mean(lons) - 180) / 360)
+  at <- which((lons[-n] - seam) * (lons[-1] - seam) < 0)[1]
+  if (is.na(at)) {
+    return(coords)
+  }
+
+  opening <- coords[at, , drop = FALSE]
+  opening[, 1] <- seam
+  opening[, 2] <- edge_lat_at_lon(lons[at], coords[at, 2],
+                                  lons[at + 1L], coords[at + 1L, 2], seam)
+  closing <- opening
+  closing[, 1] <- seam + winding
+
+  # Walk from the seam once around, so the ring runs the width of the map
+  turned <- coords[seq_len(at), , drop = FALSE]
+  turned[, 1] <- turned[, 1] + winding
+  ring <- rbind(opening, coords[seq_len(n - 1L)[-seq_len(at)], , drop = FALSE],
+                turned, closing)
+  ring[, 1] <- ring[, 1] - seam - 180 * sign(winding)
+
+  caps <- ring[c(nrow(ring), 1L), , drop = FALSE]
+  caps[, 2] <- 90 * pole
+  rbind(ring, caps, ring[1, , drop = FALSE])
+}
+
+#' Give a ring a corner where it meets the antimeridian
+#'
+#' `sf::st_wrap_dateline()` cuts a ring at +/-180 and joins the cut ends along a
+#' line of constant latitude, which is not where the cell's own edge runs. A
+#' corner placed on the edge itself is where the cut belongs, so the two halves
+#' keep the cell's shape. An edge running over a pole meets the meridian at the
+#' pole.
+#'
+#' @param coords A 2+ column matrix with continuous longitudes
+#' @return The same matrix, with a corner inserted at each seam crossing
+#' @noRd
+insert_seam_corners <- function(coords) {
+  lons <- coords[, 1]
+  n <- nrow(coords)
+  if (n < 2 || anyNA(lons) || (min(lons) >= -180 && max(lons) <= 180)) {
+    return(coords)
+  }
+
+  pieces <- vector("list", 2L * n)
+  at <- 0L
+  for (i in seq_len(n - 1L)) {
+    pieces[[at <- at + 1L]] <- coords[i, , drop = FALSE]
+    over_pole <- abs(abs(lons[i + 1L] - lons[i]) - 180) < 1e-6
+
+    for (seam in c(-180, 180)) {
+      if ((lons[i] - seam) * (lons[i + 1L] - seam) >= 0) {
+        next
+      }
+      corner <- coords[i, , drop = FALSE]
+      corner[, 1] <- seam
+      corner[, 2] <- if (over_pole) {
+        90 * sign(coords[i, 2] + coords[i + 1L, 2])
+      } else {
+        edge_lat_at_lon(lons[i], coords[i, 2], lons[i + 1L], coords[i + 1L, 2], seam)
+      }
+      pieces[[at <- at + 1L]] <- corner
+    }
+  }
+  pieces[[at + 1L]] <- coords[n, , drop = FALSE]
+
+  do.call(rbind, pieces[seq_len(at + 1L)])
+}
+
+#' Prepare a spherical cell ring for a lon/lat polygon
+#'
+#' @param coords A 2+ column matrix whose first two columns are lon and lat
+#' @return The prepared coordinate matrix
+#' @noRd
+lonlat_ring_coords <- function(coords) {
+  insert_seam_corners(close_ring_over_pole(unwrap_ring_longitudes(coords)))
 }
 
 #' Split cells at the antimeridian
@@ -76,7 +191,7 @@ wrap_cells_at_dateline <- function(x) {
 
 #' Build hexagon polygons for ISEA cell IDs
 #'
-#' Rings are prepared with `unwrap_ring_longitudes()` so each polygon is
+#' Rings are prepared with `lonlat_ring_coords()` so each polygon is
 #' contiguous; callers that render on a flat map pass the result through
 #' `sf::st_wrap_dateline()` to split them at +/-180.
 #'
@@ -98,7 +213,7 @@ isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
   }
 
   polygons <- lapply(corners_list, function(coords) {
-    sf::st_polygon(list(unwrap_ring_longitudes(coords)))
+    sf::st_polygon(list(lonlat_ring_coords(coords)))
   })
 
   # A ring that crosses the antimeridian or runs over a pole carries longitudes
@@ -260,7 +375,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
     boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
     polygons <- lapply(boundaries, function(coords) {
       if (nrow(coords) == 0) return(sf::st_polygon())
-      coords <- unwrap_ring_longitudes(coords)
+      coords <- lonlat_ring_coords(coords)
       sf::st_polygon(list(coords))
     })
     sfc <- sf::st_sfc(polygons, crs = grid_crs(g))

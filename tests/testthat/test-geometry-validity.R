@@ -152,3 +152,51 @@ test_that("near-polar cells stay non-degenerate across apertures", {
     expect_lt(max(abs(corners$lat)), 90)
   }
 })
+
+test_that("grid_global covers the poles without warning", {
+  skip_on_cran()
+  skip_if_not_installed("sf")
+
+  for (aperture in c(3L, 4L, 7L)) {
+    label <- sprintf("aperture %d", aperture)
+    expect_no_warning({
+      global <- grid_global(hex_grid(resolution = 2, aperture = aperture))
+    })
+
+    expect_true(all(sf::st_is_valid(global)), info = label)
+    expect_false(any(sf::st_is_empty(global)), info = label)
+
+    # The cells holding a pole carry it as a corner
+    reach <- vapply(sf::st_geometry(global), function(g) {
+      max(abs(sf::st_coordinates(g)[, 2]))
+    }, numeric(1))
+    expect_equal(max(reach), 90, info = label)
+  }
+})
+
+test_that("the dateline wrap keeps each cell's area", {
+  skip_on_cran()
+  skip_if_not_installed("sf")
+
+  cases <- list(
+    list(aperture = 3L, resolution = 3L),
+    list(aperture = 4L, resolution = 3L),
+    list(aperture = 7L, resolution = 2L)
+  )
+
+  for (case in cases) {
+    label <- sprintf("aperture %d, resolution %d", case$aperture, case$resolution)
+    grid <- hex_grid(resolution = case$resolution, aperture = case$aperture)
+    cells <- seq_len(2 + 10 * case$aperture^case$resolution)
+
+    whole <- cell_to_sf(cells, grid, wrap_dateline = FALSE)
+    split <- cell_to_sf(cells, grid, wrap_dateline = TRUE)
+
+    expect_true(all(sf::st_is_valid(split)), info = label)
+
+    # An unwrapped ring carries longitudes past +/-180, which st_area() notes
+    whole_area <- suppressWarnings(as.numeric(sf::st_area(whole)))
+    expect_equal(as.numeric(sf::st_area(split)), whole_area,
+                 tolerance = 1e-6, info = label)
+  }
+})

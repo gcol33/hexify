@@ -10,6 +10,19 @@
   a cell edge, never on a corner, and corners now keep the position the inverse
   projection gives them.
 
+* `grid_global()` emitted GDAL errors and returned an invalid geometry for the
+  cells that cover a pole. The ring of such a cell winds once around the globe,
+  which no lon/lat ring closes, and `sf::st_wrap_dateline()` joined the two
+  halves it cut along a line of constant latitude, across the cell's own edges.
+  The ring is now cut at the antimeridian and carried up to the pole, the way a
+  polar cap is drawn in lon/lat.
+
+* A cell split at the antimeridian keeps its shape. The cut ends were joined
+  along a line of constant latitude, which is not where the cell's edge runs and
+  moved as much as a tenth of the area of a cell at the seam. The ring now
+  carries a corner on its own edge where it meets +/-180, and a cell covers the
+  same area whether or not it is split.
+
 * Cell rings cross the antimeridian by carrying their longitudes on
   continuously rather than by shifting the negative ones, which placed a ring
   spanning exactly half the globe on both sides of the map at once. Only cells
