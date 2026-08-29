@@ -686,6 +686,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_cell_lattice_generator_seq
+NumericVector cpp_cell_lattice_generator_seq(IntegerVector ap_seq_in);
+RcppExport SEXP _hexify_cpp_cell_lattice_generator_seq(SEXP ap_seq_inSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_lattice_generator_seq(ap_seq_in));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_get_neighbors_isea
 Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution, int aperture);
 RcppExport SEXP _hexify_cpp_get_neighbors_isea(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
@@ -696,6 +707,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_neighbors_isea(cell_id, resolution, aperture));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_get_neighbors_isea_seq
+Rcpp::List cpp_get_neighbors_isea_seq(Rcpp::NumericVector cell_id, IntegerVector ap_seq_in);
+RcppExport SEXP _hexify_cpp_get_neighbors_isea_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_get_neighbors_isea_seq(cell_id, ap_seq_in));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1320,7 +1343,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_ij_to_cell_seq", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell_seq, 4},
     {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 2},
     {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 2},
+    {"_hexify_cpp_cell_lattice_generator_seq", (DL_FUNC) &_hexify_cpp_cell_lattice_generator_seq, 1},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 3},
+    {"_hexify_cpp_get_neighbors_isea_seq", (DL_FUNC) &_hexify_cpp_get_neighbors_isea_seq, 2},
     {"_hexify_cpp_get_neighbors_z7", (DL_FUNC) &_hexify_cpp_get_neighbors_z7, 2},
     {"_hexify_cpp_icosa_tri_to_plane", (DL_FUNC) &_hexify_cpp_icosa_tri_to_plane, 3},
     {"_hexify_cpp_cell_to_plane", (DL_FUNC) &_hexify_cpp_cell_to_plane, 3},

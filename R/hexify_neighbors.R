@@ -113,16 +113,8 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
 
 # --- ISEA backend ---
 .get_neighbors_isea <- function(cell_id, grid, k, include_self, distances) {
-  if (is_mixed_aperture(grid@aperture)) {
-    stop("get_neighbors() has no adjacency for the mixed aperture sequence \"",
-         grid@aperture, "\" (gcol33/hexify#76)", call. = FALSE)
-  }
-
-  ap <- aperture_to_int(grid@aperture)
-  res <- grid@resolution
-
-  # Use k=1 fast path helper (C++ handles all apertures including ap7)
-  get_k1 <- function(cids) cpp_get_neighbors_isea(cids, res, ap)
+  # k = 1 fast path. C++ walks every aperture and every mixed sequence.
+  get_k1 <- function(cids) grid_neighbors_isea(cids, grid)
 
   if (k == 1L && !distances) {
     result <- get_k1(cell_id)

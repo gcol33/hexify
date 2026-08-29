@@ -205,8 +205,16 @@ cpp_cell_to_polygon_seq <- function(cell_id, ap_seq_in) {
     .Call(`_hexify_cpp_cell_to_polygon_seq`, cell_id, ap_seq_in)
 }
 
+cpp_cell_lattice_generator_seq <- function(ap_seq_in) {
+    .Call(`_hexify_cpp_cell_lattice_generator_seq`, ap_seq_in)
+}
+
 cpp_get_neighbors_isea <- function(cell_id, resolution, aperture) {
     .Call(`_hexify_cpp_get_neighbors_isea`, cell_id, resolution, aperture)
+}
+
+cpp_get_neighbors_isea_seq <- function(cell_id, ap_seq_in) {
+    .Call(`_hexify_cpp_get_neighbors_isea_seq`, cell_id, ap_seq_in)
 }
 
 cpp_get_neighbors_z7 <- function(index_ids, resolution) {

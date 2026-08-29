@@ -788,6 +788,38 @@ cell_area <- function(cell_id = NULL, grid) {
 # HIERARCHICAL INDEX HELPERS
 # =============================================================================
 
+#' Quad coordinates of cells on any ISEA grid
+#'
+#' A pure aperture and a mixed sequence pack their cells the same way and are
+#' read by the same walk, through one entry point taking the aperture and one
+#' taking the sequence.
+#'
+#' @param cell_id Numeric vector of cell IDs
+#' @param g HexGridInfo object
+#' @return Data frame with quad, i and j columns
+#' @noRd
+grid_quad_ij <- function(cell_id, g) {
+  if (is_mixed_aperture(g@aperture)) {
+    return(cpp_cell_to_quad_ij_seq(as.numeric(cell_id), grid_ap_seq(g)))
+  }
+  cpp_cell_to_quad_ij(as.numeric(cell_id), g@resolution,
+                      aperture_to_int(g@aperture))
+}
+
+#' The cells adjacent to given cells on any ISEA grid
+#'
+#' @param cell_id Numeric vector of cell IDs
+#' @param g HexGridInfo object
+#' @return List of numeric vectors, the neighbours of each cell
+#' @noRd
+grid_neighbors_isea <- function(cell_id, g) {
+  if (is_mixed_aperture(g@aperture)) {
+    return(cpp_get_neighbors_isea_seq(as.numeric(cell_id), grid_ap_seq(g)))
+  }
+  cpp_get_neighbors_isea(as.numeric(cell_id), g@resolution,
+                         aperture_to_int(g@aperture))
+}
+
 #' Hierarchical index strings of cells on a pure-aperture grid
 #'
 #' The index encoders work on (quad, i, j), so cell IDs make the round trip

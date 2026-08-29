@@ -1312,23 +1312,6 @@ DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
 // Neighbor Finding (v0.7.0)
 // ============================================================================
 
-// Helper: convert (quad, i, j) to cell_id
-// For ap7: (i,j) are surrogates. For ap3/4: (i,j) are substrates.
-static double encode_cell_id(int quad, long long i, long long j,
-                              uint64_t offsetPerQuad, long long dim,
-                              const SubstrateLattice& lat, int aperture, int resolution) {
-    if (quad == 0 && i == 0 && j == 0) {
-        return 1.0;
-    }
-
-    uint64_t offset = 1 + (quad - 1) * offsetPerQuad;
-    uint64_t bnd2D_seq = (aperture == 7)
-        ? hexify::ap7_surrogate_to_quad_index(i, j, resolution)
-        : cell_index_2d(i, j, dim, lat);
-
-    return static_cast<double>(offset + bnd2D_seq + 1);
-}
-
 // Resolution 0 is the 12 base cells, one per icosahedron vertex. Every one of
 // them is a pentagon and each quad holds a single cell, so adjacency there is
 // the icosahedron's vertex graph rather than a step through a quad frame.
@@ -1348,40 +1331,152 @@ static const int kBaseCellNeighbors[12][5] = {
     { 6,  7,  8,  9, 10}
 };
 
-// [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
-                                   int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        Rcpp::stop("cpp_get_neighbors_isea: aperture must be 3, 4, or 7");
+// How a grid lays its cells out in a quad: what a quad edge measures, which
+// substrate lattice the cells sit on, and how a quad coordinate maps to and
+// from the plane. A pure aperture and a mixed aperture sequence differ only in
+// these, so one neighbour walk serves both.
+struct QuadFrame {
+    std::vector<int> ap_seq;   // empty for a pure aperture
+    int aperture;              // 0 for a mixed sequence
+    int resolution;
+    uint64_t nCells;
+    uint64_t offsetPerQuad;
+    long long dim;
+    long long max_ij;
+    long long edge;            // coordinate of the quad's far corner
+    SubstrateLattice lattice;
+    LatticeGenerator generator;
+};
+
+static QuadFrame quad_frame_pure(int aperture, int resolution) {
+    QuadFrame f;
+    f.aperture = aperture;
+    f.resolution = resolution;
+    calc_grid_params(resolution, aperture, f.nCells, f.offsetPerQuad);
+    f.dim = grid_dim_for_aperture(resolution, aperture);
+    f.max_ij = hexify::get_max_ij(aperture, resolution);
+    f.edge = (aperture == 7) ? hexify::ap7_classI_scale(resolution)
+                             : f.max_ij + 1;
+    f.lattice = lattice_for_aperture(aperture, resolution);
+    f.generator = generator_for_aperture(aperture, resolution);
+    return f;
+}
+
+static QuadFrame quad_frame_seq(const std::vector<int>& ap_seq) {
+    QuadFrame f;
+    f.ap_seq = ap_seq;
+    f.aperture = 0;
+    f.resolution = static_cast<int>(ap_seq.size()) - 1;
+    calc_grid_params_mixed(ap_seq, f.nCells, f.offsetPerQuad);
+    f.dim = hexify::quad_edge_coord_mixed(ap_seq);
+    f.max_ij = f.dim - 1;
+    f.edge = f.dim;
+
+    // A mixed sequence stores its cells on the substrate its own form names,
+    // so the sublattice and its generator both come from that form.
+    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
+    f.lattice = sublattice_of(form);
+    f.generator.a = form.m + form.n;
+    f.generator.b = form.n;
+    return f;
+}
+
+static bool frame_in_quad(const QuadFrame& f, long long i, long long j) {
+    if (f.aperture == 7) {
+        return hexify::ap7_surrogate_in_quad(i, j, f.resolution);
+    }
+    return i >= 0 && j >= 0 && i <= f.max_ij && j <= f.max_ij;
+}
+
+static double frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
+    if (quad == 0 && i == 0 && j == 0) {
+        return 1.0;
+    }
+    uint64_t offset = 1 + (quad - 1) * f.offsetPerQuad;
+    uint64_t within_quad = (f.aperture == 7)
+        ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
+        : cell_index_2d(i, j, f.dim, f.lattice);
+    return static_cast<double>(offset + within_quad + 1);
+}
+
+static void frame_decode(const QuadFrame& f, uint64_t idx,
+                         int& quad, long long& i, long long& j) {
+    quad = static_cast<int>(idx / f.offsetPerQuad) + 1;
+    uint64_t within_quad = idx - (quad - 1) * f.offsetPerQuad;
+    if (f.aperture == 7) {
+        hexify::ap7_quad_index_to_surrogate(within_quad, f.resolution, i, j);
+    } else {
+        ij_from_cell_index(within_quad, f.dim, f.lattice, i, j);
+    }
+}
+
+static void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, long long j,
+                           double& x, double& y) {
+    if (f.ap_seq.empty()) {
+        hexify::quad_ij_to_xy(quad, i, j, f.aperture, f.resolution, x, y);
+    } else {
+        hexify::quad_ij_to_xy_mixed(quad, i, j, f.ap_seq, x, y);
+    }
+}
+
+// Re-express a coordinate that has stepped outside its quad in the quad that
+// owns it. A mixed sequence stores substrate coordinates, so its quad edge is
+// all the edge table needs; a pure aperture goes through the call that also
+// unpacks aperture 7's surrogate.
+static bool frame_canonicalize(const QuadFrame& f, int& quad,
+                               long long& i, long long& j) {
+    if (f.ap_seq.empty()) {
+        return hexify::quad_ij_canonicalize(quad, i, j, f.aperture, f.resolution);
+    }
+    return hexify::substrate_ij_canonicalize(quad, i, j, f.edge);
+}
+
+// The quad a point falls in, and its coordinates there
+static void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
+                         int& quad, long long& i, long long& j) {
+    hexify::ProjectionResult fwd = hexify::snyder_forward(lon_deg, lat_deg);
+
+    if (f.ap_seq.empty()) {
+        hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                      fwd.icosa_triangle_y, f.aperture,
+                                      f.resolution, quad, i, j);
+        return;
     }
 
+    int quad_pre;
+    double quad_x, quad_y;
+    hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x,
+                                  fwd.icosa_triangle_y, quad_pre, quad_x, quad_y);
+    hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, f.ap_seq, quad, i, j);
+}
+
+// [[Rcpp::export]]
+NumericVector cpp_cell_lattice_generator_seq(IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_lattice_generator_seq");
+    QuadFrame f = quad_frame_seq(ap_seq);
+    return NumericVector::create(static_cast<double>(f.generator.a),
+                                 static_cast<double>(f.generator.b));
+}
+
+// The six cells adjacent to each of `cell_id`, in the frame's own grid.
+//
+// The six neighbours are the generator times the six units of the Eisenstein
+// integers, so one step table serves every lattice. A step leaving the quad is
+// sent back through the forward pipeline, which names the quad that owns it.
+static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
+                                      const QuadFrame& f, const char* fn) {
     int n = cell_id.size();
     Rcpp::List out(n);
 
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    long long max_ij = hexify::get_max_ij(aperture, resolution);
-
-    // The aligned lattice writes (i, j) as x = i - j/2, y = j * sin60, so the
-    // six cells one unit away sit at +/-(1,0), +/-(0,1) and +/-(1,1). Aperture
-    // 4, aperture 3's even resolutions and aperture 7's surrogates all live on
-    // this lattice; aperture 3's odd resolutions carry cells on the 30-degree
-    // Class II lattice, where one substrate point in three is a cell and
-    // adjacent cells stand sqrt(3) substrate units apart.
     long long offsets[6][2];
-    lattice_unit_steps(generator_for_aperture(aperture, resolution), offsets);
+    lattice_unit_steps(f.generator, offsets);
 
     for (int k = 0; k < n; k++) {
         double cell_id_raw = cell_id[k];
         if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
-            cell_id_raw > static_cast<double>(nCells)) {
-            Rcpp::stop("cell_id must be a finite value in [1, %.0f] for resolution %d, aperture %d",
-                       static_cast<double>(nCells), resolution, aperture);
+            cell_id_raw > static_cast<double>(f.nCells)) {
+            Rcpp::stop("%s: cell_id must be a finite value in [1, %.0f] for resolution %d",
+                       fn, static_cast<double>(f.nCells), f.resolution);
         }
         uint64_t idx = static_cast<uint64_t>(cell_id_raw);
         idx--;
@@ -1389,7 +1484,7 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
         std::vector<double> neighbor_ids;
         neighbor_ids.reserve(6);
 
-        if (resolution == 0) {
+        if (f.resolution == 0) {
             Rcpp::NumericVector base(5);
             for (int d = 0; d < 5; d++) {
                 base[d] = kBaseCellNeighbors[idx][d] + 1;
@@ -1401,58 +1496,39 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
         int quad;
         long long i, j;
 
-        if (idx == 0 || idx == nCells - 1) {
+        if (idx == 0 || idx == f.nCells - 1) {
             // Quads 0 and 11 hold a single cell each -- the icosahedron vertex
             // where five quads meet -- so their own frame carries no offsets to
             // step through. Read the vertex from an adjacent quad, where it
             // sits at the corner coordinate the edge tables fold into the pole,
             // and take the six offsets from there.
-            long long edge = (aperture == 7)
-                ? hexify::ap7_classI_scale(resolution)
-                : hexify::get_max_ij(aperture, resolution) + 1;
             bool north = (idx == 0);
-            long long ci = north ? 0 : edge;
-            long long cj = north ? edge : 0;
+            long long ci = north ? 0 : f.edge;
+            long long cj = north ? f.edge : 0;
             quad = north ? 1 : 6;
-            if (aperture == 7) {
-                hexify::ap7_substrate_to_surrogate_ijk(ci, cj, resolution, i, j);
+            if (f.aperture == 7) {
+                hexify::ap7_substrate_to_surrogate_ijk(ci, cj, f.resolution, i, j);
             } else {
                 i = ci;
                 j = cj;
             }
         } else {
-            idx--;
-            quad = static_cast<int>(idx / offsetPerQuad) + 1;
-            uint64_t within_quad = idx - (quad - 1) * offsetPerQuad;
-
-            if (aperture == 7) {
-                hexify::ap7_quad_index_to_surrogate(within_quad, resolution, i, j);
-            } else {
-                ij_from_cell_index(within_quad, dim, sub_lat, i, j);
-            }
+            frame_decode(f, idx - 1, quad, i, j);
         }
 
         for (int d = 0; d < 6; d++) {
             long long ni = i + offsets[d][0];
             long long nj = j + offsets[d][1];
 
-            bool in_bounds = (aperture == 7)
-                ? hexify::ap7_surrogate_in_quad(ni, nj, resolution)
-                : (ni >= 0 && nj >= 0 && ni <= max_ij && nj <= max_ij);
-
-            if (in_bounds) {
-                neighbor_ids.push_back(
-                    encode_cell_id(quad, ni, nj,
-                                   offsetPerQuad, dim, sub_lat,
-                                   aperture, resolution));
+            if (frame_in_quad(f, ni, nj)) {
+                neighbor_ids.push_back(frame_encode(f, quad, ni, nj));
                 continue;
             }
 
             // The neighbour sits in another quad: send its centre back through
             // the forward pipeline, which names the quad that owns it.
             double nbr_qx, nbr_qy;
-            hexify::quad_ij_to_xy(quad, ni, nj, aperture, resolution,
-                                   nbr_qx, nbr_qy);
+            frame_ij_to_xy(f, quad, ni, nj, nbr_qx, nbr_qy);
 
             int tri_face;
             double tri_x, tri_y;
@@ -1463,29 +1539,18 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
                 // through the edge table instead.
                 int alt_quad = quad;
                 long long alt_i = ni, alt_j = nj;
-                if (hexify::quad_ij_canonicalize(alt_quad, alt_i, alt_j,
-                                                  aperture, resolution)) {
-                    neighbor_ids.push_back(
-                        encode_cell_id(alt_quad, alt_i, alt_j,
-                                       offsetPerQuad, dim, sub_lat,
-                                       aperture, resolution));
+                if (frame_canonicalize(f, alt_quad, alt_i, alt_j)) {
+                    neighbor_ids.push_back(frame_encode(f, alt_quad, alt_i, alt_j));
                 }
                 continue;
             }
 
             auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
-            auto fwd = hexify::snyder_forward(ll.first, ll.second);
             int final_quad;
             long long final_i, final_j;
-            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
-                                          fwd.icosa_triangle_y,
-                                          aperture, resolution,
-                                          final_quad, final_i, final_j);
+            frame_locate(f, ll.first, ll.second, final_quad, final_i, final_j);
 
-            neighbor_ids.push_back(
-                encode_cell_id(final_quad, final_i, final_j,
-                               offsetPerQuad, dim, sub_lat,
-                               aperture, resolution));
+            neighbor_ids.push_back(frame_encode(f, final_quad, final_i, final_j));
         }
 
         // Remove duplicates (can happen at pentagons / boundary)
@@ -1502,6 +1567,24 @@ Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
     }
 
     return out;
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_get_neighbors_isea(Rcpp::NumericVector cell_id, int resolution,
+                                   int aperture) {
+    if (aperture != 3 && aperture != 4 && aperture != 7) {
+        Rcpp::stop("cpp_get_neighbors_isea: aperture must be 3, 4, or 7");
+    }
+    return neighbors_in_frame(cell_id, quad_frame_pure(aperture, resolution),
+                              "cpp_get_neighbors_isea");
+}
+
+// [[Rcpp::export]]
+Rcpp::List cpp_get_neighbors_isea_seq(Rcpp::NumericVector cell_id,
+                                       IntegerVector ap_seq_in) {
+    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_get_neighbors_isea_seq");
+    return neighbors_in_frame(cell_id, quad_frame_seq(ap_seq),
+                              "cpp_get_neighbors_isea_seq");
 }
 
 // [[Rcpp::export]]

@@ -477,32 +477,36 @@ void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
     ap7_substrate_to_surrogate_ijk(u, v, resolution, sur_i, sur_j);
 }
 
-bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
-                          int aperture, int resolution) {
-    long long top_edge;
-    long long ci, cj;
-    if (aperture == 7) {
-        top_edge = ap7_classI_scale(resolution);
-        ap7_surrogate_to_substrate_ijk(i, j, resolution, ci, cj);
-    } else {
-        top_edge = get_max_ij(aperture, resolution) + 1;
-        ci = i;
-        cj = j;
-    }
-
+bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
+                               long long top_edge) {
     int q = quad;
+    long long ci = i, cj = j;
+
     dggrid_canonicalize_q2di(top_edge, q, ci, cj);
     if (ci < 0 || ci >= top_edge || cj < 0 || cj >= top_edge) {
         return false;
     }
 
     quad = q;
-    if (aperture == 7) {
-        ap7_substrate_to_surrogate_ijk(ci, cj, resolution, i, j);
-    } else {
-        i = ci;
-        j = cj;
+    i = ci;
+    j = cj;
+    return true;
+}
+
+bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
+                          int aperture, int resolution) {
+    if (aperture != 7) {
+        return substrate_ij_canonicalize(quad, i, j,
+                                         get_max_ij(aperture, resolution) + 1);
     }
+
+    long long ci, cj;
+    ap7_surrogate_to_substrate_ijk(i, j, resolution, ci, cj);
+    if (!substrate_ij_canonicalize(quad, ci, cj, ap7_classI_scale(resolution))) {
+        return false;
+    }
+
+    ap7_substrate_to_surrogate_ijk(ci, cj, resolution, i, j);
     return true;
 }
 

@@ -139,6 +139,12 @@ bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution);
 bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
                           int aperture, int resolution);
 
+// The same walk on a bare substrate coordinate, given the coordinate of the
+// quad's far corner. A mixed aperture sequence stores its cells on the
+// substrate, so its quad edge is all the edge table needs.
+bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
+                               long long top_edge);
+
 // Aperture 7: Inverse - surrogate IJ back to quad XY coordinates.
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
                                   double& out_quad_x, double& out_quad_y);

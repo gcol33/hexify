@@ -34,9 +34,6 @@ one substrate point in three is a cell -- so the difference is divided by the
 lattice generator first. Cross-quad distances use breadth-first search over
 \code{\link[=get_neighbors]{get_neighbors()}} and return \code{NA} beyond a hundred rings.
 
-Mixed aperture sequences are not supported: their adjacency is not
-implemented (gcol33/hexify#76).
-
 For geodesic (geographic) distances between cell centers, convert to
 lon/lat with \code{\link[=cell_to_lonlat]{cell_to_lonlat()}} and use \code{sf::st_distance()}.
 }

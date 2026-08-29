@@ -85,10 +85,15 @@
   hop apart at apertures 3, 4 and 7, and the distances agree with breadth-first
   search over `get_neighbors()`.
 
-* `hex_distance()` and `get_neighbors()` on a grid built from a mixed aperture
-  sequence read the sequence spelling as a single number, which is `NA`, and
-  stopped on a coerced-aperture message naming neither the grid nor the reason.
-  They say plainly that the sequence has no adjacency (#76).
+* `get_neighbors()` and `hex_distance()` read a grid's aperture as a single
+  number, which is `NA` for a sequence spelling, so every grid built from one --
+  `"4/3"`, `"4/7"` or a per-level vector -- stopped on a coerced-aperture
+  message while every other operation on it worked. One walk now serves both:
+  it takes what a quad edge measures, which substrate lattice the cells sit on,
+  and how a quad coordinate maps to and from the plane, and a pure aperture and
+  a sequence differ only in those. A mixed grid has the twelve cells with five
+  neighbours and six everywhere else that a pure one has, at every sequence and
+  resolution tested, and its distances agree with breadth-first search.
 
 * `grid_clip()`, `hex_zonal()` and `hex_extract()` stopped on a grid built for
   another body, with sf's own `st_crs(x) == st_crs(y) is not TRUE`, which names
