@@ -1,4 +1,4 @@
-# hexify 0.8.2.9000
+# hexify 0.8.3
 
 ## Breaking changes
 
