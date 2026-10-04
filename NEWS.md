@@ -1,3 +1,12 @@
+# hexify (development version)
+
+## Bug fixes
+
+* `grid_rect()` on ISEA grids missed cells that intersect the bounding box, mostly
+  along its edges and occasionally inside it. It now seeds from a point sampling and
+  grows through neighbouring cells that meet the box until none is added, so the
+  result is every cell meeting the box, independent of the sampling density (#77).
+
 # hexify 0.8.3
 
 ## Breaking changes

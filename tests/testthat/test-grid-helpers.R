@@ -196,3 +196,25 @@ test_that("cell_to_sf keeps non-crossing cells as POLYGON", {
   geom_type <- as.character(sf::st_geometry_type(polys))
   expect_equal(geom_type, "POLYGON")
 })
+
+test_that("grid_rect returns every ISEA cell meeting the box", {
+  skip_if_not_installed("sf")
+  cases <- list(
+    list(c(-74.3, 40.5, -73.7, 40.95), 3, 11),
+    list(c(-74.3, 40.5, -73.7, 40.95), 4, 8),
+    list(c(-74.3, 40.5, -73.7, 40.95), 7, 5),
+    list(c(5, 45, 16, 55), 7, 4),
+    list(c(-20, 60, 40, 75), 4, 6)
+  )
+  for (cs in cases) {
+    bbox <- cs[[1]]
+    g <- hex_grid(type = "isea", resolution = cs[[3]], aperture = cs[[2]])
+    got <- grid_rect(bbox, g)
+    step <- g@diagonal_km / 111.32 / 20
+    pts <- expand.grid(lon = c(seq(bbox[1], bbox[3], by = step), bbox[3]),
+                       lat = c(seq(bbox[2], bbox[4], by = step), bbox[4]))
+    ref <- unique(lonlat_to_cell(pts$lon, pts$lat, g))
+    expect_length(setdiff(ref, got$cell_id), 0L)
+    expect_false(anyDuplicated(got$cell_id) > 0L)
+  }
+})

@@ -405,8 +405,8 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
 #' Generate a rectangular grid of hexagons
 #'
 #' Creates hexagon polygons covering a rectangular geographic region.
-#' For H3 grids, all cells that overlap the bounding box are included
-#' (not just cells whose center falls inside), ensuring full spatial coverage.
+#' All cells that overlap the bounding box are included (not just cells whose
+#' center falls inside), ensuring full spatial coverage on both backends.
 #'
 #' @param bbox Bounding box as c(xmin, ymin, xmax, ymax), or an sf/sfc object
 #' @param grid A HexGridInfo object specifying the grid parameters
@@ -453,19 +453,51 @@ grid_rect <- function(bbox, grid) {
   maxlon <- bbox[3]
   maxlat <- bbox[4]
 
-  # Create sampling grid - use diagonal_km from grid if available
+  # Seed with the cells of a point lattice over the box, far edges included
   diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
   spacing_deg <- diagonal / km_per_degree(grid_radius_km(g)) * 0.8
 
-  lons <- seq(minlon, maxlon, by = spacing_deg)
-  lats <- seq(minlat, maxlat, by = spacing_deg)
+  lons <- unique(c(seq(minlon, maxlon, by = spacing_deg), maxlon))
+  lats <- unique(c(seq(minlat, maxlat, by = spacing_deg), maxlat))
   grid_pts <- expand.grid(lon = lons, lat = lats)
+  seeds <- unique(lonlat_to_cell(grid_pts$lon, grid_pts$lat, g))
 
-  # Get unique cells covering the region
-  cell_ids <- lonlat_to_cell(grid_pts$lon, grid_pts$lat, g)
-  unique_cells <- unique(cell_ids)
+  cell_ids <- isea_cells_meeting_box(seeds, c(minlon, minlat, maxlon, maxlat), g)
+  cell_to_sf(cell_ids, g)
+}
 
-  cell_to_sf(unique_cells, g)
+#' Close a set of ISEA cells over the cells meeting a lon/lat box
+#'
+#' The cells whose polygon meets a rectangle form one edge-connected set, so
+#' growing from any member through neighbours that meet the box reaches all of
+#' them, independent of how the seeds were sampled.
+#'
+#' @param seeds Cell IDs known to meet the box
+#' @param bbox c(xmin, ymin, xmax, ymax)
+#' @param g HexGridInfo object
+#' @return Numeric vector of cell IDs
+#' @noRd
+isea_cells_meeting_box <- function(seeds, bbox, g) {
+  old <- suppressMessages(sf::sf_use_s2(FALSE))
+  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  box <- sf::st_as_sfc(sf::st_bbox(
+    c(xmin = bbox[1], ymin = bbox[2], xmax = bbox[3], ymax = bbox[4]),
+    crs = grid_crs(g)))
+
+  members <- seeds
+  tested <- seeds
+  frontier <- seeds
+  while (length(frontier) > 0L) {
+    candidates <- setdiff(unique(unlist(grid_neighbors_isea(frontier, g))), tested)
+    candidates <- candidates[!is.na(candidates)]
+    if (length(candidates) == 0L) break
+    tested <- c(tested, candidates)
+    hit <- lengths(suppressMessages(sf::st_intersects(
+      sf::st_geometry(cell_to_sf(candidates, g)), box))) > 0L
+    frontier <- candidates[hit]
+    members <- c(members, frontier)
+  }
+  members
 }
 
 #' Generate a global hexagon grid
