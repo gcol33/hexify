@@ -56,7 +56,8 @@ write_result <- function(df, name, extra = character()) {
     error = function(e) NA_character_)
   dirty <- tryCatch(
     length(system2("git", c("-C", shQuote(dirname(sys_script_path())), "status", "--porcelain",
-                            "--", "../../R", "../../src", "."), stdout = TRUE, stderr = FALSE)) > 0,
+                            "--", "../../R", "../../src", ".", ":(exclude)results"),
+                    stdout = TRUE, stderr = FALSE)) > 0,
     error = function(e) NA)
   meta <- c(
     paste("script:", basename(sys_script_path())),
