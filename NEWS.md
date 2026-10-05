@@ -53,7 +53,8 @@
   `dggs_vert0_lon`, `dggs_vert0_lat` and `dggs_vert0_azimuth` take it,
   `"random"` (repeatable with `set.seed()`), or `"region"` with `region =` a
   point or an sf object, which centres the grid as DGGRID's `REGION_CENTER`
-  does. The grid stores it in a new `orientation` slot, and every function
+  does (on the midpoint of an icosahedron edge), or `"face"` with `region =`,
+  which puts the region's centre on the centre of a face. The grid stores it in a new `orientation` slot, and every function
   taking the grid reads it, the `hex_globe()` shader included; grids saved
   before the slot existed read the standard orientation. Cell IDs, the
   hierarchy and neighbours are the same under every orientation. Under three

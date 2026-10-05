@@ -161,6 +161,19 @@ test_that("a region orientation puts the centre on the middle of an edge", {
   }
 })
 
+test_that("a face orientation puts the centre on the centre of a face", {
+  for (centre in list(c(10, 46.5), c(-75, -10), c(0, 90), c(170, -89), c(-180, 0))) {
+    g <- hex_grid(resolution = 5, orientation = "face", region = centre)
+    s <- icosa_solid(orient_arg(g))
+    C <- drop(unit_rows(centre[1], centre[2]))
+    to_face <- sort(row_angle(s$normals, matrix(C, 20, 3, byrow = TRUE)))
+    expect_lt(to_face[1], 1e-9)
+  }
+  expect_error(hex_grid(resolution = 4, orientation = "face"), "needs a region")
+  expect_error(hex_grid(resolution = 4, orientation = "random", region = c(0, 0)),
+               "region applies")
+})
+
 test_that("a region can be an sf object", {
   box <- sf::st_as_sfc(sf::st_bbox(c(xmin = 5, ymin = 44, xmax = 15, ymax = 49),
                                    crs = 4326))

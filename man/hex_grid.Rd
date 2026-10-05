@@ -53,11 +53,12 @@ name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 "enceladus", "titan", "uranus", "neptune", "pluto".}
 
 \item{orientation}{Where the icosahedron of an ISEA grid sits on the
-sphere: "standard" (default), "random", "region", or
+sphere: "standard" (default), "random", "region", "face", or
 \code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
 section. H3 fixes its own orientation, so H3 grids take only "standard".}
 
-\item{region}{For \code{orientation = "region"}, the area to centre the grid
+\item{region}{For \code{orientation = "region"} or \code{"face"}, the area
+to centre the grid
 on: \code{c(lon, lat)} in degrees, or an sf, sfc or bbox object, whose
 spherical centroid is used.}
 }
@@ -126,6 +127,10 @@ how much a result depends on where the cell boundaries fall.
 centre of \code{region} lands on the midpoint of an icosahedron edge,
 the middle of the two faces sharing it, far from the twelve vertices
 where the pentagons and the largest distortion sit.
+\item "face" places the centre of \code{region} on the centre of a face,
+about 20.9 degrees from the nearest face edge and 37.4 degrees from the
+nearest vertex, so a region up to about 40 degrees across lies on one
+face, away from the face edges where the projection bends.
 }
 
 Rotating the icosahedron rotates the grid with it, so cell IDs, the cell

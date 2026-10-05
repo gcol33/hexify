@@ -52,26 +52,33 @@ is_standard_orientation <- function(o) {
 
 #' Resolve hex_grid()'s orientation argument
 #'
-#' @param orientation "standard", "random", "region", or a numeric
+#' @param orientation "standard", "random", "region", "face", or a numeric
 #'   \code{c(vert0_lon, vert0_lat, azimuth)}
-#' @param region The area "region" centres the grid on
+#' @param region The area "region" and "face" centre the grid on
 #' @return Named numeric \code{c(vert0_lon, vert0_lat, azimuth)}, longitude in
 #'   [-180, 180) and azimuth in [0, 360)
 #' @noRd
 resolve_orientation <- function(orientation, region = NULL) {
+  placed <- c("region", "face")
+  region_misuse <- "region applies to orientation = \"region\" or \"face\""
   if (is.numeric(orientation)) {
-    if (!is.null(region)) {
-      stop("region applies to orientation = \"region\"", call. = FALSE)
-    }
+    if (!is.null(region)) stop(region_misuse, call. = FALSE)
     return(check_orientation(orientation))
   }
   if (!is.character(orientation) || length(orientation) != 1L ||
-      !orientation %in% c("standard", "random", "region")) {
-    stop("orientation must be \"standard\", \"random\", \"region\", or ",
-         "c(vert0_lon, vert0_lat, azimuth) in degrees", call. = FALSE)
+      !orientation %in% c("standard", "random", placed)) {
+    stop("orientation must be \"standard\", \"random\", \"region\", \"face\", ",
+         "or c(vert0_lon, vert0_lat, azimuth) in degrees", call. = FALSE)
   }
-  if (orientation != "region" && !is.null(region)) {
-    stop("region applies to orientation = \"region\"", call. = FALSE)
+  if (!orientation %in% placed && !is.null(region)) {
+    stop(region_misuse, call. = FALSE)
+  }
+  if (orientation %in% placed) {
+    if (is.null(region)) {
+      stop("orientation = \"", orientation, "\" needs a region: c(lon, lat) ",
+           "or an sf object", call. = FALSE)
+    }
+    centre <- region_centre(region)
   }
   switch(orientation,
     standard = ISEA_ORIENTATION,
@@ -80,14 +87,8 @@ resolve_orientation <- function(orientation, region = NULL) {
       asin(stats::runif(1, -1, 1)) * 180 / pi,
       stats::runif(1, 0, 360)
     )),
-    region = {
-      if (is.null(region)) {
-        stop("orientation = \"region\" needs a region: c(lon, lat) or an sf ",
-             "object", call. = FALSE)
-      }
-      centre <- region_centre(region)
-      region_orientation(centre[1], centre[2])
-    }
+    region = region_orientation(centre[1], centre[2]),
+    face = face_orientation(centre[1], centre[2])
   )
 }
 
@@ -157,6 +158,36 @@ region_orientation <- function(lon, lat) {
   p0 <- gnomonic_inverse(lon, lat, DGGRID_REGION_VERT0_M / DGGRID_AUTHALIC_RADIUS_M)
   p1 <- gnomonic_inverse(lon, lat, DGGRID_REGION_AZ_POINT_M / DGGRID_AUTHALIC_RADIUS_M)
   check_orientation(c(p0[1], p0[2], gc_azimuth_deg(p0, p1)))
+}
+
+#' Orientation that places a region centre on the centre of a face
+#'
+#' Vertex 0 lies due north of the centre, one face circumradius away, and
+#' vertex 1 is vertex 0 turned a third of a turn about the centre, so the face
+#' they span with the third such vertex is centred on the region. The north
+#' direction at a pole is read from the centre's longitude.
+#' @param lon,lat Region centre in degrees
+#' @noRd
+face_orientation <- function(lon, lat) {
+  r <- pi / 180
+  phi <- (1 + sqrt(5)) / 2
+  # Angle between a face centre and its vertices
+  circum <- acos(sqrt((3 * phi + 2) / (3 * (phi + 2))))
+  lo <- lon * r
+  la <- lat * r
+  centre <- c(cos(la) * cos(lo), cos(la) * sin(lo), sin(la))
+  north <- c(-sin(la) * cos(lo), -sin(la) * sin(lo), cos(la))
+  v0 <- cos(circum) * centre + sin(circum) * north
+  # Rodrigues rotation of v0 by 120 degrees about the centre
+  turn <- 2 * pi / 3
+  cross <- c(centre[2] * v0[3] - centre[3] * v0[2],
+             centre[3] * v0[1] - centre[1] * v0[3],
+             centre[1] * v0[2] - centre[2] * v0[1])
+  v1 <- cos(turn) * v0 + sin(turn) * cross +
+    (1 - cos(turn)) * sum(centre * v0) * centre
+  ll <- function(v) c(atan2(v[2], v[1]), asin(max(-1, min(1, v[3])))) / r
+  p0 <- ll(v0)
+  check_orientation(c(p0[1], p0[2], gc_azimuth_deg(p0, ll(v1))))
 }
 
 #' Inverse gnomonic projection about (lon0, lat0) of a point (x, y) on the
