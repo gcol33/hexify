@@ -7,7 +7,7 @@ versions and the processor.
 
 | Script | What it measures | Output |
 |---|---|---|
-| `bench_dggrid_agreement.R` | Cell assignment, centres and corners against DGGRID for apertures 3, 4, 7, ISEA43H and a mixed sequence, 200,000 random points per grid | `dggrid_agreement.csv`, `dggrid_disagreements.csv` |
+| `bench_dggrid_agreement.R` | Cell assignment, centres and corners against DGGRID for apertures 3, 4, 7, ISEA43H and a mixed sequence, 200,000 random points per grid; a cell whose corners differ by more than 1 m is checked against its neighbours in both programs | `dggrid_agreement.csv`, `dggrid_disagreements.csv` |
 | `bench_dggrid_orientation.R` | The same comparison under three given icosahedron orientations and three DGGRID `REGION_CENTER` placements, 50,000 random points per grid | `dggrid_orientation.csv` |
 | `make_dggrid_orientation_fixture.R` | DGGRID cells and centres under non-standard orientations, for the test suite | `tests/testthat/data/dggrid_orientation.csv` |
 | `bench_h3_agreement.R` | H3 cells and centres against the H3 library (h3r), resolutions 0 to 15 | `h3_agreement.csv` |
