@@ -9,6 +9,11 @@
   y,
   surface = c("sphere", "icosahedron"),
   center = c(lon = 15, lat = 32),
+  projection = c("orthographic", "perspective"),
+  distance = NULL,
+  tilt = 0,
+  rotation = 0,
+  fov = NULL,
   cells = NULL,
   land = TRUE,
   ocean_fill = "#F4F6F8",
@@ -35,6 +40,24 @@ needs an ISEA grid; an H3 grid is drawn on the sphere.}
 
 \item{center}{Point the view looks down on: a preset name from
 \code{\link{globe_centers}} or \code{c(lon, lat)}.}
+
+\item{projection}{\code{"orthographic"} or \code{"perspective"}.}
+
+\item{distance}{Distance of the untilted perspective camera from the
+sphere's centre, in sphere radii; greater than 1. \code{NULL} uses 3. A
+geostationary satellite sits at about 6.6 Earth radii.}
+
+\item{tilt}{Degrees the perspective camera swings about the point at
+\code{center}, between -90 and 90, keeping its range of
+\code{distance - 1} radii to that point. Positive values move the camera
+towards the bottom of the view, so it looks towards the top.}
+
+\item{rotation}{Degrees the view turns about the line of sight; positive
+values turn north clockwise.}
+
+\item{fov}{Field of view of the perspective camera in degrees, across the
+square the plot shows, centred on \code{center}; below 170. \code{NULL}
+frames the whole visible sphere instead.}
 
 \item{cells}{Cell IDs to draw. \code{NULL} draws every cell of the grid.}
 
@@ -77,11 +100,26 @@ sphere, or on the flat faces of the icosahedron the grid is built on. Both
 surfaces take their cell boundaries from the same points, so a cell on the
 icosahedron is the cell on the sphere folded flat.
 }
+\details{
+The view is an orthographic projection by default: parallel lines of sight,
+so the whole near half of the sphere shows. \code{projection =
+"perspective"} places a camera \code{distance} sphere radii from the
+sphere's centre, above \code{center}; it sees a smaller cap, and nearer
+cells appear larger. \code{tilt} swings that camera about the point at
+\code{center}, which it keeps looking at, so the surface is seen at a slant
+with the horizon towards the top; by default the plot frames the whole
+visible sphere. \code{fov} sets how wide
+the camera sees, and \code{rotation} turns the view about the line of sight
+in either projection.
+}
 \examples{
 grid <- hex_grid(resolution = 3, aperture = 3)
 plot(grid)
 plot(grid, surface = "icosahedron")
 plot(grid, surface = "icosahedron", land = FALSE, center = "pacific")
+plot(grid, projection = "perspective", distance = 2, center = "europe")
+plot(grid, surface = "icosahedron", projection = "perspective",
+     distance = 2.5, tilt = 25, rotation = 30)
 }
 \seealso{
 \code{\link{grid_global}} for the cells as sf polygons

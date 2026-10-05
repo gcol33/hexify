@@ -45,6 +45,173 @@ test_that("resolve_center errors on invalid input", {
 })
 
 # =============================================================================
+# Camera: orthographic and perspective views
+# =============================================================================
+
+test_that("the orthographic view puts the centre at the origin and north up", {
+  view <- hexify:::surface_view(c(lon = 40, lat = 20))
+  P <- hexify:::unit_vec(c(40, 40), c(20, 30))
+  xy <- hexify:::project(P, view)
+  expect_equal(xy[1, ], c(0, 0), tolerance = 1e-12)
+  expect_equal(xy[2, 1], 0, tolerance = 1e-12)
+  expect_gt(xy[2, 2], 0)
+  rim <- hexify:::project(hexify:::horizon_ring(view), view)
+  expect_equal(rowSums(rim^2), rep(1, nrow(rim)), tolerance = 1e-12)
+})
+
+test_that("the default frame holds the unit disc in both projections", {
+  ortho <- hexify:::surface_view(c(lon = 0, lat = 0))
+  expect_equal(hexify:::view_frame(ortho, NA_real_), c(0, 0, 1.02))
+  for (d in c(1.2, 3)) {
+    view <- hexify:::surface_view(c(lon = 0, lat = 0), distance = d)
+    fov <- hexify:::resolve_camera("perspective", d, 0, 0)$fov
+    expect_equal(hexify:::view_frame(view, fov), c(0, 0, 1.02), tolerance = 1e-12,
+                 info = paste(d))
+  }
+})
+
+test_that("the default frame holds the whole visible sphere of a tilted camera", {
+  for (cfg in list(c(3, 40), c(1.6, 25), c(2, -20))) {
+    info <- paste(cfg, collapse = " ")
+    view <- hexify:::surface_view(c(lon = 30, lat = 10), distance = cfg[1], tilt = cfg[2])
+    rim <- hexify:::project(hexify:::horizon_ring(view, 721L), view)
+    frame <- hexify:::view_frame(view, NA_real_)
+    expect_false(anyNA(rim), info = info)
+    off <- abs(sweep(rim, 2, frame[1:2]))
+    expect_lte(max(off), frame[3] / 1.02 + 1e-12)
+    # the rim touches the frame on two opposite sides
+    expect_equal(max(apply(rim, 2, function(x) diff(range(x)))), 2 * frame[3] / 1.02,
+                 tolerance = 1e-12, info = info)
+  }
+  # close and steeply tilted, the nearby surface spreads wider than 120
+  # degrees: the frame holds the rim cut to that square and touches it on
+  # its wider side
+  for (cfg in list(c(1.6, 60), c(1.2, 80))) {
+    info <- paste(cfg, collapse = " ")
+    view <- hexify:::surface_view(c(lon = 30, lat = 10), distance = cfg[1], tilt = cfg[2])
+    widest <- view$scale * tan(60 * pi / 180)
+    rim <- hexify:::project(hexify:::horizon_ring(view, 721L), view)
+    rim <- pmin(pmax(rim[stats::complete.cases(rim), ], -widest), widest)
+    frame <- hexify:::view_frame(view, NA_real_)
+    expect_lte(frame[3], 1.02 * widest + 1e-12)
+    expect_lte(max(abs(sweep(rim, 2, frame[1:2]))), frame[3] / 1.02 + 1e-12)
+    expect_equal(max(apply(rim, 2, function(x) diff(range(x)))), 2 * frame[3] / 1.02,
+                 tolerance = 1e-12, info = info)
+    expect_equal(min(rim), -widest, info = info)
+  }
+})
+
+test_that("an icosahedron is framed by the corners of the faces the camera sees", {
+  view <- hexify:::surface_view(c(lon = 10, lat = 45), distance = 1.8, tilt = 35)
+  ico <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("icosahedron", view))
+  sph <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("sphere", view))
+  expect_lt(ico[3], sph[3])
+  s <- hexify:::icosa_solid()
+  xy <- hexify:::project(s$vertices[unique(as.vector(s$faces[hexify:::icosa_front(s, view), ])), ], view)
+  expect_lte(max(abs(sweep(xy, 2, ico[1:2]))), ico[3] / 1.02 + 1e-12)
+})
+
+test_that("an untilted perspective view shows the sphere as the unit disc", {
+  for (d in c(1.2, 3, 6.6)) {
+    view <- hexify:::surface_view(c(lon = -70, lat = 45), distance = d)
+    rim <- hexify:::project(hexify:::horizon_ring(view), view)
+    expect_equal(rowSums(rim^2), rep(1, nrow(rim)), tolerance = 1e-12, info = d)
+    expect_equal(drop(hexify:::horizon_ring(view) %*% view$dir),
+                 rep(1 / d, nrow(rim)), tolerance = 1e-12, info = d)
+  }
+})
+
+test_that("faces_camera keeps the sphere points the camera has a line of sight to", {
+  set.seed(1)
+  P <- matrix(rnorm(3000), ncol = 3)
+  P <- P / sqrt(rowSums(P^2))
+  view <- hexify:::surface_view(c(lon = 100, lat = -30), distance = 2.2)
+  # the ray from the camera meets the sphere first at P when P lies on the
+  # near side of the tangent plane through P
+  seen <- rowSums((matrix(view$eye, nrow(P), 3, byrow = TRUE) - P) * P) > 0
+  expect_identical(hexify:::faces_camera(P, view), seen)
+})
+
+test_that("an icosahedron face is drawn exactly when the camera is outside its plane", {
+  s <- hexify:::icosa_solid()
+  for (d in c(1.05, 1.5, 4)) {
+    view <- hexify:::surface_view(c(lon = 10, lat = 60), distance = d)
+    h <- rowSums(s$normals * s$vertices[s$faces[, 1], ])
+    drawn <- drop(s$normals %*% view$dir) > h * view$horizon
+    centroid <- t(apply(s$faces, 1, function(f) colMeans(s$vertices[f, ])))
+    outside <- rowSums((matrix(view$eye, 20, 3, byrow = TRUE) - centroid) * s$normals) > 0
+    expect_identical(drawn, outside, info = d)
+  }
+})
+
+test_that("project_ring keeps the part of a ring in front of the camera", {
+  view <- hexify:::surface_view(c(lon = 0, lat = 0), distance = 1.2, tilt = 80)
+  rim <- hexify:::horizon_ring(view)
+  q <- hexify:::camera_coords(rim, view)
+  expect_true(any(q[, 3] < view$near) && any(q[, 3] >= view$near))
+  xy <- hexify:::project_ring(rim, view)
+  expect_false(anyNA(xy))
+  # every kept vertex is in front of the near plane, and the two cut points
+  # lie on it
+  kept <- sum(q[, 3] >= view$near)
+  expect_equal(nrow(xy), kept + 2L)
+  # a ring wholly behind the camera leaves nothing
+  behind <- sweep(diag(3) * 0.1, 2, view$eye + 0.5 * view$cam[, 3], "+")
+  expect_null(hexify:::project_ring(behind, view))
+})
+
+test_that("orient_ring turns a ring to the asked direction", {
+  sq <- cbind(c(0, 1, 1, 0), c(0, 0, 1, 1))
+  area2 <- function(p) {
+    n <- nrow(p)
+    sum(p[, 1] * p[c(2:n, 1), 2] - p[c(2:n, 1), 1] * p[, 2])
+  }
+  for (p in list(sq, sq[4:1, ])) {
+    expect_gt(area2(hexify:::orient_ring(p, TRUE)), 0)
+    expect_lt(area2(hexify:::orient_ring(p, FALSE)), 0)
+  }
+  expect_identical(hexify:::orient_ring(sq, TRUE), sq)
+})
+
+test_that("rotation turns north clockwise", {
+  north <- hexify:::unit_vec(0, 90)
+  view <- hexify:::surface_view(c(lon = 0, lat = 0), rotation = 90)
+  expect_equal(drop(hexify:::project(north, view)), c(1, 0), tolerance = 1e-12)
+})
+
+test_that("tilt swings the camera about the centre point, which stays in the middle", {
+  target <- hexify:::unit_vec(-40, 25)
+  for (tilt in c(-60, 0, 35, 80)) {
+    info <- paste("tilt", tilt)
+    view <- hexify:::surface_view(c(lon = -40, lat = 25), distance = 1.8, tilt = tilt)
+    expect_equal(drop(hexify:::project(target, view)), c(0, 0), tolerance = 1e-12, info = info)
+    offset <- view$eye - drop(target)
+    expect_equal(sqrt(sum(offset^2)), 0.8, tolerance = 1e-12, info = info)
+    # the line to the camera leans from the local vertical by the tilt
+    expect_equal(sum(offset * drop(target)) / 0.8, cos(tilt * pi / 180),
+                 tolerance = 1e-12, info = info)
+  }
+  # a positive tilt moves the camera south of the point, so it looks north
+  view <- hexify:::surface_view(c(lon = 0, lat = 0), distance = 2, tilt = 30)
+  expect_lt(view$eye[3], 0)
+})
+
+test_that("projection arguments are checked", {
+  cam <- hexify:::resolve_camera
+  expect_identical(cam("orthographic", NULL, 0, 0), list(distance = Inf, fov = NA_real_))
+  expect_identical(cam("perspective", NULL, 0, 0), list(distance = 3, fov = NA_real_))
+  expect_identical(cam("perspective", 2, 0, 0, fov = 20)$fov, 20)
+  expect_error(cam("orthographic", 2, 0, 0), "perspective camera")
+  expect_error(cam("orthographic", NULL, 10, 0), "perspective camera")
+  expect_error(cam("orthographic", NULL, 0, 0, fov = 30), "perspective camera")
+  expect_error(cam("perspective", 2, 0, 0, fov = 170), "between 0 and 170")
+  expect_error(cam("perspective", 1, 0, 0), "greater than 1")
+  expect_error(cam("perspective", 2, 90, 0), "between -90 and 90")
+  expect_identical(cam("perspective", 1.2, 80, 0)$distance, 1.2)
+  expect_error(cam("perspective", 2, NA_real_, 0), "single number")
+})
+
+# =============================================================================
 # Face-plane cell boundaries
 # =============================================================================
 
@@ -140,6 +307,19 @@ test_that("plot draws a grid on the sphere and on the icosahedron", {
                               center = "pacific")), g)
   expect_identical(draws(plot(g, cells = 1:5, land_border = NA,
                               center = c(-60, -15))), g)
+})
+
+test_that("plot draws perspective, tilted and rotated views", {
+  g <- hex_grid(resolution = 2, aperture = 3)
+  expect_identical(draws(plot(g, projection = "perspective", distance = 1.5)), g)
+  expect_identical(draws(plot(g, surface = "icosahedron", projection = "perspective",
+                              distance = 2, tilt = 30, rotation = -45)), g)
+  expect_identical(draws(plot(g, rotation = 120, center = "arctic")), g)
+  expect_identical(draws(plot(g, projection = "perspective", distance = 1.3,
+                              tilt = 30, fov = 40)), g)
+  expect_identical(draws(plot(g, surface = "icosahedron", projection = "perspective",
+                              distance = 1.15, tilt = 80, fov = 70)), g)
+  expect_error(draws(plot(g, distance = 2)), "perspective camera")
 })
 
 test_that("plot takes land as an sf object", {

@@ -39,8 +39,11 @@ keep_cols <- c(
 )
 world <- world[, keep_cols]
 
-# Simplify geometry (tolerance in degrees, ~10km at equator)
-world <- st_simplify(world, dTolerance = 0.1, preserveTopology = TRUE)
+# Simplify geometry as a coverage: each border two countries share is
+# simplified once for both, so neighbours stay joined with no gaps or overlaps
+# between them. Keeps 20% of the vertices, and every country, however small.
+world <- rmapshaper::ms_simplify(world, keep = 0.2, keep_shapes = TRUE)
+world <- world[, keep_cols]
 
 # Ensure valid geometries
 world <- st_make_valid(world)

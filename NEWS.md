@@ -17,7 +17,21 @@
   crosses a face edge, so a cell on the icosahedron is the cell on the sphere
   folded flat.
 
+* `plot(<grid>)` takes a viewpoint. `projection = "perspective"` places a
+  camera `distance` sphere radii from the centre, `tilt` swings it about the
+  point at `center`, which it keeps looking at, until the horizon shows, and
+  `fov` sets its field of view; by default the frame holds the whole visible
+  sphere. `rotation` turns either projection about the line of
+  sight. Filled shapes are clipped at a plane in front of the camera, so any
+  tilt below 90 degrees draws.
+
 ## Bug fixes
+
+* `hexify_world` is simplified as a coverage, so neighbouring countries share
+  their simplified borders exactly. It was simplified country by country,
+  which left about 480 slivers of gap between neighbours; they showed as thin
+  lines wherever land was filled without country outlines. Attributes are
+  unchanged.
 
 * A cell at an icosahedral vertex now drops the corner that lies in the
   icosahedron's angular deficit, found from the faces rather than a fixed
