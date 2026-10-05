@@ -49,6 +49,31 @@ Projection-level and test-only entry points call
 The cell-ID hierarchy is orientation-free, so the mixed-aperture hierarchy
 (`R/aperture_mixed_hierarchy.R`) runs in the standard orientation.
 
+## DGGRID corner bug: aperture 7, odd resolutions
+
+Found 2026-10-05; not filed upstream yet. At aperture 7, odd resolutions
+(Class III), DGGRID's corners for a cell straddling a face edge are wrong.
+Its output then has gaps and overlaps; hexify's does not. hexify is correct
+here; do not "fix" hexify towards DGGRID.
+
+- Size: 140 of 3,432 cells at res 3 (up to 5.5 km), 980 of 168,072 at res 5
+  (up to 1.4 km), two corners per cell. Cell assignment and centres agree.
+- Proof: every hexify corner is shared by exactly three cells. Each affected
+  DGGRID cell has two corners no other DGGRID cell carries, and its two
+  DGGRID neighbours put that corner where hexify does (139/140 cells at
+  res 3, 980/980 at res 5).
+- Cause: `DgIDGGBase::setAddVertices` → `DgQ2DDtoVertex2DDConverter`
+  (`DgIDGGutil.cpp:632`) chooses the face from the cell's own quad, so a
+  corner past the quad's far edge is computed on the near face, with the
+  inverse projection extended past its edge. hexify's `quad_point_lonlat()`
+  (`src/rcpp_cell.cpp`) first moves the point into the quad that owns it.
+- Effect on benches: `bench_dggrid_agreement.R` tests aperture 7 only at even
+  resolutions, so it never shows this. The orientation bench tests res 5, so
+  its corner-gap column picks up DGGRID's error, not hexify's.
+- Local repro (dev_notes/ is git-ignored): `dev_notes/ap7_odd_corner_repro.R`,
+  `dev_notes/ap7_odd_corner_share.R`,
+  `dev_notes/dggrid_ap7_odd_corners_2026-10-05.md`.
+
 ## Vendored H3 C Library
 
 The H3 backend uses vendored C source from Uber's H3 library in `src/h3/`. This is a direct copy of upstream code — **do not rewrite or restyle it**. Benefits:
