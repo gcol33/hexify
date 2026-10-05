@@ -103,6 +103,7 @@ reference:
   - is_pentagon
   - hex_compact
   - hex_uncompact
+  - hex_sample
 - title: H3 Interoperability
   desc: Cross-grid mapping and per-cell area
   contents:

@@ -19,22 +19,22 @@ test_that("plot.HexData works with default settings", {
   })
 })
 
-test_that("jitter_points_in_cells(jitter = FALSE) snaps points to the cell centroid", {
+test_that("jitter_points_in_cells(jitter = FALSE) snaps points to the cell centre", {
   skip_if_not_installed("sf")
 
   # Many points in one cell
   df <- data.frame(lon = rep(2.35, 20), lat = rep(48.86, 20))
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 200000)
-  hex_sf <- cell_to_sf(unique(result@cell_id), result@grid)
-
-  jittered <- hexify:::jitter_points_in_cells(result@cell_id, hex_sf, jitter = TRUE)
-  unjittered <- hexify:::jitter_points_in_cells(result@cell_id, hex_sf, jitter = FALSE)
+  jittered <- hexify:::jitter_points_in_cells(result@cell_id, result@grid, jitter = TRUE)
+  unjittered <- hexify:::jitter_points_in_cells(result@cell_id, result@grid, jitter = FALSE)
 
   # With jitter, 20 random points in the same cell are extremely unlikely
   # to all land on the exact same coordinate
   expect_true(length(unique(jittered$lon)) > 1 || length(unique(jittered$lat)) > 1)
 
-  # Without jitter, every point in the cell collapses to the same centroid
+  expect_equal(lonlat_to_cell(jittered$lon, jittered$lat, result@grid), result@cell_id)
+
+  # Without jitter, every point in the cell collapses to the cell centre
   expect_equal(length(unique(unjittered$lon)), 1)
   expect_equal(length(unique(unjittered$lat)), 1)
 })

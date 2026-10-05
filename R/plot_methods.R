@@ -109,78 +109,29 @@ resolve_point_size <- function(size, hex_sf, xlim, ylim) {
 
 #' Jitter points within their assigned hexagon cells
 #' @param cell_ids Vector of cell IDs (one per point)
-#' @param hex_sf sf object with cell polygons (must have cell_id column)
-#' @param jitter If TRUE (default), randomly scatter points within their
-#'   cell. If FALSE, place every point at its cell's centroid.
-#' @return Data frame with lon, lat columns for jittered positions
+#' @param grid The grid the cells belong to
+#' @param jitter If TRUE (default), place each point at a random position in
+#'   its cell. If FALSE, place every point at its cell's centre.
+#' @return Data frame with lon, lat columns, NA for a point without a cell
 #' @noRd
-jitter_points_in_cells <- function(cell_ids, hex_sf, jitter = TRUE) {
-  n_points <- length(cell_ids)
-
-  # Pre-allocate result
-  result <- data.frame(
-    lon = numeric(n_points),
-    lat = numeric(n_points)
-  )
-
-  # Disable S2 for sampling (simpler planar sampling in small hexagons)
-  s2_state <- sf::sf_use_s2()
-  suppressMessages(sf::sf_use_s2(FALSE))
-  on.exit(invisible(suppressMessages(sf::sf_use_s2(s2_state))), add = TRUE)
-
-  # Group points by cell
-  cell_groups <- split(seq_along(cell_ids), cell_ids)
-
-  # Determine if cell_ids are character (H3) or numeric (ISEA)
-  h3_mode <- is.character(hex_sf$cell_id)
-
-  for (cell_id_str in names(cell_groups)) {
-    cell_id_val <- if (h3_mode) cell_id_str else as.numeric(cell_id_str)
-    indices <- cell_groups[[cell_id_str]]
-    n_in_cell <- length(indices)
-
-    # Get the polygon for this cell
-    poly_idx <- which(hex_sf$cell_id == cell_id_val)
-    if (length(poly_idx) == 0) next
-
-    poly <- hex_sf[poly_idx, ]
-
-    # Sample random points inside the polygon (or none, if jitter = FALSE,
-    # so every point in the cell falls back to the centroid below)
-    sampled <- if (jitter) {
-      suppressMessages(suppressWarnings(
-        sf::st_sample(poly, size = n_in_cell, type = "random")
-      ))
-    } else {
-      sf::st_sfc()
-    }
-
-    # If sampling failed or returned wrong count, use centroid
-    if (length(sampled) == 0) {
-      centroid <- suppressMessages(suppressWarnings(
-        sf::st_centroid(sf::st_geometry(poly))
-      ))
-      coords <- sf::st_coordinates(centroid)
-      result$lon[indices] <- coords[1, 1]
-      result$lat[indices] <- coords[1, 2]
-    } else {
-      coords <- sf::st_coordinates(sampled)
-      # Handle case where we got fewer points than expected
-      if (nrow(coords) < n_in_cell) {
-        # Pad with centroid
-        centroid <- suppressMessages(suppressWarnings(
-          sf::st_centroid(sf::st_geometry(poly))
-        ))
-        centroid_coords <- sf::st_coordinates(centroid)
-        n_missing <- n_in_cell - nrow(coords)
-        coords <- rbind(coords, matrix(rep(centroid_coords, n_missing),
-                                        ncol = 2, byrow = TRUE))
-      }
-      result$lon[indices] <- coords[1:n_in_cell, 1]
-      result$lat[indices] <- coords[1:n_in_cell, 2]
-    }
+jitter_points_in_cells <- function(cell_ids, grid, jitter = TRUE) {
+  result <- data.frame(lon = rep(NA_real_, length(cell_ids)),
+                       lat = rep(NA_real_, length(cell_ids)))
+  ok <- which(!is.na(cell_ids))
+  if (length(ok) == 0L) return(result)
+  if (!jitter) {
+    ctr <- cell_to_lonlat(cell_ids[ok], grid)
+    result$lon[ok] <- ctr$lon_deg
+    result$lat[ok] <- ctr$lat_deg
+    return(result)
   }
-
+  # Points of one cell take that cell's samples in turn
+  cells <- unique(cell_ids[ok])
+  key <- match(cell_ids[ok], cells)
+  pts <- hex_sample(cells, grid, n = tabulate(key, nbins = length(cells)))
+  slot <- order(key)
+  result$lon[ok[slot]] <- pts$lon
+  result$lat[ok[slot]] <- pts$lat
   result
 }
 
@@ -409,8 +360,8 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
       # Resolve point size based on hex cell size
       cex <- resolve_point_size(point_size, hex_sf, xlim, ylim)
 
-      # Jitter points within their hexagon (or centroid-snap if jitter = FALSE)
-      jittered <- jitter_points_in_cells(x@cell_id, hex_sf, jitter = jitter)
+      # Jitter points within their hexagon (or place them at its centre if jitter = FALSE)
+      jittered <- jitter_points_in_cells(x@cell_id, x@grid, jitter = jitter)
 
       points(jittered$lon, jittered$lat,
              pch = 19, cex = cex,

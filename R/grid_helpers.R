@@ -190,6 +190,20 @@ wrap_cells_at_dateline <- function(x) {
   x
 }
 
+#' Boundaries of ISEA cells as closed lon/lat rings
+#'
+#' Each edge follows the true cell boundary to within `tolerance` of its
+#' length; 0 gives the corners alone.
+#' @noRd
+isea_cell_rings <- function(cell_id, resolution, aperture,
+                            tolerance = CELL_EDGE_TOLERANCE) {
+  if (is_mixed_aperture(aperture)) {
+    return(mixed_cell_corners(cell_id, resolution, aperture, tolerance))
+  }
+  cpp_cell_to_corners(as.numeric(cell_id), as.integer(resolution),
+                      as.integer(aperture), tolerance)
+}
+
 #' Build hexagon polygons for ISEA cell IDs
 #'
 #' Each edge follows the true cell boundary to within `CELL_EDGE_TOLERANCE`.
@@ -205,16 +219,7 @@ wrap_cells_at_dateline <- function(x) {
 #' @noRd
 isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326,
                               tolerance = CELL_EDGE_TOLERANCE) {
-  corners_list <- if (is_mixed_aperture(aperture)) {
-    mixed_cell_corners(cell_id, resolution, aperture, tolerance)
-  } else {
-    cpp_cell_to_corners(
-      as.numeric(cell_id),
-      as.integer(resolution),
-      as.integer(aperture),
-      tolerance
-    )
-  }
+  corners_list <- isea_cell_rings(cell_id, resolution, aperture, tolerance)
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(lonlat_ring_coords(coords)))
