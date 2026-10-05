@@ -1,4 +1,6 @@
 #include "icosahedron.h"
+#include "projection_forward.h"
+#include "projection_inverse.h"
 #include "constants.h"
 #include <array>
 #include <cmath>
@@ -62,47 +64,37 @@ namespace {
    *
    * Mathematical basis: spherical coordinate rotation via great-circle geometry
    */
+  //
+  // The new co-latitude is the angle between the point and the new pole, and
+  // the new longitude is lon0 less the point's azimuth seen from the new pole,
+  // measured from the direction of the old north pole and positive eastward.
+  // Both come from atan2 on unit vectors, which keeps full precision at every
+  // angle.
   inline Geo coordtrans(const Geo& newNPold, const Geo& ptold, double lon0) {
-    // Precompute trigonometric values for clarity
-    const double sin_np_lat = std::sin(newNPold.lat);
-    const double cos_np_lat = std::cos(newNPold.lat);
-    const double sin_pt_lat = std::sin(ptold.lat);
-    const double cos_pt_lat = std::cos(ptold.lat);
-    const double dlon = newNPold.lon - ptold.lon;
-    const double cos_dlon = std::cos(dlon);
+    const Vec3 p = ll2xyz(ptold);
+    const Vec3 n = ll2xyz(newNPold);
+    // Unit vectors at the new pole: towards the old north pole, and east.
+    const double sl = std::sin(newNPold.lat), cl = std::cos(newNPold.lat);
+    const double so = std::sin(newNPold.lon), co = std::cos(newNPold.lon);
+    const Vec3 north{ -sl * co, -sl * so, cl };
+    const Vec3 east{ -so, co, 0.0 };
 
-    // Compute new latitude using spherical law of cosines
-    // cos(new_lat) = sin(np_lat)*sin(pt_lat) + cos(np_lat)*cos(pt_lat)*cos(dlon)
-    double cos_new_lat = sin_np_lat * sin_pt_lat + cos_np_lat * cos_pt_lat * cos_dlon;
-    cos_new_lat = clampd(cos_new_lat, -1.0, 1.0);
-    const double ptnew_lat = std::acos(cos_new_lat);
+    const double along = p.x * n.x + p.y * n.y + p.z * n.z;
+    const double cx = p.y * n.z - p.z * n.y;
+    const double cy = p.z * n.x - p.x * n.z;
+    const double cz = p.x * n.y - p.y * n.x;
+    const double across = std::sqrt(cx * cx + cy * cy + cz * cz);
+    const double colat = std::atan2(across, along);
 
-    // Handle poles (longitude undefined)
+    // Longitude is undefined at the new pole and its antipode.
     constexpr double POLE_TOLERANCE = kPrecision * 100000;
-    const bool at_pole = (std::abs(ptnew_lat) < POLE_TOLERANCE) ||
-                         (std::abs(ptnew_lat - kPi) < POLE_TOLERANCE);
-
-    double ptnew_lon = 0.0;
-    if (!at_pole) {
-      // Compute new longitude using spherical trig identity
-      const double sin_new_lat = std::sin(ptnew_lat);
-      double cos_new_lon = (sin_pt_lat * cos_np_lat - cos_pt_lat * sin_np_lat * cos_dlon) / sin_new_lat;
-      cos_new_lon = clampd(cos_new_lon, -1.0, 1.0);
-
-      ptnew_lon = std::acos(cos_new_lon);
-
-      // Determine longitude sign based on original position
-      const double lon_diff = ptold.lon - newNPold.lon;
-      if (0.0 <= lon_diff && lon_diff < kPi) {
-        ptnew_lon = -ptnew_lon + lon0;
-      } else {
-        ptnew_lon = ptnew_lon + lon0;
-      }
-      ptnew_lon = wrap_lon(ptnew_lon);
+    double lon = 0.0;
+    if (across >= POLE_TOLERANCE) {
+      const double az = std::atan2(p.x * east.x + p.y * east.y + p.z * east.z,
+                                   p.x * north.x + p.y * north.y + p.z * north.z);
+      lon = wrap_lon(lon0 - az);
     }
-
-    // Return co-latitude converted to latitude
-    return Geo(ptnew_lon, kPiOver2 - ptnew_lat);
+    return Geo(lon, kPiOver2 - colat);
   }
   
 } // anon
@@ -126,8 +118,8 @@ void build_icosa_full(double vert0_lon_deg, double vert0_lat_deg, double azimuth
   const Geo newnpold(0.0, S_pt.lat);
 
   for (int i = 1; i <= 5; ++i) {
-    vertsnew[i]   = Geo(wrap_lon(-S_az + deg2rad(72.0 * (i-1))),     deg2rad(26.565051177));
-    vertsnew[i+5] = Geo(wrap_lon(-S_az + deg2rad(36.0 + 72.0*(i-1))), -deg2rad(26.565051177));
+    vertsnew[i]   = Geo(wrap_lon(-S_az + deg2rad(72.0 * (i-1))),     deg2rad(kIcosaVertexLatDeg));
+    vertsnew[i+5] = Geo(wrap_lon(-S_az + deg2rad(36.0 + 72.0*(i-1))), -deg2rad(kIcosaVertexLatDeg));
   }
   vertsnew[11] = Geo(0.0, -deg2rad(90.0));
 
@@ -162,6 +154,38 @@ void build_icosa_full(double vert0_lon_deg, double vert0_lat_deg, double azimuth
     g_ico.face_azimuth_offset[i] = std::atan2(num, den);
   }
 
+  for (int v = 0; v < 12; ++v) g_ico.verts[v] = icoverts[v];
+  for (int i = 0; i < 20; ++i) {
+    for (int k = 0; k < 3; ++k) g_ico.face_verts[i][k] = faces[i][k];
+  }
+
+  // A face's corners project to its triangle's corners, so the three pairs
+  // (triangle coordinates, vertex position) fix the face's affine map.
+  for (int i = 0; i < 20; ++i) {
+    Vec3 P[3];
+    double t[3][2];
+    for (int k = 0; k < 3; ++k) {
+      P[k] = ll2xyz(icoverts[faces[i][k]]);
+      const auto xy = project_to_face(icoverts[faces[i][k]], g_ico, i);
+      t[k][0] = xy.first;
+      t[k][1] = xy.second;
+    }
+    const double a = t[1][0] - t[0][0], b = t[2][0] - t[0][0];
+    const double c = t[1][1] - t[0][1], d = t[2][1] - t[0][1];
+    const double det = a * d - b * c;
+    const double inv[2][2] = { {  d / det, -b / det },
+                               { -c / det,  a / det } };
+    const double E1[3] = { P[1].x - P[0].x, P[1].y - P[0].y, P[1].z - P[0].z };
+    const double E2[3] = { P[2].x - P[0].x, P[2].y - P[0].y, P[2].z - P[0].z };
+    const double P0[3] = { P[0].x, P[0].y, P[0].z };
+    for (int r = 0; r < 3; ++r) {
+      g_ico.solid_x[i][r] = E1[r] * inv[0][0] + E2[r] * inv[1][0];
+      g_ico.solid_y[i][r] = E1[r] * inv[0][1] + E2[r] * inv[1][1];
+      g_ico.solid_origin[i][r] = P0[r] - g_ico.solid_x[i][r] * t[0][0]
+                                       - g_ico.solid_y[i][r] * t[0][1];
+    }
+  }
+
   g_ico.built = true;
 }
 
@@ -177,6 +201,21 @@ double get_face_azimuth_offset(int face) {
   const IcosaData& icosa = ico();
   if (face < 0 || face >= 20) return 0.0;
   return icosa.face_azimuth_offset[face];
+}
+
+void face_tri_to_solid(int face, double tx, double ty, double out[3]) {
+  const IcosaData& S = ico();
+  for (int r = 0; r < 3; ++r) {
+    out[r] = S.solid_origin[face][r] + tx * S.solid_x[face][r] + ty * S.solid_y[face][r];
+  }
+}
+
+void face_tri_to_sphere(int face, double tx, double ty, double out[3]) {
+  const auto ll = face_xy_to_ll(tx, ty, face);
+  const Vec3 v = ll2xyz(Geo(deg2rad(ll.first), deg2rad(ll.second)));
+  out[0] = v.x;
+  out[1] = v.y;
+  out[2] = v.z;
 }
 
 int which_face(double lon_deg, double lat_deg) {

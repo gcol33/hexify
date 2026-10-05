@@ -18,6 +18,14 @@ struct IcosaData {
   std::array<double, 20> center_coslat;   // cos(center latitude) per face
   std::array<double, 20> center_lon;      // center longitude per face (radians)
   std::array<double, 20> face_azimuth_offset;  // per-face azimuth offsets (radians)
+  std::array<Geo, 12> verts;              // icosahedron vertices (radians)
+  std::array<std::array<int, 3>, 20> face_verts;  // vertex indices of each face
+  // The flat face as an affine map of its triangle coordinates: the point
+  // (tx, ty) of face f sits at solid_origin[f] + tx * solid_x[f] + ty * solid_y[f]
+  // on the icosahedron inscribed in the unit sphere.
+  std::array<std::array<double, 3>, 20> solid_origin;
+  std::array<std::array<double, 3>, 20> solid_x;
+  std::array<std::array<double, 3>, 20> solid_y;
   bool built = false;
 };
 
@@ -45,5 +53,11 @@ const std::array<Geo,20>& face_centers();
 
 // Returns the per-face azimuth offset (in radians)
 double get_face_azimuth_offset(int face);
+
+// The point (tx, ty) of a face on the flat icosahedron, as xyz
+void face_tri_to_solid(int face, double tx, double ty, double out[3]);
+
+// The point (tx, ty) of a face on the unit sphere, as xyz
+void face_tri_to_sphere(int face, double tx, double ty, double out[3]);
 
 } // namespace hexify

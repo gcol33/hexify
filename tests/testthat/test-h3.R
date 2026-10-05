@@ -131,6 +131,44 @@ test_that("grid_rect() works with H3", {
   expect_true(all(sf::st_is_valid(rect)))
 })
 
+test_that("grid_global() tiles the sphere with H3 cells at coarse resolutions", {
+  old <- suppressMessages(sf::sf_use_s2(TRUE))
+  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  sphere_km2 <- 4 * pi * 6371.007180918475^2
+
+  for (res in 0:1) {
+    grid <- hex_grid(resolution = res, type = "h3")
+    cells <- h3_all_cells(res)
+    expected <- cpp_h3_cellAreaKm2(cells)
+
+    unwrapped <- grid_global(grid, wrap_dateline = FALSE)
+    expect_identical(unwrapped$cell_id, cells)
+
+    global <- grid_global(grid)
+    expect_identical(global$cell_id, cells)
+    expect_true(all(sf::st_is_valid(global)))
+
+    area <- as.numeric(sf::st_area(global)) / 1e6
+    expect_lt(max(abs(area / expected - 1)), 1e-3)
+    expect_equal(sum(area), sphere_km2, tolerance = 1e-3)
+  }
+})
+
+test_that("H3 cells holding a pole close into rings around the pole", {
+  for (res in 0:1) {
+    cells <- h3_all_cells(res)
+    polar <- cells[cells == lonlat_to_cell(0, 90, hex_grid(resolution = res, type = "h3")) |
+                   cells == lonlat_to_cell(0, -90, hex_grid(resolution = res, type = "h3"))]
+    expect_length(polar, 2L)
+    for (ring in cpp_h3_cellToBoundary(polar)) {
+      coords <- lonlat_ring_coords(ring)
+      expect_equal(coords[1, ], coords[nrow(coords), ])
+      expect_equal(range(coords[, 1]), c(-180, 180))
+      expect_true(any(abs(coords[, 2]) == 90))
+    }
+  }
+})
+
 test_that("grid_clip() works with H3", {
   grid <- hex_grid(resolution = 2, type = "h3")
   # Simple test polygon

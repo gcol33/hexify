@@ -753,6 +753,42 @@ test_that("mixed sequence points land in a cell centred near them", {
   }
 })
 
+test_that("mixed sequence cell boundaries enclose the points assigned to them", {
+  skip_on_cran()  # Enumerates every cell of the grid
+  setup_icosa()
+
+  to_xyz <- function(lon, lat) {
+    r <- pi / 180
+    cbind(cos(lat * r) * cos(lon * r), cos(lat * r) * sin(lon * r), sin(lat * r))
+  }
+
+  # An odd number of aperture-7 steps rotates the lattice off the quad edges,
+  # so the cells along every edge straddle it.
+  for (aperture in list(c(4, 7), c(7, 3), c(4, 4, 7, 3), c(4, 3, 7))) {
+    res <- length(aperture)
+    g <- hex_grid(resolution = res, aperture = aperture)
+    ids <- seq_len(hexify:::grid_n_cells(g))
+    label <- paste(aperture, collapse = ",")
+
+    expect_equal(nrow(grid_global(g)), length(ids),
+                 info = sprintf("c(%s): grid_global returns every cell", label))
+
+    ctr <- cell_to_lonlat(ids, g)
+    corners <- cpp_cell_to_corners_seq(as.numeric(ids), hexify:::grid_ap_seq(g), 1e-3)
+    owner <- rep(ids, vapply(corners, nrow, 1L))
+    vert <- do.call(rbind, corners)
+    v <- to_xyz(vert[, 1], vert[, 2])
+    p <- v + 0.005 * (to_xyz(ctr$lon_deg, ctr$lat_deg)[owner, , drop = FALSE] - v)
+    p <- p / sqrt(rowSums(p^2))
+    lon <- atan2(p[, 2], p[, 1]) * 180 / pi
+    lat <- asin(pmin(1, pmax(-1, p[, 3]))) * 180 / pi
+
+    # A point just inside a drawn boundary is assigned to that cell
+    expect_equal(lonlat_to_cell(lon, lat, g), owner,
+                 info = sprintf("c(%s): boundary points fall in their own cell", label))
+  }
+})
+
 test_that("mixed sequence hierarchy navigates for aperture-7 spellings", {
   skip_on_cran()  # Walks children of sampled cells
   setup_icosa()

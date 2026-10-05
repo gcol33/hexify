@@ -13,7 +13,6 @@ using hexify::kPi;
 using hexify::kTwoPi;
 using hexify::kPiOver6;
 using hexify::k2PiOver3;
-using hexify::k4PiOver3;
 using hexify::kSnyderR1;
 using hexify::kSnyderR1Squared;
 using hexify::kSnyderElAngle;
@@ -188,11 +187,11 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   // Snyder quirk: azimuth uses atan2(x, y) (not atan2(y, x))
   double azimuth_transformed = std::atan2(px, py);
   if (azimuth_transformed < 0.0) azimuth_transformed += kTwoPi;
-  const double azimuth_original = azimuth_transformed;
+  if (azimuth_transformed >= kTwoPi) azimuth_transformed -= kTwoPi;
 
-  // Reduce to [0,120°) sector for iteration, then restore later
-  if (azimuth_transformed > k2PiOver3 && azimuth_transformed <= k4PiOver3) azimuth_transformed -= k2PiOver3;
-  if (azimuth_transformed > k4PiOver3) azimuth_transformed -= k4PiOver3;
+  // Reduce to its 120° sector for iteration, then restore later
+  const int sector = hexify::azimuth_sector(azimuth_transformed);
+  azimuth_transformed -= sector * k2PiOver3;
 
   // Solve for azimuth using Newton-Raphson iteration
   NewtonResult newton = solve_snyder_azimuth(azimuth_transformed, cfg);
@@ -218,8 +217,7 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   const double z = 2.0 * std::asin(arg);
 
   // Restore original 120° sector and add per-face azimuth
-  if (azimuth_original >= k2PiOver3 && azimuth_original < k4PiOver3) azimuth += k2PiOver3;
-  if (azimuth_original >= k4PiOver3) azimuth += k4PiOver3;
+  azimuth += sector * k2PiOver3;
 
   azimuth += face_azimuth;
   while (azimuth <= -kPi) azimuth += kTwoPi;

@@ -896,14 +896,6 @@ DataFrame cpp_quad_ij_to_icosa_tri(IntegerVector quad, NumericVector i,
 // Circumradius of a hexagon on the unscaled grid, 1/sqrt(3).
 constexpr double kHexCircumradius = 0.57735026918962576451;
 
-// Which corner a cell at an icosahedral vertex drops. Five quads meet there, so
-// one of the six sectors around such a cell is the icosahedron's angular
-// deficit and the cell is a pentagon. Counting counter-clockwise from the
-// lattice's first corner, the deficit takes the fourth corner in the northern
-// quads and the third in the southern ones.
-constexpr int kPentagonSkipNorth = 3;
-constexpr int kPentagonSkipSouth = 2;
-
 // Deepest halving of one cell edge, 2^12 pieces.
 constexpr int kMaxEdgeSplits = 12;
 
@@ -973,8 +965,93 @@ static void sector_exit(int quad, double ax, double ay, double bx, double by,
     out_y = ay + lo * (by - ay);
 }
 
-// The boundary of one cell in lon/lat, counter-clockwise and left open: five
-// corners for a cell at an icosahedral vertex, six for every other cell. A
+// Which corner a cell at an icosahedral vertex drops. Five faces meet there and
+// the quad plane holds six sectors, so the sector no face reads is the
+// icosahedron's angular deficit, and the corner in it goes. Its corners are a
+// sixth of a turn apart, as wide as the sector, so either one corner lies
+// inside the sector or two lie on its bounding rays with the edge between them
+// inside; then the later of the two goes, and the folded edge of the earlier
+// one reaches the same point of the globe.
+static int dropped_corner(int quad, const double vx[6], const double vy[6]) {
+    int face;
+    double tx, ty;
+    for (int c = 0; c < 6; c++) {
+        if (!hexify::try_quad_xy_to_icosa_tri(quad, vx[c], vy[c], face, tx, ty)) {
+            return c;
+        }
+    }
+    for (int c = 0; c < 6; c++) {
+        int d = (c + 1) % 6;
+        if (!hexify::try_quad_xy_to_icosa_tri(quad, 0.5 * (vx[c] + vx[d]),
+                                              0.5 * (vy[c] + vy[d]),
+                                              face, tx, ty)) {
+            return d;
+        }
+    }
+    Rcpp::stop("vertex cell has no corner in the icosahedron's deficit");
+}
+
+// One straight piece of a cell's boundary in the quad plane, a -> b. A piece
+// that leaves a vertex cell's dropped sector starts at the point of the globe
+// where the other piece entered it; when that point is a corner of the cell,
+// 'from_corner' names it so the corner keeps its own reading.
+struct PlaneEdge {
+    double ax, ay, bx, by;
+    bool from_corner;
+    double cx, cy;
+};
+
+// The boundary of one cell as straight pieces of the quad plane,
+// counter-clockwise: five corners for a cell at an icosahedral vertex, six for
+// every other cell. With 'fold_vertex', the edge of a vertex cell across its
+// dropped corner is folded onto the faces. The quad plane holds six triangles
+// around the vertex and the globe five, so the sector holding that corner is
+// no face: its two bounding rays are one face edge, and the plane edges
+// c0 -> skip and skip -> c1 meet them at one point of the globe. The pentagon
+// edge runs from c0 to that point on the first ray and on from the second to
+// c1. When the corners sit on the rays instead (a Class II vertex cell), one
+// of the two plane edges lies wholly in the sector, so its piece has no length
+// and the corner it leaves from is the same point of the globe as the other
+// piece's start. Without 'fold_vertex' the edge joins c0 and c1 directly.
+static void cell_plane_edges(int quad, double qx_center, double qy_center,
+                             double radius, double rotation_deg,
+                             bool at_icosa_vertex, bool fold_vertex,
+                             std::vector<PlaneEdge>& out) {
+    double vx[6], vy[6];
+    hexify::generate_hex_corners(qx_center, qy_center, radius, rotation_deg,
+                                 vx, vy);
+
+    int skip = at_icosa_vertex ? dropped_corner(quad, vx, vy) : -1;
+
+    std::vector<int> kept;
+    for (int c = 0; c < 6; c++) {
+        if (c != skip) kept.push_back(c);
+    }
+    int n_corner = static_cast<int>(kept.size());
+
+    out.clear();
+    for (int k = 0; k < n_corner; k++) {
+        int c0 = kept[k];
+        int c1 = kept[(k + 1) % n_corner];
+        if (c1 != (c0 + 1) % 6 && fold_vertex) {
+            double ax, ay, bx, by;
+            sector_exit(quad, vx[c0], vy[c0], vx[skip], vy[skip], ax, ay);
+            sector_exit(quad, vx[c1], vy[c1], vx[skip], vy[skip], bx, by);
+            double piece_min = kEdgePieceMin * radius;
+            bool from_c0 = std::hypot(ax - vx[c0], ay - vy[c0]) > piece_min;
+            if (from_c0) {
+                out.push_back({vx[c0], vy[c0], ax, ay, false, 0.0, 0.0});
+            }
+            if (std::hypot(vx[c1] - bx, vy[c1] - by) > piece_min) {
+                out.push_back({bx, by, vx[c1], vy[c1], !from_c0, vx[c0], vy[c0]});
+            }
+        } else {
+            out.push_back({vx[c0], vy[c0], vx[c1], vy[c1], false, 0.0, 0.0});
+        }
+    }
+}
+
+// The boundary of one cell in lon/lat, counter-clockwise and left open. A
 // cell edge is straight in the quad plane and curved in lon/lat, so with a
 // positive 'tolerance' each edge is split in the plane, as DGGRID's
 // densification does, until every piece is a straight lon/lat chord to within
@@ -986,20 +1063,9 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                  bool at_icosa_vertex, double tolerance,
                                  std::vector<double>& out_lon,
                                  std::vector<double>& out_lat) {
-    double vx[6], vy[6];
-    hexify::generate_hex_corners(qx_center, qy_center, radius, rotation_deg,
-                                 vx, vy);
-
-    int skip = -1;
-    if (at_icosa_vertex) {
-        skip = (quad <= 5) ? kPentagonSkipNorth : kPentagonSkipSouth;
-    }
-
-    std::vector<int> kept;
-    for (int c = 0; c < 6; c++) {
-        if (c != skip) kept.push_back(c);
-    }
-    int n_corner = static_cast<int>(kept.size());
+    std::vector<PlaneEdge> edges;
+    cell_plane_edges(quad, qx_center, qy_center, radius, rotation_deg,
+                     at_icosa_vertex, /*fold_vertex=*/tolerance > 0.0, edges);
 
     out_lon.clear();
     out_lat.clear();
@@ -1054,41 +1120,77 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
         add_segment(ax, ay, alon, alat, bx, by, blon, blat, 0);
     };
 
-    for (int k = 0; k < n_corner; k++) {
-        int c0 = kept[k];
-        int c1 = kept[(k + 1) % n_corner];
-        if (c1 != (c0 + 1) % 6 && tolerance > 0.0) {
-            // The edge across the dropped corner. The quad plane holds six
-            // triangles around the vertex and the globe five, so the sector
-            // holding that corner is no face: its two bounding rays are one
-            // face edge, and the plane edges c0 -> skip and skip -> c1 meet
-            // them at one point of the globe. The pentagon edge runs from c0
-            // to that point on the first ray and on from the second to c1.
-            // When the corners sit on the rays instead (a Class II vertex
-            // cell), one of the two plane edges lies wholly in the sector, so
-            // its piece has no length and the corner it leaves from is the
-            // same point of the globe as the other piece's start.
-            double ax, ay, bx, by;
-            sector_exit(quad, vx[c0], vy[c0], vx[skip], vy[skip], ax, ay);
-            sector_exit(quad, vx[c1], vy[c1], vx[skip], vy[skip], bx, by);
-            double piece_min = kEdgePieceMin * radius;
-            bool from_c0 = std::hypot(ax - vx[c0], ay - vy[c0]) > piece_min;
-            if (from_c0) {
-                add_edge(vx[c0], vy[c0], ax, ay);
-            }
-            if (std::hypot(vx[c1] - bx, vy[c1] - by) > piece_min) {
-                size_t start = out_lon.size();
-                add_edge(bx, by, vx[c1], vy[c1]);
-                if (!from_c0) {
-                    // The piece starts at c0's point of the globe; keep the
-                    // corner as c0 itself reads, not as the far face reads it.
-                    project(vx[c0], vy[c0], out_lon[start], out_lat[start]);
-                }
-            }
-        } else {
-            add_edge(vx[c0], vy[c0], vx[c1], vy[c1]);
+    for (const PlaneEdge& e : edges) {
+        size_t start = out_lon.size();
+        add_edge(e.ax, e.ay, e.bx, e.by);
+        if (e.from_corner) {
+            project(e.cx, e.cy, out_lon[start], out_lat[start]);
         }
     }
+}
+
+// Where a point of the quad plane lies on the icosahedron: its face and
+// triangle coordinates. False for a point past the far vertex of every quad,
+// which lies in no face.
+static bool quad_point_face(int quad, double qx, double qy,
+                            int& face, double& tx, double& ty) {
+    return hexify::quad_xy_canonicalize(quad, qx, qy) &&
+           hexify::try_quad_xy_to_icosa_tri(quad, qx, qy, face, tx, ty);
+}
+
+// A straight piece of a cell edge on one face, in its triangle coordinates.
+struct FacePiece {
+    int face;
+    double ax, ay, bx, by;
+};
+
+// The plane segment a -> b cut where it crosses from one face to the next.
+// Each face is a convex triangle of the plane, so the segment's points on the
+// face it is in form one interval: bisection on face membership finds where
+// the segment leaves it, and the walk goes on from the face it enters there.
+static void plane_segment_faces(int quad, double ax, double ay,
+                                double bx, double by,
+                                std::vector<FacePiece>& out) {
+    int face_b;
+    double bt_x, bt_y;
+    if (!quad_point_face(quad, bx, by, face_b, bt_x, bt_y)) {
+        Rcpp::stop("cell edge ends outside every icosahedron face");
+    }
+    double s = 0.0;
+    int face;
+    double tx, ty;
+    if (!quad_point_face(quad, ax, ay, face, tx, ty)) {
+        Rcpp::stop("cell edge starts outside every icosahedron face");
+    }
+    // Two faces meet along an edge and five around a vertex, so a segment
+    // shorter than a face crosses at most a few.
+    for (int guard = 0; guard < 8; guard++) {
+        if (face == face_b) {
+            out.push_back({face, tx, ty, bt_x, bt_y});
+            return;
+        }
+        double lo = s, hi = 1.0;
+        int f;
+        double fx, fy;
+        for (int it = 0; it < 60; it++) {
+            double mid = 0.5 * (lo + hi);
+            if (quad_point_face(quad, ax + mid * (bx - ax), ay + mid * (by - ay),
+                                f, fx, fy) && f == face) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        double ex, ey;
+        quad_point_face(quad, ax + lo * (bx - ax), ay + lo * (by - ay), f, ex, ey);
+        out.push_back({face, tx, ty, ex, ey});
+        if (!quad_point_face(quad, ax + hi * (bx - ax), ay + hi * (by - ay),
+                             face, tx, ty)) {
+            Rcpp::stop("cell edge passes outside every icosahedron face");
+        }
+        s = hi;
+    }
+    Rcpp::stop("cell edge crosses more faces than a cell edge can");
 }
 
 // A boundary as an (n + 1) x 2 lon/lat matrix, the first point repeated last.
@@ -1139,56 +1241,6 @@ static DataFrame rings_to_frame(NumericVector cell_id, const List& rings) {
         _["lat"] = out_lat,
         _["order"] = out_order
     );
-}
-
-// [[Rcpp::export]]
-List cpp_cell_to_corners(NumericVector cell_id, int resolution,
-                          int aperture, double tolerance = 0.0) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_corners: aperture must be 3, 4, or 7");
-    }
-
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    hexify::HexGridForm form = hexify::hex_form_pure(aperture, resolution);
-    double radius = kHexCircumradius / form.scale;
-    double rotation_deg = hexify::form_rotation_deg(form);
-
-    int n = cell_id.size();
-    List result(n);
-    std::vector<double> lon, lat;
-
-    for (int k = 0; k < n; k++) {
-        int quad;
-        long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
-
-        double qx_center, qy_center;
-        hexify::quad_ij_to_xy(quad, i, j, aperture, resolution,
-                              qx_center, qy_center);
-
-        cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
-                             /*at_icosa_vertex=*/(i == 0 && j == 0), tolerance,
-                             lon, lat);
-
-        result[k] = closed_ring(lon, lat);
-    }
-
-    return result;
-}
-
-// [[Rcpp::export]]
-DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
-                               int aperture, double tolerance = 0.0) {
-    return rings_to_frame(cell_id,
-                          cpp_cell_to_corners(cell_id, resolution, aperture,
-                                              tolerance));
 }
 
 // ============================================================================
@@ -1400,46 +1452,109 @@ NumericVector cpp_quad_ij_to_cell_seq(IntegerVector quad, NumericVector i,
     return result;
 }
 
+// ============================================================================
+// Cell Boundaries
+// ============================================================================
+
+// A cell placed in the quad plane: its quad, centre, and whether it sits at an
+// icosahedral vertex.
+struct CellPlane {
+    int quad;
+    double qx, qy;
+    bool at_vertex;
+};
+
+// The cells of a grid in the quad plane, with the hexagon's circumradius and
+// turn there. An empty 'ap_seq' reads 'aperture' as a pure aperture; otherwise
+// the cells are those of the mixed sequence.
+struct CellPlanes {
+    double radius;
+    double rotation_deg;
+    std::vector<CellPlane> cells;
+};
+
+static CellPlanes cell_planes(const NumericVector& cell_id, int aperture,
+                              int resolution, const std::vector<int>& ap_seq) {
+    bool mixed = !ap_seq.empty();
+    if (mixed) {
+        resolution = static_cast<int>(ap_seq.size()) - 1;
+    } else if (aperture != 3 && aperture != 4 && aperture != 7) {
+        stop("aperture must be 3, 4, or 7");
+    }
+
+    uint64_t nCells, offsetPerQuad;
+    long long dim;
+    SubstrateLattice sub_lat;
+    hexify::HexGridForm form;
+    if (mixed) {
+        calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
+        dim = hexify::quad_edge_coord_mixed(ap_seq);
+        sub_lat = lattice_for_mixed(ap_seq);
+        form = hexify::hex_form_sequence(ap_seq);
+    } else {
+        calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
+        dim = grid_dim_for_aperture(resolution, aperture);
+        sub_lat = lattice_for_aperture(aperture, resolution);
+        form = hexify::hex_form_pure(aperture, resolution);
+    }
+
+    CellPlanes out;
+    out.radius = kHexCircumradius / form.scale;
+    out.rotation_deg = hexify::form_rotation_deg(form);
+    out.cells.resize(cell_id.size());
+
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        CellPlane& c = out.cells[k];
+        long long i, j;
+        // A mixed sequence stores its cells on the substrate, which is
+        // decode_cell_id's branch for any aperture other than 7.
+        decode_cell_id(cell_id[k], resolution, mixed ? 3 : aperture, dim,
+                       offsetPerQuad, nCells, sub_lat,
+                       /*handle_ap7_south_pole=*/false, c.quad, i, j);
+        if (mixed) {
+            hexify::quad_ij_to_xy_mixed(c.quad, i, j, ap_seq, c.qx, c.qy);
+        } else {
+            hexify::quad_ij_to_xy(c.quad, i, j, aperture, resolution, c.qx, c.qy);
+        }
+        c.at_vertex = (i == 0 && j == 0);
+    }
+    return out;
+}
+
+static List cell_rings(const NumericVector& cell_id, int aperture,
+                       int resolution, const std::vector<int>& ap_seq,
+                       double tolerance) {
+    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+    List result(cell_id.size());
+    std::vector<double> lon, lat;
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        const CellPlane& c = g.cells[k];
+        cell_boundary_lonlat(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
+                             c.at_vertex, tolerance, lon, lat);
+        result[k] = closed_ring(lon, lat);
+    }
+    return result;
+}
+
+// [[Rcpp::export]]
+List cpp_cell_to_corners(NumericVector cell_id, int resolution,
+                          int aperture, double tolerance = 0.0) {
+    return cell_rings(cell_id, aperture, resolution, {}, tolerance);
+}
+
+// [[Rcpp::export]]
+DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
+                               int aperture, double tolerance = 0.0) {
+    return rings_to_frame(cell_id,
+                          cpp_cell_to_corners(cell_id, resolution, aperture,
+                                              tolerance));
+}
+
 // [[Rcpp::export]]
 List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in,
                              double tolerance = 0.0) {
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq");
-    int resolution = static_cast<int>(ap_seq.size()) - 1;
-
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-
-    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
-
-    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
-    double radius = kHexCircumradius / form.scale;
-    double rotation_deg = hexify::form_rotation_deg(form);
-
-    int n = cell_id.size();
-    List result(n);
-    std::vector<double> lon, lat;
-
-    for (int k = 0; k < n; k++) {
-        int quad;
-        long long i, j;
-        // Any aperture other than 7 selects decode_cell_id's substrate branch,
-        // which is the one a mixed sequence stores its cells on.
-        decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
-
-        double qx_center, qy_center;
-        hexify::quad_ij_to_xy_mixed(quad, i, j, ap_seq, qx_center, qy_center);
-
-        cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
-                             /*at_icosa_vertex=*/(i == 0 && j == 0), tolerance,
-                             lon, lat);
-
-        result[k] = closed_ring(lon, lat);
-    }
-
-    return result;
+    return cell_rings(cell_id, 0, 0,
+                      as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq"), tolerance);
 }
 
 // [[Rcpp::export]]
@@ -1447,6 +1562,125 @@ DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
                                    IntegerVector ap_seq_in, double tolerance = 0.0) {
     return rings_to_frame(cell_id,
                           cpp_cell_to_corners_seq(cell_id, ap_seq_in, tolerance));
+}
+
+// The boundaries of cells on the icosahedron and on the sphere, from the same
+// points. Each cell edge is cut where it crosses a face edge, and every piece
+// is split into steps no longer than 'step' in triangle coordinates (a face
+// edge is about 1). A point carries its position on the flat face and on the
+// unit sphere, so the two surfaces show the same boundaries. One closed path
+// per cell: a matrix with columns cell (position in 'cell_id', from 1), face
+// (from 0), solid x, y, z and sphere x, y, z.
+// [[Rcpp::export]]
+NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
+                                     int aperture, IntegerVector ap_seq_in,
+                                     double step) {
+    if (!(step > 0.0)) stop("step must be positive");
+    std::vector<int> ap_seq;
+    if (ap_seq_in.size() > 0) {
+        ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
+    }
+    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+
+    std::vector<double> rows;
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    double solid[3], sphere[3];
+    auto emit = [&](R_xlen_t cell, int face, double tx, double ty) {
+        hexify::face_tri_to_solid(face, tx, ty, solid);
+        hexify::face_tri_to_sphere(face, tx, ty, sphere);
+        rows.insert(rows.end(), {static_cast<double>(cell + 1),
+                                 static_cast<double>(face),
+                                 solid[0], solid[1], solid[2],
+                                 sphere[0], sphere[1], sphere[2]});
+    };
+
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        const CellPlane& c = g.cells[k];
+        cell_plane_edges(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
+                         c.at_vertex, /*fold_vertex=*/true, edges);
+        pieces.clear();
+        for (const PlaneEdge& e : edges) {
+            plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, pieces);
+        }
+        for (const FacePiece& p : pieces) {
+            double len = std::hypot(p.bx - p.ax, p.by - p.ay);
+            int n = std::max(1, static_cast<int>(std::ceil(len / step)));
+            for (int s = 0; s < n; s++) {
+                double f = static_cast<double>(s) / n;
+                emit(k, p.face, p.ax + f * (p.bx - p.ax), p.ay + f * (p.by - p.ay));
+            }
+        }
+        const FacePiece& first = pieces.front();
+        emit(k, first.face, first.ax, first.ay);
+    }
+
+    R_xlen_t n_row = static_cast<R_xlen_t>(rows.size() / 8);
+    NumericMatrix out(n_row, 8);
+    for (R_xlen_t r = 0; r < n_row; r++) {
+        for (int col = 0; col < 8; col++) out(r, col) = rows[r * 8 + col];
+    }
+    colnames(out) = CharacterVector::create("cell", "face", "solid_x", "solid_y",
+                                            "solid_z", "sphere_x", "sphere_y",
+                                            "sphere_z");
+    return out;
+}
+
+// The icosahedron: its vertices on the unit sphere and the vertex indices
+// (from 1) of each face.
+// [[Rcpp::export]]
+List cpp_icosa_solid() {
+    const hexify::IcosaData& S = hexify::ico();
+    NumericMatrix verts(12, 3);
+    for (int v = 0; v < 12; v++) {
+        double cl = std::cos(S.verts[v].lat);
+        verts(v, 0) = cl * std::cos(S.verts[v].lon);
+        verts(v, 1) = cl * std::sin(S.verts[v].lon);
+        verts(v, 2) = std::sin(S.verts[v].lat);
+    }
+    IntegerMatrix faces(20, 3);
+    for (int f = 0; f < 20; f++) {
+        for (int k = 0; k < 3; k++) faces(f, k) = S.face_verts[f][k] + 1;
+    }
+    return List::create(_["vertices"] = verts, _["faces"] = faces);
+}
+
+// Points of one face, given in lon/lat, as triangle coordinates and as their
+// place on the flat face. A point off the face lands on the face's plane
+// extended, where the projection still reads it.
+// [[Rcpp::export]]
+NumericMatrix cpp_lonlat_to_face_solid(int face, NumericVector lon,
+                                       NumericVector lat) {
+    if (face < 0 || face > 19) stop("face must be 0..19");
+    R_xlen_t n = lon.size();
+    NumericMatrix out(n, 5);
+    double p[3];
+    for (R_xlen_t k = 0; k < n; k++) {
+        auto t = hexify::snyder_forward_to_face(face, lon[k], lat[k]);
+        hexify::face_tri_to_solid(face, t.first, t.second, p);
+        out(k, 0) = t.first;
+        out(k, 1) = t.second;
+        out(k, 2) = p[0];
+        out(k, 3) = p[1];
+        out(k, 4) = p[2];
+    }
+    colnames(out) = CharacterVector::create("tx", "ty", "x", "y", "z");
+    return out;
+}
+
+// Triangle coordinates of a face as their place on the flat face.
+// [[Rcpp::export]]
+NumericMatrix cpp_face_tri_to_solid(int face, NumericVector tx, NumericVector ty) {
+    if (face < 0 || face > 19) stop("face must be 0..19");
+    R_xlen_t n = tx.size();
+    NumericMatrix out(n, 3);
+    double p[3];
+    for (R_xlen_t k = 0; k < n; k++) {
+        hexify::face_tri_to_solid(face, tx[k], ty[k], p);
+        for (int r = 0; r < 3; r++) out(k, r) = p[r];
+    }
+    colnames(out) = CharacterVector::create("x", "y", "z");
+    return out;
 }
 
 // ============================================================================

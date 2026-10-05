@@ -746,8 +746,12 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
         quantize_class2(scaled_x, scaled_y, out_i, out_j);
     }
 
+    // A cell centre beyond the quad belongs to the neighbouring quad. A Class II
+    // cell edge runs along the icosahedron edge, so a point on or just across
+    // that edge can quantize to a centre more than one row outside the quad;
+    // DGGRID's edgeTable map reassigns any such centre, not only the first row.
     out_quad = quad;
-    handle_edge_overflow(out_quad, out_i, out_j, aperture, resolution);
+    dggrid_canonicalize_q2di(get_max_ij(aperture, resolution) + 1, out_quad, out_i, out_j);
 }
 
 void icosa_tri_to_quad_ij(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
@@ -816,27 +820,14 @@ void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
 
     out_quad = quad;
 
-    long long edge_coord = quad_edge_coord_mixed(ap_seq);
-
-    // A rotated lattice quantizes through a rotate/requantize chain (see
-    // quantize_form()) that can leave [0, edge_coord] by a tie-breaking unit
-    // near a quad boundary, since the substrate factor sqrt(norm) is not exact
-    // in floating point. handle_upper_edge()/handle_lower_edge() below match on
-    // exact equality, and the cell index reads the pair as an unsigned offset
-    // from the quad origin, so clamp either slip back onto the boundary.
-    if (out_i > edge_coord) out_i = edge_coord;
-    if (out_j > edge_coord) out_j = edge_coord;
-    if (out_i < 0) out_i = 0;
-    if (out_j < 0) out_j = 0;
-
-    if ((out_i == edge_coord || out_j == edge_coord) && out_quad >= 1 && out_quad <= 10) {
-        const QuadAdjacency& adj = kQuadAdjacency[out_quad];
-        if (adj.is_upper) {
-            handle_upper_edge(out_quad, out_i, out_j, edge_coord, adj);
-        } else {
-            handle_lower_edge(out_quad, out_i, out_j, edge_coord, adj);
-        }
-    }
+    // (out_i, out_j) is the substrate coordinate of the nearest cell centre.
+    // A lattice rotated off the substrate axes by an odd number of aperture-7
+    // steps has no mirror symmetry across a quad edge, so the cells along an
+    // edge straddle it and the nearest centre of a point inside the quad can
+    // lie outside [0, edge_coord]^2. That centre is a cell of the neighbouring
+    // quad; the edge table moves it there, and sends a centre on the far edges
+    // or vertices to the quad that owns it.
+    dggrid_canonicalize_q2di(quad_edge_coord_mixed(ap_seq), out_quad, out_i, out_j);
 }
 
 void quad_ij_to_xy_mixed(int quad, long long i, long long j,

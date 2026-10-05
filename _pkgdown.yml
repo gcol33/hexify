@@ -115,7 +115,7 @@ reference:
   - hexify_heatmap
   - plot_grid
   - plot_world
-  - plot_globe
+  - starts_with("plot,HexGridInfo")
   - hexify_world
   - globe_centers
   - hex_browse

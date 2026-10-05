@@ -96,7 +96,6 @@ export(is_hex_grid)
 export(is_pentagon)
 export(lonlat_to_cell)
 export(n_cells)
-export(plot_globe)
 export(plot_grid)
 export(plot_world)
 export(st_as_sf)
@@ -123,20 +122,26 @@ exportMethods(summary)
 import(methods)
 importFrom(Rcpp,sourceCpp)
 importFrom(grDevices,adjustcolor)
-importFrom(graphics,points)
-importFrom(graphics,polygon)
-importFrom(methods,as)
-importFrom(methods,is)
-importFrom(methods,new)
-importFrom(methods,setClass)
-importFrom(methods,setGeneric)
-importFrom(methods,setMethod)
-importFrom(methods,setValidity)
-importFrom(methods,slot)
-importFrom(methods,slotNames)
-importFrom(methods,validObject)
+importFrom(graphics,
+  points,
+  polygon
+)
+importFrom(methods,
+  as,
+  is,
+  new,
+  setClass,
+  setGeneric,
+  setMethod,
+  setValidity,
+  slot,
+  slotNames,
+  validObject
+)
 importFrom(rlang,.data)
-importFrom(sf,st_as_sf)
-importFrom(sf,st_crs)
+importFrom(sf,
+  st_as_sf,
+  st_crs
+)
 importFrom(utils,head)
 useDynLib(hexify, .registration = TRUE)

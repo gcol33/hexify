@@ -88,9 +88,10 @@ close_ring_over_pole <- function(coords) {
     return(coords)
   }
 
-  # The one antimeridian the ring spans, and the edge that meets it
-  seam <- 180 + 360 * round((mean(lons) - 180) / 360)
-  at <- which((lons[-n] - seam) * (lons[-1] - seam) < 0)[1]
+  # The ring spans one full turn, so the antimeridian nearest the middle of its
+  # longitude range is the one it crosses; find the edge that meets it
+  seam <- 180 + 360 * round(((max(lons) + min(lons)) / 2 - 180) / 360)
+  at <- which((lons[-n] - seam) * (lons[-1] - seam) <= 0 & lons[-n] != lons[-1])[1]
   if (is.na(at)) {
     return(coords)
   }
@@ -502,6 +503,21 @@ isea_cells_meeting_box <- function(seeds, bbox, g) {
   members
 }
 
+#' Every H3 cell at a resolution
+#'
+#' H3 has 122 base cells. The index of base cell b at resolution 0 sets the
+#' mode nibble to 1, the 7-bit base cell field (bits 45-51) to b, and every
+#' digit to 7; its children at the target resolution are the whole grid.
+#' @param resolution H3 resolution, 0-15
+#' @return Character vector of H3 cell indices
+#' @noRd
+h3_all_cells <- function(resolution) {
+  b <- 0:121
+  base <- sprintf("80%x%xfffffffffff", b %/% 8L, (b %% 8L) * 2L + 1L)
+  if (resolution == 0L) return(base)
+  unlist(cpp_h3_cellToChildren(base, as.integer(resolution)), use.names = FALSE)
+}
+
 #' Generate a global hexagon grid
 #'
 #' Creates hexagon polygons covering the entire Earth.
@@ -542,20 +558,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
         g@resolution, h3_n_cells
       ))
     }
-    # Split globe into quadrants for polygonToCells
-    quads <- list(
-      matrix(c(-180, 0, 0, 0, 0, 90, -180, 90, -180, 0), ncol = 2, byrow = TRUE),
-      matrix(c(0, 0, 180, 0, 180, 90, 0, 90, 0, 0), ncol = 2, byrow = TRUE),
-      matrix(c(-180, -90, 0, -90, 0, 0, -180, 0, -180, -90), ncol = 2, byrow = TRUE),
-      matrix(c(0, -90, 180, -90, 180, 0, 0, 0, 0, -90), ncol = 2, byrow = TRUE)
-    )
-    all_cells <- character(0)
-    for (q in quads) {
-      quad_cells <- cpp_h3_polygonToCells(q, g@resolution)
-      all_cells <- c(all_cells, quad_cells)
-    }
-    cell_ids <- unique(all_cells)
-    return(cell_to_sf(cell_ids, g, wrap_dateline = wrap_dateline))
+    return(cell_to_sf(h3_all_cells(g@resolution), g, wrap_dateline = wrap_dateline))
   }
 
   # Estimate cell count for warning (ISEA)

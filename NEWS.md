@@ -1,3 +1,61 @@
+# hexify (development version)
+
+## Breaking changes
+
+* `plot_globe()` is removed. `plot(<grid>)` draws a grid in 3D, on the sphere
+  (`surface = "sphere"`) or on the flat faces of the icosahedron the grid is
+  built on (`surface = "icosahedron"`), with land fill and country outlines
+  from `hexify_world` or any sf polygons (`land =`), a `center` to look down
+  on, and the icosahedron's face edges. It takes the grid object, so any
+  aperture, mixed sequence, resolution or body reaches it; an H3 grid is
+  drawn on the sphere. `globe_centers` names the views as before.
+
+## New features
+
+* Both surfaces read their cell boundaries from the same points: each cell
+  edge is walked in the face plane, where it is straight, and cut where it
+  crosses a face edge, so a cell on the icosahedron is the cell on the sphere
+  folded flat.
+
+## Bug fixes
+
+* A cell at an icosahedral vertex now drops the corner that lies in the
+  icosahedron's angular deficit, found from the faces rather than a fixed
+  corner number. Under the lattice turn of a mixed sequence such as
+  `c(4, 4, 7, 3)` the fixed number named the wrong corner, and those twelve
+  pentagons were drawn with a corner read off the wrong face.
+
+* On a mixed aperture sequence with an odd number of aperture-7 levels
+  (`"4/7"` at odd resolutions, `c(4, 4, 7, 3)`, `c(7, 3)`, ...), the cell
+  lattice is turned by atan(sqrt(3)/5) and its cells straddle the quad edges,
+  so a point near an edge can have its nearest centre in the next quad.
+  `lonlat_to_cell()` clamped that centre back onto the quad and read it as an
+  unrelated cell: 2,500 to 4,200 boundary points per grid went to the wrong
+  cell, and `grid_global()` missed a cell of `c(4, 4, 7, 3)` and of
+  `c(4, 3, 7)`. The centre now moves to the quad that owns it through
+  DGGRID's edge table, as pure aperture 7 already did.
+
+* At odd aperture-3 resolutions, a point on or just across an icosahedron
+  face edge could quantize to a centre two rows outside its quad, which
+  `lonlat_to_cell()` read as an unrelated cell (often a pentagon). Such
+  centres now go through the same edge table. Points away from face edges
+  keep their cells.
+
+* The Snyder projection constants are computed from their closed forms at
+  full double precision (tan θ = 3 - sqrt(5), a face edge of
+  sqrt(4π / (5 sqrt(3))), R' = edge / (sqrt(3) tan θ), vertex latitude
+  atan(1/2)) instead of being carried to 8 to 10 digits, and the icosahedron's
+  vertices are rotated into place on unit vectors, which places them to
+  4e-16 where they were off by 1e-8. Cell assignments move only for points
+  within about 1e-8 rad (6 cm) of a cell boundary: 2 of 3.8 million random
+  points across 19 grids.
+
+* Forward and inverse projection put an azimuth that lies exactly on a
+  120° sector boundary, a line from a face centre through a vertex, in
+  different sectors, so the inverse returned such a point on the mirrored
+  side of the face. Both now read one half-open sector rule. A point on a
+  face edge now gets one of the two cells beside it at every resolution.
+
 # hexify 0.8.4
 
 ## Breaking changes

@@ -169,14 +169,6 @@ cpp_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, quad, i, j, resolution, aperture)
 }
 
-cpp_cell_to_corners <- function(cell_id, resolution, aperture, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_corners`, cell_id, resolution, aperture, tolerance)
-}
-
-cpp_cell_to_polygon <- function(cell_id, resolution, aperture, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_polygon`, cell_id, resolution, aperture, tolerance)
-}
-
 cpp_ap_seq_edge_dim <- function(ap_seq_in) {
     .Call(`_hexify_cpp_ap_seq_edge_dim`, ap_seq_in)
 }
@@ -197,12 +189,36 @@ cpp_quad_ij_to_cell_seq <- function(quad, i, j, ap_seq_in) {
     .Call(`_hexify_cpp_quad_ij_to_cell_seq`, quad, i, j, ap_seq_in)
 }
 
+cpp_cell_to_corners <- function(cell_id, resolution, aperture, tolerance = 0.0) {
+    .Call(`_hexify_cpp_cell_to_corners`, cell_id, resolution, aperture, tolerance)
+}
+
+cpp_cell_to_polygon <- function(cell_id, resolution, aperture, tolerance = 0.0) {
+    .Call(`_hexify_cpp_cell_to_polygon`, cell_id, resolution, aperture, tolerance)
+}
+
 cpp_cell_to_corners_seq <- function(cell_id, ap_seq_in, tolerance = 0.0) {
     .Call(`_hexify_cpp_cell_to_corners_seq`, cell_id, ap_seq_in, tolerance)
 }
 
 cpp_cell_to_polygon_seq <- function(cell_id, ap_seq_in, tolerance = 0.0) {
     .Call(`_hexify_cpp_cell_to_polygon_seq`, cell_id, ap_seq_in, tolerance)
+}
+
+cpp_cell_surface_paths <- function(cell_id, resolution, aperture, ap_seq_in, step) {
+    .Call(`_hexify_cpp_cell_surface_paths`, cell_id, resolution, aperture, ap_seq_in, step)
+}
+
+cpp_icosa_solid <- function() {
+    .Call(`_hexify_cpp_icosa_solid`)
+}
+
+cpp_lonlat_to_face_solid <- function(face, lon, lat) {
+    .Call(`_hexify_cpp_lonlat_to_face_solid`, face, lon, lat)
+}
+
+cpp_face_tri_to_solid <- function(face, tx, ty) {
+    .Call(`_hexify_cpp_face_tri_to_solid`, face, tx, ty)
 }
 
 cpp_cell_lattice_generator_seq <- function(ap_seq_in) {
