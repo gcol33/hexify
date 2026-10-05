@@ -27,7 +27,9 @@ SEED <- 20261005L
 
 pts <- sphere_points(N_POINTS, seed = SEED)
 rows <- list()
-differing <- list()
+differing <- list(data.frame(aperture = character(), resolution = integer(),
+                             lon = numeric(), lat = numeric(),
+                             hexify_cell = numeric(), dggrid_cell = numeric()))
 for (cfg in CONFIGS) for (res in cfg[[4]]) {
   ap_arg <- if (length(cfg[[2]]) > 1) head(cfg[[2]], res) else cfg[[2]]
   g <- hex_grid(resolution = res, aperture = ap_arg)
