@@ -63,3 +63,51 @@ Use Windows git/gh for remote operations (WSL SSH agent doesn't persist):
 cmd.exe /C "cd /d C:\Users\Gilles Colling\documents\dev\hexify && git push origin main"
 cmd.exe /C "cd /d C:\Users\Gilles Colling\documents\dev\hexify && gh release create v0.x.x --title \"title\" --notes \"notes\""
 ```
+
+## SoftwareX paper
+
+The manuscript lives in `C:/GillesC/Documents/writing/papers/paper_hexify_2026` (own git repo; see its `CLAUDE.md`). Scripts behind any number in the paper go in this repository under `paper/bench/`, so the tagged release carries them.
+
+## University of Vienna and open-source software
+
+Recorded 2026-10-05 from university documents and Austrian law read that day.
+
+- **Rights:** UrhG §40b gives the employer an unrestricted exploitation right to
+  computer programs an employee writes "in Erfüllung seiner dienstlichen
+  Obliegenheiten", unless agreed otherwise; the right to be named as author stays
+  with the author. The university's RDM Policy (Rectorate, 8 Sept 2021) §3:
+  usage rights to research data lie "im Regelfall" with the university, citing
+  §40b for programs. Whether hexify counts as a job duty depends on the predoc
+  contract (not checked).
+- **Open release is allowed:** RDM Policy §3 entitles staff to publish research
+  data under open licences in repositories unless legal, contractual, ethical or
+  other reasons (such as the university's commercial interests) stand against it.
+  The RDM FAQ (v1, 5 Oct 2021) counts "software and code" as research data and
+  names GPL as an example licence; MIT is not mentioned. The Technology Transfer
+  Office's Guide to Patents (printed June 2024, p. 18): "Can I publish the
+  software open source? Yes, the University supports an open-source policy",
+  recommending a check of third-party requirements, all authors' contributions
+  and incoming licences (for hexify: the Apache-2.0 H3 code).
+- **No approval step** is stated in any public document. The "open-source
+  policy" the guide refers to was not found publicly (may be intranet-only).
+- **Reporting:** UG 2002 §106(3) requires service inventions to be reported to
+  the Rectorate; software as such is not named. The invention-disclosure form has
+  a software section; a separate Software Disclosure Form existed but its URL
+  now returns 404.
+- **Archiving:** the RDM Policy names PHAIDRA as an example repository and asks
+  for persistent identifiers. Zenodo is not mentioned.
+- **LICENSE copyright line:** no university rule found. "Copyright (c) Gilles
+  Colling" is consistent with the authorship right; whether the university wants
+  to be named is open.
+- **Contacts (from the documents):** Technology Transfer Office
+  techtransfer@univie.ac.at (Guide to Patents p. 23), now under
+  https://forschungsservice.univie.ac.at/transfer; research data management
+  rdm@univie.ac.at (RDM FAQ).
+- Sources:
+  https://www.ris.bka.gv.at/NormDokument.wxe?Abfrage=Bundesnormen&Gesetzesnummer=10001848&Paragraf=40b ;
+  https://www.ris.bka.gv.at/NormDokument.wxe?Abfrage=Bundesnormen&Gesetzesnummer=20002128&Paragraf=106 ;
+  https://datenmanagement.univie.ac.at/fileadmin/user_upload/p_forschungsdatenmanagement/Dokumente/RDM_Policy_UNIVIE_v1_de.pdf ;
+  https://rdm.univie.ac.at/fileadmin/user_upload/p_forschungsdatenmanagement/Dokumente/RDM_FAQ__UNIVIE_v1_en.pdf ;
+  https://forschungsservice.univie.ac.at/fileadmin/user_upload/forschungsservice/Dokumente/Guide_to_Patents.pdf
+- Open for the user: MIT acceptable? notice to the TTO needed? copyright line?
+  any IP clause in the predoc contract?
