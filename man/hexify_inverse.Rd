@@ -2,9 +2,16 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_inverse}
 \alias{hexify_inverse}
-\title{Inverse Snyder projection}
+\title{Inverse face projection}
 \usage{
-hexify_inverse(x, y, face, tol = NULL, max_iters = NULL)
+hexify_inverse(
+  x,
+  y,
+  face,
+  tol = NULL,
+  max_iters = NULL,
+  projection = c("isea", "fuller")
+)
 }
 \arguments{
 \item{x}{X coordinate on face plane}
@@ -16,6 +23,9 @@ hexify_inverse(x, y, face, tol = NULL, max_iters = NULL)
 \item{tol}{Convergence tolerance (NULL for default)}
 
 \item{max_iters}{Maximum iterations (NULL for default)}
+
+\item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
+projection) or \code{"fuller"} (Fuller's projection)}
 }
 \value{
 Named numeric vector: c(lon_deg, lat_deg)

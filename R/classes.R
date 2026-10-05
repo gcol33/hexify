@@ -41,6 +41,9 @@ setClassUnion("HexCRS", c("integer", "character"))
 #'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees, vertex 0 and the
 #'   azimuth of vertex 1 seen from it. Empty for H3 grids, whose orientation
 #'   H3 fixes.
+#' @slot projection Character. How an ISEA-family grid projects each
+#'   icosahedron face onto its plane triangle: "isea" (Snyder's equal-area
+#'   projection) or "fuller" (Fuller's projection). Empty for H3 grids.
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -67,7 +70,8 @@ setClass(
     crs = "HexCRS",
     grid_type = "character",
     radius_km = "numeric",
-    orientation = "numeric"
+    orientation = "numeric",
+    projection = "character"
   ),
   prototype = list(
     aperture = "3",
@@ -77,7 +81,8 @@ setClass(
     crs = 4326L,
     grid_type = "isea",
     radius_km = NA_real_,
-    orientation = ISEA_ORIENTATION
+    orientation = ISEA_ORIENTATION,
+    projection = "isea"
   )
 )
 
@@ -153,11 +158,18 @@ setValidity("HexGridInfo", function(object) {
     if (length(object@orientation) != 0L) {
       errors <- c(errors, "H3 grids carry no orientation; H3 fixes its own")
     }
+    if (length(object@projection) != 0L) {
+      errors <- c(errors, "H3 grids carry no face projection; H3 fixes its own")
+    }
   } else {
     o <- object@orientation
     if (length(o) != 3L || !all(is.finite(o)) || o[2] < -90 || o[2] > 90) {
       errors <- c(errors, paste0("orientation must be c(vert0_lon, vert0_lat, ",
                                  "azimuth) in degrees, vert0_lat in [-90, 90]"))
+    }
+    if (length(object@projection) != 1L ||
+        !object@projection %in% names(FACE_PROJECTIONS)) {
+      errors <- c(errors, "projection must be \"isea\" or \"fuller\"")
     }
     # ISEA validation
     ap_ok <- tryCatch({
@@ -454,10 +466,7 @@ setMethod("$", "HexData", function(x, name) {
     return(x@cell_center[, "lat"])
   }
   if (name == "cell_area_km2") {
-    if (is_h3_grid(x@grid)) {
-      return(as.numeric(cell_area(grid = x)))
-    }
-    return(rep(x@grid@area_km2, nrow(x@data)))
+    return(unname(cell_area(grid = x)))
   }
   if (name == "cell_diag_km") {
     return(rep(x@grid@diagonal_km, nrow(x@data)))
@@ -517,10 +526,7 @@ setMethod("[[", c("HexData", "ANY"), function(x, i) {
     if (i == "cell_id") return(x@cell_id)
     if (i == "cell_cen_lon") return(x@cell_center[, "lon"])
     if (i == "cell_cen_lat") return(x@cell_center[, "lat"])
-    if (i == "cell_area_km2") {
-      if (is_h3_grid(x@grid)) return(as.numeric(cell_area(grid = x)))
-      return(rep(x@grid@area_km2, nrow(x@data)))
-    }
+    if (i == "cell_area_km2") return(unname(cell_area(grid = x)))
     if (i == "cell_diag_km") return(rep(x@grid@diagonal_km, nrow(x@data)))
   }
   x@data[[i]]
@@ -560,7 +566,8 @@ setMethod("show", "HexGridInfo", function(object) {
 #'   carrying \code{grid_type}, \code{aperture}, \code{resolution},
 #'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
 #'   \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
-#'   empty for H3) and \code{n_cells}. For a HexData, a list of class
+#'   empty for H3), \code{projection} (\code{"isea"} or \code{"fuller"},
+#'   \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
 #'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
 #'   \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
 #'   and a \code{preview} of the first rows. The print methods return their
@@ -591,6 +598,7 @@ setMethod("summary", "HexGridInfo", function(object, ...) {
       radius_km = grid_radius_km(object),
       earth = is_earth_grid(object),
       orientation = grid_orientation(object),
+      projection = grid_projection(object),
       n_cells = grid_n_cells(object)
     ),
     class = "hexify_grid_summary"
@@ -615,11 +623,15 @@ print.hexify_grid_summary <- function(x, ...) {
   } else {
     cat("HexGridInfo Specification\n")
     cat("-------------------------\n")
+    if (identical(x$projection, "fuller")) {
+      cat("Projection:  Fuller (cells not equal-area)\n")
+    }
     cat(sprintf("Aperture:    %s\n", x$aperture))
     cat(sprintf("Resolution:  %d\n", x$resolution))
 
     if (!is.na(x$area_km2)) {
-      cat(sprintf("Area:        %.2f km^2\n", x$area_km2))
+      cat(sprintf(if (identical(x$projection, "fuller")) "Mean Area:   %.2f km^2\n"
+                  else "Area:        %.2f km^2\n", x$area_km2))
     }
     if (!is.na(x$diagonal_km)) {
       cat(sprintf("Diagonal:    %.2f km\n", x$diagonal_km))
@@ -748,11 +760,7 @@ setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
   df$cell_id <- x@cell_id
   df$cell_cen_lon <- x@cell_center[, "lon"]
   df$cell_cen_lat <- x@cell_center[, "lat"]
-  if (is_h3_grid(x@grid)) {
-    df$cell_area_km2 <- as.numeric(cell_area(grid = x))
-  } else {
-    df$cell_area_km2 <- x@grid@area_km2
-  }
+  df$cell_area_km2 <- unname(cell_area(grid = x))
   df$cell_diag_km <- x@grid@diagonal_km
 
   if (!is.null(row.names)) {
@@ -773,7 +781,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
     crs = x@crs,
     grid_type = x@grid_type,
     radius_km = grid_radius_km(x),
-    orientation = grid_orientation(x)
+    orientation = grid_orientation(x),
+    projection = grid_projection(x)
   )
 })
 
@@ -840,7 +849,8 @@ extract_grid <- function(x, allow_null = FALSE) {
 #' Fill the slots a grid saved by an older hexify lacks
 #'
 #' A grid deserialized from before a slot existed reads the slot's original
-#' meaning: an ISEA grid on Earth in the standard orientation.
+#' meaning: an ISEA grid on Earth in the standard orientation, on the ISEA
+#' projection.
 #' @param g HexGridInfo object
 #' @return HexGridInfo object
 #' @noRd
@@ -853,6 +863,9 @@ upgrade_grid <- function(g) {
   }
   if (!.hasSlot(g, "orientation")) {
     g@orientation <- if (g@grid_type == "h3") numeric(0) else ISEA_ORIENTATION
+  }
+  if (!.hasSlot(g, "projection")) {
+    g@projection <- if (g@grid_type == "h3") character(0) else "isea"
   }
   g
 }
@@ -873,7 +886,8 @@ hexify_grid_to_HexGridInfo <- function(x) {
       diagonal_km = diagonal,
       crs = resolve_crs(x$crs, grid_radius_km(x)),
       radius_km = grid_radius_km(x),
-      orientation = grid_orientation(x))
+      orientation = grid_orientation(x),
+      projection = grid_projection(x))
 }
 
 #' Convert HexGridInfo to legacy hexify_grid
@@ -909,7 +923,7 @@ HexGridInfo_to_hexify_grid <- function(x) {
     resolution = x@resolution,
     aperture = aperture_num,
     topology = "HEXAGON",
-    projection = "ISEA",
+    projection = toupper(grid_projection(x)),
     metric = TRUE,
     radius_km = grid_radius_km(x),
     index_type = legacy_index,

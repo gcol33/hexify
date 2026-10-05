@@ -1,5 +1,5 @@
 // rcpp_projection.cpp
-// Rcpp bindings for Snyder projection functions
+// Rcpp bindings for the face projections (ISEA and Fuller)
 //
 // This file provides the R interface for:
 // - Icosahedron construction
@@ -12,7 +12,7 @@
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
-#include "rcpp_orientation.h"
+#include "rcpp_icosa.h"
 
 using namespace Rcpp;
 
@@ -29,13 +29,13 @@ void cpp_build_icosa(double vert0_lon_deg = 11.25,
 
 // [[Rcpp::export]]
 int cpp_which_face(double lon_deg, double lat_deg) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return hexify::which_face(lon_deg, lat_deg);
 }
 
 // [[Rcpp::export]]
 DataFrame cpp_face_centers() {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   const auto& C = hexify::face_centers();
   NumericVector lon(20), lat(20);
   for (int i = 0; i < 20; ++i) {
@@ -50,8 +50,8 @@ DataFrame cpp_face_centers() {
 // ============================================================================
 
 // [[Rcpp::export]]
-NumericVector cpp_snyder_forward(double lon_deg, double lat_deg) {
-  hexify::use_default_orientation();
+NumericVector cpp_icosa_forward(NumericVector icosa, double lon_deg, double lat_deg) {
+  activate_icosa(icosa);
   auto out = hexify::snyder_forward(lon_deg, lat_deg);
   return NumericVector::create(_["face"] = out.face,
                                _["icosa_triangle_x"] = out.icosa_triangle_x,
@@ -59,8 +59,9 @@ NumericVector cpp_snyder_forward(double lon_deg, double lat_deg) {
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_project_to_icosa_triangle(int face, double lon_deg, double lat_deg) {
-  hexify::use_default_orientation();
+NumericVector cpp_project_to_icosa_triangle(NumericVector icosa, int face,
+                                            double lon_deg, double lat_deg) {
+  activate_icosa(icosa);
   auto xy = hexify::snyder_forward_to_face(face, lon_deg, lat_deg);
   return NumericVector::create(_["icosa_triangle_x"] = xy.first,
                                _["icosa_triangle_y"] = xy.second);
@@ -105,10 +106,10 @@ Rcpp::IntegerVector cpp_snyder_inv_get_stats_and_reset() {
 }
 
 // [[Rcpp::export]]
-Rcpp::NumericVector cpp_face_xy_to_ll(double x, double y, int face,
+Rcpp::NumericVector cpp_face_xy_to_ll(NumericVector icosa, double x, double y, int face,
                                       Rcpp::Nullable<double> tol = R_NilValue,
                                       Rcpp::Nullable<int>    max_iters = R_NilValue) {
-  hexify::use_default_orientation();
+  activate_icosa(icosa);
   double tol_v = -1.0;
   int    mi_v  = -1;
   if (tol.isNotNull())       tol_v = Rcpp::as<double>(tol);
@@ -120,7 +121,7 @@ Rcpp::NumericVector cpp_face_xy_to_ll(double x, double y, int face,
 
 // [[Rcpp::export]]
 Rcpp::NumericVector cpp_icosa_face_params(int face) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   if (face < 0 || face >= 20) Rcpp::stop("face must be 0..19");
   const auto& C = hexify::face_centers();
   return Rcpp::NumericVector::create(
@@ -137,7 +138,7 @@ Rcpp::NumericVector cpp_hex_index_face_to_lonlat(double x, double y,
                                                  bool degrees = true,
                                                  Rcpp::Nullable<double> tol = R_NilValue,
                                                  Rcpp::Nullable<int>    max_iters = R_NilValue) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   const auto& S = hexify::ico();
   int face = 0;
   double best = 1e300;

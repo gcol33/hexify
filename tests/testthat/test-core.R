@@ -74,7 +74,7 @@ test_that("cell conversions work for aperture 7", {
 # =============================================================================
 
 test_that("snyder forward projection works", {
-  proj <- cpp_snyder_forward(10, 45)
+  proj <- cpp_icosa_forward(numeric(0), 10, 45)
 
   expect_equal(proj[["face"]], cache$proj_forward$face)
   expect_equal(proj[["icosa_triangle_x"]], cache$proj_forward$icosa_triangle_x, tolerance = 1e-9)

@@ -65,7 +65,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
   # point, and encodes it as an index string. A missing coordinate gives a
   # missing index.
   cell_indices <- cpp_lonlat_to_index(
-    orient_arg(grid),
+    icosa_arg(grid),
     as.numeric(lon), as.numeric(lat),
     as.integer(grid$resolution),
     as.integer(grid$aperture),
@@ -121,7 +121,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
   # center in face plane coordinates and projects it back through the inverse
   # ISEA projection. A missing index gives a missing coordinate.
   cpp_index_to_lonlat(
-    orient_arg(grid),
+    icosa_arg(grid),
     h_index,
     as.integer(grid$aperture),
     grid$index_type
@@ -305,7 +305,7 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_lonlat_to_quad_ij(
-    orient = numeric(0),
+    icosa = numeric(0),
     lon_deg = as.numeric(lon),
     lat_deg = as.numeric(lat),
     aperture = as.integer(aperture),
@@ -857,7 +857,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' plot(plane$plane_x, plane$plane_y)
 hexify_lonlat_to_plane <- function(lon, lat) {
   cpp_lonlat_to_plane(
-    orient = numeric(0),
+    icosa = numeric(0),
     lon = as.numeric(lon),
     lat = as.numeric(lat)
   )

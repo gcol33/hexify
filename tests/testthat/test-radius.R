@@ -120,7 +120,8 @@ test_that("cells and centres are the same on every body", {
 test_that("cell_area reports the body's cell area", {
   mars <- hex_grid(resolution = 5, radius_km = "mars")
   cells <- lonlat_to_cell(c(0, 30), c(0, 40), mars)
-  expect_equal(unname(cell_area(cells, mars)), rep(mars@area_km2, 2))
+  n <- hexify:::aperture_n_cells(mars@aperture, mars@resolution)
+  expect_equal(unname(cell_area(cells, mars)), rep(MARS_SURFACE_KM2 / (n - 2), 2))
 })
 
 # =============================================================================
@@ -188,7 +189,9 @@ test_that("hexify() passes a radius through to the grid", {
 
   expect_equal(hexify:::grid_radius_km(hd@grid), MARS_RADIUS_KM)
   expect_equal(as.data.frame(hd)$cell_area_km2,
-               rep(hd@grid@area_km2, 3))
+               unname(cell_area(hd@cell_id, hd@grid)))
+  expect_equal(hd@grid@area_km2, MARS_SURFACE_KM2 /
+                 hexify:::aperture_n_cells(hd@grid@aperture, hd@grid@resolution))
 
   earth <- hexify(df, lon = "lon", lat = "lat", resolution = 5)
   expect_equal(hd@cell_id, earth@cell_id)

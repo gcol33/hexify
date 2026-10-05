@@ -44,7 +44,7 @@ rows <- list()
 for (pl in PLACEMENTS) for (gr in GRIDS) {
   cfg <- gr[[1]]
   res <- gr[[2]]
-  orient <- orient_lines(pl[[2]], pl[[3]])
+  icosa <- orient_lines(pl[[2]], pl[[3]])
   ap_arg <- if (length(cfg[[2]]) > 1) head(cfg[[2]], res) else cfg[[2]]
   g <- if (is.null(pl[[3]])) {
     hex_grid(resolution = res, aperture = ap_arg, orientation = pl[[2]])
@@ -53,7 +53,7 @@ for (pl in PLACEMENTS) for (gr in GRIDS) {
   }
 
   h_id <- lonlat_to_cell(pts$lon, pts$lat, g)
-  d_id <- dggrid_seqnum(cfg, res, pts$lon, pts$lat, orient)
+  d_id <- dggrid_seqnum(cfg, res, pts$lon, pts$lat, icosa)
   same <- h_id == d_id
 
   ok_cells <- unique(h_id[same])
@@ -65,11 +65,11 @@ for (pl in PLACEMENTS) for (gr in GRIDS) {
              max_corner_gap_other_m = NA_real_)
   if (length(centre_cells)) {
     hc <- cell_to_lonlat(centre_cells, g)
-    dc <- dggrid_centres(cfg, res, centre_cells, orient)
+    dc <- dggrid_centres(cfg, res, centre_cells, icosa)
     centre_gap_m <- gc_km(hc[[1]], hc[[2]], dc$lon, dc$lat) * 1000
 
     poly_cells <- sample(ok_cells, min(N_POLY, length(ok_cells)))
-    cc <- corner_check(cfg, res, g, poly_cells, orient)
+    cc <- corner_check(cfg, res, g, poly_cells, icosa)
   }
 
   o <- g@orientation

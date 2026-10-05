@@ -221,7 +221,7 @@ test_that("aperture-7 quad IJ -> XY lands on the cell centre", {
     for (k in keep) {
       xy <- cpp_quad_ij_to_xy(qij$quad[k], qij$i[k], qij$j[k], 7L, res)
       tri <- cpp_quad_xy_to_icosa_tri(qij$quad[k], xy$quad_x, xy$quad_y)
-      ll <- cpp_face_xy_to_ll(tri[["icosa_triangle_x"]],
+      ll <- cpp_face_xy_to_ll(numeric(0), tri[["icosa_triangle_x"]],
                               tri[["icosa_triangle_y"]],
                               tri[["icosa_triangle_face"]])
 

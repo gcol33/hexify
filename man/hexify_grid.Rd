@@ -25,7 +25,8 @@ hexify_grid(
 
 \item{aperture}{Aperture sequence (3, 4, or 7)}
 
-\item{projection}{Projection type (only 'ISEA' supported currently)}
+\item{projection}{Face projection, DGGRID's \code{dggs_proj}: 'ISEA'
+(default) or 'FULLER'}
 
 \item{radius_km}{Radius of the body the grid covers, in kilometers, or a body
 name such as "mars" (default Earth). See \code{\link{hex_grid}}.}
@@ -36,7 +37,7 @@ A hexify_grid object containing:
 \item{resolution}{Calculated resolution level}
 \item{aperture}{Grid aperture (3, 4, or 7)}
 \item{topology}{Grid topology ("HEXAGON")}
-\item{projection}{Map projection ("ISEA")}
+\item{projection}{Face projection ("ISEA" or "FULLER")}
 \item{radius_km}{Radius of the body, in kilometers}
 \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 }

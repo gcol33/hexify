@@ -195,13 +195,13 @@ wrap_cells_at_dateline <- function(x) {
 #' Each edge follows the true cell boundary to within `tolerance` of its
 #' length; 0 gives the corners alone.
 #' @noRd
-isea_cell_rings <- function(cell_id, resolution, aperture, orient,
+isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
                             tolerance = CELL_EDGE_TOLERANCE) {
   if (is_mixed_aperture(aperture)) {
-    return(cpp_cell_to_corners_seq(orient, as.numeric(cell_id),
+    return(cpp_cell_to_corners_seq(icosa, as.numeric(cell_id),
                                    mixed_ap_seq(aperture, resolution), tolerance))
   }
-  cpp_cell_to_corners(orient, as.numeric(cell_id), as.integer(resolution),
+  cpp_cell_to_corners(icosa, as.numeric(cell_id), as.integer(resolution),
                       as.integer(aperture), tolerance)
 }
 
@@ -215,13 +215,13 @@ isea_cell_rings <- function(cell_id, resolution, aperture, orient,
 #' @param cell_id Numeric vector of cell IDs
 #' @param resolution Grid resolution level
 #' @param aperture Grid aperture: 3, 4, 7, or a mixed sequence spelling
-#' @param orient Orientation argument of the C++ layer (see orient_arg())
+#' @param icosa Orientation argument of the C++ layer (see icosa_arg())
 #' @param crs CRS the polygons carry, as sf reads it
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
-isea_cells_to_sfc <- function(cell_id, resolution, aperture, orient, crs = 4326,
+isea_cells_to_sfc <- function(cell_id, resolution, aperture, icosa, crs = 4326,
                               tolerance = CELL_EDGE_TOLERANCE) {
-  corners_list <- isea_cell_rings(cell_id, resolution, aperture, orient, tolerance)
+  corners_list <- isea_cell_rings(cell_id, resolution, aperture, icosa, tolerance)
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(lonlat_ring_coords(coords)))
@@ -272,14 +272,14 @@ lonlat_to_cell <- function(lon, lat, grid) {
 
   if (is_mixed_aperture(g@aperture)) {
     cpp_lonlat_to_cell_seq(
-      orient_arg(g),
+      icosa_arg(g),
       as.numeric(lon),
       as.numeric(lat),
       grid_ap_seq(g)
     )
   } else {
     cpp_lonlat_to_cell(
-      orient_arg(g),
+      icosa_arg(g),
       as.numeric(lon),
       as.numeric(lat),
       g@resolution,
@@ -314,13 +314,13 @@ cell_to_lonlat <- function(cell_id, grid) {
 
   if (is_mixed_aperture(g@aperture)) {
     cpp_cell_to_lonlat_seq(
-      orient_arg(g),
+      icosa_arg(g),
       as.numeric(cell_id),
       grid_ap_seq(g)
     )
   } else {
     cpp_cell_to_lonlat(
-      orient_arg(g),
+      icosa_arg(g),
       as.numeric(cell_id),
       g@resolution,
       as.integer(g@aperture)
@@ -422,7 +422,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
 
   # ISEA path: generate polygons using C++ function. For globe/orthographic
   # projections, pass wrap_dateline = FALSE to keep cells intact.
-  sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture, orient_arg(g),
+  sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture, icosa_arg(g),
                            crs = grid_crs(g),
                            tolerance = if (is.null(densify)) CELL_EDGE_TOLERANCE else densify)
 
@@ -789,9 +789,10 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 
 #' Compute per-cell area in km²
 #'
-#' Returns the area of each cell in square kilometers. For ISEA grids, all
-#' cells have the same area (equal-area property). For H3 grids, each cell
-#' has a different geodesic area depending on its location.
+#' Returns the area of each cell in square kilometers. On the ISEA projection
+#' every hexagon of a resolution has the same area and the 12 pentagons 5/6 of
+#' it. On the Fuller projection and for H3 grids, the area varies from cell to
+#' cell.
 #'
 #' @param cell_id Cell IDs to compute area for. For ISEA grids, these are
 #'   numeric; for H3 grids, character strings. When \code{grid} is a HexData
@@ -802,8 +803,17 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' @return Named numeric vector of areas in km², one per \code{cell_id}.
 #'
 #' @details
-#' For ISEA grids the area is constant across all cells and is read directly
-#' from the grid specification.
+#' On the ISEA projection, Snyder's equal-area projection gives every hexagon
+#' of a resolution the same area. Each of the 12 pentagons, centred on an
+#' icosahedron vertex, covers five of a hexagon's six sixths, so a grid of
+#' \eqn{N} cells on a body of area \eqn{S} has hexagons of area
+#' \eqn{S / (N - 2)} and pentagons of \eqn{(5/6) S / (N - 2)}. The grid's
+#' \code{area_km2} is the mean, \eqn{S / N}.
+#'
+#' On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are
+#' not equal-area. Each cell's area is its solid angle, summed over its true
+#' boundary, times the body's area over \eqn{4\pi}, so the cells of a grid add
+#' up to the body's area.
 #'
 #' For H3 grids the area varies from cell to cell, by about a factor of 2
 #' across the hexagons of a resolution. The vendored 'H3' library computes
@@ -816,7 +826,7 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #'
 #' @export
 #' @examples
-#' # ISEA: constant area
+#' # ISEA: one area for every hexagon
 #' grid <- hex_grid(area_km2 = 1000)
 #' cells <- lonlat_to_cell(c(0, 10, 20), c(45, 50, 55), grid)
 #' cell_area(cells, grid)
@@ -842,17 +852,29 @@ cell_area <- function(cell_id = NULL, grid) {
     }
   }
 
-  # ISEA: constant equal-area
-  if (!is_h3_grid(g)) {
-    areas <- rep(g@area_km2, length(cell_id))
-    names(areas) <- as.character(cell_id)
-    return(areas)
+  cell_id <- if (is_h3_grid(g)) as.character(cell_id) else as.numeric(cell_id)
+  ids <- unique(cell_id)
+  surface <- body_surface_km2(grid_radius_km(g))
+
+  per_id <- if (is_h3_grid(g)) {
+    scale_area_to_body(cpp_h3_cellAreaKm2(ids), grid_radius_km(g))
+  } else if (identical(grid_projection(g), "fuller")) {
+    sr <- if (is_mixed_aperture(g@aperture)) {
+      cpp_cell_solid_angle_seq(icosa_arg(g), ids,
+                               mixed_ap_seq(g@aperture, g@resolution),
+                               CELL_AREA_TOLERANCE)
+    } else {
+      cpp_cell_solid_angle(icosa_arg(g), ids, g@resolution,
+                           aperture_to_int(g@aperture), CELL_AREA_TOLERANCE)
+    }
+    sr / (4 * pi) * surface
+  } else {
+    hexagon <- surface / (aperture_n_cells(g@aperture, g@resolution) - 2)
+    ifelse(is_pentagon(ids, g), 5 / 6, 1) * hexagon
   }
 
-  # H3: per-cell area via native C backend, read on the grid's body
-  cell_id <- as.character(cell_id)
-  areas <- scale_area_to_body(cpp_h3_cellAreaKm2(cell_id), grid_radius_km(g))
-  names(areas) <- cell_id
+  areas <- per_id[match(cell_id, ids)]
+  names(areas) <- as.character(cell_id)
   areas
 }
 
@@ -887,10 +909,10 @@ grid_quad_ij <- function(cell_id, g) {
 #' @noRd
 grid_neighbors_isea <- function(cell_id, g) {
   if (is_mixed_aperture(g@aperture)) {
-    return(cpp_get_neighbors_isea_seq(orient_arg(g), as.numeric(cell_id),
+    return(cpp_get_neighbors_isea_seq(icosa_arg(g), as.numeric(cell_id),
                                       grid_ap_seq(g)))
   }
-  cpp_get_neighbors_isea(orient_arg(g), as.numeric(cell_id), g@resolution,
+  cpp_get_neighbors_isea(icosa_arg(g), as.numeric(cell_id), g@resolution,
                          aperture_to_int(g@aperture))
 }
 

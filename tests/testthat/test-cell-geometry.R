@@ -201,7 +201,7 @@ test_that("a drawn cell is the cell lonlat_to_cell assigns", {
     total <- 2 + 10 * prod(grid_ap_seq(g)[-1])
     cells <- unique(c(seq_len(total)[is_pentagon(seq_len(total), g)],
                       round(seq(2, total - 1, length.out = 40))))
-    rings <- isea_cell_rings(cells, g@resolution, g@aperture, orient_arg(g), 1e-6)
+    rings <- isea_cell_rings(cells, g@resolution, g@aperture, icosa_arg(g), 1e-6)
     centres <- cell_to_lonlat(cells, g)
 
     for (k in seq_along(cells)) {

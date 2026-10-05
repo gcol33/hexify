@@ -55,8 +55,8 @@ test_that("hexify_grid validates topology", {
 
 test_that("hexify_grid validates projection", {
   expect_error(
-    hexify_grid(area = 1000, projection = "FULLER"),
-    "ISEA"
+    hexify_grid(area = 1000, projection = "GNOMONIC"),
+    "ISEA' or 'FULLER"
   )
 })
 

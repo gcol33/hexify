@@ -1,5 +1,6 @@
 #include "projection_inverse.h"
 #include "projection_forward.h"
+#include "projection_fuller.h"
 #include "icosahedron.h"
 #include "constants.h"
 #include <cmath>
@@ -151,35 +152,15 @@ std::tuple<int,int,int,int> snyder_inv_get_stats_and_reset() {
   return out;
 }
 
-std::pair<double,double> face_xy_to_ll(double x, double y, int face,
-                                       double tol_override,
-                                       int    max_iters_override)
-{
-  if (face < 0 || face >= 20) throw std::runtime_error("face must be 0..19");
+} // namespace hexify
 
-  // per-call precision
-  PrecCfg cfg = CFG;
-  if (tol_override       >= 0.0) cfg.tol       = tol_override;
-  if (max_iters_override >= 0  ) cfg.max_iters = max_iters_override;
+namespace {
 
-  // Face centers are in radians
-  const auto& C = face_centers();
-  const double center_lon = C[face].lon;
-  const double center_lat = C[face].lat;
-  const double center_sinlat = std::sin(center_lat);
-  const double center_coslat = std::cos(center_lat);
-
-  // Per-face azimuth bias (radians)
-  const double face_azimuth = snyder_get_face_azimuth_offset(face);
-
-  // Convert Snyder face-plane (tx,ty) back to px,py (same basis as forward)
+// Snyder's inverse on a face: face-plane (x, y) -> distance z from the face
+// centre and azimuth from the face's first vertex.
+std::pair<double,double> snyder_face_polar(double x, double y, const PrecCfg& cfg) {
   const double px = x * kSnyderIcosaEdge - kSnyderOriginXOff;
   const double py = y * kSnyderIcosaEdge - kSnyderOriginYOff;
-
-  // Exact face center shortcut
-  if (std::abs(px) < kEpsBranch && std::abs(py) < kEpsBranch) {
-    return { rad2deg(wrap_lon_rad(center_lon)), rad2deg(center_lat) };
-  }
 
   // Radial distance in face plane (Snyder notation: ρ)
   const double rho   = std::hypot(px, py);
@@ -212,14 +193,58 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   // Snyder's 'f' scale factor (Snyder notation: f)
   const double f_scale = TAN_EL / (2.0 * denom * sin_half_dz);
   double arg = (rho / (2.0 * kSnyderR1 * f_scale));
-  arg = clampd(arg, -1.0, 1.0);
+  arg = hexify::clampd(arg, -1.0, 1.0);
   // Great-circle distance z from face center (Snyder notation: z)
   const double z = 2.0 * std::asin(arg);
 
-  // Restore original 120° sector and add per-face azimuth
-  azimuth += sector * k2PiOver3;
+  // Restore original 120° sector
+  return {z, azimuth + sector * k2PiOver3};
+}
 
-  azimuth += face_azimuth;
+// Fuller's inverse on a face, with the Snyder solver's statistics.
+std::pair<double,double> fuller_polar(double x, double y, const PrecCfg& cfg) {
+  int iters = 0;
+  const auto za = hexify::fuller_face_polar(x, y, cfg.tol, cfg.max_iters, &iters);
+  ++ST_calls;
+  ST_iters_total += iters;
+  if (iters > ST_iters_max) ST_iters_max = iters;
+  if (iters >= cfg.max_iters) ++ST_capped;
+  return za;
+}
+
+} // anon
+
+namespace hexify {
+
+std::pair<double,double> face_xy_to_ll(double x, double y, int face,
+                                       double tol_override,
+                                       int    max_iters_override)
+{
+  if (face < 0 || face >= 20) throw std::runtime_error("face must be 0..19");
+
+  // per-call precision
+  PrecCfg cfg = CFG;
+  if (tol_override       >= 0.0) cfg.tol       = tol_override;
+  if (max_iters_override >= 0  ) cfg.max_iters = max_iters_override;
+
+  // Face centers are in radians
+  const auto& C = face_centers();
+  const double center_lon = C[face].lon;
+  const double center_lat = C[face].lat;
+  const double center_sinlat = std::sin(center_lat);
+  const double center_coslat = std::cos(center_lat);
+
+  // Exact face center shortcut
+  if (std::abs(x * kSnyderIcosaEdge - kSnyderOriginXOff) < kEpsBranch &&
+      std::abs(y * kSnyderIcosaEdge - kSnyderOriginYOff) < kEpsBranch) {
+    return { rad2deg(wrap_lon_rad(center_lon)), rad2deg(center_lat) };
+  }
+
+  const auto [z, face_az] = active_projection() == FaceProjection::Fuller
+    ? fuller_polar(x, y, cfg) : snyder_face_polar(x, y, cfg);
+
+  // Add the per-face azimuth bias (radians)
+  double azimuth = face_az + snyder_get_face_azimuth_offset(face);
   while (azimuth <= -kPi) azimuth += kTwoPi;
   while (azimuth >   kPi) azimuth -= kTwoPi;
 

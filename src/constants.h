@@ -108,6 +108,36 @@ inline const double kSnyderOriginYOff = kSnyderIcosaEdge / (2.0 * std::sqrt(3.0)
 inline const double kSnyderR1 = kSnyderIcosaEdge / (std::sqrt(3.0) * std::tan(kSnyderElAngle));
 inline const double kSnyderR1Squared = kSnyderR1 * kSnyderR1;
 
+// =============================================================================
+// Fuller Projection Constants (Gray 1995, Crider 2008)
+// =============================================================================
+// References: Gray, R.W. (1995). "Exact Transformation Equations for Fuller's
+// World Map". Cartographica 32(3): 17-25. Crider, J.E. (2008). "Exact
+// Equations for Fuller's Map Projection and Inverse". Cartographica 43(1):
+// 67-72.
+//
+// Fuller unfolds each spherical face onto a plane triangle whose edges keep
+// their arc length, so the plane triangle's edge is the icosahedron's edge arc.
+
+// ARC: arc length of an icosahedron edge on the unit sphere, atan(2).
+inline const double kFullerArc = std::atan(2.0);
+
+// alpha: half the edge arc.
+inline const double kFullerAlpha = 0.5 * kFullerArc;
+
+// EL: chord length of an icosahedron edge, sqrt(8) / sqrt(5 + sqrt(5)).
+inline const double kFullerEL = std::sqrt(8.0) / std::sqrt(5.0 + std::sqrt(5.0));
+
+// DVE: distance from the centre to an edge midpoint, sqrt(3 + sqrt(5)) /
+// sqrt(5 + sqrt(5)).
+inline const double kFullerDVE = std::sqrt(3.0 + std::sqrt(5.0)) / std::sqrt(5.0 + std::sqrt(5.0));
+
+// Height of the face plane above the centre: sqrt(5 + 2 sqrt(5)) / sqrt(15).
+inline const double kFullerZ0 = std::sqrt(5.0 + 2.0 * std::sqrt(5.0)) / std::sqrt(15.0);
+
+// tan(alpha) = EL / (2 DVE).
+inline const double kFullerTanAlpha = kFullerEL / (2.0 * kFullerDVE);
+
 // Latitude of the ten icosahedron vertices off the poles in the standard
 // orientation: atan(1/2).
 inline const double kIcosaVertexLatDeg = std::atan(0.5) * kRadToDeg;

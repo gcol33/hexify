@@ -22,20 +22,21 @@
 #
 # The hierarchy is a relation between cell IDs, and a rotation of the
 # icosahedron carries cells and their centres together, so it is the same under
-# every orientation. It is computed in the standard ISEA orientation, the frame
-# the pole probes below are placed in.
+# every orientation and both face projections. It is computed in the standard
+# ISEA orientation on the ISEA projection, the frame the pole probes below are
+# placed in.
 
 mixed_ap_seq <- function(aperture, resolution) {
   parse_aperture_seq(aperture_at_resolution(aperture, resolution), resolution)
 }
 
 mixed_cell_center <- function(cell_id, resolution, aperture) {
-  cpp_cell_to_lonlat_seq(unname(ISEA_ORIENTATION), as.numeric(cell_id),
+  cpp_cell_to_lonlat_seq(standard_icosa(), as.numeric(cell_id),
                          mixed_ap_seq(aperture, resolution))
 }
 
 mixed_point_to_cell <- function(lon, lat, resolution, aperture) {
-  cpp_lonlat_to_cell_seq(unname(ISEA_ORIENTATION), as.numeric(lon), as.numeric(lat),
+  cpp_lonlat_to_cell_seq(standard_icosa(), as.numeric(lon), as.numeric(lat),
                          mixed_ap_seq(aperture, resolution))
 }
 

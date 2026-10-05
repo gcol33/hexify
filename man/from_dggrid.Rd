@@ -21,7 +21,7 @@ Creates a hexify_grid object from a 'dggridR' dggs object. This allows
 using hexify functions with grids created by 'dggridR' dgconstruct().
 }
 \details{
-Only 'ISEA' projection with HEXAGON topology is fully supported.
+The 'ISEA' and 'FULLER' projections with HEXAGON topology are supported.
 Other configurations will generate warnings.
 
 A dggs has no field for the body it is sized on, so the resolution is all
@@ -36,7 +36,7 @@ takes its standard ISEA value.
 
 The function validates that the 'dggridR' grid uses compatible settings:
 \itemize{
-\item Projection must be 'ISEA' (FULLER not supported)
+\item Projection must be 'ISEA' or 'FULLER'
 \item Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 \item Aperture must be 3, 4, or 7
 }

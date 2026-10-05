@@ -96,7 +96,7 @@ hex_globe <- function(x,
   center <- resolve_center(center)
   land <- surface_land(land)
   arc <- step * atan(2)
-  orient <- orient_arg(g)
+  icosa <- icosa_arg(g)
 
   grid <- NULL
   fill <- NULL
@@ -125,21 +125,21 @@ hex_globe <- function(x,
     ),
     fold = if (surface == "sphere") 1 else 0,
     foldable = !is_h3_grid(g),
-    surface = globe_mesh(cpp_globe_faces(orient, GLOBE_MESH_SPACING),
+    surface = globe_mesh(cpp_globe_faces(icosa, GLOBE_MESH_SPACING),
                          tri = !is.null(grid)),
     land = if (!is.null(land) && !is.na(land_fill)) {
-      globe_mesh(cpp_globe_polygons(orient, sfc_polygons(land), GLOBE_MESH_SPACING))
+      globe_mesh(cpp_globe_polygons(icosa, sfc_polygons(land), GLOBE_MESH_SPACING))
     },
     grid = grid,
-    projection = if (!is.null(grid)) cpp_globe_projection(orient),
+    projection = if (!is.null(grid)) cpp_globe_projection(icosa),
     cells = fill,
     palette = as.vector(grDevices::col2rgb(ramp_colours(palette), alpha = TRUE)) / 255,
     grid_lines = grid_lines,
     cell_width = sqrt(4 * pi / grid_n_cells(g)),
     land_lines = if (!is.null(land) && !is.na(land_border)) {
-      globe_lines(land_surface_paths(land, arc, orient))
+      globe_lines(land_surface_paths(land, arc, icosa))
     },
-    edge_lines = if (face_edges) globe_lines(edge_surface_paths(arc, orient)),
+    edge_lines = if (face_edges) globe_lines(edge_surface_paths(arc, icosa)),
     style = list(
       ocean_fill = globe_rgba(ocean_fill),
       land_fill = globe_rgba(land_fill),
@@ -355,22 +355,22 @@ h3_surface_mesh <- function(cells, max_len) {
 
 #' Coastlines placed on the faces, one path per ring
 #' @noRd
-land_surface_paths <- function(land, max_angle, orient) {
+land_surface_paths <- function(land, max_angle, icosa) {
   rings <- unlist(sfc_polygons(land), recursive = FALSE)
   path <- rep(seq_along(rings), vapply(rings, nrow, integer(1)))
   ll <- do.call(rbind, rings)
-  cpp_sphere_paths_on_faces(orient, ll[, 1], ll[, 2], path, max_angle)
+  cpp_sphere_paths_on_faces(icosa, ll[, 1], ll[, 2], path, max_angle)
 }
 
 #' The icosahedron's edges placed on the faces, one path per edge
 #' @noRd
-edge_surface_paths <- function(max_angle, orient) {
-  solid <- icosa_solid(orient)
+edge_surface_paths <- function(max_angle, icosa) {
+  solid <- icosa_solid(icosa)
   V <- solid$vertices
   ends <- as.vector(t(solid$edges[, c("v1", "v2")]))
   lon <- atan2(V[ends, 2], V[ends, 1]) * 180 / pi
   lat <- asin(V[ends, 3]) * 180 / pi
-  cpp_sphere_paths_on_faces(orient, lon, lat,
+  cpp_sphere_paths_on_faces(icosa, lon, lat,
                             rep(seq_len(nrow(solid$edges)), each = 2L), max_angle)
 }
 
@@ -383,7 +383,7 @@ check_values <- function(values, n) {
 }
 
 #' Where values sit along the colour ramp: a value v at
-#' clamp((v - m[1]) * m[2] + m[3], 0, 1), the limits at its two ends, or
+#' `clamp((v - m[1]) * m[2] + m[3], 0, 1)`, the limits at its two ends, or
 #' halfway when they coincide
 #' @noRd
 ramp_map <- function(values, limits) {

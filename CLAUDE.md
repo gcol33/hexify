@@ -4,13 +4,15 @@
 
 hexify supports **all** major hexagonal DGGS through two backends:
 
-- **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30.
+- **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30,
+  on Snyder's equal-area projection or Fuller's (`hex_grid(projection = "fuller")`).
   `hex_grid(aperture = "4/3")` / `"4/7"` / `"7/4"` name a family (first `floor(res/2)` levels
   take the first aperture), and `aperture = c(4, 4, 7, 3)` names one aperture per level.
 - **H3** (vendored H3 v4.4.1 C source in `src/h3`): fixed aperture 7 — resolutions 0-15
 
 This covers every hexagonal grid system that matters:
 - ISEA3H, ISEA4H, ISEA7H, ISEA43H = ISEA backend with different aperture settings
+- FULLER3H, FULLER4H, FULLER7H, FULLER43H = the same with `projection = "fuller"`
 - H3 = H3 backend
 - IGEO7/Z7 (2025, Sahr) = equal-area aperture-7 hex grid with Z7 indexing = already covered by `hex_grid(aperture = 7)` (ISEA7H with Z7 index). hexify uses the same Z7 hierarchical indexing (7-digit encoding, 0-6 per level) in `src/index_z7.cpp`.
 - OpenEAGGR ISEA3H = already covered by `hex_grid(aperture = 3)`
@@ -34,18 +36,29 @@ radius ratio -- rather than touching vendored code. H3 cell IDs remain H3's
 Earth-read topology; a grid on another body is that topology on that body, and
 `h3_crosswalk()` needs both grids on the same body.
 
-## Orientation
+## Orientation and face projection
 
 An ISEA grid carries its icosahedron's orientation in the `orientation` slot,
-`c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`). The C++ layer
-keeps one face table per orientation (`src/icosahedron.cpp`) and reads the
-active one through `ico()`. Every Rcpp entry point that reaches `ico()` takes
-`orient` as its FIRST argument and calls `activate_orientation(orient)`
-(`src/rcpp_orientation.h`) on entry; R passes `orient_arg(g)`, or
-`numeric(0)` for the default orientation that `hexify_build_icosa()` sets.
-Projection-level and test-only entry points call
-`hexify::use_default_orientation()` instead. A new entry point reaching
-`ico()` must do one of the two, or it reads whatever the previous call left.
+`c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`), and its face
+projection in the `projection` slot, `"isea"` (Snyder) or `"fuller"`. The C++
+layer keeps one face table per orientation (`src/icosahedron.cpp`) and reads
+the active one through `ico()`; `project_core()` and `face_xy_to_ll()` read
+the active projection (`active_projection()`). Every Rcpp entry point that
+reaches either takes `icosa` as its FIRST argument and calls
+`activate_icosa(icosa)` (`src/rcpp_icosa.h`) on entry; R passes
+`icosa_arg(g)` = `c(orientation, projection code)`, `numeric(0)` for the
+default orientation that `hexify_build_icosa()` sets on ISEA, or
+`projection_icosa(projection)` for the default orientation on a given
+projection. Test-only entry points call `activate_default_icosa()` instead.
+A new entry point reaching `ico()` or a projection must do one of the two, or
+it reads whatever the previous call left.
+
+Fuller (`src/projection_fuller.cpp`) is written from Gray (1995) and Crider
+(2008), DGGRID's `DgProjFuller` used as a reference only. Both projections
+share the face frame: azimuth measured from the face's first vertex, plane
+triangle of unit edge, so everything downstream of the face coordinates is
+projection-free. Fuller is not equal-area: `cell_area()` sums each cell's
+solid angle (`cpp_cell_solid_angle`).
 The cell-ID hierarchy is orientation-free, so the mixed-aperture hierarchy
 (`R/aperture_mixed_hierarchy.R`) runs in the standard orientation.
 

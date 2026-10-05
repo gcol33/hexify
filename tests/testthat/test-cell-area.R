@@ -5,17 +5,32 @@
 # ISEA cell_area()
 # =============================================================================
 
-test_that("cell_area() returns constant area for ISEA grids", {
+test_that("cell_area() gives every ISEA hexagon the same area", {
   grid <- hex_grid(area_km2 = 1000)
   cells <- lonlat_to_cell(c(0, 10, 20), c(0, 45, 80), grid)
   areas <- cell_area(cells, grid)
 
   expect_true(is.numeric(areas))
   expect_equal(length(areas), 3)
-  # All areas should be the same (equal-area property)
   expect_true(all(areas == areas[1]))
-  # Area should match grid spec
-  expect_equal(unname(areas[1]), grid@area_km2)
+  n <- hexify:::aperture_n_cells(grid@aperture, grid@resolution)
+  expect_equal(unname(areas[1]), grid@area_km2 * n / (n - 2))
+})
+
+test_that("ISEA pentagons are 5/6 of a hexagon and the cells tile the body", {
+  for (ap in list(3, 4, 7, "4/3")) {
+    for (res in 0:3) {
+      g <- hex_grid(resolution = res, aperture = ap)
+      ids <- grid_global(g)$cell_id
+      a <- cell_area(ids, g)
+      pent <- is_pentagon(ids, g)
+      expect_equal(sum(pent), 12L)
+      expect_equal(sum(a), body_surface_km2(EARTH_RADIUS_KM), tolerance = 1e-12)
+      if (res > 0) {
+        expect_equal(unname(a[pent]) / max(a), rep(5 / 6, 12))
+      }
+    }
+  }
 })
 
 test_that("cell_area() returns named vector for ISEA", {
@@ -142,7 +157,5 @@ test_that("$cell_area_km2 still works for ISEA HexData", {
 
   areas <- result$cell_area_km2
   expect_equal(length(areas), 2)
-  # ISEA: all areas should be the same
-  expect_equal(areas[1], areas[2])
-  expect_equal(areas[1], grid@area_km2)
+  expect_equal(areas, unname(cell_area(result@cell_id, grid)))
 })

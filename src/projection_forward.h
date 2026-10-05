@@ -4,6 +4,13 @@
 
 namespace hexify {
 
+// The projection between each spherical face and its plane triangle: Snyder's
+// equal-area ISEA projection or Fuller's. Every forward and inverse face
+// projection reads the active one.
+enum class FaceProjection { ISEA = 0, Fuller = 1 };
+void use_projection(FaceProjection p);
+FaceProjection active_projection();
+
 // Project a point onto a specific icosahedral face (low-level)
 // Returns (icosa_triangle_x, icosa_triangle_y) face-plane coordinates
 std::pair<double,double> project_to_face(const Geo& geo, const IcosaData& ico_data, int face);

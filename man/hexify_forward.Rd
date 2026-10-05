@@ -2,14 +2,17 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_forward}
 \alias{hexify_forward}
-\title{Forward Snyder projection}
+\title{Forward face projection}
 \usage{
-hexify_forward(lon, lat)
+hexify_forward(lon, lat, projection = c("isea", "fuller"))
 }
 \arguments{
 \item{lon}{Longitude in degrees}
 
 \item{lat}{Latitude in degrees}
+
+\item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
+projection) or \code{"fuller"} (Fuller's projection)}
 }
 \value{
 Named numeric vector: c(face, tx, ty)

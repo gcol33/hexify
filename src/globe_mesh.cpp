@@ -20,7 +20,7 @@
 #include <deque>
 #include <limits>
 #include <string>
-#include "rcpp_orientation.h"
+#include "rcpp_icosa.h"
 
 using namespace Rcpp;
 
@@ -662,8 +662,8 @@ using namespace hexify;
 // The faces of the icosahedron as one mesh, refined until no edge is longer
 // than 'max_len' (a face edge is 1). Item k is face k - 1.
 // [[Rcpp::export]]
-List cpp_globe_faces(NumericVector orient, double max_len) {
-  activate_orientation(orient);
+List cpp_globe_faces(NumericVector icosa, double max_len) {
+  activate_icosa(icosa);
   FaceMesh mesh;
   double tx[3], ty[3];
   for (int f = 0; f < 20; f++) {
@@ -676,22 +676,23 @@ List cpp_globe_faces(NumericVector orient, double max_len) {
 
 // What a renderer needs to run the forward projection and the quad layout
 // itself. 'constants': tan, cos of the edge angle, cot 30 degrees, sin, cos
-// and value of the vertex angle G, R', R'^2, the face-plane origin (x, y) and
-// the face edge, then a zero. 'faces': 16 numbers per face: the centre as a
+// and value of the vertex angle G, R', R'^2, the face-plane origin (x, y),
+// the face edge, and the face projection (0 ISEA, 1 Fuller). 'faces': 16 numbers per face: the centre as a
 // unit vector, then the two unit vectors along which the face's azimuth is
 // read (azimuth = atan2(p . b, p . a)), each followed by a zero, then the
 // face's quad, its 60-degree turns into the quad and the offset after them.
 // 'edges': 8 integers per quad of DGGRID's edge table: type 0, lone vertex,
 // up, down, right and left quads, then two zeros.
 // [[Rcpp::export]]
-List cpp_globe_projection(NumericVector orient) {
-  activate_orientation(orient);
+List cpp_globe_projection(NumericVector icosa) {
+  activate_icosa(icosa);
   const IcosaData& S = ico();
   const SnyderConstants k = snyder_constants();
   NumericVector constants = NumericVector::create(
       k.tan_el, k.cos_el, k.cot_30, k.sin_g, k.cos_g, kSnyderGAngle,
       kSnyderR1, kSnyderR1Squared, kSnyderOriginXOff, kSnyderOriginYOff,
-      kSnyderIcosaEdge, 0.0);
+      kSnyderIcosaEdge,
+      active_projection() == FaceProjection::Fuller ? 1.0 : 0.0);
 
   NumericVector faces(20 * 16);
   for (int f = 0; f < 20; f++) {
@@ -746,8 +747,8 @@ List cpp_globe_projection(NumericVector orient) {
 // are refined along great circles until no edge is longer than 'max_len'.
 // Item k is polygon k.
 // [[Rcpp::export]]
-List cpp_globe_polygons(NumericVector orient, List polygons, double max_len) {
-  activate_orientation(orient);
+List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
+  activate_icosa(icosa);
   FaceMesh mesh(/*great_circle=*/true);
   EarSlicer slicer;
   std::vector<double> gx, gy;
@@ -834,10 +835,10 @@ List cpp_globe_polygons(NumericVector orient, List polygons, double max_len) {
 // cpp_cell_surface_paths(). A point where a path crosses from one face to the
 // next has one place on both surfaces, so a path stays unbroken.
 // [[Rcpp::export]]
-NumericMatrix cpp_sphere_paths_on_faces(NumericVector orient,
+NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
                                         NumericVector lon, NumericVector lat,
                                         IntegerVector path, double max_angle) {
-  activate_orientation(orient);
+  activate_icosa(icosa);
   if (!(max_angle > 0.0)) stop("max_angle must be positive");
   R_xlen_t n = lon.size();
   std::vector<double> rows;

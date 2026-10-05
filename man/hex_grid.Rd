@@ -13,6 +13,7 @@ hex_grid(
   crs = NULL,
   radius_km = EARTH_RADIUS_KM,
   orientation = "standard",
+  projection = c("isea", "fuller"),
   region = NULL
 )
 }
@@ -56,6 +57,11 @@ name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 sphere: "standard" (default), "random", "region", "face", or
 \code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
 section. H3 fixes its own orientation, so H3 grids take only "standard".}
+
+\item{projection}{How an ISEA-family grid projects each icosahedron face
+onto its plane triangle: "isea" (default), Snyder's equal-area
+projection, or "fuller", Fuller's projection. See the Projection section.
+H3 fixes its own projection, so H3 grids take only "isea".}
 
 \item{region}{For \code{orientation = "region"} or \code{"face"}, the area
 to centre the grid
@@ -141,6 +147,25 @@ its orientation.
 \preformatted{
 alps <- hex_grid(area_km2 = 100, orientation = "region", region = c(10, 46.5))
 hex_grid(resolution = 8, orientation = c(0, 90, 0))   # vertex 0 at the pole
+}
+}
+
+\section{Projection}{
+
+
+An ISEA-family grid lays its cells out on the plane triangles of the
+icosahedron's faces, and the projection carries each spherical face onto its
+triangle. With \code{"isea"}, Snyder's icosahedral equal-area projection,
+every cell of a resolution has the same area. With \code{"fuller"}, Fuller's
+projection keeps lengths along the face edges and is not equal-area, so
+\code{area_km2} is the mean cell area and \code{cell_area()} reports each
+cell's own. These are DGGRID's \code{dggs_proj ISEA} and \code{FULLER},
+giving FULLER3H, FULLER4H, FULLER7H and FULLER43H. Cell IDs, the hierarchy
+and neighbours are the same under both projections; where each cell's centre
+and corners sit on the sphere differs.
+
+\preformatted{
+hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
 }
 }
 

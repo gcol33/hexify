@@ -41,7 +41,8 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
 #' @param metric Whether area is in metric units (km^2)
 #' @param resround How to round resolution ("nearest", "up", "down")
 #' @param aperture Aperture sequence (3, 4, or 7)
-#' @param projection Projection type (only 'ISEA' supported currently)
+#' @param projection Face projection, DGGRID's \code{dggs_proj}: 'ISEA'
+#'   (default) or 'FULLER'
 #' @param radius_km Radius of the body the grid covers, in kilometers, or a body
 #'   name such as "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
@@ -50,7 +51,7 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
 #'   \item{resolution}{Calculated resolution level}
 #'   \item{aperture}{Grid aperture (3, 4, or 7)}
 #'   \item{topology}{Grid topology ("HEXAGON")}
-#'   \item{projection}{Map projection ("ISEA")}
+#'   \item{projection}{Face projection ("ISEA" or "FULLER")}
 #'   \item{radius_km}{Radius of the body, in kilometers}
 #'   \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 #'
@@ -78,8 +79,8 @@ hexify_grid <- function(area,
     stop("Only HEXAGON topology is supported")
   }
 
-  if (projection != "ISEA") {
-    stop("Only ISEA projection is supported")
+  if (!projection %in% DGGS_PROJECTIONS) {
+    stop("projection must be 'ISEA' or 'FULLER'")
   }
 
   validate_aperture(aperture)
@@ -205,8 +206,8 @@ dgverify <- function(dggs) {
   }
   
   # Validate projection
-  if (dggs$projection != "ISEA") {
-    warning("Only ISEA projection is fully supported")
+  if (!dggs$projection %in% DGGS_PROJECTIONS) {
+    warning("Only the ISEA and FULLER projections are supported")
   }
   
   invisible(TRUE)

@@ -115,7 +115,7 @@ test_that("HexData [[ accessor works", {
   expect_equal(result[["value"]], c(1, 2))
   expect_equal(result[["cell_id"]], result@cell_id)
   expect_equal(result[["cell_cen_lon"]], result@cell_center[, "lon"])
-  expect_equal(result[["cell_area_km2"]], rep(result@grid@area_km2, 2))
+  expect_equal(result[["cell_area_km2"]], unname(cell_area(grid = result)))
 })
 
 test_that("HexData [[<- assignment works", {

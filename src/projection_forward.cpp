@@ -1,4 +1,5 @@
 #include "projection_forward.h"
+#include "projection_fuller.h"
 #include "constants.h"
 #include <cmath>
 #include <stdexcept>
@@ -13,6 +14,12 @@ static const double TAN_EL = std::tan(kSnyderElAngle);
 static const double COS_EL = std::cos(kSnyderElAngle);
 static const double SIN_G  = std::sin(kSnyderGAngle);
 static const double COS_G  = std::cos(kSnyderGAngle);
+
+static FaceProjection g_projection = FaceProjection::ISEA;
+
+void use_projection(FaceProjection p) { g_projection = p; }
+
+FaceProjection active_projection() { return g_projection; }
 
 // Maximum angular distance from face center (with small tolerance for FP)
 static const double DH_TOLERANCE = kSnyderElAngle + 1e-10;
@@ -59,6 +66,7 @@ static ProjectionWithStatus project_core(const Geo& geo, const IcosaData& ico_da
                    - face_azimuth;
   if (azimuth < 0.0) azimuth += kTwoPi;
   if (azimuth >= kTwoPi) azimuth -= kTwoPi;
+  const double face_az = azimuth;
 
   // Reduce the azimuth to its 120° sector
   const int sector = azimuth_sector(azimuth);
@@ -73,6 +81,11 @@ static ProjectionWithStatus project_core(const Geo& geo, const IcosaData& ico_da
   // The point must lie inside the sector boundary
   if (validate && z > dz_angle + 1e-7) {
     return {0.0, 0.0, false};
+  }
+
+  if (active_projection() == FaceProjection::Fuller) {
+    const auto xy = fuller_face_xy(z, face_az);
+    return {xy.first, xy.second, true};
   }
 
   // Snyder's angle 'h' - auxiliary spherical angle (Snyder notation: h)

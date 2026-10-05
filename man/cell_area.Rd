@@ -18,13 +18,23 @@ used.}
 Named numeric vector of areas in km², one per \code{cell_id}.
 }
 \description{
-Returns the area of each cell in square kilometers. For ISEA grids, all
-cells have the same area (equal-area property). For H3 grids, each cell
-has a different geodesic area depending on its location.
+Returns the area of each cell in square kilometers. On the ISEA projection
+every hexagon of a resolution has the same area and the 12 pentagons 5/6 of
+it. On the Fuller projection and for H3 grids, the area varies from cell to
+cell.
 }
 \details{
-For ISEA grids the area is constant across all cells and is read directly
-from the grid specification.
+On the ISEA projection, Snyder's equal-area projection gives every hexagon
+of a resolution the same area. Each of the 12 pentagons, centred on an
+icosahedron vertex, covers five of a hexagon's six sixths, so a grid of
+\eqn{N} cells on a body of area \eqn{S} has hexagons of area
+\eqn{S / (N - 2)} and pentagons of \eqn{(5/6) S / (N - 2)}. The grid's
+\code{area_km2} is the mean, \eqn{S / N}.
+
+On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are
+not equal-area. Each cell's area is its solid angle, summed over its true
+boundary, times the body's area over \eqn{4\pi}, so the cells of a grid add
+up to the body's area.
 
 For H3 grids the area varies from cell to cell, by about a factor of 2
 across the hexagons of a resolution. The vendored 'H3' library computes
@@ -33,7 +43,7 @@ reads on the grid's body, so a grid built with \code{radius_km} reports that
 body's areas.
 }
 \examples{
-# ISEA: constant area
+# ISEA: one area for every hexagon
 grid <- hex_grid(area_km2 = 1000)
 cells <- lonlat_to_cell(c(0, 10, 20), c(45, 50, 55), grid)
 cell_area(cells, grid)

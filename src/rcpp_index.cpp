@@ -23,7 +23,7 @@
 #include "index_z3.h"
 #include "index_z7.h"
 #include <cstdlib>
-#include "rcpp_orientation.h"
+#include "rcpp_icosa.h"
 
 using namespace Rcpp;
 
@@ -275,11 +275,11 @@ static CharacterVector lonlat_to_index_vec(const NumericVector& lon,
 }
 
 // [[Rcpp::export]]
-CharacterVector cpp_lonlat_to_index(NumericVector orient, NumericVector lon_deg,
+CharacterVector cpp_lonlat_to_index(NumericVector icosa, NumericVector lon_deg,
                                      NumericVector lat_deg,
                                      int resolution, int aperture,
                                      std::string index_type = "auto") {
-  activate_orientation(orient);
+  activate_icosa(icosa);
   if (aperture != 3 && aperture != 4 && aperture != 7) {
     Rcpp::stop("Invalid aperture. Must be 3, 4, or 7");
   }
@@ -292,9 +292,9 @@ CharacterVector cpp_lonlat_to_index(NumericVector orient, NumericVector lon_deg,
 // ============================================================================
 
 // [[Rcpp::export]]
-DataFrame cpp_index_to_lonlat(NumericVector orient, CharacterVector index, int aperture,
+DataFrame cpp_index_to_lonlat(NumericVector icosa, CharacterVector index, int aperture,
                                std::string index_type = "auto") {
-  activate_orientation(orient);
+  activate_icosa(icosa);
   R_xlen_t n = index.size();
   hexify::IndexType idx_type = parse_index_type(index_type);
 

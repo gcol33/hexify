@@ -46,9 +46,19 @@ test_that("from_dggrid warns on unsupported projection", {
     res = 5L,
     aperture = 3L,
     topology = "HEXAGON",
-    projection = "FULLER"
+    projection = "GNOMONIC"
   )
-  expect_warning(from_dggrid(dggs), "Only ISEA projection")
+  expect_warning(from_dggrid(dggs), "ISEA and FULLER")
+})
+
+test_that("from_dggrid and as_dggrid carry the FULLER projection", {
+  dggs <- list(res = 5L, aperture = 4L, topology = "HEXAGON", projection = "FULLER")
+  grid <- from_dggrid(dggs)
+  expect_equal(grid$projection, "FULLER")
+  g <- extract_grid(grid)
+  expect_equal(g@projection, "fuller")
+  expect_equal(as_dggrid(g)$projection, "FULLER")
+  expect_true(dggrid_is_compatible(dggs))
 })
 
 test_that("from_dggrid warns on unsupported topology", {
@@ -106,8 +116,8 @@ test_that("dggrid_is_compatible rejects incompatible grids (strict=TRUE)", {
   expect_error(dggrid_is_compatible("not a list"), "not compatible")
 
   # Wrong projection
-  dggs <- list(aperture = 3L, topology = "HEXAGON", projection = "FULLER")
-  expect_error(dggrid_is_compatible(dggs), "ISEA projection")
+  dggs <- list(aperture = 3L, topology = "HEXAGON", projection = "GNOMONIC")
+  expect_error(dggrid_is_compatible(dggs), "ISEA or FULLER")
 
   # Wrong topology
   dggs <- list(aperture = 3L, topology = "DIAMOND", projection = "ISEA")
@@ -119,7 +129,7 @@ test_that("dggrid_is_compatible rejects incompatible grids (strict=TRUE)", {
 })
 
 test_that("dggrid_is_compatible returns FALSE for incompatible grids (strict=FALSE)", {
-  dggs <- list(aperture = 3L, topology = "HEXAGON", projection = "FULLER")
+  dggs <- list(aperture = 3L, topology = "HEXAGON", projection = "GNOMONIC")
   expect_false(dggrid_is_compatible(dggs, strict = FALSE))
 
   dggs <- list(aperture = 3L, topology = "DIAMOND", projection = "ISEA")

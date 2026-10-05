@@ -316,7 +316,7 @@
       const buf = new ArrayBuffer(1808);
       const f = new Float32Array(buf), u = new Uint32Array(buf), i = new Int32Array(buf);
       const c = this.x.projection.constants;
-      f.set(c.slice(0, 11), 0);
+      f.set(c.slice(0, 12), 0);
       u.set([g.dim, g.index, g.c, g.n_keys], 12);
       i.set(g.generator, 16);
       u.set([g.all ? 1 : 0, g.values ? 1 : 0, g.dense ? 1 : 0], 20);

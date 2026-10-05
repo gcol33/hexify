@@ -31,16 +31,62 @@ grid_orientation <- function(x) {
   stats::setNames(as.numeric(o), names(ISEA_ORIENTATION))
 }
 
-#' The orientation argument the C++ layer takes
+#' Face projections an ISEA-family grid can be built on
 #'
-#' A grid's own orientation; \code{numeric(0)} for no grid or an H3 grid,
-#' which the C++ layer reads as the default orientation set by
-#' \code{hexify_build_icosa()}.
+#' Snyder's equal-area ISEA projection and Fuller's projection, with the codes
+#' the C++ layer reads (\code{hexify::FaceProjection}).
+#' @noRd
+FACE_PROJECTIONS <- c(isea = 0, fuller = 1)
+
+#' DGGRID's names for the face projections (\code{dggs_proj})
+#' @noRd
+DGGS_PROJECTIONS <- toupper(names(FACE_PROJECTIONS))
+
+#' Face projection of a grid
+#'
+#' A grid saved before grids carried a projection, and a legacy
+#' \code{hexify_grid} list, uses ISEA. H3 grids have none.
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @return \code{"isea"} or \code{"fuller"}, or \code{NA} for an H3 grid
+#' @noRd
+grid_projection <- function(x) {
+  if (isS4(x)) {
+    if (is_h3_grid(x)) return(NA_character_)
+    if (.hasSlot(x, "projection") && length(x@projection) == 1L) return(x@projection)
+    return("isea")
+  }
+  if (is.null(x$projection)) "isea" else tolower(x$projection)
+}
+
+#' The icosa argument for a projection on the default orientation
+#' @param projection \code{"isea"} or \code{"fuller"}, or the choices vector
+#'   of a function argument
+#' @noRd
+projection_icosa <- function(projection) {
+  projection <- match.arg(projection, names(FACE_PROJECTIONS))
+  unname(FACE_PROJECTIONS[projection])
+}
+
+#' The icosa argument of the standard ISEA orientation on the ISEA projection
+#' @noRd
+standard_icosa <- function() {
+  c(unname(ISEA_ORIENTATION), FACE_PROJECTIONS[["isea"]])
+}
+
+#' The icosa argument the C++ layer takes
+#'
+#' A grid's own orientation and face projection,
+#' \code{c(vert0_lon, vert0_lat, azimuth, projection)};
+#' \code{numeric(0)} for no grid or an H3 grid, which the C++ layer reads as
+#' the default orientation set by \code{hexify_build_icosa()} with the ISEA
+#' projection.
 #' @param g HexGridInfo object, legacy hexify_grid list, or NULL
 #' @noRd
-orient_arg <- function(g) {
+icosa_arg <- function(g) {
   if (is.null(g)) return(numeric(0))
-  unname(grid_orientation(g))
+  o <- grid_orientation(g)
+  if (length(o) == 0L) return(numeric(0))
+  c(unname(o), unname(FACE_PROJECTIONS[grid_projection(g)]))
 }
 
 #' Is this the standard ISEA orientation?

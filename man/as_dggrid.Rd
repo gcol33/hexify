@@ -18,7 +18,7 @@ A list with 'dggridR'-compatible fields:
 \item{aperture}{Grid aperture (3, 4, or 7)}
 \item{res}{Resolution level}
 \item{topology}{Grid topology ("HEXAGON")}
-\item{projection}{Map projection ('ISEA')}
+\item{projection}{Face projection ('ISEA' or 'FULLER')}
 \item{precision}{Output decimal precision (default 7)}
 }
 \description{

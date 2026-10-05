@@ -159,7 +159,7 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     view <- surface_view(resolve_center(center), camera$distance, tilt, rotation)
     paths <- grid_surface_paths(g, cells, step)
     land <- surface_land(land)
-    orient <- orient_arg(g)
+    icosa <- icosa_arg(g)
     style <- list(ocean_fill = ocean_fill, land_fill = land_fill,
                   land_border = land_border, land_lwd = land_lwd,
                   grid_border = grid_border, grid_lwd = grid_lwd,
@@ -170,22 +170,22 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     on.exit(graphics::par(old), add = TRUE)
     graphics::plot.new()
     if (surface == "net") {
-      tris <- net_triangles(orient)
+      tris <- net_triangles(icosa)
       xy <- do.call(rbind, lapply(tris, `[[`, "plane"))
       pad <- 0.02 * diff(range(xy[, 1]))
       xlim <- range(xy[, 1]) + c(-1, 1) * pad
       ylim <- range(xy[, 2]) + c(-1, 1) * pad
     } else {
-      frame <- view_frame(view, camera$fov, surface_outline(surface, view, orient))
+      frame <- view_frame(view, camera$fov, surface_outline(surface, view, icosa))
       xlim <- frame[1] + c(-1, 1) * frame[3]
       ylim <- frame[2] + c(-1, 1) * frame[3]
     }
     graphics::plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
     graphics::clip(xlim[1], xlim[2], ylim[1], ylim[2])
     switch(surface,
-      sphere = draw_sphere(paths, land, view, style, orient),
-      icosahedron = draw_icosahedron(paths, land, view, style, orient),
-      net = draw_net(paths, land, tris, style, orient)
+      sphere = draw_sphere(paths, land, view, style, icosa),
+      icosahedron = draw_icosahedron(paths, land, view, style, icosa),
+      net = draw_net(paths, land, tris, style, icosa)
     )
     if (!is.null(main)) graphics::title(main = main)
     invisible(x)
@@ -321,9 +321,9 @@ view_frame <- function(view, fov, outline = horizon_ring(view, 721L)) {
 #' camera: the icosahedron's outline runs along edges between a face that
 #' faces the camera and one that does not, so its corners are among these.
 #' @noRd
-surface_outline <- function(surface, view, orient) {
+surface_outline <- function(surface, view, icosa) {
   if (surface == "sphere") return(horizon_ring(view, 721L))
-  solid <- icosa_solid(orient)
+  solid <- icosa_solid(icosa)
   front <- icosa_front(solid, view)
   solid$vertices[unique(as.vector(solid$faces[front, ])), , drop = FALSE]
 }
@@ -511,8 +511,8 @@ shade_col <- function(col, s) {
 #' outward normal, and its 30 edges as vertex pairs with the two faces that
 #' share them.
 #' @noRd
-icosa_solid <- function(orient) {
-  s <- cpp_icosa_solid(orient)
+icosa_solid <- function(icosa) {
+  s <- cpp_icosa_solid(icosa)
   V <- s$vertices
   Fv <- s$faces
   N <- t(apply(Fv, 1, function(f) {
@@ -543,7 +543,7 @@ grid_surface_paths <- function(g, cells, step) {
   if (is_h3_grid(g)) return(h3_sphere_paths(as.character(cells), step))
   mixed <- is_mixed_aperture(g@aperture)
   cpp_cell_surface_paths(
-    orient_arg(g), as.numeric(cells), g@resolution,
+    icosa_arg(g), as.numeric(cells), g@resolution,
     if (mixed) 0L else aperture_to_int(g@aperture),
     if (mixed) grid_ap_seq(g) else integer(0),
     step
@@ -650,7 +650,7 @@ land_outline_points <- function(land) {
 
 #' Draw the grid on the sphere
 #' @noRd
-draw_sphere <- function(paths, land, view, style, orient) {
+draw_sphere <- function(paths, land, view, style, icosa) {
   rim <- horizon_ring(view)
   disc <- project_ring(rim, view)
   if (!is.null(disc)) graphics::polygon(disc, col = style$ocean_fill, border = NA)
@@ -677,7 +677,7 @@ draw_sphere <- function(paths, land, view, style, orient) {
                 front & c(front[-1], FALSE), style$grid_border, style$grid_lwd)
 
   if (style$face_edges) {
-    solid <- icosa_solid(orient)
+    solid <- icosa_solid(icosa)
     V <- solid$vertices
     arcs <- lapply(seq_len(nrow(solid$edges)), function(j) {
       a <- V[solid$edges[j, "v1"], ]
@@ -694,8 +694,8 @@ draw_sphere <- function(paths, land, view, style, orient) {
 
 #' Draw the grid on the icosahedron
 #' @noRd
-draw_icosahedron <- function(paths, land, view, style, orient) {
-  solid <- icosa_solid(orient)
+draw_icosahedron <- function(paths, land, view, style, icosa) {
+  solid <- icosa_solid(icosa)
   V <- solid$vertices
   front <- icosa_front(solid, view)
   shade <- 0.80 + 0.20 * pmax(0, drop(solid$normals %*% view$light))
@@ -706,7 +706,7 @@ draw_icosahedron <- function(paths, land, view, style, orient) {
     if (!is.null(flat)) {
       graphics::polygon(flat, col = shade_col(style$ocean_fill, shade[f]), border = NA)
     }
-    if (!is.null(land)) draw_face_land(f - 1L, tri, land, view, style, shade[f], orient)
+    if (!is.null(land)) draw_face_land(f - 1L, tri, land, view, style, shade[f], icosa)
   }
 
   face <- paths[, "face"] + 1L
@@ -732,14 +732,14 @@ draw_icosahedron <- function(paths, land, view, style, orient) {
 #' polygons (lists of rings) and the outlines (matrices), each NULL when the
 #' face holds none.
 #' @noRd
-face_land <- function(face, tri, land, orient) {
+face_land <- function(face, tri, land, icosa) {
   c3 <- colMeans(tri)
   c_ll <- c(atan2(c3[2], c3[1]), asin(c3[3] / sqrt(sum(c3^2)))) * 180 / pi
   polys <- land_in_cap(land, c_ll[1], c_ll[2], 40)
   if (length(polys) == 0L) return(list(fill = NULL, lines = NULL))
 
   to_tri <- function(r) {
-    cpp_lonlat_to_face_solid(orient, face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
+    cpp_lonlat_to_face_solid(icosa, face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
   }
   tri_ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
   tri_t <- to_tri(tri_ll)
@@ -776,9 +776,9 @@ face_land <- function(face, tri, land, orient) {
 
 #' Land and country outlines on one face of the icosahedron
 #' @noRd
-draw_face_land <- function(face, tri, land, view, style, shade, orient) {
-  part <- face_land(face, tri, land, orient)
-  to_solid <- function(m) cpp_face_tri_to_solid(orient, face, m[, 1], m[, 2])
+draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
+  part <- face_land(face, tri, land, icosa)
+  to_solid <- function(m) cpp_face_tri_to_solid(icosa, face, m[, 1], m[, 2])
   if (!is.na(style$land_fill) && !is.null(part$fill)) {
     fill_polygons(lapply(part$fill, function(p) lapply(p, to_solid)), view,
                   shade_col(style$land_fill, shade))
@@ -799,12 +799,12 @@ draw_face_land <- function(face, tri, land, view, style, shade, orient) {
 #' One entry per face (from 0): its vertices on the unit sphere and its
 #' triangle in the PLANE layout.
 #' @noRd
-net_triangles <- function(orient) {
-  solid <- icosa_solid(orient)
+net_triangles <- function(icosa) {
+  solid <- icosa_solid(icosa)
   lapply(seq_len(nrow(solid$faces)), function(f) {
     tri <- solid$vertices[solid$faces[f, ], ]
     ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
-    t <- cpp_lonlat_to_face_solid(orient, f - 1L, ll[, 1], ll[, 2])
+    t <- cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
     list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE]))
   })
 }
@@ -818,12 +818,12 @@ to_plane <- function(face, m) {
 
 #' Draw the grid on the unfolded icosahedron
 #' @noRd
-draw_net <- function(paths, land, tris, style, orient) {
+draw_net <- function(paths, land, tris, style, icosa) {
   for (t in tris) graphics::polygon(t$plane, col = style$ocean_fill, border = NA)
 
   if (!is.null(land)) {
     for (f in seq_along(tris)) {
-      part <- face_land(f - 1L, tris[[f]]$tri, land, orient)
+      part <- face_land(f - 1L, tris[[f]]$tri, land, icosa)
       if (!is.na(style$land_fill) && !is.null(part$fill)) {
         xy <- do.call(rbind, lapply(part$fill, function(p) {
           do.call(rbind, lapply(seq_along(p), function(k) {

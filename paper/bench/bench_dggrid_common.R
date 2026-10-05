@@ -30,15 +30,21 @@ run_dggrid <- function(lines) {
   invisible(out)
 }
 
-# `orient` is further DGGRID lines placing the icosahedron (see
-# orient_lines()); NULL keeps DGGRID's standard orientation.
-dggs_lines <- function(cfg, res, orient = NULL) {
+# `icosa` is further DGGRID lines placing the icosahedron (see
+# orient_lines()) and projecting its faces (see proj_lines()); NULL keeps
+# DGGRID's standard orientation, and the ISEA projection unless a dggs_proj
+# line is given.
+dggs_lines <- function(cfg, res, icosa = NULL) {
   ap_lines <- if (identical(cfg[[1]], "4/3")) {
     c("dggs_aperture_type MIXED43", sprintf("dggs_num_aperture_4_res %d", res %/% 2))
   } else cfg[[3]]
-  c("dggs_type CUSTOM", "dggs_topology HEXAGON", "dggs_proj ISEA", ap_lines,
-    sprintf("dggs_res_spec %d", res), orient)
+  proj <- if (!any(startsWith(icosa, "dggs_proj"))) proj_lines("isea")
+  c("dggs_type CUSTOM", "dggs_topology HEXAGON", proj, ap_lines,
+    sprintf("dggs_res_spec %d", res), icosa)
 }
+
+# The DGGRID line for a face projection as hex_grid() names it.
+proj_lines <- function(projection) paste("dggs_proj", toupper(projection))
 
 # DGGRID lines for an orientation c(vert0_lon, vert0_lat, azimuth), or for
 # DGGRID's own REGION_CENTER placement about c(lon, lat).
@@ -54,23 +60,23 @@ orient_lines <- function(orientation = NULL, region = NULL) {
     sprintf("dggs_vert0_azimuth %.15f", orientation[3]))
 }
 
-dggrid_seqnum <- function(cfg, res, lon, lat, orient = NULL) {
+dggrid_seqnum <- function(cfg, res, lon, lat, icosa = NULL) {
   inp <- file.path(work, "pts.txt"); outp <- file.path(work, "seq.txt")
   write.table(data.frame(sprintf("%.12f", lon), sprintf("%.12f", lat)), inp,
               row.names = FALSE, col.names = FALSE, quote = FALSE)
-  run_dggrid(c("dggrid_operation TRANSFORM_POINTS", dggs_lines(cfg, res, orient),
+  run_dggrid(c("dggrid_operation TRANSFORM_POINTS", dggs_lines(cfg, res, icosa),
                paste("input_file_name", inp), "input_address_type GEO",
                "input_delimiter \" \"", paste("output_file_name", outp),
                "output_address_type SEQNUM", "output_delimiter \" \""))
   as.numeric(readLines(outp))
 }
 
-dggrid_generate <- function(cfg, res, seqnum, cells = FALSE, orient = NULL) {
+dggrid_generate <- function(cfg, res, seqnum, cells = FALSE, icosa = NULL) {
   inp <- file.path(work, "clip.txt")
   cstem <- file.path(work, "cells"); pstem <- file.path(work, "points")
   writeLines(format(unique(seqnum), scientific = FALSE, trim = TRUE), inp)
   unlink(c(paste0(cstem, ".gen"), paste0(pstem, ".txt")))
-  run_dggrid(c("dggrid_operation GENERATE_GRID", dggs_lines(cfg, res, orient),
+  run_dggrid(c("dggrid_operation GENERATE_GRID", dggs_lines(cfg, res, icosa),
                "clip_subset_type ADDRESS_FILES", "input_address_type SEQNUM",
                paste("clip_region_files", inp),
                if (cells) c("cell_output_type AIGEN", paste("cell_output_file_name", cstem))
@@ -99,13 +105,13 @@ read_aigen <- function(path) {
   list(seqnum = ids, corners = corners)
 }
 
-dggrid_centres <- function(cfg, res, seqnum, orient = NULL) {
-  ctr <- dggrid_generate(cfg, res, seqnum, orient = orient)$centres
+dggrid_centres <- function(cfg, res, seqnum, icosa = NULL) {
+  ctr <- dggrid_generate(cfg, res, seqnum, icosa = icosa)$centres
   ctr[match(seqnum, ctr$seqnum), c("lon", "lat")]
 }
 
-dggrid_polygons <- function(cfg, res, seqnum, orient = NULL) {
-  dggrid_generate(cfg, res, seqnum, cells = TRUE, orient = orient)$cells
+dggrid_polygons <- function(cfg, res, seqnum, icosa = NULL) {
+  dggrid_generate(cfg, res, seqnum, cells = TRUE, icosa = icosa)$cells
 }
 
 # A corner further than this from every corner of the other program's cell
@@ -132,13 +138,13 @@ corner_owners <- function(p, rings) {
 # cell with a gap the corners are checked against the cell's neighbours in
 # each program: a DGGRID corner no neighbour carries leaves DGGRID's polygons
 # open there, and hexify's corners of that cell should each meet three cells.
-corner_check <- function(cfg, res, g, cells, orient = NULL) {
-  ocpp <- hexify:::orient_arg(g)
+corner_check <- function(cfg, res, g, cells, icosa = NULL) {
+  ocpp <- hexify:::icosa_arg(g)
   rings_h <- function(ids) {
     lapply(hexify:::isea_cell_rings(ids, g@resolution, g@aperture, ocpp, 0),
            function(m) m[, 1:2, drop = FALSE])
   }
-  dp <- dggrid_polygons(cfg, res, cells, orient)
+  dp <- dggrid_polygons(cfg, res, cells, icosa)
   hr <- rings_h(dp$seqnum)
   gap <- vapply(seq_along(dp$seqnum), function(i)
     corner_gap_km(dp$corners[[i]], hr[[i]]), numeric(1))
@@ -149,7 +155,7 @@ corner_check <- function(cfg, res, g, cells, orient = NULL) {
   if (length(gap_idx)) {
     nb <- hexify:::grid_neighbors_isea(dp$seqnum[gap_idx], g)
     nb_ids <- unique(unlist(nb))
-    dn <- dggrid_polygons(cfg, res, nb_ids, orient)
+    dn <- dggrid_polygons(cfg, res, nb_ids, icosa)
     dn_rings <- dn$corners[match(nb_ids, dn$seqnum)]
     hn_rings <- rings_h(nb_ids)
     for (k in seq_along(gap_idx)) {

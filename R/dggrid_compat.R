@@ -29,7 +29,7 @@
 #'   \item{aperture}{Grid aperture (3, 4, or 7)}
 #'   \item{res}{Resolution level}
 #'   \item{topology}{Grid topology ("HEXAGON")}
-#'   \item{projection}{Map projection ('ISEA')}
+#'   \item{projection}{Face projection ('ISEA' or 'FULLER')}
 #'   \item{precision}{Output decimal precision (default 7)}
 #'
 #' @family 'dggridR' compatibility
@@ -64,7 +64,7 @@ as_dggrid <- function(grid) {
     aperture = grid$aperture,
     res = grid$resolution,
     topology = "HEXAGON",
-    projection = "ISEA",
+    projection = toupper(grid_projection(grid)),
     precision = 7L
   )
 
@@ -85,7 +85,7 @@ as_dggrid <- function(grid) {
 #' @return A hexify_grid object
 #'
 #' @details
-#' Only 'ISEA' projection with HEXAGON topology is fully supported.
+#' The 'ISEA' and 'FULLER' projections with HEXAGON topology are supported.
 #' Other configurations will generate warnings.
 #'
 #' A dggs has no field for the body it is sized on, so the resolution is all
@@ -99,7 +99,7 @@ as_dggrid <- function(grid) {
 #' takes its standard ISEA value.
 #'
 #' The function validates that the 'dggridR' grid uses compatible settings:
-#' - Projection must be 'ISEA' (FULLER not supported)
+#' - Projection must be 'ISEA' or 'FULLER'
 #' - Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 #' - Aperture must be 3, 4, or 7
 #'
@@ -120,8 +120,11 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
 
   # Check compatibility
 
-  if (!is.null(dggs$projection) && dggs$projection != "ISEA") {
-    warning("Only ISEA projection is supported. Results may differ from dggridR.")
+  projection <- if (is.null(dggs$projection)) "ISEA" else dggs$projection
+  if (!projection %in% DGGS_PROJECTIONS) {
+    warning("Only the ISEA and FULLER projections are supported. ",
+            "Results may differ from dggridR.")
+    projection <- "ISEA"
   }
 
   if (!is.null(dggs$topology) && dggs$topology != "HEXAGON") {
@@ -144,7 +147,7 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
     metric = TRUE,
     resround = "nearest",
     aperture = as.integer(dggs$aperture),
-    projection = "ISEA",
+    projection = projection,
     radius_km = radius_km
   ) -> grid
 
@@ -182,8 +185,8 @@ dggrid_is_compatible <- function(dggs, strict = TRUE) {
   if (!is.list(dggs)) {
     issues <- c(issues, "dggs must be a list")
   } else {
-    if (is.null(dggs$projection) || dggs$projection != "ISEA") {
-      issues <- c(issues, "Only ISEA projection supported (not FULLER)")
+    if (is.null(dggs$projection) || !dggs$projection %in% DGGS_PROJECTIONS) {
+      issues <- c(issues, "Projection must be ISEA or FULLER")
     }
 
     if (is.null(dggs$topology) || dggs$topology != "HEXAGON") {

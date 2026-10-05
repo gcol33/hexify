@@ -13,6 +13,7 @@
 
 #include <Rcpp.h>
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <cmath>
 #include <string>
@@ -27,7 +28,7 @@
 #include "index_z7.h"
 #include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
-#include "rcpp_orientation.h"
+#include "rcpp_icosa.h"
 
 using namespace Rcpp;
 
@@ -128,9 +129,9 @@ Rcpp::List cpp_quad_ij_to_xy(int quad, double i, double j,
 }
 
 // [[Rcpp::export]]
-Rcpp::List cpp_lonlat_to_quad_ij(NumericVector orient, double lon_deg, double lat_deg,
+Rcpp::List cpp_lonlat_to_quad_ij(NumericVector icosa, double lon_deg, double lat_deg,
                                   int aperture, int resolution) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     // Step 1: Forward project to icosa triangle coordinates
     hexify::ProjectionResult fwd = hexify::snyder_forward(lon_deg, lat_deg);
 
@@ -499,10 +500,10 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_lonlat_to_cell(NumericVector orient,
+NumericVector cpp_lonlat_to_cell(NumericVector icosa,
                                  NumericVector lon, NumericVector lat,
                                   int resolution, int aperture) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (aperture != 3 && aperture != 4 && aperture != 7) {
         stop("cpp_lonlat_to_cell: aperture must be 3, 4, or 7");
     }
@@ -558,10 +559,10 @@ NumericVector cpp_lonlat_to_cell(NumericVector orient,
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_lonlat(NumericVector orient,
+DataFrame cpp_cell_to_lonlat(NumericVector icosa,
                              NumericVector cell_id, int resolution,
                               int aperture) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (aperture != 3 && aperture != 4 && aperture != 7) {
         stop("cpp_cell_to_lonlat: aperture must be 3, 4, or 7");
     }
@@ -1310,10 +1311,10 @@ double cpp_ap_seq_edge_dim(IntegerVector ap_seq_in) {
 }
 
 // [[Rcpp::export]]
-NumericVector cpp_lonlat_to_cell_seq(NumericVector orient,
+NumericVector cpp_lonlat_to_cell_seq(NumericVector icosa,
                                      NumericVector lon, NumericVector lat,
                                      IntegerVector ap_seq_in) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_lonlat_to_cell_seq");
 
     int n = lon.size();
@@ -1358,9 +1359,9 @@ NumericVector cpp_lonlat_to_cell_seq(NumericVector orient,
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_lonlat_seq(NumericVector orient,
+DataFrame cpp_cell_to_lonlat_seq(NumericVector icosa,
                                  NumericVector cell_id, IntegerVector ap_seq_in) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_lonlat_seq");
     int resolution = static_cast<int>(ap_seq.size()) - 1;
 
@@ -1557,25 +1558,83 @@ static List cell_rings(const NumericVector& cell_id, int aperture,
     return result;
 }
 
+// Solid angle of each cell, in steradians: its boundary is walked to within
+// `tolerance` of each edge's length and the polygon summed as spherical
+// triangles fanned from the mean of its boundary points (Van Oosterom and
+// Strackee's formula for a triangle's solid angle).
+static NumericVector cell_solid_angles(const NumericVector& cell_id, int aperture,
+                                       int resolution, const std::vector<int>& ap_seq,
+                                       double tolerance) {
+    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+    NumericVector out(cell_id.size());
+    std::vector<double> lon, lat;
+    std::vector<std::array<double, 3>> v;
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        const CellPlane& c = g.cells[k];
+        cell_boundary_lonlat(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
+                             c.at_vertex, tolerance, lon, lat);
+        const size_t n = lon.size();
+        v.resize(n);
+        double o[3] = {0.0, 0.0, 0.0};
+        for (size_t i = 0; i < n; i++) {
+            const double la = lat[i] * hexify::kDegToRad, lo = lon[i] * hexify::kDegToRad;
+            v[i] = {std::cos(la) * std::cos(lo), std::cos(la) * std::sin(lo), std::sin(la)};
+            for (int d = 0; d < 3; d++) o[d] += v[i][d];
+        }
+        const double on = std::sqrt(o[0] * o[0] + o[1] * o[1] + o[2] * o[2]);
+        for (int d = 0; d < 3; d++) o[d] /= on;
+        double omega = 0.0;
+        for (size_t i = 0; i < n; i++) {
+            const auto& a = v[i];
+            const auto& b = v[(i + 1) % n];
+            const double cx = a[1] * b[2] - a[2] * b[1];
+            const double cy = a[2] * b[0] - a[0] * b[2];
+            const double cz = a[0] * b[1] - a[1] * b[0];
+            const double triple = o[0] * cx + o[1] * cy + o[2] * cz;
+            const double denom = 1.0 + (o[0] * a[0] + o[1] * a[1] + o[2] * a[2])
+                                     + (a[0] * b[0] + a[1] * b[1] + a[2] * b[2])
+                                     + (b[0] * o[0] + b[1] * o[1] + b[2] * o[2]);
+            omega += 2.0 * std::atan2(triple, denom);
+        }
+        out[k] = std::fabs(omega);
+    }
+    return out;
+}
+
 // [[Rcpp::export]]
-List cpp_cell_to_corners(NumericVector orient, NumericVector cell_id,
+NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
+                                   int resolution, int aperture, double tolerance) {
+    activate_icosa(icosa);
+    return cell_solid_angles(cell_id, aperture, resolution, {}, tolerance);
+}
+
+// [[Rcpp::export]]
+NumericVector cpp_cell_solid_angle_seq(NumericVector icosa, NumericVector cell_id,
+                                       IntegerVector ap_seq_in, double tolerance) {
+    activate_icosa(icosa);
+    return cell_solid_angles(cell_id, 0, 0,
+                             as_ap_seq(ap_seq_in, "cpp_cell_solid_angle_seq"), tolerance);
+}
+
+// [[Rcpp::export]]
+List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id,
                          int resolution, int aperture, double tolerance = 0.0) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     return cell_rings(cell_id, aperture, resolution, {}, tolerance);
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_polygon(NumericVector orient, NumericVector cell_id,
+DataFrame cpp_cell_to_polygon(NumericVector icosa, NumericVector cell_id,
                               int resolution, int aperture, double tolerance = 0.0) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     return rings_to_frame(cell_id,
                           cell_rings(cell_id, aperture, resolution, {}, tolerance));
 }
 
 // [[Rcpp::export]]
-List cpp_cell_to_corners_seq(NumericVector orient, NumericVector cell_id,
+List cpp_cell_to_corners_seq(NumericVector icosa, NumericVector cell_id,
                              IntegerVector ap_seq_in, double tolerance = 0.0) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     return cell_rings(cell_id, 0, 0,
                       as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq"), tolerance);
 }
@@ -1681,11 +1740,11 @@ static std::vector<int> surface_ap_seq(const IntegerVector& ap_seq_in,
 // the crossing point appears on both faces, so the points of one face run
 // unbroken in the plane, where faces that meet on the solid may lie apart.
 // [[Rcpp::export]]
-NumericMatrix cpp_cell_surface_paths(NumericVector orient,
+NumericMatrix cpp_cell_surface_paths(NumericVector icosa,
                                      NumericVector cell_id, int resolution,
                                      int aperture, IntegerVector ap_seq_in,
                                      double step) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (!(step > 0.0)) stop("step must be positive");
     std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
     CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
@@ -1738,8 +1797,8 @@ NumericMatrix cpp_cell_surface_paths(NumericVector orient,
 // The icosahedron: its vertices on the unit sphere and the vertex indices
 // (from 1) of each face.
 // [[Rcpp::export]]
-List cpp_icosa_solid(NumericVector orient) {
-    activate_orientation(orient);
+List cpp_icosa_solid(NumericVector icosa) {
+    activate_icosa(icosa);
     const hexify::IcosaData& S = hexify::ico();
     NumericMatrix verts(12, 3);
     for (int v = 0; v < 12; v++) {
@@ -1759,10 +1818,10 @@ List cpp_icosa_solid(NumericVector orient) {
 // place on the flat face. A point off the face lands on the face's plane
 // extended, where the projection still reads it.
 // [[Rcpp::export]]
-NumericMatrix cpp_lonlat_to_face_solid(NumericVector orient,
+NumericMatrix cpp_lonlat_to_face_solid(NumericVector icosa,
                                        int face, NumericVector lon,
                                        NumericVector lat) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (face < 0 || face > 19) stop("face must be 0..19");
     R_xlen_t n = lon.size();
     NumericMatrix out(n, 5);
@@ -1782,9 +1841,9 @@ NumericMatrix cpp_lonlat_to_face_solid(NumericVector orient,
 
 // Triangle coordinates of a face as their place on the flat face.
 // [[Rcpp::export]]
-NumericMatrix cpp_face_tri_to_solid(NumericVector orient,
+NumericMatrix cpp_face_tri_to_solid(NumericVector icosa,
                                     int face, NumericVector tx, NumericVector ty) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (face < 0 || face > 19) stop("face must be 0..19");
     R_xlen_t n = tx.size();
     NumericMatrix out(n, 3);
@@ -2093,10 +2152,10 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
 }
 
 // [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_isea(NumericVector orient,
+Rcpp::List cpp_get_neighbors_isea(NumericVector icosa,
                                   Rcpp::NumericVector cell_id, int resolution,
                                    int aperture) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     if (aperture != 3 && aperture != 4 && aperture != 7) {
         Rcpp::stop("cpp_get_neighbors_isea: aperture must be 3, 4, or 7");
     }
@@ -2105,9 +2164,9 @@ Rcpp::List cpp_get_neighbors_isea(NumericVector orient,
 }
 
 // [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_isea_seq(NumericVector orient, Rcpp::NumericVector cell_id,
+Rcpp::List cpp_get_neighbors_isea_seq(NumericVector icosa, Rcpp::NumericVector cell_id,
                                        IntegerVector ap_seq_in) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_get_neighbors_isea_seq");
     return neighbors_in_frame(cell_id, quad_frame_seq(ap_seq),
                               "cpp_get_neighbors_isea_seq");
@@ -2240,9 +2299,9 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_lonlat_to_plane(NumericVector orient,
+DataFrame cpp_lonlat_to_plane(NumericVector icosa,
                               NumericVector lon, NumericVector lat) {
-    activate_orientation(orient);
+    activate_icosa(icosa);
     int n = lon.size();
     if (lat.size() != n) {
         stop("cpp_lonlat_to_plane: lon and lat must have same length");

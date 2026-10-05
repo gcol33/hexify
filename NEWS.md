@@ -12,6 +12,19 @@
 
 ## New features
 
+* `hex_grid(projection = "fuller")` builds an ISEA-family grid on Fuller's
+  projection instead of Snyder's equal-area one: DGGRID's FULLER3H,
+  FULLER4H, FULLER7H and FULLER43H, and any aperture sequence or orientation.
+  The forward projection follows Gray (1995) and the inverse solves Gray's
+  equation (39) in Crider's (2008) form by Newton's method. Cell IDs, the
+  hierarchy and neighbours are those of the ISEA grid; centres and corners
+  agree with DGGRID's FULLER output. Fuller cells are not equal-area, so
+  `area_km2` is the mean cell area and `cell_area()` returns each cell's own,
+  from its solid angle. `hexify_forward()`, `hexify_forward_to_face()` and
+  `hexify_inverse()` take `projection`, `as_dggrid()` and `from_dggrid()`
+  carry FULLER, `dggrid_is_compatible()` accepts it, and `hex_globe()` finds
+  Fuller cells per pixel as it does ISEA cells.
+
 * `hex_globe(<grid>)` draws a grid on an interactive globe, rendered on the
   graphics card through WebGPU (an htmlwidget; needs 'htmlwidgets'). Drag turns
   the globe, Shift-drag tilts and turns the view, the wheel zooms, and a
@@ -72,6 +85,13 @@
   longer reset it.
 
 ## Bug fixes
+
+* `cell_area()` on an ISEA grid returns each cell's area: every hexagon of a
+  resolution has `S / (N - 2)` of a body of area `S` split into
+  `N` cells, and each of the 12 pentagons 5/6 of that. It returned the
+  mean `S / N` for every cell. The `cell_area_km2` column of a HexData
+  object and of `as.data.frame()` reads `cell_area()`, so it carries the same
+  areas, on the Fuller projection each cell's own.
 
 * `hexify_world` is simplified as a coverage, so neighbouring countries share
   their simplified borders exactly. It was simplified country by country,

@@ -310,7 +310,7 @@ xyz_lonlat <- function(p) {
 # sphere, a third within a few cells of the face edges (which hold the quad
 # seams) and a third within a few cells of the 12 vertices.
 shader_probe <- function(n, grid) {
-  s <- hexify:::icosa_solid(hexify:::orient_arg(grid))
+  s <- hexify:::icosa_solid(hexify:::icosa_arg(grid))
   V <- unitize(s$vertices)
   E <- s$edges
   spread <- 3 * sqrt(4 * pi / grid_n_cells(grid))
@@ -363,7 +363,11 @@ GLOBE_AGREEMENT_CASES <- c(
   list(list(ap = c(4, 4, 7, 3), res = 4), list(ap = c(3, 7, 4, 7, 3, 4), res = 6)),
   list(list(ap = 3, res = 10, orient = c(-40, 20, 33)),
        list(ap = 7, res = 6, orient = c(0, 90, 0)),
-       list(ap = "4/3", res = 12, orient = c(150, -60, 200)))
+       list(ap = "4/3", res = 12, orient = c(150, -60, 200))),
+  list(list(ap = 3, res = 10, proj = "fuller"),
+       list(ap = 4, res = 8, proj = "fuller"),
+       list(ap = 7, res = 5, proj = "fuller"),
+       list(ap = "4/3", res = 12, proj = "fuller", orient = c(-40, 20, 33)))
 )
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5
@@ -373,7 +377,8 @@ test_that("the shader finds the cell lonlat_to_cell() finds", {
   set.seed(79)
   for (spec in GLOBE_AGREEMENT_CASES) {
     grid <- hex_grid(resolution = spec$res, aperture = spec$ap,
-                     orientation = if (is.null(spec$orient)) "standard" else spec$orient)
+                     orientation = if (is.null(spec$orient)) "standard" else spec$orient,
+                     projection = if (is.null(spec$proj)) "isea" else spec$proj)
     p <- shader_probe(GLOBE_AGREEMENT_N, grid)
     ll <- xyz_lonlat(p)
     ref <- lonlat_to_cell(ll[, 1], ll[, 2], grid)

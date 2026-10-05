@@ -24,6 +24,13 @@ EARTH_RADIUS_KM <- 6371.0088
 #' @noRd
 CELL_EDGE_TOLERANCE <- 1e-3
 
+#' Edge tolerance for the area of a cell on a grid that is not equal-area
+#'
+#' The cell's boundary is followed to within this fraction of each edge's
+#' length and its area summed as spherical triangles.
+#' @noRd
+CELL_AREA_TOLERANCE <- 1e-7
+
 #' Longest edge of the triangles hex_globe() draws surfaces with
 #'
 #' In triangle coordinates, where a face edge is 1. A triangle of the sphere

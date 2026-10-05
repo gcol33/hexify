@@ -21,7 +21,7 @@
 #include "projection_inverse.h"
 #include "aperture.h"
 #include "aperture_sequence.h"
-#include "rcpp_orientation.h"
+#include "rcpp_icosa.h"
 
 using namespace Rcpp;
 
@@ -173,14 +173,14 @@ List cpp_hex_corners_ap3(double i, double j, int resolution,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_cell_ap3(double lon_deg, double lat_deg,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return lonlat_to_cell_impl(lon_deg, lat_deg, 3, resolution);
 }
 
 // [[Rcpp::export]]
 NumericVector cpp_cell_to_lonlat_ap3(int face, double i, double j,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return cell_to_lonlat_impl(face, i, j, 3, resolution);
 }
 
@@ -207,14 +207,14 @@ List cpp_hex_corners_ap4(double i, double j, int resolution,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_cell_ap4(double lon_deg, double lat_deg,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return lonlat_to_cell_impl(lon_deg, lat_deg, 4, resolution);
 }
 
 // [[Rcpp::export]]
 NumericVector cpp_cell_to_lonlat_ap4(int face, double i, double j,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return cell_to_lonlat_impl(face, i, j, 4, resolution);
 }
 
@@ -241,14 +241,14 @@ List cpp_hex_corners_ap7(double i, double j, int resolution,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_cell_ap7(double lon_deg, double lat_deg,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return lonlat_to_cell_impl(lon_deg, lat_deg, 7, resolution);
 }
 
 // [[Rcpp::export]]
 NumericVector cpp_cell_to_lonlat_ap7(int face, double i, double j,
                                       int resolution) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   return cell_to_lonlat_impl(face, i, j, 7, resolution);
 }
 
@@ -298,7 +298,7 @@ List cpp_hex_corners_mixed(double i, double j,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_cell_mixed(double lon_deg, double lat_deg,
                                        IntegerVector ap_seq) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   auto fwd = hexify::snyder_forward(lon_deg, lat_deg);
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   long long i = 0, j = 0;
@@ -313,7 +313,7 @@ NumericVector cpp_lonlat_to_cell_mixed(double lon_deg, double lat_deg,
 // [[Rcpp::export]]
 NumericVector cpp_cell_to_lonlat_mixed(int face, double i, double j,
                                        IntegerVector ap_seq) {
-  hexify::use_default_orientation();
+  activate_default_icosa();
   std::vector<int> seq(ap_seq.begin(), ap_seq.end());
   double cx = 0.0, cy = 0.0;
   hexify::hex_center_mixed(checked_ij(i, "i"),

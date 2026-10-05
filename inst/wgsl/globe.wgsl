@@ -104,8 +104,8 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 //
 // The faces mesh carries each vertex's face and triangle coordinates. A
 // fragment's triangle coordinates are the interpolated ones on the flat
-// icosahedron, where they are linear, and the Snyder projection of its
-// direction on the sphere, blended by the fold. The point goes into its
+// icosahedron, where they are linear, and the face projection (Snyder's or
+// Fuller's) of its direction on the sphere, blended by the fold. The point goes into its
 // face's quad, is scaled to the substrate, and its cell is the nearest
 // multiple of the grid's generator; DGGRID's edge table moves that centre
 // into the quad that owns it, and the cell ID follows hexify's numbering.
@@ -120,7 +120,7 @@ struct Face {
 struct Grid {
   snyder0: vec4f,    // tan, cos of the edge angle, cot 30 degrees, sin G
   snyder1: vec4f,    // cos G, G, R', R'^2
-  snyder2: vec4f,    // face-plane origin x, y, face edge
+  snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller)
   frame: vec4u,      // quad side in substrate steps, sublattice index, c, number of keys
   generator: vec4i,  // generator a + b omega
   flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1
@@ -172,6 +172,37 @@ fn snyder_face(p: vec3f, f: u32) -> vec2f {
   let rho = 2.0 * r1 * tan_el / denom * half_chord;
   azt += sector * 2.0 * PI / 3.0;
   return (vec2f(rho * sin(azt), rho * cos(azt)) + grid.snyder2.xy) / grid.snyder2.z;
+}
+
+// Fuller's projection (Gray 1995) of the unit vector p onto face f, as
+// triangle coordinates. The point on the face's plane triangle is the
+// gnomonic one; its distances along the triangle's edges become arc lengths
+// a1, a2, a3 along the spherical face, and those lengths place the point on
+// the plane triangle of edge ARC.
+const FULLER_ARC = 1.10714871779409;      // atan(2)
+const FULLER_EL = 1.05146222423827;       // sqrt(8) / sqrt(5 + sqrt(5))
+const FULLER_DVE = 0.85065080835204;      // sqrt(3 + sqrt(5)) / sqrt(5 + sqrt(5))
+const FULLER_Z0 = 0.794654472291766;      // sqrt(5 + 2 sqrt(5)) / sqrt(15)
+const SQRT3 = 1.73205080756888;
+
+fn fuller_face(p: vec3f, f: u32) -> vec2f {
+  let face = grid.faces[f];
+  let s = FULLER_Z0 / dot(p, face.centre.xyz);
+  let xs = s * dot(p, face.az_b.xyz);
+  let ys = s * dot(p, face.az_a.xyz);
+  let b1 = atan((2.0 * ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let b2 = atan((xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let b3 = atan((-xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let xy = vec2f(0.5 * (b2 - b3), (2.0 * b1 - b2 - b3) / (2.0 * SQRT3));
+  return xy / FULLER_ARC + vec2f(0.5, 0.5 / SQRT3);
+}
+
+// The grid's face projection of the unit vector p onto face f.
+fn face_xy(p: vec3f, f: u32) -> vec2f {
+  if (grid.snyder2.w > 0.5) {
+    return fuller_face(p, f);
+  }
+  return snyder_face(p, f);
 }
 
 // The face whose centre is nearest: the face the point lies on.
@@ -404,7 +435,7 @@ fn vs_grid(@location(0) solid: vec3f, @location(1) sphere: vec3f,
 @fragment
 fn fs_grid(in: GridOut) -> @location(0) vec4f {
   let fold = camera.light.w;
-  let t = mix(in.tri, snyder_face(normalize(in.sphere), in.face), fold);
+  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), fold);
   let cell = cell_at(in.face, t);
   let gx = dpdx(cell.spot);
   let gy = dpdy(cell.spot);
@@ -459,7 +490,7 @@ fn fs_grid(in: GridOut) -> @location(0) vec4f {
 // index of its value plus one (0 for none), and whether a surface is there.
 @fragment
 fn fs_pick(in: GridOut) -> @location(0) vec4u {
-  let t = mix(in.tri, snyder_face(normalize(in.sphere), in.face), camera.light.w);
+  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), camera.light.w);
   let cell = cell_at(in.face, t);
   return vec4u(cell.id, u32(value_index(cell.id) + 1), 1u);
 }
@@ -476,7 +507,7 @@ fn cs_locate(@builtin(global_invocation_id) gid: vec3u) {
   }
   let p = normalize(probe[gid.x].xyz);
   let f = nearest_face(p);
-  probed[gid.x] = cell_at(f, snyder_face(p, f)).id;
+  probed[gid.x] = cell_at(f, face_xy(p, f)).id;
 }
 
 // ---------------------------------------------------------------------------

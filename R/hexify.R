@@ -197,7 +197,7 @@ hexify <- function(data,
   # -------------------------------------------------------------------------
   aperture_str <- hex_grid_obj@aperture
   res <- hex_grid_obj@resolution
-  orient <- orient_arg(hex_grid_obj)
+  icosa <- icosa_arg(hex_grid_obj)
 
   if (is_h3_grid(hex_grid_obj)) {
     # H3 path: use native C backend
@@ -206,16 +206,16 @@ hexify <- function(data,
     centers <- list(lon_deg = center_df$lon, lat_deg = center_df$lat)
   } else if (is_mixed_aperture(aperture_str)) {
     ap_seq <- parse_aperture_seq(aperture_str, res)
-    cell_ids <- cpp_lonlat_to_cell_seq(orient, lon_vec, lat_vec, ap_seq)
-    centers <- cpp_cell_to_lonlat_seq(orient, cell_ids, ap_seq)
+    cell_ids <- cpp_lonlat_to_cell_seq(icosa, lon_vec, lat_vec, ap_seq)
+    centers <- cpp_cell_to_lonlat_seq(icosa, cell_ids, ap_seq)
   } else {
     aperture_num <- match(aperture_str, c("3", "4", "7"))
     if (is.na(aperture_num)) {
       stop(sprintf("unexpected aperture value '%s' in grid object", aperture_str))
     }
     aperture_num <- c(3L, 4L, 7L)[aperture_num]
-    cell_ids <- cpp_lonlat_to_cell(orient, lon_vec, lat_vec, res, aperture_num)
-    centers <- cpp_cell_to_lonlat(orient, cell_ids, res, aperture_num)
+    cell_ids <- cpp_lonlat_to_cell(icosa, lon_vec, lat_vec, res, aperture_num)
+    centers <- cpp_cell_to_lonlat(icosa, cell_ids, res, aperture_num)
   }
 
   # Build cell center matrix

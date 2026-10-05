@@ -4,7 +4,7 @@
 \alias{hexify_forward_to_face}
 \title{Forward projection to specific face}
 \usage{
-hexify_forward_to_face(face, lon, lat)
+hexify_forward_to_face(face, lon, lat, projection = c("isea", "fuller"))
 }
 \arguments{
 \item{face}{Face index (0-19)}
@@ -12,6 +12,9 @@ hexify_forward_to_face(face, lon, lat)
 \item{lon}{Longitude in degrees}
 
 \item{lat}{Latitude in degrees}
+
+\item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
+projection) or \code{"fuller"} (Fuller's projection)}
 }
 \value{
 Named numeric vector: c(icosa_triangle_x, icosa_triangle_y)
