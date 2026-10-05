@@ -40,7 +40,8 @@ public:
   void refine(double max_len);
 
   // The mesh for R: solid and sphere positions (x, y, z per vertex), the
-  // vertex indices of each triangle (from 0) and the item of each vertex.
+  // vertex indices of each triangle (from 0), the item of each vertex and its
+  // triangle coordinates (tx, ty per vertex) on its face.
   Rcpp::List to_list() const;
 
   size_t n_vertices() const { return item_.size(); }
@@ -68,14 +69,5 @@ private:
 // The corners of a face in its triangle coordinates, in the order of the
 // face's vertices.
 void face_tri_corners(int face, double tx[3], double ty[3]);
-
-// The point (tx, ty) of face 'from' in the triangle coordinates of face
-// 'to', read through the projection of 'to' extended past its edges.
-void face_tri_to_face(int from, double tx, double ty, int to,
-                      double& out_x, double& out_y);
-
-// Cut a polygon given in a face's triangle coordinates to that triangle
-// (Sutherland-Hodgman clipping against its three edges).
-void clip_to_face_tri(int face, std::vector<double>& x, std::vector<double>& y);
 
 } // namespace hexify

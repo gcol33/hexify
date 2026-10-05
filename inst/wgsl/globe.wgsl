@@ -99,6 +99,387 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 }
 
 // ---------------------------------------------------------------------------
+// ISEA cells, found per pixel
+// ---------------------------------------------------------------------------
+//
+// The faces mesh carries each vertex's face and triangle coordinates. A
+// fragment's triangle coordinates are the interpolated ones on the flat
+// icosahedron, where they are linear, and the Snyder projection of its
+// direction on the sphere, blended by the fold. The point goes into its
+// face's quad, is scaled to the substrate, and its cell is the nearest
+// multiple of the grid's generator; DGGRID's edge table moves that centre
+// into the quad that owns it, and the cell ID follows hexify's numbering.
+
+struct Face {
+  centre: vec4f,     // xyz: face centre on the unit sphere
+  az_a: vec4f,       // the face's azimuth is atan2(p . az_b, p . az_a)
+  az_b: vec4f,
+  quad: vec4f,       // quad, 60-degree turns into it, offset x, offset y
+};
+
+struct Grid {
+  snyder0: vec4f,    // tan, cos of the edge angle, cot 30 degrees, sin G
+  snyder1: vec4f,    // cos G, G, R', R'^2
+  snyder2: vec4f,    // face-plane origin x, y, face edge
+  frame: vec4u,      // quad side in substrate steps, sublattice index, c, number of keys
+  generator: vec4i,  // generator a + b omega
+  flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1
+  per_quad: vec4u,   // cells per quad: high and low 32 bits
+  na_fill: vec4f,    // fill of a cell whose value is NA
+  ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
+  faces: array<Face, 20>,
+  edges: array<vec4i, 24>,   // per quad: type 0, lone vertex, up, down; right, left
+};
+
+@group(1) @binding(4) var<uniform> grid: Grid;
+@group(1) @binding(5) var<storage, read> keys: array<vec2u>;
+
+const PI = 3.14159265358979;
+const SIN60 = 0.866025403784439;
+
+// Snyder's forward projection of the unit vector p onto face f, as triangle
+// coordinates (a face edge is 1). sin(z / 2) is half the chord from the face
+// centre, which keeps precision near the centre.
+fn snyder_face(p: vec3f, f: u32) -> vec2f {
+  let face = grid.faces[f];
+  let tan_el = grid.snyder0.x;
+  let cos_el = grid.snyder0.y;
+  let cot30 = grid.snyder0.z;
+  let sin_g = grid.snyder0.w;
+  let cos_g = grid.snyder1.x;
+  let g = grid.snyder1.y;
+  let r1 = grid.snyder1.z;
+  let r1sq = grid.snyder1.w;
+  let half_chord = 0.5 * length(p - face.centre.xyz);
+
+  var az = atan2(dot(p, face.az_b.xyz), dot(p, face.az_a.xyz));
+  if (az < 0.0) {
+    az += 2.0 * PI;
+  }
+  var sector = 0.0;
+  if (az >= 4.0 * PI / 3.0) {
+    sector = 2.0;
+  } else if (az >= 2.0 * PI / 3.0) {
+    sector = 1.0;
+  }
+  az -= sector * 2.0 * PI / 3.0;
+
+  let dz = atan2(tan_el, cos(az) + cot30 * sin(az));
+  let h = acos(clamp(sin(az) * sin_g * cos_el - cos(az) * cos_g, -1.0, 1.0));
+  let ag = az + g + h - PI;
+  var azt = atan2(2.0 * ag, r1sq * tan_el * tan_el - 2.0 * ag * cot30);
+  let denom = 2.0 * (cos(azt) + cot30 * sin(azt)) * sin(0.5 * dz);
+  let rho = 2.0 * r1 * tan_el / denom * half_chord;
+  azt += sector * 2.0 * PI / 3.0;
+  return (vec2f(rho * sin(azt), rho * cos(azt)) + grid.snyder2.xy) / grid.snyder2.z;
+}
+
+// The face whose centre is nearest: the face the point lies on.
+fn nearest_face(p: vec3f) -> u32 {
+  var best = 0u;
+  var best_dot = -2.0;
+  for (var f = 0u; f < 20u; f++) {
+    let d = dot(p, grid.faces[f].centre.xyz);
+    if (d > best_dot) {
+      best_dot = d;
+      best = f;
+    }
+  }
+  return best;
+}
+
+// 64-bit unsigned arithmetic on (high, low) pairs.
+fn mul_wide(a: u32, b: u32) -> vec2u {
+  let a0 = a & 0xffffu;
+  let a1 = a >> 16u;
+  let b0 = b & 0xffffu;
+  let b1 = b >> 16u;
+  let p00 = a0 * b0;
+  let p01 = a0 * b1;
+  let p10 = a1 * b0;
+  let mid = (p00 >> 16u) + (p01 & 0xffffu) + (p10 & 0xffffu);
+  return vec2u(a1 * b1 + (p01 >> 16u) + (p10 >> 16u) + (mid >> 16u),
+               (p00 & 0xffffu) | (mid << 16u));
+}
+
+fn add64(a: vec2u, b: vec2u) -> vec2u {
+  let lo = a.y + b.y;
+  return vec2u(a.x + b.x + select(0u, 1u, lo < a.y), lo);
+}
+
+// The point (i, j) of a quad that has stepped outside it, in the quad that
+// owns it (DgQ2DDtoIConverter's reassignment through the edge table).
+fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
+  var quad = i32(quad_in);
+  var i = i_in;
+  var j = j_in;
+  let under_i = i < 0;
+  let under_j = j < 0;
+  let over_i = i >= top;
+  let over_j = j >= top;
+  let n_over = u32(under_i) + u32(under_j) + u32(over_i) + u32(over_j);
+  if (n_over == 0u) {
+    return vec3i(quad, i, j);
+  }
+  let e0 = grid.edges[2 * quad];       // type 0, lone vertex, up, down
+  let e1 = grid.edges[2 * quad + 1];   // right, left
+  let type0 = e0.x == 1;
+  if (over_i && over_j) {
+    quad = select(e1.x, e0.z, type0);
+    i = 0;
+    j = 0;
+  } else if (n_over > 1u) {
+  } else if (under_i) {
+    quad = e1.y;
+    if (type0) {
+      let ni = top - j + i;
+      j = top + i;
+      i = ni;
+    } else {
+      i = top + i;
+    }
+  } else if (under_j) {
+    quad = e0.w;
+    if (type0) {
+      j = top + j;
+    } else {
+      let ni = top + j;
+      j = (top - i) + j;
+      i = ni;
+    }
+  } else if (over_i) {
+    if (type0) {
+      quad = e1.x;
+      i = i - top;
+    } else if (j == 0) {
+      quad = e0.y;
+      i = 0;
+    } else {
+      quad = e1.x;
+      let over = i - top;
+      i = (top - j) + over;
+      j = over;
+    }
+  } else {
+    if (!type0) {
+      quad = e0.z;
+      j = j - top;
+    } else if (i == 0) {
+      quad = e0.y;
+      j = 0;
+    } else {
+      quad = e0.z;
+      let over = j - top;
+      j = top - i + over;
+      i = over;
+    }
+  }
+  return vec3i(quad, i, j);
+}
+
+struct Cell {
+  id: vec2u,         // cell ID, high and low 32 bits
+  spot: vec2f,       // the point in the plane of the cell lattice, centres 1 apart
+  offset: vec2f,     // the point from its cell's centre, in the same plane
+};
+
+// The cell at triangle coordinates t of face f.
+fn cell_at(f: u32, t: vec2f) -> Cell {
+  let place = grid.faces[f].quad;
+  let turn = u32(place.y) % 6u;
+  let cs = array<vec2f, 6>(vec2f(1.0, 0.0), vec2f(0.5, SIN60), vec2f(-0.5, SIN60),
+                           vec2f(-1.0, 0.0), vec2f(-0.5, -SIN60), vec2f(0.5, -SIN60))[turn];
+  let q = vec2f(cs.x * t.x - cs.y * t.y, cs.y * t.x + cs.x * t.y) - place.zw;
+
+  // The substrate point as a + b omega, divided by the generator g: times
+  // conj(g) = (ga - gb) - gb omega, over the norm N, with omega^2 = -1 - omega.
+  let dim = grid.frame.x;
+  let n = grid.frame.y;
+  let p = q * f32(dim);
+  let b = p.y / SIN60;
+  let a = p.x + 0.5 * b;
+  let ga = grid.generator.x;
+  let gb = grid.generator.y;
+  let ca = f32(ga - gb);
+  let cb = f32(-gb);
+  let za = (a * ca - b * cb) / f32(n);
+  let zb = (a * cb + b * ca - b * cb) / f32(n);
+
+  // Nearest Eisenstein integer, by cube rounding the axial coordinates
+  // (x, y, -x - y) of the 60-degree basis 1, 1 + omega: za + zb omega =
+  // (za - zb) + zb (1 + omega).
+  let x = za - zb;
+  let y = zb;
+  let z = -x - y;
+  var rx = round(x);
+  var ry = round(y);
+  let rz = round(z);
+  let dx = abs(rx - x);
+  let dy = abs(ry - y);
+  let dz = abs(rz - z);
+  if (dx > dy && dx > dz) {
+    rx = -ry - rz;
+  } else if (dy > dz) {
+    ry = -rx - rz;
+  }
+  let qa = i32(rx + ry);
+  let qb = i32(ry);
+
+  var cell: Cell;
+  cell.spot = vec2f(za - 0.5 * zb, SIN60 * zb);
+  let la = za - f32(qa);
+  let lb = zb - f32(qb);
+  cell.offset = vec2f(la - 0.5 * lb, SIN60 * lb);
+
+  // The centre g * q in the substrate, in the quad that owns it.
+  let ci = ga * qa - gb * qb;
+  let cj = ga * qb + gb * qa - gb * qb;
+  let own = canonicalize(i32(dim), u32(place.x), ci, cj);
+  if (own.x == 0) {
+    cell.id = vec2u(0u, 1u);
+    return cell;
+  }
+  let u = u32(own.y);
+  let v = u32(own.z);
+  let residue = (grid.frame.z * u) % n;
+  let within = add64(mul_wide(u, dim / n), vec2u(0u, (v - residue) / n));
+  let k = u32(own.x) - 1u;
+  let before = vec2u(grid.per_quad.x * k + mul_wide(grid.per_quad.y, k).x,
+                     mul_wide(grid.per_quad.y, k).y);
+  cell.id = add64(add64(before, within), vec2u(0u, 2u));
+  return cell;
+}
+
+// Index of the cell's value: its ID - 1 when every cell has one, else its
+// place among the keys (sorted cell IDs); -1 for a cell not given.
+fn value_index(id: vec2u) -> i32 {
+  if (grid.flags.z == 1u) {
+    return select(-1, i32(id.y) - 1, id.x == 0u);
+  }
+  if (grid.frame.w == 0u) {
+    return -1;
+  }
+  return key_index(id);
+}
+
+fn key_index(id: vec2u) -> i32 {
+  var lo = 0u;
+  var hi = grid.frame.w;
+  while (lo < hi) {
+    let mid = (lo + hi) / 2u;
+    let k = keys[mid];
+    if (k.x < id.x || (k.x == id.x && k.y < id.y)) {
+      lo = mid + 1u;
+    } else {
+      hi = mid;
+    }
+  }
+  if (lo < grid.frame.w && all(keys[lo] == id)) {
+    return i32(lo);
+  }
+  return -1;
+}
+
+struct GridOut {
+  @builtin(position) position: vec4f,
+  @location(0) world: vec3f,
+  @location(1) sphere: vec3f,
+  @location(2) tri: vec2f,
+  @location(3) @interpolate(flat) face: u32,
+};
+
+@vertex
+fn vs_grid(@location(0) solid: vec3f, @location(1) sphere: vec3f,
+           @location(2) face: u32, @location(3) tri: vec2f) -> GridOut {
+  var out: GridOut;
+  let p = fold_point(solid, sphere);
+  out.position = to_clip(p);
+  out.world = p;
+  out.sphere = sphere;
+  out.tri = tri;
+  out.face = face;
+  return out;
+}
+
+@fragment
+fn fs_grid(in: GridOut) -> @location(0) vec4f {
+  let fold = camera.light.w;
+  let t = mix(in.tri, snyder_face(normalize(in.sphere), in.face), fold);
+  let cell = cell_at(in.face, t);
+  let gx = dpdx(cell.spot);
+  let gy = dpdy(cell.spot);
+  var normal = normalize(cross(dpdx(in.world), dpdy(in.world)));
+
+  // A cell is drawn when the grid is drawn whole or the cell is given. NaN
+  // stands for NA.
+  var fill = vec4f(0.0);
+  let k = value_index(cell.id);
+  let drawn = grid.flags.x == 1u || k >= 0;
+  if (k >= 0 && grid.flags.y == 1u) {
+    let v = values[k];
+    if ((bitcast<u32>(v) & 0x7fffffffu) > 0x7f800000u) {
+      fill = grid.na_fill;
+    } else {
+      let pos = clamp((v - grid.ramp_map.x) * grid.ramp_map.y + grid.ramp_map.z, 0.0, 1.0);
+      let n_ramp = arrayLength(&ramp);
+      fill = ramp[min(u32(round(pos * f32(n_ramp - 1u))), n_ramp - 1u)];
+    }
+  }
+  if (!drawn) {
+    discard;
+  }
+
+  if (layer.params.z > 0.5) {
+    if (dot(normal, in.world) < 0.0) {
+      normal = -normal;
+    }
+    let shade = 0.80 + 0.20 * max(0.0, dot(normal, camera.light.xyz));
+    fill = vec4f(fill.rgb * mix(shade, 1.0, fold), fill.a);
+  }
+
+  // Distance to the cell's edge in pixels: the edges lie halfway to the six
+  // neighbours, along three directions of the lattice plane.
+  let dirs = array<vec2f, 3>(vec2f(1.0, 0.0), vec2f(-0.5, SIN60), vec2f(-0.5, -SIN60));
+  var edge_px = 1e9;
+  for (var e = 0; e < 3; e++) {
+    let d = dirs[e];
+    let per_px = length(vec2f(dot(gx, d), dot(gy, d)));
+    edge_px = min(edge_px, (0.5 - abs(dot(cell.offset, d))) / max(per_px, 1e-12));
+  }
+  let cell_px = 1.0 / max(max(length(gx), length(gy)), 1e-12);
+  let width = layer.params.y;
+  let line = layer.color.a * clamp(0.5 * width + 0.5 - edge_px, 0.0, 1.0) *
+             smoothstep(3.0, 10.0, cell_px);
+
+  let a = line + fill.a * (1.0 - line);
+  return vec4f(layer.color.rgb * line + fill.rgb * fill.a * (1.0 - line), a);
+}
+
+// The cell under one pixel, for the readout under the pointer: its ID, the
+// index of its value plus one (0 for none), and whether a surface is there.
+@fragment
+fn fs_pick(in: GridOut) -> @location(0) vec4u {
+  let t = mix(in.tri, snyder_face(normalize(in.sphere), in.face), camera.light.w);
+  let cell = cell_at(in.face, t);
+  return vec4u(cell.id, u32(value_index(cell.id) + 1), 1u);
+}
+
+// The cell of every probe point (a direction in xyz), for testing the lookup
+// against the C++ one.
+@group(2) @binding(0) var<storage, read> probe: array<vec4f>;
+@group(2) @binding(1) var<storage, read_write> probed: array<vec2u>;
+
+@compute @workgroup_size(64)
+fn cs_locate(@builtin(global_invocation_id) gid: vec3u) {
+  if (gid.x >= arrayLength(&probe)) {
+    return;
+  }
+  let p = normalize(probe[gid.x].xyz);
+  let f = nearest_face(p);
+  probed[gid.x] = cell_at(f, snyder_face(p, f)).id;
+}
+
+// ---------------------------------------------------------------------------
 // Lines: cell boundaries, coastlines and face edges
 // ---------------------------------------------------------------------------
 //

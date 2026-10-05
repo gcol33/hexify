@@ -5,6 +5,10 @@ cpp_globe_faces <- function(max_len) {
     .Call(`_hexify_cpp_globe_faces`, max_len)
 }
 
+cpp_globe_projection <- function() {
+    .Call(`_hexify_cpp_globe_projection`)
+}
+
 cpp_globe_polygons <- function(polygons, max_len) {
     .Call(`_hexify_cpp_globe_polygons`, polygons, max_len)
 }
@@ -225,10 +229,6 @@ cpp_cell_surface_paths <- function(cell_id, resolution, aperture, ap_seq_in, ste
     .Call(`_hexify_cpp_cell_surface_paths`, cell_id, resolution, aperture, ap_seq_in, step)
 }
 
-cpp_cell_surface_mesh <- function(cell_id, resolution, aperture, ap_seq_in, max_len) {
-    .Call(`_hexify_cpp_cell_surface_mesh`, cell_id, resolution, aperture, ap_seq_in, max_len)
-}
-
 cpp_icosa_solid <- function() {
     .Call(`_hexify_cpp_icosa_solid`)
 }
@@ -239,6 +239,10 @@ cpp_lonlat_to_face_solid <- function(face, lon, lat) {
 
 cpp_face_tri_to_solid <- function(face, tx, ty) {
     .Call(`_hexify_cpp_face_tri_to_solid`, face, tx, ty)
+}
+
+cpp_globe_frame <- function(resolution, aperture, ap_seq_in) {
+    .Call(`_hexify_cpp_globe_frame`, resolution, aperture, ap_seq_in)
 }
 
 cpp_cell_lattice_generator_seq <- function(ap_seq_in) {

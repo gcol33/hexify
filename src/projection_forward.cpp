@@ -167,4 +167,8 @@ double snyder_get_face_azimuth_offset(int face) {
   return S.face_azimuth_offset[face];
 }
 
+SnyderConstants snyder_constants() {
+  return {TAN_EL, COS_EL, COT_30, SIN_G, COS_G};
+}
+
 } // namespace hexify

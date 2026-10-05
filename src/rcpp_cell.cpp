@@ -27,7 +27,6 @@
 #include "index_z7.h"
 #include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
-#include "globe_mesh.h"
 
 using namespace Rcpp;
 
@@ -1638,52 +1637,6 @@ NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
     return out;
 }
 
-// The cells as filled surfaces on the icosahedron and the sphere: one mesh,
-// item k being cell_id[k]. A cell's part on one face is the face triangle cut
-// by the cell. The cell's boundary is read in that face's triangle
-// coordinates, its pieces on other faces through the projection of the face
-// extended, and clipped to the triangle: the part is convex and inside the
-// face its boundary is the cell's own, so it is exact. Triangles are refined
-// until no edge is longer than 'max_len' (a face edge is 1), so the sphere's
-// curvature shows.
-// [[Rcpp::export]]
-List cpp_cell_surface_mesh(NumericVector cell_id, int resolution, int aperture,
-                           IntegerVector ap_seq_in, double max_len) {
-    std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_mesh");
-    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
-
-    hexify::FaceMesh mesh;
-    std::vector<PlaneEdge> edges;
-    std::vector<FacePiece> pieces;
-    std::vector<int> faces;
-    std::vector<double> tx, ty;
-
-    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-        cell_face_pieces(g, g.cells[k], edges, pieces);
-        int item = static_cast<int>(k + 1);
-        faces.clear();
-        for (const FacePiece& p : pieces) {
-            if (std::find(faces.begin(), faces.end(), p.face) == faces.end()) {
-                faces.push_back(p.face);
-            }
-        }
-        for (int face : faces) {
-            tx.clear();
-            ty.clear();
-            for (const FacePiece& p : pieces) {
-                double x = p.ax, y = p.ay;
-                if (p.face != face) hexify::face_tri_to_face(p.face, x, y, face, x, y);
-                tx.push_back(x);
-                ty.push_back(y);
-            }
-            if (faces.size() > 1) hexify::clip_to_face_tri(face, tx, ty);
-            mesh.convex_polygon(item, face, tx, ty);
-        }
-    }
-    mesh.refine(max_len);
-    return mesh.to_list();
-}
-
 // The icosahedron: its vertices on the unit sphere and the vertex indices
 // (from 1) of each face.
 // [[Rcpp::export]]
@@ -1812,6 +1765,40 @@ static QuadFrame quad_frame_seq(const std::vector<int>& ap_seq) {
     f.generator.a = form.m + form.n;
     f.generator.b = form.n;
     return f;
+}
+
+// What a renderer needs to find the cell of a quad-plane point by itself.
+// Scaled by 'dim', the quad's side in substrate steps, a point's nearest cell
+// centre is its nearest multiple of the generator a + b*omega (omega =
+// exp(2*pi*i/3)) in the substrate's (i, j); the edge table moves that centre
+// into the quad that owns it, and the cell ID counts 'per_quad' cells per
+// quad, numbered within a quad as cell_index_2d() numbers them on the
+// sublattice j = c * i (mod index). Aperture 7 stores surrogates but numbers
+// its cells by their substrate centres, which is the same count.
+// [[Rcpp::export]]
+List cpp_globe_frame(int resolution, int aperture, IntegerVector ap_seq_in) {
+    QuadFrame f;
+    hexify::HexGridForm form;
+    if (ap_seq_in.size() > 0) {
+        std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_globe_frame");
+        f = quad_frame_seq(ap_seq);
+        form = hexify::hex_form_sequence(ap_seq);
+    } else {
+        if (aperture != 3 && aperture != 4 && aperture != 7) {
+            stop("cpp_globe_frame: aperture must be 3, 4, or 7");
+        }
+        f = quad_frame_pure(aperture, resolution);
+        form = hexify::hex_form_pure(aperture, resolution);
+    }
+    SubstrateLattice lattice = sublattice_of(form);
+    return List::create(
+        _["dim"] = static_cast<double>(f.edge),
+        _["index"] = static_cast<double>(lattice.index),
+        _["c"] = static_cast<double>(lattice.c),
+        _["generator"] = NumericVector::create(
+            static_cast<double>(form.m + form.n), static_cast<double>(form.n)),
+        _["per_quad"] = static_cast<double>(f.offsetPerQuad),
+        _["n_cells"] = static_cast<double>(f.nCells));
 }
 
 static bool frame_in_quad(const QuadFrame& f, long long i, long long j) {

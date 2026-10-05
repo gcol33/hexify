@@ -57,6 +57,16 @@ namespace hexify {
 void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
                           int& out_quad, double& out_quad_x, double& out_quad_y);
 
+// How icosa_tri_to_quad_xy() places a face in its quad: the quad, the number
+// of 60-degree counter-clockwise turns, and the offset subtracted after them.
+void face_quad_placement(int face, int& quad, int& rotations,
+                         double& offset_x, double& offset_y);
+
+// DGGRID's edge table for a quad: whether it is an upper (type 0) quad, the
+// vertex quad of its lone vertex, and the quads across its four edges.
+void quad_edge_table(int quad, bool& is_type0, int& lone_vert,
+                     int& up, int& down, int& right, int& left);
+
 // Convert from quad XY to quad IJ (cell indices)
 // This quantizes continuous coords to integer cell indices
 //

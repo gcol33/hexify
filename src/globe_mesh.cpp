@@ -10,6 +10,7 @@
 
 #include "globe_mesh.h"
 #include "constants.h"
+#include "coordinate_transforms.h"
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include <algorithm>
@@ -167,9 +168,14 @@ List FaceMesh::to_list() const {
     for (int r = 0; r < 3; r++) sphere[3 * k + r] = p[r];
     item[k] = item_[k];
   }
+  NumericVector tri(2 * n);
+  for (size_t k = 0; k < n; k++) {
+    tri[2 * k] = tx_[k];
+    tri[2 * k + 1] = ty_[k];
+  }
   IntegerVector index(tri_.begin(), tri_.end());
   return List::create(_["solid"] = solid, _["sphere"] = sphere,
-                      _["index"] = index, _["item"] = item);
+                      _["index"] = index, _["item"] = item, _["tri"] = tri);
 }
 
 void face_tri_corners(int face, double tx[3], double ty[3]) {
@@ -178,49 +184,6 @@ void face_tri_corners(int face, double tx[3], double ty[3]) {
     const auto t = project_to_face(S.verts[S.face_verts[face][k]], S, face);
     tx[k] = t.first;
     ty[k] = t.second;
-  }
-}
-
-void face_tri_to_face(int from, double tx, double ty, int to,
-                      double& out_x, double& out_y) {
-  double p[3];
-  face_tri_to_sphere(from, tx, ty, p);
-  Geo g(std::atan2(p[1], p[0]), std::atan2(p[2], std::hypot(p[0], p[1])));
-  const auto t = project_to_face(g, ico(), to);
-  out_x = t.first;
-  out_y = t.second;
-}
-
-void clip_to_face_tri(int face, std::vector<double>& x, std::vector<double>& y) {
-  double cx[3], cy[3];
-  face_tri_corners(face, cx, cy);
-  std::vector<double> ox, oy;
-  for (int e = 0; e < 3 && !x.empty(); e++) {
-    double ax = cx[e], ay = cy[e];
-    double ex = cx[(e + 1) % 3] - ax, ey = cy[(e + 1) % 3] - ay;
-    // Signed distance to the edge's line, positive on the third corner's side.
-    double side = ex * (cy[(e + 2) % 3] - ay) - ey * (cx[(e + 2) % 3] - ax) > 0 ? 1.0 : -1.0;
-    auto dist = [&](double px, double py) {
-      return side * (ex * (py - ay) - ey * (px - ax));
-    };
-    ox.clear();
-    oy.clear();
-    size_t n = x.size();
-    for (size_t i = 0; i < n; i++) {
-      size_t j = (i + 1) % n;
-      double di = dist(x[i], y[i]), dj = dist(x[j], y[j]);
-      if (di >= 0.0) {
-        ox.push_back(x[i]);
-        oy.push_back(y[i]);
-      }
-      if ((di >= 0.0) != (dj >= 0.0)) {
-        double s = di / (di - dj);
-        ox.push_back(x[i] + s * (x[j] - x[i]));
-        oy.push_back(y[i] + s * (y[j] - y[i]));
-      }
-    }
-    x.swap(ox);
-    y.swap(oy);
   }
 }
 
@@ -707,6 +670,69 @@ List cpp_globe_faces(double max_len) {
   }
   mesh.refine(max_len);
   return mesh.to_list();
+}
+
+// What a renderer needs to run the forward projection and the quad layout
+// itself. 'constants': tan, cos of the edge angle, cot 30 degrees, sin, cos
+// and value of the vertex angle G, R', R'^2, the face-plane origin (x, y) and
+// the face edge, then a zero. 'faces': 16 numbers per face: the centre as a
+// unit vector, then the two unit vectors along which the face's azimuth is
+// read (azimuth = atan2(p . b, p . a)), each followed by a zero, then the
+// face's quad, its 60-degree turns into the quad and the offset after them.
+// 'edges': 8 integers per quad of DGGRID's edge table: type 0, lone vertex,
+// up, down, right and left quads, then two zeros.
+// [[Rcpp::export]]
+List cpp_globe_projection() {
+  const IcosaData& S = ico();
+  const SnyderConstants k = snyder_constants();
+  NumericVector constants = NumericVector::create(
+      k.tan_el, k.cos_el, k.cot_30, k.sin_g, k.cos_g, kSnyderGAngle,
+      kSnyderR1, kSnyderR1Squared, kSnyderOriginXOff, kSnyderOriginYOff,
+      kSnyderIcosaEdge, 0.0);
+
+  NumericVector faces(20 * 16);
+  for (int f = 0; f < 20; f++) {
+    const double lon = S.centers[f].lon, lat = S.centers[f].lat;
+    const double centre[3] = {std::cos(lat) * std::cos(lon),
+                              std::cos(lat) * std::sin(lon), std::sin(lat)};
+    const double north[3] = {-std::sin(lat) * std::cos(lon),
+                             -std::sin(lat) * std::sin(lon), std::cos(lat)};
+    const double east[3] = {-std::sin(lon), std::cos(lon), 0.0};
+    // project_core() reads the azimuth from north towards east and turns it
+    // back by the face's offset.
+    const double ca = std::cos(S.face_azimuth_offset[f]);
+    const double sa = std::sin(S.face_azimuth_offset[f]);
+    double* row = &faces[16 * f];
+    for (int r = 0; r < 3; r++) {
+      row[r] = centre[r];
+      row[4 + r] = north[r] * ca + east[r] * sa;
+      row[8 + r] = east[r] * ca - north[r] * sa;
+    }
+    int quad, rotations;
+    double offset_x, offset_y;
+    face_quad_placement(f, quad, rotations, offset_x, offset_y);
+    row[12] = quad;
+    row[13] = rotations;
+    row[14] = offset_x;
+    row[15] = offset_y;
+  }
+
+  IntegerVector edges(12 * 8);
+  for (int q = 0; q < 12; q++) {
+    bool type0;
+    int lone, up, down, right, left;
+    quad_edge_table(q, type0, lone, up, down, right, left);
+    int* row = &edges[8 * q];
+    row[0] = type0 ? 1 : 0;
+    row[1] = lone;
+    row[2] = up;
+    row[3] = down;
+    row[4] = right;
+    row[5] = left;
+  }
+
+  return List::create(_["constants"] = constants, _["faces"] = faces,
+                      _["edges"] = edges);
 }
 
 // Polygons of the sphere as one mesh on the faces. 'polygons' is a list of

@@ -2,11 +2,13 @@
 // An interactive globe for hexify grids, drawn with WebGPU.
 //
 // The scene arrives from R as binary buffers (base64): triangle meshes for
-// the faces, land and cells, and polylines for cell boundaries, coastlines
-// and face edges. Every point carries its place on the icosahedron and on
-// the sphere, and the shader folds one into the other. The camera follows
-// hexify's plot() method: surface_view(), view_frame() and project() are
-// ported below.
+// the faces and land, and polylines for coastlines and face edges. Every
+// point carries its place on the icosahedron and on the sphere, and the
+// shader folds one into the other. An ISEA grid comes as its frame and the
+// IDs and values of its cells, and the shader finds each pixel's cell on the
+// faces mesh; an H3 grid comes as cell meshes and boundary polylines. The
+// camera follows hexify's plot() method: surface_view(), view_frame() and
+// project() are ported below.
 
 (function () {
   "use strict";
@@ -140,10 +142,12 @@
       this.x = x;
       this.state = this.initialState();
       this.layers = [];
+      this.meshGpu = new Map();
       this.frameRequested = false;
       el.innerHTML = "";
       delete el.dataset.state;
       el.classList.add("hexify-globe");
+      el.hexGlobe = this;
       this.canvas = document.createElement("canvas");
       this.canvas.style.cssText = "width:100%;height:100%;display:block;touch-action:none;cursor:grab;";
       el.appendChild(this.canvas);
@@ -207,6 +211,7 @@
     buildPipelines() {
       const device = this.device;
       const module = device.createShaderModule({ code: this.x.shader });
+      this.module = module;
       const blend = {
         color: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" },
         alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" }
@@ -227,9 +232,21 @@
                         depthCompare: depthWrite ? "less" : "less-equal" },
         multisample: { count: SAMPLES }
       });
+      const gridBuffers = [
+        meshBuffers[0], meshBuffers[1],
+        { arrayStride: 8, attributes: [{ shaderLocation: 3, offset: 0, format: "float32x2" }] }
+      ];
       this.pipelines = {
         surface: make("vs_mesh", "fs_mesh", meshBuffers, false, true),
         overlay: make("vs_mesh", "fs_mesh", meshBuffers, true, false),
+        grid: make("vs_grid", "fs_grid", gridBuffers, true, false),
+        pick: device.createRenderPipeline({
+          layout: "auto",
+          vertex: { module: module, entryPoint: "vs_grid", buffers: gridBuffers },
+          fragment: { module: module, entryPoint: "fs_pick", targets: [{ format: "rgba32uint" }] },
+          primitive: { topology: "triangle-list", cullMode: "none" },
+          depthStencil: { format: "depth24plus", depthWriteEnabled: true, depthCompare: "less" }
+        }),
         line: make("vs_line", "fs_line",
                    [{ arrayStride: 4, stepMode: "instance",
                       attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }] }],
@@ -257,13 +274,26 @@
       return buf;
     }
 
+    // The vertex and index buffers of a mesh, made once and shared by the
+    // layers drawn on it.
+    meshBuffers(mesh) {
+      if (!this.meshGpu.has(mesh)) {
+        const device = this.device;
+        this.meshGpu.set(mesh, {
+          pos: gpuBuffer(device, decode(mesh.position, Float32Array), GPUBufferUsage.VERTEX),
+          item: gpuBuffer(device, decode(mesh.item, Uint32Array), GPUBufferUsage.VERTEX),
+          index: gpuBuffer(device, decode(mesh.index, Uint32Array), GPUBufferUsage.INDEX),
+          tri: mesh.tri ? gpuBuffer(device, decode(mesh.tri, Float32Array), GPUBufferUsage.VERTEX) : null
+        });
+      }
+      return this.meshGpu.get(mesh);
+    }
+
     meshLayer(name, mesh, color, shaded, pipeline, values, ramp) {
       if (!mesh || !color) return;
       const device = this.device;
       const S = GPUBufferUsage.STORAGE;
-      const pos = gpuBuffer(device, decode(mesh.position, Float32Array), GPUBufferUsage.VERTEX);
-      const item = gpuBuffer(device, decode(mesh.item, Uint32Array), GPUBufferUsage.VERTEX);
-      const index = gpuBuffer(device, decode(mesh.index, Uint32Array), GPUBufferUsage.INDEX);
+      const { pos, item, index } = this.meshBuffers(mesh);
       const ramped = Boolean(values);
       const valueBuf = gpuBuffer(device, values || new Float32Array(4), S);
       const rampBuf = gpuBuffer(device, ramp || new Float32Array(4), S);
@@ -278,6 +308,153 @@
       });
       this.layers.push({ kind: "mesh", pipeline: pipeline, pos: pos, item: item, index: index,
                          count: mesh.n_index, group: group });
+    }
+
+    // The Grid uniform of globe.wgsl: the projection, the grid's frame, and
+    // the fill of NA cells.
+    gridUniform(g, naFill) {
+      const buf = new ArrayBuffer(1808);
+      const f = new Float32Array(buf), u = new Uint32Array(buf), i = new Int32Array(buf);
+      const c = this.x.projection.constants;
+      f.set(c.slice(0, 11), 0);
+      u.set([g.dim, g.index, g.c, g.n_keys], 12);
+      i.set(g.generator, 16);
+      u.set([g.all ? 1 : 0, g.values ? 1 : 0, g.dense ? 1 : 0], 20);
+      u.set(g.per_quad, 24);
+      f.set(naFill || [0, 0, 0, 0], 28);
+      f.set(g.ramp_map || [0, 0, 0, 0], 32);
+      f.set(this.x.projection.faces, 36);
+      i.set(this.x.projection.edges, 356);
+      const out = this.device.createBuffer({
+        size: buf.byteLength, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+      this.device.queue.writeBuffer(out, 0, buf);
+      return out;
+    }
+
+    // ISEA cells found per pixel on the faces mesh: fill and borders at once.
+    gridLayer(g, mesh, color, width, naFill) {
+      const device = this.device;
+      const S = GPUBufferUsage.STORAGE;
+      const { pos, item, index, tri } = this.meshBuffers(mesh);
+      this.gridBuffer = this.gridUniform(g, naFill);
+      const keys = gpuBuffer(device, g.n_keys > 0 ? decode(g.keys, Uint32Array) : new Uint32Array(4), S);
+      this.valueArray = g.values ? decode(g.values, Float32Array) : null;
+      const values = gpuBuffer(device, this.valueArray || new Float32Array(4), S);
+      const ramp = gpuBuffer(device, new Float32Array(this.x.palette), S);
+      const uniform = this.layerUniform(color || [0, 0, 0, 0], LIFT.cells, color ? width : 0,
+                                        true, Boolean(g.values));
+      const group = device.createBindGroup({
+        layout: this.pipelines.grid.getBindGroupLayout(1),
+        entries: [
+          { binding: 0, resource: { buffer: uniform } },
+          { binding: 1, resource: { buffer: values } },
+          { binding: 2, resource: { buffer: ramp } },
+          { binding: 4, resource: { buffer: this.gridBuffer } },
+          { binding: 5, resource: { buffer: keys } }
+        ]
+      });
+      const layer = { kind: "mesh", pipeline: "grid", pos: pos, item: item, tri: tri,
+                      index: index, count: mesh.n_index, group: group };
+      this.layers.push(layer);
+      this.pickLayer = Object.assign({}, layer, {
+        pipeline: "pick",
+        group: device.createBindGroup({
+          layout: this.pipelines.pick.getBindGroupLayout(1),
+          entries: [
+            { binding: 0, resource: { buffer: uniform } },
+            { binding: 4, resource: { buffer: this.gridBuffer } },
+            { binding: 5, resource: { buffer: keys } }
+          ]
+        })
+      });
+    }
+
+    // The cell under device pixel (px, py), drawn alone into a one-pixel
+    // scissor of an integer target: { id, value } or null off the grid.
+    async pick(px, py) {
+      const device = this.device, w = this.canvas.width, h = this.canvas.height;
+      if (!this.pickLayer || px < 0 || py < 0 || px >= w || py >= h) return null;
+      if (!this.pickTarget || this.pickTarget.width !== w || this.pickTarget.height !== h) {
+        if (this.pickTarget) {
+          this.pickTarget.color.destroy();
+          this.pickTarget.depth.destroy();
+        }
+        this.pickTarget = {
+          width: w, height: h,
+          color: device.createTexture({ size: [w, h], format: "rgba32uint",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC }),
+          depth: device.createTexture({ size: [w, h], format: "depth24plus",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT }),
+          read: device.createBuffer({ size: 256, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST })
+        };
+      }
+      const t = this.pickTarget, layer = this.pickLayer;
+      this.writeCamera();
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [{ view: t.color.createView(), clearValue: { r: 0, g: 0, b: 0, a: 0 },
+                             loadOp: "clear", storeOp: "store" }],
+        depthStencilAttachment: { view: t.depth.createView(), depthClearValue: 1,
+                                  depthLoadOp: "clear", depthStoreOp: "discard" }
+      });
+      pass.setScissorRect(px, py, 1, 1);
+      pass.setPipeline(this.pipelines.pick);
+      pass.setBindGroup(0, this.cameraGroups.pick);
+      pass.setBindGroup(1, layer.group);
+      pass.setVertexBuffer(0, layer.pos);
+      pass.setVertexBuffer(1, layer.item);
+      pass.setVertexBuffer(2, layer.tri);
+      pass.setIndexBuffer(layer.index, "uint32");
+      pass.drawIndexed(layer.count);
+      pass.end();
+      encoder.copyTextureToBuffer({ texture: t.color, origin: { x: px, y: py } },
+                                  { buffer: t.read, bytesPerRow: 256 }, [1, 1]);
+      device.queue.submit([encoder.finish()]);
+      await t.read.mapAsync(GPUMapMode.READ);
+      const r = new Uint32Array(t.read.getMappedRange().slice(0, 16));
+      t.read.unmap();
+      if (r[3] === 0 || (!this.x.grid.all && r[2] === 0)) return null;
+      const out = { id: r[0] * 4294967296 + r[1] };
+      if (this.valueArray && r[2] > 0) out.value = this.valueArray[r[2] - 1];
+      return out;
+    }
+
+    // The cell IDs of directions given as base64 xyz float triples, found by
+    // the shader's own lookup.
+    async locate(b64) {
+      const device = this.device;
+      const xyz = decode(b64, Float32Array);
+      const n = xyz.length / 3;
+      if (n > 64 * 65535) throw new Error("at most " + 64 * 65535 + " points at once");
+      const probe = new Float32Array(4 * n);
+      for (let k = 0; k < n; k++) probe.set(xyz.subarray(3 * k, 3 * k + 3), 4 * k);
+      const pipeline = device.createComputePipeline({
+        layout: "auto", compute: { module: this.module, entryPoint: "cs_locate" } });
+      const size = Math.max(16, 8 * n);
+      const out = device.createBuffer({ size: size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
+      const read = device.createBuffer({ size: size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+      const groups = [
+        device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [] }),
+        device.createBindGroup({ layout: pipeline.getBindGroupLayout(1),
+                                 entries: [{ binding: 4, resource: { buffer: this.gridBuffer } }] }),
+        device.createBindGroup({ layout: pipeline.getBindGroupLayout(2), entries: [
+          { binding: 0, resource: { buffer: gpuBuffer(device, probe, GPUBufferUsage.STORAGE) } },
+          { binding: 1, resource: { buffer: out } }] })
+      ];
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      groups.forEach((g, k) => pass.setBindGroup(k, g));
+      pass.dispatchWorkgroups(Math.ceil(n / 64));
+      pass.end();
+      encoder.copyBufferToBuffer(out, 0, read, 0, size);
+      device.queue.submit([encoder.finish()]);
+      await read.mapAsync(GPUMapMode.READ);
+      const words = new Uint32Array(read.getMappedRange().slice(0, 8 * n));
+      read.unmap();
+      const ids = new Float64Array(n);
+      for (let k = 0; k < n; k++) ids[k] = words[2 * k] * 4294967296 + words[2 * k + 1];
+      return ids;
     }
 
     lineLayer(name, lines, color, width, fade) {
@@ -301,6 +478,9 @@
       const x = this.x, s = x.style;
       this.meshLayer("ocean", x.surface, s.ocean_fill, true, "surface");
       this.meshLayer("land", x.land, s.land_fill, true, "surface");
+      if (x.grid) {
+        this.gridLayer(x.grid, x.surface, s.grid_border, s.grid_lwd, s.na_fill);
+      }
       if (x.cells) {
         const ramp = new Float32Array(x.palette);
         this.meshLayer("cells", x.cells, s.na_fill || [0, 0, 0, 0], true, "overlay",
@@ -352,8 +532,7 @@
       });
     }
 
-    draw() {
-      if (!this.device || !this.colorTexture) return;
+    writeCamera() {
       const { view, frame } = this.currentView();
       const c = view.cam, e = view.eye || [0, 0, 0];
       this.device.queue.writeBuffer(this.cameraBuffer, 0, new Float32Array([
@@ -365,6 +544,11 @@
         this.canvas.width, this.canvas.height, view.eye ? view.near : 0, view.eye ? view.far : 1,
         view.light[0], view.light[1], view.light[2], this.state.fold
       ]));
+    }
+
+    draw() {
+      if (!this.device || !this.colorTexture) return;
+      this.writeCamera();
 
       const encoder = this.device.createCommandEncoder();
       const pass = encoder.beginRenderPass({
@@ -385,6 +569,7 @@
         if (layer.kind === "mesh") {
           pass.setVertexBuffer(0, layer.pos);
           pass.setVertexBuffer(1, layer.item);
+          if (layer.tri) pass.setVertexBuffer(2, layer.tri);
           pass.setIndexBuffer(layer.index, "uint32");
           pass.drawIndexed(layer.count);
         } else {
@@ -452,6 +637,13 @@
       panel.appendChild(reset);
       if (getComputedStyle(this.el).position === "static") this.el.style.position = "relative";
       this.el.appendChild(panel);
+      this.readout = document.createElement("div");
+      this.readout.className = "hexify-globe-controls";
+      this.readout.style.cssText = "position:absolute;display:none;pointer-events:none;" +
+        "font:12px sans-serif;color:#222;background:rgba(255,255,255,0.9);" +
+        "padding:3px 6px;border-radius:3px;white-space:pre;";
+      this.el.appendChild(this.readout);
+      this.canvas.addEventListener("pointerleave", () => { this.readout.style.display = "none"; });
     }
 
     // Drag turns the globe under the pointer; shift-drag tilts (up and down)
@@ -471,7 +663,11 @@
         canvas.style.cursor = "grab";
       });
       canvas.addEventListener("pointermove", (ev) => {
-        if (!last) return;
+        if (!last) {
+          this.hover(ev);
+          return;
+        }
+        this.readout.style.display = "none";
         const dx = ev.clientX - last[0], dy = ev.clientY - last[1];
         last = [ev.clientX, ev.clientY];
         if (ev.shiftKey) this.turn(dx, dy);
@@ -488,6 +684,36 @@
         }
         this.requestFrame();
       }, { passive: false });
+    }
+
+    // The cell under the pointer, and its value, shown beside it. One pick
+    // runs at a time; a move during it is picked when it returns.
+    hover(ev) {
+      if (!this.pickLayer) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      this.hoverAt = [ev.clientX - rect.left, ev.clientY - rect.top];
+      if (this.picking) return;
+      this.picking = true;
+      const [x, y] = this.hoverAt;
+      this.pick(Math.floor(x * dpr), Math.floor(y * dpr)).then((cell) => {
+        this.picking = false;
+        const box = this.readout;
+        if (!cell) {
+          box.style.display = "none";
+        } else {
+          let text = "cell " + cell.id;
+          if ("value" in cell) {
+            text += "\n" + (Number.isNaN(cell.value) ? "NA" : String(Number(cell.value.toPrecision(6))));
+          }
+          box.textContent = text;
+          box.style.left = (x + 14) + "px";
+          box.style.top = (y + 14) + "px";
+          box.style.display = "block";
+        }
+        if (this.hoverAt[0] !== x || this.hoverAt[1] !== y) this.hover({
+          clientX: this.hoverAt[0] + rect.left, clientY: this.hoverAt[1] + rect.top });
+      }).catch(() => { this.picking = false; });
     }
 
     drag(dx, dy) {

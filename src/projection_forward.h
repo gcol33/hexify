@@ -20,4 +20,9 @@ std::pair<double,double> snyder_forward_to_face(int face, double lon_deg, double
 // Per-face azimuth offset (radians), face = 0..19
 double snyder_get_face_azimuth_offset(int face);
 
+// The derived constants the forward projection works with, for a renderer
+// that runs the same projection
+struct SnyderConstants { double tan_el, cos_el, cot_30, sin_g, cos_g; };
+SnyderConstants snyder_constants();
+
 } // namespace hexify

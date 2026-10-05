@@ -21,6 +21,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_globe_projection
+List cpp_globe_projection();
+RcppExport SEXP _hexify_cpp_globe_projection() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_projection());
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_globe_polygons
 List cpp_globe_polygons(List polygons, double max_len);
 RcppExport SEXP _hexify_cpp_globe_polygons(SEXP polygonsSEXP, SEXP max_lenSEXP) {
@@ -754,21 +764,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_cell_surface_mesh
-List cpp_cell_surface_mesh(NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq_in, double max_len);
-RcppExport SEXP _hexify_cpp_cell_surface_mesh(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seq_inSEXP, SEXP max_lenSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
-    Rcpp::traits::input_parameter< double >::type max_len(max_lenSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_surface_mesh(cell_id, resolution, aperture, ap_seq_in, max_len));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_icosa_solid
 List cpp_icosa_solid();
 RcppExport SEXP _hexify_cpp_icosa_solid() {
@@ -802,6 +797,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type tx(txSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type ty(tySEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_face_tri_to_solid(face, tx, ty));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_globe_frame
+List cpp_globe_frame(int resolution, int aperture, IntegerVector ap_seq_in);
+RcppExport SEXP _hexify_cpp_globe_frame(SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seq_inSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_frame(resolution, aperture, ap_seq_in));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1412,6 +1420,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_globe_faces", (DL_FUNC) &_hexify_cpp_globe_faces, 1},
+    {"_hexify_cpp_globe_projection", (DL_FUNC) &_hexify_cpp_globe_projection, 0},
     {"_hexify_cpp_globe_polygons", (DL_FUNC) &_hexify_cpp_globe_polygons, 2},
     {"_hexify_cpp_sphere_paths_on_faces", (DL_FUNC) &_hexify_cpp_sphere_paths_on_faces, 4},
     {"_hexify_cpp_base64_buffer", (DL_FUNC) &_hexify_cpp_base64_buffer, 2},
@@ -1467,10 +1476,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 3},
     {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 3},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 5},
-    {"_hexify_cpp_cell_surface_mesh", (DL_FUNC) &_hexify_cpp_cell_surface_mesh, 5},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 0},
     {"_hexify_cpp_lonlat_to_face_solid", (DL_FUNC) &_hexify_cpp_lonlat_to_face_solid, 3},
     {"_hexify_cpp_face_tri_to_solid", (DL_FUNC) &_hexify_cpp_face_tri_to_solid, 3},
+    {"_hexify_cpp_globe_frame", (DL_FUNC) &_hexify_cpp_globe_frame, 3},
     {"_hexify_cpp_cell_lattice_generator_seq", (DL_FUNC) &_hexify_cpp_cell_lattice_generator_seq, 1},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 3},
     {"_hexify_cpp_get_neighbors_isea_seq", (DL_FUNC) &_hexify_cpp_get_neighbors_isea_seq, 2},

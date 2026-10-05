@@ -112,12 +112,18 @@ An htmlwidget.
 \description{
 Draws the cells of a grid on a globe that turns under the mouse, rendered
 on the graphics card through WebGPU. A slider folds the icosahedron the
-grid is built on into the sphere: every point of a cell boundary, a
-coastline or a face edge carries its place on both surfaces, and the
-shader blends the two. Values given per cell fill the cells through a
-colour ramp.
+grid is built on into the sphere, and the shader blends the two surfaces.
+Values given per cell fill the cells through a colour ramp.
 }
 \details{
+The cells of an ISEA grid are found per pixel on the graphics card, by the
+same projection and cell numbering as \code{\link{lonlat_to_cell}}, so the
+page holds the grid's description and the values rather than the cells'
+outlines, and a grid of any resolution draws as fast as a coarse one.
+Borders keep their width at every zoom and fade out where the cells get
+too small to see. The pointer shows the ID and value of the cell under it.
+H3 cells are drawn from their outlines.
+
 Drag to turn the globe. Drag with Shift held to turn the view about the
 line of sight and, in the perspective view, to tilt the camera. The mouse
 wheel moves the perspective camera closer or zooms the orthographic view.

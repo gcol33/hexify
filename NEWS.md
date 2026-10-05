@@ -17,8 +17,16 @@
   the globe, Shift-drag tilts and turns the view, the wheel zooms, and a
   slider folds the icosahedron into the sphere. `values` fills the cells
   through a colour ramp (`palette`, `limits`, `na_fill`). It takes the camera
-  and style arguments of `plot(<grid>)`. Cell boundaries fade out where cells
-  shrink to a few pixels on screen. Without WebGPU the widget shows a notice.
+  and style arguments of `plot(<grid>)`. The cells of an ISEA grid are found
+  per pixel on the graphics card, with `lonlat_to_cell()`'s projection and
+  numbering, so the page carries the grid's description and one value per
+  cell rather than cell outlines: at aperture 3, resolution 10 (590,492
+  cells), a globe with a value on every cell builds in 0.4 s, its page is
+  7 MB and a frame takes about 3 ms at 800 and at 1600 pixels. The shader's
+  cells agree with `lonlat_to_cell()` to within 1e-5 radians. Borders keep
+  their width at every zoom and fade out where cells shrink to a few pixels.
+  The pointer shows the ID and value of the cell under it. H3 cells are drawn
+  from their outlines. Without WebGPU the widget shows a notice.
 
 * `hex_globe_png()` saves a globe as a PNG, drawn by the widget's own WebGPU
   renderer in headless Chrome (needs 'chromote').

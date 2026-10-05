@@ -576,6 +576,32 @@ void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolutio
 // Public API Implementation
 // ============================================================================
 
+void face_quad_placement(int face, int& quad, int& rotations,
+                         double& offset_x, double& offset_y) {
+    if (face < 0 || face >= 20) {
+        throw std::runtime_error("face_quad_placement: face must be 0-19");
+    }
+    const TriangleMapping& m = kTriangleMap[face];
+    quad = m.quad;
+    rotations = m.rotations;
+    offset_x = m.offset_x;
+    offset_y = m.offset_y;
+}
+
+void quad_edge_table(int quad, bool& is_type0, int& lone_vert,
+                     int& up, int& down, int& right, int& left) {
+    if (quad < 0 || quad >= 12) {
+        throw std::runtime_error("quad_edge_table: quad must be 0-11");
+    }
+    const DgQuadEdge& e = kDggridEdgeTable[quad];
+    is_type0 = e.isType0;
+    lone_vert = e.loneVert;
+    up = e.up;
+    down = e.down;
+    right = e.right;
+    left = e.left;
+}
+
 void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
                           int& out_quad, double& out_quad_x, double& out_quad_y) {
     if (icosa_triangle_face < 0 || icosa_triangle_face >= 20) {
