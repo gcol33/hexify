@@ -8,8 +8,10 @@
 # script records how many cell IDs (DGGRID SEQNUMs) agree, the largest and
 # median distance between the two programs' centres of the same cells, and, for each point
 # assigned differently, its distance to the boundary of the hexify cell. Cell
-# boundaries are compared on a random subset of cells as the largest distance
-# from a DGGRID corner to the nearest vertex of the hexify polygon.
+# corners are compared on a random subset of cells as the largest distance
+# from a DGGRID corner to the nearest hexify corner of the same cell; a cell
+# with a gap above 1 m is checked against its neighbours in both programs
+# (corner_check() in bench_dggrid_common.R).
 #
 # Usage: Rscript paper/bench/bench_dggrid_agreement.R
 # Set DGGRID_EXE to the dggrid executable if it is not at the default path.
@@ -22,12 +24,6 @@ source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE)
 N_POINTS <- 200000L
 N_POLY <- 500L
 SEED <- 20261005L
-
-corner_gap_km <- function(cd, hexify_geom) {
-  ch <- sf::st_coordinates(hexify_geom)[, 1:2]
-  max(vapply(seq_len(nrow(cd)), function(i)
-    min(gc_km(cd[i, 1], cd[i, 2], ch[, 1], ch[, 2])), numeric(1)))
-}
 
 pts <- sphere_points(N_POINTS, seed = SEED)
 rows <- list()
@@ -59,21 +55,18 @@ for (cfg in CONFIGS) for (res in cfg[[4]]) {
   }
 
   poly_cells <- sample(ok_cells, min(N_POLY, length(ok_cells)))
-  dp <- dggrid_polygons(cfg, res, poly_cells)
-  hp <- cell_to_sf(dp$seqnum, g)
-  hp <- hp[match(dp$seqnum, hp$cell_id), ]
-  cgap <- vapply(seq_along(dp$seqnum), function(i)
-    corner_gap_km(dp$corners[[i]], sf::st_geometry(hp)[i]), numeric(1))
+  cc <- corner_check(cfg, res, g, poly_cells)
 
-  message(sprintf("ap %-12s res %2d: %d/%d agree, centre gap max %.3g m, corner gap %.3g m, edge distance %.3g m",
-                  cfg[[1]], res, sum(same), N_POINTS, max(centre_gap_m), max(cgap) * 1000, edge_m))
+  message(sprintf(paste("ap %-12s res %2d: %d/%d agree, centre gap max %.3g m, corner gap %.3g m",
+                        "(%d cells > 1 m, %d open in DGGRID; otherwise %.3g m), edge distance %.3g m"),
+                  cfg[[1]], res, sum(same), N_POINTS, max(centre_gap_m), cc$max_corner_gap_m,
+                  cc$n_corner_gap, cc$n_gap_dggrid_open, cc$max_corner_gap_other_m, edge_m))
   rows[[length(rows) + 1]] <- data.frame(
     aperture = cfg[[1]], resolution = res, cell_area_km2 = g@area_km2,
     n_points = N_POINTS, n_agree = sum(same), n_differ = sum(!same),
     n_centre_cells = length(centre_cells),
     max_centre_gap_m = max(centre_gap_m), median_centre_gap_m = median(centre_gap_m),
-    max_edge_distance_m = edge_m, n_polygons = length(dp$seqnum),
-    max_corner_gap_m = max(cgap) * 1000)
+    max_edge_distance_m = edge_m, as.data.frame(cc))
 }
 
 dg_version <- tryCatch(system2("git", c("-C", shQuote(dirname(dirname(dirname(dirname(dirname(DGGRID_EXE)))))),

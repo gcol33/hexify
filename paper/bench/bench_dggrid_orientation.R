@@ -7,8 +7,9 @@
 # assigned to cells by both programs, as in bench_dggrid_agreement.R: the
 # script records how many cell IDs (DGGRID SEQNUMs) agree, the largest and
 # median distance between the two programs' centres of the same cells, and the
-# largest distance from a DGGRID cell corner to the nearest vertex of the
-# hexify polygon on a random subset of cells. A REGION_CENTER grid is built in
+# largest distance from a DGGRID cell corner to the nearest hexify corner of
+# the same cell on a random subset of cells, with cells above 1 m checked
+# against their neighbours (corner_check() in bench_dggrid_common.R). A REGION_CENTER grid is built in
 # hexify with hex_grid(orientation = "region"), so its rows also test that
 # hexify places the icosahedron where DGGRID does.
 #
@@ -38,12 +39,6 @@ PLACEMENTS <- list(
   list("region (0, 90)", NULL, c(0, 90))
 )
 
-corner_gap_km <- function(cd, hexify_geom) {
-  ch <- sf::st_coordinates(hexify_geom)[, 1:2]
-  max(vapply(seq_len(nrow(cd)), function(i)
-    min(gc_km(cd[i, 1], cd[i, 2], ch[, 1], ch[, 2])), numeric(1)))
-}
-
 pts <- sphere_points(N_POINTS, seed = SEED)
 rows <- list()
 for (pl in PLACEMENTS) for (gr in GRIDS) {
@@ -65,30 +60,31 @@ for (pl in PLACEMENTS) for (gr in GRIDS) {
   set.seed(res)
   centre_cells <- if (length(ok_cells) > 20000) sample(ok_cells, 20000) else ok_cells
   centre_gap_m <- NA_real_
-  cgap <- NA_real_
+  cc <- list(n_polygons = 0L, max_corner_gap_m = NA_real_, n_corner_gap = NA_integer_,
+             n_gap_dggrid_open = NA_integer_, n_gap_hexify_closed = NA_integer_,
+             max_corner_gap_other_m = NA_real_)
   if (length(centre_cells)) {
     hc <- cell_to_lonlat(centre_cells, g)
     dc <- dggrid_centres(cfg, res, centre_cells, orient)
     centre_gap_m <- gc_km(hc[[1]], hc[[2]], dc$lon, dc$lat) * 1000
 
     poly_cells <- sample(ok_cells, min(N_POLY, length(ok_cells)))
-    dp <- dggrid_polygons(cfg, res, poly_cells, orient)
-    hp <- cell_to_sf(dp$seqnum, g)
-    hp <- hp[match(dp$seqnum, hp$cell_id), ]
-    cgap <- vapply(seq_along(dp$seqnum), function(i)
-      corner_gap_km(dp$corners[[i]], sf::st_geometry(hp)[i]), numeric(1)) * 1000
+    cc <- corner_check(cfg, res, g, poly_cells, orient)
   }
 
   o <- g@orientation
-  message(sprintf("%-30s ap %-12s res %2d: %d/%d agree, centre gap max %.3g m, corner gap %.3g m",
-                  pl[[1]], cfg[[1]], res, sum(same), N_POINTS, max(centre_gap_m), max(cgap)))
+  message(sprintf(paste("%-30s ap %-12s res %2d: %d/%d agree, centre gap max %.3g m, corner gap %.3g m",
+                        "(%d cells > 1 m, %d open in DGGRID; otherwise %.3g m)"),
+                  pl[[1]], cfg[[1]], res, sum(same), N_POINTS, max(centre_gap_m),
+                  cc$max_corner_gap_m, cc$n_corner_gap, cc$n_gap_dggrid_open,
+                  cc$max_corner_gap_other_m))
   rows[[length(rows) + 1]] <- data.frame(
     placement = pl[[1]], vert0_lon = o[["vert0_lon"]], vert0_lat = o[["vert0_lat"]],
     azimuth = o[["azimuth"]], aperture = cfg[[1]], resolution = res,
     n_points = N_POINTS, n_agree = sum(same), n_differ = sum(!same),
     n_centre_cells = length(centre_cells),
     max_centre_gap_m = max(centre_gap_m), median_centre_gap_m = median(centre_gap_m),
-    n_polygons = length(cgap), max_corner_gap_m = max(cgap))
+    as.data.frame(cc))
 }
 
 dg_version <- tryCatch(system2("git", c("-C", shQuote(dirname(dirname(dirname(dirname(dirname(DGGRID_EXE)))))),

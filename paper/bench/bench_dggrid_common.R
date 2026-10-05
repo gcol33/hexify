@@ -12,7 +12,7 @@ stopifnot(file.exists(DGGRID_EXE))
 CONFIGS <- list(
   list("3", 3, c("dggs_aperture_type PURE", "dggs_aperture 3"), c(3, 7, 11, 15)),
   list("4", 4, c("dggs_aperture_type PURE", "dggs_aperture 4"), c(2, 5, 8, 11)),
-  list("7", 7, c("dggs_aperture_type PURE", "dggs_aperture 7"), c(2, 4, 6, 8)),
+  list("7", 7, c("dggs_aperture_type PURE", "dggs_aperture 7"), 2:8),
   list("4/3", "4/3", NULL, c(4, 8, 12)),
   list("4,3,4,7,4,7", c(4, 3, 4, 7, 4, 7, 4, 3),
        c("dggs_aperture_type SEQUENCE", "dggs_aperture_sequence 43474743"), c(3, 6))
@@ -106,6 +106,68 @@ dggrid_centres <- function(cfg, res, seqnum, orient = NULL) {
 
 dggrid_polygons <- function(cfg, res, seqnum, orient = NULL) {
   dggrid_generate(cfg, res, seqnum, cells = TRUE, orient = orient)$cells
+}
+
+# A corner further than this from every corner of the other program's cell
+# counts as a corner gap; corners otherwise agree to within a millimetre.
+CORNER_GAP_KM <- 1e-3
+
+# Largest distance from a corner of `cd` to the nearest corner of `ch`, km.
+corner_gap_km <- function(cd, ch) {
+  max(vapply(seq_len(nrow(cd)), function(i)
+    min(gc_km(cd[i, 1], cd[i, 2], ch[, 1], ch[, 2])), numeric(1)))
+}
+
+# How many of `rings` have a corner within CORNER_GAP_KM of each row of `p`.
+corner_owners <- function(p, rings) {
+  vapply(seq_len(nrow(p)), function(k)
+    sum(vapply(rings, function(r)
+      any(gc_km(p[k, 1], p[k, 2], r[, 1], r[, 2]) < CORNER_GAP_KM), logical(1))),
+    integer(1))
+}
+
+# Cell corners of both programs on `cells`. Each DGGRID corner is matched to
+# the nearest hexify corner of the same cell; the largest distance is the
+# cell's corner gap. Cells in a tiling meet three to a corner, so for every
+# cell with a gap the corners are checked against the cell's neighbours in
+# each program: a DGGRID corner no neighbour carries leaves DGGRID's polygons
+# open there, and hexify's corners of that cell should each meet three cells.
+corner_check <- function(cfg, res, g, cells, orient = NULL) {
+  ocpp <- hexify:::orient_arg(g)
+  rings_h <- function(ids) {
+    lapply(hexify:::isea_cell_rings(ids, g@resolution, g@aperture, ocpp, 0),
+           function(m) m[, 1:2, drop = FALSE])
+  }
+  dp <- dggrid_polygons(cfg, res, cells, orient)
+  hr <- rings_h(dp$seqnum)
+  gap <- vapply(seq_along(dp$seqnum), function(i)
+    corner_gap_km(dp$corners[[i]], hr[[i]]), numeric(1))
+
+  gap_idx <- which(gap > CORNER_GAP_KM)
+  dggrid_open <- logical(length(gap_idx))
+  hexify_closed <- logical(length(gap_idx))
+  if (length(gap_idx)) {
+    nb <- hexify:::grid_neighbors_isea(dp$seqnum[gap_idx], g)
+    nb_ids <- unique(unlist(nb))
+    dn <- dggrid_polygons(cfg, res, nb_ids, orient)
+    dn_rings <- dn$corners[match(nb_ids, dn$seqnum)]
+    hn_rings <- rings_h(nb_ids)
+    for (k in seq_along(gap_idx)) {
+      i <- gap_idx[k]
+      own <- match(nb[[k]], nb_ids)
+      d <- dp$corners[[i]]
+      far <- vapply(seq_len(nrow(d)), function(j)
+        min(gc_km(d[j, 1], d[j, 2], hr[[i]][, 1], hr[[i]][, 2])) > CORNER_GAP_KM, logical(1))
+      dggrid_open[k] <- all(corner_owners(d[far, , drop = FALSE],
+                                          c(dp$corners[i], dn_rings[own])) < 3L)
+      hexify_closed[k] <- all(corner_owners(hr[[i]], c(hr[i], hn_rings[own])) == 3L)
+    }
+  }
+  explained <- seq_along(gap) %in% gap_idx[dggrid_open & hexify_closed]
+  list(n_polygons = length(gap), max_corner_gap_m = max(gap) * 1000,
+       n_corner_gap = length(gap_idx),
+       n_gap_dggrid_open = sum(dggrid_open), n_gap_hexify_closed = sum(hexify_closed),
+       max_corner_gap_other_m = max(c(0, gap[!explained])) * 1000)
 }
 
 # Coordinates in DGGRID's PLANE system (the unfolded icosahedron), for points
