@@ -29,7 +29,8 @@ area_km2, resolution, aperture and radius_km parameters.}
 
 \item{area_km2}{Target cell area in km^2 (mutually exclusive with diagonal).}
 
-\item{diagonal}{Target cell diagonal (long diagonal) in km}
+\item{diagonal}{Target cell spacing in km: the short (flat-to-flat)
+diagonal, equal to the distance between neighbouring cell centres}
 
 \item{resolution}{Grid resolution (0-30). Alternative to area_km2.}
 

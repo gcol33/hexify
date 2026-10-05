@@ -46,9 +46,7 @@ as_dggrid <- function(grid) {
     grid <- HexGridInfo_to_hexify_grid(grid)
   }
 
-  if (!inherits(grid, "hexify_grid")) {
-    stop("grid must be a hexify_grid object from hexify_grid()")
-  }
+  check_hexify_grid(grid)
 
   if (!is_earth_grid(grid)) {
     warning("A dggs carries no body radius: this grid is sized on a radius of ",

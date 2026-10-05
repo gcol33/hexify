@@ -51,8 +51,9 @@ hex_sample <- function(cell_id, grid, n = 1L) {
     # usually finishes in one round.
     draw <- rep(k, ceiling(need[k] * 1.3) + 2L)
     P <- sample_cap(C[draw, , drop = FALSE], cos_cap[draw])
-    lon <- atan2(P[, 2], P[, 1]) * 180 / pi
-    lat <- asin(pmax(-1, pmin(1, P[, 3]))) * 180 / pi
+    ll <- vec_lonlat(P)
+    lon <- ll[, 1]
+    lat <- ll[, 2]
     hit <- which(lonlat_to_cell(lon, lat, g) == cell_id[draw])
     # draw is sorted, so the hits of each cell are consecutive
     rank <- sequence(rle(draw[hit])$lengths)
@@ -99,12 +100,8 @@ sample_cap <- function(C, cos_cap) {
   # furthest from
   axis <- matrix(0, m, 3)
   axis[cbind(seq_len(m), max.col(-abs(C), ties.method = "first"))] <- 1
-  e1 <- cbind(C[, 2] * axis[, 3] - C[, 3] * axis[, 2],
-              C[, 3] * axis[, 1] - C[, 1] * axis[, 3],
-              C[, 1] * axis[, 2] - C[, 2] * axis[, 1])
+  e1 <- cross3(C, axis)
   e1 <- e1 / sqrt(rowSums(e1^2))
-  e2 <- cbind(C[, 2] * e1[, 3] - C[, 3] * e1[, 2],
-              C[, 3] * e1[, 1] - C[, 1] * e1[, 3],
-              C[, 1] * e1[, 2] - C[, 2] * e1[, 1])
+  e2 <- cross3(C, e1)
   z * C + (r * cos(phi)) * e1 + (r * sin(phi)) * e2
 }

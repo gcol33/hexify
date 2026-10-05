@@ -136,35 +136,47 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
     return(result)
   }
 
-  # General k-ring: iterative BFS expansion
   lapply(cell_id, function(origin) {
-    visited <- origin
-    ring_dist <- 0L
-    current_ring <- origin
-
-    for (ring in seq_len(k)) {
-      all_nbrs <- get_k1(current_ring)
-      new_cells <- unique(unlist(all_nbrs))
-      new_cells <- setdiff(new_cells, visited)
-
-      if (length(new_cells) == 0) break
-      visited <- c(visited, new_cells)
-      ring_dist <- c(ring_dist, rep(ring, length(new_cells)))
-      current_ring <- new_cells
-    }
-
-    if (!include_self) {
-      keep <- ring_dist > 0L
-      visited <- visited[keep]
-      ring_dist <- ring_dist[keep]
-    }
-
+    rings <- isea_rings(origin, grid, k)
+    keep <- include_self | rings$ring_distance > 0L
     if (distances) {
-      data.frame(cell_id = visited, ring_distance = ring_dist)
+      data.frame(cell_id = rings$cell_id[keep],
+                 ring_distance = rings$ring_distance[keep])
     } else {
-      visited
+      rings$cell_id[keep]
     }
   })
+}
+
+#' Cells within k rings of a cell, by breadth-first search
+#'
+#' Each ring holds the neighbours of the previous ring not met before, in the
+#' order the neighbour lookup returns them. The search stops early once every
+#' cell of `targets` is reached, or when a ring comes back empty.
+#'
+#' @param source One cell ID
+#' @param g HexGridInfo object of an ISEA grid
+#' @param k Number of rings
+#' @param targets Optional cell IDs whose rings are wanted
+#' @return List with `cell_id` (source first, then ring by ring) and the
+#'   integer `ring_distance` of each
+#' @noRd
+isea_rings <- function(source, g, k, targets = NULL) {
+  visited <- source
+  ring_distance <- 0L
+  frontier <- source
+  remaining <- if (!is.null(targets)) setdiff(targets, source)
+
+  for (ring in seq_len(k)) {
+    if (!is.null(targets) && length(remaining) == 0L) break
+    frontier <- setdiff(unique(unlist(grid_neighbors_isea(frontier, g))), visited)
+    if (length(frontier) == 0L) break
+    visited <- c(visited, frontier)
+    ring_distance <- c(ring_distance, rep(ring, length(frontier)))
+    if (!is.null(targets)) remaining <- remaining[!remaining %in% frontier]
+  }
+
+  list(cell_id = visited, ring_distance = ring_distance)
 }
 
 #' Links from cells to their neighbours as sf lines
@@ -186,9 +198,9 @@ neighbor_links <- function(cell_id, g, k, include_self) {
   b <- V[match(to, ids), , drop = FALSE]
   lines <- lapply(seq_along(from), function(i) {
     P <- rbind(slerp(a[i, ], b[i, ], pi / 180), b[i, ])
-    lon <- atan2(P[, 2], P[, 1]) * 180 / pi
-    lon <- lon[1] + cumsum(c(0, (diff(lon) + 180) %% 360 - 180))
-    sf::st_linestring(cbind(lon, asin(pmax(-1, pmin(1, P[, 3]))) * 180 / pi))
+    ll <- vec_lonlat(P)
+    ll[, 1] <- ll[1, 1] + cumsum(c(0, (diff(ll[, 1]) + 180) %% 360 - 180))
+    sf::st_linestring(ll)
   })
   links <- sf::st_sf(cell_id = from, neighbor_id = to,
                      ring_distance = as.integer(ring_distance),

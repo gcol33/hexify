@@ -36,7 +36,6 @@ cell_id <- hexify_lonlat_to_cell(0, 45, resolution = 5, aperture = 3)
 \code{\link{hexify_cell_to_lonlat}} for the inverse operation
 
 Other coordinate conversion:
-\code{\link[=hexify_cell_id_to_quad_ij]{hexify_cell_id_to_quad_ij()}},
 \code{\link[=hexify_cell_to_icosa_tri]{hexify_cell_to_icosa_tri()}},
 \code{\link[=hexify_cell_to_lonlat]{hexify_cell_to_lonlat()}},
 \code{\link[=hexify_cell_to_plane]{hexify_cell_to_plane()}},

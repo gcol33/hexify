@@ -30,7 +30,9 @@ setClassUnion("HexCRS", c("integer", "character"))
 #'   as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").
 #' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
-#' @slot diagonal_km Numeric. Cell diagonal (long diagonal) in kilometers.
+#' @slot diagonal_km Numeric. Centre spacing in kilometers: the short
+#'   (flat-to-flat) diagonal of a regular hexagon of area \code{area_km2},
+#'   \eqn{\sqrt{2A/\sqrt{3}}}.
 #' @slot crs Integer or character. Coordinate reference system: an EPSG code,
 #'   or a 'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat
 #'   CRS on the sphere of \code{radius_km} on any other body.
@@ -320,7 +322,7 @@ grid_n_cells <- function(grid) {
   gt <- tryCatch(grid@grid_type, error = function(e) "isea")
 
   if (gt == "h3") {
-    2 + 120 * 7^grid@resolution
+    h3_n_cells(grid@resolution)
   } else {
     aperture_n_cells(grid@aperture, grid@resolution)
   }
@@ -846,6 +848,35 @@ extract_grid <- function(x, allow_null = FALSE) {
   stop("Cannot extract grid from object of class ", class(x)[1])
 }
 
+#' Cell IDs and grid of a call that takes a grid or a HexData object
+#'
+#' A HexData object supplies its own cells when none are given; a grid needs
+#' them.
+#' @param cell_id Cell IDs, or NULL to read a HexData object's own
+#' @param grid A HexGridInfo, HexData or legacy hexify_grid object
+#' @return List with `cell_id` and `grid`, the HexGridInfo from extract_grid()
+#' @noRd
+resolve_cells_grid <- function(cell_id, grid) {
+  g <- extract_grid(grid)
+  if (is.null(cell_id)) {
+    if (!is_hex_data(grid)) {
+      stop("cell_id required when grid is not HexData")
+    }
+    cell_id <- grid@cell_id
+  }
+  list(cell_id = cell_id, grid = g)
+}
+
+#' Stop unless an object is a legacy hexify_grid
+#' @param grid Object to check
+#' @noRd
+check_hexify_grid <- function(grid) {
+  if (!inherits(grid, "hexify_grid")) {
+    stop("grid must be a hexify_grid object from hexify_grid()")
+  }
+  invisible(grid)
+}
+
 #' Fill the slots a grid saved by an older hexify lacks
 #'
 #' A grid deserialized from before a slot existed reads the slot's original
@@ -877,7 +908,7 @@ upgrade_grid <- function(g) {
 #' @keywords internal
 hexify_grid_to_HexGridInfo <- function(x) {
   area <- if (!is.null(x$area)) as.numeric(x$area) else NA_real_
-  diagonal <- if (!is.na(area)) sqrt(area * 2 / sqrt(3)) else NA_real_
+  diagonal <- hex_spacing_km(area)
 
   new("HexGridInfo",
       aperture = as.character(x$aperture),
@@ -904,15 +935,8 @@ HexGridInfo_to_hexify_grid <- function(x) {
     stop("H3 grids cannot be converted to legacy hexify_grid format")
   }
 
-  # Determine legacy index_type based on aperture
   ap <- x@aperture
-  legacy_index <- if (ap == "3") {
-    "z3"
-  } else if (ap == "7") {
-    "z7"
-  } else {
-    "zorder"
-  }
+  legacy_index <- index_type_for_aperture(ap)
 
   # Convert aperture to numeric for legacy
   aperture_num <- aperture_to_int(ap)

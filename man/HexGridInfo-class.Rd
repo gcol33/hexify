@@ -29,7 +29,9 @@ as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").}
 
 \item{\code{area_km2}}{Numeric. Cell area in square kilometers.}
 
-\item{\code{diagonal_km}}{Numeric. Cell diagonal (long diagonal) in kilometers.}
+\item{\code{diagonal_km}}{Numeric. Centre spacing in kilometers: the short
+(flat-to-flat) diagonal of a regular hexagon of area \code{area_km2},
+\eqn{\sqrt{2A/\sqrt{3}}}.}
 
 \item{\code{crs}}{Integer or character. Coordinate reference system: an EPSG code,
 or a 'PROJ' or 'WKT' string. Defaults to 'WGS84' on Earth, and to a longlat

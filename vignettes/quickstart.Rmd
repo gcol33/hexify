@@ -254,7 +254,7 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 | `aperture` | character | Grid aperture ("3", "4", "7", or "4/3") |
 | `resolution` | integer | Resolution level (0-30) |
 | `area_km2` | numeric | Cell area in km² |
-| `diagonal_km` | numeric | Cell diagonal in km |
+| `diagonal_km` | numeric | Cell centre spacing (short diagonal) in km |
 | `crs` | integer or character | EPSG code, or a PROJ or WKT string |
 | `grid_type` | character | Backend: `"isea"` or `"h3"` |
 

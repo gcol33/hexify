@@ -7,7 +7,6 @@
 # - hexify_cell_to_lonlat()
 # - hexify_cell_to_quad_ij()
 # - hexify_cell_to_icosa_tri()
-# - hexify_cell_id_to_quad_ij()
 # - hexify_grid_to_cell()
 # - hexify_grid_cell_to_lonlat()
 
@@ -262,10 +261,10 @@ test_that("cell_to_icosa_tri returns valid structure", {
 # CELL ID TO QUAD IJ INFO
 # =============================================================================
 
-test_that("cell_id_to_quad_ij returns valid cell info", {
+test_that("cell_to_quad_ij returns valid cell info", {
   cell_ids <- c(1702, 1954, 100)
 
-  info <- hexify_cell_id_to_quad_ij(cell_ids, resolution = 5, aperture = 3)
+  info <- hexify_cell_to_quad_ij(cell_ids, resolution = 5, aperture = 3)
 
   expect_true(is.data.frame(info))
   expect_true("quad" %in% names(info))

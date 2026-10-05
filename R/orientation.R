@@ -221,19 +221,15 @@ face_orientation <- function(lon, lat) {
   circum <- acos(sqrt((3 * phi + 2) / (3 * (phi + 2))))
   lo <- lon * r
   la <- lat * r
-  centre <- c(cos(la) * cos(lo), cos(la) * sin(lo), sin(la))
+  centre <- drop(unit_vec(lon, lat))
   north <- c(-sin(la) * cos(lo), -sin(la) * sin(lo), cos(la))
   v0 <- cos(circum) * centre + sin(circum) * north
   # Rodrigues rotation of v0 by 120 degrees about the centre
   turn <- 2 * pi / 3
-  cross <- c(centre[2] * v0[3] - centre[3] * v0[2],
-             centre[3] * v0[1] - centre[1] * v0[3],
-             centre[1] * v0[2] - centre[2] * v0[1])
-  v1 <- cos(turn) * v0 + sin(turn) * cross +
+  v1 <- cos(turn) * v0 + sin(turn) * cross3(centre, v0) +
     (1 - cos(turn)) * sum(centre * v0) * centre
-  ll <- function(v) c(atan2(v[2], v[1]), asin(max(-1, min(1, v[3])))) / r
-  p0 <- ll(v0)
-  check_orientation(c(p0[1], p0[2], gc_azimuth_deg(p0, ll(v1))))
+  p <- vec_lonlat(rbind(v0, v1))
+  check_orientation(c(p[1, 1], p[1, 2], gc_azimuth_deg(p[1, ], p[2, ])))
 }
 
 #' Inverse gnomonic projection about (lon0, lat0) of a point (x, y) on the

@@ -240,14 +240,6 @@ resolve_surface <- function(surface, face_edges, g) {
   face_edges
 }
 
-#' Unit vectors of lon/lat points
-#' @noRd
-unit_vec <- function(lon, lat) {
-  lon <- lon * pi / 180
-  lat <- lat * pi / 180
-  cbind(cos(lat) * cos(lon), cos(lat) * sin(lon), sin(lat))
-}
-
 #' Check the projection arguments of the plot method
 #'
 #' Returns the camera distance (\code{Inf} for the orthographic view) and the
@@ -359,9 +351,7 @@ surface_view <- function(center, distance = Inf, tilt = 0, rotation = 0) {
   lon <- center[["lon"]] * pi / 180
   e3 <- drop(unit_vec(center[["lon"]], center[["lat"]]))
   e1 <- c(-sin(lon), cos(lon), 0)
-  e2 <- c(e3[2] * e1[3] - e3[3] * e1[2],
-          e3[3] * e1[1] - e3[1] * e1[3],
-          e3[1] * e1[2] - e3[2] * e1[1])
+  e2 <- cross3(e3, e1)
   r <- rotation * pi / 180
   u <- cos(r) * e1 + sin(r) * e2
   v <- -sin(r) * e1 + cos(r) * e2
@@ -379,10 +369,7 @@ surface_view <- function(center, distance = Inf, tilt = 0, rotation = 0) {
   dir <- eye / reach
   list(cam = cam, eye = eye, scale = sqrt(distance^2 - 1),
        near = 0.01 * (reach - 1), dir = dir, horizon = 1 / reach, u = u,
-       v = c(dir[2] * u[3] - dir[3] * u[2],
-             dir[3] * u[1] - dir[1] * u[3],
-             dir[1] * u[2] - dir[2] * u[1]),
-       light = light)
+       v = cross3(dir, u), light = light)
 }
 
 #' Points in camera coordinates: right, up, and depth in front of the camera
@@ -577,16 +564,6 @@ h3_sphere_paths <- function(cells, step) {
   do.call(rbind, rows)
 }
 
-#' Points along the great-circle arc a -> b, from a and short of b
-#' @noRd
-slerp <- function(a, b, max_angle) {
-  w <- acos(max(-1, min(1, sum(a * b))))
-  n <- max(1L, ceiling(w / max_angle))
-  if (w < 1e-12) return(rbind(a))
-  s <- (seq_len(n) - 1L) / n
-  outer(sin((1 - s) * w), a) / sin(w) + outer(sin(s * w), b) / sin(w)
-}
-
 #' The land a plot draws
 #' @noRd
 surface_land <- function(land) {
@@ -609,7 +586,7 @@ land_in_cap <- function(land, lon, lat, radius_deg) {
   old <- suppressMessages(sf::sf_use_s2(TRUE))
   on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
   cap <- sf::st_buffer(sf::st_sfc(sf::st_point(c(lon, lat)), crs = 4326),
-                       radius_deg * pi / 180 * 6371008.8)
+                       radius_deg * pi / 180 * EARTH_RADIUS_KM * 1000)
   part <- suppressMessages(sf::st_intersection(land, cap))
   part <- part[!sf::st_is_empty(part)]
   if (length(part) == 0L) return(list())
@@ -655,7 +632,7 @@ draw_sphere <- function(paths, land, view, style, icosa) {
   disc <- project_ring(rim, view)
   if (!is.null(disc)) graphics::polygon(disc, col = style$ocean_fill, border = NA)
   d <- view$dir
-  center_ll <- c(atan2(d[2], d[1]), asin(d[3])) * 180 / pi
+  center_ll <- vec_lonlat(d)
   cap_deg <- acos(view$horizon) * 180 / pi - 0.5
 
   if (!is.null(land)) {
@@ -734,15 +711,14 @@ draw_icosahedron <- function(paths, land, view, style, icosa) {
 #' @noRd
 face_land <- function(face, tri, land, icosa) {
   c3 <- colMeans(tri)
-  c_ll <- c(atan2(c3[2], c3[1]), asin(c3[3] / sqrt(sum(c3^2)))) * 180 / pi
+  c_ll <- vec_lonlat(c3 / sqrt(sum(c3^2)))
   polys <- land_in_cap(land, c_ll[1], c_ll[2], 40)
   if (length(polys) == 0L) return(list(fill = NULL, lines = NULL))
 
   to_tri <- function(r) {
     cpp_lonlat_to_face_solid(icosa, face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
   }
-  tri_ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
-  tri_t <- to_tri(tri_ll)
+  tri_t <- to_tri(vec_lonlat(tri))
   triangle <- sf::st_sfc(sf::st_polygon(list(rbind(tri_t, tri_t[1, ]))))
 
   old <- suppressMessages(sf::sf_use_s2(FALSE))
@@ -803,8 +779,8 @@ net_triangles <- function(icosa) {
   solid <- icosa_solid(icosa)
   lapply(seq_len(nrow(solid$faces)), function(f) {
     tri <- solid$vertices[solid$faces[f, ], ]
-    ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
-    t <- cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
+    ll <- vec_lonlat(tri)
+    t <-cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
     list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE]))
   })
 }

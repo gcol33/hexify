@@ -41,7 +41,6 @@ cell_id <- hexify_quad_xy_to_cell(result$quad, result$quad_x, result$quad_y,
 \code{\link{hexify_cell_to_quad_ij}} for integer grid coordinates
 
 Other coordinate conversion:
-\code{\link[=hexify_cell_id_to_quad_ij]{hexify_cell_id_to_quad_ij()}},
 \code{\link[=hexify_cell_to_icosa_tri]{hexify_cell_to_icosa_tri()}},
 \code{\link[=hexify_cell_to_lonlat]{hexify_cell_to_lonlat()}},
 \code{\link[=hexify_cell_to_plane]{hexify_cell_to_plane()}},

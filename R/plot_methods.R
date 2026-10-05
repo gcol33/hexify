@@ -231,24 +231,10 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
       stop("Package 'sf' is required for plotting")
     }
 
-    # Get grid spec
-    g <- x@grid
-
-    # Generate cell polygons
-    unique_cells <- unique(x@cell_id)
-    hex_sf <- cell_to_sf(unique_cells, g)
-
-    # If fill column specified, merge data
-    if (!is.null(fill)) {
-      if (!fill %in% names(x@data)) {
-        stop(sprintf("Column '%s' not found in data", fill))
-      }
-      # Create data frame with cell_id for merging
-      data_with_id <- cbind(x@data, cell_id = x@cell_id)
-      # Aggregate by cell if needed (take first value)
-      agg_data <- data_with_id[!duplicated(data_with_id$cell_id), c("cell_id", fill)]
-      hex_sf <- merge(hex_sf, agg_data, by = "cell_id", all.x = TRUE)
+    if (!is.null(fill) && !fill %in% names(x@data)) {
+      stop(sprintf("Column '%s' not found in data", fill))
     }
+    hex_sf <- hex_data_cells_sf(x, columns = if (is.null(fill)) character(0) else fill)
 
     # Calculate bounding box
     hex_bbox <- sf::st_bbox(hex_sf)
@@ -361,7 +347,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
       cex <- resolve_point_size(point_size, hex_sf, xlim, ylim)
 
       # Jitter points within their hexagon (or place them at its centre if jitter = FALSE)
-      jittered <- jitter_points_in_cells(x@cell_id, x@grid, jitter = jitter)
+      jittered <- jitter_points_in_cells(x@cell_id, extract_grid(x), jitter = jitter)
 
       points(jittered$lon, jittered$lat,
              pch = 19, cex = cex,

@@ -21,7 +21,7 @@ test_that("forward and inverse Fuller projections invert each other", {
     f <- hexify_forward(lon[k], lat[k], projection = "fuller")
     ll <- hexify_inverse(f[["icosa_triangle_x"]], f[["icosa_triangle_y"]],
                          f[["face"]], projection = "fuller")
-    gap <- row_angle(unit_rows(ll[[1]], ll[[2]]), unit_rows(lon[k], lat[k]))
+    gap <- row_angle(hexify:::unit_vec(ll[[1]], ll[[2]]), hexify:::unit_vec(lon[k], lat[k]))
     expect_lt(gap, 1e-11)
   }
 })
@@ -34,10 +34,10 @@ test_that("Fuller keeps lengths along face edges", {
     f0 <- hexify_forward(fc$lon[1] * 180 / pi, fc$lat[1] * 180 / pi, projection = "fuller")
     v1 <- hexify_inverse(0, 0, 0, projection = "fuller")
     v2 <- hexify_inverse(1, 0, 0, projection = "fuller")
-    a <- unit_rows(v1[[1]], v1[[2]]); b <- unit_rows(v2[[1]], v2[[2]])
+    a <- hexify:::unit_vec(v1[[1]], v1[[2]]); b <- hexify:::unit_vec(v2[[1]], v2[[2]])
     arc <- acos(sum(a * b))
     p <- (sin((1 - s) * arc) * a + sin(s * arc) * b) / sin(arc)
-    ll <- c(atan2(p[2], p[1]), asin(p[3])) * 180 / pi
+    ll <- hexify:::vec_lonlat(p)
     xy <- hexify_forward_to_face(0, ll[1], ll[2], projection = "fuller")
     expect_equal(unname(xy), c(s, 0), tolerance = 1e-9)
     expect_equal(unname(f0[2:3]), c(0.5, 0.5 / sqrt(3)), tolerance = 1e-12)

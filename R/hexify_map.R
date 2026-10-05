@@ -148,25 +148,16 @@ apply_continuous_scale <- function(p, colors, legend_title, na_color) {
 }
 
 #' Convert hexify data to sf polygons
+#'
+#' @param data A HexData object, an sf object (returned as is), or a data frame
+#'   with a cell_id column and the cell area in cell_area_km2 or cell_area
+#' @param aperture Aperture of the grid a data frame's cells belong to
+#' @return sf object with one polygon per cell, carrying the cell's first data
+#'   row
 #' @noRd
 prepare_hex_sf <- function(data, aperture) {
-  # Handle HexData objects
   if (is_hex_data(data)) {
-    g <- data@grid
-    underlying_data <- data@data
-    unique_cells <- unique(data@cell_id)
-    hex_sf <- cell_to_sf(unique_cells, g)
-
-    # Join extra columns from original data
-    extra_cols <- setdiff(names(underlying_data), c("cell_id", "geometry"))
-    if (length(extra_cols) > 0) {
-      # Build data frame with cell_id for merge
-      data_with_id <- cbind(underlying_data, cell_id = data@cell_id)
-      cols <- c("cell_id", extra_cols)
-      data_unique <- data_with_id[!duplicated(data_with_id$cell_id), cols, drop = FALSE]
-      hex_sf <- merge(hex_sf, data_unique, by = "cell_id", all.x = TRUE)
-    }
-    return(hex_sf)
+    return(hex_data_cells_sf(data))
   }
 
   if (inherits(data, "sf")) return(data)
@@ -175,30 +166,44 @@ prepare_hex_sf <- function(data, aperture) {
     stop("data must be a HexData object or an sf object")
   }
 
-  # Handle legacy data frames with cell_area column
-  if ("cell_area" %in% names(data) || "cell_area_km2" %in% names(data)) {
-    # Get area to determine resolution
-    area <- if ("cell_area_km2" %in% names(data)) data$cell_area_km2[1]
-            else if ("cell_area" %in% names(data)) data$cell_area[1]
-
-    # Create temporary grid
-    grid <- hex_grid(area_km2 = area, aperture = aperture)
-
-    # Generate polygons
-    unique_cells <- unique(data$cell_id)
-    hex_sf <- cell_to_sf(unique_cells, grid)
-
-    # Join extra columns from original data
-    extra_cols <- setdiff(names(data), c("cell_id", "geometry"))
-    if (length(extra_cols) > 0) {
-      cols <- c("cell_id", extra_cols)
-      data_unique <- data[!duplicated(data$cell_id), cols, drop = FALSE]
-      hex_sf <- merge(hex_sf, data_unique, by = "cell_id", all.x = TRUE)
-    }
-    return(hex_sf)
+  if (!any(c("cell_area_km2", "cell_area") %in% names(data))) {
+    stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()).")
   }
 
-  stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()).")
+  area <- if ("cell_area_km2" %in% names(data)) data$cell_area_km2[1] else data$cell_area[1]
+  grid <- hex_grid(area_km2 = area, aperture = aperture)
+  merge_first_rows(cell_to_sf(data$cell_id, grid), data, data$cell_id,
+                   setdiff(names(data), c("cell_id", "geometry")))
+}
+
+#' Polygons of the cells of a HexData object, with each cell's first data row
+#'
+#' @param x HexData object
+#' @param columns Data columns to carry onto the polygons; NULL takes every
+#'   column of the data
+#' @return sf object with one polygon per cell
+#' @noRd
+hex_data_cells_sf <- function(x, columns = NULL) {
+  rows <- x@data
+  if (inherits(rows, "sf")) rows <- sf::st_drop_geometry(rows)
+  if (is.null(columns)) columns <- setdiff(names(rows), "cell_id")
+  merge_first_rows(cell_to_sf(grid = x), rows, x@cell_id, columns)
+}
+
+#' Join the first data row of each cell onto the cell polygons
+#'
+#' @param hex_sf sf object with a cell_id column
+#' @param rows Data frame, one row per point
+#' @param cell_id Cell of each row
+#' @param columns Columns of rows to join
+#' @return hex_sf with the columns added
+#' @noRd
+merge_first_rows <- function(hex_sf, rows, cell_id, columns) {
+  if (length(columns) == 0) return(hex_sf)
+  first <- !duplicated(cell_id)
+  first_rows <- cbind(data.frame(cell_id = cell_id[first]),
+                      rows[first, columns, drop = FALSE])
+  merge(hex_sf, first_rows, by = "cell_id", all.x = TRUE)
 }
 
 #' Resolve a basemap specification to its vector and raster parts
@@ -349,39 +354,6 @@ build_standard_layers <- function(p, hex_sf, fill_col, hex_border, hex_lwd,
       alpha = hex_alpha
     )
   }
-}
-
-#' Simple sf preparation for hexify_map (no extra column merging)
-#' @noRd
-prepare_hex_sf_simple <- function(data, aperture) {
-  # Handle HexData objects
-  if (is_hex_data(data)) {
-    g <- data@grid
-    unique_cells <- unique(data@cell_id)
-    return(cell_to_sf(unique_cells, g))
-  }
-
-  if (inherits(data, "sf")) return(data)
-
-  if (!is.data.frame(data) || !"cell_id" %in% names(data)) {
-    stop("data must be a HexData object or an sf object")
-  }
-
-  # Handle legacy data frames with cell_area column
-  if ("cell_area" %in% names(data) || "cell_area_km2" %in% names(data)) {
-    # Get area to determine resolution
-    area <- if ("cell_area_km2" %in% names(data)) data$cell_area_km2[1]
-            else if ("cell_area" %in% names(data)) data$cell_area[1]
-
-    # Create temporary grid
-    grid <- hex_grid(area_km2 = area, aperture = aperture)
-
-    # Generate polygons
-    unique_cells <- unique(data$cell_id)
-    return(cell_to_sf(unique_cells, grid))
-  }
-
-  stop("data must contain 'cell_area' or 'cell_area_km2' column (output from hexify()).")
 }
 
 #' Resolve value column name (auto-detect if NULL)

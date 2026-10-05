@@ -36,7 +36,6 @@ plot(plane$plane_x, plane$plane_y)
 \code{\link{hexify_lonlat_to_plane}} for lon/lat conversion
 
 Other coordinate conversion:
-\code{\link[=hexify_cell_id_to_quad_ij]{hexify_cell_id_to_quad_ij()}},
 \code{\link[=hexify_cell_to_icosa_tri]{hexify_cell_to_icosa_tri()}},
 \code{\link[=hexify_cell_to_lonlat]{hexify_cell_to_lonlat()}},
 \code{\link[=hexify_cell_to_quad_ij]{hexify_cell_to_quad_ij()}},

@@ -9,28 +9,6 @@
 #' @name hexify-grid
 NULL
 
-#' Calculate resolution for target area
-#'
-#' Uses the 'ISEA3H'/'ISEA4H'/'ISEA7H' cell count formula
-#' N = 10 * aperture^res + 2, which matches 'dggridR' resolution numbering
-#' exactly.
-#'
-#' @param target_area_km2 Target area in square kilometers
-#' @param aperture Aperture (3, 4, or 7)
-#' @param radius_km Radius of the body, in kilometers
-#' @return Resolution level
-#' @keywords internal
-calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
-                                          radius_km = EARTH_RADIUS_KM) {
-  n_cells <- body_surface_km2(radius_km) / target_area_km2
-
-  # Solving N = 10 * aperture^res + 2 for res given target area:
-  # res = log((surface / area - 2) / 10) / log(aperture)
-  resolution <- log((n_cells - 2) / 10) / log(aperture)
-
-  return(resolution)  # Return unrounded for caller to handle rounding mode
-}
-
 #' Create a hexagonal grid specification
 #'
 #' Creates a discrete global grid system (DGGS) object with hexagonal cells
@@ -87,38 +65,13 @@ hexify_grid <- function(area,
 
   radius_km <- resolve_radius_km(radius_km)
 
-  if (!resround %in% c("nearest", "up", "down")) {
-    stop("resround must be 'nearest', 'up', or 'down'")
-  }
-
   if (!is.numeric(area) || length(area) != 1 || is.na(area) || area <= 0) {
     stop("area must be a positive number")
   }
 
-  # Calculate resolution for target area
-  resolution <- calculate_resolution_for_area(area, aperture, radius_km)
-  
-  # Apply rounding
-  if (resround == "up") {
-    resolution <- ceiling(resolution)
-  } else if (resround == "down") {
-    resolution <- floor(resolution)
-  } else {
-    resolution <- round(resolution)
-  }
-  
-  # Ensure resolution is valid
-  resolution <- max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
-  
-  # Determine index type based on aperture
-  index_type <- if (aperture == 3) {
-    "z3"
-  } else if (aperture == 7) {
-    "z7"
-  } else {
-    "zorder"
-  }
-  
+  resolution <- resolve_resolution_from_area(area, aperture, radius_km, resround)
+  index_type <- index_type_for_aperture(as.character(aperture))
+
   # Create grid specification with both hexify and dggridR-compatible fields
   grid <- list(
     # Hexify fields

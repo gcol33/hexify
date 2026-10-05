@@ -37,30 +37,11 @@ NULL
 #'
 #' @keywords internal
 hexify_lonlat_to_h_index <- function(grid, lon, lat) {
-  
-  # Validate grid object
-  if (!inherits(grid, "hexify_grid")) {
-    stop("grid must be a hexify_grid object from hexify_grid()")
-  }
-  
-  # Validate inputs
-  if (length(lon) != length(lat)) {
-    stop("lon and lat must have the same length")
-  }
-  
-  if (!is.numeric(lon) || !is.numeric(lat)) {
-    stop("lon and lat must be numeric vectors")
-  }
-  
-  # Check for out-of-range coordinates
-  if (any(!is.na(lon) & (lon < -180 | lon > 180))) {
-    warning("Some longitude values are outside valid range [-180, 180]")
-  }
-  
-  if (any(!is.na(lat) & (lat < -90 | lat > 90))) {
-    warning("Some latitude values are outside valid range [-90, 90]")
-  }
-  
+  check_hexify_grid(grid)
+  validate_same_length(list(lon = lon, lat = lat), "hexify_lonlat_to_h_index")
+  validate_lon(lon)
+  validate_lat(lat)
+
   # Projects lon/lat to the icosahedron, quantizes to the cell containing each
   # point, and encodes it as an index string. A missing coordinate gives a
   # missing index.
@@ -106,11 +87,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
 #'
 #' @keywords internal
 hexify_h_index_to_lonlat <- function(grid, h_index) {
-
-  # Validate grid object
-  if (!inherits(grid, "hexify_grid")) {
-    stop("grid must be a hexify_grid object from hexify_grid()")
-  }
+  check_hexify_grid(grid)
 
   # Validate input
   if (!is.character(h_index)) {
@@ -154,11 +131,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 #' grid <- hexify_grid(area = 1000, aperture = 3)
 #' cell_ids <- hexify_grid_to_cell(grid, lon = c(0, 10), lat = c(45, 50))
 hexify_grid_to_cell <- function(grid, lon, lat) {
-  # Validate grid object
-
-  if (!inherits(grid, "hexify_grid")) {
-    stop("grid must be a hexify_grid object from hexify_grid()")
-  }
+  check_hexify_grid(grid)
 
   hexify_lonlat_to_cell(lon, lat, grid$resolution, grid$aperture)
 }
@@ -185,10 +158,7 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #' cell_ids <- hexify_grid_to_cell(grid, lon = 5, lat = 45)
 #' coords <- hexify_grid_cell_to_lonlat(grid, cell_ids)
 hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
-  # Validate grid object
-  if (!inherits(grid, "hexify_grid")) {
-    stop("grid must be a hexify_grid object from hexify_grid()")
-  }
+  check_hexify_grid(grid)
 
   hexify_cell_to_lonlat(cell_id, grid$resolution, grid$aperture)
 }
@@ -540,11 +510,13 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #'                                    resolution = 10, aperture = 3)
 #' # Should equal original cell_id
 hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
-  hexify_cell_id_to_quad_ij(
-    cell_id = as.numeric(cell_id),
-    resolution = as.integer(resolution),
-    aperture = as.integer(aperture)
-  )
+  cell_id <- as.numeric(cell_id)
+  resolution <- as.integer(resolution)
+  aperture <- as.integer(aperture)
+  validate_resolution(resolution)
+  validate_aperture(aperture)
+  validate_cell_id(cell_id, resolution, aperture)
+  as.data.frame(cpp_cell_to_quad_ij(cell_id, resolution, aperture))
 }
 
 #' Convert Cell ID to Icosa Triangle coordinates

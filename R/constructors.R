@@ -286,7 +286,7 @@ hex_grid <- function(area_km2 = NULL,
     }
 
     actual_area <- h3_avg_area_km2(resolution, radius_km)
-    actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
+    actual_diagonal <- hex_spacing_km(actual_area)
 
     grid <- new("HexGridInfo",
                 aperture = "7",
@@ -302,7 +302,7 @@ hex_grid <- function(area_km2 = NULL,
   }
 
   # =========================================================================
-  # ISEA grid path (original logic)
+  # ISEA grid path
   # =========================================================================
 
   # -------------------------------------------------------------------------
@@ -314,11 +314,8 @@ hex_grid <- function(area_km2 = NULL,
   }
   aperture_str <- format_aperture(aperture, resolution)
 
-  if (is_mixed_aperture(aperture_str)) {
-    aperture_num <- NA_integer_
-  } else if (aperture_str %in% c("3", "4", "7")) {
-    aperture_num <- as.integer(aperture_str)
-  } else {
+  if (!is_mixed_aperture(aperture_str) &&
+      !aperture_str %in% as.character(VALID_APERTURES)) {
     stop("Aperture must be 3, 4, 7, a family such as \"4/3\", or one aperture per level")
   }
 
@@ -339,23 +336,8 @@ hex_grid <- function(area_km2 = NULL,
     if (!is.numeric(area_km2) || area_km2 <= 0) {
       stop("area_km2 must be a positive number")
     }
-
-    res_exact <- if (is_mixed_aperture(aperture_str)) {
-      calculate_resolution_for_area_mixed(area_km2, aperture_str, radius_km)
-    } else {
-      calculate_resolution_for_area(area_km2, aperture_num, radius_km)
-    }
-
-    # Apply rounding
-    resolution <- switch(resround,
-      "nearest" = round(res_exact),
-      "up" = ceiling(res_exact),
-      "down" = floor(res_exact),
-      stop("resround must be 'nearest', 'up', or 'down'")
-    )
-
-    # Clamp to valid range
-    resolution <- max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
+    resolution <- resolve_resolution_from_area(area_km2, aperture_str,
+                                               radius_km, resround)
   } else {
     if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
       stop("resolution must be a single non-NA number")
@@ -370,9 +352,8 @@ hex_grid <- function(area_km2 = NULL,
   # -------------------------------------------------------------------------
   # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
-  n_cells <- aperture_n_cells(aperture_str, resolution)
-  actual_area <- body_surface_km2(radius_km) / n_cells
-  actual_diagonal <- sqrt(actual_area * 2 / sqrt(3))
+  actual_area <- mean_cell_area_km2(aperture_str, resolution, radius_km)
+  actual_diagonal <- hex_spacing_km(actual_area)
 
   # -------------------------------------------------------------------------
   # Create and validate HexGridInfo object

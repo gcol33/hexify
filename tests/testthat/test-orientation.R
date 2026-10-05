@@ -55,11 +55,11 @@ test_that("points rotated with the icosahedron land in the same cells", {
   set.seed(80)
   lon <- runif(3000, -180, 180)
   lat <- asin(runif(3000, -1, 1)) * 180 / pi
-  P <- unit_rows(lon, lat)
+  P <- hexify:::unit_vec(lon, lat)
 
   for (o in ORIENTS) {
     R <- rotation_to(o)
-    Q <- rows_lonlat(P %*% t(R))
+    Q <- hexify:::vec_lonlat(P %*% t(R))
     for (ap in list(3, 7, "4/3", c(4, 4, 7, 3, 4))) {
       res <- if (length(ap) > 1) length(ap) else 5
       g0 <- hex_grid(resolution = res, aperture = ap)
@@ -71,14 +71,14 @@ test_that("points rotated with the icosahedron land in the same cells", {
       cells <- unique(ids)[1:50]
       c0 <- cell_to_lonlat(cells, g0)
       c1 <- cell_to_lonlat(cells, g1)
-      expect_equal(unit_rows(c1[[1]], c1[[2]]),
-                   unit_rows(c0[[1]], c0[[2]]) %*% t(R), tolerance = 1e-10)
+      expect_equal(hexify:::unit_vec(c1[[1]], c1[[2]]),
+                   hexify:::unit_vec(c0[[1]], c0[[2]]) %*% t(R), tolerance = 1e-10)
 
       r0 <- isea_cell_rings(cells, g0@resolution, g0@aperture, icosa_arg(g0), 0)
       r1 <- isea_cell_rings(cells, g1@resolution, g1@aperture, icosa_arg(g1), 0)
       for (k in seq_along(cells)) {
-        expect_equal(unit_rows(r1[[k]][, 1], r1[[k]][, 2]),
-                     unit_rows(r0[[k]][, 1], r0[[k]][, 2]) %*% t(R),
+        expect_equal(hexify:::unit_vec(r1[[k]][, 1], r1[[k]][, 2]),
+                     hexify:::unit_vec(r0[[k]][, 1], r0[[k]][, 2]) %*% t(R),
                      tolerance = 1e-10)
       }
     }
@@ -136,7 +136,7 @@ test_that("a region orientation puts the centre on the middle of an edge", {
   for (centre in list(c(10, 46.5), c(-75, -10), c(0, 90), c(170, -89))) {
     g <- hex_grid(resolution = 5, orientation = "region", region = centre)
     s <- icosa_solid(icosa_arg(g))
-    C <- drop(unit_rows(centre[1], centre[2]))
+    C <- drop(hexify:::unit_vec(centre[1], centre[2]))
     # DGGRID's placement constants hold the edge midpoint to about 1e-7 degrees
     to_vertex <- sort(row_angle(s$vertices, matrix(C, 12, 3, byrow = TRUE)))
     expect_lt(max(abs(to_vertex[1:2] - atan(1 / phi) * 180 / pi)), 1e-7)
@@ -149,7 +149,7 @@ test_that("a face orientation puts the centre on the centre of a face", {
   for (centre in list(c(10, 46.5), c(-75, -10), c(0, 90), c(170, -89), c(-180, 0))) {
     g <- hex_grid(resolution = 5, orientation = "face", region = centre)
     s <- icosa_solid(icosa_arg(g))
-    C <- drop(unit_rows(centre[1], centre[2]))
+    C <- drop(hexify:::unit_vec(centre[1], centre[2]))
     to_face <- sort(row_angle(s$normals, matrix(C, 20, 3, byrow = TRUE)))
     expect_lt(to_face[1], 1e-9)
   }
@@ -207,7 +207,7 @@ test_that("cells and centres match DGGRID under other orientations and on Fuller
     expect_identical(lonlat_to_cell(d$lon, d$lat, g), as.numeric(d$seqnum), info = key)
     ctr <- cell_to_lonlat(d$seqnum, g)
     # DGGRID writes centres to 12 decimals
-    gap <- row_angle(unit_rows(ctr[[1]], ctr[[2]]), unit_rows(d$centre_lon, d$centre_lat))
+    gap <- row_angle(hexify:::unit_vec(ctr[[1]], ctr[[2]]), hexify:::unit_vec(d$centre_lon, d$centre_lat))
     expect_lt(max(gap), 1e-7)
   }
 })

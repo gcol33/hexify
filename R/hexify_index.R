@@ -294,29 +294,6 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   cpp_cell_to_lonlat(numeric(0), cell_id, resolution, aperture)
 }
 
-#' Get cell info from cell ID
-#'
-#' Converts cell ID to cell components (quad, i, j).
-#'
-#' @param cell_id Numeric vector of cell IDs (1-based)
-#' @param resolution Grid resolution (integer >= 0)
-#' @param aperture Grid aperture (3, 4, or 7)
-#'
-#' @return Data frame with quad, i, j columns
-#'
-#' @family coordinate conversion
-#' @keywords internal
-#' @export
-#' @examples
-#' info <- hexify_cell_id_to_quad_ij(1702, resolution = 5, aperture = 3)
-hexify_cell_id_to_quad_ij <- function(cell_id, resolution, aperture) {
-  validate_resolution(resolution)
-  validate_aperture(aperture)
-  validate_cell_id(cell_id, resolution, aperture)
-  result <- cpp_cell_to_quad_ij(cell_id, resolution, aperture)
-  as.data.frame(result)
-}
-
 # =============================================================================
 # Z7 SPECIAL OPERATIONS
 # =============================================================================

@@ -109,20 +109,34 @@ test_that("hexify_cell_to_sf handles NA values", {
 test_that("hexify_cell_to_sf validates aperture", {
   expect_error(
     hexify_cell_to_sf(c(12847), resolution = 10, aperture = 5),
-    "aperture must be 3, 4, or 7"
+    "Aperture must be 3, 4, 7"
   )
 })
 
 test_that("hexify_cell_to_sf validates resolution", {
   expect_error(
     hexify_cell_to_sf(c(12847), resolution = -1, aperture = 3),
-    "resolution must be between 0 and 30"
+    "Resolution must be between 0 and 30"
   )
 
   expect_error(
     hexify_cell_to_sf(c(12847), resolution = 31, aperture = 3),
-    "resolution must be between 0 and 30"
+    "Resolution must be between 0 and 30"
   )
+})
+
+test_that("hexify_cell_to_sf takes a mixed aperture and the grid's CRS", {
+  skip_if_not_installed("sf")
+
+  grid <- hex_grid(resolution = 5, aperture = "4/3")
+  ids <- lonlat_to_cell(c(0, 20), c(10, 40), grid)
+
+  rings <- hexify_cell_to_sf(ids, resolution = 5, aperture = "4/3", return_sf = FALSE)
+  expect_setequal(unique(rings$cell_id), unique(ids))
+
+  mars <- hex_grid(resolution = 5, radius_km = "mars")
+  polys <- hexify_cell_to_sf(c(100, 200), grid = mars)
+  expect_equal(sf::st_crs(polys), grid_crs(mars))
 })
 
 test_that("hexify_cell_to_sf works with aperture 4", {
@@ -303,10 +317,19 @@ test_that("st_as_sf creates polygon geometry from HexData object", {
 # RESOLUTION FROM AREA HELPER
 # =============================================================================
 
-test_that(".resolution_from_area returns valid resolution", {
-  res <- hexify:::.resolution_from_area(1000, aperture = 3)
+test_that("resolve_resolution_from_area rounds and clamps", {
+  res <- hexify:::resolve_resolution_from_area(1000, aperture = 3)
   expect_true(is.numeric(res))
   expect_true(res >= 0 && res <= 30)
+
+  exact <- hexify:::calculate_resolution_for_area(1000, 3)
+  expect_equal(hexify:::resolve_resolution_from_area(1000, 3, round = "up"), ceiling(exact))
+  expect_equal(hexify:::resolve_resolution_from_area(1000, 3, round = "down"), floor(exact))
+
+  expect_equal(hexify:::resolve_resolution_from_area(1e9, 7), 0)
+  expect_equal(hexify:::resolve_resolution_from_area(1e-12, 3), 30)
+  expect_equal(hexify:::resolve_resolution_from_area(1e9, "4/3"), 0)
+  expect_error(hexify:::resolve_resolution_from_area(1000, 3, round = "x"), "resround")
 })
 
 # =============================================================================
@@ -359,6 +382,10 @@ test_that("hexify_grid_global works with large area", {
 
   expect_s3_class(grid, "sf")
   expect_true(nrow(grid) > 0)
+
+  spec <- hex_grid(area_km2 = 10000000)
+  expect_equal(nrow(grid), hexify:::aperture_n_cells(spec@aperture, spec@resolution))
+  expect_true(all(lonlat_to_cell(c(0, 0), c(90, -90), spec) %in% grid$cell_id))
 })
 
 test_that("hexify_grid_global warns on small area", {

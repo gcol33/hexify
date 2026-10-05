@@ -302,7 +302,10 @@ test_that("h3_crosswalk needs both grids on the same body", {
 
   cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars_isea)
   xw <- h3_crosswalk(cells, mars_isea, direction = "isea_to_h3")
-  expect_equal(xw$isea_area_km2, rep(mars_isea@area_km2, nrow(xw)))
+  expect_equal(xw$isea_area_km2, unname(cell_area(xw$isea_cell_id, mars_isea)))
+  expect_equal(xw$isea_area_km2,
+               rep(body_surface_km2(grid_radius_km(mars_isea)) /
+                     (n_cells(mars_isea) - 2), nrow(xw)))
   expect_equal(xw$area_ratio, xw$isea_area_km2 / xw$h3_area_km2)
 
   h3_cells <- lonlat_to_cell(c(0, 10), c(45, 50), mars_h3)

@@ -368,9 +368,8 @@ edge_surface_paths <- function(max_angle, icosa) {
   solid <- icosa_solid(icosa)
   V <- solid$vertices
   ends <- as.vector(t(solid$edges[, c("v1", "v2")]))
-  lon <- atan2(V[ends, 2], V[ends, 1]) * 180 / pi
-  lat <- asin(V[ends, 3]) * 180 / pi
-  cpp_sphere_paths_on_faces(icosa, lon, lat,
+  ll <- vec_lonlat(V[ends, ])
+  cpp_sphere_paths_on_faces(icosa, ll[, 1], ll[, 2],
                             rep(seq_len(nrow(solid$edges)), each = 2L), max_angle)
 }
 

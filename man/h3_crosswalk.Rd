@@ -38,7 +38,8 @@ A data frame with columns:
 \describe{
 \item{isea_cell_id}{ISEA cell ID (numeric)}
 \item{h3_cell_id}{H3 cell ID (character)}
-\item{isea_area_km2}{Area of the ISEA cell in km2}
+\item{isea_area_km2}{Area of the ISEA cell in km2, as \code{\link{cell_area}}
+returns it}
 \item{h3_area_km2}{Geodesic area of the H3 cell in km2}
 \item{area_ratio}{Ratio of ISEA area to H3 area}
 }

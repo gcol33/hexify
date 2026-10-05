@@ -1,13 +1,6 @@
 # R/hex_compact.R
 # Multi-resolution compaction and uncompaction
 
-#' A grid's own resolutions, for reading indexed cells at each of them
-#' @noRd
-isea_grid_at <- function(g, resolution) {
-  hex_grid(resolution = resolution, aperture = g@aperture,
-           radius_km = grid_radius_km(g))
-}
-
 #' The cells an ISEA index string names
 #' @noRd
 isea_index_cells <- function(indices, g) {
@@ -70,9 +63,9 @@ check_isea_indices <- function(indices, g, what) {
 #' @noRd
 isea_child_indices <- function(indices, resolution, g) {
   cells <- isea_index_cells(indices, g)
-  children <- get_children(cells, isea_grid_at(g, resolution))
+  children <- get_children(cells, grid_at_resolution(g, resolution))
   cell_to_index(unique(unlist(children, use.names = FALSE)),
-                isea_grid_at(g, resolution + 1L))
+                grid_at_resolution(g, resolution + 1L))
 }
 
 #' Compact Hex Cells
@@ -148,9 +141,9 @@ hex_compact <- function(cell_ids, grid) {
     at_level <- nchar(ids) - 2L == level
     if (!any(at_level)) next
 
-    parent_grid <- isea_grid_at(g, level - 1L)
+    parent_grid <- grid_at_resolution(g, level - 1L)
     cells <- isea_index_cells(ids[at_level], g)
-    groups <- split(cells, get_parent(cells, isea_grid_at(g, level)))
+    groups <- split(cells, get_parent(cells, grid_at_resolution(g, level)))
     candidates <- as.numeric(names(groups))
 
     # Every cell in a group has this parent, so a group holding as many

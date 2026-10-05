@@ -10,6 +10,9 @@
   aperture, mixed sequence, resolution or body reaches it; an H3 grid is
   drawn on the sphere. `globe_centers` names the views as before.
 
+* `hexify_cell_id_to_quad_ij()` is removed. `hexify_cell_to_quad_ij()` takes
+  the same arguments and returns the same `quad`, `i`, `j` data frame.
+
 ## New features
 
 * `hex_grid(projection = "fuller")` builds an ISEA-family grid on Fuller's

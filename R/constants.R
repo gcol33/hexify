@@ -122,6 +122,47 @@ km_per_degree <- function(radius_km) {
   KM_PER_DEGREE * radius_km / EARTH_RADIUS_KM
 }
 
+#' Centre spacing of a regular hexagon of a given area
+#'
+#' A regular hexagon of area A has flat-to-flat width sqrt(2 A / sqrt(3)),
+#' which is also the distance between the centres of neighbouring cells.
+#' @param area_km2 Hexagon area in km^2
+#' @noRd
+hex_spacing_km <- function(area_km2) {
+  sqrt(2 * area_km2 / sqrt(3))
+}
+
+#' Area of a regular hexagon of a given centre spacing (inverse of
+#' hex_spacing_km())
+#' @param spacing_km Flat-to-flat width in km
+#' @noRd
+hex_area_from_spacing <- function(spacing_km) {
+  spacing_km^2 * sqrt(3) / 2
+}
+
+#' Characteristic length scale: the diameter of a circle of a cell's area
+#' @param area_km2 Cell area in km^2
+#' @noRd
+cls_km <- function(area_km2) {
+  2 * sqrt(area_km2 / pi)
+}
+
+#' Number of cells of an H3 grid at a resolution
+#' @param resolution H3 resolution
+#' @noRd
+h3_n_cells <- function(resolution) {
+  2 + 120 * 7^resolution
+}
+
+#' Mean cell area of an ISEA grid in km^2: the body's area over the cell count
+#' @param aperture Aperture spelling (pure or mixed)
+#' @param resolution Resolution
+#' @param radius_km Radius of the body in km
+#' @noRd
+mean_cell_area_km2 <- function(aperture, resolution, radius_km = EARTH_RADIUS_KM) {
+  body_surface_km2(radius_km) / aperture_n_cells(aperture, resolution)
+}
+
 #' Radius a grid is sized against, in km
 #'
 #' A grid carrying neither the slot nor the field is an Earth grid.
@@ -214,13 +255,6 @@ grid_crs <- function(x) {
     crs <- resolve_crs(NULL, grid_radius_km(x))
   }
   parse_crs(crs)
-}
-
-#' A grid's CRS as 'WKT', for the packages that take a string
-#' @param x HexGridInfo object or legacy hexify_grid list
-#' @noRd
-grid_crs_wkt <- function(x) {
-  grid_crs(x)$wkt
 }
 
 #' A CRS as it prints in a grid specification

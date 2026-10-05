@@ -45,40 +45,6 @@ quad_ij_hops <- function(di, dj, generator) {
   pmax(abs(qi), abs(qj), abs(qi - qj))
 }
 
-#' Hops from one cell to a set of targets, by breadth-first search
-#'
-#' @param source One cell ID
-#' @param targets Cell IDs to reach
-#' @param g HexGridInfo object
-#' @param max_search Rings to expand before giving up
-#' @return Numeric vector of hop counts, `NA` where a target was not reached
-#' @noRd
-isea_bfs_hops <- function(source, targets, g, max_search = 100L) {
-  out <- rep(NA_real_, length(targets))
-  wanted <- unique(targets)
-  found <- stats::setNames(rep(NA_real_, length(wanted)), as.character(wanted))
-  found[as.character(source)] <- 0
-
-  visited <- source
-  frontier <- source
-
-  for (dist in seq_len(max_search)) {
-    if (!anyNA(found)) break
-    frontier <- setdiff(unique(unlist(
-      grid_neighbors_isea(frontier, g)
-    )), visited)
-    if (length(frontier) == 0) break
-
-    visited <- c(visited, frontier)
-    reached <- as.character(frontier)
-    reached <- reached[reached %in% names(found)]
-    found[reached] <- dist
-  }
-
-  out[] <- found[as.character(targets)]
-  out
-}
-
 #' Grid Distance Between Cells
 #'
 #' Computes the grid distance (minimum number of hops) between pairs
@@ -164,7 +130,8 @@ hex_distance <- function(cell_a, cell_b, grid) {
   if (any(cross)) {
     for (source in unique(cell_a[cross])) {
       from <- cross & cell_a == source
-      result[from] <- isea_bfs_hops(source, cell_b[from], g)
+      rings <- isea_rings(source, g, 100L, targets = cell_b[from])
+      result[from] <- rings$ring_distance[match(cell_b[from], rings$cell_id)]
     }
   }
 

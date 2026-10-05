@@ -125,6 +125,27 @@ aperture_n_cells <- function(aperture, resolution) {
   }
 }
 
+#' Calculate resolution for target area
+#'
+#' Uses the 'ISEA3H'/'ISEA4H'/'ISEA7H' cell count formula
+#' N = 10 * aperture^res + 2, which matches 'dggridR' resolution numbering
+#' exactly.
+#'
+#' @param target_area_km2 Target area in square kilometers
+#' @param aperture Aperture (3, 4, or 7)
+#' @param radius_km Radius of the body, in kilometers
+#' @return Resolution level, not rounded. A target larger than the cells of
+#'   resolution 0 gives -Inf.
+#' @keywords internal
+calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
+                                          radius_km = EARTH_RADIUS_KM) {
+  n_cells <- body_surface_km2(radius_km) / target_area_km2
+
+  # Solving N = 10 * aperture^res + 2 for res:
+  # res = log((surface / area - 2) / 10) / log(aperture)
+  log(pmax((n_cells - 2) / 10, 0)) / log(aperture)
+}
+
 #' Resolution whose cells have a target area, for a mixed sequence
 #'
 #' Cell area is the sphere over the cell count, and for a sequence that count is
@@ -138,10 +159,9 @@ aperture_n_cells <- function(aperture, resolution) {
 #' @noRd
 calculate_resolution_for_area_mixed <- function(area_km2, aperture,
                                                 radius_km = EARTH_RADIUS_KM) {
-  surface_km2 <- body_surface_km2(radius_km)
   res <- seq.int(MIN_RESOLUTION, MAX_RESOLUTION)
   log_area <- vapply(res, function(r) {
-    log(surface_km2 / aperture_n_cells(aperture, r))
+    log(mean_cell_area_km2(aperture, r, radius_km))
   }, numeric(1))
   target <- log(area_km2)
 
@@ -151,4 +171,34 @@ calculate_resolution_for_area_mixed <- function(area_km2, aperture,
   k <- max(which(log_area > target))
   frac <- (log_area[k] - target) / (log_area[k] - log_area[k + 1])
   res[k] + frac
+}
+
+#' ISEA resolution for a target cell area
+#'
+#' The resolution whose mean cell area is closest to the target in the
+#' direction `round` asks for, clamped to the resolutions the ISEA backend
+#' supports.
+#' @param area_km2 Target cell area in km^2
+#' @param aperture Aperture spelling, pure or mixed
+#' @param radius_km Radius of the body, in kilometers
+#' @param round "nearest", "up" (finer cells) or "down" (coarser cells)
+#' @return Resolution, a whole number
+#' @noRd
+resolve_resolution_from_area <- function(area_km2, aperture,
+                                         radius_km = EARTH_RADIUS_KM,
+                                         round = "nearest") {
+  res_exact <- if (is_mixed_aperture(aperture)) {
+    calculate_resolution_for_area_mixed(area_km2, aperture, radius_km)
+  } else {
+    calculate_resolution_for_area(area_km2, as.integer(aperture), radius_km)
+  }
+
+  resolution <- switch(round,
+    "nearest" = base::round(res_exact),
+    "up" = ceiling(res_exact),
+    "down" = floor(res_exact),
+    stop("resround must be 'nearest', 'up', or 'down'")
+  )
+
+  max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
 }

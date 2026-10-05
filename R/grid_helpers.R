@@ -382,18 +382,9 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
     stop("densify must be NULL or a single non-negative number")
   }
 
-  # Handle HexData input
-  if (is_hex_data(grid)) {
-    if (is.null(cell_id)) {
-      cell_id <- unique(grid@cell_id)
-    }
-    g <- grid@grid
-  } else {
-    g <- extract_grid(grid)
-    if (is.null(cell_id)) {
-      stop("cell_id required when grid is not HexData")
-    }
-  }
+  resolved <- resolve_cells_grid(cell_id, grid)
+  cell_id <- resolved$cell_id
+  g <- resolved$grid
 
   # Remove NA and duplicates
   cell_id <- unique(cell_id[!is.na(cell_id)])
@@ -489,8 +480,7 @@ grid_rect <- function(bbox, grid) {
   maxlat <- bbox[4]
 
   # Seed with the cells of a point lattice over the box, far edges included
-  diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
-  spacing_deg <- diagonal / km_per_degree(grid_radius_km(g)) * 0.8
+  spacing_deg <- hex_spacing_km(g@area_km2) / km_per_degree(grid_radius_km(g)) * 0.8
 
   lons <- unique(c(seq(minlon, maxlon, by = spacing_deg), maxlon))
   lats <- unique(c(seq(minlat, maxlat, by = spacing_deg), maxlat))
@@ -583,11 +573,11 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
 
   # H3 path: fill globe using native C backend
   if (is_h3_grid(g)) {
-    h3_n_cells <- 2 + 120 * 7^g@resolution
-    if (h3_n_cells > 2e6) {
+    n_cells <- h3_n_cells(g@resolution)
+    if (n_cells > 2e6) {
       warning(sprintf(
         "H3 global grid at res %d has ~%.0f cells. This may take a while.",
-        g@resolution, h3_n_cells
+        g@resolution, n_cells
       ))
     }
     return(cell_to_sf(h3_all_cells(g@resolution), g, wrap_dateline = wrap_dateline))
@@ -602,9 +592,8 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
     ))
   }
 
-  # Dense sampling - use diagonal_km from grid if available
-  diagonal <- if (!is.na(g@diagonal_km)) g@diagonal_km else sqrt(g@area_km2 * 2 / sqrt(3))
-  spacing_deg <- diagonal / km_per_degree(grid_radius_km(g)) * 0.7
+  # Dense sampling at a fraction of the cell centre spacing
+  spacing_deg <- hex_spacing_km(g@area_km2) / km_per_degree(grid_radius_km(g)) * 0.7
 
   lons <- seq(-180, 180, by = spacing_deg)
   lats <- seq(-85, 85, by = spacing_deg)
@@ -838,19 +827,9 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' cell_area(h3_cells, h3)  # equator vs polar — different areas
 #' }
 cell_area <- function(cell_id = NULL, grid) {
-
-  # Handle HexData input
-  if (is_hex_data(grid)) {
-    if (is.null(cell_id)) {
-      cell_id <- grid@cell_id
-    }
-    g <- grid@grid
-  } else {
-    g <- extract_grid(grid)
-    if (is.null(cell_id)) {
-      stop("cell_id required when grid is not HexData")
-    }
-  }
+  resolved <- resolve_cells_grid(cell_id, grid)
+  cell_id <- resolved$cell_id
+  g <- resolved$grid
 
   cell_id <- if (is_h3_grid(g)) as.character(cell_id) else as.numeric(cell_id)
   ids <- unique(cell_id)
@@ -1112,15 +1091,25 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
   front
 }
 
-#' The same grid at another resolution: its aperture, type, radius and CRS
+#' The same grid at another resolution
+#'
+#' Keeps the grid's type, aperture, radius, CRS, orientation and face
+#' projection. A per-level aperture spelling is read at the new resolution
+#' through aperture_at_resolution(), which takes its leading levels.
+#' @param g HexGridInfo object
+#' @param resolution Resolution of the returned grid
+#' @return HexGridInfo object
 #' @noRd
 grid_at_resolution <- function(g, resolution) {
   if (is_h3_grid(g)) {
     return(hex_grid(resolution = resolution, type = "h3", crs = g@crs,
-                    radius_km = g@radius_km))
+                    radius_km = grid_radius_km(g)))
   }
-  hex_grid(resolution = resolution, aperture = g@aperture, crs = g@crs,
-           radius_km = g@radius_km)
+  hex_grid(resolution = resolution,
+           aperture = aperture_at_resolution(g@aperture, resolution),
+           crs = g@crs, radius_km = grid_radius_km(g),
+           orientation = grid_orientation(g),
+           projection = grid_projection(g))
 }
 
 #' Children of ISEA cells, one resolution down
@@ -1150,12 +1139,9 @@ isea_children_one_level <- function(front, resolution, g) {
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
   child_res <- resolution + 1L
-  radius <- grid_radius_km(g)
 
-  parent_grid <- hex_grid(resolution = resolution, aperture = g@aperture,
-                          radius_km = radius)
-  child_grid <- hex_grid(resolution = child_res, aperture = g@aperture,
-                         radius_km = radius)
+  parent_grid <- grid_at_resolution(g, resolution)
+  child_grid <- grid_at_resolution(g, child_res)
   n_child <- aperture_n_cells(g@aperture, child_res)
 
   parent_idx <- isea_cells_to_index(parents, resolution, aperture_int, index_type)

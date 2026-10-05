@@ -47,7 +47,7 @@ hex_browse <- function(hex_data, grid = NULL, value = NULL,
   # Get grid and cell data
 
   if (is_hex_data(hex_data)) {
-    g <- hex_data@grid
+    g <- extract_grid(hex_data)
 
     # Aggregate to unique cells
     df <- as.data.frame(hex_data)

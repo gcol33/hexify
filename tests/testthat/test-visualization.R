@@ -307,27 +307,6 @@ test_that("hexify_heatmap accepts the world_hires basemap", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("prepare_hex_sf_simple validates input", {
-  expect_error(
-    hexify:::prepare_hex_sf_simple(data.frame(x = 1), aperture = 3),
-    "HexData object or an sf object"
-  )
-
-  expect_error(
-    hexify:::prepare_hex_sf_simple(data.frame(cell_id = 1), aperture = 3),
-    "cell_area"
-  )
-})
-
-test_that("prepare_hex_sf_simple passes through sf objects", {
-  skip_if_not_installed("sf")
-
-  hex_sf <- hexify_cell_to_sf(c(12847), resolution = 10, aperture = 3)
-  result <- hexify:::prepare_hex_sf_simple(hex_sf, aperture = 3)
-
-  expect_s3_class(result, "sf")
-})
-
 test_that("prepare_hex_sf validates input", {
   expect_error(
     hexify:::prepare_hex_sf(data.frame(x = 1), aperture = 3),

@@ -52,17 +52,7 @@ hex_zonal <- function(raster, grid, fun = "mean", boundary = NULL,
 
   g <- extract_grid(grid)
 
-  # Get cell IDs
-  if (!is.null(cells)) {
-    cell_ids <- unique(cells[!is.na(cells)])
-  } else if (is_hex_data(grid)) {
-    cell_ids <- unique(grid@cell_id)
-  } else if (!is.null(boundary)) {
-    cell_data <- grid_clip(boundary, g)
-    cell_ids <- unique(cell_data$cell_id)
-  } else {
-    stop("Provide a HexData object, cell IDs via 'cells', or a 'boundary' polygon")
-  }
+  cell_ids <- raster_target_cells(grid, g, cells, boundary)
 
   # Generate hex polygons, read in the raster's own CRS
   hex_sf <- cell_to_sf(cell_ids, g)

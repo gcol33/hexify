@@ -18,7 +18,8 @@ hexify_cell_to_sf(
 
 \item{resolution}{Grid resolution level. Can be omitted if grid is provided.}
 
-\item{aperture}{Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.}
+\item{aperture}{Grid aperture: 3, 4, 7, or a mixed spelling as
+\code{\link{hex_grid}} takes it. Can be omitted if grid is provided.}
 
 \item{return_sf}{Logical. If TRUE (default), returns sf object with polygon
 geometries. If FALSE, returns data frame with vertex coordinates.}
@@ -39,7 +40,8 @@ If return_sf = FALSE: data frame with columns:
 \item{cell_id}{Cell identifier}
 \item{lon}{Vertex longitude}
 \item{lat}{Vertex latitude}
-\item{order}{Vertex order (1-7, 7 closes the polygon)}
+\item{order}{Vertex order along the ring; the last vertex repeats the
+first, closing the polygon}
 }
 \description{
 Creates polygon geometries for hexagonal grid cells from their cell IDs.

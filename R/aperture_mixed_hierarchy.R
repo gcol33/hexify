@@ -49,14 +49,6 @@ mixed_qij_cell <- function(quad, i, j, resolution, aperture) {
                           mixed_ap_seq(aperture, resolution))
 }
 
-#' Maximum (i,j) substrate coordinate for a mixed grid at a resolution.
-#' One less than the quad edge coordinate the C++ layer quantizes against.
-#' @noRd
-mixed_max_dim <- function(resolution, aperture) {
-  if (resolution == 0) return(0L)
-  as.integer(cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution))) - 1L
-}
-
 #' All valid cells within a band of the (i,j) boundary of the ten body quads,
 #' plus the poles. Non-nested ISEA seams -- especially near the twelve
 #' icosahedron vertices (pentagon points), where a parent's children spread into
@@ -65,7 +57,7 @@ mixed_max_dim <- function(resolution, aperture) {
 #' set is O(w * sqrt(n_cells)), still cheap against the full grid.
 #' @noRd
 mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L) {
-  m <- mixed_max_dim(resolution, aperture)
+  m <- cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution)) - 1L
   w <- min(w, as.integer(m) + 1L)
   lo <- 0:(w - 1L)
   hi <- (m - w + 1L):m
@@ -100,45 +92,6 @@ mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L) {
   mixed_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res, aperture)
 }
 
-#' Candidate neighbour cells of a set of mixed cells.
-#'
-#' Two sources unioned for robustness: exact axial (i,j) neighbours in each
-#' cell's own quad (correct for quad interiors), plus directional lon/lat probes
-#' at the cell spacing (which cross icosahedron seams into adjacent quads). Only
-#' used to grow a candidate superset; correctness comes from the parent filter.
-#' @noRd
-mixed_neighbors <- function(cells, child_res, aperture, spacing_deg, n_cells_child) {
-  qij <- mixed_cell_qij(cells, child_res, aperture)
-  # 6 axial hex-neighbour offsets
-  off <- rbind(c(1, 0), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1), c(1, -1))
-  nb <- integer(0)
-  for (r in seq_len(nrow(off))) {
-    nb <- c(nb, mixed_qij_cell(qij$quad, qij$i + off[r, 1], qij$j + off[r, 2],
-                               child_res, aperture))
-  }
-  # Directional probes at the cell spacing (seam-crossing)
-  cll <- mixed_cell_center(cells, child_res, aperture)
-  if (is.finite(spacing_deg) && spacing_deg > 0) {
-    ang <- seq(0, 2 * pi, length.out = 13)[-13]
-    coslat <- cos(cll$lat_deg * pi / 180)
-    for (rad in c(0.8, 1.15) * spacing_deg) {
-      for (a in ang) {
-        plat <- pmax(pmin(cll$lat_deg + rad * sin(a), 89.9999), -89.9999)
-        dlon <- ifelse(coslat > 1e-6, rad * cos(a) / coslat, rad * cos(a))
-        plon <- ((cll$lon_deg + dlon + 180) %% 360) - 180
-        nb <- c(nb, mixed_point_to_cell(plon, plat, child_res, aperture))
-      }
-    }
-  }
-  nb <- unique(nb)
-  nb <- nb[is.finite(nb) & nb >= 1 & nb <= n_cells_child]
-  # Keep only cells whose (i,j) round-trips to a real cell
-  if (length(nb) == 0) return(nb)
-  q2 <- mixed_cell_qij(nb, child_res, aperture)
-  rt <- mixed_qij_cell(q2$quad, q2$i, q2$j, child_res, aperture)
-  nb[rt == nb]
-}
-
 #' Geometric children of a single mixed cell.
 #'
 #' Children are cells whose geometric parent (centre re-quantised at the coarser
@@ -158,7 +111,6 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
     return(sort(all_child[par == cell_id]))
   }
 
-  spacing_deg <- mixed_spacing_deg(child_res, aperture)
   ll <- mixed_cell_center(cell_id, resolution, aperture)
 
   # Seed set: (i,j) box around the central child, plus the pole cells.
@@ -189,8 +141,9 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   # BFS over neighbours, keeping only genuine children.
   for (iter in seq_len(64)) {
     if (length(frontier) == 0) break
-    nb <- mixed_neighbors(frontier, child_res, aperture, spacing_deg, n_cells_child)
-    nb <- setdiff(nb, visited)
+    nb <- unlist(cpp_get_neighbors_isea_seq(standard_icosa(), frontier,
+                                            mixed_ap_seq(aperture, child_res)))
+    nb <- setdiff(nb[!is.na(nb)], visited)
     visited <- c(visited, nb)
     if (length(nb) == 0) break
     kids <- nb[parent_of(nb) == cell_id]
@@ -206,7 +159,7 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   # and add any cell whose exact parent is this cell. Interior parents keep all
   # children in-quad, so the fast walk above is already complete for them.
   pq <- mixed_cell_qij(cell_id, resolution, aperture)
-  m_parent <- mixed_max_dim(resolution, aperture)
+  m_parent <- cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution)) - 1L
   gate <- 3L
   near_boundary <- min(pq$i, pq$j, m_parent - pq$i, m_parent - pq$j) < gate
   if (near_boundary) {
@@ -217,20 +170,6 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   }
 
   sort(unique(found))
-}
-
-#' Approximate cell centre spacing in degrees at a resolution, for sizing the
-#' child-footprint sampling disk.
-#' @noRd
-mixed_spacing_deg <- function(resolution, aperture) {
-  # Mean cell area (km^2) from the grid's cell count over the body's surface,
-  # then hexagon centre spacing s = sqrt(2 A / sqrt(3)) in degrees of arc. Area
-  # goes with r^2 and both the spacing and the km per degree with r, so the
-  # angle is the same on every body and Earth's figures give it.
-  n <- aperture_n_cells(aperture, resolution)
-  area_km2 <- EARTH_SURFACE_KM2 / n
-  spacing_km <- sqrt(2 * area_km2 / sqrt(3))
-  spacing_km / KM_PER_DEGREE
 }
 
 # -----------------------------------------------------------------------------
@@ -273,24 +212,4 @@ mixed_cell_to_index_one <- function(cell_id, resolution, aperture) {
   }
   paste0(sprintf("%02d", as.integer(anc[1])),
          paste(sprintf(paste0("%0", w, "d"), digits), collapse = ""))
-}
-
-#' Decode a single mixed hierarchical index string to a cell ID.
-#' @noRd
-mixed_index_to_cell_one <- function(index, resolution, aperture) {
-  base0 <- as.integer(substr(index, 1, 2))
-  cell <- base0
-  if (resolution == 0) return(cell)
-  w <- mixed_index_digit_width
-  for (k in 1:resolution) {
-    start <- 2L + (k - 1L) * w + 1L
-    d <- as.integer(substr(index, start, start + w - 1L))
-    kids <- mixed_get_children_one(cell, k - 1L, k, aperture,
-                                   aperture_n_cells(aperture, k))
-    if (d + 1L > length(kids)) {
-      stop("hexify internal error: mixed index digit out of range on decode")
-    }
-    cell <- kids[d + 1L]
-  }
-  cell
 }

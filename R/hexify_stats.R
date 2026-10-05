@@ -39,78 +39,61 @@ NULL
 #' print(sprintf("Average cell spacing: %.2f km",
 #'               stats$cell_spacing_km))
 dgearthstat <- function(dggs) {
-  # Accept HexGridInfo objects
   if (is_hex_grid(dggs)) {
-    g <- dggs
-    gt <- tryCatch(g@grid_type, error = function(e) "isea")
-
-    if (gt == "h3") {
-      h3_n_cells <- 2 + 120 * 7^g@resolution
-      cell_area_km2 <- h3_avg_area_km2(g@resolution, grid_radius_km(g))
-      cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
-      cls_km <- 2 * sqrt(cell_area_km2 / pi)
-      return(list(
-        area_km = body_surface_km2(grid_radius_km(g)),
-        n_cells = h3_n_cells,
-        cell_area_km2 = cell_area_km2,
-        cell_spacing_km = cell_spacing_km,
-        cls_km = cls_km,
-        resolution = g@resolution,
-        aperture = 7L,
-        grid_type = "h3"
-      ))
+    if (is_h3_grid(dggs)) {
+      return(h3_level_stats(dggs@resolution, grid_radius_km(dggs)))
     }
-
-    # ISEA HexGridInfo
-    n_cells <- aperture_n_cells(g@aperture, g@resolution)
-    ap <- aperture_to_int(g@aperture)
-    surface_km2 <- body_surface_km2(grid_radius_km(g))
-    cell_area_km2 <- surface_km2 / n_cells
-    cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
-    cls_km <- 2 * sqrt(cell_area_km2 / pi)
-    return(list(
-      area_km = surface_km2,
-      n_cells = n_cells,
-      cell_area_km2 = cell_area_km2,
-      cell_spacing_km = cell_spacing_km,
-      cls_km = cls_km,
-      resolution = g@resolution,
-      aperture = ap
-    ))
+    return(grid_level_stats(body_surface_km2(grid_radius_km(dggs)),
+                            aperture_n_cells(dggs@aperture, dggs@resolution),
+                            dggs@resolution, aperture_to_int(dggs@aperture)))
   }
 
-  # Legacy hexify_grid / dggs path
   if (!inherits(dggs, "hexify_grid") && !inherits(dggs, "dggs")) {
     stop("dggs must be a hexify_grid or HexGridInfo object")
   }
 
   resolution <- get_grid_resolution(dggs, require = TRUE)
+  grid_level_stats(body_surface_km2(grid_radius_km(dggs)),
+                   aperture_n_cells(dggs$aperture, resolution),
+                   resolution, dggs$aperture)
+}
 
-  # Cell count formula (matches calc_grid_params() in rcpp_cell.cpp)
-  n_cells <- max_cell_id(resolution, dggs$aperture)
-
-  # Calculate cell area
-  surface_km2 <- body_surface_km2(grid_radius_km(dggs))
-  cell_area_km2 <- surface_km2 / n_cells
-
-  # Approximate cell spacing (distance between cell centers)
-  # For hexagons: spacing approx  sqrt(2 * area / sqrt(3))
-  cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
-
-  # Calculate characteristic length scale (CLS)
-  # CLS is the diameter of a spherical cap with same area
-  # CLS = 2 * sqrt(area / pi)
-  cls_km <- 2 * sqrt(cell_area_km2 / pi)
-
-  return(list(
+#' Whole-body statistics of one grid level
+#'
+#' @param surface_km2 Area of the body in km^2
+#' @param n_cells Number of cells at this level
+#' @param resolution Resolution, reported as given
+#' @param aperture Aperture, reported as given
+#' @param cell_area_km2 Mean cell area in km^2: the body's area over the cell
+#'   count, unless the backend reports its own
+#' @param ... Further fields appended to the list
+#' @return The list dgearthstat() documents
+#' @noRd
+grid_level_stats <- function(surface_km2, n_cells, resolution, aperture,
+                             cell_area_km2 = surface_km2 / n_cells, ...) {
+  c(list(
     area_km = surface_km2,
     n_cells = n_cells,
     cell_area_km2 = cell_area_km2,
-    cell_spacing_km = cell_spacing_km,
-    cls_km = cls_km,
+    cell_spacing_km = hex_spacing_km(cell_area_km2),
+    cls_km = cls_km(cell_area_km2),
     resolution = resolution,
-    aperture = dggs$aperture
-  ))
+    aperture = aperture
+  ), list(...))
+}
+
+#' Whole-body statistics of an H3 level
+#'
+#' H3 cells are not equal-area, so the mean cell area is H3's own average
+#' rather than the body's area over the cell count.
+#' @param resolution H3 resolution
+#' @param radius_km Radius of the body in km
+#' @noRd
+h3_level_stats <- function(resolution, radius_km) {
+  grid_level_stats(body_surface_km2(radius_km), h3_n_cells(resolution),
+                   resolution, 7L,
+                   cell_area_km2 = h3_avg_area_km2(resolution, radius_km),
+                   grid_type = "h3")
 }
 
 #' Find closest resolution for target cell area
@@ -145,23 +128,10 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
     # Convert from square miles to square km
     area <- area * MI2_TO_KM2
   }
-  
-  # Calculate resolution
-  resolution <- calculate_resolution_for_area(area, dggs$aperture,
-                                              grid_radius_km(dggs))
-  
-  # Apply rounding
-  if (round == "up") {
-    resolution <- ceiling(resolution)
-  } else if (round == "down") {
-    resolution <- floor(resolution)
-  } else {
-    resolution <- round(resolution)
-  }
-  
-  # Ensure valid range
-  resolution <- max(0, min(30, resolution))
-  
+
+  resolution <- resolve_resolution_from_area(area, dggs$aperture,
+                                             grid_radius_km(dggs), round)
+
   if (show_info) {
     # Calculate actual area at this resolution
     temp_grid <- dggs
@@ -219,93 +189,43 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
   radius_km <- resolve_radius_km(radius_km)
 
   if (type == "h3") {
-    # H3 resolution table from pre-computed area values
     res_range <- res_range[res_range >= H3_MIN_RESOLUTION & res_range <= H3_MAX_RESOLUTION]
-    results <- lapply(res_range, function(res) {
-      cell_area_km2 <- h3_avg_area_km2(res, radius_km)
-      h3_n_cells <- 2 + 120 * 7^res
-      cell_spacing_km <- sqrt(2 * cell_area_km2 / sqrt(3))
-      cls_km <- 2 * sqrt(cell_area_km2 / pi)
-      data.frame(
-        resolution = res,
-        n_cells = h3_n_cells,
-        cell_area_km2 = cell_area_km2,
-        cell_spacing_km = cell_spacing_km,
-        cls_km = cls_km
-      )
-    })
-    result_df <- do.call(rbind, results)
-
-    if (print) {
-      cat("\nGrid Resolution Comparison (H3)\n")
-      cat(paste(rep("=", 70), collapse = ""), "\n")
-      cat(sprintf("%-4s  %-12s  %-12s  %-12s  %-10s\n",
-                  "Res", "# Cells", "Area (km^2)", "Spacing (km)", "CLS (km)"))
-      cat(paste(rep("-", 70), collapse = ""), "\n")
-      for (i in seq_len(nrow(result_df))) {
-        row <- result_df[i, ]
-        n_cells_str <- if (row$n_cells > 1e12) {
-          sprintf("%.1fT", row$n_cells / 1e12)
-        } else if (row$n_cells > 1e9) {
-          sprintf("%.1fB", row$n_cells / 1e9)
-        } else if (row$n_cells > 1e6) {
-          sprintf("%.1fM", row$n_cells / 1e6)
-        } else if (row$n_cells > 1e3) {
-          sprintf("%.1fK", row$n_cells / 1e3)
-        } else {
-          sprintf("%.0f", row$n_cells)
-        }
-        cat(sprintf("%-4d  %-12s  %-12.4f  %-12.3f  %-10.3f\n",
-                    row$resolution, n_cells_str,
-                    row$cell_area_km2, row$cell_spacing_km, row$cls_km))
-      }
-      cat(paste(rep("=", 70), collapse = ""), "\n")
-      cat("Note: H3 areas are averages; actual area varies by location\n\n")
-      return(invisible(result_df))
+    level_stats <- function(res) h3_level_stats(res, radius_km)
+    title <- "Grid Resolution Comparison (H3)"
+  } else {
+    surface_km2 <- body_surface_km2(radius_km)
+    level_stats <- function(res) {
+      grid_level_stats(surface_km2, aperture_n_cells(aperture, res), res, aperture)
     }
-    return(result_df)
+    title <- sprintf("Grid Resolution Comparison (Aperture %s)", aperture)
   }
 
-  # ISEA path (original)
-  # Create temporary grid
-  temp_grid <- list(
-    aperture = aperture,
-    topology = "HEXAGON",
-    projection = "ISEA",
-    radius_km = radius_km
-  )
-  class(temp_grid) <- c("hexify_grid", "dggs", "list")
-
-  # Calculate stats for each resolution
-  results <- lapply(res_range, function(res) {
-    temp_grid$resolution <- res
-    temp_grid$res <- res
-    stats <- dgearthstat(temp_grid)
-
-    data.frame(
-      resolution = res,
-      n_cells = stats$n_cells,
-      cell_area_km2 = stats$cell_area_km2,
-      cell_spacing_km = stats$cell_spacing_km,
-      cls_km = stats$cls_km
-    )
-  })
-
-  # Combine into data frame
-  result_df <- do.call(rbind, results)
+  columns <- c("resolution", "n_cells", "cell_area_km2", "cell_spacing_km", "cls_km")
+  result_df <- do.call(rbind, lapply(res_range, function(res) {
+    as.data.frame(level_stats(res)[columns])
+  }))
 
   if (print) {
-    .print_resolution_table(result_df, aperture)
+    if (type == "h3") {
+      .print_resolution_table(result_df, title, "%-12.4f  %-12.3f  %-10.3f",
+                              "Note: H3 areas are averages; actual area varies by location")
+    } else {
+      .print_resolution_table(result_df, title, "%-12.1f  %-12.1f  %-10.1f")
+    }
     return(invisible(result_df))
   }
 
-  return(result_df)
+  result_df
 }
 
 #' Print formatted resolution table
+#' @param comparison Data frame from hexify_compare_resolutions()
+#' @param title Heading line
+#' @param value_format sprintf format of the area, spacing and CLS columns
+#' @param note Optional line printed under the table
 #' @noRd
-.print_resolution_table <- function(comparison, aperture) {
-  cat(sprintf("\nGrid Resolution Comparison (Aperture %d)\n", aperture))
+.print_resolution_table <- function(comparison, title, value_format, note = NULL) {
+  cat(sprintf("\n%s\n", title))
   cat(paste(rep("=", 70), collapse = ""), "\n")
   cat(sprintf("%-4s  %-12s  %-12s  %-12s  %-10s\n",
               "Res", "# Cells", "Area (km^2)", "Spacing (km)", "CLS (km)"))
@@ -313,24 +233,28 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
 
   for (i in seq_len(nrow(comparison))) {
     row <- comparison[i, ]
-
-    # Format numbers nicely
-    n_cells_str <- if (row$n_cells > 1e6) {
-      sprintf("%.1fM", row$n_cells / 1e6)
-    } else if (row$n_cells > 1e3) {
-      sprintf("%.1fK", row$n_cells / 1e3)
-    } else {
-      sprintf("%.0f", row$n_cells)
-    }
-
-    cat(sprintf("%-4d  %-12s  %-12.1f  %-12.1f  %-10.1f\n",
-                row$resolution,
-                n_cells_str,
-                row$cell_area_km2,
-                row$cell_spacing_km,
-                row$cls_km))
+    cat(sprintf(paste0("%-4d  %-12s  ", value_format, "\n"),
+                row$resolution, format_cell_count(row$n_cells),
+                row$cell_area_km2, row$cell_spacing_km, row$cls_km))
   }
 
-  cat(paste(rep("=", 70), collapse = ""), "\n\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  if (!is.null(note)) cat(note, "\n", sep = "")
+  cat("\n")
 }
 
+#' Cell count with a T/B/M/K suffix
+#' @noRd
+format_cell_count <- function(n) {
+  if (n > 1e12) {
+    sprintf("%.1fT", n / 1e12)
+  } else if (n > 1e9) {
+    sprintf("%.1fB", n / 1e9)
+  } else if (n > 1e6) {
+    sprintf("%.1fM", n / 1e6)
+  } else if (n > 1e3) {
+    sprintf("%.1fK", n / 1e3)
+  } else {
+    sprintf("%.0f", n)
+  }
+}
