@@ -23,6 +23,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Suggests:
     testthat (>= 3.0.0),
+    chromote,
     knitr,
     rmarkdown,
     terra,
@@ -32,6 +33,7 @@ Suggests:
     rnaturalearth,
     tibble,
     gridExtra,
+    htmlwidgets,
     leaflet
 VignetteBuilder: knitr
 LinkingTo: Rcpp

@@ -27,6 +27,7 @@
 #include "index_z7.h"
 #include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
+#include "globe_mesh.h"
 
 using namespace Rcpp;
 
@@ -1571,15 +1572,32 @@ DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
 // unit sphere, so the two surfaces show the same boundaries. One closed path
 // per cell: a matrix with columns cell (position in 'cell_id', from 1), face
 // (from 0), solid x, y, z and sphere x, y, z.
+// The boundary of one cell as straight pieces on the faces it covers, in
+// their triangle coordinates, counter-clockwise in the quad plane.
+static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
+                             std::vector<PlaneEdge>& edges,
+                             std::vector<FacePiece>& pieces) {
+    cell_plane_edges(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
+                     c.at_vertex, /*fold_vertex=*/true, edges);
+    pieces.clear();
+    for (const PlaneEdge& e : edges) {
+        plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, pieces);
+    }
+}
+
+// The aperture sequence of a surface call: empty for a pure aperture.
+static std::vector<int> surface_ap_seq(const IntegerVector& ap_seq_in,
+                                       const char* fn) {
+    if (ap_seq_in.size() == 0) return {};
+    return as_ap_seq(ap_seq_in, fn);
+}
+
 // [[Rcpp::export]]
 NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
                                      int aperture, IntegerVector ap_seq_in,
                                      double step) {
     if (!(step > 0.0)) stop("step must be positive");
-    std::vector<int> ap_seq;
-    if (ap_seq_in.size() > 0) {
-        ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
-    }
+    std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
     CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
 
     std::vector<double> rows;
@@ -1596,13 +1614,7 @@ NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
     };
 
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-        const CellPlane& c = g.cells[k];
-        cell_plane_edges(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
-                         c.at_vertex, /*fold_vertex=*/true, edges);
-        pieces.clear();
-        for (const PlaneEdge& e : edges) {
-            plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, pieces);
-        }
+        cell_face_pieces(g, g.cells[k], edges, pieces);
         for (const FacePiece& p : pieces) {
             double len = std::hypot(p.bx - p.ax, p.by - p.ay);
             int n = std::max(1, static_cast<int>(std::ceil(len / step)));
@@ -1624,6 +1636,52 @@ NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
                                             "solid_z", "sphere_x", "sphere_y",
                                             "sphere_z");
     return out;
+}
+
+// The cells as filled surfaces on the icosahedron and the sphere: one mesh,
+// item k being cell_id[k]. A cell's part on one face is the face triangle cut
+// by the cell. The cell's boundary is read in that face's triangle
+// coordinates, its pieces on other faces through the projection of the face
+// extended, and clipped to the triangle: the part is convex and inside the
+// face its boundary is the cell's own, so it is exact. Triangles are refined
+// until no edge is longer than 'max_len' (a face edge is 1), so the sphere's
+// curvature shows.
+// [[Rcpp::export]]
+List cpp_cell_surface_mesh(NumericVector cell_id, int resolution, int aperture,
+                           IntegerVector ap_seq_in, double max_len) {
+    std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_mesh");
+    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+
+    hexify::FaceMesh mesh;
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    std::vector<int> faces;
+    std::vector<double> tx, ty;
+
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        cell_face_pieces(g, g.cells[k], edges, pieces);
+        int item = static_cast<int>(k + 1);
+        faces.clear();
+        for (const FacePiece& p : pieces) {
+            if (std::find(faces.begin(), faces.end(), p.face) == faces.end()) {
+                faces.push_back(p.face);
+            }
+        }
+        for (int face : faces) {
+            tx.clear();
+            ty.clear();
+            for (const FacePiece& p : pieces) {
+                double x = p.ax, y = p.ay;
+                if (p.face != face) hexify::face_tri_to_face(p.face, x, y, face, x, y);
+                tx.push_back(x);
+                ty.push_back(y);
+            }
+            if (faces.size() > 1) hexify::clip_to_face_tri(face, tx, ty);
+            mesh.convex_polygon(item, face, tx, ty);
+        }
+    }
+    mesh.refine(max_len);
+    return mesh.to_list();
 }
 
 // The icosahedron: its vertices on the unit sphere and the vertex indices

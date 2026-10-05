@@ -12,6 +12,21 @@
 
 ## New features
 
+* `hex_globe(<grid>)` draws a grid on an interactive globe, rendered on the
+  graphics card through WebGPU (an htmlwidget; needs 'htmlwidgets'). Drag turns
+  the globe, Shift-drag tilts and turns the view, the wheel zooms, and a
+  slider folds the icosahedron into the sphere. `values` fills the cells
+  through a colour ramp (`palette`, `limits`, `na_fill`). It takes the camera
+  and style arguments of `plot(<grid>)`. Cell boundaries fade out where cells
+  shrink to a few pixels on screen. Without WebGPU the widget shows a notice.
+
+* `hex_globe_png()` saves a globe as a PNG, drawn by the widget's own WebGPU
+  renderer in headless Chrome (needs 'chromote').
+
+* Land is triangulated on the faces of the icosahedron in C++, so filled land
+  folds with the grid; the land area of the mesh matches `sf::st_area()` of
+  `hexify_world`.
+
 * Both surfaces read their cell boundaries from the same points: each cell
   edge is walked in the face plane, where it is straight, and cut where it
   crosses a face edge, so a cell on the icosahedron is the cell on the sphere

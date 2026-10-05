@@ -10,6 +10,55 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// cpp_globe_faces
+List cpp_globe_faces(double max_len);
+RcppExport SEXP _hexify_cpp_globe_faces(SEXP max_lenSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type max_len(max_lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_faces(max_len));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_globe_polygons
+List cpp_globe_polygons(List polygons, double max_len);
+RcppExport SEXP _hexify_cpp_globe_polygons(SEXP polygonsSEXP, SEXP max_lenSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type polygons(polygonsSEXP);
+    Rcpp::traits::input_parameter< double >::type max_len(max_lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_polygons(polygons, max_len));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_sphere_paths_on_faces
+NumericMatrix cpp_sphere_paths_on_faces(NumericVector lon, NumericVector lat, IntegerVector path, double max_angle);
+RcppExport SEXP _hexify_cpp_sphere_paths_on_faces(SEXP lonSEXP, SEXP latSEXP, SEXP pathSEXP, SEXP max_angleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type lon(lonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< double >::type max_angle(max_angleSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_sphere_paths_on_faces(lon, lat, path, max_angle));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_base64_buffer
+std::string cpp_base64_buffer(NumericVector x, std::string type);
+RcppExport SEXP _hexify_cpp_base64_buffer(SEXP xSEXP, SEXP typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_base64_buffer(x, type));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_hex_quantize_ap3
 NumericVector cpp_hex_quantize_ap3(double icosa_triangle_x, double icosa_triangle_y, int resolution);
 RcppExport SEXP _hexify_cpp_hex_quantize_ap3(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP resolutionSEXP) {
@@ -705,6 +754,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_cell_surface_mesh
+List cpp_cell_surface_mesh(NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq_in, double max_len);
+RcppExport SEXP _hexify_cpp_cell_surface_mesh(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seq_inSEXP, SEXP max_lenSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
+    Rcpp::traits::input_parameter< double >::type max_len(max_lenSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_surface_mesh(cell_id, resolution, aperture, ap_seq_in, max_len));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_icosa_solid
 List cpp_icosa_solid();
 RcppExport SEXP _hexify_cpp_icosa_solid() {
@@ -1347,6 +1411,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_hexify_cpp_globe_faces", (DL_FUNC) &_hexify_cpp_globe_faces, 1},
+    {"_hexify_cpp_globe_polygons", (DL_FUNC) &_hexify_cpp_globe_polygons, 2},
+    {"_hexify_cpp_sphere_paths_on_faces", (DL_FUNC) &_hexify_cpp_sphere_paths_on_faces, 4},
+    {"_hexify_cpp_base64_buffer", (DL_FUNC) &_hexify_cpp_base64_buffer, 2},
     {"_hexify_cpp_hex_quantize_ap3", (DL_FUNC) &_hexify_cpp_hex_quantize_ap3, 3},
     {"_hexify_cpp_hex_center_ap3", (DL_FUNC) &_hexify_cpp_hex_center_ap3, 3},
     {"_hexify_cpp_hex_corners_ap3", (DL_FUNC) &_hexify_cpp_hex_corners_ap3, 4},
@@ -1399,6 +1467,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 3},
     {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 3},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 5},
+    {"_hexify_cpp_cell_surface_mesh", (DL_FUNC) &_hexify_cpp_cell_surface_mesh, 5},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 0},
     {"_hexify_cpp_lonlat_to_face_solid", (DL_FUNC) &_hexify_cpp_lonlat_to_face_solid, 3},
     {"_hexify_cpp_face_tri_to_solid", (DL_FUNC) &_hexify_cpp_face_tri_to_solid, 3},

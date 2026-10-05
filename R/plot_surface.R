@@ -136,16 +136,7 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            ...) {
     surface <- match.arg(surface)
     g <- extract_grid(x)
-    if (surface == "icosahedron" && is_h3_grid(g)) {
-      stop("surface = \"icosahedron\" needs an ISEA grid; H3 cells are drawn ",
-           "on the sphere", call. = FALSE)
-    }
-
-    if (is.null(face_edges)) face_edges <- !is_h3_grid(g)
-    if (face_edges && is_h3_grid(g)) {
-      stop("face_edges = TRUE draws the ISEA icosahedron, which an H3 grid is ",
-           "not built on", call. = FALSE)
-    }
+    face_edges <- resolve_surface(surface, face_edges, g)
 
     projection <- match.arg(projection)
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
@@ -205,6 +196,23 @@ resolve_center <- function(center) {
   }
 
   stop("center must be a preset name or numeric c(lon, lat)")
+}
+
+#' Check the surface a grid is drawn on, and whether its face edges are drawn
+#'
+#' Returns `face_edges`, \code{NULL} becoming TRUE for an ISEA grid and FALSE for H3.
+#' @noRd
+resolve_surface <- function(surface, face_edges, g) {
+  if (surface == "icosahedron" && is_h3_grid(g)) {
+    stop("surface = \"icosahedron\" needs an ISEA grid; H3 cells are drawn ",
+         "on the sphere", call. = FALSE)
+  }
+  if (is.null(face_edges)) face_edges <- !is_h3_grid(g)
+  if (face_edges && is_h3_grid(g)) {
+    stop("face_edges = TRUE draws the ISEA icosahedron, which an H3 grid is ",
+         "not built on", call. = FALSE)
+  }
+  face_edges
 }
 
 #' Unit vectors of lon/lat points
@@ -505,11 +513,8 @@ icosa_solid <- function() {
 #' a great-circle arc between corners, so H3 paths carry sphere positions only.
 #' @noRd
 grid_surface_paths <- function(g, cells, step) {
-  if (is_h3_grid(g)) {
-    if (is.null(cells)) cells <- h3_all_cells(g@resolution)
-    return(h3_sphere_paths(as.character(cells), step))
-  }
-  if (is.null(cells)) cells <- seq_len(grid_n_cells(g))
+  cells <- surface_cells(g, cells)
+  if (is_h3_grid(g)) return(h3_sphere_paths(as.character(cells), step))
   mixed <- is_mixed_aperture(g@aperture)
   cpp_cell_surface_paths(
     as.numeric(cells), g@resolution,
@@ -517,6 +522,13 @@ grid_surface_paths <- function(g, cells, step) {
     if (mixed) grid_ap_seq(g) else integer(0),
     step
   )
+}
+
+#' The cells to draw: those given, or every cell of the grid
+#' @noRd
+surface_cells <- function(g, cells) {
+  if (!is.null(cells)) return(cells)
+  if (is_h3_grid(g)) h3_all_cells(g@resolution) else seq_len(grid_n_cells(g))
 }
 
 #' H3 cell boundaries as great-circle arcs on the sphere
@@ -575,10 +587,7 @@ land_in_cap <- function(land, lon, lat, radius_deg) {
   part <- suppressMessages(sf::st_intersection(land, cap))
   part <- part[!sf::st_is_empty(part)]
   if (length(part) == 0L) return(list())
-  part <- polygons_only(part)
-  unlist(lapply(part, function(p) {
-    if (inherits(p, "MULTIPOLYGON")) unclass(p) else list(unclass(p))
-  }), recursive = FALSE)
+  sfc_polygons(polygons_only(part))
 }
 
 #' The polygons of a geometry set, dropping the points and lines an
@@ -591,12 +600,19 @@ polygons_only <- function(x) {
   x[sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))]
 }
 
+#' The polygons of a set of polygon geometries, each a list of lon/lat rings
+#' (exterior first, then holes)
+#' @noRd
+sfc_polygons <- function(x) {
+  unlist(lapply(x, function(p) {
+    if (inherits(p, "MULTIPOLYGON")) unclass(p) else list(unclass(p))
+  }), recursive = FALSE)
+}
+
 #' Country outlines as one set of 3D polylines on the unit sphere
 #' @noRd
 land_outline_points <- function(land) {
-  rings <- unlist(lapply(land, function(p) {
-    if (inherits(p, "MULTIPOLYGON")) unlist(unclass(p), recursive = FALSE) else unclass(p)
-  }), recursive = FALSE)
+  rings <- unlist(sfc_polygons(land), recursive = FALSE)
   P <- do.call(rbind, lapply(rings, function(r) unit_vec(r[, 1], r[, 2])))
   brk <- unlist(lapply(rings, function(r) c(TRUE, rep(FALSE, nrow(r) - 1L))))
   list(P = P, brk = brk)
@@ -714,10 +730,7 @@ draw_face_land <- function(face, tri, land, view, style, shade) {
     filled <- suppressWarnings(sf::st_intersection(flat, sf::st_sfc(triangle)))
     filled <- filled[!sf::st_is_empty(filled)]
     if (length(filled) > 0L) {
-      filled <- polygons_only(filled)
-      polys <- unlist(lapply(filled, function(p) {
-        if (inherits(p, "MULTIPOLYGON")) unclass(p) else list(unclass(p))
-      }), recursive = FALSE)
+      polys <- sfc_polygons(polygons_only(filled))
       fill_polygons(lapply(polys, function(p) lapply(p, to_solid)), view,
                     shade_col(style$land_fill, shade))
     }

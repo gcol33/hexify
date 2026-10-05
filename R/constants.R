@@ -24,6 +24,14 @@ EARTH_RADIUS_KM <- 6371.0088
 #' @noRd
 CELL_EDGE_TOLERANCE <- 1e-3
 
+#' Longest edge of the triangles hex_globe() draws surfaces with
+#'
+#' In triangle coordinates, where a face edge is 1. A triangle of the sphere
+#' this wide sags below the sphere by under 3e-4 radii, less than the lift
+#' the widget gives each layer above the one below.
+#' @noRd
+GLOBE_MESH_SPACING <- 0.04
+
 #' Approximate km per degree of latitude (at equator)
 #' @noRd
 KM_PER_DEGREE <- 111.0

@@ -116,6 +116,8 @@ reference:
   - plot_grid
   - plot_world
   - starts_with("plot,HexGridInfo")
+  - hex_globe
+  - hex_globe_png
   - hexify_world
   - globe_centers
   - hex_browse
