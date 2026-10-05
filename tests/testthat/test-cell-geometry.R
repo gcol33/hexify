@@ -161,3 +161,62 @@ test_that("a mixed sequence and its first aperture give different polygons", {
 
   expect_false(isTRUE(all.equal(mixed_xy, pure_xy)))
 })
+
+test_that("a point goes to the cell with the nearest centre", {
+  # Within one face the plane is the face's own, and a cell is the set of points
+  # nearer its centre than any neighbour's. Odd aperture-7 resolutions sit on a
+  # rotated lattice, where a substrate-then-coarsen assignment breaks this.
+  set.seed(7)
+  lon <- runif(500, 8, 16)
+  lat <- runif(500, 42, 48)
+  plane <- cpp_lonlat_to_plane(lon, lat)
+
+  for (case in list(c(3, 5), c(4, 6), c(7, 3), c(7, 4), c(7, 5))) {
+    g <- hex_grid(resolution = case[2], aperture = case[1])
+    cells <- lonlat_to_cell(lon, lat, g)
+    neighbours <- get_neighbors(cells, g)
+
+    nearest <- vapply(seq_along(cells), function(k) {
+      cand <- c(cells[k], neighbours[[k]])
+      ctr <- cpp_cell_to_plane(cand, case[2], case[1])
+      d <- (ctr$plane_x - plane$plane_x[k])^2 + (ctr$plane_y - plane$plane_y[k])^2
+      which.min(d) == 1L
+    }, logical(1))
+    expect_true(all(nearest), info = sprintf("aperture %d, resolution %d", case[1], case[2]))
+  }
+})
+
+test_that("a drawn cell is the cell lonlat_to_cell assigns", {
+  # Trace each ring tightly, step every point a hair towards the centre on the
+  # sphere, and read it back: it must land in the same cell. The sample holds
+  # the 12 vertex cells and cells straddling quad edges.
+  xyz <- function(lon, lat) {
+    r <- pi / 180
+    cbind(cos(lat * r) * cos(lon * r), cos(lat * r) * sin(lon * r), sin(lat * r))
+  }
+
+  for (case in list(list(3, 3), list(3, 4), list(4, 3), list(7, 2), list(7, 3),
+                    list("4/7", 4))) {
+    g <- hex_grid(resolution = case[[2]], aperture = case[[1]])
+    total <- 2 + 10 * prod(grid_ap_seq(g)[-1])
+    cells <- unique(c(seq_len(total)[is_pentagon(seq_len(total), g)],
+                      round(seq(2, total - 1, length.out = 40))))
+    rings <- if (is_mixed_aperture(g@aperture)) {
+      mixed_cell_corners(cells, g@resolution, g@aperture, 1e-6)
+    } else {
+      cpp_cell_to_corners(cells, g@resolution, as.integer(g@aperture), 1e-6)
+    }
+    centres <- cell_to_lonlat(cells, g)
+
+    for (k in seq_along(cells)) {
+      ring <- rings[[k]][-nrow(rings[[k]]), , drop = FALSE]
+      p <- xyz(ring[, 1], ring[, 2]) * (1 - 1e-4) +
+        xyz(centres$lon_deg[k], centres$lat_deg[k])[rep(1, nrow(ring)), ] * 1e-4
+      p <- p / sqrt(rowSums(p^2))
+      back <- lonlat_to_cell(atan2(p[, 2], p[, 1]) * 180 / pi, asin(p[, 3]) * 180 / pi, g)
+      expect_true(all(back == cells[k]),
+                  info = sprintf("aperture %s, resolution %d, cell %s",
+                                 case[[1]], case[[2]], cells[k]))
+    }
+  }
+})

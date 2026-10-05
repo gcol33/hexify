@@ -145,9 +145,9 @@ test_that("cell_to_sf returns valid geometries for all cells", {
   validity <- sf::st_is_valid(polys)
   expect_true(all(validity))
 
-  # These pentagon cells should have 5 vertices (6 coords with closing)
-  vertex_counts <- sapply(sf::st_geometry(polys), function(g) nrow(sf::st_coordinates(g)))
-  expect_true(all(vertex_counts == 6))
+  # These pentagon cells have 5 corners (6 coords with closing)
+  rings <- cpp_cell_to_corners(polar_cells, grid@resolution, as.integer(grid@aperture))
+  expect_true(all(vapply(rings, nrow, integer(1)) == 6L))
 })
 
 # =============================================================================
@@ -204,6 +204,7 @@ test_that("grid_rect returns every ISEA cell meeting the box", {
     list(c(-74.3, 40.5, -73.7, 40.95), 4, 8),
     list(c(-74.3, 40.5, -73.7, 40.95), 7, 5),
     list(c(5, 45, 16, 55), 7, 4),
+    list(c(-10, 35, 30, 60), 7, 5),
     list(c(-20, 60, 40, 75), 4, 6)
   )
   for (cs in cases) {

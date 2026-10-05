@@ -575,28 +575,30 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_cell_to_corners
-List cpp_cell_to_corners(NumericVector cell_id, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_cell_to_corners(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+List cpp_cell_to_corners(NumericVector cell_id, int resolution, int aperture, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_to_corners(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners(cell_id, resolution, aperture));
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners(cell_id, resolution, aperture, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
 // cpp_cell_to_polygon
-DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution, int aperture);
-RcppExport SEXP _hexify_cpp_cell_to_polygon(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
+DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution, int aperture, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_to_polygon(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_polygon(cell_id, resolution, aperture));
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_polygon(cell_id, resolution, aperture, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -663,26 +665,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_cell_to_corners_seq
-List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in);
-RcppExport SEXP _hexify_cpp_cell_to_corners_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP) {
+List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_to_corners_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners_seq(cell_id, ap_seq_in));
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners_seq(cell_id, ap_seq_in, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
 // cpp_cell_to_polygon_seq
-DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id, IntegerVector ap_seq_in);
-RcppExport SEXP _hexify_cpp_cell_to_polygon_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP) {
+DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id, IntegerVector ap_seq_in, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_to_polygon_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq_in(ap_seq_inSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_polygon_seq(cell_id, ap_seq_in));
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_polygon_seq(cell_id, ap_seq_in, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1334,15 +1338,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_xy_to_cell", (DL_FUNC) &_hexify_cpp_quad_xy_to_cell, 5},
     {"_hexify_cpp_cell_to_icosa_tri", (DL_FUNC) &_hexify_cpp_cell_to_icosa_tri, 3},
     {"_hexify_cpp_quad_ij_to_icosa_tri", (DL_FUNC) &_hexify_cpp_quad_ij_to_icosa_tri, 5},
-    {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 3},
-    {"_hexify_cpp_cell_to_polygon", (DL_FUNC) &_hexify_cpp_cell_to_polygon, 3},
+    {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 4},
+    {"_hexify_cpp_cell_to_polygon", (DL_FUNC) &_hexify_cpp_cell_to_polygon, 4},
     {"_hexify_cpp_ap_seq_edge_dim", (DL_FUNC) &_hexify_cpp_ap_seq_edge_dim, 1},
     {"_hexify_cpp_lonlat_to_cell_seq", (DL_FUNC) &_hexify_cpp_lonlat_to_cell_seq, 3},
     {"_hexify_cpp_cell_to_lonlat_seq", (DL_FUNC) &_hexify_cpp_cell_to_lonlat_seq, 2},
     {"_hexify_cpp_cell_to_quad_ij_seq", (DL_FUNC) &_hexify_cpp_cell_to_quad_ij_seq, 2},
     {"_hexify_cpp_quad_ij_to_cell_seq", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell_seq, 4},
-    {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 2},
-    {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 2},
+    {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 3},
+    {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 3},
     {"_hexify_cpp_cell_lattice_generator_seq", (DL_FUNC) &_hexify_cpp_cell_lattice_generator_seq, 1},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 3},
     {"_hexify_cpp_get_neighbors_isea_seq", (DL_FUNC) &_hexify_cpp_get_neighbors_isea_seq, 2},

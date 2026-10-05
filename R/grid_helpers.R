@@ -191,6 +191,7 @@ wrap_cells_at_dateline <- function(x) {
 
 #' Build hexagon polygons for ISEA cell IDs
 #'
+#' Each edge follows the true cell boundary to within `CELL_EDGE_TOLERANCE`.
 #' Rings are prepared with `lonlat_ring_coords()` so each polygon is
 #' contiguous; callers that render on a flat map pass the result through
 #' `sf::st_wrap_dateline()` to split them at +/-180.
@@ -203,12 +204,13 @@ wrap_cells_at_dateline <- function(x) {
 #' @noRd
 isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
   corners_list <- if (is_mixed_aperture(aperture)) {
-    mixed_cell_corners(cell_id, resolution, aperture)
+    mixed_cell_corners(cell_id, resolution, aperture, CELL_EDGE_TOLERANCE)
   } else {
     cpp_cell_to_corners(
       as.numeric(cell_id),
       as.integer(resolution),
-      as.integer(aperture)
+      as.integer(aperture),
+      CELL_EDGE_TOLERANCE
     )
   }
 

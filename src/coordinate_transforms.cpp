@@ -87,6 +87,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace hexify {
@@ -384,41 +385,56 @@ const DgQuadEdge kDggridEdgeTable[12] = {
     {11, false, 11, 0,  0,  0,  0},
 };
 
-// Reassign an out-of-box Class I (i,j) to the quad that owns it. topEdge =
-// 7^numClassI = maxI + 1 = maxJ + 1. Port of DgQ2DDtoIConverter's reassignment.
-void dggrid_canonicalize_q2di(long long topEdge, int& quadNum,
-                              long long& i, long long& j) {
-    const long long maxI = topEdge - 1, maxJ = topEdge - 1;
-    const long long topEdgeI = topEdge, topEdgeJ = topEdge;
+// Reassign an out-of-box quad coordinate (i,j) to the quad that owns it.
+// topEdge = maxI + 1 = maxJ + 1. Port of DgQ2DDtoIConverter's reassignment.
+// Every edge map is affine in (i, j), so the same maps carry a continuous
+// coordinate across a quad edge when topEdge is the quad's side. Returns false
+// when the coordinate lies beyond both far edges or below both near edges,
+// which a cell centre never does: an integer centre beyond both far edges is
+// the far vertex, and is moved there.
+template <typename T>
+bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
+    const T maxI = topEdge - 1, maxJ = topEdge - 1;
+    const T topEdgeI = topEdge, topEdgeJ = topEdge;
+    const bool integral = std::is_integral<T>::value;
 
-    bool underI = i < 0, underJ = j < 0, overI = i > maxI, overJ = j > maxJ;
+    bool underI = i < 0, underJ = j < 0;
+    bool overI = integral ? i > maxI : i >= topEdge;
+    bool overJ = integral ? j > maxJ : j >= topEdge;
     int numOver = (int)underI + (int)underJ + (int)overI + (int)overJ;
-    if (!numOver) return;
+    if (!numOver) return true;
 
     const DgQuadEdge& ec = kDggridEdgeTable[quadNum];
 
     if (overI && overJ) {
+        if (!integral) return false;
         quadNum = ec.isType0 ? ec.up : ec.right;
         i = 0; j = 0;
     } else if (numOver > 1) {
-        return;  // multi-underage: unreached for valid cell centres
+        return false;
     } else if (underI) {
         quadNum = ec.left;
-        if (ec.isType0) { long long ni = topEdgeJ - j + i, nj = topEdgeJ + i; i = ni; j = nj; }
+        if (ec.isType0) { T ni = topEdgeJ - j + i, nj = topEdgeJ + i; i = ni; j = nj; }
         else            { i = topEdgeI + i; }
     } else if (underJ) {
         quadNum = ec.down;
         if (ec.isType0) { j = topEdgeJ + j; }
-        else            { long long ni = topEdgeJ + j, nj = (topEdgeI - i) + j; i = ni; j = nj; }
+        else            { T ni = topEdgeJ + j, nj = (topEdgeI - i) + j; i = ni; j = nj; }
     } else if (overI) {
         if (ec.isType0) { quadNum = ec.right; i = i - topEdgeI; }
         else if (j == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
-        else { quadNum = ec.right; long long iOver = i - topEdgeI; long long ni = (topEdgeJ - j) + iOver; i = ni; j = iOver; }
+        else { quadNum = ec.right; T iOver = i - topEdgeI; T ni = (topEdgeJ - j) + iOver; i = ni; j = iOver; }
     } else if (overJ) {
         if (!ec.isType0) { quadNum = ec.up; j = j - topEdgeJ; }
         else if (i == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
-        else { quadNum = ec.up; long long jOver = j - topEdgeJ; long long nj = topEdgeI - i + jOver; i = jOver; j = nj; }
+        else { quadNum = ec.up; T jOver = j - topEdgeJ; T nj = topEdgeI - i + jOver; i = jOver; j = nj; }
     }
+    return true;
+}
+
+void dggrid_canonicalize_q2di(long long topEdge, int& quadNum,
+                              long long& i, long long& j) {
+    canonicalize_q2d<long long>(topEdge, quadNum, i, j);
 }
 
 } // anonymous namespace
@@ -447,6 +463,34 @@ void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolu
     z7::IVec2D a(v);
     sub_i = a.i();
     sub_j = a.j();
+}
+
+void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
+                        int resolution, long long& ctr_i, long long& ctr_j) {
+    if (resolution % 2 == 0) { ctr_i = sub_i; ctr_j = sub_j; return; }
+    // At odd resolutions the cells are the Voronoi regions of a rotated
+    // sublattice of the substrate, one centre per seven substrate points. The
+    // point lies within one substrate circumradius of (sub_i, sub_j) and within
+    // sqrt(7) of them of its own centre, so that centre is at most 2.1 lattice
+    // spacings from (sub_i, sub_j): inside the 5 x 5 block of indices around it.
+    double best = -1.0;
+    for (long long di = -2; di <= 2; ++di) {
+        for (long long dj = -2; dj <= 2; ++dj) {
+            long long ci = sub_i + di, cj = sub_j + dj;
+            long long sur_i, sur_j, back_i, back_j;
+            ap7_substrate_to_surrogate_ijk(ci, cj, resolution, sur_i, sur_j);
+            ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, back_i, back_j);
+            if (back_i != ci || back_j != cj) continue;
+            double cx, cy;
+            inv_quantize_class1(ci, cj, cx, cy);
+            double d = (cx - px) * (cx - px) + (cy - py) * (cy - py);
+            if (best < 0.0 || d < best) {
+                best = d;
+                ctr_i = ci;
+                ctr_j = cj;
+            }
+        }
+    }
 }
 
 uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution) {
@@ -664,19 +708,16 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
             return;
         }
         long long S = ap7_classI_scale(resolution);
+        double px = quad_x * static_cast<double>(S);
+        double py = quad_y * static_cast<double>(S);
         long long sub_i, sub_j;
-        quantize_class1(quad_x * static_cast<double>(S), quad_y * static_cast<double>(S),
-                        sub_i, sub_j);
-        // Coarsen to the cell, then canonicalize the cell CENTRE. At odd
-        // resolutions one cell covers seven substrate points, and a cell on a
-        // quad edge covers points on both sides of it, so canonicalizing the
-        // sampled point would give that one cell an address in either quad. Its
-        // centre lies in exactly one quad and so fixes the owner. At even
-        // resolutions the centre is the sampled point.
-        long long sur_i, sur_j;
-        ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, sur_i, sur_j);
+        quantize_class1(px, py, sub_i, sub_j);
         long long ctr_i, ctr_j;
-        ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, ctr_i, ctr_j);
+        ap7_nearest_centre(px, py, sub_i, sub_j, resolution, ctr_i, ctr_j);
+        // Canonicalize the cell CENTRE. A cell on a quad edge covers points on
+        // both sides of it, so canonicalizing the sampled point would give that
+        // one cell an address in either quad. Its centre lies in exactly one
+        // quad and so fixes the owner.
         out_quad = quad;
         dggrid_canonicalize_q2di(S, out_quad, ctr_i, ctr_j);
         ap7_substrate_to_surrogate_ijk(ctr_i, ctr_j, resolution, out_i, out_j);
@@ -1219,6 +1260,23 @@ static int compute_subtriangle(double x, double y) {
 
 // Try to convert quad XY to icosa triangle coords. Returns true on success,
 // false if the point is in an invalid region (e.g., outside the valid quad bounds).
+bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y) {
+    if (quad < 1 || quad > 10) return true;
+    // The quad box is the unit rhombus of the Class I lattice basis.
+    double v = quad_y / kSin60;
+    double u = quad_x + v / 2.0;
+    // Below a near edge the point is still in the hexagon of triangles around
+    // the quad's origin vertex, which try_quad_xy_to_icosa_tri() reads
+    // directly, dropped sector included.
+    if (u < 1.0 && v < 1.0) return true;
+    int q = quad;
+    if (!canonicalize_q2d<double>(1.0, q, u, v)) return false;
+    quad = q;
+    quad_x = u - v / 2.0;
+    quad_y = v * kSin60;
+    return true;
+}
+
 bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
                               int& out_icosa_triangle_face, double& out_icosa_triangle_x, double& out_icosa_triangle_y) {
     if (quad < kMinQuad || quad > kMaxQuad) {

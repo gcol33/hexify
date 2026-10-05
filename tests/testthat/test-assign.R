@@ -169,11 +169,13 @@ test_that("hexify_assign polygons have 6 corners", {
 
   result <- hexify_assign(lon, lat, effective_res = 3, make_polygons = TRUE)
 
-  # Get coordinates of polygon
-  coords <- sf::st_coordinates(result$geometry[[1]])
-
-  # Polygon should have 7 points (6 corners + closing point)
-  expect_equal(nrow(coords), 7)
+  # The ring runs through the cell's six corners, with edge points between
+  coords <- sf::st_coordinates(result$geometry[[1]])[, 1:2]
+  corners <- cpp_cell_to_corners(cpp_lonlat_to_cell(lon, lat, 3L, 3L), 3L, 3L)[[1]][1:6, ]
+  expect_equal(coords[1, ], coords[nrow(coords), ])
+  for (k in seq_len(6)) {
+    expect_lt(min(abs(coords[, 1] - corners[k, 1]) + abs(coords[, 2] - corners[k, 2])), 1e-9)
+  }
 })
 
 # =============================================================================

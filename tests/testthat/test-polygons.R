@@ -22,20 +22,34 @@ test_that("hexify_cell_to_sf returns data frame with return_sf=FALSE", {
   expect_true(all(c("cell_id", "lon", "lat", "order") %in% names(result)))
 })
 
-test_that("hexify_cell_to_sf returns 7 vertices per hexagon (closed polygon)", {
+# Each ring is closed, numbered from 1, and runs through the cell's corners
+expect_rings_through_corners <- function(result, hex_ids, resolution, aperture) {
+  corners <- cpp_cell_to_corners(hex_ids, resolution, aperture)
+  for (k in seq_along(hex_ids)) {
+    ring <- result[result$cell_id == hex_ids[k], ]
+    expect_equal(ring$order, seq_len(nrow(ring)))
+    expect_equal(unlist(ring[1, c("lon", "lat")]), unlist(ring[nrow(ring), c("lon", "lat")]))
+    for (v in seq_len(nrow(corners[[k]]) - 1L)) {
+      gap <- abs(ring$lon - corners[[k]][v, 1]) + abs(ring$lat - corners[[k]][v, 2])
+      expect_lt(min(gap), 1e-9)
+    }
+  }
+}
+
+test_that("hexify_cell_to_sf returns a closed ring through each hexagon's 6 corners", {
   hex_ids <- c(12847, 12532, 22178)
 
   result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
-  expect_equal(nrow(result), length(hex_ids) * 7)
-  expect_equal(unique(result$order), 1:7)
+  expect_true(all(vapply(cpp_cell_to_corners(hex_ids, 10L, 3L), nrow, integer(1)) == 7L))
+  expect_rings_through_corners(result, hex_ids, 10L, 3L)
 })
 
-test_that("hexify_cell_to_sf returns 6 vertices for a cell at an icosahedral vertex", {
+test_that("hexify_cell_to_sf returns a closed ring through a vertex cell's 5 corners", {
   result <- hexify_cell_to_sf(1, resolution = 3, aperture = 3, return_sf = FALSE)
 
-  expect_equal(nrow(result), 6)
-  expect_equal(result$order, 1:6)
+  expect_equal(nrow(cpp_cell_to_corners(1, 3L, 3L)[[1]]), 6L)
+  expect_rings_through_corners(result, 1, 3L, 3L)
 })
 
 test_that("hexify_cell_to_sf returns valid coordinates", {
@@ -81,7 +95,7 @@ test_that("hexify_cell_to_sf removes duplicates", {
   result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
   expect_equal(length(unique(result$cell_id)), 2)
-  expect_equal(nrow(result), 2 * 7)
+  expect_rings_through_corners(result, c(12847, 12532), 10L, 3L)
 })
 
 test_that("hexify_cell_to_sf handles NA values", {
@@ -117,7 +131,7 @@ test_that("hexify_cell_to_sf works with aperture 4", {
   result <- hexify_cell_to_sf(hex_ids, resolution = 8, aperture = 4, return_sf = FALSE)
 
   expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 3 * 7)
+  expect_rings_through_corners(result, hex_ids, 8L, 4L)
 })
 
 test_that("hexify_cell_to_sf works with aperture 7", {
@@ -126,7 +140,7 @@ test_that("hexify_cell_to_sf works with aperture 7", {
   result <- hexify_cell_to_sf(hex_ids, resolution = 5, aperture = 7, return_sf = FALSE)
 
   expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 3 * 7)
+  expect_rings_through_corners(result, hex_ids, 5L, 7L)
 })
 
 # =============================================================================
@@ -397,7 +411,7 @@ test_that("hexify_cell_to_sf with return_sf=FALSE produces correct structure", {
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("cell_id", "lon", "lat", "order") %in% names(result)))
-  expect_equal(nrow(result), 2 * 7)  # 7 vertices per hex
+  expect_rings_through_corners(result, hex_ids, 5L, 3L)
 })
 
 # =============================================================================

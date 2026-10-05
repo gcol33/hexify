@@ -86,6 +86,11 @@ void quad_ij_to_xy(int quad, long long i, long long j,
 void quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
                           int& out_icosa_triangle_face, double& out_icosa_triangle_x, double& out_icosa_triangle_y);
 
+// Move a quad-plane point lying past a far edge of its quad into the quad that
+// owns it, in that quad's frame. False when the point lies past both far edges,
+// beyond the far vertex.
+bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y);
+
 // Inverse: quad XY → icosa triangle coords (returns false on invalid region)
 bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
                               int& out_icosa_triangle_face, double& out_icosa_triangle_x, double& out_icosa_triangle_y);
@@ -111,6 +116,11 @@ void ap7_substrate_to_surrogate_ijk(long long sub_i, long long sub_j, int resolu
                                     long long& sur_i, long long& sur_j);
 void ap7_surrogate_to_substrate_ijk(long long sur_i, long long sur_j, int resolution,
                                     long long& sub_i, long long& sub_j);
+
+// The substrate coordinates of the centre of the aperture-7 cell holding the
+// substrate-scaled point (px, py), given its nearest substrate point.
+void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
+                        int resolution, long long& ctr_i, long long& ctr_j);
 
 // Aperture 7: dense cell index within a quad, and its inverse.
 //

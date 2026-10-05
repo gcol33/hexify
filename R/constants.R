@@ -15,6 +15,15 @@ EARTH_SURFACE_KM2 <- 510065621.724078904704516
 #' @noRd
 EARTH_RADIUS_KM <- 6371.0088
 
+#' How far an ISEA cell edge drawn in lon/lat may stray from the true edge
+#'
+#' A cell edge is straight in the projection plane and curved in lon/lat.
+#' Polygon builders split each edge until every piece is a straight lon/lat
+#' chord to within this fraction of its length, which keeps a cell's drawn area
+#' within about 0.1% of the cell that `lonlat_to_cell()` assigns.
+#' @noRd
+CELL_EDGE_TOLERANCE <- 1e-3
+
 #' Approximate km per degree of latitude (at equator)
 #' @noRd
 KM_PER_DEGREE <- 111.0

@@ -13,6 +13,7 @@
 
 #include <Rcpp.h>
 #include <algorithm>
+#include <functional>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -903,13 +904,86 @@ constexpr double kHexCircumradius = 0.57735026918962576451;
 constexpr int kPentagonSkipNorth = 3;
 constexpr int kPentagonSkipSouth = 2;
 
+// Deepest halving of one cell edge, 2^12 pieces.
+constexpr int kMaxEdgeSplits = 12;
+
+// An edge whose corner longitudes are a half turn apart to within this many
+// degrees runs over a pole. Corners carry the inverse projection's error, a
+// few 1e-5 degrees; a chord this close to a half turn passes within about a
+// metre of the pole.
+constexpr double kPoleEdgeLonSlack = 1e-3;
+
+// A piece of a vertex cell's folded edge shorter than this fraction of the
+// cell's circumradius is a corner, not an edge.
+constexpr double kEdgePieceMin = 1e-9;
+
+// A point of the quad plane in lon/lat. A point past an edge of the quad is
+// first carried into the quad that owns it, so it is read on its own face as
+// a point there is. Only a point past the far vertex is read on the face
+// holding the cell centre, extended across its edge.
+static void quad_point_lonlat(int quad, double qx, double qy,
+                              double qx_center, double qy_center,
+                              double& lon, double& lat) {
+    lon = NA_REAL;
+    lat = NA_REAL;
+
+    int face;
+    double tx, ty;
+    int own_quad = quad;
+    double own_x = qx, own_y = qy;
+    if (hexify::quad_xy_canonicalize(own_quad, own_x, own_y) &&
+        hexify::try_quad_xy_to_icosa_tri(own_quad, own_x, own_y, face, tx, ty)) {
+        auto ll = hexify::face_xy_to_ll(tx, ty, face);
+        lon = ll.first;
+        lat = ll.second;
+        return;
+    }
+
+    int center_face;
+    double center_tx, center_ty;
+    if (hexify::try_quad_xy_to_icosa_tri(quad, qx_center, qy_center,
+                                         center_face, center_tx, center_ty)) {
+        auto ll = hexify::face_xy_to_ll(center_tx + (qx - qx_center),
+                                        center_ty + (qy - qy_center),
+                                        center_face);
+        lon = ll.first;
+        lat = ll.second;
+    }
+}
+
+// Where the plane segment from a point on a face (ax, ay) to the dropped
+// corner (bx, by) of a vertex cell leaves the faces, found by bisection on
+// whether the quad's vertex table reads a point.
+static void sector_exit(int quad, double ax, double ay, double bx, double by,
+                        double& out_x, double& out_y) {
+    double lo = 0.0, hi = 1.0;
+    int face;
+    double tx, ty;
+    for (int it = 0; it < 60; it++) {
+        double mid = 0.5 * (lo + hi);
+        if (hexify::try_quad_xy_to_icosa_tri(quad, ax + mid * (bx - ax),
+                                             ay + mid * (by - ay),
+                                             face, tx, ty)) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    out_x = ax + lo * (bx - ax);
+    out_y = ay + lo * (by - ay);
+}
+
 // The boundary of one cell in lon/lat, counter-clockwise and left open: five
-// points for a cell at an icosahedral vertex, six for every other cell. A pole
-// falls inside a cell or on a cell edge, never on a corner, so every corner
-// keeps the position the inverse projection gives it.
+// corners for a cell at an icosahedral vertex, six for every other cell. A
+// cell edge is straight in the quad plane and curved in lon/lat, so with a
+// positive 'tolerance' each edge is split in the plane, as DGGRID's
+// densification does, until every piece is a straight lon/lat chord to within
+// that fraction of its length. Zero gives the corners alone. A pole falls
+// inside a cell or on a cell edge, never on a corner, so every corner keeps
+// the position the inverse projection gives it.
 static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                  double radius, double rotation_deg,
-                                 bool at_icosa_vertex,
+                                 bool at_icosa_vertex, double tolerance,
                                  std::vector<double>& out_lon,
                                  std::vector<double>& out_lat) {
     double vx[6], vy[6];
@@ -921,37 +995,99 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
         skip = (quad <= 5) ? kPentagonSkipNorth : kPentagonSkipSouth;
     }
 
+    std::vector<int> kept;
+    for (int c = 0; c < 6; c++) {
+        if (c != skip) kept.push_back(c);
+    }
+    int n_corner = static_cast<int>(kept.size());
+
     out_lon.clear();
     out_lat.clear();
 
-    for (int c = 0; c < 6; c++) {
-        if (c == skip) continue;
+    auto project = [&](double x, double y, double& lon, double& lat) {
+        quad_point_lonlat(quad, x, y, qx_center, qy_center, lon, lat);
+    };
 
-        double lon = NA_REAL;
-        double lat = NA_REAL;
-
-        int face;
-        double tx, ty;
-        if (hexify::try_quad_xy_to_icosa_tri(quad, vx[c], vy[c], face, tx, ty)) {
-            auto ll = hexify::face_xy_to_ll(tx, ty, face);
-            lon = ll.first;
-            lat = ll.second;
-        } else {
-            int center_face;
-            double center_tx, center_ty;
-            if (hexify::try_quad_xy_to_icosa_tri(quad, qx_center, qy_center,
-                                                 center_face, center_tx,
-                                                 center_ty)) {
-                auto ll = hexify::face_xy_to_ll(center_tx + (vx[c] - qx_center),
-                                                center_ty + (vy[c] - qy_center),
-                                                center_face);
-                lon = ll.first;
-                lat = ll.second;
+    // The plane segment a -> b in lon/lat, from a and short of b. A segment is
+    // halved while its projected midpoint lies further than 'tolerance' times
+    // the segment's length from the midpoint of the straight lon/lat chord.
+    std::function<void(double, double, double, double, double, double,
+                       double, double, int)> add_segment;
+    add_segment = [&](double ax, double ay, double alon, double alat,
+                      double bx, double by, double blon, double blat,
+                      int depth) {
+        if (tolerance > 0.0 && depth < kMaxEdgeSplits &&
+            R_finite(alon) && R_finite(blon)) {
+            double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
+            double mlon, mlat;
+            project(mx, my, mlon, mlat);
+            double dlon = blon - alon;
+            if (dlon > 180.0) dlon -= 360.0;
+            if (dlon < -180.0) dlon += 360.0;
+            double clat = 0.5 * (alat + blat);
+            double coslat = std::cos(clat * hexify::kDegToRad);
+            double off_lon = mlon - (alon + 0.5 * dlon);
+            if (off_lon > 180.0) off_lon -= 360.0;
+            if (off_lon < -180.0) off_lon += 360.0;
+            double off = std::hypot(off_lon * coslat, mlat - clat);
+            double len = std::hypot(dlon * coslat, blat - alat);
+            if (R_finite(mlon) && len > 0.0 && off > tolerance * len) {
+                add_segment(ax, ay, alon, alat, mx, my, mlon, mlat, depth + 1);
+                add_segment(mx, my, mlon, mlat, bx, by, blon, blat, depth + 1);
+                return;
             }
         }
+        out_lon.push_back(alon);
+        out_lat.push_back(alat);
+    };
+    auto add_edge = [&](double ax, double ay, double bx, double by) {
+        double alon, alat, blon, blat;
+        project(ax, ay, alon, alat);
+        project(bx, by, blon, blat);
+        // An edge over a pole is two meridians, already exact as drawn, and
+        // splitting it lands on the pole, where longitude is undefined.
+        if (std::fabs(std::fabs(blon - alon) - 180.0) < kPoleEdgeLonSlack) {
+            out_lon.push_back(alon);
+            out_lat.push_back(alat);
+            return;
+        }
+        add_segment(ax, ay, alon, alat, bx, by, blon, blat, 0);
+    };
 
-        out_lon.push_back(lon);
-        out_lat.push_back(lat);
+    for (int k = 0; k < n_corner; k++) {
+        int c0 = kept[k];
+        int c1 = kept[(k + 1) % n_corner];
+        if (c1 != (c0 + 1) % 6 && tolerance > 0.0) {
+            // The edge across the dropped corner. The quad plane holds six
+            // triangles around the vertex and the globe five, so the sector
+            // holding that corner is no face: its two bounding rays are one
+            // face edge, and the plane edges c0 -> skip and skip -> c1 meet
+            // them at one point of the globe. The pentagon edge runs from c0
+            // to that point on the first ray and on from the second to c1.
+            // When the corners sit on the rays instead (a Class II vertex
+            // cell), one of the two plane edges lies wholly in the sector, so
+            // its piece has no length and the corner it leaves from is the
+            // same point of the globe as the other piece's start.
+            double ax, ay, bx, by;
+            sector_exit(quad, vx[c0], vy[c0], vx[skip], vy[skip], ax, ay);
+            sector_exit(quad, vx[c1], vy[c1], vx[skip], vy[skip], bx, by);
+            double piece_min = kEdgePieceMin * radius;
+            bool from_c0 = std::hypot(ax - vx[c0], ay - vy[c0]) > piece_min;
+            if (from_c0) {
+                add_edge(vx[c0], vy[c0], ax, ay);
+            }
+            if (std::hypot(vx[c1] - bx, vy[c1] - by) > piece_min) {
+                size_t start = out_lon.size();
+                add_edge(bx, by, vx[c1], vy[c1]);
+                if (!from_c0) {
+                    // The piece starts at c0's point of the globe; keep the
+                    // corner as c0 itself reads, not as the far face reads it.
+                    project(vx[c0], vy[c0], out_lon[start], out_lat[start]);
+                }
+            }
+        } else {
+            add_edge(vx[c0], vy[c0], vx[c1], vy[c1]);
+        }
     }
 }
 
@@ -1007,7 +1143,7 @@ static DataFrame rings_to_frame(NumericVector cell_id, const List& rings) {
 
 // [[Rcpp::export]]
 List cpp_cell_to_corners(NumericVector cell_id, int resolution,
-                          int aperture) {
+                          int aperture, double tolerance = 0.0) {
     if (aperture != 3 && aperture != 4 && aperture != 7) {
         stop("cpp_cell_to_corners: aperture must be 3, 4, or 7");
     }
@@ -1038,7 +1174,8 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
                               qx_center, qy_center);
 
         cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
-                             /*at_icosa_vertex=*/(i == 0 && j == 0), lon, lat);
+                             /*at_icosa_vertex=*/(i == 0 && j == 0), tolerance,
+                             lon, lat);
 
         result[k] = closed_ring(lon, lat);
     }
@@ -1048,9 +1185,10 @@ List cpp_cell_to_corners(NumericVector cell_id, int resolution,
 
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_polygon(NumericVector cell_id, int resolution,
-                               int aperture) {
+                               int aperture, double tolerance = 0.0) {
     return rings_to_frame(cell_id,
-                          cpp_cell_to_corners(cell_id, resolution, aperture));
+                          cpp_cell_to_corners(cell_id, resolution, aperture,
+                                              tolerance));
 }
 
 // ============================================================================
@@ -1263,7 +1401,8 @@ NumericVector cpp_quad_ij_to_cell_seq(IntegerVector quad, NumericVector i,
 }
 
 // [[Rcpp::export]]
-List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
+List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in,
+                             double tolerance = 0.0) {
     std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq");
     int resolution = static_cast<int>(ap_seq.size()) - 1;
 
@@ -1294,7 +1433,8 @@ List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
         hexify::quad_ij_to_xy_mixed(quad, i, j, ap_seq, qx_center, qy_center);
 
         cell_boundary_lonlat(quad, qx_center, qy_center, radius, rotation_deg,
-                             /*at_icosa_vertex=*/(i == 0 && j == 0), lon, lat);
+                             /*at_icosa_vertex=*/(i == 0 && j == 0), tolerance,
+                             lon, lat);
 
         result[k] = closed_ring(lon, lat);
     }
@@ -1304,8 +1444,9 @@ List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
 
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
-                                   IntegerVector ap_seq_in) {
-    return rings_to_frame(cell_id, cpp_cell_to_corners_seq(cell_id, ap_seq_in));
+                                   IntegerVector ap_seq_in, double tolerance = 0.0) {
+    return rings_to_frame(cell_id,
+                          cpp_cell_to_corners_seq(cell_id, ap_seq_in, tolerance));
 }
 
 // ============================================================================

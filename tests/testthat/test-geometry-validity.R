@@ -45,9 +45,9 @@ test_that("cell_to_sf produces valid geometries for polar pentagon cells", {
       info = sprintf("Aperture %d: polar pentagon cells have invalid geometry", aperture)
     )
 
-    # Both should have 5 vertices (6 coords with closing)
-    vertex_counts <- sapply(sf::st_geometry(polys), function(g) nrow(sf::st_coordinates(g)))
-    expect_true(all(vertex_counts == 6),
+    # Both are pentagons: 5 corners, the first repeated last
+    rings <- cpp_cell_to_corners(polar_cells, grid@resolution, aperture)
+    expect_true(all(vapply(rings, nrow, integer(1)) == 6),
       info = sprintf("Aperture %d: polar pentagon cells should have 6 coordinates", aperture)
     )
   }
@@ -67,30 +67,19 @@ test_that("grid_global geometries are non-empty", {
   )
 })
 
-test_that("pentagon cells have approximately 5 unique vertices", {
+test_that("exactly the 12 vertex cells are pentagons", {
   skip_on_cran()
   skip_if_not_installed("sf")
 
   grid <- hex_grid(area_km2 = 100000)
   global <- grid_global(grid)
 
-  # Count unique vertices for each cell
-  vertex_counts <- sapply(sf::st_geometry(global), function(g) {
-    coords <- sf::st_coordinates(g)
-    nrow(unique(coords[, 1:2]))
-  })
-
-  # Most cells should have 6 vertices (hexagons)
-  # 12 cells should have ~5 vertices (pentagons at icosahedral vertices)
-  n_pentagons <- sum(vertex_counts <= 5)
-  n_hexagons <- sum(vertex_counts >= 6)
-
-  expect_true(n_pentagons >= 1 && n_pentagons <= 20,
-    info = sprintf("Expected 1-20 pentagons, found %d", n_pentagons)
-  )
-  expect_true(n_hexagons > n_pentagons,
-    info = "Hexagons should outnumber pentagons"
-  )
+  # The 12 cells at icosahedral vertices are pentagons, every other a hexagon
+  rings <- cpp_cell_to_corners(as.numeric(global$cell_id), grid@resolution,
+                               as.integer(grid@aperture))
+  corner_counts <- vapply(rings, nrow, integer(1)) - 1L
+  expect_equal(sum(corner_counts == 5L), 12L)
+  expect_true(all(corner_counts %in% c(5L, 6L)))
 })
 
 test_that("grid_rect produces all valid geometries", {

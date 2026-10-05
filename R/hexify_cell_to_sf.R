@@ -125,7 +125,8 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 
   } else {
     # Return data frame format
-    result <- cpp_cell_to_polygon(cell_id, resolution, aperture)
+    result <- cpp_cell_to_polygon(cell_id, resolution, aperture,
+                                  CELL_EDGE_TOLERANCE)
     names(result) <- c("cell_id", "lon", "lat", "order")
     result$cell_id <- as.integer(result$cell_id)
     result
@@ -174,22 +175,9 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
 
-  radius_km <- resolve_radius_km(radius_km)
-
-  # Create grid of sample points
-  diagonal <- sqrt(area * 2 / sqrt(3))
-  spacing_deg <- diagonal / km_per_degree(radius_km) * 0.8
-
-  lons <- seq(minlon, maxlon, by = spacing_deg)
-  lats <- seq(minlat, maxlat, by = spacing_deg)
-  grid_pts <- expand.grid(lon = lons, lat = lats)
-
-  # Assign to hexes and get polygons
-  result <- hexify(grid_pts, lon = "lon", lat = "lat", area_km2 = area,
-                   aperture = aperture, resround = resround,
+  grid <- hex_grid(area_km2 = area, aperture = aperture, resround = resround,
                    radius_km = radius_km)
-
-  cell_to_sf(grid = result)
+  grid_rect(c(minlon, minlat, maxlon, maxlat), grid)
 }
 
 #' Generate a global grid of hexagon polygons

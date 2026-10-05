@@ -1,11 +1,37 @@
-# hexify (development version)
+# hexify 0.8.4
+
+## Breaking changes
+
+* ISEA cell polygons follow the true cell edges. An edge is straight in the
+  projection plane and curved in lon/lat, so `cell_to_sf()`, `grid_rect()`,
+  `grid_global()`, `hexify_cell_to_sf()` and the plot methods now split each
+  edge until every piece is a straight lon/lat chord to within 0.1% of its
+  length, as DGGRID's densification does. Drawn with their six (or five)
+  corners alone, cells were off by up to 4% of their area at aperture 3
+  resolution 8 and up to 19% at coarse resolutions; now within about 0.1%. A polygon now has
+  six corners and the points between them, so a cell's vertex count is no
+  longer six; the corners themselves are unchanged.
 
 ## Bug fixes
+
+* At odd aperture-7 resolutions, `lonlat_to_cell()`, `hexify()` and the index
+  functions gave a point near a cell edge to a neighbouring cell: 7 to 11% of
+  random points over central Europe at resolutions 2 to 7. A point was snapped to the finer
+  substrate lattice and then to that point's parent, so a cell was the union
+  of seven substrate hexagons rather than a hexagon. Points now go to the cell
+  whose centre is nearest, the hexagon its polygon draws, which changes the
+  cell ID of those points.
+
+* A cell straddling a quad edge was drawn with the corners beyond the edge
+  read on its centre's face stretched across it, and an icosahedral-vertex
+  cell with its folded edge drawn straight across the missing sector. Both
+  are now drawn where `lonlat_to_cell()` places their boundary.
 
 * `grid_rect()` on ISEA grids missed cells that intersect the bounding box, mostly
   along its edges and occasionally inside it. It now seeds from a point sampling and
   grows through neighbouring cells that meet the box until none is added, so the
   result is every cell meeting the box, independent of the sampling density (#77).
+  `hexify_grid_rect()` had its own copy of the sampling and now calls `grid_rect()`.
 
 # hexify 0.8.3
 
