@@ -120,7 +120,7 @@ hexify_lonlat_to_index <- function(lon, lat, resolution, aperture = 3L,
   validate_resolution(resolution)
   validate_aperture(aperture)
   validate_same_length(list(lon = lon, lat = lat), "hexify_lonlat_to_index")
-  cpp_lonlat_to_index(as.numeric(lon), as.numeric(lat), as.integer(resolution),
+  cpp_lonlat_to_index(numeric(0), as.numeric(lon), as.numeric(lat), as.integer(resolution),
                       as.integer(aperture), index_type)
 }
 
@@ -146,7 +146,7 @@ hexify_index_to_lonlat <- function(index, aperture = 3L,
                                     index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
   validate_aperture(aperture)
-  cpp_index_to_lonlat(as.character(index), as.integer(aperture), index_type)
+  cpp_index_to_lonlat(numeric(0), as.character(index), as.integer(aperture), index_type)
 }
 
 # =============================================================================
@@ -265,7 +265,7 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
   validate_lat(lat)
   validate_resolution(resolution)
   validate_aperture(aperture)
-  cpp_lonlat_to_cell(lon, lat, resolution, aperture)
+  cpp_lonlat_to_cell(numeric(0), lon, lat, resolution, aperture)
 }
 
 #' Convert cell ID to longitude/latitude
@@ -291,7 +291,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
   validate_cell_id(cell_id, resolution, aperture)
-  cpp_cell_to_lonlat(cell_id, resolution, aperture)
+  cpp_cell_to_lonlat(numeric(0), cell_id, resolution, aperture)
 }
 
 #' Get cell info from cell ID

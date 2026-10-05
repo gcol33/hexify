@@ -34,6 +34,21 @@ radius ratio -- rather than touching vendored code. H3 cell IDs remain H3's
 Earth-read topology; a grid on another body is that topology on that body, and
 `h3_crosswalk()` needs both grids on the same body.
 
+## Orientation
+
+An ISEA grid carries its icosahedron's orientation in the `orientation` slot,
+`c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`). The C++ layer
+keeps one face table per orientation (`src/icosahedron.cpp`) and reads the
+active one through `ico()`. Every Rcpp entry point that reaches `ico()` takes
+`orient` as its FIRST argument and calls `activate_orientation(orient)`
+(`src/rcpp_orientation.h`) on entry; R passes `orient_arg(g)`, or
+`numeric(0)` for the default orientation that `hexify_build_icosa()` sets.
+Projection-level and test-only entry points call
+`hexify::use_default_orientation()` instead. A new entry point reaching
+`ico()` must do one of the two, or it reads whatever the previous call left.
+The cell-ID hierarchy is orientation-free, so the mixed-aperture hierarchy
+(`R/aperture_mixed_hierarchy.R`) runs in the standard orientation.
+
 ## Vendored H3 C Library
 
 The H3 backend uses vendored C source from Uber's H3 library in `src/h3/`. This is a direct copy of upstream code — **do not rewrite or restyle it**. Benefits:

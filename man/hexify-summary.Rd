@@ -27,7 +27,8 @@
 For a HexGridInfo, a list of class \code{hexify_grid_summary}
 carrying \code{grid_type}, \code{aperture}, \code{resolution},
 \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
-\code{earth} and \code{n_cells}. For a HexData, a list of class
+\code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
+empty for H3) and \code{n_cells}. For a HexData, a list of class
 \code{hexify_data_summary} carrying \code{rows}, \code{columns},
 \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
 and a \code{preview} of the first rows. The print methods return their

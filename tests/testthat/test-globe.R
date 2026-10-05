@@ -35,7 +35,7 @@ mesh_item_area <- function(m) {
 # =============================================================================
 
 test_that("the faces mesh covers the sphere once, on the unit sphere", {
-  m <- hexify:::cpp_globe_faces(0.1)
+  m <- hexify:::cpp_globe_faces(numeric(0), 0.1)
   expect_equal(sum(mesh_item_area(m)), 4 * pi, tolerance = 1e-9)
   expect_equal(sqrt(rowSums(mesh_points(m$sphere)^2)),
                rep(1, length(m$item)), tolerance = 1e-12)
@@ -44,7 +44,7 @@ test_that("the faces mesh covers the sphere once, on the unit sphere", {
 })
 
 test_that("no edge of a refined mesh is longer than the spacing", {
-  m <- hexify:::cpp_globe_faces(0.1)
+  m <- hexify:::cpp_globe_faces(numeric(0), 0.1)
   S <- mesh_points(m$solid)
   i <- matrix(m$index + 1L, ncol = 3, byrow = TRUE)
   # A face edge of the inscribed icosahedron is 1.0515 radii long.
@@ -60,11 +60,11 @@ test_that("H3 cells tile the sphere", {
 })
 
 test_that("the faces mesh carries each vertex's triangle coordinates", {
-  m <- hexify:::cpp_globe_faces(0.25)
+  m <- hexify:::cpp_globe_faces(numeric(0), 0.25)
   tri <- matrix(m$tri, ncol = 2, byrow = TRUE)
   face <- m$item - 1L
   for (k in seq(1, nrow(tri), by = 7)) {
-    expect_equal(as.vector(hexify:::cpp_face_tri_to_solid(face[k], tri[k, 1], tri[k, 2])),
+    expect_equal(as.vector(hexify:::cpp_face_tri_to_solid(numeric(0), face[k], tri[k, 1], tri[k, 2])),
                  mesh_points(m$solid)[k, ], tolerance = 1e-12)
   }
 })
@@ -72,7 +72,7 @@ test_that("the faces mesh carries each vertex's triangle coordinates", {
 test_that("land triangles keep the land's area", {
   land <- hexify:::surface_land(TRUE)
   polys <- hexify:::sfc_polygons(land)
-  m <- hexify:::cpp_globe_polygons(polys, 0.05)
+  m <- hexify:::cpp_globe_polygons(numeric(0), polys, 0.05)
   area <- mesh_item_area(m)
   expect_length(area, length(polys))
   ref <- vapply(polys, function(p) {
@@ -86,15 +86,15 @@ test_that("land triangles keep the land's area", {
 test_that("a polygon with a hole leaves the hole open", {
   outer <- cbind(c(0, 20, 20, 0, 0), c(0, 0, 20, 20, 0))
   hole <- cbind(c(5, 5, 15, 15, 5), c(5, 15, 15, 5, 5))
-  full <- mesh_item_area(hexify:::cpp_globe_polygons(list(list(outer)), 0.05))
-  holed <- mesh_item_area(hexify:::cpp_globe_polygons(list(list(outer, hole)), 0.05))
-  inner <- mesh_item_area(hexify:::cpp_globe_polygons(list(list(hole)), 0.05))
+  full <- mesh_item_area(hexify:::cpp_globe_polygons(numeric(0), list(list(outer)), 0.05))
+  holed <- mesh_item_area(hexify:::cpp_globe_polygons(numeric(0), list(list(outer, hole)), 0.05))
+  inner <- mesh_item_area(hexify:::cpp_globe_polygons(numeric(0), list(list(hole)), 0.05))
   expect_equal(unname(holed), unname(full - inner), tolerance = 1e-9)
 })
 
 test_that("a polygon wider than a hemisphere is refused", {
   ring <- cbind(c(-170, 0, 170, 0, -170), c(0, -80, 0, 80, 0))
-  expect_error(hexify:::cpp_globe_polygons(list(list(ring)), 0.05),
+  expect_error(hexify:::cpp_globe_polygons(numeric(0), list(list(ring)), 0.05),
                "88 degrees")
 })
 
@@ -103,11 +103,11 @@ test_that("a polygon wider than a hemisphere is refused", {
 # =============================================================================
 
 test_that("paths on the faces keep both surfaces and stay on their faces", {
-  m <- hexify:::cpp_sphere_paths_on_faces(c(0, 90, 179, -170), c(0, 10, 20, 60),
+  m <- hexify:::cpp_sphere_paths_on_faces(numeric(0), c(0, 90, 179, -170), c(0, 10, 20, 60),
                                           rep(1L, 4), 0.02)
   expect_equal(sqrt(rowSums(m[, c("sphere_x", "sphere_y", "sphere_z")]^2)),
                rep(1, nrow(m)), tolerance = 1e-12)
-  solid <- hexify:::icosa_solid()
+  solid <- hexify:::icosa_solid(numeric(0))
   S <- m[, c("solid_x", "solid_y", "solid_z")]
   n <- solid$normals[m[, "face"] + 1L, ]
   h <- rowSums(solid$normals * solid$vertices[solid$faces[, 1], ])[m[, "face"] + 1L]
@@ -115,8 +115,8 @@ test_that("paths on the faces keep both surfaces and stay on their faces", {
 })
 
 test_that("face edges lie on the edges of the solid", {
-  m <- hexify:::edge_surface_paths(0.05)
-  solid <- hexify:::icosa_solid()
+  m <- hexify:::edge_surface_paths(0.05, numeric(0))
+  solid <- hexify:::icosa_solid(numeric(0))
   V <- solid$vertices
   E <- solid$edges
   S <- m[, c("solid_x", "solid_y", "solid_z")]
@@ -310,7 +310,7 @@ xyz_lonlat <- function(p) {
 # sphere, a third within a few cells of the face edges (which hold the quad
 # seams) and a third within a few cells of the 12 vertices.
 shader_probe <- function(n, grid) {
-  s <- hexify:::icosa_solid()
+  s <- hexify:::icosa_solid(hexify:::orient_arg(grid))
   V <- unitize(s$vertices)
   E <- s$edges
   spread <- 3 * sqrt(4 * pi / grid_n_cells(grid))
@@ -360,7 +360,10 @@ GLOBE_AGREEMENT_CASES <- c(
   lapply(c(0, 1, 2, 3, 6, 10), function(r) list(ap = 7, res = r)),
   lapply(c(2, 7, 12, 18), function(r) list(ap = "4/3", res = r)),
   lapply(c(3, 9, 12), function(r) list(ap = "4/7", res = r)),
-  list(list(ap = c(4, 4, 7, 3), res = 4), list(ap = c(3, 7, 4, 7, 3, 4), res = 6))
+  list(list(ap = c(4, 4, 7, 3), res = 4), list(ap = c(3, 7, 4, 7, 3, 4), res = 6)),
+  list(list(ap = 3, res = 10, orient = c(-40, 20, 33)),
+       list(ap = 7, res = 6, orient = c(0, 90, 0)),
+       list(ap = "4/3", res = 12, orient = c(150, -60, 200)))
 )
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5
@@ -369,7 +372,8 @@ test_that("the shader finds the cell lonlat_to_cell() finds", {
   skip_without_gpu_browser()
   set.seed(79)
   for (spec in GLOBE_AGREEMENT_CASES) {
-    grid <- hex_grid(resolution = spec$res, aperture = spec$ap)
+    grid <- hex_grid(resolution = spec$res, aperture = spec$ap,
+                     orientation = if (is.null(spec$orient)) "standard" else spec$orient)
     p <- shader_probe(GLOBE_AGREEMENT_N, grid)
     ll <- xyz_lonlat(p)
     ref <- lonlat_to_cell(ll[, 1], ll[, 2], grid)

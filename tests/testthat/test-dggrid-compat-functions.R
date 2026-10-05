@@ -71,23 +71,24 @@ test_that("from_dggrid rejects unsupported aperture", {
   expect_error(from_dggrid(dggs), "Aperture 5 not supported")
 })
 
-test_that("from_dggrid warns on non-default orientation", {
+test_that("from_dggrid carries the orientation", {
   dggs <- list(
     res = 5L,
     aperture = 3L,
     topology = "HEXAGON",
     projection = "ISEA",
-    pole_lon_deg = 0
+    pole_lon_deg = -20,
+    pole_lat_deg = 10,
+    azimuth_deg = 45
   )
-  expect_warning(from_dggrid(dggs), "Non-default pole_lon_deg")
+  grid <- extract_grid(from_dggrid(dggs))
+  expect_equal(unname(grid@orientation), c(-20, 10, 45))
 
+  # DGGRID writes the standard latitude to eight decimals
   dggs$pole_lon_deg <- 11.25
-  dggs$pole_lat_deg <- 0
-  expect_warning(from_dggrid(dggs), "Non-default pole_lat_deg")
-
-  dggs$pole_lat_deg <- 58.282525588538995
-  dggs$azimuth_deg <- 45
-  expect_warning(from_dggrid(dggs), "Non-default azimuth_deg")
+  dggs$pole_lat_deg <- 58.28252559
+  dggs$azimuth_deg <- 0
+  expect_identical(extract_grid(from_dggrid(dggs))@orientation, ISEA_ORIENTATION)
 })
 
 test_that("dggrid_is_compatible validates compatible grids", {
@@ -125,14 +126,27 @@ test_that("dggrid_is_compatible returns FALSE for incompatible grids (strict=FAL
   expect_false(dggrid_is_compatible(dggs, strict = FALSE))
 })
 
-test_that("dggrid_is_compatible detects non-default orientation", {
+test_that("dggrid_is_compatible accepts any orientation on the sphere", {
   dggs <- list(
     aperture = 3L,
     topology = "HEXAGON",
     projection = "ISEA",
-    pole_lon_deg = 0
+    pole_lon_deg = 0,
+    pole_lat_deg = 90,
+    azimuth_deg = 30
   )
-  expect_error(dggrid_is_compatible(dggs), "pole_lon_deg")
+  expect_true(dggrid_is_compatible(dggs))
+
+  dggs$pole_lat_deg <- 95
+  expect_error(dggrid_is_compatible(dggs), "pole_lat_deg")
+})
+
+test_that("round-trip: hex_grid -> dggridR -> hex_grid keeps the orientation", {
+  grid <- hex_grid(resolution = 6, orientation = c(30, -45, 100))
+  dggs <- as_dggrid(grid)
+  expect_equal(c(dggs$pole_lon_deg, dggs$pole_lat_deg, dggs$azimuth_deg),
+               c(30, -45, 100))
+  expect_equal(extract_grid(from_dggrid(dggs))@orientation, grid@orientation)
 })
 
 test_that("round-trip: hexify_grid -> dggridR -> hexify_grid", {

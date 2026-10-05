@@ -103,10 +103,10 @@ test_that("the default frame holds the whole visible sphere of a tilted camera",
 
 test_that("an icosahedron is framed by the corners of the faces the camera sees", {
   view <- hexify:::surface_view(c(lon = 10, lat = 45), distance = 1.8, tilt = 35)
-  ico <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("icosahedron", view))
-  sph <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("sphere", view))
+  ico <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("icosahedron", view, numeric(0)))
+  sph <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("sphere", view, numeric(0)))
   expect_lt(ico[3], sph[3])
-  s <- hexify:::icosa_solid()
+  s <- hexify:::icosa_solid(numeric(0))
   xy <- hexify:::project(s$vertices[unique(as.vector(s$faces[hexify:::icosa_front(s, view), ])), ], view)
   expect_lte(max(abs(sweep(xy, 2, ico[1:2]))), ico[3] / 1.02 + 1e-12)
 })
@@ -133,7 +133,7 @@ test_that("faces_camera keeps the sphere points the camera has a line of sight t
 })
 
 test_that("an icosahedron face is drawn exactly when the camera is outside its plane", {
-  s <- hexify:::icosa_solid()
+  s <- hexify:::icosa_solid(numeric(0))
   for (d in c(1.05, 1.5, 4)) {
     view <- hexify:::surface_view(c(lon = 10, lat = 60), distance = d)
     h <- rowSums(s$normals * s$vertices[s$faces[, 1], ])
@@ -224,7 +224,7 @@ to_lonlat <- function(S) {
 }
 
 test_that("icosahedron solid has 12 unit vertices, 20 faces and 30 edges", {
-  s <- hexify:::icosa_solid()
+  s <- hexify:::icosa_solid(numeric(0))
   expect_equal(dim(s$vertices), c(12L, 3L))
   expect_equal(rowSums(s$vertices^2), rep(1, 12), tolerance = 1e-12)
   expect_equal(dim(s$faces), c(20L, 3L))
@@ -237,7 +237,7 @@ test_that("icosahedron solid has 12 unit vertices, 20 faces and 30 edges", {
 })
 
 test_that("cell boundary points sit on their face plane and on the sphere", {
-  s <- hexify:::icosa_solid()
+  s <- hexify:::icosa_solid(numeric(0))
   inradius <- sqrt(sum(colMeans(s$vertices[s$faces[1, ], ])^2))
   for (ap in c(3, 4, 7)) {
     g <- hex_grid(resolution = 2, aperture = ap)
@@ -285,7 +285,7 @@ test_that("a vertex cell of a 4,4,7,3 sequence drops the corner no face reads", 
   qij <- hexify:::cpp_cell_to_quad_ij_seq(as.numeric(seq_len(n_cells(g))), seq)
   vertex <- which(qij$i == 0 & qij$j == 0)
   expect_length(vertex, 12L)
-  P <- hexify:::cpp_cell_surface_paths(as.numeric(vertex), 4L, 0L, seq, 0.05)
+  P <- hexify:::cpp_cell_surface_paths(numeric(0), as.numeric(vertex), 4L, 0L, seq, 0.05)
   expect_setequal(unique(P[, "cell"]), seq_along(vertex))
 })
 
@@ -353,7 +353,7 @@ test_that("boundary points of one face run unbroken in the plane", {
 })
 
 test_that("boundary points lie inside their face's triangle of the net", {
-  tris <- hexify:::net_triangles()
+  tris <- hexify:::net_triangles(numeric(0))
   P <- surface_paths_for(hex_grid(resolution = 3, aperture = 3))
   for (f in unique(P[, "face"])) {
     T <- tris[[f + 1]]$plane

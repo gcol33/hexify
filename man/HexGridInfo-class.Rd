@@ -39,6 +39,11 @@ CRS on the sphere of \code{radius_km} on any other body.}
 
 \item{\code{radius_km}}{Numeric. Radius of the body the grid covers, in kilometers.
 \code{NA} reads as Earth's mean radius.}
+
+\item{\code{orientation}}{Numeric. Where an ISEA grid's icosahedron sits:
+\code{c(vert0_lon, vert0_lat, azimuth)} in degrees, vertex 0 and the
+azimuth of vertex 1 seen from it. Empty for H3 grids, whose orientation
+H3 fixes.}
 }}
 
 \seealso{

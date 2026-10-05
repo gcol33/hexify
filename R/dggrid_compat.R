@@ -22,9 +22,10 @@
 #' spacings and CLS come back on Earth. Converting such a grid warns.
 #'
 #' @return A list with 'dggridR'-compatible fields:
-#'   \item{pole_lon_deg}{Longitude of grid pole (default 11.25)}
-#'   \item{pole_lat_deg}{Latitude of grid pole (default 58.282525588538995)}
-#'   \item{azimuth_deg}{Grid azimuth rotation (default 0)}
+#'   \item{pole_lon_deg}{Longitude of icosahedron vertex 0 (standard 11.25)}
+#'   \item{pole_lat_deg}{Latitude of icosahedron vertex 0 (standard
+#'     58.282525588538995)}
+#'   \item{azimuth_deg}{Azimuth of vertex 1 seen from vertex 0 (standard 0)}
 #'   \item{aperture}{Grid aperture (3, 4, or 7)}
 #'   \item{res}{Resolution level}
 #'   \item{topology}{Grid topology ("HEXAGON")}
@@ -55,10 +56,11 @@ as_dggrid <- function(grid) {
             "Earth's ", format(EARTH_RADIUS_KM), " km.", call. = FALSE)
   }
 
+  orientation <- grid_orientation(grid)
   dggs <- list(
-    pole_lon_deg = ISEA_VERT0_LON_DEG,
-    pole_lat_deg = ISEA_VERT0_LAT_DEG,
-    azimuth_deg = ISEA_AZIMUTH_DEG,
+    pole_lon_deg = orientation[["vert0_lon"]],
+    pole_lat_deg = orientation[["vert0_lat"]],
+    azimuth_deg = orientation[["azimuth"]],
     aperture = grid$aperture,
     res = grid$resolution,
     topology = "HEXAGON",
@@ -90,6 +92,11 @@ as_dggrid <- function(grid) {
 #' that carries over and the result is an Earth grid unless \code{radius_km}
 #' says otherwise. Cell area follows from the radius, so it is read from the
 #' radius given rather than from the dggs.
+#'
+#' The orientation carries over: \code{pole_lon_deg}, \code{pole_lat_deg} and
+#' \code{azimuth_deg} place the icosahedron as DGGRID's \code{dggs_vert0_lon},
+#' \code{dggs_vert0_lat} and \code{dggs_vert0_azimuth} do, and a field left out
+#' takes its standard ISEA value.
 #'
 #' The function validates that the 'dggridR' grid uses compatible settings:
 #' - Projection must be 'ISEA' (FULLER not supported)
@@ -125,16 +132,7 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
     stop(sprintf("Aperture %d not supported. Must be 3, 4, or 7.", dggs$aperture))
   }
 
-  # Check for non-default orientation (not supported)
-  if (!is.null(dggs$pole_lon_deg) && abs(dggs$pole_lon_deg - ISEA_VERT0_LON_DEG) > 1e-6) {
-    warning("Non-default pole_lon_deg not supported. Using standard ISEA orientation.")
-  }
-  if (!is.null(dggs$pole_lat_deg) && abs(dggs$pole_lat_deg - ISEA_VERT0_LAT_DEG) > 1e-6) {
-    warning("Non-default pole_lat_deg not supported. Using standard ISEA orientation.")
-  }
-  if (!is.null(dggs$azimuth_deg) && abs(dggs$azimuth_deg - ISEA_AZIMUTH_DEG) > 1e-6) {
-    warning("Non-default azimuth_deg not supported. Using standard ISEA orientation.")
-  }
+  orientation <- dggs_orientation(dggs)
 
   # Create hexify_grid. `area` is a throwaway placeholder -- both `resolution`
   # and `area` are overwritten below from `dggs$res` directly, but
@@ -154,6 +152,9 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
   validate_resolution(dggs$res)
   grid$resolution <- as.integer(dggs$res)
   grid$res <- as.integer(dggs$res)
+  grid$pole_lon_deg <- orientation[["vert0_lon"]]
+  grid$pole_lat_deg <- orientation[["vert0_lat"]]
+  grid$azimuth_deg <- orientation[["azimuth"]]
 
   # Calculate actual area for this resolution
   n_cells <- max_cell_id(grid$resolution, grid$aperture)
@@ -193,15 +194,13 @@ dggrid_is_compatible <- function(dggs, strict = TRUE) {
       issues <- c(issues, "Aperture must be 3, 4, or 7")
     }
 
-    # Check orientation
-    if (!is.null(dggs$pole_lon_deg) && abs(dggs$pole_lon_deg - ISEA_VERT0_LON_DEG) > 1e-6) {
-      issues <- c(issues, "Non-default pole_lon_deg not supported")
-    }
-    if (!is.null(dggs$pole_lat_deg) && abs(dggs$pole_lat_deg - ISEA_VERT0_LAT_DEG) > 1e-6) {
-      issues <- c(issues, "Non-default pole_lat_deg not supported")
-    }
-    if (!is.null(dggs$azimuth_deg) && abs(dggs$azimuth_deg - ISEA_AZIMUTH_DEG) > 1e-6) {
-      issues <- c(issues, "Non-default azimuth_deg not supported")
+    orientation_ok <- tryCatch({
+      dggs_orientation(dggs)
+      TRUE
+    }, error = function(e) FALSE)
+    if (!orientation_ok) {
+      issues <- c(issues, paste0("pole_lon_deg, pole_lat_deg and azimuth_deg must ",
+                                 "be finite, pole_lat_deg in [-90, 90]"))
     }
   }
 
@@ -214,4 +213,22 @@ dggrid_is_compatible <- function(dggs, strict = TRUE) {
   }
 
   TRUE
+}
+
+#' Orientation a dggs carries
+#'
+#' The DGGRID fields dggs_vert0_lon, dggs_vert0_lat and dggs_vert0_azimuth,
+#' which 'dggridR' names pole_lon_deg, pole_lat_deg and azimuth_deg. A field
+#' left out takes its standard ISEA value. DGGRID and 'dggridR' write the
+#' standard vertex 0 latitude to eight decimals (58.28252559), so an
+#' orientation within 1e-6 degrees of the standard one is read as it.
+#' @noRd
+dggs_orientation <- function(dggs) {
+  field <- function(name, standard) if (is.null(dggs[[name]])) standard else dggs[[name]]
+  o <- check_orientation(c(
+    vert0_lon = field("pole_lon_deg", ISEA_VERT0_LON_DEG),
+    vert0_lat = field("pole_lat_deg", ISEA_VERT0_LAT_DEG),
+    azimuth = field("azimuth_deg", ISEA_AZIMUTH_DEG)
+  ))
+  if (all(abs(o - ISEA_ORIENTATION) <= 1e-6)) ISEA_ORIENTATION else o
 }

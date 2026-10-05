@@ -195,12 +195,13 @@ wrap_cells_at_dateline <- function(x) {
 #' Each edge follows the true cell boundary to within `tolerance` of its
 #' length; 0 gives the corners alone.
 #' @noRd
-isea_cell_rings <- function(cell_id, resolution, aperture,
+isea_cell_rings <- function(cell_id, resolution, aperture, orient,
                             tolerance = CELL_EDGE_TOLERANCE) {
   if (is_mixed_aperture(aperture)) {
-    return(mixed_cell_corners(cell_id, resolution, aperture, tolerance))
+    return(cpp_cell_to_corners_seq(orient, as.numeric(cell_id),
+                                   mixed_ap_seq(aperture, resolution), tolerance))
   }
-  cpp_cell_to_corners(as.numeric(cell_id), as.integer(resolution),
+  cpp_cell_to_corners(orient, as.numeric(cell_id), as.integer(resolution),
                       as.integer(aperture), tolerance)
 }
 
@@ -214,12 +215,13 @@ isea_cell_rings <- function(cell_id, resolution, aperture,
 #' @param cell_id Numeric vector of cell IDs
 #' @param resolution Grid resolution level
 #' @param aperture Grid aperture: 3, 4, 7, or a mixed sequence spelling
+#' @param orient Orientation argument of the C++ layer (see orient_arg())
 #' @param crs CRS the polygons carry, as sf reads it
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
-isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326,
+isea_cells_to_sfc <- function(cell_id, resolution, aperture, orient, crs = 4326,
                               tolerance = CELL_EDGE_TOLERANCE) {
-  corners_list <- isea_cell_rings(cell_id, resolution, aperture, tolerance)
+  corners_list <- isea_cell_rings(cell_id, resolution, aperture, orient, tolerance)
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(lonlat_ring_coords(coords)))
@@ -270,12 +272,14 @@ lonlat_to_cell <- function(lon, lat, grid) {
 
   if (is_mixed_aperture(g@aperture)) {
     cpp_lonlat_to_cell_seq(
+      orient_arg(g),
       as.numeric(lon),
       as.numeric(lat),
       grid_ap_seq(g)
     )
   } else {
     cpp_lonlat_to_cell(
+      orient_arg(g),
       as.numeric(lon),
       as.numeric(lat),
       g@resolution,
@@ -310,11 +314,13 @@ cell_to_lonlat <- function(cell_id, grid) {
 
   if (is_mixed_aperture(g@aperture)) {
     cpp_cell_to_lonlat_seq(
+      orient_arg(g),
       as.numeric(cell_id),
       grid_ap_seq(g)
     )
   } else {
     cpp_cell_to_lonlat(
+      orient_arg(g),
       as.numeric(cell_id),
       g@resolution,
       as.integer(g@aperture)
@@ -416,7 +422,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
 
   # ISEA path: generate polygons using C++ function. For globe/orthographic
   # projections, pass wrap_dateline = FALSE to keep cells intact.
-  sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture,
+  sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture, orient_arg(g),
                            crs = grid_crs(g),
                            tolerance = if (is.null(densify)) CELL_EDGE_TOLERANCE else densify)
 
@@ -881,9 +887,10 @@ grid_quad_ij <- function(cell_id, g) {
 #' @noRd
 grid_neighbors_isea <- function(cell_id, g) {
   if (is_mixed_aperture(g@aperture)) {
-    return(cpp_get_neighbors_isea_seq(as.numeric(cell_id), grid_ap_seq(g)))
+    return(cpp_get_neighbors_isea_seq(orient_arg(g), as.numeric(cell_id),
+                                      grid_ap_seq(g)))
   }
-  cpp_get_neighbors_isea(as.numeric(cell_id), g@resolution,
+  cpp_get_neighbors_isea(orient_arg(g), as.numeric(cell_id), g@resolution,
                          aperture_to_int(g@aperture))
 }
 

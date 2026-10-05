@@ -26,7 +26,6 @@ struct IcosaData {
   std::array<std::array<double, 3>, 20> solid_origin;
   std::array<std::array<double, 3>, 20> solid_x;
   std::array<std::array<double, 3>, 20> solid_y;
-  bool built = false;
 };
 
 // ---- Utility functions ----
@@ -35,17 +34,39 @@ double rad2deg(double r);
 double clampd(double x, double a, double b);
 double wrap_lon(double lon_rad);
 
+// ---- Icosahedron orientation ----
+// Where the icosahedron sits on the sphere: vertex 0 and the azimuth of
+// vertex 1 seen from it, in degrees. The defaults are the standard ISEA
+// orientation.
+struct Orientation {
+  double vert0_lon_deg = 11.25;
+  double vert0_lat_deg = 58.282525588538995;
+  double azimuth_deg   = 0.0;
+};
+
+bool operator==(const Orientation& a, const Orientation& b);
+
 // ---- Icosahedron construction and queries ----
+
+// Sets the default orientation -- the one read by calls that name none -- and
+// makes it the active one.
 void build_icosa_full(double vert0_lon_deg = 11.25,
                       double vert0_lat_deg = 58.282525588538995,
                       double azimuth_deg   = 0.0);
+
+// Makes `o` the orientation ico() and every query below read. Each table is
+// built once and kept, so switching between grids costs a lookup.
+void use_orientation(const Orientation& o);
+
+// Makes the default orientation the active one.
+void use_default_orientation();
 
 // Identify which icosahedral face a point (lon_deg, lat_deg) belongs to
 int which_face(double lon_deg, double lat_deg);
 
 // ---- Accessors ----
 
-// Returns the global IcosaData (builds it if needed)
+// Returns the IcosaData of the active orientation
 const IcosaData& ico();
 
 // Returns all face centers in radians

@@ -20,6 +20,7 @@
 #include <deque>
 #include <limits>
 #include <string>
+#include "rcpp_orientation.h"
 
 using namespace Rcpp;
 
@@ -661,7 +662,8 @@ using namespace hexify;
 // The faces of the icosahedron as one mesh, refined until no edge is longer
 // than 'max_len' (a face edge is 1). Item k is face k - 1.
 // [[Rcpp::export]]
-List cpp_globe_faces(double max_len) {
+List cpp_globe_faces(NumericVector orient, double max_len) {
+  activate_orientation(orient);
   FaceMesh mesh;
   double tx[3], ty[3];
   for (int f = 0; f < 20; f++) {
@@ -682,7 +684,8 @@ List cpp_globe_faces(double max_len) {
 // 'edges': 8 integers per quad of DGGRID's edge table: type 0, lone vertex,
 // up, down, right and left quads, then two zeros.
 // [[Rcpp::export]]
-List cpp_globe_projection() {
+List cpp_globe_projection(NumericVector orient) {
+  activate_orientation(orient);
   const IcosaData& S = ico();
   const SnyderConstants k = snyder_constants();
   NumericVector constants = NumericVector::create(
@@ -743,7 +746,8 @@ List cpp_globe_projection() {
 // are refined along great circles until no edge is longer than 'max_len'.
 // Item k is polygon k.
 // [[Rcpp::export]]
-List cpp_globe_polygons(List polygons, double max_len) {
+List cpp_globe_polygons(NumericVector orient, List polygons, double max_len) {
+  activate_orientation(orient);
   FaceMesh mesh(/*great_circle=*/true);
   EarSlicer slicer;
   std::vector<double> gx, gy;
@@ -830,8 +834,10 @@ List cpp_globe_polygons(List polygons, double max_len) {
 // cpp_cell_surface_paths(). A point where a path crosses from one face to the
 // next has one place on both surfaces, so a path stays unbroken.
 // [[Rcpp::export]]
-NumericMatrix cpp_sphere_paths_on_faces(NumericVector lon, NumericVector lat,
+NumericMatrix cpp_sphere_paths_on_faces(NumericVector orient,
+                                        NumericVector lon, NumericVector lat,
                                         IntegerVector path, double max_angle) {
+  activate_orientation(orient);
   if (!(max_angle > 0.0)) stop("max_angle must be positive");
   R_xlen_t n = lon.size();
   std::vector<double> rows;

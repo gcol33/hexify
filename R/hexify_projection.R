@@ -4,8 +4,9 @@
 # This module handles all projection operations between geographic coordinates
 # (longitude/latitude) and the planar icosahedral faces.
 #
-# Note: The C++ layer handles lazy initialization of the icosahedron via ico().
-# No R-level state management is needed.
+# The C++ layer builds the icosahedron of each orientation once, when first
+# read. Functions that take no grid read the default orientation, which
+# hexify_build_icosa() sets.
 #
 # @name hexify-projection
 
@@ -13,10 +14,14 @@
 # ICOSAHEDRON INITIALIZATION
 # =============================================================================
 
-#' Initialize icosahedron geometry
+#' Set the default icosahedron orientation
 #'
-#' Sets up the icosahedron state for ISEA projection. Uses standard ISEA3H
-#' orientation by default (vertex 0 at 11.25E, 58.28N).
+#' Sets the orientation read by the functions that take no grid: the
+#' projection functions in this family and the low-level conversions that take
+#' a resolution and an aperture. The standard ISEA orientation (vertex 0 at
+#' 11.25E, 58.28N, azimuth 0) is the default until this is called. A grid
+#' carries its own orientation (see the \code{orientation} argument of
+#' \code{\link{hex_grid}}), which this does not change.
 #'
 #' @param vert0_lon Vertex 0 longitude in degrees (default ISEA_VERT0_LON_DEG)
 #' @param vert0_lat Vertex 0 latitude in degrees (default ISEA_VERT0_LAT_DEG)
@@ -24,9 +29,6 @@
 #'
 #' @return Invisible NULL. Called for side effect.
 #'
-#' @details
-#' The icosahedron is initialized lazily at the C++ level when first needed.
-#' Manual call is only required for non-standard orientations.
 #'
 #' @family projection
 #' @export

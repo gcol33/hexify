@@ -52,7 +52,7 @@ test_that("points spread evenly over the cell's area", {
   fine <- hex_grid(resolution = 5, aperture = 4)
   fine_cell <- lonlat_to_cell(pts$lon, pts$lat, fine)
   ids <- unique(fine_cell)
-  rings <- hexify:::isea_cell_rings(ids, 5, "4", 0)
+  rings <- hexify:::isea_cell_rings(ids, 5, "4", numeric(0), 0)
   inside <- vapply(rings, function(r) {
     all(lonlat_to_cell(r[, 1], r[, 2], g) == cell) &&
       all(lonlat_to_cell(r[, 1] * 0.999 + mean(r[, 1]) * 0.001,

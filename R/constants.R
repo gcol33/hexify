@@ -389,6 +389,20 @@ ISEA_VERT0_LAT_DEG <- 58.282525588538995
 #' @noRd
 ISEA_AZIMUTH_DEG <- 0.0
 
+#' The standard ISEA orientation, as a grid's orientation slot holds it
+#' @noRd
+ISEA_ORIENTATION <- c(vert0_lon = ISEA_VERT0_LON_DEG,
+                      vert0_lat = ISEA_VERT0_LAT_DEG,
+                      azimuth = ISEA_AZIMUTH_DEG)
+
+#' DGGRID's REGION_CENTER placement (SubOpDGG::orientGrid()): vertex 0 and
+#' the point its azimuth is taken towards, as gnomonic coordinates in metres
+#' about the region centre on the sphere of the WGS84 authalic radius
+#' @noRd
+DGGRID_REGION_VERT0_M <- c(-7289214.618283, 7289214.618283)
+DGGRID_REGION_AZ_POINT_M <- c(2784232.232959, 2784232.232959)
+DGGRID_AUTHALIC_RADIUS_M <- 6371007.180918475
+
 # =============================================================================
 # Grid Parameter Limits
 # =============================================================================

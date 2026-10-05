@@ -23,6 +23,7 @@
 #include "index_z3.h"
 #include "index_z7.h"
 #include <cstdlib>
+#include "rcpp_orientation.h"
 
 using namespace Rcpp;
 
@@ -274,34 +275,11 @@ static CharacterVector lonlat_to_index_vec(const NumericVector& lon,
 }
 
 // [[Rcpp::export]]
-CharacterVector cpp_lonlat_to_index_ap3(NumericVector lon_deg,
-                                         NumericVector lat_deg, int resolution,
-                                         std::string index_type = "auto") {
-  return lonlat_to_index_vec(lon_deg, lat_deg, resolution, 3, index_type,
-                             "cpp_lonlat_to_index_ap3");
-}
-
-// [[Rcpp::export]]
-CharacterVector cpp_lonlat_to_index_ap4(NumericVector lon_deg,
-                                         NumericVector lat_deg, int resolution,
-                                         std::string index_type = "auto") {
-  return lonlat_to_index_vec(lon_deg, lat_deg, resolution, 4, index_type,
-                             "cpp_lonlat_to_index_ap4");
-}
-
-// [[Rcpp::export]]
-CharacterVector cpp_lonlat_to_index_ap7(NumericVector lon_deg,
-                                         NumericVector lat_deg, int resolution,
-                                         std::string index_type = "auto") {
-  return lonlat_to_index_vec(lon_deg, lat_deg, resolution, 7, index_type,
-                             "cpp_lonlat_to_index_ap7");
-}
-
-// [[Rcpp::export]]
-CharacterVector cpp_lonlat_to_index(NumericVector lon_deg,
+CharacterVector cpp_lonlat_to_index(NumericVector orient, NumericVector lon_deg,
                                      NumericVector lat_deg,
                                      int resolution, int aperture,
                                      std::string index_type = "auto") {
+  activate_orientation(orient);
   if (aperture != 3 && aperture != 4 && aperture != 7) {
     Rcpp::stop("Invalid aperture. Must be 3, 4, or 7");
   }
@@ -314,8 +292,9 @@ CharacterVector cpp_lonlat_to_index(NumericVector lon_deg,
 // ============================================================================
 
 // [[Rcpp::export]]
-DataFrame cpp_index_to_lonlat(CharacterVector index, int aperture,
+DataFrame cpp_index_to_lonlat(NumericVector orient, CharacterVector index, int aperture,
                                std::string index_type = "auto") {
+  activate_orientation(orient);
   R_xlen_t n = index.size();
   hexify::IndexType idx_type = parse_index_type(index_type);
 

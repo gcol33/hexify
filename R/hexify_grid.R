@@ -109,9 +109,6 @@ hexify_grid <- function(area,
   # Ensure resolution is valid
   resolution <- max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
   
-  # Initialize icosahedron geometry (C++ function)
-  cpp_build_icosa()
-  
   # Determine index type based on aperture
   index_type <- if (aperture == 3) {
     "z3"

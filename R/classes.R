@@ -7,6 +7,7 @@
 #' @import methods
 #' @importFrom methods setClass setMethod setGeneric setValidity
 #' @importFrom methods new slot slotNames validObject
+#' @include constants.R
 NULL
 
 # =============================================================================
@@ -36,6 +37,10 @@ setClassUnion("HexCRS", c("integer", "character"))
 #' @slot grid_type Character. Grid system: "isea" (default) or "h3".
 #' @slot radius_km Numeric. Radius of the body the grid covers, in kilometers.
 #'   \code{NA} reads as Earth's mean radius.
+#' @slot orientation Numeric. Where an ISEA grid's icosahedron sits:
+#'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees, vertex 0 and the
+#'   azimuth of vertex 1 seen from it. Empty for H3 grids, whose orientation
+#'   H3 fixes.
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -61,7 +66,8 @@ setClass(
     diagonal_km = "numeric",
     crs = "HexCRS",
     grid_type = "character",
-    radius_km = "numeric"
+    radius_km = "numeric",
+    orientation = "numeric"
   ),
   prototype = list(
     aperture = "3",
@@ -70,7 +76,8 @@ setClass(
     diagonal_km = NA_real_,
     crs = 4326L,
     grid_type = "isea",
-    radius_km = NA_real_
+    radius_km = NA_real_,
+    orientation = ISEA_ORIENTATION
   )
 )
 
@@ -143,7 +150,15 @@ setValidity("HexGridInfo", function(object) {
     if (object@resolution < 0L || object@resolution > 15L) {
       errors <- c(errors, "H3 resolution must be between 0 and 15")
     }
+    if (length(object@orientation) != 0L) {
+      errors <- c(errors, "H3 grids carry no orientation; H3 fixes its own")
+    }
   } else {
+    o <- object@orientation
+    if (length(o) != 3L || !all(is.finite(o)) || o[2] < -90 || o[2] > 90) {
+      errors <- c(errors, paste0("orientation must be c(vert0_lon, vert0_lat, ",
+                                 "azimuth) in degrees, vert0_lat in [-90, 90]"))
+    }
     # ISEA validation
     ap_ok <- tryCatch({
       parse_aperture_seq(object@aperture, object@resolution)
@@ -544,7 +559,8 @@ setMethod("show", "HexGridInfo", function(object) {
 #' @return For a HexGridInfo, a list of class \code{hexify_grid_summary}
 #'   carrying \code{grid_type}, \code{aperture}, \code{resolution},
 #'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
-#'   \code{earth} and \code{n_cells}. For a HexData, a list of class
+#'   \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
+#'   empty for H3) and \code{n_cells}. For a HexData, a list of class
 #'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
 #'   \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
 #'   and a \code{preview} of the first rows. The print methods return their
@@ -574,6 +590,7 @@ setMethod("summary", "HexGridInfo", function(object, ...) {
       crs = object@crs,
       radius_km = grid_radius_km(object),
       earth = is_earth_grid(object),
+      orientation = grid_orientation(object),
       n_cells = grid_n_cells(object)
     ),
     class = "hexify_grid_summary"
@@ -613,6 +630,11 @@ print.hexify_grid_summary <- function(x, ...) {
 
   if (!x$earth) {
     cat(sprintf("Radius:      %.2f km\n", x$radius_km))
+  }
+
+  if (length(x$orientation) == 3L && !is_standard_orientation(x$orientation)) {
+    cat(sprintf("Orientation: vertex 0 at %.6f, %.6f; azimuth %.6f\n",
+                x$orientation[1], x$orientation[2], x$orientation[3]))
   }
 
   cat(sprintf("Total Cells: %.0f\n", x$n_cells))
@@ -750,7 +772,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
     diagonal_km = x@diagonal_km,
     crs = x@crs,
     grid_type = x@grid_type,
-    radius_km = grid_radius_km(x)
+    radius_km = grid_radius_km(x),
+    orientation = grid_orientation(x)
   )
 })
 
@@ -803,27 +826,8 @@ extract_grid <- function(x, allow_null = FALSE) {
     stop("grid specification required")
   }
 
-  if (is_hex_grid(x)) {
-    # Handle deserialized old objects without grid_type / radius_km slots
-    if (!.hasSlot(x, "grid_type")) {
-      x@grid_type <- "isea"
-    }
-    if (!.hasSlot(x, "radius_km")) {
-      x@radius_km <- EARTH_RADIUS_KM
-    }
-    return(x)
-  }
-
-  if (is_hex_data(x)) {
-    g <- x@grid
-    if (!.hasSlot(g, "grid_type")) {
-      g@grid_type <- "isea"
-    }
-    if (!.hasSlot(g, "radius_km")) {
-      g@radius_km <- EARTH_RADIUS_KM
-    }
-    return(g)
-  }
+  if (is_hex_grid(x)) return(upgrade_grid(x))
+  if (is_hex_data(x)) return(upgrade_grid(x@grid))
 
   # Handle legacy hexify_grid objects (S3 class)
   if (inherits(x, "hexify_grid")) {
@@ -831,6 +835,26 @@ extract_grid <- function(x, allow_null = FALSE) {
   }
 
   stop("Cannot extract grid from object of class ", class(x)[1])
+}
+
+#' Fill the slots a grid saved by an older hexify lacks
+#'
+#' A grid deserialized from before a slot existed reads the slot's original
+#' meaning: an ISEA grid on Earth in the standard orientation.
+#' @param g HexGridInfo object
+#' @return HexGridInfo object
+#' @noRd
+upgrade_grid <- function(g) {
+  if (!.hasSlot(g, "grid_type")) {
+    g@grid_type <- "isea"
+  }
+  if (!.hasSlot(g, "radius_km")) {
+    g@radius_km <- EARTH_RADIUS_KM
+  }
+  if (!.hasSlot(g, "orientation")) {
+    g@orientation <- if (g@grid_type == "h3") numeric(0) else ISEA_ORIENTATION
+  }
+  g
 }
 
 #' Convert legacy hexify_grid to HexGridInfo
@@ -848,7 +872,8 @@ hexify_grid_to_HexGridInfo <- function(x) {
       area_km2 = area,
       diagonal_km = diagonal,
       crs = resolve_crs(x$crs, grid_radius_km(x)),
-      radius_km = grid_radius_km(x))
+      radius_km = grid_radius_km(x),
+      orientation = grid_orientation(x))
 }
 
 #' Convert HexGridInfo to legacy hexify_grid
@@ -877,6 +902,7 @@ HexGridInfo_to_hexify_grid <- function(x) {
 
   # Convert aperture to numeric for legacy
   aperture_num <- aperture_to_int(ap)
+  orientation <- grid_orientation(x)
 
   grid <- list(
     area = x@area_km2,
@@ -890,9 +916,9 @@ HexGridInfo_to_hexify_grid <- function(x) {
     res = x@resolution,
     topology_family = "HEXAGON",
     metric_radius = if (!is.na(x@area_km2)) sqrt(x@area_km2 / pi) else NULL,
-    pole_lon_deg = ISEA_VERT0_LON_DEG,
-    pole_lat_deg = ISEA_VERT0_LAT_DEG,
-    azimuth_deg = ISEA_AZIMUTH_DEG,
+    pole_lon_deg = orientation[["vert0_lon"]],
+    pole_lat_deg = orientation[["vert0_lat"]],
+    azimuth_deg = orientation[["azimuth"]],
     # MIXED43 is DGGRID's own name for the 4/3 arrangement; other sequences
     # have no DGGRID aperture type, so they carry the generic label.
     aperture_type = if (ap == "4/3") "MIXED43" else if (is_mixed_aperture(ap)) "MIXED" else "SEQUENCE",

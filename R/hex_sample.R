@@ -77,7 +77,7 @@ cell_cap_radius <- function(cell_id, g, C) {
     cpp_densify_great_circle(cpp_h3_cellToBoundary(as.character(cell_id)),
                              CELL_EDGE_TOLERANCE)
   } else {
-    isea_cell_rings(cell_id, g@resolution, g@aperture)
+    isea_cell_rings(cell_id, g@resolution, g@aperture, orient_arg(g))
   }
   vapply(seq_along(rings), function(i) {
     R <- unit_vec(rings[[i]][, 1], rings[[i]][, 2])

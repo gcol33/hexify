@@ -18,8 +18,8 @@ test_that("the corner list and the polygon table are the same boundary", {
   for (ap in c(3, 4, 7)) {
     cells <- as.numeric(c(1, 5, 40, 10 * ap^3 + 2))
 
-    rings <- cpp_cell_to_corners(cells, 3L, ap)
-    table <- cpp_cell_to_polygon(cells, 3L, ap)
+    rings <- cpp_cell_to_corners(numeric(0), cells, 3L, ap)
+    table <- cpp_cell_to_polygon(numeric(0), cells, 3L, ap)
 
     for (k in seq_along(cells)) {
       rows <- table[table$hex_id == cells[k], ]
@@ -43,7 +43,7 @@ test_that("corners fall between the neighbouring cell centres", {
       cells <- cells[!is_pentagon(cells, g)]
 
       centres <- lonlat_matrix(cell_to_lonlat(cells, g))
-      rings <- cpp_cell_to_corners(as.numeric(cells), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as.numeric(cells), as.integer(res),
                                    as.integer(ap))
 
       ratios <- numeric(0)
@@ -79,7 +79,7 @@ test_that("a cell at an icosahedral vertex is a pentagon", {
       pentagons <- seq_len(n)[is_pentagon(seq_len(n), g)]
       expect_length(pentagons, 12)
 
-      rings <- cpp_cell_to_corners(as.numeric(pentagons), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as.numeric(pentagons), as.integer(res),
                                    as.integer(ap))
       for (ring in rings) {
         expect_equal(nrow(ring), 6L)
@@ -100,7 +100,7 @@ test_that("every pentagon corner is shared with a neighbour", {
       pentagons <- seq_len(n)[is_pentagon(seq_len(n), g)]
 
       centres <- lonlat_matrix(cell_to_lonlat(pentagons, g))
-      rings <- cpp_cell_to_corners(as.numeric(pentagons), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as.numeric(pentagons), as.integer(res),
                                    as.integer(ap))
 
       for (k in seq_along(pentagons)) {
@@ -169,7 +169,7 @@ test_that("a point goes to the cell with the nearest centre", {
   set.seed(7)
   lon <- runif(500, 8, 16)
   lat <- runif(500, 42, 48)
-  plane <- cpp_lonlat_to_plane(lon, lat)
+  plane <- cpp_lonlat_to_plane(numeric(0), lon, lat)
 
   for (case in list(c(3, 5), c(4, 6), c(7, 3), c(7, 4), c(7, 5))) {
     g <- hex_grid(resolution = case[2], aperture = case[1])
@@ -201,11 +201,7 @@ test_that("a drawn cell is the cell lonlat_to_cell assigns", {
     total <- 2 + 10 * prod(grid_ap_seq(g)[-1])
     cells <- unique(c(seq_len(total)[is_pentagon(seq_len(total), g)],
                       round(seq(2, total - 1, length.out = 40))))
-    rings <- if (is_mixed_aperture(g@aperture)) {
-      mixed_cell_corners(cells, g@resolution, g@aperture, 1e-6)
-    } else {
-      cpp_cell_to_corners(cells, g@resolution, as.integer(g@aperture), 1e-6)
-    }
+    rings <- isea_cell_rings(cells, g@resolution, g@aperture, orient_arg(g), 1e-6)
     centres <- cell_to_lonlat(cells, g)
 
     for (k in seq_along(cells)) {

@@ -77,6 +77,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
                               wrap_dateline = TRUE) {
 
   # Extract from grid if provided
+  orient <- numeric(0)
   if (!is.null(grid)) {
     g <- extract_grid(grid)
     # H3 grids: redirect to cell_to_sf() which handles H3 boundaries
@@ -85,6 +86,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
     }
     resolution <- g@resolution
     aperture <- as.integer(g@aperture)
+    orient <- orient_arg(g)
   }
 
   # Input validation
@@ -116,7 +118,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
            "Install with: install.packages('sf')")
     }
 
-    sfc <- isea_cells_to_sfc(cell_id, resolution, aperture)
+    sfc <- isea_cells_to_sfc(cell_id, resolution, aperture, orient)
     result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
     if (wrap_dateline) {
       result_sf <- wrap_cells_at_dateline(result_sf)
@@ -125,7 +127,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 
   } else {
     # Return data frame format
-    result <- cpp_cell_to_polygon(cell_id, resolution, aperture,
+    result <- cpp_cell_to_polygon(orient, cell_id, resolution, aperture,
                                   CELL_EDGE_TOLERANCE)
     names(result) <- c("cell_id", "lon", "lat", "order")
     result$cell_id <- as.integer(result$cell_id)

@@ -31,8 +31,8 @@ hexify_assign <- function(lon, lat, effective_res, make_polygons = FALSE) {
   lat <- as.numeric(lat)
   res <- as.integer(effective_res)
 
-  cell_id <- cpp_lonlat_to_cell(lon, lat, res, 3L)
-  center <- cpp_cell_to_lonlat(cell_id, res, 3L)
+  cell_id <- cpp_lonlat_to_cell(numeric(0), lon, lat, res, 3L)
+  center <- cpp_cell_to_lonlat(numeric(0), cell_id, res, 3L)
   quad_ij <- cpp_cell_to_quad_ij(cell_id, res, 3L)
 
   df <- data.frame(
@@ -50,5 +50,5 @@ hexify_assign <- function(lon, lat, effective_res, make_polygons = FALSE) {
     stop("make_polygons=TRUE requires the 'sf' package.")
   }
 
-  sf::st_sf(df, geometry = isea_cells_to_sfc(cell_id, res, 3L))
+  sf::st_sf(df, geometry = isea_cells_to_sfc(cell_id, res, 3L, numeric(0)))
 }

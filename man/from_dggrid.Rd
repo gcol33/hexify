@@ -29,6 +29,11 @@ that carries over and the result is an Earth grid unless \code{radius_km}
 says otherwise. Cell area follows from the radius, so it is read from the
 radius given rather than from the dggs.
 
+The orientation carries over: \code{pole_lon_deg}, \code{pole_lat_deg} and
+\code{azimuth_deg} place the icosahedron as DGGRID's \code{dggs_vert0_lon},
+\code{dggs_vert0_lat} and \code{dggs_vert0_azimuth} do, and a field left out
+takes its standard ISEA value.
+
 The function validates that the 'dggridR' grid uses compatible settings:
 \itemize{
 \item Projection must be 'ISEA' (FULLER not supported)

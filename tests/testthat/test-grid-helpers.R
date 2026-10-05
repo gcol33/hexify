@@ -146,7 +146,7 @@ test_that("cell_to_sf returns valid geometries for all cells", {
   expect_true(all(validity))
 
   # These pentagon cells have 5 corners (6 coords with closing)
-  rings <- cpp_cell_to_corners(polar_cells, grid@resolution, as.integer(grid@aperture))
+  rings <- cpp_cell_to_corners(numeric(0), polar_cells, grid@resolution, as.integer(grid@aperture))
   expect_true(all(vapply(rings, nrow, integer(1)) == 6L))
 })
 

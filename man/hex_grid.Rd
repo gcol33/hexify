@@ -11,7 +11,9 @@ hex_grid(
   type = c("isea", "h3"),
   resround = "nearest",
   crs = NULL,
-  radius_km = EARTH_RADIUS_KM
+  radius_km = EARTH_RADIUS_KM,
+  orientation = "standard",
+  region = NULL
 )
 }
 \arguments{
@@ -49,6 +51,15 @@ string. Defaults to 'WGS84' on Earth, and to a longlat CRS on the sphere of
 name of a body: "mercury", "venus", "earth" (default), "moon", "mars",
 "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
 "enceladus", "titan", "uranus", "neptune", "pluto".}
+
+\item{orientation}{Where the icosahedron of an ISEA grid sits on the
+sphere: "standard" (default), "random", "region", or
+\code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
+section. H3 fixes its own orientation, so H3 grids take only "standard".}
+
+\item{region}{For \code{orientation = "region"}, the area to centre the grid
+on: \code{c(lon, lat)} in degrees, or an sf, sfc or bbox object, whose
+spherical centroid is used.}
 }
 \value{
 A HexGridInfo object containing the grid specification.
@@ -93,6 +104,39 @@ square of the radius ratio, exactly. One caveat carries: an 'H3' cell ID
 names a position in 'H3''s topology, which 'Uber''s 'H3' reads on Earth, so
 the IDs of a grid on another body are that topology on that body and are not
 interchangeable with Earth 'H3' data.
+}
+
+\section{Orientation}{
+
+
+An ISEA grid is built on an icosahedron, and its orientation places that
+icosahedron on the sphere: vertex 0 at longitude \code{vert0_lon} and
+latitude \code{vert0_lat}, and vertex 1 at azimuth \code{azimuth} seen from
+vertex 0, all in degrees, as DGGRID's \code{dggs_vert0_lon},
+\code{dggs_vert0_lat} and \code{dggs_vert0_azimuth} do.
+
+\itemize{
+\item "standard" is the ISEA orientation: vertex 0 at 11.25E, 58.28N,
+azimuth 0, which places the twelve pentagons over the oceans.
+\item "random" draws vertex 0 uniformly on the sphere and the azimuth
+uniformly in [0, 360), from R's random number generator, so
+\code{set.seed()} repeats it. Grids in several random orientations show
+how much a result depends on where the cell boundaries fall.
+\item "region" places the grid as DGGRID's \code{REGION_CENTER} does: the
+centre of \code{region} lands on the midpoint of an icosahedron edge,
+the middle of the two faces sharing it, far from the twelve vertices
+where the pentagons and the largest distortion sit.
+}
+
+Rotating the icosahedron rotates the grid with it, so cell IDs, the cell
+hierarchy and neighbours are the same under every orientation; only where
+each cell sits on the sphere changes. Every function taking the grid reads
+its orientation.
+
+\preformatted{
+alps <- hex_grid(area_km2 = 100, orientation = "region", region = c(10, 46.5))
+hex_grid(resolution = 8, orientation = c(0, 90, 0))   # vertex 0 at the pole
+}
 }
 
 \section{One Grid, Many Datasets}{

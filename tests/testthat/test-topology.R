@@ -79,7 +79,7 @@ test_that("ISEA distances match breadth-first search over the neighbours", {
     frontier <- source
 
     for (step in seq_len(depth)) {
-      reached <- unique(unlist(cpp_get_neighbors_isea(frontier, resolution,
+      reached <- unique(unlist(cpp_get_neighbors_isea(numeric(0), frontier, resolution,
                                                       aperture)))
       reached <- reached[!(as.character(reached) %in% names(hops))]
       if (length(reached) == 0) break

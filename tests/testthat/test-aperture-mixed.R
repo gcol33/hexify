@@ -356,9 +356,9 @@ test_that("mixed aperture (i,j) does not collide across many sampled points", {
   for (mixed_level in c(1, 2, 3)) {
     for (res in c(3, 4, 5, 6)) {
       if (mixed_level >= res) next
-      cells <- cpp_lonlat_to_cell_seq(lons, lats, seq43(res, mixed_level))
-      centers <- cpp_cell_to_lonlat_seq(cells, seq43(res, mixed_level))
-      cells2 <- cpp_lonlat_to_cell_seq(centers$lon_deg, centers$lat_deg, seq43(res, mixed_level))
+      cells <- cpp_lonlat_to_cell_seq(numeric(0), lons, lats, seq43(res, mixed_level))
+      centers <- cpp_cell_to_lonlat_seq(numeric(0), cells, seq43(res, mixed_level))
+      cells2 <- cpp_lonlat_to_cell_seq(numeric(0), centers$lon_deg, centers$lat_deg, seq43(res, mixed_level))
 
       expect_equal(cells2, cells,
                    info = sprintf("mixed_level=%d res=%d: cell id round-trip", mixed_level, res))
@@ -380,7 +380,7 @@ test_that("mixed aperture (i,j) matches the mixed-radix grid dimension, not pure
 
   res <- 5
   mixed_level <- 2
-  cells <- cpp_lonlat_to_cell_seq(lons, lats, seq43(res, mixed_level))
+  cells <- cpp_lonlat_to_cell_seq(numeric(0), lons, lats, seq43(res, mixed_level))
   qij <- cpp_cell_to_quad_ij_seq(cells, seq43(res, mixed_level))
 
   # True mixed-radix dim: 2^2 * sqrt(3)^3 (+ substrate boost if class II)
@@ -411,10 +411,10 @@ test_that("mixed aperture level = 0 (all aperture 3)", {
 
   for (res in c(3, 5, 7)) {
     # Mixed with level 0 = all ap3
-    cell_mixed <- cpp_lonlat_to_cell_seq(test_lon, test_lat, seq43(res, 0))
+    cell_mixed <- cpp_lonlat_to_cell_seq(numeric(0), test_lon, test_lat, seq43(res, 0))
 
     # Pure aperture 3
-    cell_pure <- cpp_lonlat_to_cell(test_lon, test_lat, res, 3)
+    cell_pure <- cpp_lonlat_to_cell(numeric(0), test_lon, test_lat, res, 3)
 
     expect_equal(cell_mixed, cell_pure,
                  info = sprintf("res=%d, mixed_level=0 should equal pure ap3", res))
@@ -432,7 +432,7 @@ test_that("mixed aperture level = resolution produces valid cells", {
 
   for (res in c(2, 4, 6)) {
     # Mixed with level = res = all ap4 subdivisions
-    cell_mixed <- cpp_lonlat_to_cell_seq(test_lon, test_lat, seq43(res, res))
+    cell_mixed <- cpp_lonlat_to_cell_seq(numeric(0), test_lon, test_lat, seq43(res, res))
 
     # Verify cells are valid (positive integers)
     expect_true(all(cell_mixed >= 1),
@@ -441,8 +441,8 @@ test_that("mixed aperture level = resolution produces valid cells", {
                 info = sprintf("res=%d cells should be finite", res))
 
     # Verify round-trip works
-    centers <- cpp_cell_to_lonlat_seq(cell_mixed, seq43(res, res))
-    cell2 <- cpp_lonlat_to_cell_seq(centers$lon_deg, centers$lat_deg, seq43(res, res))
+    centers <- cpp_cell_to_lonlat_seq(numeric(0), cell_mixed, seq43(res, res))
+    cell2 <- cpp_lonlat_to_cell_seq(numeric(0), centers$lon_deg, centers$lat_deg, seq43(res, res))
     expect_equal(cell_mixed, cell2,
                  info = sprintf("res=%d, mixed_level=res round-trip", res))
   }
@@ -459,9 +459,9 @@ test_that("mixed aperture round-trip at boundary resolutions", {
   # Skip res=1 with mixed_level=1 as it's a degenerate case
   for (res in c(2, 5, 10)) {
     for (mixed_level in c(0, 1, min(res - 1, 5))) {
-      cell <- cpp_lonlat_to_cell_seq(test_lon, test_lat, seq43(res, mixed_level))
-      centers <- cpp_cell_to_lonlat_seq(cell, seq43(res, mixed_level))
-      cell2 <- cpp_lonlat_to_cell_seq(centers$lon_deg, centers$lat_deg, seq43(res, mixed_level))
+      cell <- cpp_lonlat_to_cell_seq(numeric(0), test_lon, test_lat, seq43(res, mixed_level))
+      centers <- cpp_cell_to_lonlat_seq(numeric(0), cell, seq43(res, mixed_level))
+      cell2 <- cpp_lonlat_to_cell_seq(numeric(0), centers$lon_deg, centers$lat_deg, seq43(res, mixed_level))
 
       expect_equal(cell, cell2,
                    info = sprintf("res=%d, mixed_level=%d round-trip", res, mixed_level))
@@ -473,12 +473,12 @@ test_that("mixed aperture rejects an unsupported aperture", {
   setup_icosa()
 
   expect_error(
-    cpp_lonlat_to_cell_seq(0, 0, c(4, 4, 5)),
+    cpp_lonlat_to_cell_seq(numeric(0), 0, 0, c(4, 4, 5)),
     "aperture must be 3, 4, or 7"
   )
 
   expect_error(
-    cpp_lonlat_to_cell_seq(0, 0, integer(0)),
+    cpp_lonlat_to_cell_seq(numeric(0), 0, 0, integer(0)),
     "ap_seq must name at least the base grid"
   )
 })
@@ -774,7 +774,7 @@ test_that("mixed sequence cell boundaries enclose the points assigned to them", 
                  info = sprintf("c(%s): grid_global returns every cell", label))
 
     ctr <- cell_to_lonlat(ids, g)
-    corners <- cpp_cell_to_corners_seq(as.numeric(ids), hexify:::grid_ap_seq(g), 1e-3)
+    corners <- cpp_cell_to_corners_seq(numeric(0), as.numeric(ids), hexify:::grid_ap_seq(g), 1e-3)
     owner <- rep(ids, vapply(corners, nrow, 1L))
     vert <- do.call(rbind, corners)
     v <- to_xyz(vert[, 1], vert[, 2])

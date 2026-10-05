@@ -24,7 +24,7 @@ test_that("hexify_cell_to_sf returns data frame with return_sf=FALSE", {
 
 # Each ring is closed, numbered from 1, and runs through the cell's corners
 expect_rings_through_corners <- function(result, hex_ids, resolution, aperture) {
-  corners <- cpp_cell_to_corners(hex_ids, resolution, aperture)
+  corners <- cpp_cell_to_corners(numeric(0), hex_ids, resolution, aperture)
   for (k in seq_along(hex_ids)) {
     ring <- result[result$cell_id == hex_ids[k], ]
     expect_equal(ring$order, seq_len(nrow(ring)))
@@ -41,14 +41,14 @@ test_that("hexify_cell_to_sf returns a closed ring through each hexagon's 6 corn
 
   result <- hexify_cell_to_sf(hex_ids, resolution = 10, aperture = 3, return_sf = FALSE)
 
-  expect_true(all(vapply(cpp_cell_to_corners(hex_ids, 10L, 3L), nrow, integer(1)) == 7L))
+  expect_true(all(vapply(cpp_cell_to_corners(numeric(0), hex_ids, 10L, 3L), nrow, integer(1)) == 7L))
   expect_rings_through_corners(result, hex_ids, 10L, 3L)
 })
 
 test_that("hexify_cell_to_sf returns a closed ring through a vertex cell's 5 corners", {
   result <- hexify_cell_to_sf(1, resolution = 3, aperture = 3, return_sf = FALSE)
 
-  expect_equal(nrow(cpp_cell_to_corners(1, 3L, 3L)[[1]]), 6L)
+  expect_equal(nrow(cpp_cell_to_corners(numeric(0), 1, 3L, 3L)[[1]]), 6L)
   expect_rings_through_corners(result, 1, 3L, 3L)
 })
 

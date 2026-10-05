@@ -48,6 +48,28 @@
   sight. Filled shapes are clipped at a plane in front of the camera, so any
   tilt below 90 degrees draws.
 
+* `hex_grid(orientation = )` places an ISEA grid's icosahedron anywhere on
+  the sphere (#80): `c(vert0_lon, vert0_lat, azimuth)` as DGGRID's
+  `dggs_vert0_lon`, `dggs_vert0_lat` and `dggs_vert0_azimuth` take it,
+  `"random"` (repeatable with `set.seed()`), or `"region"` with `region =` a
+  point or an sf object, which centres the grid as DGGRID's `REGION_CENTER`
+  does. The grid stores it in a new `orientation` slot, and every function
+  taking the grid reads it, the `hex_globe()` shader included; grids saved
+  before the slot existed read the standard orientation. Cell IDs, the
+  hierarchy and neighbours are the same under every orientation. Under three
+  given orientations and three region placements, 50,000 random points per
+  grid fall in the same cells as in DGGRID for apertures 3, 4, 7, ISEA43H and
+  a mixed sequence, with cell centres within 2 mm. H3 grids keep H3's own
+  orientation.
+
+* `as_dggrid()`, `from_dggrid()` and `dggrid_is_compatible()` carry the
+  orientation (`pole_lon_deg`, `pole_lat_deg`, `azimuth_deg`) instead of
+  warning about or rejecting a non-standard one.
+
+* `hexify_build_icosa()` sets the orientation of the functions that take no
+  grid, and no longer reaches grids; `hex_grid()` and `hexify_grid()` no
+  longer reset it.
+
 ## Bug fixes
 
 * `hexify_world` is simplified as a coverage, so neighbouring countries share

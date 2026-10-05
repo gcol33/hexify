@@ -4,14 +4,23 @@
 #include "constants.h"
 #include <array>
 #include <cmath>
+#include <memory>
 #include <stdexcept>
+#include <vector>
 
 namespace hexify {
 
 namespace {
   constexpr double kPrecision = 1e-15;
 
-  IcosaData g_ico;
+  // One face table per orientation read so far. A few grids are live at once,
+  // so the list stays short; past kMaxTables the oldest table that is neither
+  // the default nor the active one is dropped.
+  constexpr std::size_t kMaxTables = 16;
+  struct Table { Orientation orientation; std::unique_ptr<IcosaData> data; };
+  std::vector<Table> g_tables;
+  Orientation g_default;
+  const IcosaData* g_active = nullptr;
 
   struct Vec3 { double x, y, z; };
 
@@ -109,10 +118,18 @@ double wrap_lon(double lon_rad) {
   return lon_rad;
 }
 
-// ---- build + queries ----
-void build_icosa_full(double vert0_lon_deg, double vert0_lat_deg, double azimuth_deg) {
-  const Geo S_pt(deg2rad(vert0_lon_deg), deg2rad(vert0_lat_deg));
-  const double S_az = deg2rad(azimuth_deg);
+bool operator==(const Orientation& a, const Orientation& b) {
+  return a.vert0_lon_deg == b.vert0_lon_deg &&
+         a.vert0_lat_deg == b.vert0_lat_deg &&
+         a.azimuth_deg == b.azimuth_deg;
+}
+
+namespace {
+
+// The face table of the icosahedron placed by `o`.
+void build_table(const Orientation& o, IcosaData& g_ico) {
+  const Geo S_pt(deg2rad(o.vert0_lon_deg), deg2rad(o.vert0_lat_deg));
+  const double S_az = deg2rad(o.azimuth_deg);
 
   std::array<Geo,12> vertsnew;
   const Geo newnpold(0.0, S_pt.lat);
@@ -185,13 +202,52 @@ void build_icosa_full(double vert0_lon_deg, double vert0_lat_deg, double azimuth
                                        - g_ico.solid_y[i][r] * t[0][1];
     }
   }
+}
 
-  g_ico.built = true;
+} // anon
+
+void use_orientation(const Orientation& o) {
+  if (!std::isfinite(o.vert0_lon_deg) || !std::isfinite(o.vert0_lat_deg) ||
+      !std::isfinite(o.azimuth_deg)) {
+    throw std::invalid_argument("orientation: vert0_lon, vert0_lat and azimuth must be finite");
+  }
+  if (o.vert0_lat_deg < -90.0 || o.vert0_lat_deg > 90.0) {
+    throw std::invalid_argument("orientation: vert0_lat must lie in [-90, 90]");
+  }
+  for (const Table& t : g_tables) {
+    if (t.orientation == o) {
+      g_active = t.data.get();
+      return;
+    }
+  }
+  if (g_tables.size() >= kMaxTables) {
+    for (auto it = g_tables.begin(); it != g_tables.end(); ++it) {
+      if (!(it->orientation == g_default) && it->data.get() != g_active) {
+        g_tables.erase(it);
+        break;
+      }
+    }
+  }
+  std::unique_ptr<IcosaData> data(new IcosaData());
+  build_table(o, *data);
+  g_active = data.get();
+  g_tables.push_back(Table{o, std::move(data)});
+}
+
+void use_default_orientation() { use_orientation(g_default); }
+
+void build_icosa_full(double vert0_lon_deg, double vert0_lat_deg, double azimuth_deg) {
+  Orientation o;
+  o.vert0_lon_deg = vert0_lon_deg;
+  o.vert0_lat_deg = vert0_lat_deg;
+  o.azimuth_deg = azimuth_deg;
+  use_orientation(o);
+  g_default = o;
 }
 
 const IcosaData& ico() {
-  if (!g_ico.built) build_icosa_full();
-  return g_ico;
+  if (g_active == nullptr) use_default_orientation();
+  return *g_active;
 }
 
 const std::array<Geo,20>& face_centers() { return ico().centers; }
