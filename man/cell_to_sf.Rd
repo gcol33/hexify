@@ -4,7 +4,7 @@
 \alias{cell_to_sf}
 \title{Convert cell IDs to sf polygons}
 \usage{
-cell_to_sf(cell_id = NULL, grid, wrap_dateline = TRUE)
+cell_to_sf(cell_id = NULL, grid, wrap_dateline = TRUE, densify = NULL)
 }
 \arguments{
 \item{cell_id}{Numeric vector of cell IDs. If NULL and x is HexData,
@@ -16,6 +16,12 @@ polygons are generated for all cells in the data.}
 \item{wrap_dateline}{Logical. If TRUE (default), calls
 \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
 Set to FALSE for orthographic/globe projections where wrapping creates gaps.}
+
+\item{densify}{Points added along each cell edge: every edge is halved
+until the straight line in longitude and latitude between consecutive
+points stays within \code{densify} times its length of the true edge.
+\code{0} keeps the corners alone. \code{NULL} uses 0.001 for ISEA cells
+and 0 for H3 cells.}
 }
 \value{
 sf object with cell_id and geometry columns
@@ -27,6 +33,12 @@ Creates sf polygon geometries for hexagonal grid cells.
 When called with a HexData object and no cell_id argument, this function
 generates polygons for all unique cells in the data, which is useful for
 plotting.
+
+An ISEA cell edge is straight on its icosahedron face and curved in
+longitude and latitude, so ISEA polygons are densified by default. An H3
+cell edge is a great-circle arc between corners, which sf reads exactly
+from the corners alone when it uses s2; densify H3 cells for planar work,
+or to draw them on a flat map.
 }
 \examples{
 # From grid specification

@@ -60,4 +60,7 @@ void face_tri_to_solid(int face, double tx, double ty, double out[3]);
 // The point (tx, ty) of a face on the unit sphere, as xyz
 void face_tri_to_sphere(int face, double tx, double ty, double out[3]);
 
+// The point (tx, ty) of a face in the PLANE layout of the unfolded icosahedron
+void face_tri_to_plane(int face, double tx, double ty, double& px, double& py);
+
 } // namespace hexify

@@ -2,12 +2,12 @@
 % Please edit documentation in R/plot_surface.R
 \name{plot,HexGridInfo,missing-method}
 \alias{plot,HexGridInfo,missing-method}
-\title{Plot a grid on the sphere or on its icosahedron}
+\title{Plot a grid on the sphere, on its icosahedron, or on the unfolded net}
 \usage{
 \S4method{plot}{HexGridInfo,missing}(
   x,
   y,
-  surface = c("sphere", "icosahedron"),
+  surface = c("sphere", "icosahedron", "net"),
   center = c(lon = 15, lat = 32),
   projection = c("orthographic", "perspective"),
   distance = NULL,
@@ -35,8 +35,9 @@
 
 \item{y}{Ignored}
 
-\item{surface}{\code{"sphere"} or \code{"icosahedron"}. The icosahedron
-needs an ISEA grid; an H3 grid is drawn on the sphere.}
+\item{surface}{\code{"sphere"}, \code{"icosahedron"} or \code{"net"}.
+The icosahedron and the net need an ISEA grid; an H3 grid is drawn on the
+sphere.}
 
 \item{center}{Point the view looks down on: a preset name from
 \code{\link{globe_centers}} or \code{c(lon, lat)}.}
@@ -96,11 +97,18 @@ The grid, invisibly
 }
 \description{
 Draws the cells of a grid in 3D, seen from above a chosen point: on the
-sphere, or on the flat faces of the icosahedron the grid is built on. Both
+sphere, or on the flat faces of the icosahedron the grid is built on. All
 surfaces take their cell boundaries from the same points, so a cell on the
 icosahedron is the cell on the sphere folded flat.
 }
 \details{
+\code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
+DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in the same
+coordinates). A cell on a face edge that the net cuts is drawn in two
+parts, one on each face. The net is drawn without a camera, so
+\code{center}, \code{projection}, \code{distance}, \code{tilt},
+\code{rotation} and \code{fov} apply to the other two surfaces.
+
 The view is an orthographic projection by default: parallel lines of sight,
 so the whole near half of the sphere shows. \code{projection =
 "perspective"} places a camera \code{distance} sphere radii from the
@@ -120,6 +128,7 @@ plot(grid, surface = "icosahedron", land = FALSE, center = "pacific")
 plot(grid, projection = "perspective", distance = 2, center = "europe")
 plot(grid, surface = "icosahedron", projection = "perspective",
      distance = 2.5, tilt = 25, rotation = 30)
+plot(grid, surface = "net")
 }
 \seealso{
 \code{\link{grid_global}} for the cells as sf polygons

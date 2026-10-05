@@ -905,6 +905,27 @@ constexpr int kMaxEdgeSplits = 12;
 // metre of the pole.
 constexpr double kPoleEdgeLonSlack = 1e-3;
 
+// Whether an edge a -> b, whose true midpoint is m, must be split before the
+// straight lon/lat chord a -> b may stand for it: m lies further from the
+// chord's midpoint than 'tolerance' times the chord's length, both measured
+// with longitude scaled by the cosine of the mean latitude.
+static inline bool chord_needs_split(double alon, double alat,
+                                     double mlon, double mlat,
+                                     double blon, double blat,
+                                     double tolerance) {
+    double dlon = blon - alon;
+    if (dlon > 180.0) dlon -= 360.0;
+    if (dlon < -180.0) dlon += 360.0;
+    double clat = 0.5 * (alat + blat);
+    double coslat = std::cos(clat * hexify::kDegToRad);
+    double off_lon = mlon - (alon + 0.5 * dlon);
+    if (off_lon > 180.0) off_lon -= 360.0;
+    if (off_lon < -180.0) off_lon += 360.0;
+    double off = std::hypot(off_lon * coslat, mlat - clat);
+    double len = std::hypot(dlon * coslat, blat - alat);
+    return len > 0.0 && off > tolerance * len;
+}
+
 // A piece of a vertex cell's folded edge shorter than this fraction of the
 // cell's circumradius is a corner, not an edge.
 constexpr double kEdgePieceMin = 1e-9;
@@ -1074,9 +1095,8 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
         quad_point_lonlat(quad, x, y, qx_center, qy_center, lon, lat);
     };
 
-    // The plane segment a -> b in lon/lat, from a and short of b. A segment is
-    // halved while its projected midpoint lies further than 'tolerance' times
-    // the segment's length from the midpoint of the straight lon/lat chord.
+    // The plane segment a -> b in lon/lat, from a and short of b, halved while
+    // its projected midpoint leaves the lon/lat chord (chord_needs_split).
     std::function<void(double, double, double, double, double, double,
                        double, double, int)> add_segment;
     add_segment = [&](double ax, double ay, double alon, double alat,
@@ -1087,17 +1107,8 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
             double mlon, mlat;
             project(mx, my, mlon, mlat);
-            double dlon = blon - alon;
-            if (dlon > 180.0) dlon -= 360.0;
-            if (dlon < -180.0) dlon += 360.0;
-            double clat = 0.5 * (alat + blat);
-            double coslat = std::cos(clat * hexify::kDegToRad);
-            double off_lon = mlon - (alon + 0.5 * dlon);
-            if (off_lon > 180.0) off_lon -= 360.0;
-            if (off_lon < -180.0) off_lon += 360.0;
-            double off = std::hypot(off_lon * coslat, mlat - clat);
-            double len = std::hypot(dlon * coslat, blat - alat);
-            if (R_finite(mlon) && len > 0.0 && off > tolerance * len) {
+            if (R_finite(mlon) &&
+                chord_needs_split(alon, alat, mlon, mlat, blon, blat, tolerance)) {
                 add_segment(ax, ay, alon, alat, mx, my, mlon, mlat, depth + 1);
                 add_segment(mx, my, mlon, mlat, bx, by, blon, blat, depth + 1);
                 return;
@@ -1557,6 +1568,76 @@ List cpp_cell_to_corners_seq(NumericVector cell_id, IntegerVector ap_seq_in,
                       as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq"), tolerance);
 }
 
+// Closed lon/lat rings whose edges are great-circle arcs between corners, as
+// H3 draws its cells, with each arc halved while its midpoint leaves the
+// lon/lat chord (chord_needs_split), as ISEA cell edges are.
+// [[Rcpp::export]]
+List cpp_densify_great_circle(List rings, double tolerance) {
+    auto unit = [](double lon, double lat, double v[3]) {
+        double la = lat * hexify::kDegToRad, lo = lon * hexify::kDegToRad;
+        v[0] = std::cos(la) * std::cos(lo);
+        v[1] = std::cos(la) * std::sin(lo);
+        v[2] = std::sin(la);
+    };
+    List out(rings.size());
+    std::vector<double> lon, lat;
+    for (R_xlen_t r = 0; r < rings.size(); r++) {
+        NumericMatrix ring = rings[r];
+        int n = ring.nrow();
+        if (n < 2 || !(tolerance > 0.0)) {
+            out[r] = ring;
+            continue;
+        }
+        lon.clear();
+        lat.clear();
+        std::function<void(const double*, double, double, const double*,
+                           double, double, int)> add_arc;
+        add_arc = [&](const double* a, double alon, double alat,
+                      const double* b, double blon, double blat, int depth) {
+            if (depth < kMaxEdgeSplits) {
+                double m[3] = {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+                double norm = std::sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]);
+                if (norm > 0.0) {
+                    for (double& x : m) x /= norm;
+                    double mlon = std::atan2(m[1], m[0]) * hexify::kRadToDeg;
+                    double mlat = std::asin(std::max(-1.0, std::min(1.0, m[2]))) *
+                                  hexify::kRadToDeg;
+                    if (chord_needs_split(alon, alat, mlon, mlat, blon, blat,
+                                          tolerance)) {
+                        add_arc(a, alon, alat, m, mlon, mlat, depth + 1);
+                        add_arc(m, mlon, mlat, b, blon, blat, depth + 1);
+                        return;
+                    }
+                }
+            }
+            lon.push_back(alon);
+            lat.push_back(alat);
+        };
+        double a[3], b[3];
+        for (int i = 0; i + 1 < n; i++) {
+            double alon = ring(i, 0), alat = ring(i, 1);
+            double blon = ring(i + 1, 0), blat = ring(i + 1, 1);
+            if (std::fabs(std::fabs(blon - alon) - 180.0) < kPoleEdgeLonSlack) {
+                lon.push_back(alon);
+                lat.push_back(alat);
+                continue;
+            }
+            unit(alon, alat, a);
+            unit(blon, blat, b);
+            add_arc(a, alon, alat, b, blon, blat, 0);
+        }
+        lon.push_back(ring(n - 1, 0));
+        lat.push_back(ring(n - 1, 1));
+        NumericMatrix dense(static_cast<int>(lon.size()), 2);
+        for (size_t k = 0; k < lon.size(); k++) {
+            dense(k, 0) = lon[k];
+            dense(k, 1) = lat[k];
+        }
+        out[r] = dense;
+    }
+    return out;
+}
+
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
                                    IntegerVector ap_seq_in, double tolerance = 0.0) {
@@ -1564,13 +1645,6 @@ DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id,
                           cpp_cell_to_corners_seq(cell_id, ap_seq_in, tolerance));
 }
 
-// The boundaries of cells on the icosahedron and on the sphere, from the same
-// points. Each cell edge is cut where it crosses a face edge, and every piece
-// is split into steps no longer than 'step' in triangle coordinates (a face
-// edge is about 1). A point carries its position on the flat face and on the
-// unit sphere, so the two surfaces show the same boundaries. One closed path
-// per cell: a matrix with columns cell (position in 'cell_id', from 1), face
-// (from 0), solid x, y, z and sphere x, y, z.
 // The boundary of one cell as straight pieces on the faces it covers, in
 // their triangle coordinates, counter-clockwise in the quad plane.
 static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
@@ -1591,6 +1665,16 @@ static std::vector<int> surface_ap_seq(const IntegerVector& ap_seq_in,
     return as_ap_seq(ap_seq_in, fn);
 }
 
+// The boundaries of cells on the icosahedron and on the sphere, from the same
+// points. Each cell edge is cut where it crosses a face edge, and every piece
+// is split into steps no longer than 'step' in triangle coordinates (a face
+// edge is about 1). A point carries its position on the flat face and on the
+// unit sphere, so the two surfaces show the same boundaries. One closed path
+// per cell: a matrix with columns cell (position in 'cell_id', from 1), face
+// (from 0), solid x, y, z, sphere x, y, z, and plane x, y in the PLANE
+// layout of the unfolded icosahedron. Where a path crosses onto another face
+// the crossing point appears on both faces, so the points of one face run
+// unbroken in the plane, where faces that meet on the solid may lie apart.
 // [[Rcpp::export]]
 NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
                                      int aperture, IntegerVector ap_seq_in,
@@ -1599,41 +1683,48 @@ NumericMatrix cpp_cell_surface_paths(NumericVector cell_id, int resolution,
     std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
     CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
 
+    constexpr int n_col = 10;
     std::vector<double> rows;
     std::vector<PlaneEdge> edges;
     std::vector<FacePiece> pieces;
-    double solid[3], sphere[3];
+    double solid[3], sphere[3], px, py;
     auto emit = [&](R_xlen_t cell, int face, double tx, double ty) {
         hexify::face_tri_to_solid(face, tx, ty, solid);
         hexify::face_tri_to_sphere(face, tx, ty, sphere);
+        hexify::face_tri_to_plane(face, tx, ty, px, py);
         rows.insert(rows.end(), {static_cast<double>(cell + 1),
                                  static_cast<double>(face),
                                  solid[0], solid[1], solid[2],
-                                 sphere[0], sphere[1], sphere[2]});
+                                 sphere[0], sphere[1], sphere[2], px, py});
     };
 
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
         cell_face_pieces(g, g.cells[k], edges, pieces);
-        for (const FacePiece& p : pieces) {
+        for (size_t i = 0; i < pieces.size(); i++) {
+            const FacePiece& p = pieces[i];
             double len = std::hypot(p.bx - p.ax, p.by - p.ay);
             int n = std::max(1, static_cast<int>(std::ceil(len / step)));
             for (int s = 0; s < n; s++) {
                 double f = static_cast<double>(s) / n;
                 emit(k, p.face, p.ax + f * (p.bx - p.ax), p.ay + f * (p.by - p.ay));
             }
+            // Where the path crosses onto another face, its end on this face
+            // closes the run of points this face holds.
+            const FacePiece& next = pieces[(i + 1) % pieces.size()];
+            if (next.face != p.face) emit(k, p.face, p.bx, p.by);
         }
         const FacePiece& first = pieces.front();
         emit(k, first.face, first.ax, first.ay);
     }
 
-    R_xlen_t n_row = static_cast<R_xlen_t>(rows.size() / 8);
-    NumericMatrix out(n_row, 8);
+    R_xlen_t n_row = static_cast<R_xlen_t>(rows.size() / n_col);
+    NumericMatrix out(n_row, n_col);
     for (R_xlen_t r = 0; r < n_row; r++) {
-        for (int col = 0; col < 8; col++) out(r, col) = rows[r * 8 + col];
+        for (int col = 0; col < n_col; col++) out(r, col) = rows[r * n_col + col];
     }
     colnames(out) = CharacterVector::create("cell", "face", "solid_x", "solid_y",
                                             "solid_z", "sphere_x", "sphere_y",
-                                            "sphere_z");
+                                            "sphere_z", "plane_x", "plane_y");
     return out;
 }
 
@@ -2076,26 +2167,8 @@ DataFrame cpp_icosa_tri_to_plane(IntegerVector icosa_triangle_face,
             continue;
         }
 
-        double x = icosa_triangle_x[k];
-        double y = icosa_triangle_y[k];
-
-        // Get layout parameters for this face
-        const hexify::PlaneTriLayout& layout = hexify::kPlaneLayout[face];
-
-        // Rotate by rot60 * 60 degrees
-        if (layout.rot60 != 0) {
-            double angle_rad = layout.rot60 * 60.0 * hexify::kDegToRad;
-            double cos_ang = std::cos(angle_rad);
-            double sin_ang = std::sin(angle_rad);
-            double x_rot = x * cos_ang - y * sin_ang;
-            double y_rot = x * sin_ang + y * cos_ang;
-            x = x_rot;
-            y = y_rot;
-        }
-
-        // Add offset
-        out_px[k] = x + layout.offset_x;
-        out_py[k] = y + layout.offset_y;
+        hexify::face_tri_to_plane(face, icosa_triangle_x[k], icosa_triangle_y[k],
+                                  out_px[k], out_py[k]);
     }
 
     return DataFrame::create(
@@ -2142,26 +2215,7 @@ DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture)
         hexify::quad_xy_to_icosa_tri(quad, quad_x, quad_y, tri_face,
                                      tri_x, tri_y);
 
-        // Convert Icosa Triangle → PLANE
-        const hexify::PlaneTriLayout& layout = hexify::kPlaneLayout[tri_face];
-
-        double x = tri_x;
-        double y = tri_y;
-
-        // Rotate by rot60 * 60 degrees
-        if (layout.rot60 != 0) {
-            double angle_rad = layout.rot60 * 60.0 * hexify::kDegToRad;
-            double cos_ang = std::cos(angle_rad);
-            double sin_ang = std::sin(angle_rad);
-            double x_rot = x * cos_ang - y * sin_ang;
-            double y_rot = x * sin_ang + y * cos_ang;
-            x = x_rot;
-            y = y_rot;
-        }
-
-        // Add offset
-        out_px[k] = x + layout.offset_x;
-        out_py[k] = y + layout.offset_y;
+        hexify::face_tri_to_plane(tri_face, tri_x, tri_y, out_px[k], out_py[k]);
     }
 
     return DataFrame::create(
@@ -2183,28 +2237,8 @@ DataFrame cpp_lonlat_to_plane(NumericVector lon, NumericVector lat) {
     for (int k = 0; k < n; k++) {
         // Project to icosahedron
         auto fwd = hexify::snyder_forward(lon[k], lat[k]);
-
-        int face = fwd.face;
-        double x = fwd.icosa_triangle_x;
-        double y = fwd.icosa_triangle_y;
-
-        // Convert Icosa Triangle → PLANE
-        const hexify::PlaneTriLayout& layout = hexify::kPlaneLayout[face];
-
-        // Rotate by rot60 * 60 degrees
-        if (layout.rot60 != 0) {
-            double angle_rad = layout.rot60 * 60.0 * hexify::kDegToRad;
-            double cos_ang = std::cos(angle_rad);
-            double sin_ang = std::sin(angle_rad);
-            double x_rot = x * cos_ang - y * sin_ang;
-            double y_rot = x * sin_ang + y * cos_ang;
-            x = x_rot;
-            y = y_rot;
-        }
-
-        // Add offset
-        out_px[k] = x + layout.offset_x;
-        out_py[k] = y + layout.offset_y;
+        hexify::face_tri_to_plane(fwd.face, fwd.icosa_triangle_x,
+                                  fwd.icosa_triangle_y, out_px[k], out_py[k]);
     }
 
     return DataFrame::create(

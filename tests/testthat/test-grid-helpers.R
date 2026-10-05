@@ -219,3 +219,86 @@ test_that("grid_rect returns every ISEA cell meeting the box", {
     expect_false(anyDuplicated(got$cell_id) > 0L)
   }
 })
+
+# =============================================================================
+# Densified cell edges, neighbour links and child polygons
+# =============================================================================
+
+ring_of <- function(x) sf::st_coordinates(sf::st_geometry(x)[[1]])[, 1:2]
+
+test_that("cell_to_sf densifies ISEA edges to the tolerance asked", {
+  g <- hex_grid(resolution = 3, aperture = 3)
+  cell <- lonlat_to_cell(10, 50, g)
+  corners <- nrow(ring_of(cell_to_sf(cell, g, densify = 0)))
+  default <- nrow(ring_of(cell_to_sf(cell, g)))
+  fine <- nrow(ring_of(cell_to_sf(cell, g, densify = 1e-5)))
+  expect_equal(corners, 7L)
+  expect_gt(default, corners)
+  expect_gt(fine, default)
+  expect_equal(ring_of(cell_to_sf(cell, g, densify = 0.001)),
+               ring_of(cell_to_sf(cell, g)))
+  expect_error(cell_to_sf(cell, g, densify = -1), "non-negative")
+})
+
+test_that("cell_to_sf densifies H3 edges along their great circles", {
+  g <- suppressMessages(hex_grid(resolution = 2, type = "h3"))
+  cell <- lonlat_to_cell(10, 50, g)
+  corners <- ring_of(cell_to_sf(cell, g, wrap_dateline = FALSE))
+  dense <- ring_of(cell_to_sf(cell, g, wrap_dateline = FALSE, densify = 1e-4))
+  expect_equal(nrow(corners), 7L)
+  expect_gt(nrow(dense), nrow(corners))
+  V <- hexify:::unit_vec(corners[, 1], corners[, 2])
+  normals <- t(vapply(1:6, function(i) {
+    n <- c(V[i, 2] * V[i + 1, 3] - V[i, 3] * V[i + 1, 2],
+           V[i, 3] * V[i + 1, 1] - V[i, 1] * V[i + 1, 3],
+           V[i, 1] * V[i + 1, 2] - V[i, 2] * V[i + 1, 1])
+    n / sqrt(sum(n^2))
+  }, numeric(3)))
+  D <- hexify:::unit_vec(dense[, 1], dense[, 2])
+  off <- apply(abs(D %*% t(normals)), 1, min)
+  expect_lt(max(off), 1e-10)
+})
+
+test_that("get_neighbors(as_sf = TRUE) links each cell to its neighbours", {
+  g <- hex_grid(resolution = 4, aperture = 4)
+  cells <- lonlat_to_cell(c(10, -60), c(50, -15), g)
+  links <- get_neighbors(cells, g, k = 2, as_sf = TRUE)
+  rings <- get_neighbors(cells, g, k = 2, distances = TRUE)
+  expect_s3_class(links, "sf")
+  expect_equal(links$cell_id, rep(cells, vapply(rings, nrow, integer(1))))
+  expect_equal(links$neighbor_id, unlist(lapply(rings, `[[`, "cell_id")))
+  expect_equal(links$ring_distance, unlist(lapply(rings, `[[`, "ring_distance")))
+  ends <- t(vapply(sf::st_geometry(links), function(l) {
+    xy <- sf::st_coordinates(l)
+    c(xy[1, 1:2], xy[nrow(xy), 1:2])
+  }, numeric(4)))
+  from <- cell_to_lonlat(links$cell_id, g)
+  to <- cell_to_lonlat(links$neighbor_id, g)
+  expect_equal(unname(ends), unname(cbind(from$lon_deg, from$lat_deg,
+                                          to$lon_deg, to$lat_deg)),
+               tolerance = 1e-9)
+})
+
+test_that("get_neighbors(as_sf = TRUE) splits a link at the antimeridian", {
+  g <- hex_grid(resolution = 3, aperture = 3)
+  cell <- lonlat_to_cell(179.9, 10, g)
+  links <- get_neighbors(cell, g, as_sf = TRUE)
+  lon <- sf::st_coordinates(links)[, 1]
+  expect_true(all(lon >= -180 & lon <= 180))
+})
+
+test_that("get_children(as_sf = TRUE) returns each child with its parent", {
+  for (ap in list(4, 3, "4/3")) {
+    g <- hex_grid(resolution = 2, aperture = ap)
+    parents <- c(1, 5, 5)
+    kids <- get_children(parents, g, levels = 2, as_sf = TRUE)
+    ids <- get_children(parents, g, levels = 2)
+    expect_equal(kids$parent_id, rep(parents, lengths(ids)), info = ap)
+    expect_equal(kids$cell_id, unlist(ids), info = ap)
+    expect_false(any(sf::st_is_empty(kids)), info = ap)
+  }
+  h <- suppressMessages(hex_grid(resolution = 1, type = "h3"))
+  hc <- lonlat_to_cell(c(10, -60), c(50, -15), h)
+  hk <- get_children(hc, h, as_sf = TRUE)
+  expect_equal(nrow(hk), length(unlist(get_children(hc, h))))
+})

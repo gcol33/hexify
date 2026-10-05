@@ -19,10 +19,15 @@
 #'   result (default `FALSE`).
 #' @param distances Logical. If `TRUE`, return a data.frame with cell IDs
 #'   and their ring distance from the origin (default `FALSE`).
+#' @param as_sf Logical. If `TRUE`, return the links from each cell to its
+#'   neighbours as great-circle lines between cell centres.
 #'
 #' @return If `distances = FALSE` (default): a list of cell ID vectors, one
 #'   per input cell. If `distances = TRUE`: a list of data.frames with columns
-#'   `cell_id` and `ring_distance`.
+#'   `cell_id` and `ring_distance`. If `as_sf = TRUE`: an sf object of
+#'   lines (MULTILINESTRINGs when one is split at the antimeridian), one
+#'   row per cell and neighbour, with columns `cell_id`,
+#'   `neighbor_id` and `ring_distance`.
 #'
 #' @details
 #' For **ISEA grids**, neighbors are computed using axial coordinate offsets
@@ -54,10 +59,16 @@
 #'
 #' # With distances
 #' get_neighbors(cell, g, k = 2, distances = TRUE)
+#'
+#' # Links to the neighbours, drawn over the cells
+#' links <- get_neighbors(cell, g, k = 2, as_sf = TRUE)
+#' plot(sf::st_geometry(cell_to_sf(c(cell, links$neighbor_id), g)))
+#' plot(sf::st_geometry(links), col = "red", add = TRUE)
 #' }
 get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
-                           distances = FALSE) {
+                           distances = FALSE, as_sf = FALSE) {
   g <- extract_grid(grid)
+  if (as_sf) return(neighbor_links(cell_id, g, k, include_self))
   k <- as.integer(k)
 
   if (k < 0L) stop("k must be a non-negative integer")
@@ -154,4 +165,37 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
       visited
     }
   })
+}
+
+#' Links from cells to their neighbours as sf lines
+#'
+#' Each link is the great-circle arc between the two cell centres, with a
+#' point at least every degree, its longitudes continuous and split at the
+#' antimeridian. When a link is split, every link becomes a MULTILINESTRING.
+#' @noRd
+neighbor_links <- function(cell_id, g, k, include_self) {
+  rings <- get_neighbors(cell_id, g, k, include_self, distances = TRUE)
+  from <- rep(cell_id, vapply(rings, nrow, integer(1)))
+  to <- unlist(lapply(rings, `[[`, "cell_id"), use.names = FALSE)
+  ring_distance <- unlist(lapply(rings, `[[`, "ring_distance"), use.names = FALSE)
+
+  ids <- unique(c(from, to))
+  ctr <- cell_to_lonlat(ids, g)
+  V <- unit_vec(ctr$lon_deg, ctr$lat_deg)
+  a <- V[match(from, ids), , drop = FALSE]
+  b <- V[match(to, ids), , drop = FALSE]
+  lines <- lapply(seq_along(from), function(i) {
+    P <- rbind(slerp(a[i, ], b[i, ], pi / 180), b[i, ])
+    lon <- atan2(P[, 2], P[, 1]) * 180 / pi
+    lon <- lon[1] + cumsum(c(0, (diff(lon) + 180) %% 360 - 180))
+    sf::st_linestring(cbind(lon, asin(pmax(-1, pmin(1, P[, 3]))) * 180 / pi))
+  })
+  links <- sf::st_sf(cell_id = from, neighbor_id = to,
+                     ring_distance = as.integer(ring_distance),
+                     geometry = sf::st_sfc(lines, crs = grid_crs(g)))
+  links <- wrap_cells_at_dateline(links)
+  if (inherits(sf::st_geometry(links), "sfc_GEOMETRY")) {
+    links <- sf::st_cast(links, "MULTILINESTRING")
+  }
+  links
 }

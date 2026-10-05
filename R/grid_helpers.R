@@ -203,15 +203,16 @@ wrap_cells_at_dateline <- function(x) {
 #' @param crs CRS the polygons carry, as sf reads it
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
-isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326) {
+isea_cells_to_sfc <- function(cell_id, resolution, aperture, crs = 4326,
+                              tolerance = CELL_EDGE_TOLERANCE) {
   corners_list <- if (is_mixed_aperture(aperture)) {
-    mixed_cell_corners(cell_id, resolution, aperture, CELL_EDGE_TOLERANCE)
+    mixed_cell_corners(cell_id, resolution, aperture, tolerance)
   } else {
     cpp_cell_to_corners(
       as.numeric(cell_id),
       as.integer(resolution),
       as.integer(aperture),
-      CELL_EDGE_TOLERANCE
+      tolerance
     )
   }
 
@@ -327,6 +328,11 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' @param wrap_dateline Logical. If TRUE (default), calls
 #'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
 #'   Set to FALSE for orthographic/globe projections where wrapping creates gaps.
+#' @param densify Points added along each cell edge: every edge is halved
+#'   until the straight line in longitude and latitude between consecutive
+#'   points stays within \code{densify} times its length of the true edge.
+#'   \code{0} keeps the corners alone. \code{NULL} uses 0.001 for ISEA cells
+#'   and 0 for H3 cells.
 #'
 #' @return sf object with cell_id and geometry columns
 #'
@@ -334,6 +340,12 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' When called with a HexData object and no cell_id argument, this function
 #' generates polygons for all unique cells in the data, which is useful for
 #' plotting.
+#'
+#' An ISEA cell edge is straight on its icosahedron face and curved in
+#' longitude and latitude, so ISEA polygons are densified by default. An H3
+#' cell edge is a great-circle arc between corners, which sf reads exactly
+#' from the corners alone when it uses s2; densify H3 cells for planar work,
+#' or to draw them on a flat map.
 #'
 #' @seealso \code{\link{hex_grid}} for grid specifications,
 #'   \code{\link[=st_as_sf.HexData]{st_as_sf}} for converting HexData to sf
@@ -349,9 +361,14 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
 #' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 #' polys <- cell_to_sf(grid = result)
-cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
+cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
+                       densify = NULL) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
+  }
+  if (!is.null(densify) && (!is.numeric(densify) || length(densify) != 1L ||
+                            !is.finite(densify) || densify < 0)) {
+    stop("densify must be NULL or a single non-negative number")
   }
 
   # Handle HexData input
@@ -376,6 +393,9 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   # H3 path: use native C backend for boundaries
   if (is_h3_grid(g)) {
     boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
+    if (!is.null(densify) && densify > 0) {
+      boundaries <- cpp_densify_great_circle(boundaries, densify)
+    }
     polygons <- lapply(boundaries, function(coords) {
       if (nrow(coords) == 0) return(sf::st_polygon())
       coords <- lonlat_ring_coords(coords)
@@ -392,7 +412,8 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE) {
   # ISEA path: generate polygons using C++ function. For globe/orthographic
   # projections, pass wrap_dateline = FALSE to keep cells intact.
   sfc <- isea_cells_to_sfc(cell_id, g@resolution, g@aperture,
-                           crs = grid_crs(g))
+                           crs = grid_crs(g),
+                           tolerance = if (is.null(densify)) CELL_EDGE_TOLERANCE else densify)
 
   result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
   if (wrap_dateline) {
@@ -995,12 +1016,34 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 #' @param cell_id Numeric vector of cell IDs
 #' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels down (default 1)
+#' @param as_sf If \code{TRUE}, return the children as sf polygons, one row
+#'   per child with its \code{parent_id}.
 #'
-#' @return List of numeric vectors containing child cell IDs
+#' @return List of numeric vectors containing child cell IDs, one per input
+#'   cell; with \code{as_sf = TRUE}, an sf object with columns
+#'   \code{parent_id}, \code{cell_id} and \code{geometry}.
 #'
 #' @keywords internal
 #' @export
-get_children <- function(cell_id, grid, levels = 1L) {
+#' @examples
+#' grid <- hex_grid(resolution = 3, aperture = 4)
+#' parent <- lonlat_to_cell(10, 50, grid)
+#' get_children(parent, grid)
+#' kids <- get_children(parent, grid, levels = 2, as_sf = TRUE)
+#' plot(sf::st_geometry(kids))
+#' plot(sf::st_geometry(cell_to_sf(parent, grid)), border = "red", add = TRUE)
+get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
+  if (as_sf) {
+    g <- extract_grid(grid)
+    children <- get_children(cell_id, g, levels)
+    child_id <- unlist(children)
+    polys <- cell_to_sf(child_id, grid_at_resolution(g, g@resolution + as.integer(levels)))
+    return(sf::st_sf(
+      parent_id = rep(cell_id, lengths(children)),
+      cell_id = child_id,
+      geometry = sf::st_geometry(polys)[match(child_id, polys$cell_id)]
+    ))
+  }
   g <- extract_grid(grid)
 
   # H3 path
@@ -1033,6 +1076,17 @@ get_children <- function(cell_id, grid, levels = 1L) {
     front <- isea_children_one_level(front, g@resolution + step - 1L, g)
   }
   front
+}
+
+#' The same grid at another resolution: its aperture, type, radius and CRS
+#' @noRd
+grid_at_resolution <- function(g, resolution) {
+  if (is_h3_grid(g)) {
+    return(hex_grid(resolution = resolution, type = "h3", crs = g@crs,
+                    radius_km = g@radius_km))
+  }
+  hex_grid(resolution = resolution, aperture = g@aperture, crs = g@crs,
+           radius_km = g@radius_km)
 }
 
 #' Children of ISEA cells, one resolution down

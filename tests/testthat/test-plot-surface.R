@@ -335,3 +335,60 @@ test_that("an H3 grid draws on the sphere only", {
   expect_error(draws(plot(h, surface = "icosahedron")), "needs an ISEA grid")
   expect_error(draws(plot(h, face_edges = TRUE)), "not built on")
 })
+
+# =============================================================================
+# The unfolded net
+# =============================================================================
+
+test_that("boundary points of one face run unbroken in the plane", {
+  for (ap in c(3, 4, 7)) {
+    g <- hex_grid(resolution = 2, aperture = ap)
+    P <- surface_paths_for(g, step = 0.02)
+    n <- nrow(P)
+    same <- P[-1, "cell"] == P[-n, "cell"] & P[-1, "face"] == P[-n, "face"]
+    gap <- sqrt(rowSums((P[-1, c("plane_x", "plane_y")] -
+                         P[-n, c("plane_x", "plane_y")])^2))[same]
+    expect_lte(max(gap), 0.02 + 1e-9)
+  }
+})
+
+test_that("boundary points lie inside their face's triangle of the net", {
+  tris <- hexify:::net_triangles()
+  P <- surface_paths_for(hex_grid(resolution = 3, aperture = 3))
+  for (f in unique(P[, "face"])) {
+    T <- tris[[f + 1]]$plane
+    p <- P[P[, "face"] == f, c("plane_x", "plane_y"), drop = FALSE]
+    M <- cbind(T[1, ] - T[3, ], T[2, ] - T[3, ])
+    w <- solve(M, t(p) - T[3, ])
+    expect_gte(min(w, 1 - colSums(w)), -1e-9)
+  }
+})
+
+test_that("a cell on one face is centred on its PLANE centre", {
+  for (ap in c(3, 4, 7)) {
+    g <- hex_grid(resolution = 3, aperture = ap)
+    P <- surface_paths_for(g, step = 0.01)
+    one_face <- tapply(P[, "face"], P[, "cell"], function(f) length(unique(f)) == 1)
+    cells <- as.integer(names(one_face)[one_face])[1:20]
+    ctr <- hexify_cell_to_plane(cells, 3, ap)
+    for (i in seq_along(cells)) {
+      ring <- P[P[, "cell"] == cells[i], c("plane_x", "plane_y")]
+      xy <- sf::st_coordinates(sf::st_centroid(sf::st_polygon(list(ring))))
+      expect_equal(unname(xy[1, 1:2]), c(ctr$plane_x[i], ctr$plane_y[i]),
+                   tolerance = 1e-6, info = paste(ap, cells[i]))
+    }
+  }
+})
+
+test_that("plot draws a grid on the net", {
+  g <- hex_grid(resolution = 2, aperture = 3)
+  expect_identical(draws(plot(g, surface = "net")), g)
+  expect_identical(draws(plot(g, surface = "net", land = FALSE, face_edges = FALSE,
+                              cells = 1:10)), g)
+  expect_identical(draws(plot(hex_grid(resolution = 3, aperture = "4/3"),
+                              surface = "net", land = FALSE)), hex_grid(resolution = 3, aperture = "4/3"))
+  expect_error(draws(plot(g, surface = "net", center = "europe")), "drawn flat")
+  expect_error(draws(plot(g, surface = "net", rotation = 10)), "drawn flat")
+  h <- hex_grid(resolution = 0, type = "h3")
+  expect_error(suppressMessages(draws(plot(h, surface = "net"))), "needs an ISEA grid")
+})

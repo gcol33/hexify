@@ -221,6 +221,10 @@ cpp_cell_to_corners_seq <- function(cell_id, ap_seq_in, tolerance = 0.0) {
     .Call(`_hexify_cpp_cell_to_corners_seq`, cell_id, ap_seq_in, tolerance)
 }
 
+cpp_densify_great_circle <- function(rings, tolerance) {
+    .Call(`_hexify_cpp_densify_great_circle`, rings, tolerance)
+}
+
 cpp_cell_to_polygon_seq <- function(cell_id, ap_seq_in, tolerance = 0.0) {
     .Call(`_hexify_cpp_cell_to_polygon_seq`, cell_id, ap_seq_in, tolerance)
 }

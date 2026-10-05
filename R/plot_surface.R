@@ -42,12 +42,19 @@ globe_centers <- list(
   antarctic     = c(lon = 0,    lat = -90)
 )
 
-#' Plot a grid on the sphere or on its icosahedron
+#' Plot a grid on the sphere, on its icosahedron, or on the unfolded net
 #'
 #' Draws the cells of a grid in 3D, seen from above a chosen point: on the
-#' sphere, or on the flat faces of the icosahedron the grid is built on. Both
+#' sphere, or on the flat faces of the icosahedron the grid is built on. All
 #' surfaces take their cell boundaries from the same points, so a cell on the
 #' icosahedron is the cell on the sphere folded flat.
+#'
+#' \code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
+#' DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in the same
+#' coordinates). A cell on a face edge that the net cuts is drawn in two
+#' parts, one on each face. The net is drawn without a camera, so
+#' \code{center}, \code{projection}, \code{distance}, \code{tilt},
+#' \code{rotation} and \code{fov} apply to the other two surfaces.
 #'
 #' The view is an orthographic projection by default: parallel lines of sight,
 #' so the whole near half of the sphere shows. \code{projection =
@@ -62,8 +69,9 @@ globe_centers <- list(
 #'
 #' @param x A HexGridInfo object from \code{\link{hex_grid}}
 #' @param y Ignored
-#' @param surface \code{"sphere"} or \code{"icosahedron"}. The icosahedron
-#'   needs an ISEA grid; an H3 grid is drawn on the sphere.
+#' @param surface \code{"sphere"}, \code{"icosahedron"} or \code{"net"}.
+#'   The icosahedron and the net need an ISEA grid; an H3 grid is drawn on the
+#'   sphere.
 #' @param center Point the view looks down on: a preset name from
 #'   \code{\link{globe_centers}} or \code{c(lon, lat)}.
 #' @param projection \code{"orthographic"} or \code{"perspective"}.
@@ -111,9 +119,10 @@ globe_centers <- list(
 #' plot(grid, projection = "perspective", distance = 2, center = "europe")
 #' plot(grid, surface = "icosahedron", projection = "perspective",
 #'      distance = 2.5, tilt = 25, rotation = 30)
+#' plot(grid, surface = "net")
 setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
   function(x, y,
-           surface = c("sphere", "icosahedron"),
+           surface = c("sphere", "icosahedron", "net"),
            center = c(lon = 15, lat = 32),
            projection = c("orthographic", "perspective"),
            distance = NULL,
@@ -139,6 +148,13 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     face_edges <- resolve_surface(surface, face_edges, g)
 
     projection <- match.arg(projection)
+    if (surface == "net" && (!missing(center) || projection != "orthographic" ||
+                             !is.null(distance) || !is.null(fov) ||
+                             tilt != 0 || rotation != 0)) {
+      stop("the net is drawn flat; center, projection, distance, tilt, ",
+           "rotation and fov apply to the sphere and the icosahedron",
+           call. = FALSE)
+    }
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
     view <- surface_view(resolve_center(center), camera$distance, tilt, rotation)
     paths <- grid_surface_paths(g, cells, step)
@@ -152,16 +168,24 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     old <- graphics::par(mar = c(0, 0, if (is.null(main)) 0 else 2, 0))
     on.exit(graphics::par(old), add = TRUE)
     graphics::plot.new()
-    frame <- view_frame(view, camera$fov, surface_outline(surface, view))
-    xlim <- frame[1] + c(-1, 1) * frame[3]
-    ylim <- frame[2] + c(-1, 1) * frame[3]
+    if (surface == "net") {
+      tris <- net_triangles()
+      xy <- do.call(rbind, lapply(tris, `[[`, "plane"))
+      pad <- 0.02 * diff(range(xy[, 1]))
+      xlim <- range(xy[, 1]) + c(-1, 1) * pad
+      ylim <- range(xy[, 2]) + c(-1, 1) * pad
+    } else {
+      frame <- view_frame(view, camera$fov, surface_outline(surface, view))
+      xlim <- frame[1] + c(-1, 1) * frame[3]
+      ylim <- frame[2] + c(-1, 1) * frame[3]
+    }
     graphics::plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
     graphics::clip(xlim[1], xlim[2], ylim[1], ylim[2])
-    if (surface == "sphere") {
-      draw_sphere(paths, land, view, style)
-    } else {
-      draw_icosahedron(paths, land, view, style)
-    }
+    switch(surface,
+      sphere = draw_sphere(paths, land, view, style),
+      icosahedron = draw_icosahedron(paths, land, view, style),
+      net = draw_net(paths, land, tris, style)
+    )
     if (!is.null(main)) graphics::title(main = main)
     invisible(x)
   }
@@ -203,9 +227,9 @@ resolve_center <- function(center) {
 #' Returns `face_edges`, \code{NULL} becoming TRUE for an ISEA grid and FALSE for H3.
 #' @noRd
 resolve_surface <- function(surface, face_edges, g) {
-  if (surface == "icosahedron" && is_h3_grid(g)) {
-    stop("surface = \"icosahedron\" needs an ISEA grid; H3 cells are drawn ",
-         "on the sphere", call. = FALSE)
+  if (surface != "sphere" && is_h3_grid(g)) {
+    stop(sprintf("surface = \"%s\" needs an ISEA grid; H3 cells are drawn ",
+                 surface), "on the sphere", call. = FALSE)
   }
   if (is.null(face_edges)) face_edges <- !is_h3_grid(g)
   if (face_edges && is_h3_grid(g)) {
@@ -508,9 +532,10 @@ icosa_solid <- function() {
 
 #' Cell boundaries of a grid on the sphere and on the icosahedron
 #'
-#' One closed path per cell, as a matrix with columns cell, face, solid_x/y/z
-#' and sphere_x/y/z. An ISEA grid reads them from its faces; an H3 cell edge is
-#' a great-circle arc between corners, so H3 paths carry sphere positions only.
+#' One closed path per cell, as a matrix with columns cell, face, solid_x/y/z,
+#' sphere_x/y/z and plane_x/y. An ISEA grid reads them from its faces; an H3
+#' cell edge is a great-circle arc between corners, so H3 paths carry sphere
+#' positions only.
 #' @noRd
 grid_surface_paths <- function(g, cells, step) {
   cells <- surface_cells(g, cells)
@@ -546,7 +571,7 @@ h3_sphere_paths <- function(cells, step) {
     pts <- rbind(pts, V[1, ])
     cbind(cell = k, face = NA_real_, solid_x = NA_real_, solid_y = NA_real_,
           solid_z = NA_real_, sphere_x = pts[, 1], sphere_y = pts[, 2],
-          sphere_z = pts[, 3])
+          sphere_z = pts[, 3], plane_x = NA_real_, plane_y = NA_real_)
   })
   do.call(rbind, rows)
 }
@@ -698,22 +723,24 @@ draw_icosahedron <- function(paths, land, view, style) {
   }
 }
 
-#' Land and country outlines on one flat face
+#' Land and country outlines on one flat face, in its triangle coordinates
 #'
 #' Land within a cap around the face's centre is read in the face's triangle
-#' coordinates, cut to the triangle there, and placed on the face. The cap is
-#' wider than the face's circumradius, so its rim never reaches the triangle.
+#' coordinates and cut to the triangle there. The cap is wider than the face's
+#' circumradius, so its rim never reaches the triangle. Returns the filled
+#' polygons (lists of rings) and the outlines (matrices), each NULL when the
+#' face holds none.
 #' @noRd
-draw_face_land <- function(face, tri, land, view, style, shade) {
+face_land <- function(face, tri, land) {
   c3 <- colMeans(tri)
   c_ll <- c(atan2(c3[2], c3[1]), asin(c3[3] / sqrt(sum(c3^2)))) * 180 / pi
   polys <- land_in_cap(land, c_ll[1], c_ll[2], 40)
-  if (length(polys) == 0L) return(invisible())
+  if (length(polys) == 0L) return(list(fill = NULL, lines = NULL))
 
   to_tri <- function(r) cpp_lonlat_to_face_solid(face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
   tri_ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
   tri_t <- to_tri(tri_ll)
-  triangle <- sf::st_polygon(list(rbind(tri_t, tri_t[1, ])))
+  triangle <- sf::st_sfc(sf::st_polygon(list(rbind(tri_t, tri_t[1, ]))))
 
   old <- suppressMessages(sf::sf_use_s2(FALSE))
   on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
@@ -724,32 +751,109 @@ draw_face_land <- function(face, tri, land, view, style, shade) {
     }))
   }))
   flat <- suppressWarnings(sf::st_make_valid(flat))
-  to_solid <- function(m) cpp_face_tri_to_solid(face, m[, 1], m[, 2])
 
-  if (!is.na(style$land_fill)) {
-    filled <- suppressWarnings(sf::st_intersection(flat, sf::st_sfc(triangle)))
-    filled <- filled[!sf::st_is_empty(filled)]
-    if (length(filled) > 0L) {
-      polys <- sfc_polygons(polygons_only(filled))
-      fill_polygons(lapply(polys, function(p) lapply(p, to_solid)), view,
-                    shade_col(style$land_fill, shade))
+  filled <- suppressWarnings(sf::st_intersection(flat, triangle))
+  filled <- filled[!sf::st_is_empty(filled)]
+  fill <- if (length(filled) > 0L) sfc_polygons(polygons_only(filled))
+
+  lines_t <- suppressWarnings(sf::st_intersection(sf::st_boundary(flat), triangle))
+  lines_t <- lines_t[!sf::st_is_empty(lines_t)]
+  lines <- NULL
+  if (length(lines_t) > 0L) {
+    lines_t <- lines_t[sf::st_dimension(lines_t) == 1L]
+    if (any(sf::st_is(lines_t, "GEOMETRYCOLLECTION"))) {
+      lines_t <- sf::st_collection_extract(lines_t, "LINESTRING")
+    }
+    lines <- unlist(lapply(lines_t, function(l) {
+      if (inherits(l, "MULTILINESTRING")) unclass(l) else list(unclass(l))
+    }), recursive = FALSE)
+  }
+  list(fill = fill, lines = lines)
+}
+
+#' Land and country outlines on one face of the icosahedron
+#' @noRd
+draw_face_land <- function(face, tri, land, view, style, shade) {
+  part <- face_land(face, tri, land)
+  to_solid <- function(m) cpp_face_tri_to_solid(face, m[, 1], m[, 2])
+  if (!is.na(style$land_fill) && !is.null(part$fill)) {
+    fill_polygons(lapply(part$fill, function(p) lapply(p, to_solid)), view,
+                  shade_col(style$land_fill, shade))
+  }
+  if (!is.na(style$land_border) && !is.null(part$lines)) {
+    P <- do.call(rbind, lapply(part$lines, to_solid))
+    brk <- unlist(lapply(part$lines, function(l) c(TRUE, rep(FALSE, nrow(l) - 1L))))
+    draw_segments(P, view, brk, rep(TRUE, nrow(P)), style$land_border, style$land_lwd)
+  }
+}
+
+# =============================================================================
+# NET
+# =============================================================================
+
+#' The faces of the icosahedron laid out flat
+#'
+#' One entry per face (from 0): its vertices on the unit sphere and its
+#' triangle in the PLANE layout.
+#' @noRd
+net_triangles <- function() {
+  solid <- icosa_solid()
+  lapply(seq_len(nrow(solid$faces)), function(f) {
+    tri <- solid$vertices[solid$faces[f, ], ]
+    ll <- cbind(atan2(tri[, 2], tri[, 1]), asin(tri[, 3])) * 180 / pi
+    t <- cpp_lonlat_to_face_solid(f - 1L, ll[, 1], ll[, 2])
+    list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE]))
+  })
+}
+
+#' Triangle coordinates of one face in the PLANE layout
+#' @noRd
+to_plane <- function(face, m) {
+  p <- cpp_icosa_tri_to_plane(rep(as.integer(face), nrow(m)), m[, 1], m[, 2])
+  cbind(p$plane_x, p$plane_y)
+}
+
+#' Draw the grid on the unfolded icosahedron
+#' @noRd
+draw_net <- function(paths, land, tris, style) {
+  for (t in tris) graphics::polygon(t$plane, col = style$ocean_fill, border = NA)
+
+  if (!is.null(land)) {
+    for (f in seq_along(tris)) {
+      part <- face_land(f - 1L, tris[[f]]$tri, land)
+      if (!is.na(style$land_fill) && !is.null(part$fill)) {
+        xy <- do.call(rbind, lapply(part$fill, function(p) {
+          do.call(rbind, lapply(seq_along(p), function(k) {
+            rbind(orient_ring(to_plane(f - 1L, p[[k]]), anticlockwise = k == 1L), NA)
+          }))
+        }))
+        xy <- xy[-nrow(xy), , drop = FALSE]
+        graphics::polypath(xy[, 1], xy[, 2], col = style$land_fill, border = NA,
+                           rule = "winding")
+      }
+      if (!is.na(style$land_border) && !is.null(part$lines)) {
+        for (l in part$lines) {
+          graphics::lines(to_plane(f - 1L, l), col = style$land_border,
+                          lwd = style$land_lwd)
+        }
+      }
     }
   }
 
-  if (!is.na(style$land_border)) {
-    lines_t <- suppressWarnings(sf::st_intersection(sf::st_boundary(flat), sf::st_sfc(triangle)))
-    lines_t <- lines_t[!sf::st_is_empty(lines_t)]
-    if (length(lines_t) > 0L) {
-      lines_t <- lines_t[sf::st_dimension(lines_t) == 1L]
-      if (any(sf::st_is(lines_t, "GEOMETRYCOLLECTION"))) {
-        lines_t <- sf::st_collection_extract(lines_t, "LINESTRING")
-      }
-      parts <- unlist(lapply(lines_t, function(l) {
-        if (inherits(l, "MULTILINESTRING")) unclass(l) else list(unclass(l))
-      }), recursive = FALSE)
-      P <- do.call(rbind, lapply(parts, to_solid))
-      brk <- unlist(lapply(parts, function(l) c(TRUE, rep(FALSE, nrow(l) - 1L))))
-      draw_segments(P, view, brk, rep(TRUE, nrow(P)), style$land_border, style$land_lwd)
+  n <- nrow(paths)
+  if (n >= 2L) {
+    s <- which(paths[-1L, "cell"] == paths[-n, "cell"] &
+               paths[-1L, "face"] == paths[-n, "face"])
+    graphics::segments(paths[s, "plane_x"], paths[s, "plane_y"],
+                       paths[s + 1L, "plane_x"], paths[s + 1L, "plane_y"],
+                       col = style$grid_border, lwd = style$grid_lwd,
+                       lend = "round")
+  }
+
+  if (style$face_edges) {
+    for (t in tris) {
+      graphics::polygon(t$plane, col = NA, border = style$edge_col,
+                        lwd = style$edge_lwd)
     }
   }
 }

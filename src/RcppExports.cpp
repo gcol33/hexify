@@ -736,6 +736,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_densify_great_circle
+List cpp_densify_great_circle(List rings, double tolerance);
+RcppExport SEXP _hexify_cpp_densify_great_circle(SEXP ringsSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type rings(ringsSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_densify_great_circle(rings, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_to_polygon_seq
 DataFrame cpp_cell_to_polygon_seq(NumericVector cell_id, IntegerVector ap_seq_in, double tolerance);
 RcppExport SEXP _hexify_cpp_cell_to_polygon_seq(SEXP cell_idSEXP, SEXP ap_seq_inSEXP, SEXP toleranceSEXP) {
@@ -1474,6 +1486,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 4},
     {"_hexify_cpp_cell_to_polygon", (DL_FUNC) &_hexify_cpp_cell_to_polygon, 4},
     {"_hexify_cpp_cell_to_corners_seq", (DL_FUNC) &_hexify_cpp_cell_to_corners_seq, 3},
+    {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 2},
     {"_hexify_cpp_cell_to_polygon_seq", (DL_FUNC) &_hexify_cpp_cell_to_polygon_seq, 3},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 5},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 0},

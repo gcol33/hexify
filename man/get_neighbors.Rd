@@ -4,7 +4,14 @@
 \alias{get_neighbors}
 \title{Get Neighboring Cells}
 \usage{
-get_neighbors(cell_id, grid, k = 1L, include_self = FALSE, distances = FALSE)
+get_neighbors(
+  cell_id,
+  grid,
+  k = 1L,
+  include_self = FALSE,
+  distances = FALSE,
+  as_sf = FALSE
+)
 }
 \arguments{
 \item{cell_id}{Cell IDs to find neighbors for. Numeric vector for ISEA
@@ -20,11 +27,17 @@ result (default \code{FALSE}).}
 
 \item{distances}{Logical. If \code{TRUE}, return a data.frame with cell IDs
 and their ring distance from the origin (default \code{FALSE}).}
+
+\item{as_sf}{Logical. If \code{TRUE}, return the links from each cell to its
+neighbours as great-circle lines between cell centres.}
 }
 \value{
 If \code{distances = FALSE} (default): a list of cell ID vectors, one
 per input cell. If \code{distances = TRUE}: a list of data.frames with columns
-\code{cell_id} and \code{ring_distance}.
+\code{cell_id} and \code{ring_distance}. If \code{as_sf = TRUE}: an sf object of
+lines (MULTILINESTRINGs when one is split at the antimeridian), one
+row per cell and neighbour, with columns \code{cell_id},
+\code{neighbor_id} and \code{ring_distance}.
 }
 \description{
 Returns the k-ring (disk) of cells neighboring the input cells.
@@ -57,6 +70,11 @@ get_neighbors(cell_h3, g_h3, k = 2)
 
 # With distances
 get_neighbors(cell, g, k = 2, distances = TRUE)
+
+# Links to the neighbours, drawn over the cells
+links <- get_neighbors(cell, g, k = 2, as_sf = TRUE)
+plot(sf::st_geometry(cell_to_sf(c(cell, links$neighbor_id), g)))
+plot(sf::st_geometry(links), col = "red", add = TRUE)
 }
 }
 \seealso{

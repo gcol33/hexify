@@ -218,6 +218,19 @@ void face_tri_to_sphere(int face, double tx, double ty, double out[3]) {
   out[2] = v.z;
 }
 
+void face_tri_to_plane(int face, double tx, double ty, double& px, double& py) {
+  const PlaneTriLayout& layout = kPlaneLayout[face];
+  if (layout.rot60 != 0) {
+    const double a = layout.rot60 * 60.0 * kDegToRad;
+    const double c = std::cos(a), s = std::sin(a);
+    const double x = tx * c - ty * s;
+    ty = tx * s + ty * c;
+    tx = x;
+  }
+  px = tx + layout.offset_x;
+  py = ty + layout.offset_y;
+}
+
 int which_face(double lon_deg, double lat_deg) {
   if (!std::isfinite(lon_deg) || !std::isfinite(lat_deg)) {
     throw std::invalid_argument("which_face: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
