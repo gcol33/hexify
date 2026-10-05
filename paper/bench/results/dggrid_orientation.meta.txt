@@ -1,6 +1,6 @@
 script: bench_dggrid_orientation.R
-date: 2026-10-05 22:18:55 CEST
-hexify commit: bb93b7f
+date: 2026-10-05 22:44:13 CEST
+hexify commit: a776da4
 uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
