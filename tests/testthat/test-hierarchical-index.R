@@ -272,9 +272,11 @@ test_that("every aperture-7 base cell has six children", {
   base <- hex_grid(resolution = 0, aperture = 7)
   expect_equal(lengths(get_children(seq_len(12), base)), rep(6L, 12))
 
-  # The leading field of a Z7 index is quad + 12 * seed, so a two-character
-  # index is not a bare quad: "25" is quad 1 reached from base cell 0
-  expect_equal(hexify_index_to_cell("25", aperture = 7)$face, 0L)
+  # and the six Z7 strings under each base cell name exactly those children
+  g1 <- hex_grid(resolution = 1, aperture = 7)
+  from_cells <- lapply(get_children(seq_len(12), base),
+                       function(k) sort(cell_to_index(k, g1)))
+  expect_identical(hexify_get_children(sprintf("%02d", 0:11), aperture = 7), from_cells)
   expect_equal(hexify_index_to_cell("00", aperture = 7)$face, 0L)
   expect_equal(hexify_index_to_cell("01", aperture = 7)$face, 1L)
 })

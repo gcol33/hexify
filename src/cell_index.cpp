@@ -16,18 +16,12 @@ namespace hexify {
 // ---------------------------------------------------------------------------
 // Aperture-7 Z7 index path
 //
-// hexify stores each ap7 cell as its exact resolution-r surrogate (quad, i, j)
-// -- a bijective, geographically consistent coordinate. The Z7 index is the
-// bijective hierarchical encoding of it (z7::encode_bijective/decode_bijective):
-// the surrogate is expanded to its Class I substrate IJK (exact integer, one
-// aperture-7 level at odd resolutions), encoded, and coarsened back on decode.
-// The digits follow DGGRID's DgZ7StringRF except in the pentagon regions where
-// DGGRID's own encoder is non-injective (it collides distinct cells); there
-// hexify keeps a distinct, round-tripping index instead of the colliding one.
-// The leading field is quad + n * seed rather than the bare quad, n the solid's
-// number of quads and seed naming
-// the level-0 point the hierarchy walk arrives at, which is the origin only for
-// a cell whose whole ancestry lies inside its quad.
+// hexify stores each ap7 cell as its exact resolution-r surrogate (quad, i, j).
+// The Z7 index (z7::encode/decode) expands it to its Class I substrate IJK
+// (exact integer, one aperture-7 level at odd resolutions), encodes it, and
+// coarsens it back on decode. On the icosahedron the string is IGEO7's Z7
+// index as DGGRID writes it: the leading field is the base cell, which is not
+// always the cell's quad.
 // ---------------------------------------------------------------------------
 namespace {
   const int MAX_RES_AP3 = 30;
@@ -126,10 +120,10 @@ std::string cell_to_index(int face, long long i, long long j,
   } else if (index_type == IndexType::Z7) {
     // Z7 encode includes the base cell in its output. Expand the stored
     // surrogate to its Class I substrate IJK (exact, identity for even res),
-    // then encode bijectively (quad fixed).
+    // then encode.
     long long sub_i, sub_j;
     ap7_surrogate_to_substrate_ijk(i, j, resolution, sub_i, sub_j);
-    return z7::encode_bijective(face, sub_i, sub_j, resolution);
+    return z7::encode(face, sub_i, sub_j, resolution);
   }
   
   return result;
@@ -156,11 +150,10 @@ void index_to_cell(const std::string& index, int aperture,
     resolution = 0;
     i = 0;
     j = 0;
-    // A Z7 index spells its leading field as quad + n * seed, so a
-    // two-character one is not a bare quad: the seed names which of the base
-    // cells meeting at the quad's corner the index reaches.
+    // A Z7 index's leading field is not always a bare quad, so its decoder
+    // reads it.
     if (index_type == IndexType::Z7) {
-      z7::decode_bijective(index, 0, face, i, j);
+      z7::decode(index, face, i, j);
     }
     return;
   }
@@ -187,7 +180,7 @@ void index_to_cell(const std::string& index, int aperture,
     resolution = index.length() - 2;
     int quadNum = face;
     long long sub_i, sub_j;
-    z7::decode_bijective(index, resolution, quadNum, sub_i, sub_j);
+    z7::decode(index, quadNum, sub_i, sub_j);
     // Coarsen the Class I substrate IJK back to the resolution-r surrogate
     // (identity for even res) that hexify stores.
     ap7_substrate_to_surrogate_ijk(sub_i, sub_j, resolution, i, j);
@@ -319,9 +312,13 @@ std::vector<std::string> get_children_indices(const std::string& index,
   // digit naming which child was taken, so the children are the parent index
   // with each digit appended -- the exact strings get_parent_index() strips
   // back to this one, which is what makes the two operations inverse.
+  // A Z7 string whose first nonzero digit is the direction a pentagon lacks
+  // names no cell, so a pentagon's descendants are the six that read back.
   if (!(index_type == IndexType::ZORDER && aperture == 7)) {
     for (int digit = 0; digit < aperture; digit++) {
-      children.push_back(index + std::to_string(digit));
+      std::string child = index + std::to_string(digit);
+      if (index_type == IndexType::Z7 && z7::in_deleted_subsequence(child)) continue;
+      children.push_back(child);
     }
     return children;
   }

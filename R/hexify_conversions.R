@@ -53,9 +53,9 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
     grid$index_type
   )
 
-  # The leading field of an index is not always the face on its own -- the
-  # aperture-7 Z7 index packs its hierarchy seed in there too -- so read the
-  # face back through the decoder that owns the format.
+  # The leading field of an index is not always the face -- the aperture-7 Z7
+  # index writes the base cell a cell descends from -- so read the face back
+  # through the decoder that owns the format.
   faces <- as.integer(
     cpp_index_to_cell(icosa_arg(grid), cell_indices, as.integer(grid$aperture),
                       grid$index_type)$face

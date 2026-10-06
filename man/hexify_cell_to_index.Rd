@@ -44,10 +44,11 @@ Default index types by aperture:
 
 A Z7 index has the form \code{BBd1...dr}, where \code{BB} is the two-digit base
 cell (00--11), \code{r} is the resolution, and every child digit is in 0--6.
-hexify's Z7 encoding is bijective: decoding and re-encoding a valid index
-returns the same string. It follows DGGRID's Z7 layout for ordinary cells,
-but retains distinct indices in pentagon regions where DGGRID's encoder can
-map different cells to the same string.
+It is IGEO7's Z7 index, the string DGGRID writes for the same cell, and
+decoding and re-encoding a valid index returns the same string. \code{BB} is
+the pentagon the cell descends from, which need not be \code{face}. Under each
+pentagon one direction is missing: a string whose first nonzero digit is 2
+(base cells 00--05) or 5 (06--11) names no cell.
 }
 \examples{
 idx <- hexify_cell_to_index(5, 10, 15, resolution = 3, aperture = 3)

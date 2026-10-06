@@ -35,16 +35,16 @@ public:
     CENTER_DIGIT = 0,   // (0, 0, 0)
     K_AXES_DIGIT = 1,   // (0, 0, 1)
     J_AXES_DIGIT = 2,   // (0, 1, 0)
-    I_AXES_DIGIT = 3,   // (0, 1, 1)
-    IK_AXES_DIGIT = 4,  // (1, 0, 0)
-    IJ_AXES_DIGIT = 5,  // (1, 0, 1)
-    JK_AXES_DIGIT = 6,  // (1, 1, 0)
+    JK_AXES_DIGIT = 3,  // (0, 1, 1)
+    I_AXES_DIGIT = 4,   // (1, 0, 0)
+    IK_AXES_DIGIT = 5,  // (1, 0, 1)
+    IJ_AXES_DIGIT = 6,  // (1, 1, 0)
     NUM_DIGITS = 7,
     INVALID_DIGIT = 7
   };
   
-  static const int PENTAGON_SKIPPED_DIGIT_TYPE1 = 2;
-  static const int PENTAGON_SKIPPED_DIGIT_TYPE2 = 5;
+  static const int PENTAGON_SKIPPED_DIGIT_TYPE1 = J_AXES_DIGIT;
+  static const int PENTAGON_SKIPPED_DIGIT_TYPE2 = IK_AXES_DIGIT;
   
   IVec3D() : i_(0), j_(0), k_(0) {}
   IVec3D(long long i, long long j) : i_(i), j_(j), k_(-(i + j)) {}

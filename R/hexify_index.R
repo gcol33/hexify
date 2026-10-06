@@ -36,10 +36,11 @@
 #'
 #' A Z7 index has the form `BBd1...dr`, where `BB` is the two-digit base
 #' cell (00--11), `r` is the resolution, and every child digit is in 0--6.
-#' hexify's Z7 encoding is bijective: decoding and re-encoding a valid index
-#' returns the same string. It follows DGGRID's Z7 layout for ordinary cells,
-#' but retains distinct indices in pentagon regions where DGGRID's encoder can
-#' map different cells to the same string.
+#' It is IGEO7's Z7 index, the string DGGRID writes for the same cell, and
+#' decoding and re-encoding a valid index returns the same string. `BB` is
+#' the pentagon the cell descends from, which need not be `face`. Under each
+#' pentagon one direction is missing: a string whose first nonzero digit is 2
+#' (base cells 00--05) or 5 (06--11) names no cell.
 #'
 #' @family hierarchical index
 #' @keywords internal
@@ -301,14 +302,15 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 
 #' Get canonical form of Z7 index
 #'
-#' Decodes and re-encodes a Z7 index until it reaches a stable form. Current Z7
-#' indices are bijective, so every valid index is already canonical and this
-#' function normally returns its input unchanged. It remains available for
-#' validating or normalizing indices created by older hexify versions.
+#' Decodes and re-encodes a Z7 index until it reaches a stable form. Every
+#' valid index is already canonical and comes back unchanged. A string whose
+#' first nonzero digit is the direction its pentagon base cell lacks names no
+#' cell; it decodes, as in DGGRID, to the lattice point its digits reach, and
+#' this function returns the index of the cell there.
 #'
 #' @param index Character vector of Z7 index strings.
-#' @param max_iterations Maximum number of decode/encode iterations. This is a
-#'   safety bound for legacy indices; the default is 128.
+#' @param max_iterations Maximum number of decode/encode iterations; the
+#'   default is 128.
 #'
 #' @return A character vector of stable indices.
 #'

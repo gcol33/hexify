@@ -33,10 +33,10 @@ static const IVec3D UNIT_VECS[] = {
     {0, 0, 0},  // direction 0 (CENTER_DIGIT)
     {0, 0, 1},  // direction 1 (K_AXES_DIGIT)
     {0, 1, 0},  // direction 2 (J_AXES_DIGIT)
-    {0, 1, 1},  // direction 3 (I_AXES_DIGIT)
-    {1, 0, 0},  // direction 4 (IK_AXES_DIGIT)
-    {1, 0, 1},  // direction 5 (IJ_AXES_DIGIT)
-    {1, 1, 0}   // direction 6 (JK_AXES_DIGIT)
+    {0, 1, 1},  // direction 3 (JK_AXES_DIGIT)
+    {1, 0, 0},  // direction 4 (I_AXES_DIGIT)
+    {1, 0, 1},  // direction 5 (IK_AXES_DIGIT)
+    {1, 1, 0}   // direction 6 (IJ_AXES_DIGIT)
 };
 
 void IVec3D::ijkPlusNormalize() {

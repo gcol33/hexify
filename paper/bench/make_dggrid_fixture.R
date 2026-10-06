@@ -3,6 +3,7 @@
 # which runs without DGGRID. Random points are assigned to cells by DGGRID for
 # icosahedra placed at a given vertex 0 and azimuth and about region centres,
 # on the ISEA and FULLER projections, and each cell's centre is read back.
+# DGGRID's aperture-7 Z7 strings go to tests/testthat/data/dggrid_z7.csv.
 #
 # Usage: Rscript paper/bench/make_dggrid_fixture.R
 # Set DGGRID_EXE to the dggrid executable if it is not at the default path.
@@ -55,3 +56,16 @@ dest <- file.path(dirname(dirname(dirname(normalizePath(
   "tests", "testthat", "data", "dggrid_reference.csv")
 write.csv(out, dest, row.names = FALSE, quote = FALSE)
 message("wrote ", nrow(out), " rows to ", dest)
+
+# DGGRID's Z7 strings of every aperture-7 cell at resolutions 0 to 3, and of
+# Z7_SAMPLE random cells at resolution 7 (tests/testthat/data/dggrid_z7.csv).
+Z7_SAMPLE <- 2000L
+z7_cells <- c(lapply(0:3, function(res) list(res = res, seqnum = seq_len(10 * 7^res + 2))),
+              list(list(res = 7L, seqnum = sort(sample.int(10 * 7^7 + 2, Z7_SAMPLE)))))
+z7 <- do.call(rbind, lapply(z7_cells, function(cs) {
+  data.frame(resolution = cs$res, seqnum = format(cs$seqnum, scientific = FALSE, trim = TRUE),
+             z7 = dggrid_z7(CONFIGS[[3]], cs$res, seqnum = cs$seqnum))
+}))
+dest_z7 <- file.path(dirname(dest), "dggrid_z7.csv")
+write.csv(z7, dest_z7, row.names = FALSE, quote = FALSE)
+message("wrote ", nrow(z7), " rows to ", dest_z7)

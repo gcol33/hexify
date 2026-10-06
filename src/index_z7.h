@@ -25,18 +25,21 @@
 namespace hexify {
 namespace z7 {
 
-// Bijective aperture-7 hierarchical index (hexify-native). Keeps the quad fixed
-// (no DGGRID base-cell reassignment / pentagon skip), so every (quad, i, j)
-// round-trips. The leading field is quad + n * seed, n the solid's number of
-// quads and seed the unit digit the hierarchy walk arrives at; it is the plain
-// two-digit quad DGGRID writes
-// for a cell whose whole ancestry lies inside its quad, and about two cells in
-// three sit on a quad boundary and carry a nonzero seed instead. (i,j) are
-// Class I substrate.
-std::string encode_bijective(int quadNum, long long i, long long j, int resolution);
+// Aperture-7 hierarchical index of a cell given as its quad and Class I
+// substrate (i, j). On the icosahedron it is IGEO7's Z7 index, identical to
+// DGGRID's: a two-digit base cell followed by one digit per resolution. On
+// other solids the leading field is quad + n * seed, n the solid's number of
+// quads and seed the unit digit the hierarchy walk arrives at.
+std::string encode(int quadNum, long long i, long long j, int resolution);
 
-void decode_bijective(const std::string& index, int resolution,
-                      int& quadNum, long long& i, long long& j);
+// The inverse of encode(): the quad and Class I substrate (i, j) of an index.
+// The resolution is the number of digits after the leading field.
+void decode(const std::string& index, int& quadNum, long long& i, long long& j);
+
+// Whether an IGEO7 index lies in the subsequence a pentagon deletes: its first
+// nonzero digit is the direction its base cell lacks. Such a string names no
+// cell. Always false on solids without IGEO7 labels.
+bool in_deleted_subsequence(const std::string& index);
 
 // Get the canonical form of a Z7 index
 // Finds the lexicographically smallest index in the cycle

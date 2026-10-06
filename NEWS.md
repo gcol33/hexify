@@ -19,6 +19,23 @@
   own first level (aperture 4). Cell IDs are unchanged. `get_children()` on a
   per-level grid now says that the spelling names no finer level.
 
+* The aperture-7 Z7 index on the icosahedron is now IGEO7's, string for
+  string the one DGGRID writes: every cell at resolutions 0 to 7 agrees with
+  DGGRID, on ISEA and FULLER and under a given orientation
+  (`paper/bench/bench_dggrid_z7.R`). Previously about two cells in three
+  differed: a cell whose ancestry leaves its quad was written as quad + 12 *
+  seed instead of the base cell it descends from, and the digits were not
+  turned into a polar base cell's frame or past the direction each pentagon
+  lacks. DGGRID's encoder is bijective: the two cells #53 reported as sharing
+  a string get distinct strings from it, so that report came from hexify's
+  own earlier port, not from DGGRID. The axis names of digits 3 to 6 were
+  also swapped in hexify, which turned digit rotations the wrong way. A
+  pentagon has six children, so `hexify_get_children()` returns six strings
+  under one, and `hexify_z7_canonical()` sends a string in the deleted
+  subsequence to the cell's own index. Cell IDs are unchanged. Octahedral
+  grids keep the quad + 6 * seed leading field, since IGEO7 is defined on the
+  icosahedron (#86).
+
 * `hexify_cell_id_to_quad_ij()` is removed. `hexify_cell_to_quad_ij()` takes
   the same arguments and returns the same `quad`, `i`, `j` data frame.
 

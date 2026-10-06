@@ -921,7 +921,7 @@ hexify supports three hierarchical index encodings. Each converts the $(quad, i,
 
 #### Z7 Index (Aperture 7)
 
-The Z7 index represents each cell as a hierarchical path through the aperture-7 subdivision tree (Sahr, 2025). The format is:
+The Z7 index represents each cell as a hierarchical path through the aperture-7 subdivision tree (Kmoch et al., 2025). The format is:
 
 $$\texttt{BB}\underbrace{\texttt{D}_1\texttt{D}_2\cdots\texttt{D}_r}_{r \text{ digits}}$$
 
@@ -941,22 +941,30 @@ The leading field is always two characters, so the resolution is
 `nchar(index) - 2`. Dropping the final digit gives the parent; appending digits
 0--6 enumerates the seven positions in the next refinement level.
 
-hexify uses a **bijective Z7 variant**. DGGRID's base-cell reassignment and
-pentagon digit-skip rules can make its encoder non-injective near pentagons:
-distinct cells may receive the same string. hexify keeps the geographic quad
-fixed in those regions, so every cell has a distinct index and both
-`cell -> index -> cell` and `index -> cell -> index` round-trip.
+On the icosahedron this is IGEO7's Z7 index (Kmoch et al., 2025), and hexify
+writes the same string as DGGRID, its reference implementation, for every
+cell: `paper/bench/bench_dggrid_z7.R` compares all cells at resolutions 0--7.
+Every valid index decodes to its cell and re-encodes to itself.
 
-Holding the quad fixed is what the leading field pays for. A quad is a rhombus
-while the aperture-7 parents are hexagons, so the quad boundary cuts through
-the parents of the cells along it: walking such a cell up the hierarchy arrives
-at one of the six neighbours of the quad's own level-0 point rather than at the
-point itself. The leading field records which, as $\texttt{quad} + 12s$ with
-$s \in \{0, 1, \ldots, 6\}$, and a cell whose whole ancestry stays inside its
-quad has $s = 0$ and keeps the plain two-digit quad DGGRID writes. Recover the
-quad with `BB %% 12`, or with `hexify_index_to_cell()`. This matters when
-exchanging raw Z7 strings with DGGRID; geographic coordinates and cell geometry
-remain the safest interoperability layer.
+The twelve resolution-0 cells are pentagons centred on the icosahedron's
+vertices, and **BB** names the one a cell descends from. hexify computes cells
+on a quad, but a quad is a rhombus while the aperture-7 parents are hexagons,
+so the quad boundary cuts through the parents of the cells along it. Walking
+such a cell up the hierarchy arrives at a neighbour of the quad's vertex rather
+than at the vertex itself, and **BB** is then the vertex at the quad corner
+that neighbour points to, not the cell's quad. Under the two polar base cells the digits are also turned into
+the pole's frame. A pentagon lacks one of the six directions, so the
+subsequence whose first nonzero digit is that direction is deleted (Sahr,
+2005, pp. 83--84): digit 2 under base cells 0--5 and digit 5 under 6--11. A
+pentagon therefore has six children, and a string in the deleted subsequence
+names no cell.
+
+At odd resolutions the cells are turned against the quad's axes (Class III).
+Each is addressed as Sahr (2005, p. 80) addresses Class II cells, by the
+Class I cell one resolution finer centred on it; that cell's own digit is 0
+and is not written. Octahedral grids have square vertex cells, for which IGEO7 defines
+no index; there the leading field is $\texttt{quad} + 6s$, where $s$ is the
+digit of the neighbour of the quad's vertex that the walk arrives at.
 
 ```{r z7-example}
 # Z7 index encoding for aperture 7
@@ -1032,11 +1040,10 @@ cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
 | **Parent operation** | Drop last digit | Drop last pair | Drop last digit(s) |
 | **Index length** (res $r$) | $2 + r$ | $2 + 2\lceil r/2\rceil$ | $2 + r$ or $2 + 2r$ |
 
-All three hexify encodings are bijective: each valid $(quad, i, j)$ cell maps
-to exactly one index string, and vice versa. hexify stores indices as character
+All three hexify encodings are bijective: each cell maps to exactly one index
+string, and each valid string to one cell. hexify stores indices as character
 strings to support arbitrary precision and avoid integer overflow at high
-resolutions. As noted above, hexify's bijective Z7 strings intentionally differ
-from DGGRID in the pentagon regions where DGGRID's raw Z7 encoding collides.
+resolutions.
 
 ### SEQNUM: The Flat Cell ID
 
@@ -1187,13 +1194,17 @@ for (ap in c(3, 4, 7)) {
 
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*. https://github.com/sahrk/DGGRID
 
+- Kmoch, A., Sahr, K., Chan, W.T., & Uuemaa, E. (2025). IGEO7: A new hierarchically indexed hexagonal equal-area discrete global grid system. *AGILE: GIScience Series*, 6, 32. https://doi.org/10.5194/agile-giss-6-32-2025
+
 - Morton, G.M. (1966). *A Computer Oriented Geodetic Data Base and a New Technique in File Sequencing*. IBM Technical Report.
 
 - Recht, B.R.S. (2021). Snyder's equal-area projection. *The BRSR Blog*. https://brsr.github.io/2021/08/31/snyder-equal-area.html
 
+- Sahr, K. (2005). *Location coding on icosahedral aperture 3 hexagon discrete global grids*. PhD thesis, University of Oregon. https://www.cs.uoregon.edu/Reports/PHD-200508-Sahr.pdf
+
 - Sahr, K. (2008). Location coding on icosahedral aperture 3 hexagon discrete global grids. *Computers, Environment and Urban Systems*, 32(3), 174-187.
 
-- Sahr, K. (2025). IGEO7: An equal-area hierarchical hexagonal discrete global grid system with Z7 indexing. *Cartography and Geographic Information Science*.
+
 
 - Sahr, K., White, D., & Kimerling, A.J. (2003). Geodesic Discrete Global Grid Systems. *Cartography and Geographic Information Science*, 30(2), 121-134.
 

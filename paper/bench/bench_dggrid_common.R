@@ -38,7 +38,7 @@ dggs_lines <- function(cfg, res, icosa = NULL) {
   ap_lines <- if (identical(cfg[[1]], "4/3")) {
     c("dggs_aperture_type MIXED43", sprintf("dggs_num_aperture_4_res %d", res %/% 2))
   } else cfg[[3]]
-  proj <- if (!any(startsWith(icosa, "dggs_proj"))) proj_lines("isea")
+  proj <- if (!any(startsWith(as.character(icosa), "dggs_proj"))) proj_lines("isea")
   c("dggs_type CUSTOM", "dggs_topology HEXAGON", proj, ap_lines,
     sprintf("dggs_res_spec %d", res), icosa)
 }
@@ -69,6 +69,26 @@ dggrid_seqnum <- function(cfg, res, lon, lat, icosa = NULL) {
                "input_delimiter \" \"", paste("output_file_name", outp),
                "output_address_type SEQNUM", "output_delimiter \" \""))
   as.numeric(readLines(outp))
+}
+
+# DGGRID's Z7 strings (IGEO7) of cells given as SEQNUMs, or, with `z7`, the
+# SEQNUMs of Z7 strings.
+dggrid_z7 <- function(cfg, res, seqnum = NULL, z7 = NULL, icosa = NULL) {
+  inp <- file.path(work, "z7_in.txt"); outp <- file.path(work, "z7_out.txt")
+  z7_form <- function(dir) c(sprintf("%s_hier_ndx_system Z7", dir),
+                             sprintf("%s_hier_ndx_form DIGIT_STRING", dir))
+  if (is.null(z7)) {
+    writeLines(format(seqnum, scientific = FALSE, trim = TRUE), inp)
+    io <- c("input_address_type SEQNUM", "output_address_type HIERNDX", z7_form("output"))
+  } else {
+    writeLines(z7, inp)
+    io <- c("input_address_type HIERNDX", z7_form("input"), "output_address_type SEQNUM")
+  }
+  run_dggrid(c("dggrid_operation TRANSFORM_POINTS", dggs_lines(cfg, res, icosa),
+               paste("input_file_name", inp), "input_delimiter \" \"",
+               paste("output_file_name", outp), "output_delimiter \" \"", io))
+  out <- readLines(outp)
+  if (is.null(z7)) out else as.numeric(out)
 }
 
 dggrid_generate <- function(cfg, res, seqnum, cells = FALSE, icosa = NULL) {

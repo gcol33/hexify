@@ -18,7 +18,7 @@ This covers every hexagonal grid system that matters:
 - ISEA3H, ISEA4H, ISEA7H, ISEA43H = ISEA backend with different aperture settings
 - FULLER3H, FULLER4H, FULLER7H, FULLER43H = the same with `projection = "fuller"`
 - H3 = H3 backend
-- IGEO7/Z7 (2025, Sahr) = equal-area aperture-7 hex grid with Z7 indexing = already covered by `hex_grid(aperture = 7)` (ISEA7H with Z7 index). hexify uses the same Z7 hierarchical indexing (7-digit encoding, 0-6 per level) in `src/index_z7.cpp`.
+- IGEO7/Z7 (2025, Sahr) = equal-area aperture-7 hex grid with Z7 indexing = already covered by `hex_grid(aperture = 7)` (ISEA7H with Z7 index). hexify uses the same Z7 hierarchical indexing (7-digit encoding, 0-6 per level) in `src/index_z7.cpp`. On the icosahedron its strings equal DGGRID's for every cell (`paper/bench/bench_dggrid_z7.R`, fixture `tests/testthat/data/dggrid_z7.csv`); DGGRID's encoder is bijective, so do not diverge from it. Octahedral grids, for which IGEO7 defines nothing, write quad + 6 * seed.
 - OpenEAGGR ISEA3H = already covered by `hex_grid(aperture = 3)`
 - rHEALPix = diamond-based, not hexagonal — out of scope
 

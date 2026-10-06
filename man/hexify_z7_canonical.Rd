@@ -9,17 +9,18 @@ hexify_z7_canonical(index, max_iterations = 128L)
 \arguments{
 \item{index}{Character vector of Z7 index strings.}
 
-\item{max_iterations}{Maximum number of decode/encode iterations. This is a
-safety bound for legacy indices; the default is 128.}
+\item{max_iterations}{Maximum number of decode/encode iterations; the
+default is 128.}
 }
 \value{
 A character vector of stable indices.
 }
 \description{
-Decodes and re-encodes a Z7 index until it reaches a stable form. Current Z7
-indices are bijective, so every valid index is already canonical and this
-function normally returns its input unchanged. It remains available for
-validating or normalizing indices created by older hexify versions.
+Decodes and re-encodes a Z7 index until it reaches a stable form. Every
+valid index is already canonical and comes back unchanged. A string whose
+first nonzero digit is the direction its pentagon base cell lacks names no
+cell; it decodes, as in DGGRID, to the lattice point its digits reach, and
+this function returns the index of the cell there.
 }
 \examples{
 # Valid Z7 indices are stable
