@@ -683,18 +683,41 @@ test_that("hex_grid accepts family spellings and per-level sequences", {
                c(4L, 4L, 4L, 7L, 7L))
 
   g2 <- hex_grid(resolution = 4, aperture = c(4, 7, 3, 7))
-  expect_equal(g2@aperture, "4/7/3/7")
+  expect_equal(g2@aperture, "4,7,3,7")
   expect_equal(hexify:::isea_levels(g2@aperture, g2@resolution)$ap_seq,
                c(4L, 4L, 7L, 3L, 7L))
 
   # Cell count is the product over the sequence, plus the two poles
   expect_equal(hexify:::aperture_n_cells("4/7", 4), 10 * 4 * 4 * 7 * 7 + 2)
-  expect_equal(hexify:::aperture_n_cells("4/7/3/7", 4), 10 * 4 * 7 * 3 * 7 + 2)
+  expect_equal(hexify:::aperture_n_cells("4,7,3,7", 4), 10 * 4 * 7 * 3 * 7 + 2)
 
   expect_error(hex_grid(resolution = 4, aperture = c(4, 5, 3, 7)),
                "must be one of")
   expect_error(hex_grid(resolution = 4, aperture = c(4, 7, 3)),
                "one aperture per resolution level")
+})
+
+test_that("a two-level sequence is not the family of the same name", {
+  setup_icosa()
+
+  per_level <- hex_grid(resolution = 2, aperture = c(4, 7))
+  family <- hex_grid(resolution = 2, aperture = "4/7")
+  expect_equal(per_level@aperture, "4,7")
+  expect_equal(hex_grid(resolution = 2, aperture = "4,7")@aperture, "4,7")
+
+  # The same grid at resolution 2 ...
+  expect_equal(hexify:::isea_levels(per_level@aperture, 2)$ap_seq,
+               hexify:::isea_levels(family@aperture, 2)$ap_seq)
+
+  # ... whose parents sit on different grids: the per-level sequence's first
+  # level, aperture 4, and the family's resolution 1, aperture 7.
+  ids <- seq_len(hexify:::grid_n_cells(per_level))
+  expect_equal(max(get_parent(ids, per_level)), hexify:::aperture_n_cells("4", 1))
+  expect_equal(max(get_parent(ids, family)), hexify:::aperture_n_cells("7", 1))
+
+  # A per-level sequence names no finer level, and a family names two apertures
+  expect_error(get_children(1, per_level), "apertures of 2 levels, resolution 3")
+  expect_error(hex_grid(resolution = 4, aperture = "4/4/7/3"), "4,4,7,3")
 })
 
 test_that("mixed sequence cell IDs are a bijection with (quad, i, j)", {
@@ -820,8 +843,8 @@ test_that("every hexagonal parent of an aligned grid gets aperture-many children
   # A parent grid whose lattice runs along the quad edges has no cells
   # straddling an edge, so every hexagonal parent receives exactly the
   # aperture's count.
-  cases <- list(list("3/3/3", 3L, 3L), list("4/4/4", 3L, 4L), list("7/7", 2L, 7L),
-                list("3/3/3/3/3", 5L, 3L), list("4/4/4/4/4", 5L, 4L),
+  cases <- list(list("3,3,3", 3L, 3L), list("4,4,4", 3L, 4L), list("7,7", 2L, 7L),
+                list("3,3,3,3,3", 5L, 3L), list("4,4,4,4,4", 5L, 4L),
                 list("4/3", 5L, 3L))
   for (cs in cases) {
     ap <- cs[[1]]
@@ -841,7 +864,7 @@ test_that("mixed parents agree with centre containment and break ties among the 
   skip_on_cran()  # Enumerates every cell of the grid
   setup_icosa()
 
-  for (cs in list(list("4/3/4/3", 4L), list("3/4/7/3", 4L), list("4/3", 4L),
+  for (cs in list(list("4,3,4,3", 4L), list("3,4,7,3", 4L), list("4/3", 4L),
                   list("7/4", 3L), list("4/7", 2L))) {
     ap <- cs[[1]]
     res <- cs[[2]]

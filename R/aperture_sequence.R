@@ -11,21 +11,30 @@
 #                    arranges ISEA43H
 #   c(4, 4, 7, 3)    one aperture per level, in order, length = resolution
 #
-# A grid stores the spelling as a string ("4/7", "4/4/7/3") and
-# parse_aperture_seq() turns it back into the sequence the C++ layer takes:
-# entry 1 names the base grid and the rest are the refinement steps, so its
-# length is resolution + 1.
+# A grid stores the spelling as a string, a family with "/" ("4/7") and a
+# per-level sequence with "," ("4,4,7,3"), so a two-level sequence c(4, 7)
+# ("4,7") stays apart from the family "4/7": the two name the same grid at
+# resolution 2 but different grids at resolution 1. parse_aperture_seq() turns
+# a spelling back into the sequence the C++ layer takes: entry 1 names the base
+# grid and the rest are the refinement steps, so its length is resolution + 1.
 
 #' Is this aperture spelling a mixed sequence?
 #' @param aperture Character aperture spelling
 #' @noRd
 is_mixed_aperture <- function(aperture) {
-  grepl("/", as.character(aperture), fixed = TRUE)
+  grepl("[/,]", as.character(aperture))
+}
+
+#' Is this aperture spelling one aperture per level?
+#' @param aperture Character aperture spelling
+#' @noRd
+is_per_level_aperture <- function(aperture) {
+  grepl(",", as.character(aperture), fixed = TRUE)
 }
 
 #' Aperture spelling to store on a grid
 #'
-#' A family name passes through; a per-level vector is joined with "/".
+#' A family name passes through; a per-level vector is joined with ",".
 #' @param aperture Character family name or numeric vector of apertures
 #' @param resolution Integer resolution the vector spelling is given for
 #' @return Single character string
@@ -43,7 +52,7 @@ format_aperture <- function(aperture, resolution) {
         length(parts), as.integer(resolution)
       ))
     }
-    return(paste(parts, collapse = "/"))
+    return(paste(parts, collapse = ","))
   }
   as.character(aperture)
 }
@@ -57,24 +66,32 @@ format_aperture <- function(aperture, resolution) {
 #' @noRd
 parse_aperture_seq <- function(aperture, resolution) {
   resolution <- as.integer(resolution)
-  parts <- as.integer(strsplit(as.character(aperture), "/", fixed = TRUE)[[1]])
+  per_level <- is_per_level_aperture(aperture)
+  parts <- suppressWarnings(as.integer(strsplit(as.character(aperture), "[/,]")[[1]]))
 
-  if (anyNA(parts) || !all(parts %in% VALID_APERTURES)) {
+  if (anyNA(parts) || !all(parts %in% VALID_APERTURES) ||
+      (per_level && grepl("/", aperture, fixed = TRUE))) {
     stop(sprintf("Aperture must be one of %s, a family such as \"4/3\", or one aperture per level",
                  paste(VALID_APERTURES, collapse = ", ")))
   }
 
   if (length(parts) == 1L) {
     steps <- rep(parts, resolution)
-  } else if (length(parts) == resolution) {
+  } else if (per_level) {
+    if (length(parts) != resolution) {
+      stop(sprintf(
+        "Aperture \"%s\" names the apertures of %d levels, resolution %d needs %d",
+        aperture, length(parts), resolution, resolution
+      ))
+    }
     steps <- parts
   } else if (length(parts) == 2L) {
     level <- as.integer(resolution / 2)
     steps <- c(rep(parts[1], level), rep(parts[2], resolution - level))
   } else {
     stop(sprintf(
-      "Aperture \"%s\" names %d levels, resolution %d needs %d",
-      aperture, length(parts), resolution, resolution
+      "Aperture \"%s\": a family names two apertures, such as \"4/3\"; give one aperture per level as \"%s\"",
+      aperture, paste(parts, collapse = ",")
     ))
   }
 
@@ -110,9 +127,10 @@ isea_levels <- function(aperture, resolution) {
 #' @param resolution Integer resolution to read it at
 #' @noRd
 aperture_at_resolution <- function(aperture, resolution) {
-  parts <- strsplit(as.character(aperture), "/", fixed = TRUE)[[1]]
-  if (length(parts) <= 2L || resolution >= length(parts)) return(as.character(aperture))
-  paste(parts[seq_len(max(resolution, 1L))], collapse = "/")
+  if (!is_per_level_aperture(aperture)) return(as.character(aperture))
+  parts <- strsplit(as.character(aperture), ",", fixed = TRUE)[[1]]
+  if (resolution >= length(parts)) return(as.character(aperture))
+  paste(parts[seq_len(max(resolution, 1L))], collapse = ",")
 }
 
 #' Cell count of an aperture sequence

@@ -10,6 +10,15 @@
   aperture, mixed sequence, resolution, solid or body reaches it; an H3 grid
   is drawn on the sphere. `globe_centers` names the views as before.
 
+* A grid built with one aperture per level stores it comma-separated:
+  `hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))@aperture` is
+  `"4,4,7,3"`, no longer `"4/4/7/3"`; `aperture = "4,4,7,3"` is accepted and
+  "/" is kept for the two-aperture families such as `"4/3"`. A two-level
+  sequence `c(4, 7)` was stored as `"4/7"`, the family name, so its parents
+  were cells of the family's resolution-1 grid (aperture 7) rather than of its
+  own first level (aperture 4). Cell IDs are unchanged. `get_children()` on a
+  per-level grid now says that the spelling names no finer level.
+
 * `hexify_cell_id_to_quad_ij()` is removed. `hexify_cell_to_quad_ij()` takes
   the same arguments and returns the same `quad`, `i`, `j` data frame.
 

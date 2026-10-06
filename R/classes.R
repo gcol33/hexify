@@ -27,7 +27,7 @@ setClassUnion("HexCRS", c("integer", "character"))
 #' parameters needed for grid operations.
 #'
 #' @slot aperture Character. Grid aperture: "3", "4", "7", a mixed family such
-#'   as "4/3" or "4/7", or one aperture per resolution level ("4/4/7/3").
+#'   as "4/3" or "4/7", or one aperture per resolution level ("4,4,7,3").
 #' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Centre spacing in kilometers: the short
@@ -56,7 +56,9 @@ setClassUnion("HexCRS", c("integer", "character"))
 #' The aperture can be "3", "4", "7" for grids that refine by one aperture at
 #' every level; a family name such as "4/3" or "4/7", which refines by the first
 #' aperture for the first floor(resolution / 2) levels and by the second for the
-#' rest; or one aperture per level, "4/4/7/3".
+#' rest; or one aperture per level, "4,4,7,3". The separator tells the two
+#' apart: "4,7" and the family "4/7" are the same grid at resolution 2, but
+#' their grids one level coarser are "4" and "7".
 #'
 #' For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.
 #'
