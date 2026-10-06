@@ -549,6 +549,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_mixed_parent
+NumericVector cpp_mixed_parent(NumericVector icosa, NumericVector cell_id, IntegerVector ap_seq, IntegerVector parent_seq);
+RcppExport SEXP _hexify_cpp_mixed_parent(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP ap_seqSEXP, SEXP parent_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type parent_seq(parent_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_mixed_parent(icosa, cell_id, ap_seq, parent_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_lonlat_to_cell
 NumericVector cpp_lonlat_to_cell(NumericVector icosa, NumericVector lon, NumericVector lat, int resolution, int aperture, IntegerVector ap_seq);
 RcppExport SEXP _hexify_cpp_lonlat_to_cell(SEXP icosaSEXP, SEXP lonSEXP, SEXP latSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
@@ -1349,6 +1363,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_edge_dim", (DL_FUNC) &_hexify_cpp_quad_edge_dim, 3},
     {"_hexify_cpp_cell_lattice_generator", (DL_FUNC) &_hexify_cpp_cell_lattice_generator, 3},
     {"_hexify_cpp_quad_ij_to_cell", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell, 7},
+    {"_hexify_cpp_mixed_parent", (DL_FUNC) &_hexify_cpp_mixed_parent, 4},
     {"_hexify_cpp_lonlat_to_cell", (DL_FUNC) &_hexify_cpp_lonlat_to_cell, 6},
     {"_hexify_cpp_cell_to_lonlat", (DL_FUNC) &_hexify_cpp_cell_to_lonlat, 5},
     {"_hexify_cpp_cell_to_quad_ij", (DL_FUNC) &_hexify_cpp_cell_to_quad_ij, 5},

@@ -797,6 +797,106 @@ test_that("mixed sequence cell boundaries enclose the points assigned to them", 
   }
 })
 
+# =============================================================================
+# PARENT ASSIGNMENT ON THE LATTICE (issue #85)
+# =============================================================================
+#
+# An aperture-3 step puts child centres on parent corners (three parents tie)
+# and an aperture-4 step on parent edge midpoints (two tie). The parent is the
+# nearest parent-lattice point in exact integer coordinates, with a fixed tie
+# rule, so it does not depend on floating-point rounding.
+
+mixed_pentagon <- function(ids, res, ap) {
+  lv <- hexify:::isea_levels(ap, res)
+  nb <- cpp_get_neighbors_isea(numeric(0), as.numeric(ids), lv$resolution,
+                               lv$aperture, lv$ap_seq)
+  vapply(nb, length, 1L) == 5L
+}
+
+test_that("every hexagonal parent of an aligned grid gets aperture-many children", {
+  skip_on_cran()  # Enumerates every cell of the grid
+  setup_icosa()
+
+  # A parent grid whose lattice runs along the quad edges has no cells
+  # straddling an edge, so every hexagonal parent receives exactly the
+  # aperture's count.
+  cases <- list(list("3/3/3", 3L, 3L), list("4/4/4", 3L, 4L), list("7/7", 2L, 7L),
+                list("3/3/3/3/3", 5L, 3L), list("4/4/4/4/4", 5L, 4L),
+                list("4/3", 5L, 3L))
+  for (cs in cases) {
+    ap <- cs[[1]]
+    res <- cs[[2]]
+    ap_p <- hexify:::aperture_at_resolution(ap, res - 1L)
+    n_c <- hexify:::aperture_n_cells(ap, res)
+    n_p <- hexify:::aperture_n_cells(ap_p, res - 1L)
+    cnt <- tabulate(hexify:::mixed_get_parent(seq_len(n_c), res, ap), n_p)
+    hex <- !mixed_pentagon(seq_len(n_p), res - 1L, ap_p)
+
+    expect_true(all(cnt[hex] == cs[[3]]), info = sprintf("%s res %d", ap, res))
+    expect_true(all(cnt >= 1), info = sprintf("%s res %d: no childless parent", ap, res))
+  }
+})
+
+test_that("mixed parents agree with centre containment and break ties among the tied", {
+  skip_on_cran()  # Enumerates every cell of the grid
+  setup_icosa()
+
+  for (cs in list(list("4/3/4/3", 4L), list("3/4/7/3", 4L), list("4/3", 4L),
+                  list("7/4", 3L), list("4/7", 2L))) {
+    ap <- cs[[1]]
+    res <- cs[[2]]
+    ids <- seq_len(hexify:::aperture_n_cells(ap, res))
+    par <- hexify:::mixed_get_parent(ids, res, ap)
+    ll <- hexify:::mixed_cell_center(ids, res, ap)
+
+    # The parents the centre falls in when moved a hair in eight directions
+    e <- 1e-6 * sqrt(41253 / length(ids))
+    near <- sapply(0:7, function(k) {
+      lat <- pmax(-89.999999, pmin(89.999999, ll$lat_deg + e * sinpi(k / 4)))
+      hexify:::mixed_point_to_cell(ll$lon_deg + e * cospi(k / 4) / cospi(lat / 180),
+                                   lat, res - 1L, ap)
+    })
+    tied <- apply(near, 1, function(x) length(unique(x)) > 1)
+
+    expect_true(all(par[!tied] == near[!tied, 1]),
+                info = sprintf("%s res %d: off ties, the parent contains the centre", ap, res))
+    expect_true(all(par == near[cbind(seq_along(ids), max.col(near == par))]),
+                info = sprintf("%s res %d: a tie goes to one of the tied parents", ap, res))
+  }
+})
+
+test_that("mixed get_children is exactly the inverse of get_parent", {
+  skip_on_cran()  # Brute-force ground truth over every parent
+  setup_icosa()
+
+  # A child grid above 2000 cells ("4/3" at resolution 5) takes the neighbour
+  # walk rather than the exhaustive filter.
+  for (cs in list(list("4/3", 4L), list("7/4", 2L), list("4/7", 2L))) {
+    grid <- hex_grid(resolution = cs[[2]], aperture = cs[[1]])
+    cgrid <- hex_grid(resolution = cs[[2]] + 1L, aperture = cs[[1]])
+    par <- get_parent(seq_len(hexify:::grid_n_cells(cgrid)), cgrid)
+    parents <- seq_len(hexify:::grid_n_cells(grid))
+    kids <- get_children(parents, grid)
+    truth <- split(seq_along(par), factor(par, levels = parents))
+
+    expect_equal(lapply(kids, as.integer), unname(lapply(truth, as.integer)),
+                 info = sprintf("%s res %d: children of every parent", cs[[1]], cs[[2]]))
+  }
+})
+
+test_that("a two-step sequence and its reverse are the same grid", {
+  setup_icosa()
+
+  # Scale and orientation do not depend on the order of the steps
+  a <- hex_grid(resolution = 2, aperture = c(3, 4))
+  b <- hex_grid(resolution = 2, aperture = c(4, 3))
+  ids <- seq_len(hexify:::grid_n_cells(a))
+
+  expect_equal(hexify:::grid_n_cells(b), length(ids))
+  expect_equal(cell_to_lonlat(ids, b), cell_to_lonlat(ids, a))
+  expect_equal(cell_area(ids, b), cell_area(ids, a))
+})
+
 test_that("mixed sequence hierarchy navigates for aperture-7 spellings", {
   skip_on_cran()  # Walks children of sampled cells
   setup_icosa()

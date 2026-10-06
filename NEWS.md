@@ -131,6 +131,18 @@
 
 ## Bug fixes
 
+* `get_parent()` on a mixed aperture grid finds the parent in exact lattice
+  coordinates (#85). After an aperture-3 step a child centre sits on a
+  corner of three parents, and after an aperture-4 step on an edge shared by
+  two; the parent of such a child was decided by floating-point rounding of
+  the projected centre, so a hexagonal parent received anywhere from 1 to 7
+  children. A fixed tie rule now gives every hexagonal parent inside a quad
+  exactly as many children as the step's aperture. Children whose centre
+  lies strictly inside a parent keep their parent. `get_children()` and
+  `cell_to_index()` follow `get_parent()`, so index strings of mixed grids
+  change for the tied children; regenerate stored ones. `levels > 1` steps
+  up one level at a time.
+
 * Cells in the last column of a quad at aperture 3, resolutions 25-30, were
   assigned to another quad: the quad edge dimension was computed in floating
   point and came out one too small. It is now exact.

@@ -388,6 +388,66 @@ static inline bool frame_canonicalize(const QuadFrame& f, int& quad,
     return hexify::substrate_ij_canonicalize(quad, i, j, f.dim);
 }
 
+// Floor of a / b for b > 0
+static inline long long floor_div(long long a, long long b) {
+    long long q = a / b;
+    return (a % b != 0 && a < 0) ? q - 1 : q;
+}
+
+// The parent, one level up, of the cell at stored (i, j) of a quad of a mixed
+// sequence: the parent-lattice point nearest the cell's centre, in that quad's
+// plane, re-expressed in the quad that owns it.
+//
+// Both grids store a cell by the substrate coordinates i + j*omega of its
+// centre on the same quad axes, and the child's substrate is k = dim_c / dim_p
+// (1, 2, 3 or 7) times finer, so the centre reads c / k in the parent's
+// substrate. Parent cells are the multiples of the parent generator g, so in
+// parent-cell units the centre is u = c * conj(g) / (k * N(g)), a point of
+// the Eisenstein lattice divided by D = k * N(g). The nearest lattice point
+// is a corner of the rhombus [x0, x0 + 1] x [y0, y0 + 1] containing u (its
+// two halves are equilateral triangles), and the squared distances
+// N(D * corner - D * u) are integers, so the comparison is exact.
+//
+// An aperture-3 step puts child centres on parent corners (three nearest
+// points) and an aperture-4 step on parent edge midpoints (two); an
+// aperture-7 step has no ties. A tie goes to the candidate with the larger
+// 2x + y, which differs between any two candidates a unit apart. The rule
+// is a translation in parent-cell units, so every hexagonal parent inside a
+// quad receives exactly as many children as the step's aperture.
+static void frame_parent(const QuadFrame& child, const QuadFrame& parent,
+                         int& quad, long long& i, long long& j) {
+    const long long k = child.dim / parent.dim;
+    const long long a = parent.generator.a, b = parent.generator.b;
+    const long long D = k * hexify::eisenstein_norm(a - b, b);
+
+    // (i + j*omega) * ((a - b) - b*omega), using omega^2 = -1 - omega
+    const long long c = a - b, d = -b;
+    const long long U = i * c - j * d;
+    const long long V = i * d + j * c - j * d;
+    const long long x0 = floor_div(U, D), y0 = floor_div(V, D);
+
+    long long best_x = 0, best_y = 0, best_dist = -1, best_key = 0;
+    for (int corner = 0; corner < 4; corner++) {
+        const long long x = x0 + (corner & 1), y = y0 + (corner >> 1);
+        const long long dx = D * x - U, dy = D * y - V;
+        const long long dist = hexify::eisenstein_norm(dx - dy, dy);
+        const long long key = 2 * x + y;
+        if (best_dist < 0 || dist < best_dist ||
+            (dist == best_dist && key > best_key)) {
+            best_x = x;
+            best_y = y;
+            best_dist = dist;
+            best_key = key;
+        }
+    }
+
+    i = best_x * a - best_y * b;
+    j = best_x * b + best_y * a - best_y * b;
+    if (!frame_in_quad(parent, i, j) && !frame_canonicalize(parent, quad, i, j)) {
+        Rcpp::stop("hexify internal error: a parent cell centre has no owning quad");
+    }
+}
+
 // The cell a lon/lat point falls in: its quad and stored (i, j)
 static inline void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
                                 int& quad, long long& i, long long& j) {
@@ -452,6 +512,48 @@ NumericVector cpp_quad_ij_to_cell(NumericVector icosa, IntegerVector quad, Numer
         result[k] = frame_encode(f, q, ii, jj);
     }
 
+    return result;
+}
+
+// The parent of each cell of a mixed sequence `ap_seq` in the grid one level
+// coarser, `parent_seq`. A grid depends only on the multiset of its refinement
+// steps, so the parent grid is any sequence whose steps are the child's with
+// one removed; a family spelling such as "4/3" removes a leading step, not
+// the last.
+// [[Rcpp::export]]
+NumericVector cpp_mixed_parent(NumericVector icosa, NumericVector cell_id,
+                               IntegerVector ap_seq, IntegerVector parent_seq) {
+    activate_grid(icosa);
+    if (ap_seq.size() < 2 || parent_seq.size() != ap_seq.size() - 1) {
+        Rcpp::stop("cpp_mixed_parent takes a mixed sequence and the sequence one "
+                   "level coarser");
+    }
+    std::vector<int> steps(ap_seq.begin() + 1, ap_seq.end());
+    std::vector<int> parent_steps(parent_seq.begin() + 1, parent_seq.end());
+    std::sort(steps.begin(), steps.end());
+    std::sort(parent_steps.begin(), parent_steps.end());
+    if (!std::includes(steps.begin(), steps.end(),
+                       parent_steps.begin(), parent_steps.end())) {
+        Rcpp::stop("the parent sequence is not the child sequence with one step removed");
+    }
+
+    const QuadFrame child = quad_frame(0, 0, std::vector<int>(ap_seq.begin(), ap_seq.end()));
+    const QuadFrame parent = quad_frame(0, 0, std::vector<int>(parent_seq.begin(),
+                                                               parent_seq.end()));
+
+    R_xlen_t n = cell_id.size();
+    NumericVector result(n);
+    for (R_xlen_t k = 0; k < n; k++) {
+        if (ISNAN(cell_id[k])) {
+            result[k] = NA_REAL;
+            continue;
+        }
+        int quad;
+        long long i, j;
+        frame_decode(child, cell_id[k], quad, i, j);
+        frame_parent(child, parent, quad, i, j);
+        result[k] = frame_encode(parent, quad, i, j);
+    }
     return result;
 }
 

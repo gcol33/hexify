@@ -161,6 +161,10 @@ cpp_quad_ij_to_cell <- function(icosa, quad, i, j, resolution, aperture, ap_seq)
     .Call(`_hexify_cpp_quad_ij_to_cell`, icosa, quad, i, j, resolution, aperture, ap_seq)
 }
 
+cpp_mixed_parent <- function(icosa, cell_id, ap_seq, parent_seq) {
+    .Call(`_hexify_cpp_mixed_parent`, icosa, cell_id, ap_seq, parent_seq)
+}
+
 cpp_lonlat_to_cell <- function(icosa, lon, lat, resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_lonlat_to_cell`, icosa, lon, lat, resolution, aperture, ap_seq)
 }

@@ -13,8 +13,9 @@
 # continuous quad-space at different scales -- so a cell's parent is simply the
 # coarser cell whose lattice point contains the cell's centre
 # (center-containment), with no accumulated per-step rotation to go wrong.
-# Parent/children/index all follow from re-projecting a cell centre through the
-# validated forward pipeline.
+# Both lattices are integer lattices on the same quad axes, so the parent is
+# computed exactly on them, ties included (mixed_get_parent()); children and the
+# index follow from it.
 #
 # Every helper takes the aperture spelling alongside the resolution, since the
 # coarser grid a parent lives on is the same spelling read at that resolution
@@ -96,13 +97,24 @@ mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L,
   cells[rt == cells]
 }
 
-#' Geometric parent of mixed cells (center-containment)
+#' Parent of mixed cells (centre containment, decided on the lattice)
+#'
+#' The parent is the coarser cell nearest the cell's centre in the plane of the
+#' cell's quad, found in exact integer lattice coordinates (cpp_mixed_parent()).
+#' Child centres of an aperture-3 or aperture-4 step that sit on a parent
+#' corner or edge midpoint go to a fixed one of the tied parents, so the result
+#' does not depend on floating-point rounding. `levels` steps up one level at a
+#' time, so the ancestors form a single tree.
 #' @noRd
 mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L,
                              polyhedron = "icosahedron") {
-  parent_res <- resolution - as.integer(levels)
-  ll <- mixed_cell_center(cell_id, resolution, aperture, polyhedron)
-  mixed_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res, aperture, polyhedron)
+  icosa <- standard_icosa(polyhedron)
+  cell_id <- as.numeric(cell_id)
+  for (r in seq(resolution, length.out = as.integer(levels), by = -1L)) {
+    cell_id <- cpp_mixed_parent(icosa, cell_id, isea_levels(aperture, r)$ap_seq,
+                                isea_levels(aperture, r - 1L)$ap_seq)
+  }
+  cell_id
 }
 
 #' Geometric children of a single mixed cell.
