@@ -28,8 +28,12 @@ geometries. If FALSE, returns data frame with vertex coordinates.}
 are extracted from it.}
 
 \item{wrap_dateline}{Logical. If TRUE (default), calls
-\code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
-Set to FALSE for orthographic/globe projections where wrapping creates gaps.}
+\code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons,
+which flat maps and planar (GEOS) operations need.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps,
+and for spherical (s2) operations: each cell then stays one polygon whose
+corners lie in -180..180, so a cell crossing the antimeridian spans a
+flat lon/lat map.}
 }
 \value{
 If return_sf = TRUE: sf object with columns:

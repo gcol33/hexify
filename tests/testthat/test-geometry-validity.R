@@ -191,8 +191,10 @@ test_that("the dateline wrap keeps each cell's area", {
 
     expect_true(all(sf::st_is_valid(split)), info = label)
 
-    # An unwrapped ring carries longitudes past +/-180, which st_area() notes
-    whole_area <- suppressWarnings(as.numeric(sf::st_area(whole)))
+    bb <- sf::st_bbox(whole)
+    expect_gte(bb[["xmin"]], -180, label = label)
+    expect_lte(bb[["xmax"]], 180, label = label)
+    expect_no_warning(whole_area <- as.numeric(sf::st_area(whole)))
     expect_equal(as.numeric(sf::st_area(split)), whole_area,
                  tolerance = 1e-6, info = label)
   }

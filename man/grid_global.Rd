@@ -9,9 +9,13 @@ grid_global(grid, wrap_dateline = TRUE)
 \arguments{
 \item{grid}{A HexGridInfo object specifying the grid parameters}
 
-\item{wrap_dateline}{Logical. If TRUE (default), antimeridian-crossing
-polygons are split at +/-180 degrees. Set to FALSE for orthographic/globe
-projections where wrapping creates gaps.}
+\item{wrap_dateline}{Logical. If TRUE (default), calls
+\code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons,
+which flat maps and planar (GEOS) operations need.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps,
+and for spherical (s2) operations: each cell then stays one polygon whose
+corners lie in -180..180, so a cell crossing the antimeridian spans a
+flat lon/lat map.}
 }
 \value{
 sf object with hexagon polygons

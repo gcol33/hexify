@@ -190,6 +190,29 @@ wrap_cells_at_dateline <- function(x) {
   x
 }
 
+#' Bring every corner of whole cells into -180..180
+#'
+#' A cell left whole across the antimeridian runs past +/-180, and a cell
+#' winding close around a pole can span most of a turn, more than the -180..360
+#' range sf reads as lon/lat allows. On the sphere a corner is the same point
+#' whole turns on, and s2 joins corners by great-circle arcs whatever their
+#' longitudes, so each corner is moved into -180..180 on its own. The polygon
+#' is unchanged on the sphere; on a flat lon/lat plane a cell crossing the
+#' antimeridian then spans the map, which is what the dateline split avoids.
+#'
+#' @param sfc An sfc of cell polygons
+#' @return The same sfc, every longitude in -180..180
+#' @noRd
+wrap_cell_corners <- function(sfc) {
+  geoms <- lapply(sfc, function(p) {
+    sf::st_polygon(lapply(unclass(p), function(r) {
+      r[, 1] <- r[, 1] - 360 * round(r[, 1] / 360)
+      r
+    }))
+  })
+  sf::st_sfc(geoms, crs = sf::st_crs(sfc))
+}
+
 #' Boundaries of ISEA cells as closed lon/lat rings
 #'
 #' Each edge follows the true cell boundary to within `tolerance` of its
@@ -310,8 +333,12 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' @param grid A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 #'   polygons are generated for all cells in the data.
 #' @param wrap_dateline Logical. If TRUE (default), calls
-#'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
-#'   Set to FALSE for orthographic/globe projections where wrapping creates gaps.
+#'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons,
+#'   which flat maps and planar (GEOS) operations need.
+#'   Set to FALSE for orthographic/globe projections where wrapping creates gaps,
+#'   and for spherical (s2) operations: each cell then stays one polygon whose
+#'   corners lie in -180..180, so a cell crossing the antimeridian spans a
+#'   flat lon/lat map.
 #' @param densify Points added along each cell edge: every edge is halved
 #'   until the straight line in longitude and latitude between consecutive
 #'   points stays within \code{densify} times its length of the true edge.
@@ -418,28 +445,25 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
       sf::st_polygon(list(coords))
     })
     sfc <- sf::st_sfc(polygons, crs = grid_crs(g))
-    result_sf <- sf::st_sf(cell_id = as.character(cell_id), geometry = sfc)
-    if (wrap_dateline) {
-      result_sf <- wrap_cells_at_dateline(result_sf)
-    }
-    return(result_sf)
-  }
-
-  # ISEA path: generate polygons using C++ function. For globe/orthographic
-  # projections, pass wrap_dateline = FALSE to keep cells intact.
-  tolerance <- if (is.null(densify)) CELL_EDGE_TOLERANCE else densify
-  sfc <- if (shape == "hexagon") {
-    isea_cells_to_sfc(cell_id, g@resolution, g@aperture, icosa_arg(g),
-                      crs = grid_crs(g), tolerance = tolerance)
+    cell_id <- as.character(cell_id)
   } else {
-    shaped_cells_to_sfc(cell_id, g, shape, depth, tolerance)
+    # ISEA path: generate polygons using C++ function. For globe/orthographic
+    # projections, pass wrap_dateline = FALSE to keep cells intact.
+    tolerance <- if (is.null(densify)) CELL_EDGE_TOLERANCE else densify
+    sfc <- if (shape == "hexagon") {
+      isea_cells_to_sfc(cell_id, g@resolution, g@aperture, icosa_arg(g),
+                        crs = grid_crs(g), tolerance = tolerance)
+    } else {
+      shaped_cells_to_sfc(cell_id, g, shape, depth, tolerance)
+    }
   }
 
-  result_sf <- sf::st_sf(cell_id = cell_id, geometry = sfc)
   if (wrap_dateline) {
-    result_sf <- wrap_cells_at_dateline(result_sf)
+    wrap_cells_at_dateline(sf::st_sf(cell_id = cell_id, geometry = sfc))
+  } else {
+    sf::st_sf(cell_id = cell_id,
+              geometry = wrap_cell_corners(sfc))
   }
-  result_sf
 }
 
 # =============================================================================
@@ -563,9 +587,7 @@ h3_all_cells <- function(resolution) {
 #' Creates hexagon polygons covering the entire Earth.
 #'
 #' @param grid A HexGridInfo object specifying the grid parameters
-#' @param wrap_dateline Logical. If TRUE (default), antimeridian-crossing
-#'   polygons are split at +/-180 degrees. Set to FALSE for orthographic/globe
-#'   projections where wrapping creates gaps.
+#' @inheritParams cell_to_sf
 #'
 #' @return sf object with hexagon polygons
 #'

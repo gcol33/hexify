@@ -21,9 +21,7 @@
 #'   geometries. If FALSE, returns data frame with vertex coordinates.
 #' @param grid Optional HexGridInfo object. If provided, resolution and aperture
 #'   are extracted from it.
-#' @param wrap_dateline Logical. If TRUE (default), calls
-#'   \code{sf::st_wrap_dateline()} to split antimeridian-crossing polygons.
-#'   Set to FALSE for orthographic/globe projections where wrapping creates gaps.
+#' @inheritParams cell_to_sf
 #'
 #' @return If return_sf = TRUE: sf object with columns:
 #'   \item{cell_id}{Cell identifier}
