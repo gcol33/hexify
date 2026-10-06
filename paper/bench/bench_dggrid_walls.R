@@ -9,9 +9,10 @@
 # the two centres, over its length. Every cell of the grid is measured.
 #
 # A cell has a corner gap where some DGGRID corner lies more than 1 m from
-# every hexify corner of the same cell (CORNER_GAP_KM). The script counts the
-# DGGRID walls whose ratio exceeds the largest hexify ratio, and how many of
-# them belong to cells with a corner gap.
+# every hexify corner of the same cell (CORNER_GAP_KM). For each program the
+# script reports the spread of ratios; for the pair, the walls whose ratio
+# differs between the programs by more than RATIO_DIFF, how many of these
+# border a cell with a corner gap, and the largest difference.
 #
 # Usage: Rscript paper/bench/bench_dggrid_walls.R
 
@@ -21,6 +22,10 @@ source(file.path(here, "bench_dggrid_common.R"))
 
 cfg <- CONFIGS[[3]]
 stopifnot(identical(cfg[[1]], "7"))
+
+# Ratios of the same wall that differ by less than this agree: both programs
+# print corners to 12 decimals of a degree.
+RATIO_DIFF <- 1e-6
 
 wall_ratios <- function(rings, centres, nb) {
   cm <- as.matrix(centres)
@@ -51,22 +56,21 @@ one_resolution <- function(res) {
   stopifnot(identical(wh$cell, wd$cell), identical(wh$neighbor_id, wd$neighbor_id))
 
   gap <- vapply(ids, function(i) corner_gap_km(dr[[i]], hr[[i]]), numeric(1)) > CORNER_GAP_KM
-  hmax <- max(wh$ratio)
-  over <- wd$ratio > hmax
-  over_gap <- over & (gap[wd$cell] | gap[wd$neighbor_id])
+  diff <- abs(wd$ratio - wh$ratio)
+  differs <- diff > RATIO_DIFF
+  at_gap <- gap[wd$cell] | gap[wd$neighbor_id]
 
   q <- function(x, p) unname(quantile(x, p))
-  rbind(
-    data.frame(resolution = res, program = "hexify", n_cells = length(ids),
-               n_walls = nrow(wh), n_gap_cells = sum(gap),
-               ratio_median = median(wh$ratio), ratio_q999 = q(wh$ratio, 0.999),
-               ratio_max = hmax, n_walls_over_hexify_max = 0L,
-               n_over_at_gap_cells = 0L),
-    data.frame(resolution = res, program = "DGGRID", n_cells = length(ids),
-               n_walls = nrow(wd), n_gap_cells = sum(gap),
-               ratio_median = median(wd$ratio), ratio_q999 = q(wd$ratio, 0.999),
-               ratio_max = max(wd$ratio), n_walls_over_hexify_max = sum(over),
-               n_over_at_gap_cells = sum(over_gap)))
+  data.frame(resolution = res, n_cells = length(ids), n_walls = nrow(wh),
+             n_gap_cells = sum(gap),
+             hexify_ratio_median = median(wh$ratio), hexify_ratio_max = max(wh$ratio),
+             dggrid_ratio_median = median(wd$ratio), dggrid_ratio_max = max(wd$ratio),
+             n_walls_differ = sum(differs), n_differ_at_gap_cells = sum(differs & at_gap),
+             n_gap_walls = sum(at_gap),
+             max_diff_at_gap = max(c(0, diff[at_gap])),
+             max_diff_elsewhere = max(c(0, diff[!at_gap])),
+             dggrid_q999_at_gap = q(wd$ratio[at_gap], 0.999),
+             hexify_q999_at_gap = q(wh$ratio[at_gap], 0.999))
 }
 
 out <- do.call(rbind, lapply(c(3L, 5L), one_resolution))
