@@ -166,10 +166,13 @@
 
     // `data-state` on the widget reads "drawn" once the first frame is on
     // screen and "failed" when the globe cannot be drawn, for tools that
-    // capture the page, such as hex_globe_png().
-    fail(message) {
+    // capture the page, such as hex_globe_png(). `data-reason` reads
+    // "no-adapter" when WebGPU found no graphics adapter, which a fresh
+    // browser may still find.
+    fail(message, reason) {
       this.el.dataset.state = "failed";
       this.el.dataset.message = message;
+      this.el.dataset.reason = reason || "";
       this.el.innerHTML = "";
       const box = document.createElement("div");
       box.style.cssText = "display:flex;align-items:center;justify-content:center;" +
@@ -187,7 +190,7 @@
       }
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) {
-        this.fail("WebGPU found no graphics adapter in this viewer.");
+        this.fail("WebGPU found no graphics adapter in this viewer.", "no-adapter");
         return;
       }
       this.device = await adapter.requestDevice({

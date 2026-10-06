@@ -214,9 +214,13 @@ hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
 
 #' Open a globe in headless Chrome, with its GPU, wait until it is drawn and
 #' call `f(session, read)`, where `read(js)` evaluates JavaScript in the page
-#' (awaiting a promise) and returns its value
+#' (awaiting a promise) and returns its value. A browser whose WebGPU finds
+#' no graphics adapter is closed and another launched, up to `launches` in
+#' all: on machines with two GPUs Chrome's GPU process sometimes starts
+#' without one.
 #' @noRd
-globe_in_chrome <- function(widget, width, height, scale, timeout, f) {
+globe_in_chrome <- function(widget, width, height, scale, timeout, f,
+                            launches = 3) {
   dir <- tempfile("hex_globe_")
   dir.create(dir)
   on.exit(unlink(dir, recursive = TRUE), add = TRUE)
@@ -224,16 +228,37 @@ globe_in_chrome <- function(widget, width, height, scale, timeout, f) {
   widget$width <- width
   widget$height <- height
   htmlwidgets::saveWidget(widget, html, selfcontained = FALSE, libdir = "lib")
+  url <- paste0("file:///", normalizePath(html, winslash = "/"))
 
   args <- c(setdiff(chromote::default_chrome_args(), "--disable-gpu"),
             "--enable-unsafe-webgpu")
-  browser <- chromote::Chromote$new(browser = chromote::Chrome$new(args = args))
+  for (launch in seq_len(launches)) {
+    browser <- chromote::Chromote$new(browser = chromote::Chrome$new(args = args))
+    page <- tryCatch(globe_page(browser, url, width, height, scale, timeout),
+                     error = function(e) {
+                       browser$close()
+                       stop(e)
+                     })
+    if (page$state != "no-adapter" || launch == launches) break
+    browser$close()
+  }
   on.exit(browser$close(), add = TRUE)
+  if (page$state != "drawn") {
+    stop("the globe could not be drawn: ", page$message, call. = FALSE)
+  }
+  f(page$session, page$read)
+}
+
+#' Load the page at `url` in a new session of `browser` and wait until the
+#' globe is drawn. `state` is "drawn", "no-adapter" or "failed", with the
+#' widget's `message` when it is not drawn.
+#' @noRd
+globe_page <- function(browser, url, width, height, scale, timeout) {
   session <- browser$new_session(width = width, height = height)
   session$Emulation$setDeviceMetricsOverride(
     width = width, height = height, deviceScaleFactor = scale, mobile = FALSE
   )
-  session$Page$navigate(paste0("file:///", normalizePath(html, winslash = "/")))
+  session$Page$navigate(url)
 
   read <- function(js) {
     r <- session$Runtime$evaluate(js, awaitPromise = TRUE, returnByValue = TRUE,
@@ -251,15 +276,18 @@ globe_in_chrome <- function(widget, width, height, scale, timeout, f) {
     if (state %in% c("drawn", "failed")) break
     Sys.sleep(0.1)
   }
-  if (state == "failed") {
-    stop("the globe could not be drawn: ",
-         read("document.querySelector('.hexify-globe').dataset.message"),
-         call. = FALSE)
-  }
-  if (state != "drawn") {
+  if (!state %in% c("drawn", "failed")) {
     stop("the globe was not drawn within ", timeout, " seconds", call. = FALSE)
   }
-  f(session, read)
+  message <- ""
+  if (state == "failed") {
+    message <- read("document.querySelector('.hexify-globe').dataset.message")
+    if (identical(read("document.querySelector('.hexify-globe').dataset.reason"),
+                  "no-adapter")) {
+      state <- "no-adapter"
+    }
+  }
+  list(session = session, read = read, state = state, message = message)
 }
 
 #' Cell IDs of points found by the globe's shader, for testing it against

@@ -138,6 +138,82 @@ struct Grid {
 const PI = 3.14159265358979;
 const SIN60 = 0.866025403784439;
 
+// Trigonometry from +, *, / and sqrt. WGSL bounds its built-in sin and cos
+// only to 2^-11 absolute and atan2 to 4096 ulp, and some GPUs (Intel's) use
+// that room, which moves points across cells. These polynomials (Cephes'
+// single-precision ones) hold every result to about one ulp on any GPU.
+const PIO2_HI = 1.5703125;
+const PIO2_MID = 4.837512969970703125e-4;
+const PIO2_LO = 7.54978995489188216e-8;
+const TAN_PI8 = 0.414213562373095;
+
+fn sin_poly(x: f32) -> f32 {
+  let z = x * x;
+  return ((-1.9515295891e-4 * z + 8.3321608736e-3) * z - 1.6666654611e-1) * z * x + x;
+}
+
+fn cos_poly(x: f32) -> f32 {
+  let z = x * x;
+  return ((2.443315711809948e-5 * z - 1.388731625493765e-3) * z
+          + 4.166664568298827e-2) * z * z - 0.5 * z + 1.0;
+}
+
+// sin and cos of x, for |x| up to a few turns: x is reduced by the nearest
+// multiple of pi / 2, split in three parts so the reduction is exact.
+fn sincos(x: f32) -> vec2f {
+  let j = round(x * (2.0 / PI));
+  let y = ((x - j * PIO2_HI) - j * PIO2_MID) - j * PIO2_LO;
+  let s = sin_poly(y);
+  let c = cos_poly(y);
+  let q = i32(j) & 3;
+  if (q == 0) {
+    return vec2f(s, c);
+  } else if (q == 1) {
+    return vec2f(c, -s);
+  } else if (q == 2) {
+    return vec2f(-s, -c);
+  }
+  return vec2f(-c, s);
+}
+
+// atan of a in [0, 1].
+fn atan_unit(a: f32) -> f32 {
+  var x = a;
+  var base = 0.0;
+  if (x > TAN_PI8) {
+    x = (x - 1.0) / (x + 1.0);
+    base = 0.25 * PI;
+  }
+  let z = x * x;
+  return base + ((((8.05374449538e-2 * z - 1.38776856032e-1) * z + 1.99777106478e-1) * z
+                  - 3.33329491539e-1) * z * x + x);
+}
+
+fn atan2_hx(y: f32, x: f32) -> f32 {
+  let ax = abs(x);
+  let ay = abs(y);
+  let hi = max(ax, ay);
+  if (hi == 0.0) {
+    return 0.0;
+  }
+  var r = atan_unit(min(ax, ay) / hi);
+  if (ay > ax) {
+    r = 0.5 * PI - r;
+  }
+  if (x < 0.0) {
+    r = PI - r;
+  }
+  return select(r, -r, y < 0.0);
+}
+
+fn atan_hx(t: f32) -> f32 {
+  return atan2_hx(t, 1.0);
+}
+
+fn acos_hx(c: f32) -> f32 {
+  return atan2_hx(sqrt(max((1.0 - c) * (1.0 + c), 0.0)), c);
+}
+
 // Snyder's forward projection of the unit vector p onto face f, as triangle
 // coordinates (a face edge is 1). sin(z / 2) is half the chord from the face
 // centre, which keeps precision near the centre.
@@ -153,7 +229,7 @@ fn snyder_face(p: vec3f, f: u32) -> vec2f {
   let r1sq = grid.snyder1.w;
   let half_chord = 0.5 * length(p - face.centre.xyz);
 
-  var az = atan2(dot(p, face.az_b.xyz), dot(p, face.az_a.xyz));
+  var az = atan2_hx(dot(p, face.az_b.xyz), dot(p, face.az_a.xyz));
   if (az < 0.0) {
     az += 2.0 * PI;
   }
@@ -165,14 +241,16 @@ fn snyder_face(p: vec3f, f: u32) -> vec2f {
   }
   az -= sector * 2.0 * PI / 3.0;
 
-  let dz = atan2(tan_el, cos(az) + cot30 * sin(az));
-  let h = acos(clamp(sin(az) * sin_g * cos_el - cos(az) * cos_g, -1.0, 1.0));
+  let sc_az = sincos(az);
+  let dz = atan2_hx(tan_el, sc_az.y + cot30 * sc_az.x);
+  let h = acos_hx(clamp(sc_az.x * sin_g * cos_el - sc_az.y * cos_g, -1.0, 1.0));
   let ag = az + g + h - PI;
-  var azt = atan2(2.0 * ag, r1sq * tan_el * tan_el - 2.0 * ag * cot30);
-  let denom = 2.0 * (cos(azt) + cot30 * sin(azt)) * sin(0.5 * dz);
+  let azt = atan2_hx(2.0 * ag, r1sq * tan_el * tan_el - 2.0 * ag * cot30);
+  let sc_azt = sincos(azt);
+  let denom = 2.0 * (sc_azt.y + cot30 * sc_azt.x) * sincos(0.5 * dz).x;
   let rho = 2.0 * r1 * tan_el / denom * half_chord;
-  azt += sector * 2.0 * PI / 3.0;
-  return (vec2f(rho * sin(azt), rho * cos(azt)) + grid.snyder2.xy) / grid.snyder2.z;
+  let sc_out = sincos(azt + sector * 2.0 * PI / 3.0);
+  return (vec2f(rho * sc_out.x, rho * sc_out.y) + grid.snyder2.xy) / grid.snyder2.z;
 }
 
 // Fuller's projection (Gray 1995) of the unit vector p onto face f, as
@@ -191,9 +269,9 @@ fn fuller_face(p: vec3f, f: u32) -> vec2f {
   let s = FULLER_Z0 / dot(p, face.centre.xyz);
   let xs = s * dot(p, face.az_b.xyz);
   let ys = s * dot(p, face.az_a.xyz);
-  let b1 = atan((2.0 * ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
-  let b2 = atan((xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
-  let b3 = atan((-xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let b1 = atan_hx((2.0 * ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let b2 = atan_hx((xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
+  let b3 = atan_hx((-xs - ys / SQRT3 - FULLER_EL / 6.0) / FULLER_DVE);
   let xy = vec2f(0.5 * (b2 - b3), (2.0 * b1 - b2 - b3) / (2.0 * SQRT3));
   return xy / FULLER_ARC + vec2f(0.5, 0.5 / SQRT3);
 }
