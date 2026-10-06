@@ -126,10 +126,11 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolv
     return { rad2deg(wrap_lon_rad(center_lon)), rad2deg(center_lat) };
   }
 
+  const bool newton = solver == InverseSolver::Newton;
   const auto [z, face_az] =
-      active_projection() == FaceProjection::Fuller ? fuller_face_polar(x, y)
-    : solver == InverseSolver::Newton               ? snyder_face_polar_newton(sp, x, y)
-    :                                                 snyder_face_polar(sp, x, y);
+      active_projection() == FaceProjection::Fuller
+        ? (newton ? fuller_face_polar_newton(x, y) : fuller_face_polar(x, y))
+        : (newton ? snyder_face_polar_newton(sp, x, y) : snyder_face_polar(sp, x, y));
 
   // Add the per-face azimuth bias (radians)
   double azimuth = face_az + snyder_get_face_azimuth_offset(face);

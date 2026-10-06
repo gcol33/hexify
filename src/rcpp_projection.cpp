@@ -101,8 +101,8 @@ NumericVector cpp_project_to_icosa_triangle(NumericVector icosa, int face,
 // Inverse Projection
 // ============================================================================
 
-// 'newton' solves the ISEA inverse by Newton's method instead of in closed
-// form, to check the closed form against.
+// 'newton' solves the inverse (Snyder's or Fuller's) by Newton's method
+// instead of in closed form, to check the closed form against.
 // [[Rcpp::export]]
 Rcpp::NumericVector cpp_face_xy_to_ll(NumericVector icosa, double x, double y, int face,
                                       bool newton = false) {

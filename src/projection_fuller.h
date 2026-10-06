@@ -14,7 +14,11 @@ namespace hexify {
 // (z, az) -> face-plane (x, y)
 std::pair<double,double> fuller_face_xy(double z, double az);
 
-// Face-plane (x, y) -> (z, az), by Newton's method on Gray's equation (39)
+// Face-plane (x, y) -> (z, az), solving Gray's equation (39) in closed form
 std::pair<double,double> fuller_face_polar(double x, double y);
+
+// The same by Newton's method on Gray's equation (39), kept to check the
+// closed form
+std::pair<double,double> fuller_face_polar_newton(double x, double y);
 
 } // namespace hexify

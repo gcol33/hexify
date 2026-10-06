@@ -13,16 +13,36 @@ test_that("hex_grid() carries the projection", {
   expect_error(hex_grid(resolution = 4, projection = "gnomonic"))
 })
 
-test_that("forward and inverse Fuller projections invert each other", {
+test_that("forward then closed-form inverse returns the point at machine precision", {
   set.seed(1)
   lon <- runif(2000, -180, 180)
   lat <- asin(runif(2000, -1, 1)) * 180 / pi
-  for (k in seq_along(lon)) {
-    f <- hexify_forward(lon[k], lat[k], projection = "fuller")
-    ll <- hexify_inverse(f[["icosa_triangle_x"]], f[["icosa_triangle_y"]],
-                         f[["face"]], projection = "fuller")
-    gap <- row_angle(hexify:::unit_vec(ll[[1]], ll[[2]]), hexify:::unit_vec(lon[k], lat[k]))
-    expect_lt(gap, 1e-11)
+  back <- t(mapply(function(lo, la) {
+    f <- hexify_forward(lo, la, projection = "fuller")
+    hexify_inverse(f[["icosa_triangle_x"]], f[["icosa_triangle_y"]],
+                   as.integer(f[["face"]]), projection = "fuller")
+  }, lon, lat))
+  expect_lt(max(arc_between(lon, lat, back[, "lon"], back[, "lat"])), 1e-13)
+})
+
+test_that("the closed-form inverse holds at the vertices, the centre and outside the face", {
+  # At the centre two roots of the cubic meet, away from the face's own root.
+  # Points up to a quarter of the face outside it are in the closed form's
+  # range.
+  icosa <- projection_icosa("fuller", "icosahedron")
+  pts <- face_plane_samples(12)
+  cx <- 0.5
+  cy <- 0.5 / sqrt(3)
+  xy <- rbind(c(0, 0), c(1, 0), c(0.5, sqrt(3) / 2), c(cx, cy),
+              c(cx, cy + 1e-9), c(cx + 1e-9, cy),
+              cbind(cx + 1.1 * (pts$x - cx), cy + 1.1 * (pts$y - cy)),
+              cbind(cx + 1.25 * (pts$x - cx), cy + 1.25 * (pts$y - cy)))
+  for (face in c(0L, 7L, 19L)) {
+    closed <- t(apply(xy, 1, function(p) cpp_face_xy_to_ll(icosa, p[1], p[2], face)))
+    newton <- t(apply(xy, 1, function(p) cpp_face_xy_to_ll(icosa, p[1], p[2], face,
+                                                            newton = TRUE)))
+    err <- arc_between(closed[, "lon"], closed[, "lat"], newton[, "lon"], newton[, "lat"])
+    expect_lt(max(err), 1e-13, label = sprintf("face %d", face))
   }
 })
 

@@ -61,7 +61,8 @@
   projection instead of Snyder's equal-area one: DGGRID's FULLER3H,
   FULLER4H, FULLER7H and FULLER43H, and any aperture sequence or orientation.
   The forward projection follows Gray (1995) and the inverse solves Gray's
-  equation (39) in Crider's (2008) form by Newton's method. Cell IDs, the
+  equation (39) in Crider's (2008) form in closed form, as a cubic solved
+  by Viete's trigonometric method (#96). Cell IDs, the
   hierarchy and neighbours are those of the ISEA grid; centres and corners
   agree with DGGRID's FULLER output. Fuller cells are not equal-area, so
   `area_km2` is the mean cell area and `cell_area()` returns each cell's own,
