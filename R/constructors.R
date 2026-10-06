@@ -46,7 +46,7 @@
 #'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
 #'   "enceladus", "titan", "uranus", "neptune", "pluto".
 #' @param orientation Where the icosahedron of an ISEA grid sits on the
-#'   sphere: "standard" (default), "random", "region", "face", or
+#'   sphere: "standard" (default), "dymaxion", "random", "region", "face", or
 #'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
 #'   section. H3 fixes its own orientation, so H3 grids take only "standard".
 #' @param projection How an ISEA-family grid projects each icosahedron face
@@ -110,9 +110,14 @@
 #'
 #' \itemize{
 #'   \item "standard" is the ISEA orientation on the icosahedron: vertex 0 at
-#'     11.25E, 58.28N, azimuth 0, which places the twelve pentagons over the
-#'     oceans. On the octahedron it puts vertices at both poles and at
+#'     11.25E, 58.28N, azimuth 0, symmetric about the equator, with eleven
+#'     of the twelve pentagons over the oceans and one in Sichuan (Sahr et al.
+#'     2003). On the octahedron it puts vertices at both poles and at
 #'     longitudes 0, 90E, 180 and 90W on the equator.
+#'   \item "dymaxion" is Fuller's orientation of the icosahedron for his
+#'     Dymaxion map: vertex 0 at 5.2454W, 2.3009N, azimuth 7.46658 (Sahr et
+#'     al. 2003), with all twelve pentagons in the ocean. With
+#'     \code{projection = "fuller"} the grid lies on Fuller's Dymaxion map.
 #'   \item "random" draws vertex 0 uniformly on the sphere and the azimuth
 #'     uniformly in [0, 360), from R's random number generator, so
 #'     \code{set.seed()} repeats it. Grids in several random orientations show

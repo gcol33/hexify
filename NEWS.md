@@ -156,6 +156,11 @@
   grid, and no longer reaches grids; `hex_grid()` and `hexify_grid()` no
   longer reset it.
 
+* `hex_grid(orientation = "dymaxion")` places the icosahedron in Fuller's
+  Dymaxion orientation (#89; Sahr et al. 2003): vertex 0 at 5.2454W, 2.3009N,
+  azimuth 7.46658, with all twelve pentagons in the ocean. With
+  `projection = "fuller"` the grid lies on Fuller's Dymaxion map.
+
 ## Bug fixes
 
 * `get_parent()` on a mixed aperture grid finds the parent in exact lattice

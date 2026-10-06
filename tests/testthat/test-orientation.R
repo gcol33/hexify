@@ -168,6 +168,29 @@ test_that("a region can be an sf object", {
   expect_error(region_centre(c(0, 100)), "region must")
 })
 
+test_that("the Dymaxion orientation puts every pentagon in the ocean", {
+  land <- sf::st_union(sf::st_make_valid(hexify_world))
+  sea_pentagons <- function(g) {
+    cells <- grid_global(g)
+    ids <- unique(cells$cell_id[is_pentagon(cells$cell_id, g)])
+    expect_length(ids, 12L)
+    ctr <- cell_to_lonlat(ids, g)
+    pts <- sf::st_as_sf(ctr, coords = c("lon_deg", "lat_deg"), crs = 4326)
+    sum(lengths(sf::st_intersects(pts, land)) == 0)
+  }
+  for (projection in c("isea", "fuller")) {
+    g <- hex_grid(resolution = 2, orientation = "dymaxion", projection = projection)
+    expect_identical(g@orientation, hexify:::DYMAXION_ORIENTATION)
+    expect_equal(sea_pentagons(g), 12L)
+  }
+  # Sahr et al. (2003): the ISEA orientation leaves one vertex in Sichuan
+  expect_equal(sea_pentagons(hex_grid(resolution = 2)), 11L)
+  expect_error(hex_grid(resolution = 2, orientation = "dymaxion",
+                        polyhedron = "octahedron"), "places an icosahedron")
+  expect_error(hex_grid(resolution = 2, orientation = "dymaxion", type = "h3"),
+               "H3 fixes its own orientation")
+})
+
 test_that("a random orientation follows the seed", {
   set.seed(3)
   a <- hex_grid(resolution = 4, orientation = "random")@orientation

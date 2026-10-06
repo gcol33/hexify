@@ -30,6 +30,13 @@ POLYHEDRON_ORIENTATION <- list(
   tetrahedron = c(vert0_lon = 0, vert0_lat = 90, azimuth = 180)
 )
 
+#' Fuller's Dymaxion orientation of the icosahedron (Sahr et al. 2003, p. 125):
+#' vertex 0 at 5.2454W, 2.3009N, an adjacent vertex at azimuth 7.46658, which
+#' puts all twelve vertices in the ocean
+#' @noRd
+DYMAXION_ORIENTATION <- c(vert0_lon = -5.2454, vert0_lat = 2.3009,
+                          azimuth = 7.46658)
+
 #' Solid of a grid
 #'
 #' A grid saved before grids carried a solid, and a legacy \code{hexify_grid}
@@ -168,8 +175,8 @@ is_standard_orientation <- function(o, polyhedron = "icosahedron") {
 
 #' Resolve hex_grid()'s orientation argument
 #'
-#' @param orientation "standard", "random", "region", "face", or a numeric
-#'   \code{c(vert0_lon, vert0_lat, azimuth)}
+#' @param orientation "standard", "dymaxion", "random", "region", "face", or
+#'   a numeric \code{c(vert0_lon, vert0_lat, azimuth)}
 #' @param region The area "region" and "face" centre the grid on
 #' @param polyhedron The solid the orientation places
 #' @return Named numeric \code{c(vert0_lon, vert0_lat, azimuth)}, longitude in
@@ -184,12 +191,16 @@ resolve_orientation <- function(orientation, region = NULL,
     return(check_orientation(orientation))
   }
   if (!is.character(orientation) || length(orientation) != 1L ||
-      !orientation %in% c("standard", "random", placed)) {
-    stop("orientation must be \"standard\", \"random\", \"region\", \"face\", ",
-         "or c(vert0_lon, vert0_lat, azimuth) in degrees", call. = FALSE)
+      !orientation %in% c("standard", "dymaxion", "random", placed)) {
+    stop("orientation must be \"standard\", \"dymaxion\", \"random\", ",
+         "\"region\", \"face\", or c(vert0_lon, vert0_lat, azimuth) in degrees",
+         call. = FALSE)
   }
   if (!orientation %in% placed && !is.null(region)) {
     stop(region_misuse, call. = FALSE)
+  }
+  if (orientation == "dymaxion" && polyhedron != "icosahedron") {
+    stop("orientation = \"dymaxion\" places an icosahedron", call. = FALSE)
   }
   if (orientation %in% placed) {
     if (is.null(region)) {
@@ -200,6 +211,7 @@ resolve_orientation <- function(orientation, region = NULL,
   }
   switch(orientation,
     standard = POLYHEDRON_ORIENTATION[[polyhedron]],
+    dymaxion = DYMAXION_ORIENTATION,
     random = check_orientation(c(
       stats::runif(1, -180, 180),
       asin(stats::runif(1, -1, 1)) * 180 / pi,
