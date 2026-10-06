@@ -816,9 +816,11 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
 // numbers the polyline each point belongs to (consecutive points of one
 // polyline). Segments are great-circle arcs, split where they cross a face
 // edge and every 'max_angle' radians. Returns one row per point, with columns
-// path, face (from 0), solid x/y/z and sphere x/y/z, in the layout of
-// cpp_cell_surface_paths(). A point where a path crosses from one face to the
-// next has one place on both surfaces, so a path stays unbroken.
+// path, face (from 0), solid x/y/z, sphere x/y/z and triangle coordinates
+// tx, ty, in the layout of cpp_cell_surface_paths(). A point where a path
+// crosses from one face to the next appears on both faces, so the points of
+// one face run unbroken up to the face edge, also in a layout of the unfolded
+// solid that puts the two faces apart.
 // [[Rcpp::export]]
 NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
                                         NumericVector lon, NumericVector lat,
@@ -832,7 +834,8 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
     auto t = face_tri(face, p);
     face_tri_to_solid(face, t.first, t.second, solid);
     rows.insert(rows.end(), {static_cast<double>(id), static_cast<double>(face),
-                             solid[0], solid[1], solid[2], p.x, p.y, p.z});
+                             solid[0], solid[1], solid[2], p.x, p.y, p.z,
+                             t.first, t.second});
   };
 
   for (R_xlen_t k = 0; k < n; k++) {
@@ -864,7 +867,13 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
         double t = s + (t_out - s) * i / steps;
         emit(path[k], face, unit(a + t * (b - a)));
       }
-      if (t_out >= 1.0) break;
+      if (t_out >= 1.0) {
+        // The next segment starts on another face when b lies on this
+        // face's edge; b then also closes this face's run of points.
+        if (sphere_face(b) != face) emit(path[k], face, b);
+        break;
+      }
+      emit(path[k], face, p1);
       s = t_out;
       V3 next = unit(a + std::min(1.0, s + 1e-9) * (b - a));
       int best = -1;
@@ -882,14 +891,15 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
     }
   }
 
-  R_xlen_t n_row = static_cast<R_xlen_t>(rows.size() / 8);
-  NumericMatrix out(n_row, 8);
+  constexpr int n_col = 10;
+  R_xlen_t n_row = static_cast<R_xlen_t>(rows.size() / n_col);
+  NumericMatrix out(n_row, n_col);
   for (R_xlen_t r = 0; r < n_row; r++) {
-    for (int col = 0; col < 8; col++) out(r, col) = rows[r * 8 + col];
+    for (int col = 0; col < n_col; col++) out(r, col) = rows[r * n_col + col];
   }
   colnames(out) = CharacterVector::create("cell", "face", "solid_x", "solid_y",
                                           "solid_z", "sphere_x", "sphere_y",
-                                          "sphere_z");
+                                          "sphere_z", "tx", "ty");
   return out;
 }
 

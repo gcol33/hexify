@@ -340,27 +340,33 @@ test_that("an H3 grid draws on the sphere only", {
 # The unfolded net
 # =============================================================================
 
+plane_xy <- function(P, g) {
+  xy <- matrix(NA_real_, nrow(P), 2)
+  for (p in net_layout(g, "plane")$pieces) {
+    at <- P[, "face"] == p$face
+    xy[at, ] <- hexify:::place_points(P[at, c("tx", "ty"), drop = FALSE], p)
+  }
+  xy
+}
+
 test_that("boundary points of one face run unbroken in the plane", {
   for (ap in c(3, 4, 7)) {
     g <- hex_grid(resolution = 2, aperture = ap)
     P <- surface_paths_for(g, step = 0.02)
+    pxy <- plane_xy(P, g)
     n <- nrow(P)
     same <- P[-1, "cell"] == P[-n, "cell"] & P[-1, "face"] == P[-n, "face"]
-    gap <- sqrt(rowSums((P[-1, c("plane_x", "plane_y")] -
-                         P[-n, c("plane_x", "plane_y")])^2))[same]
+    gap <- sqrt(rowSums((pxy[-1, ] - pxy[-n, ])^2))[same]
     expect_lte(max(gap), 0.02 + 1e-9)
   }
 })
 
-test_that("boundary points lie inside their face's triangle of the net", {
-  tris <- hexify:::net_triangles(numeric(0))
+test_that("boundary points lie inside their face's triangle", {
+  faces <- hexify:::net_faces(numeric(0))
   P <- surface_paths_for(hex_grid(resolution = 3, aperture = 3))
   for (f in unique(P[, "face"])) {
-    T <- tris[[f + 1]]$plane
-    p <- P[P[, "face"] == f, c("plane_x", "plane_y"), drop = FALSE]
-    M <- cbind(T[1, ] - T[3, ], T[2, ] - T[3, ])
-    w <- solve(M, t(p) - T[3, ])
-    expect_gte(min(w, 1 - colSums(w)), -1e-9)
+    p <- P[P[, "face"] == f, c("tx", "ty"), drop = FALSE]
+    expect_true(all(hexify:::in_triangle(p, faces[[f + 1]]$tri)))
   }
 })
 
@@ -368,11 +374,12 @@ test_that("a cell on one face is centred on its PLANE centre", {
   for (ap in c(3, 4, 7)) {
     g <- hex_grid(resolution = 3, aperture = ap)
     P <- surface_paths_for(g, step = 0.01)
+    pxy <- plane_xy(P, g)
     one_face <- tapply(P[, "face"], P[, "cell"], function(f) length(unique(f)) == 1)
     cells <- as.integer(names(one_face)[one_face])[1:20]
     ctr <- hexify_cell_to_plane(cells, 3, ap)
     for (i in seq_along(cells)) {
-      ring <- P[P[, "cell"] == cells[i], c("plane_x", "plane_y")]
+      ring <- pxy[P[, "cell"] == cells[i], ]
       xy <- sf::st_coordinates(sf::st_centroid(sf::st_polygon(list(ring))))
       expect_equal(unname(xy[1, 1:2]), c(ctr$plane_x[i], ctr$plane_y[i]),
                    tolerance = 1e-6, info = paste(ap, cells[i]))
@@ -391,4 +398,38 @@ test_that("plot draws a grid on the net", {
   expect_error(draws(plot(g, surface = "net", rotation = 10)), "drawn flat")
   h <- hex_grid(resolution = 0, type = "h3")
   expect_error(suppressMessages(draws(plot(h, surface = "net"))), "needs an ISEA grid")
+})
+
+test_that("plot draws a grid on every net layout, with seams and a graticule", {
+  g <- hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron",
+                orientation = "gosper")
+  for (layout in c("plane", "gosper", "gosper_flower", "land")) {
+    expect_identical(draws(plot(g, surface = "net", layout = layout, seams = TRUE,
+                                graticule = TRUE)), g)
+  }
+  world <- net_layout(g, "gosper", mirror = TRUE)
+  expect_identical(draws(plot(g, surface = "net", layout = world, graticule = 15,
+                              cells = 1:20)), g)
+  expect_error(draws(plot(hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron"),
+                          surface = "net", layout = world)), "another solid")
+  expect_error(draws(plot(g, layout = "gosper")), "apply to surface")
+  expect_error(draws(plot(g, seams = TRUE)), "apply to surface")
+  expect_error(draws(plot(g, surface = "net", layout = list())), "layout must be")
+})
+
+test_that("plot draws a graticule on the sphere and the solid", {
+  g <- hex_grid(resolution = 2, aperture = 3)
+  expect_identical(draws(plot(g, graticule = TRUE)), g)
+  expect_identical(draws(plot(g, surface = "solid", graticule = 20, land = FALSE)), g)
+  expect_error(draws(plot(g, graticule = -5)), "graticule must be")
+})
+
+test_that("graticule lines on the faces reach the face edges", {
+  P <- hexify:::graticule_paths(30, numeric(0))
+  n <- nrow(P)
+  cross <- which(P[-1, "cell"] == P[-n, "cell"] & P[-1, "face"] != P[-n, "face"])
+  # A line changes face at a point both faces hold.
+  expect_gt(length(cross), 0L)
+  expect_equal(P[cross, c("sphere_x", "sphere_y", "sphere_z")],
+               P[cross + 1L, c("sphere_x", "sphere_y", "sphere_z")], tolerance = 1e-12)
 })

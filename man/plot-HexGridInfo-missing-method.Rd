@@ -25,6 +25,13 @@
   face_edges = NULL,
   edge_col = "black",
   edge_lwd = 1.1,
+  layout = "plane",
+  seams = FALSE,
+  seam_col = "#D55E00",
+  seam_lwd = 1.6,
+  graticule = FALSE,
+  graticule_col = "#9AA3AB",
+  graticule_lwd = 0.5,
   step = 0.01,
   main = NULL,
   ...
@@ -87,6 +94,25 @@ so its grid takes none.}
 
 \item{edge_lwd}{Line width of face edges.}
 
+\item{layout}{For \code{surface = "net"}, the layout of the faces: a name
+\code{\link{net_layout}} takes, or a \code{hexify_net} object it built
+for this grid.}
+
+\item{seams}{For \code{surface = "net"}, draw the cuts of the net: the
+sides of its pieces across which the map is not continuous, including
+its outline.}
+
+\item{seam_col}{Colour of seams.}
+
+\item{seam_lwd}{Line width of seams.}
+
+\item{graticule}{\code{FALSE} for none, \code{TRUE} for meridians and
+parallels every 30 degrees, or a number of degrees between them.}
+
+\item{graticule_col}{Colour of the graticule.}
+
+\item{graticule_lwd}{Line width of the graticule.}
+
 \item{step}{Spacing of the points along a cell boundary, as a fraction of
 a face edge.}
 
@@ -104,12 +130,14 @@ surfaces take their cell boundaries from the same points, so a cell on the
 solid is the cell on the sphere folded flat.
 }
 \details{
-\code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
-DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in the same
-coordinates). A cell on a face edge that the net cuts is drawn in two
-parts, one on each face. The net is drawn without a camera, so
-\code{center}, \code{projection}, \code{distance}, \code{tilt},
-\code{rotation} and \code{fov} apply to the other two surfaces.
+\code{surface = "net"} lays the faces out flat, by default in the PLANE
+layout of DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in
+the same coordinates); \code{layout} picks another, such as Van de Sande's
+Gosper World on the octahedron (see \code{\link{net_layout}}). A cell on a
+cut of the net is drawn in parts, one on each side. The net is drawn
+without a camera, so \code{center}, \code{projection}, \code{distance},
+\code{tilt}, \code{rotation} and \code{fov} apply to the other two
+surfaces.
 
 The view is an orthographic projection by default: parallel lines of sight,
 so the whole near half of the sphere shows. \code{projection =
@@ -131,6 +159,9 @@ plot(grid, projection = "perspective", distance = 2, center = "europe")
 plot(grid, surface = "solid", projection = "perspective",
      distance = 2.5, tilt = 25, rotation = 30)
 plot(grid, surface = "net")
+octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron",
+                 orientation = "gosper")
+plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
 }
 \seealso{
 \code{\link{grid_global}} for the cells as sf polygons

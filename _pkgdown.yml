@@ -123,6 +123,8 @@ reference:
   - plot_grid
   - plot_world
   - starts_with("plot,HexGridInfo")
+  - net_layout
+  - net_project
   - hex_globe
   - hex_globe_png
   - hexify_world

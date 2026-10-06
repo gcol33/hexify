@@ -161,6 +161,25 @@
   azimuth 7.46658, with all twelve pentagons in the ocean. With
   `projection = "fuller"` the grid lies on Fuller's Dymaxion map.
 
+* New `net_layout()` lays out the faces of a grid's solid as a flat map, and
+  `plot(<grid>, surface = "net", layout = )` draws on it (#83). A layout cuts
+  faces into pieces and places each by a rotation and a translation, so a
+  piece can appear more than once. `"plane"` is DGGRID's PLANE layout, as
+  before; `"gosper"` is Van de Sande's Gosper World on the octahedron, four
+  regular hexagons each of one face and a third of its three neighbours,
+  equal-area on Snyder's projection; `"gosper_flower"` surrounds one hexagon
+  by the six that border it; `"land"` cuts the solid along the edges that
+  cross the least land, a Dymaxion-style net with
+  `orientation = "dymaxion", projection = "fuller"`. `net_project()` places
+  points on a layout. `seams = TRUE` draws the cuts of the net.
+
+* `hex_grid(polyhedron = "octahedron", orientation = "gosper")` puts the poles
+  at midpoints of octahedron edges, as the Gosper World does, with all six
+  vertices at least 619 km offshore.
+
+* `plot(<grid>, graticule = )` draws meridians and parallels on the sphere,
+  the solid and the net.
+
 * New `cell_metrics()` and `wall_metrics()` measure a grid's cells: area,
   perimeter and compactness (White et al. 1998) per cell, and per wall
   between adjacent cells its length, the distance between the two centres and

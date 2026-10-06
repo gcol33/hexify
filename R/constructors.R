@@ -46,7 +46,8 @@
 #'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
 #'   "enceladus", "titan", "uranus", "neptune", "pluto".
 #' @param orientation Where the icosahedron of an ISEA grid sits on the
-#'   sphere: "standard" (default), "dymaxion", "random", "region", "face", or
+#'   sphere: "standard" (default), "dymaxion", "gosper", "random", "region",
+#'   "face", or
 #'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
 #'   section. H3 fixes its own orientation, so H3 grids take only "standard".
 #' @param projection How an ISEA-family grid projects each icosahedron face
@@ -118,6 +119,12 @@
 #'     Dymaxion map: vertex 0 at 5.2454W, 2.3009N, azimuth 7.46658 (Sahr et
 #'     al. 2003), with all twelve pentagons in the ocean. With
 #'     \code{projection = "fuller"} the grid lies on Fuller's Dymaxion map.
+#'   \item "gosper" places the octahedron as Van de Sande's Gosper World
+#'     places its poles, at midpoints of octahedron edges: vertex 0 at
+#'     21.25W, 45N, vertex 1 across the north pole from it, all six vertices
+#'     at least 619 km offshore. \code{\link{net_layout}} lays it out as four
+#'     hexagons. The standard octahedron puts the poles at vertices instead,
+#'     as Rus's four-hexagon map does.
 #'   \item "random" draws vertex 0 uniformly on the sphere and the azimuth
 #'     uniformly in [0, 360), from R's random number generator, so
 #'     \code{set.seed()} repeats it. Grids in several random orientations show

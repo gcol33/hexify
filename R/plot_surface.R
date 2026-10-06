@@ -49,12 +49,14 @@ globe_centers <- list(
 #' surfaces take their cell boundaries from the same points, so a cell on the
 #' solid is the cell on the sphere folded flat.
 #'
-#' \code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
-#' DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in the same
-#' coordinates). A cell on a face edge that the net cuts is drawn in two
-#' parts, one on each face. The net is drawn without a camera, so
-#' \code{center}, \code{projection}, \code{distance}, \code{tilt},
-#' \code{rotation} and \code{fov} apply to the other two surfaces.
+#' \code{surface = "net"} lays the faces out flat, by default in the PLANE
+#' layout of DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in
+#' the same coordinates); \code{layout} picks another, such as Van de Sande's
+#' Gosper World on the octahedron (see \code{\link{net_layout}}). A cell on a
+#' cut of the net is drawn in parts, one on each side. The net is drawn
+#' without a camera, so \code{center}, \code{projection}, \code{distance},
+#' \code{tilt}, \code{rotation} and \code{fov} apply to the other two
+#' surfaces.
 #'
 #' The view is an orthographic projection by default: parallel lines of sight,
 #' so the whole near half of the sphere shows. \code{projection =
@@ -103,6 +105,18 @@ globe_centers <- list(
 #'   so its grid takes none.
 #' @param edge_col Colour of face edges.
 #' @param edge_lwd Line width of face edges.
+#' @param layout For \code{surface = "net"}, the layout of the faces: a name
+#'   \code{\link{net_layout}} takes, or a \code{hexify_net} object it built
+#'   for this grid.
+#' @param seams For \code{surface = "net"}, draw the cuts of the net: the
+#'   sides of its pieces across which the map is not continuous, including
+#'   its outline.
+#' @param seam_col Colour of seams.
+#' @param seam_lwd Line width of seams.
+#' @param graticule \code{FALSE} for none, \code{TRUE} for meridians and
+#'   parallels every 30 degrees, or a number of degrees between them.
+#' @param graticule_col Colour of the graticule.
+#' @param graticule_lwd Line width of the graticule.
 #' @param step Spacing of the points along a cell boundary, as a fraction of
 #'   a face edge.
 #' @param main Plot title.
@@ -122,6 +136,9 @@ globe_centers <- list(
 #' plot(grid, surface = "solid", projection = "perspective",
 #'      distance = 2.5, tilt = 25, rotation = 30)
 #' plot(grid, surface = "net")
+#' octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron",
+#'                  orientation = "gosper")
+#' plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
 setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
   function(x, y,
            surface = c("sphere", "solid", "net"),
@@ -142,6 +159,13 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            face_edges = NULL,
            edge_col = "black",
            edge_lwd = 1.1,
+           layout = "plane",
+           seams = FALSE,
+           seam_col = "#D55E00",
+           seam_lwd = 1.6,
+           graticule = FALSE,
+           graticule_col = "#9AA3AB",
+           graticule_lwd = 0.5,
            step = 0.01,
            main = NULL,
            ...) {
@@ -157,23 +181,29 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            "rotation and fov apply to the sphere and the solid",
            call. = FALSE)
     }
+    if (surface != "net" && (!missing(layout) || !isFALSE(seams))) {
+      stop("layout and seams apply to surface = \"net\"", call. = FALSE)
+    }
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
     view <- surface_view(resolve_center(center), camera$distance, tilt, rotation)
     paths <- grid_surface_paths(g, cells, step)
     land <- surface_land(land)
     icosa <- icosa_arg(g)
+    grat <- graticule_paths(resolve_graticule(graticule), icosa)
     style <- list(ocean_fill = ocean_fill, land_fill = land_fill,
                   land_border = land_border, land_lwd = land_lwd,
                   grid_border = grid_border, grid_lwd = grid_lwd,
                   face_edges = face_edges, edge_col = edge_col,
-                  edge_lwd = edge_lwd)
+                  edge_lwd = edge_lwd, seams = isTRUE(seams),
+                  seam_col = seam_col, seam_lwd = seam_lwd,
+                  graticule_col = graticule_col, graticule_lwd = graticule_lwd)
 
     old <- graphics::par(mar = c(0, 0, if (is.null(main)) 0 else 2, 0))
     on.exit(graphics::par(old), add = TRUE)
     graphics::plot.new()
     if (surface == "net") {
-      tris <- net_triangles(icosa)
-      xy <- do.call(rbind, lapply(tris, `[[`, "plane"))
+      net <- resolve_layout(layout, g)
+      xy <- do.call(rbind, lapply(net$pieces, function(p) place_points(p$region, p)))
       pad <- 0.02 * diff(range(xy[, 1]))
       xlim <- range(xy[, 1]) + c(-1, 1) * pad
       ylim <- range(xy[, 2]) + c(-1, 1) * pad
@@ -185,9 +215,9 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     graphics::plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
     graphics::clip(xlim[1], xlim[2], ylim[1], ylim[2])
     switch(surface,
-      sphere = draw_sphere(paths, land, view, style, icosa),
-      solid = draw_solid(paths, land, view, style, icosa),
-      net = draw_net(paths, land, tris, style, icosa)
+      sphere = draw_sphere(paths, land, view, style, icosa, grat),
+      solid = draw_solid(paths, land, view, style, icosa, grat),
+      net = draw_net(paths, land, net, style, grat)
     )
     if (!is.null(main)) graphics::title(main = main)
     invisible(x)
@@ -240,6 +270,35 @@ resolve_surface <- function(surface, face_edges, g) {
          "not built on", call. = FALSE)
   }
   face_edges
+}
+
+#' The net layout a plot draws: a name net_layout() builds for the grid, or
+#' a layout it built for this grid
+#' @noRd
+resolve_layout <- function(layout, g) {
+  if (is.character(layout)) return(net_layout(g, layout))
+  if (!inherits(layout, "hexify_net")) {
+    stop("layout must be a layout name or a hexify_net object from net_layout()",
+         call. = FALSE)
+  }
+  if (!identical(layout$icosa, icosa_arg(g))) {
+    stop("layout was built for a grid on another solid, orientation or ",
+         "projection", call. = FALSE)
+  }
+  layout
+}
+
+#' Degrees between graticule lines, or NULL for none
+#' @noRd
+resolve_graticule <- function(graticule) {
+  if (isFALSE(graticule)) return(NULL)
+  if (isTRUE(graticule)) return(30)
+  if (!is.numeric(graticule) || length(graticule) != 1L || !is.finite(graticule) ||
+      graticule <= 0 || graticule > 90) {
+    stop("graticule must be TRUE, FALSE, or degrees between lines (up to 90)",
+         call. = FALSE)
+  }
+  graticule
 }
 
 #' Check the projection arguments of the plot method
@@ -523,9 +582,9 @@ icosa_solid <- function(icosa) {
 #' Cell boundaries of a grid on the sphere and on its solid
 #'
 #' One closed path per cell, as a matrix with columns cell, face, solid_x/y/z,
-#' sphere_x/y/z and plane_x/y. An ISEA grid reads them from its faces; an H3
-#' cell edge is a great-circle arc between corners, so H3 paths carry sphere
-#' positions only.
+#' sphere_x/y/z and the triangle coordinates tx, ty on the face. An ISEA grid
+#' reads them from its faces; an H3 cell edge is a great-circle arc between
+#' corners, so H3 paths carry sphere positions only.
 #' @noRd
 grid_surface_paths <- function(g, cells, step) {
   cells <- grid_cells(g, cells)
@@ -551,7 +610,7 @@ h3_sphere_paths <- function(cells, step) {
     pts <- rbind(pts, V[1, ])
     cbind(cell = k, face = NA_real_, solid_x = NA_real_, solid_y = NA_real_,
           solid_z = NA_real_, sphere_x = pts[, 1], sphere_y = pts[, 2],
-          sphere_z = pts[, 3], plane_x = NA_real_, plane_y = NA_real_)
+          sphere_z = pts[, 3], tx = NA_real_, ty = NA_real_)
   })
   do.call(rbind, rows)
 }
@@ -613,13 +672,29 @@ land_outline_points <- function(land) {
   list(P = P, brk = brk)
 }
 
+#' Meridians and parallels `spacing` degrees apart, placed on the faces as
+#' paths in the layout of cpp_cell_surface_paths(), or NULL for none
+#' @noRd
+graticule_paths <- function(spacing, icosa) {
+  if (is.null(spacing)) return(NULL)
+  lons <- seq(-180, 180 - 1e-9, by = spacing)
+  lats <- seq(-90 + spacing, 90 - 1e-9, by = spacing)
+  along <- seq(-90, 90, by = 1)
+  around <- seq(-180, 180, by = 1)
+  lines <- c(lapply(lons, function(lo) cbind(lo, along)),
+             lapply(lats, function(la) cbind(around, la)))
+  ll <- do.call(rbind, lines)
+  path <- rep(seq_along(lines), vapply(lines, nrow, integer(1)))
+  cpp_sphere_paths_on_faces(icosa, ll[, 1], ll[, 2], path, 0.5 * pi / 180)
+}
+
 # =============================================================================
 # SURFACES
 # =============================================================================
 
 #' Draw the grid on the sphere
 #' @noRd
-draw_sphere <- function(paths, land, view, style, icosa) {
+draw_sphere <- function(paths, land, view, style, icosa, grat = NULL) {
   rim <- horizon_ring(view)
   disc <- project_ring(rim, view)
   if (!is.null(disc)) graphics::polygon(disc, col = style$ocean_fill, border = NA)
@@ -638,6 +713,13 @@ draw_sphere <- function(paths, land, view, style, icosa) {
       draw_segments(o$P, view, o$brk, near & c(near[-1], FALSE),
                     style$land_border, style$land_lwd)
     }
+  }
+
+  if (!is.null(grat)) {
+    G <- grat[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE]
+    vis <- faces_camera(G, view)
+    draw_segments(G, view, c(TRUE, diff(grat[, "cell"]) != 0),
+                  vis & c(vis[-1], FALSE), style$graticule_col, style$graticule_lwd)
   }
 
   S <- paths[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE]
@@ -663,7 +745,7 @@ draw_sphere <- function(paths, land, view, style, icosa) {
 
 #' Draw the grid on its solid
 #' @noRd
-draw_solid <- function(paths, land, view, style, icosa) {
+draw_solid <- function(paths, land, view, style, icosa, grat = NULL) {
   solid <- icosa_solid(icosa)
   V <- solid$vertices
   front <- icosa_front(solid, view)
@@ -676,6 +758,12 @@ draw_solid <- function(paths, land, view, style, icosa) {
       graphics::polygon(flat, col = shade_col(style$ocean_fill, shade[f]), border = NA)
     }
     if (!is.null(land)) draw_face_land(f - 1L, tri, land, view, style, shade[f], icosa)
+  }
+
+  if (!is.null(grat)) {
+    draw_segments(grat[, c("solid_x", "solid_y", "solid_z"), drop = FALSE], view,
+                  c(TRUE, diff(grat[, "cell"]) != 0 | diff(grat[, "face"]) != 0),
+                  front[grat[, "face"] + 1L], style$graticule_col, style$graticule_lwd)
   }
 
   face <- paths[, "face"] + 1L
@@ -696,22 +784,24 @@ draw_solid <- function(paths, land, view, style, icosa) {
 #' Land and country outlines on one flat face, in its triangle coordinates
 #'
 #' Land within a cap around the face's centre is read in the face's triangle
-#' coordinates and cut to the triangle there. The cap is wider than the face's
-#' circumradius, so its rim never reaches the triangle. Returns the filled
-#' polygons (lists of rings) and the outlines (matrices), each NULL when the
-#' face holds none.
+#' coordinates and cut there to each of `regions`, triangles in those
+#' coordinates; NULL stands for the whole face. The cap is wider than the
+#' face's circumradius, so its rim never reaches the face. Returns one entry
+#' per region: the filled polygons (lists of rings) and the outlines
+#' (matrices), each NULL when the region holds none.
 #' @noRd
-face_land <- function(face, tri, land, icosa) {
+face_land <- function(face, tri, land, icosa, regions = list(NULL)) {
   c3 <- colMeans(tri)
   c_ll <- vec_lonlat(c3 / sqrt(sum(c3^2)))
   polys <- land_in_cap(land, c_ll[1], c_ll[2], 40)
-  if (length(polys) == 0L) return(list(fill = NULL, lines = NULL))
+  if (length(polys) == 0L) {
+    return(rep(list(list(fill = NULL, lines = NULL)), length(regions)))
+  }
 
   to_tri <- function(r) {
     cpp_lonlat_to_face_solid(icosa, face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
   }
   tri_t <- to_tri(vec_lonlat(tri))
-  triangle <- sf::st_sfc(sf::st_polygon(list(rbind(tri_t, tri_t[1, ]))))
 
   old <- suppressMessages(sf::sf_use_s2(FALSE))
   on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
@@ -722,12 +812,25 @@ face_land <- function(face, tri, land, icosa) {
     }))
   }))
   flat <- suppressWarnings(sf::st_make_valid(flat))
+  outline <- sf::st_boundary(flat)
 
+  lapply(regions, function(region) {
+    clip_land(flat, outline, if (is.null(region)) tri_t else region)
+  })
+}
+
+#' Land (`flat`) and its `outline` cut to a triangle, all in triangle
+#' coordinates
+#' @noRd
+clip_land <- function(flat, outline, region) {
+  old <- suppressMessages(sf::sf_use_s2(FALSE))
+  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  triangle <- sf::st_sfc(sf::st_polygon(list(rbind(region, region[1, ]))))
   filled <- suppressWarnings(sf::st_intersection(flat, triangle))
   filled <- filled[!sf::st_is_empty(filled)]
   fill <- if (length(filled) > 0L) sfc_polygons(polygons_only(filled))
 
-  lines_t <- suppressWarnings(sf::st_intersection(sf::st_boundary(flat), triangle))
+  lines_t <- suppressWarnings(sf::st_intersection(outline, triangle))
   lines_t <- lines_t[!sf::st_is_empty(lines_t)]
   lines <- NULL
   if (length(lines_t) > 0L) {
@@ -745,7 +848,7 @@ face_land <- function(face, tri, land, icosa) {
 #' Land and country outlines on one face of the solid
 #' @noRd
 draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
-  part <- face_land(face, tri, land, icosa)
+  part <- face_land(face, tri, land, icosa)[[1]]
   to_solid <- function(m) cpp_face_tri_to_solid(icosa, face, m[, 1], m[, 2])
   if (!is.na(style$land_fill) && !is.null(part$fill)) {
     fill_polygons(lapply(part$fill, function(p) lapply(p, to_solid)), view,
@@ -762,69 +865,69 @@ draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
 # NET
 # =============================================================================
 
-#' The faces of the solid laid out flat
-#'
-#' One entry per face (from 0): its vertices on the unit sphere and its
-#' triangle in the PLANE layout.
+#' Draw the grid on the unfolded solid, in the pieces of a net layout
 #' @noRd
-net_triangles <- function(icosa) {
-  solid <- icosa_solid(icosa)
-  lapply(seq_len(nrow(solid$faces)), function(f) {
-    tri <- solid$vertices[solid$faces[f, ], ]
-    ll <- vec_lonlat(tri)
-    t <-cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
-    list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE], icosa))
-  })
-}
-
-#' Triangle coordinates of one face in the PLANE layout
-#' @noRd
-to_plane <- function(face, m, icosa) {
-  p <- cpp_icosa_tri_to_plane(icosa, rep(as.integer(face), nrow(m)), m[, 1], m[, 2])
-  cbind(p$plane_x, p$plane_y)
-}
-
-#' Draw the grid on the unfolded solid
-#' @noRd
-draw_net <- function(paths, land, tris, style, icosa) {
-  for (t in tris) graphics::polygon(t$plane, col = style$ocean_fill, border = NA)
+draw_net <- function(paths, land, net, style, grat = NULL) {
+  for (p in net$pieces) {
+    graphics::polygon(place_points(p$region, p), col = style$ocean_fill, border = NA)
+  }
 
   if (!is.null(land)) {
-    for (f in seq_along(tris)) {
-      part <- face_land(f - 1L, tris[[f]]$tri, land, icosa)
-      if (!is.na(style$land_fill) && !is.null(part$fill)) {
-        xy <- do.call(rbind, lapply(part$fill, function(p) {
-          do.call(rbind, lapply(seq_along(p), function(k) {
-            rbind(orient_ring(to_plane(f - 1L, p[[k]], icosa), anticlockwise = k == 1L), NA)
-          }))
-        }))
-        xy <- xy[-nrow(xy), , drop = FALSE]
-        graphics::polypath(xy[, 1], xy[, 2], col = style$land_fill, border = NA,
-                           rule = "winding")
-      }
-      if (!is.na(style$land_border) && !is.null(part$lines)) {
-        for (l in part$lines) {
-          graphics::lines(to_plane(f - 1L, l, icosa), col = style$land_border,
-                          lwd = style$land_lwd)
-        }
-      }
+    solid <- icosa_solid(net$icosa)
+    faces <- vapply(net$pieces, `[[`, numeric(1), "face")
+    for (f in unique(faces)) {
+      at <- which(faces == f)
+      parts <- face_land(f, solid$vertices[solid$faces[f + 1L, ], ], land, net$icosa,
+                         lapply(net$pieces[at], `[[`, "region"))
+      for (i in seq_along(at)) draw_net_land(parts[[i]], net$pieces[[at[i]]], style)
     }
   }
 
-  n <- nrow(paths)
-  if (n >= 2L) {
-    s <- which(paths[-1L, "cell"] == paths[-n, "cell"] &
-               paths[-1L, "face"] == paths[-n, "face"])
-    graphics::segments(paths[s, "plane_x"], paths[s, "plane_y"],
-                       paths[s + 1L, "plane_x"], paths[s + 1L, "plane_y"],
-                       col = style$grid_border, lwd = style$grid_lwd,
-                       lend = "round")
+  if (!is.null(grat)) {
+    draw_net_segments(net_segments(grat, net), style$graticule_col, style$graticule_lwd)
   }
+  draw_net_segments(net_segments(paths, net), style$grid_border, style$grid_lwd)
 
-  if (style$face_edges) {
-    for (t in tris) {
-      graphics::polygon(t$plane, col = NA, border = style$edge_col,
-                        lwd = style$edge_lwd)
+  if (style$face_edges || style$seams) {
+    e <- net_edges(net)
+    if (style$face_edges) {
+      s <- e[e$solid_edge, , drop = FALSE]
+      graphics::segments(s$x0, s$y0, s$x1, s$y1, col = style$edge_col,
+                         lwd = style$edge_lwd)
+    }
+    if (style$seams) {
+      s <- e[!e$joined, , drop = FALSE]
+      graphics::segments(s$x0, s$y0, s$x1, s$y1, col = style$seam_col,
+                         lwd = style$seam_lwd, lend = "round")
     }
   }
+}
+
+#' Land and country outlines of one piece of a net
+#' @noRd
+draw_net_land <- function(part, piece, style) {
+  if (!is.na(style$land_fill) && !is.null(part$fill)) {
+    xy <- do.call(rbind, lapply(part$fill, function(p) {
+      do.call(rbind, lapply(seq_along(p), function(k) {
+        rbind(orient_ring(place_points(p[[k]], piece), anticlockwise = k == 1L), NA)
+      }))
+    }))
+    xy <- xy[-nrow(xy), , drop = FALSE]
+    graphics::polypath(xy[, 1], xy[, 2], col = style$land_fill, border = NA,
+                       rule = "winding")
+  }
+  if (!is.na(style$land_border) && !is.null(part$lines)) {
+    for (l in part$lines) {
+      graphics::lines(place_points(l, piece), col = style$land_border,
+                      lwd = style$land_lwd)
+    }
+  }
+}
+
+#' Draw segments given as a matrix with columns x0, y0, x1, y1
+#' @noRd
+draw_net_segments <- function(seg, col, lwd) {
+  if (nrow(seg) == 0L) return(invisible())
+  graphics::segments(seg[, 1], seg[, 2], seg[, 3], seg[, 4], col = col, lwd = lwd,
+                     lend = "round")
 }

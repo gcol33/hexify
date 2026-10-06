@@ -1434,10 +1434,11 @@ NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
 // edge is about 1). A point carries its position on the flat face and on the
 // unit sphere, so the two surfaces show the same boundaries. One closed path
 // per cell: a matrix with columns cell (position in 'cell_id', from 1), face
-// (from 0), solid x, y, z, sphere x, y, z, and plane x, y in the PLANE
-// layout of the unfolded solid. Where a path crosses onto another face
-// the crossing point appears on both faces, so the points of one face run
-// unbroken in the plane, where faces that meet on the solid may lie apart.
+// (from 0), solid x, y, z, sphere x, y, z, and the triangle coordinates tx, ty
+// on the face, which a layout of the unfolded solid places in the plane. Where
+// a path crosses onto another face the crossing point appears on both faces,
+// so the points of one face run unbroken, also where a layout puts faces that
+// meet on the solid apart.
 // [[Rcpp::export]]
 NumericMatrix cpp_cell_surface_paths(NumericVector icosa,
                                      NumericVector cell_id, int resolution,
@@ -1451,15 +1452,14 @@ NumericMatrix cpp_cell_surface_paths(NumericVector icosa,
     std::vector<double> rows;
     std::vector<PlaneEdge> edges;
     std::vector<FacePiece> pieces;
-    double solid[3], sphere[3], px, py;
+    double solid[3], sphere[3];
     auto emit = [&](R_xlen_t cell, int face, double tx, double ty) {
         hexify::face_tri_to_solid(face, tx, ty, solid);
         hexify::face_tri_to_sphere(face, tx, ty, sphere);
-        hexify::face_tri_to_plane(face, tx, ty, px, py);
         rows.insert(rows.end(), {static_cast<double>(cell + 1),
                                  static_cast<double>(face),
                                  solid[0], solid[1], solid[2],
-                                 sphere[0], sphere[1], sphere[2], px, py});
+                                 sphere[0], sphere[1], sphere[2], tx, ty});
     };
 
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
@@ -1488,7 +1488,7 @@ NumericMatrix cpp_cell_surface_paths(NumericVector icosa,
     }
     colnames(out) = CharacterVector::create("cell", "face", "solid_x", "solid_y",
                                             "solid_z", "sphere_x", "sphere_y",
-                                            "sphere_z", "plane_x", "plane_y");
+                                            "sphere_z", "tx", "ty");
     return out;
 }
 

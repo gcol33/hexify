@@ -37,6 +37,14 @@ POLYHEDRON_ORIENTATION <- list(
 DYMAXION_ORIENTATION <- c(vert0_lon = -5.2454, vert0_lat = 2.3009,
                           azimuth = 7.46658)
 
+#' The octahedron with the poles at midpoints of its edges, as Van de Sande's
+#' Gosper World places them: vertex 0 at 21.25W, 45N and vertex 1 across the
+#' north pole from it. Of the longitudes in steps of 0.25 degrees this one
+#' puts the six vertices furthest from the land of hexify_world, all at least
+#' 619 km offshore.
+#' @noRd
+GOSPER_ORIENTATION <- c(vert0_lon = -21.25, vert0_lat = 45, azimuth = 0)
+
 #' Solid of a grid
 #'
 #' A grid saved before grids carried a solid, and a legacy \code{hexify_grid}
@@ -175,8 +183,8 @@ is_standard_orientation <- function(o, polyhedron = "icosahedron") {
 
 #' Resolve hex_grid()'s orientation argument
 #'
-#' @param orientation "standard", "dymaxion", "random", "region", "face", or
-#'   a numeric \code{c(vert0_lon, vert0_lat, azimuth)}
+#' @param orientation "standard", "dymaxion", "gosper", "random", "region",
+#'   "face", or a numeric \code{c(vert0_lon, vert0_lat, azimuth)}
 #' @param region The area "region" and "face" centre the grid on
 #' @param polyhedron The solid the orientation places
 #' @return Named numeric \code{c(vert0_lon, vert0_lat, azimuth)}, longitude in
@@ -191,16 +199,19 @@ resolve_orientation <- function(orientation, region = NULL,
     return(check_orientation(orientation))
   }
   if (!is.character(orientation) || length(orientation) != 1L ||
-      !orientation %in% c("standard", "dymaxion", "random", placed)) {
-    stop("orientation must be \"standard\", \"dymaxion\", \"random\", ",
-         "\"region\", \"face\", or c(vert0_lon, vert0_lat, azimuth) in degrees",
-         call. = FALSE)
+      !orientation %in% c("standard", "dymaxion", "gosper", "random", placed)) {
+    stop("orientation must be \"standard\", \"dymaxion\", \"gosper\", ",
+         "\"random\", \"region\", \"face\", or c(vert0_lon, vert0_lat, azimuth) ",
+         "in degrees", call. = FALSE)
   }
   if (!orientation %in% placed && !is.null(region)) {
     stop(region_misuse, call. = FALSE)
   }
   if (orientation == "dymaxion" && polyhedron != "icosahedron") {
     stop("orientation = \"dymaxion\" places an icosahedron", call. = FALSE)
+  }
+  if (orientation == "gosper" && polyhedron != "octahedron") {
+    stop("orientation = \"gosper\" places an octahedron", call. = FALSE)
   }
   if (orientation %in% placed) {
     if (is.null(region)) {
@@ -212,6 +223,7 @@ resolve_orientation <- function(orientation, region = NULL,
   switch(orientation,
     standard = POLYHEDRON_ORIENTATION[[polyhedron]],
     dymaxion = DYMAXION_ORIENTATION,
+    gosper = GOSPER_ORIENTATION,
     random = check_orientation(c(
       stats::runif(1, -180, 180),
       asin(stats::runif(1, -1, 1)) * 180 / pi,
