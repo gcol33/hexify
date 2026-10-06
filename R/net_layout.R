@@ -19,7 +19,7 @@
 #' built on: the face projection of the grid (Snyder's equal-area projection,
 #' or Fuller's) maps the sphere onto the faces, and the layout cuts the faces
 #' into pieces and places each piece in the plane by a rotation and a
-#' translation. Draw a grid on it with
+#' translation (the rhombic layout also shears). Draw a grid on it with
 #' \code{\link[=plot,HexGridInfo,missing-method]{plot}(grid, surface = "net",
 #' layout = )}, and place points on it with \code{\link{net_project}}.
 #'
@@ -38,6 +38,15 @@
 #'     twice (Van de Sande 2024, Fig. 5). The map is continuous across the
 #'     sides of the middle tile; the three seams run out from its corners that
 #'     are vertices of the octahedron.}
+#'   \item{\code{"gosper_land"}}{The four Gosper tiles joined along the three
+#'     hexagon sides, out of the twelve, that cross the most land of
+#'     \code{land}, so the continents stay whole where they can, as in Van de
+#'     Sande's Fig. 1 (2024).}
+#'   \item{\code{"rhombic"}}{DGGAL's 5 x 6 rhombic space on the icosahedron
+#'     (Jacovella-St-Louis et al. 2025): each face sheared onto half of a unit
+#'     square, the ten diamonds a staircase of squares. Areas keep one
+#'     constant. DGGAL's y axis points down the page, so a point at DGGAL's
+#'     (x, y) is placed at (x, -y).}
 #'   \item{\code{"land"}}{A net cut along the solid's edges that cross the
 #'     least land of \code{land}, so the faces stay joined across land where
 #'     they can, in the spirit of Fuller's Dymaxion map, which also splits two
@@ -62,15 +71,16 @@
 #' @param mirror For the Gosper layouts, \code{TRUE} builds the hexagons on
 #'   the other four faces of the octahedron, the mirror image of the default
 #'   tiling.
-#' @param land For \code{layout = "land"}, the land the net keeps joined:
-#'   \code{TRUE} for the built-in \code{\link{hexify_world}}, or an sf/sfc
-#'   object of polygons.
+#' @param land For \code{layout = "land"} and \code{"gosper_land"}, the land
+#'   the net keeps joined: \code{TRUE} for the built-in
+#'   \code{\link{hexify_world}}, or an sf/sfc object of polygons.
 #'
 #' @return A \code{hexify_net} object: a list with the layout's \code{name},
 #'   the grid's solid in \code{polyhedron}, the \code{icosa} argument of the
 #'   grid, and \code{pieces}, one list per placed piece with its \code{face}
 #'   (from 0), its \code{region} (three corners in the face's triangle
-#'   coordinates), their \code{labels}, the isometry \code{A} and \code{b}, and
+#'   coordinates), their \code{labels}, the affine map \code{A} and \code{b}
+#'   placing a point t at \code{A t + b}, and
 #'   the \code{tile} it belongs to.
 #'
 #' @references
@@ -79,6 +89,13 @@
 #'
 #' Rus, J. (2017). Flowsnake Earth. \emph{Bridges 2017 Conference
 #' Proceedings}, 237-244.
+#'
+#' Jacovella-St-Louis, J., Padilla Ruiz, M., Moreira de Sousa, L.,
+#' Peterson, P., Stefanakis, E. (2025). Interoperable global and local
+#' indexing of discrete global grid systems based on the ISEA projection for
+#' efficient storage, processing and transmission. \emph{Abstracts of the
+#' International Cartographic Association} 10, 126.
+#' \doi{10.5194/ica-abs-10-126-2025}
 #'
 #' @seealso \code{\link{net_project}} to place points on a layout
 #'
@@ -89,7 +106,8 @@
 #' world <- net_layout(grid, "gosper")
 #' plot(grid, surface = "net", layout = world, seams = TRUE)
 #' plot(grid, surface = "net", layout = "gosper_flower", land = TRUE)
-net_layout <- function(x, layout = c("plane", "gosper", "gosper_flower", "land"),
+net_layout <- function(x, layout = c("plane", "gosper", "gosper_flower",
+                                     "gosper_land", "rhombic", "land"),
                        centre = NULL, mirror = FALSE, land = TRUE) {
   layout <- match.arg(layout)
   g <- extract_grid(x)
@@ -110,8 +128,9 @@ net_layout <- function(x, layout = c("plane", "gosper", "gosper_flower", "land")
   if (!isFALSE(mirror) && !isTRUE(spec$centred)) {
     stop("mirror picks the hexagons of a Gosper layout", call. = FALSE)
   }
-  if (!isTRUE(land) && layout != "land") {
-    stop("land picks the edges the \"land\" layout keeps joined", call. = FALSE)
+  if (!isTRUE(land) && !isTRUE(spec$joins_land)) {
+    stop("land picks what the \"land\" and \"gosper_land\" layouts keep joined",
+         call. = FALSE)
   }
   if (!is.null(centre)) centre <- check_lonlat(centre, "centre")
   if (!is.logical(mirror) || length(mirror) != 1L || is.na(mirror)) {
@@ -195,13 +214,19 @@ NET_LAYOUTS <- list(
                build = function(faces, icosa, ...) layout_plane(faces, icosa)),
   gosper = list(polyhedra = "octahedron", centred = TRUE,
                 build = function(faces, icosa, centre, mirror, ...) {
-                  layout_gosper(faces, icosa, centre, mirror, flower = FALSE)
+                  layout_gosper(faces, icosa, centre, mirror, "star")
                 }),
+  gosper_land = list(polyhedra = "octahedron", centred = TRUE, joins_land = TRUE,
+                     build = function(faces, icosa, centre, mirror, land) {
+                       layout_gosper(faces, icosa, centre, mirror, "land", land)
+                     }),
+  rhombic = list(polyhedra = "icosahedron",
+                 build = function(faces, ...) layout_rhombic(faces)),
   gosper_flower = list(polyhedra = "octahedron", centred = TRUE,
                        build = function(faces, icosa, centre, mirror, ...) {
-                         layout_gosper(faces, icosa, centre, mirror, flower = TRUE)
+                         layout_gosper(faces, icosa, centre, mirror, "flower")
                        }),
-  land = list(polyhedra = c("icosahedron", "octahedron"),
+  land = list(polyhedra = c("icosahedron", "octahedron"), joins_land = TRUE,
               build = function(faces, icosa, land, ...) layout_land(faces, icosa, land))
 )
 
@@ -380,17 +405,14 @@ layout_tree <- function(faces, parent) {
   lapply(seq_along(faces), function(f) net_piece(faces[[f]], iso[[f]], tile = f - 1L))
 }
 
-#' The share of each edge of the solid (rows of icosa_solid()$edges) that
-#' runs over land, from points every quarter degree along it
+#' The share of each great-circle arc from `from[i, ]` to `to[i, ]` (unit
+#' vectors) that runs over land, from points every quarter degree along it
 #' @noRd
-edge_land_share <- function(icosa, land) {
+arc_land_share <- function(from, to, land) {
   land <- surface_land(land)
   if (is.null(land)) stop("land must be TRUE or an sf/sfc object", call. = FALSE)
-  solid <- icosa_solid(icosa)
-  E <- solid$edges
-  V <- solid$vertices
-  probe <- lapply(seq_len(nrow(E)), function(j) {
-    slerp(V[E[j, "v1"], ], V[E[j, "v2"], ], 0.25 * pi / 180)
+  probe <- lapply(seq_len(nrow(from)), function(j) {
+    slerp(from[j, ], to[j, ], 0.25 * pi / 180)
   })
   ll <- vec_lonlat(do.call(rbind, probe))
   old <- suppressMessages(sf::sf_use_s2(TRUE))
@@ -398,47 +420,67 @@ edge_land_share <- function(icosa, land) {
   pts <- sf::st_as_sf(data.frame(lon = ll[, 1], lat = ll[, 2]),
                       coords = c("lon", "lat"), crs = 4326)
   on_land <- lengths(sf::st_intersects(pts, sf::st_union(land))) > 0L
-  as.vector(tapply(on_land, rep(seq_len(nrow(E)), vapply(probe, nrow, integer(1))), mean))
+  as.vector(tapply(on_land, rep(seq_along(probe), vapply(probe, nrow, integer(1))), mean))
+}
+
+#' The share of each edge of the solid (rows of icosa_solid()$edges) that
+#' runs over land
+#' @noRd
+edge_land_share <- function(icosa, land) {
+  solid <- icosa_solid(icosa)
+  V <- solid$vertices
+  arc_land_share(V[solid$edges[, "v1"], , drop = FALSE],
+                 V[solid$edges[, "v2"], , drop = FALSE], land)
+}
+
+#' The maximum spanning tree of a graph on nodes 1..n (Kruskal, ties to the
+#' lower link), as the order in which a breadth-first walk from `root`
+#' reaches the nodes: a data frame of node, the node it is reached from and
+#' the link (row of from/to/weight) it is reached by, the root first with NA
+#' @noRd
+max_spanning_tree <- function(n, from, to, weight, root = 1L) {
+  group <- seq_len(n)
+  find <- function(i) {
+    while (group[i] != i) i <- group[i]
+    i
+  }
+  tree <- logical(length(weight))
+  for (j in order(-weight, seq_along(weight))) {
+    a <- find(from[j])
+    b <- find(to[j])
+    if (a == b) next
+    group[a] <- b
+    tree[j] <- TRUE
+  }
+  walk <- data.frame(node = root, parent = NA_integer_, link = NA_integer_)
+  seen <- seq_len(n) == root
+  i <- 1L
+  while (i <= nrow(walk)) {
+    f <- walk$node[i]
+    for (j in which(tree & (from == f | to == f))) {
+      k <- if (from[j] == f) to[j] else from[j]
+      if (seen[k]) next
+      seen[k] <- TRUE
+      walk <- rbind(walk, data.frame(node = k, parent = f, link = j))
+    }
+    i <- i + 1L
+  }
+  walk
 }
 
 #' A net cut along the edges that cross the least land
 #'
 #' Each edge of the solid weighs the share of it that runs over land; the
-#' faces unfold along the maximum spanning tree of those weights (Kruskal,
-#' ties to the lower edge), so the cuts fall at sea where they can. The net
-#' is turned to lie along its longest extent.
+#' faces unfold along the maximum spanning tree of those weights, so the cuts
+#' fall at sea where they can. The net is turned to lie along its longest
+#' extent.
 #' @noRd
 layout_land <- function(faces, icosa, land) {
-  weight <- edge_land_share(icosa, land)
   E <- icosa_solid(icosa)$edges
-
-  # Kruskal on the faces: edge j joins faces f1 and f2 (from 1).
-  group <- seq_along(faces)
-  find <- function(i) {
-    while (group[i] != i) i <- group[i]
-    i
-  }
-  adj <- vector("list", length(faces))
-  for (j in order(-weight, seq_len(nrow(E)))) {
-    a <- find(E[j, "f1"])
-    b <- find(E[j, "f2"])
-    if (a == b) next
-    group[a] <- b
-    adj[[E[j, "f1"]]] <- c(adj[[E[j, "f1"]]], E[j, "f2"])
-    adj[[E[j, "f2"]]] <- c(adj[[E[j, "f2"]]], E[j, "f1"])
-  }
+  walk <- max_spanning_tree(length(faces), E[, "f1"], E[, "f2"],
+                            edge_land_share(icosa, land))
   parent <- rep(NA_real_, length(faces))
-  seen <- c(TRUE, rep(FALSE, length(faces) - 1L))
-  queue <- 1L
-  while (length(queue) > 0L) {
-    f <- queue[1]
-    queue <- queue[-1]
-    for (k in adj[[f]][!seen[adj[[f]]]]) {
-      parent[k] <- f - 1L
-      seen[k] <- TRUE
-      queue <- c(queue, k)
-    }
-  }
+  parent[walk$node[-1]] <- walk$parent[-1] - 1L
   pieces <- layout_tree(faces, parent)
 
   # Turn the longest extent of the net (principal axis of its corners) along x.
@@ -457,21 +499,60 @@ layout_land <- function(faces, icosa, land) {
   })
 }
 
+#' The corners of each icosahedron face in DGGAL's 5 x 6 rhombic space, one
+#' row per face (from 0) as x1, y1, x2, y2, x3, y3 for its vertices in the
+#' order of the solid's face table, which is DGGAL's (vertices5x6 and
+#' icoIndices in src/projections/ri5x6.ec, https://github.com/ecere/dggal).
+#' Each unit square is a diamond of two faces, the ten squares a staircase.
+#' @noRd
+RHOMBIC_5X6 <- matrix(c(
+  1, 0, 0, 0, 1, 1,   2, 1, 1, 1, 2, 2,   3, 2, 2, 2, 3, 3,   4, 3, 3, 3, 4, 4,
+  5, 4, 4, 4, 5, 5,   0, 1, 1, 1, 0, 0,   1, 2, 2, 2, 1, 1,   2, 3, 3, 3, 2, 2,
+  3, 4, 4, 4, 3, 3,   4, 5, 5, 5, 4, 4,   1, 1, 0, 1, 1, 2,   2, 2, 1, 2, 2, 3,
+  3, 3, 2, 3, 3, 4,   4, 4, 3, 4, 4, 5,   5, 5, 4, 5, 5, 6,   0, 2, 1, 2, 0, 1,
+  1, 3, 2, 3, 1, 2,   2, 4, 3, 4, 2, 3,   3, 5, 4, 5, 3, 4,   4, 6, 5, 6, 4, 5
+), ncol = 6L, byrow = TRUE)
+
+#' The affine map carrying the three points (rows) of `s` to those of `d`
+#' @noRd
+affine_of <- function(s, d) {
+  A <- cbind(d[2, ] - d[1, ], d[3, ] - d[1, ]) %*%
+    solve(cbind(s[2, ] - s[1, ], s[3, ] - s[1, ]))
+  list(A = A, b = d[1, ] - drop(A %*% s[1, ]))
+}
+
+#' DGGAL's 5 x 6 rhombic layout of the icosahedron
+#'
+#' Each face is sheared onto half of a unit square, so the map keeps areas to
+#' one constant and the ten diamonds become a staircase of unit squares.
+#' DGGAL's y axis points down the page; the layout places a point at (x, -y)
+#' so the map is not mirrored.
+#' @noRd
+layout_rhombic <- function(faces) {
+  lapply(faces, function(fc) {
+    d <- matrix(RHOMBIC_5X6[fc$face + 1L, ], 3L, 2L, byrow = TRUE)
+    d[, 2] <- -d[, 2]
+    net_piece(fc, affine_of(fc$tri, d), tile = fc$face)
+  })
+}
+
 #' Van de Sande's Gosper World on the octahedron
 #'
 #' The faces of the octahedron fall into two sets of four, each face bordered
 #' only by faces of the other set. Each face of one set is the middle of a
 #' regular hexagon that takes a third of each of its three neighbours, so the
-#' four hexagons hold the sphere once. Any two hexagons share one corner,
-#' a vertex of the octahedron where both have a 120-degree angle, and the two
-#' sides of it: a tile is joined to the middle tile across a side by
-#' unfolding the face whose thirds meet along that side.
+#' four hexagons hold the sphere once. Any two hexagons share one corner, a
+#' vertex w of the octahedron where both have a 120-degree angle, and the two
+#' sides there, each running from w to the centre of a face n of the other
+#' set. A tile is joined to another across such a side by unfolding n, whose
+#' thirds meet along it.
 #'
-#' The middle tile is the one holding `centre`. `flower = FALSE` joins the
-#' other three across one side at each corner of the middle tile; `flower =
-#' TRUE` joins a copy across each of its six sides.
+#' The middle tile is the one holding `centre`. `arrange = "star"` joins the
+#' other three across one side at each corner of the middle tile; "flower"
+#' joins a copy across each of its six sides; "land" joins the four tiles
+#' along the maximum spanning tree of the land along the twelve sides.
 #' @noRd
-layout_gosper <- function(faces, icosa, centre, mirror, flower) {
+layout_gosper <- function(faces, icosa, centre, mirror, arrange, land = TRUE) {
   if (is.null(centre)) centre <- c(0, 90)
   # Two-colour the faces; the hexagons sit on the set of face 0, or the other.
   colour <- rep(NA, length(faces))
@@ -510,25 +591,58 @@ layout_gosper <- function(faces, icosa, centre, mirror, flower) {
         net_piece(n, unfold_iso(fc, iso, n), edge = edge, tile = fc$face)
       }))
   }
-  # The tile across the side of tile `f` (placed by `iso`) that runs from its
-  # corner k to the centre of the neighbour across its edge `e`.
-  across <- function(f, iso, k, e) {
-    fc <- faces[[f]]
-    n <- faces[[fc$nb[e] + 1L]]
-    n_iso <- unfold_iso(fc, iso, n)
-    w <- fc$verts[k]
-    other <- faces[[n$nb[vapply(1:3, function(j) {
-      w %in% n$verts[c(j, j %% 3L + 1L)] && n$nb[j] != fc$face
-    }, logical(1))] + 1L]]
-    tile(other$face + 1L, unfold_iso(n, n_iso, other))
+  # The other tile on the side from vertex w to the centre of face n (both
+  # from 1), and its placement when tile f lies at `iso`.
+  other_tile <- function(f, w, n) {
+    nb <- faces[[n]]
+    nb$nb[vapply(1:3, function(j) {
+      w %in% nb$verts[c(j, j %% 3L + 1L)] && nb$nb[j] + 1L != f
+    }, logical(1))] + 1L
   }
+  across <- function(f, iso, w, n) {
+    o <- other_tile(f, w, n)
+    n_iso <- unfold_iso(faces[[f]], iso, faces[[n]])
+    list(face = o, iso = unfold_iso(faces[[n]], n_iso, faces[[o]]))
+  }
+  # Edge k of a face runs from its corner k to corner k + 1, edge k - 1 into
+  # corner k: the two sides of the hexagon at that corner.
+  prev_edge <- function(k) (k + 1L) %% 3L + 1L
 
   home <- identity_iso()
   pieces <- tile(f0, home)
-  for (k in 1:3) {
-    # Edge k runs from corner k to corner k + 1, edge k - 1 into corner k.
-    pieces <- c(pieces, across(f0, home, k, k))
-    if (flower) pieces <- c(pieces, across(f0, home, k, (k + 1L) %% 3L + 1L))
+  fc <- faces[[f0]]
+  if (arrange %in% c("star", "flower")) {
+    for (k in 1:3) {
+      edges <- if (arrange == "flower") c(k, prev_edge(k)) else k
+      for (e in edges) {
+        t <- across(f0, home, fc$verts[k], fc$nb[e] + 1L)
+        pieces <- c(pieces, tile(t$face, t$iso))
+      }
+    }
+  } else {
+    # The twelve sides: (middle face, vertex, face whose centre ends it),
+    # each listed once from both of its tiles.
+    sides <- do.call(rbind, lapply(which(middle), function(f) {
+      do.call(rbind, lapply(1:3, function(k) {
+        n <- faces[[f]]$nb[c(k, prev_edge(k))] + 1L
+        cbind(f = f, w = faces[[f]]$verts[k], n = n, o = vapply(n, function(m) {
+          other_tile(f, faces[[f]]$verts[k], m)
+        }, numeric(1)))
+      }))
+    }))
+    sides <- sides[sides[, "f"] < sides[, "o"], , drop = FALSE]
+    solid <- icosa_solid(icosa)
+    weight <- arc_land_share(solid$vertices[sides[, "w"], , drop = FALSE],
+                             solid$normals[sides[, "n"], , drop = FALSE], land)
+    walk <- max_spanning_tree(length(faces), sides[, "f"], sides[, "o"], weight, f0)
+    iso <- list()
+    iso[[f0]] <- home
+    for (i in seq_len(nrow(walk))[-1]) {
+      s <- sides[walk$link[i], ]
+      t <- across(walk$parent[i], iso[[walk$parent[i]]], s[["w"]], s[["n"]])
+      iso[[t$face]] <- t$iso
+      pieces <- c(pieces, tile(t$face, t$iso))
+    }
   }
   orient_layout(pieces, icosa, centre[1], centre[2], snap = TRUE)
 }

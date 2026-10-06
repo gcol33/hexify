@@ -6,7 +6,7 @@
 \usage{
 net_layout(
   x,
-  layout = c("plane", "gosper", "gosper_flower", "land"),
+  layout = c("plane", "gosper", "gosper_flower", "gosper_land", "rhombic", "land"),
   centre = NULL,
   mirror = FALSE,
   land = TRUE
@@ -27,16 +27,17 @@ within 30 degrees of up the page. \code{NULL} uses the north pole.}
 the other four faces of the octahedron, the mirror image of the default
 tiling.}
 
-\item{land}{For \code{layout = "land"}, the land the net keeps joined:
-\code{TRUE} for the built-in \code{\link{hexify_world}}, or an sf/sfc
-object of polygons.}
+\item{land}{For \code{layout = "land"} and \code{"gosper_land"}, the land
+the net keeps joined: \code{TRUE} for the built-in
+\code{\link{hexify_world}}, or an sf/sfc object of polygons.}
 }
 \value{
 A \code{hexify_net} object: a list with the layout's \code{name},
 the grid's solid in \code{polyhedron}, the \code{icosa} argument of the
 grid, and \code{pieces}, one list per placed piece with its \code{face}
 (from 0), its \code{region} (three corners in the face's triangle
-coordinates), their \code{labels}, the isometry \code{A} and \code{b}, and
+coordinates), their \code{labels}, the affine map \code{A} and \code{b}
+placing a point t at \code{A t + b}, and
 the \code{tile} it belongs to.
 }
 \description{
@@ -44,7 +45,7 @@ Builds a flat map of the sphere from the faces of the solid an ISEA grid is
 built on: the face projection of the grid (Snyder's equal-area projection,
 or Fuller's) maps the sphere onto the faces, and the layout cuts the faces
 into pieces and places each piece in the plane by a rotation and a
-translation. Draw a grid on it with
+translation (the rhombic layout also shears). Draw a grid on it with
 \code{\link[=plot,HexGridInfo,missing-method]{plot}(grid, surface = "net",
 layout = )}, and place points on it with \code{\link{net_project}}.
 }
@@ -64,6 +65,15 @@ the six tiles that border it, so each of the other three tiles appears
 twice (Van de Sande 2024, Fig. 5). The map is continuous across the
 sides of the middle tile; the three seams run out from its corners that
 are vertices of the octahedron.}
+\item{\code{"gosper_land"}}{The four Gosper tiles joined along the three
+hexagon sides, out of the twelve, that cross the most land of
+\code{land}, so the continents stay whole where they can, as in Van de
+Sande's Fig. 1 (2024).}
+\item{\code{"rhombic"}}{DGGAL's 5 x 6 rhombic space on the icosahedron
+(Jacovella-St-Louis et al. 2025): each face sheared onto half of a unit
+square, the ten diamonds a staircase of squares. Areas keep one
+constant. DGGAL's y axis points down the page, so a point at DGGAL's
+(x, y) is placed at (x, -y).}
 \item{\code{"land"}}{A net cut along the solid's edges that cross the
 least land of \code{land}, so the faces stay joined across land where
 they can, in the spirit of Fuller's Dymaxion map, which also splits two
@@ -91,6 +101,13 @@ Fractals. \emph{Bridges 2024 Conference Proceedings}, 507-510.
 
 Rus, J. (2017). Flowsnake Earth. \emph{Bridges 2017 Conference
 Proceedings}, 237-244.
+
+Jacovella-St-Louis, J., Padilla Ruiz, M., Moreira de Sousa, L.,
+Peterson, P., Stefanakis, E. (2025). Interoperable global and local
+indexing of discrete global grid systems based on the ISEA projection for
+efficient storage, processing and transmission. \emph{Abstracts of the
+International Cartographic Association} 10, 126.
+\doi{10.5194/ica-abs-10-126-2025}
 }
 \seealso{
 \code{\link{net_project}} to place points on a layout

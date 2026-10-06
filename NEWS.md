@@ -168,7 +168,10 @@
   before; `"gosper"` is Van de Sande's Gosper World on the octahedron, four
   regular hexagons each of one face and a third of its three neighbours,
   equal-area on Snyder's projection; `"gosper_flower"` surrounds one hexagon
-  by the six that border it; `"land"` cuts the solid along the edges that
+  by the six that border it; `"gosper_land"` joins the four hexagons along the
+  sides that cross the most land, as in Van de Sande's Fig. 1; `"rhombic"` is
+  DGGAL's 5 x 6 rhombic space on the icosahedron, each face sheared onto half
+  a unit square; `"land"` cuts the solid along the edges that
   cross the least land, a Dymaxion-style net with
   `orientation = "dymaxion", projection = "fuller"`. `net_project()` places
   points on a layout. `seams = TRUE` draws the cuts of the net.

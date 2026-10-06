@@ -60,7 +60,7 @@ test_that("cell boundaries on the plane net are the PLANE coordinates of the pat
 
 test_that("every piece is placed by a rotation and a translation", {
   g <- octa_gosper()
-  for (name in c("plane", "gosper", "gosper_flower", "land")) {
+  for (name in c("plane", "gosper", "gosper_flower", "gosper_land", "land")) {
     for (p in net_layout(g, name)$pieces) {
       expect_equal(crossprod(p$A), diag(2), tolerance = 1e-12, info = name)
       expect_equal(det(p$A), 1, tolerance = 1e-12, info = name)
@@ -71,7 +71,11 @@ test_that("every piece is placed by a rotation and a translation", {
 test_that("the tree layouts hold each face once", {
   for (g in list(octa_gosper(), hex_grid(resolution = 1, aperture = 3))) {
     n_faces <- nrow(hexify:::icosa_solid(hexify:::icosa_arg(g))$faces)
-    names <- if (n_faces == 8L) c("plane", "gosper", "land") else c("plane", "land")
+    names <- if (n_faces == 8L) {
+      c("plane", "gosper", "gosper_land", "land")
+    } else {
+      c("plane", "rhombic", "land")
+    }
     for (name in names) {
       net <- net_layout(g, name)
       area <- tapply(vapply(net$pieces, piece_area, numeric(1)),
@@ -124,7 +128,7 @@ test_that("the Gosper tree has nine cuts and the flower three inside it", {
 
 test_that("both sides of a cut are the same points of the sphere", {
   g <- octa_gosper()
-  for (name in c("gosper", "gosper_flower", "land")) {
+  for (name in c("gosper", "gosper_flower", "gosper_land", "land")) {
     net <- net_layout(g, name)
     e <- hexify:::net_edges(net)
     cut <- e[!e$joined, ]
@@ -303,6 +307,62 @@ test_that("no cut of the land net crosses more land than the joins it replaces",
   expect_gt(sum(w[joined]), 0)
 })
 
+test_that("gosper_land joins the four tiles along the most land", {
+  g <- octa_gosper()
+  net <- net_layout(g, "gosper_land")
+  e <- hexify:::net_edges(net)
+  tile <- vapply(net$pieces, `[[`, numeric(1), "tile")
+  # The twelve hexagon sides run from a vertex to a face centre; each lies
+  # between two tiles.
+  hs <- e[startsWith(e$a, "c") != startsWith(e$b, "c"), ]
+  sides <- unique(hs$key)
+  expect_length(sides, 12L)
+  ends <- lapply(sides, function(k) sort(unique(tile[hs$piece[hs$key == k]])))
+  expect_true(all(lengths(ends) == 2L))
+  solid <- hexify:::icosa_solid(net$icosa)
+  num <- function(k, p) {
+    as.integer(sub(p, "", regmatches(k, regexpr(paste0(p, "[0-9]+"), k))))
+  }
+  w <- hexify:::arc_land_share(solid$vertices[num(sides, "v"), , drop = FALSE],
+                               solid$normals[num(sides, "c") + 1L, , drop = FALSE], TRUE)
+  joined <- sides %in% hs$key[hs$joined]
+  expect_equal(sum(!e$joined), 2L * sum(!joined))
+  tree_weight <- function(pool) {
+    sets <- utils::combn(which(pool), 3L)
+    max(apply(sets, 2, function(j) {
+      links <- do.call(rbind, ends[j])
+      reach <- links[1, ]
+      for (i in 1:3) {
+        reach <- unique(c(reach, links[apply(links, 1, function(l) any(l %in% reach)), ]))
+      }
+      if (length(reach) == 4L) sum(w[j]) else -Inf
+    }))
+  }
+  # The joined sides hold a tree of the four tiles; where it joins two of the
+  # three sides around a face centre, the third closes by itself. No choice
+  # of three sides that joins the tiles carries more land than that tree.
+  expect_equal(tree_weight(joined), tree_weight(rep(TRUE, 12L)))
+})
+test_that("the rhombic layout is DGGAL's 5 x 6 space with y down the page", {
+  g <- hex_grid(resolution = 2, aperture = 3)
+  net <- net_layout(g, "rhombic")
+  for (p in net$pieces) {
+    d <- matrix(hexify:::RHOMBIC_5X6[p$face + 1L, ], 3L, 2L, byrow = TRUE)
+    expect_equal(unname(hexify:::place_points(p$region, p)), cbind(d[, 1], -d[, 2]),
+                 tolerance = 1e-12)
+    # A unit-edge triangle onto half a unit square, the same shear on every face
+    expect_equal(det(p$A), 2 / sqrt(3), tolerance = 1e-12)
+  }
+  e <- hexify:::net_edges(net)
+  # One staircase: 19 joined face edges, its outline the 11 cut ones twice
+  expect_equal(sum(e$joined) / 2, 19)
+  expect_equal(sum(!e$joined), 22L)
+  ll <- sphere_points(1000)
+  xy <- net_project(net, ll[, 1], ll[, 2])
+  expect_true(all(xy$x >= -1e-9 & xy$x <= 5 + 1e-9 & xy$y <= 1e-9 & xy$y >= -6 - 1e-9))
+  expect_error(net_layout(octa_gosper(), "rhombic"), "icosahedron")
+})
+
 # =============================================================================
 # net_project() and arguments
 # =============================================================================
@@ -357,7 +417,7 @@ test_that("net_layout checks its arguments", {
   expect_error(net_layout(hex_grid(resolution = 0, type = "h3")), "ISEA grid")
   expect_error(net_layout(ico, "plane", centre = c(0, 0)), "Gosper layout")
   expect_error(net_layout(ico, "plane", mirror = TRUE), "Gosper layout")
-  expect_error(net_layout(ico, "plane", land = FALSE), "\"land\" layout")
+  expect_error(net_layout(ico, "plane", land = FALSE), "keep joined")
   expect_error(net_layout(octa_gosper(), "gosper", centre = c(0, 100)), "c\\(lon, lat\\)")
   expect_error(net_project(list(), 0, 0), "hexify_net")
   expect_output(print(net_layout(octa_gosper(), "gosper")), "16 pieces in 4 tiles")
