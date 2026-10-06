@@ -330,6 +330,32 @@ ggplot() +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
 
+## Cell Shapes
+
+`cell_to_sf()`, `plot()`, `hexify_heatmap()` and `st_as_sf()` draw cells as hexagons by default. With `shape = "gosper"`, each cell edge is replaced `depth` times by three shorter segments turned the same way, which gives Gosper islands (flowsnakes); each island keeps its cell's area, and the islands tile the sphere. With `shape = "descendants"`, an aperture-7 cell is drawn as the outline of its descendants `depth` resolutions down, which nests across resolutions.
+
+```{r cell-shapes, fig.width=7, fig.height=2.6}
+grid <- hex_grid(resolution = 2, aperture = 7)
+cells <- grid_rect(c(-15, 30, 40, 65), grid)$cell_id
+ortho <- "+proj=ortho +lon_0=12 +lat_0=48"
+set.seed(1)
+colour <- factor(sample(8, length(cells), replace = TRUE))
+
+shapes <- do.call(rbind, lapply(c("hexagon", "gosper", "descendants"), function(s) {
+  polys <- cell_to_sf(cells, grid, shape = s, depth = 4)
+  polys$colour <- colour[match(polys$cell_id, cells)]
+  polys$shape <- factor(s, levels = c("hexagon", "gosper", "descendants"))
+  polys
+}))
+
+ggplot(sf::st_transform(shapes, ortho)) +
+  geom_sf(aes(fill = colour), color = "gray25", linewidth = 0.15,
+          show.legend = FALSE) +
+  facet_wrap(~shape) +
+  scale_fill_brewer(palette = "Set3") +
+  theme_void(base_size = FIG_BASE_SIZE)
+```
+
 ## Random Sampling Visualization
 
 Visualizing uniformly sampled cells across Earth:

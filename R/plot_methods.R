@@ -182,6 +182,7 @@ jitter_points_in_cells <- function(cell_ids, grid, jitter = TRUE) {
 #' @param crop Crop to data extent (default TRUE)
 #' @param crop_expand Expansion factor for crop (default 0.1)
 #' @param main Plot title
+#' @inheritParams cell_to_sf
 #' @param ... Additional arguments passed to base plot()
 #'
 #' @return Invisibly returns the HexData object
@@ -225,6 +226,8 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
            crop = TRUE,
            crop_expand = 0.1,
            main = NULL,
+           shape = c("hexagon", "gosper", "descendants"),
+           depth = 3L,
            ...) {
 
     if (!requireNamespace("sf", quietly = TRUE)) {
@@ -234,7 +237,8 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
     if (!is.null(fill) && !fill %in% names(x@data)) {
       stop(sprintf("Column '%s' not found in data", fill))
     }
-    hex_sf <- hex_data_cells_sf(x, columns = if (is.null(fill)) character(0) else fill)
+    hex_sf <- hex_data_cells_sf(x, columns = if (is.null(fill)) character(0) else fill,
+                                shape = match.arg(shape), depth = depth)
 
     # Calculate bounding box
     hex_bbox <- sf::st_bbox(hex_sf)

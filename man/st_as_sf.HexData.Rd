@@ -5,7 +5,13 @@
 \alias{st_as_sf.HexGridInfo}
 \title{Convert gridded data or a grid to sf}
 \usage{
-\method{st_as_sf}{HexData}(x, ..., geometry = c("point", "polygon"))
+\method{st_as_sf}{HexData}(
+  x,
+  ...,
+  geometry = c("point", "polygon"),
+  shape = c("hexagon", "gosper", "descendants"),
+  depth = 3L
+)
 
 \method{st_as_sf}{HexGridInfo}(x, ...)
 }
@@ -15,6 +21,9 @@
 \item{...}{For a HexGridInfo, passed on to \code{\link{grid_global}}}
 
 \item{geometry}{Type of geometry: "point" (default) or "polygon"}
+
+\item{shape, depth}{Cell shape for polygon geometry, as for
+\code{\link{cell_to_sf}}}
 }
 \value{
 An sf object

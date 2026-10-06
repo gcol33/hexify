@@ -20,6 +20,8 @@ hexify_heatmap(
   basemap_lwd = 0.5,
   mask_outside = FALSE,
   aperture = 3L,
+  shape = c("hexagon", "gosper", "descendants"),
+  depth = 3L,
   xlim = NULL,
   ylim = NULL,
   title = NULL,
@@ -89,6 +91,16 @@ If NULL, labels are auto-generated.}
 portions that fall outside the basemap polygons.}
 
 \item{aperture}{Grid aperture (default 3), used if data is from hexify()}
+
+\item{shape}{\code{"hexagon"} (default) draws each cell's own boundary.
+\code{"gosper"} draws it as a Gosper island and \code{"descendants"} as
+the outline of its descendants; both need an ISEA grid, and
+\code{"descendants"} one of aperture 7. See Details.}
+
+\item{depth}{For \code{shape = "gosper"}, the number of times each edge is
+replaced, multiplying its segments by 3; for \code{"descendants"}, the
+number of resolutions down, multiplying the cells behind one outline
+by 7.}
 
 \item{xlim}{Optional x-axis limits (in target CRS units) as c(min, max)}
 

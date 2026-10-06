@@ -152,12 +152,13 @@ apply_continuous_scale <- function(p, colors, legend_title, na_color) {
 #' @param data A HexData object, an sf object (returned as is), or a data frame
 #'   with a cell_id column and the cell area in cell_area_km2 or cell_area
 #' @param aperture Aperture of the grid a data frame's cells belong to
+#' @param shape,depth Cell shape, as for cell_to_sf()
 #' @return sf object with one polygon per cell, carrying the cell's first data
 #'   row
 #' @noRd
-prepare_hex_sf <- function(data, aperture) {
+prepare_hex_sf <- function(data, aperture, shape = "hexagon", depth = 3L) {
   if (is_hex_data(data)) {
-    return(hex_data_cells_sf(data))
+    return(hex_data_cells_sf(data, shape = shape, depth = depth))
   }
 
   if (inherits(data, "sf")) return(data)
@@ -172,7 +173,8 @@ prepare_hex_sf <- function(data, aperture) {
 
   area <- if ("cell_area_km2" %in% names(data)) data$cell_area_km2[1] else data$cell_area[1]
   grid <- hex_grid(area_km2 = area, aperture = aperture)
-  merge_first_rows(cell_to_sf(data$cell_id, grid), data, data$cell_id,
+  merge_first_rows(cell_to_sf(data$cell_id, grid, shape = shape, depth = depth),
+                   data, data$cell_id,
                    setdiff(names(data), c("cell_id", "geometry")))
 }
 
@@ -181,13 +183,15 @@ prepare_hex_sf <- function(data, aperture) {
 #' @param x HexData object
 #' @param columns Data columns to carry onto the polygons; NULL takes every
 #'   column of the data
+#' @param shape,depth Cell shape, as for cell_to_sf()
 #' @return sf object with one polygon per cell
 #' @noRd
-hex_data_cells_sf <- function(x, columns = NULL) {
+hex_data_cells_sf <- function(x, columns = NULL, shape = "hexagon", depth = 3L) {
   rows <- x@data
   if (inherits(rows, "sf")) rows <- sf::st_drop_geometry(rows)
   if (is.null(columns)) columns <- setdiff(names(rows), "cell_id")
-  merge_first_rows(cell_to_sf(grid = x), rows, x@cell_id, columns)
+  merge_first_rows(cell_to_sf(grid = x, shape = shape, depth = depth),
+                   rows, x@cell_id, columns)
 }
 
 #' Join the first data row of each cell onto the cell polygons
@@ -515,6 +519,7 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 #' @param mask_outside Logical. If TRUE and basemap is provided, mask hexagon
 #'   portions that fall outside the basemap polygons.
 #' @param aperture Grid aperture (default 3), used if data is from hexify()
+#' @inheritParams cell_to_sf
 #' @param xlim Optional x-axis limits (in target CRS units) as c(min, max)
 #' @param ylim Optional y-axis limits (in target CRS units) as c(min, max)
 #' @param title Plot title
@@ -615,6 +620,8 @@ hexify_heatmap <- function(data,
                         basemap_lwd = 0.5,
                         mask_outside = FALSE,
                         aperture = 3L,
+                        shape = c("hexagon", "gosper", "descendants"),
+                        depth = 3L,
                         xlim = NULL,
                         ylim = NULL,
                         title = NULL,
@@ -629,7 +636,8 @@ hexify_heatmap <- function(data,
   }
 
   # Prepare hex sf with extra columns merged
-  hex_sf <- prepare_hex_sf(data, aperture)
+  hex_sf <- prepare_hex_sf(data, aperture, shape = match.arg(shape),
+                           depth = depth)
 
   # Resolve value column (NULL means uniform fill)
   value <- resolve_value_column(hex_sf, value, require = FALSE)

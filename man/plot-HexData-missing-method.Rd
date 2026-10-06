@@ -25,6 +25,8 @@
   crop = TRUE,
   crop_expand = 0.1,
   main = NULL,
+  shape = c("hexagon", "gosper", "descendants"),
+  depth = 3L,
   ...
 )
 }
@@ -86,6 +88,16 @@ the cell centroid instead.}
 \item{crop_expand}{Expansion factor for crop (default 0.1)}
 
 \item{main}{Plot title}
+
+\item{shape}{\code{"hexagon"} (default) draws each cell's own boundary.
+\code{"gosper"} draws it as a Gosper island and \code{"descendants"} as
+the outline of its descendants; both need an ISEA grid, and
+\code{"descendants"} one of aperture 7. See Details.}
+
+\item{depth}{For \code{shape = "gosper"}, the number of times each edge is
+replaced, multiplying its segments by 3; for \code{"descendants"}, the
+number of resolutions down, multiplying the cells behind one outline
+by 7.}
 
 \item{...}{Additional arguments passed to base plot()}
 }

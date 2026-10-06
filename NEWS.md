@@ -15,6 +15,22 @@
 
 ## New features
 
+* `cell_to_sf(shape = , depth = )` draws ISEA cells as Gosper islands
+  (`"gosper"`) or as the outline of their descendants (`"descendants"`);
+  `plot()`, `hexify_heatmap()` and `st_as_sf()` on gridded data take the same
+  arguments. A Gosper island replaces each cell edge `depth` times by three
+  segments `1/sqrt(7)` as long, turned by `atan(sqrt(3)/5)`, on the face plane
+  of the projection, so on an equal-area grid each island has its cell's area
+  and the islands of a grid tile the sphere. The descendant outline of an
+  aperture-7 cell is the boundary of its descendants `depth` resolutions down,
+  which nests across resolutions; the child lattice of ISEA7H turns one way at
+  one resolution and back at the next, so this outline stays close to the
+  hexagon (#82).
+
+* `get_children()` on ISEA grids looks children up by `match()` rather than by
+  name, so its time grows linearly with the number of cells: all 492 cells of
+  an aperture-7 resolution-2 grid, three levels down, go from 123 s to 0.5 s.
+
 * `hex_grid(projection = "fuller")` builds an ISEA-family grid on Fuller's
   projection instead of Snyder's equal-area one: DGGRID's FULLER3H,
   FULLER4H, FULLER7H and FULLER43H, and any aperture sequence or orientation.
@@ -88,6 +104,10 @@
   longer reset it.
 
 ## Bug fixes
+
+* Cells in the last column of a quad at aperture 3, resolutions 25-30, were
+  assigned to another quad: the quad edge dimension was computed in floating
+  point and came out one too small. It is now exact.
 
 * `cell_area()` on an ISEA grid returns each cell's area: every hexagon of a
   resolution has `S / (N - 2)` of a body of area `S` split into

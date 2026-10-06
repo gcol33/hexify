@@ -463,6 +463,8 @@ as_tibble.HexData <- function(x, ...) {
 #' @param x A HexData or HexGridInfo object
 #' @param ... For a HexGridInfo, passed on to \code{\link{grid_global}}
 #' @param geometry Type of geometry: "point" (default) or "polygon"
+#' @param shape,depth Cell shape for polygon geometry, as for
+#'   \code{\link{cell_to_sf}}
 #'
 #' @return An sf object
 #'
@@ -486,7 +488,9 @@ as_tibble.HexData <- function(x, ...) {
 #'
 #' # Every cell of a coarse grid
 #' cells <- st_as_sf(hex_grid(resolution = 2))
-st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon")) {
+st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon"),
+                             shape = c("hexagon", "gosper", "descendants"),
+                             depth = 3L) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package 'sf' is required. Install with: install.packages('sf')")
   }
@@ -522,7 +526,8 @@ st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon")) {
     # Polygon geometry from cell boundaries
     unique_ids <- unique(x@cell_id)
 
-    polys_sf <- cell_to_sf(unique_ids, grid)
+    polys_sf <- cell_to_sf(unique_ids, grid, shape = match.arg(shape),
+                           depth = depth)
 
     # Add cell_id to data for merge
     data_with_id <- cbind(data, cell_id = x@cell_id)

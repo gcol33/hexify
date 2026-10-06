@@ -57,6 +57,7 @@ Collate:
     'dggrid.R'
     'dggrid_compat.R'
     'grid_helpers.R'
+    'gosper.R'
     'h3_compat.R'
     'hex_browse.R'
     'hex_compact.R'
