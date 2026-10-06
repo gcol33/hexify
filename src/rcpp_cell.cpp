@@ -6,7 +6,6 @@
 // - Cell ID to lon/lat conversion
 // - Cell ID to cell info conversion
 // - Quad IJ coordinate conversion
-// - Z7 decoding
 // - PLANE coordinate conversions
 //
 // Copyright (c) 2024-2025 hexify authors. MIT License.
@@ -17,56 +16,17 @@
 #include <functional>
 #include <cmath>
 #include <string>
+#include <utility>
 #include <vector>
 #include "constants.h"
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
-#include "aperture.h"
-#include "aperture_sequence.h"
 #include "grid_math.h"
-#include "index_z7.h"
-#include "ijk_coordinates.h"
 #include "coordinate_transforms.h"
 #include "rcpp_icosa.h"
 
 using namespace Rcpp;
-
-
-// ============================================================================
-// Z7 Decoding
-// ============================================================================
-
-// [[Rcpp::export]]
-DataFrame cpp_decode_z7(std::string index_body, int aperture) {
-    if (aperture != 7) {
-        Rcpp::stop("cpp_decode_z7: only aperture 7 is supported");
-    }
-
-    try {
-        int quadNum;
-        long long i, j;
-
-        // Calculate resolution from the Z7 string
-        int resolution = index_body.length() - 2;
-        if (resolution < 0) {
-            resolution = 0;
-        }
-
-        // Call Z7 decode implementation
-        hexify::z7::decode(index_body, resolution, quadNum, i, j);
-
-        return DataFrame::create(
-            Named("quad") = quadNum,
-            Named("i") = i,
-            Named("j") = j,
-            Named("resolution") = resolution
-        );
-
-    } catch (const std::exception& e) {
-        Rcpp::stop("Error in cpp_decode_z7: %s", e.what());
-    }
-}
 
 // ============================================================================
 // Triangle to Quad Coordinate Conversion
@@ -148,74 +108,6 @@ Rcpp::List cpp_lonlat_to_quad_ij(NumericVector icosa, double lon_deg, double lat
         Rcpp::Named("icosa_triangle_x") = fwd.icosa_triangle_x,
         Rcpp::Named("icosa_triangle_y") = fwd.icosa_triangle_y
     );
-}
-
-// ============================================================================
-// Quad coordinates to Cell ID
-// ============================================================================
-
-// ============================================================================
-// Grid Pattern Helpers
-// ============================================================================
-// Different apertures use different grid patterns:
-//
-// APERTURE 3 (ISEA3H):
-//   - Even resolutions: "aligned" grid where all integer (i,j) are valid cells
-//   - Odd resolutions: "offset" grid where only 1/3 of cells are valid
-//                      (those where (i+j) % 3 == 0)
-//   - Cell count: N = 10 * 3^res + 2
-//   - Grid dim: sqrt(3)^res for aligned, sqrt(3)^(res+1) for offset
-//
-// APERTURE 4 (ISEA4H):
-//   - Always "aligned" (Class I) - all (i,j) pairs valid
-//   - Cell count: N = 10 * 4^res + 2
-//   - Grid dim: 2^res
-//
-// APERTURE 7 (ISEA7H):
-//   - Even resolutions: Class III-I
-//   - Odd resolutions: Class III-II
-//   - Cell count: N = 10 * 7^res + 2
-//   - Grid dim: sqrt(7)^res for Class III-I, sqrt(21)^res for Class III-II
-// ============================================================================
-
-// Check if aperture 3 resolution uses aligned (even) or offset (odd) grid
-static inline bool is_aligned_grid_ap3(int resolution) {
-    return (resolution % 2) == 0;
-}
-
-// Calculate max grid index for aperture 3
-// Class I (even resolution): maxI = sqrt(3)^res - 1
-// Class II (odd resolution): maxI = 3 * sqrt(3)^(res-1) - 1
-// This corresponds to numI = maxI + 1 cells per dimension,
-// with total cells per quad = numI * numI / 3 (for Class II)
-static long long calc_max_grid_dim_ap3(int resolution) {
-    if (resolution == 0) return 0;
-
-    bool is_class1 = is_aligned_grid_ap3(resolution);
-
-    // Compute sqrt(3)^resolution
-    double scale = 1.0;
-    for (int r = 1; r <= resolution; r++) {
-        scale *= 1.7320508075688772935;  // sqrt(3)
-    }
-
-    if (is_class1) {
-        // Class I: maxI = sqrt(3)^res - 1
-        return static_cast<long long>(scale + 0.000001) - 1;
-    } else {
-        // Class II: maxI = 3 * sqrt(3)^(res-1) - 1 = sqrt(3)^(res-1) * 3 - 1
-        // Since sqrt(3)^res = sqrt(3)^(res-1) * sqrt(3),
-        // we have sqrt(3)^(res-1) = scale / sqrt(3)
-        // maxI = (scale / sqrt(3)) * 3 - 1 = scale * sqrt(3) - 1
-        double maxI = scale * 1.7320508075688772935 - 1.0;
-        return static_cast<long long>(maxI + 0.000001);
-    }
-}
-
-// Calculate grid dimension for aperture 4
-static long long calc_max_grid_dim_ap4(int resolution) {
-    if (resolution == 0) return 0;
-    return (1LL << resolution) - 1;  // 2^res - 1
 }
 
 // ============================================================================
@@ -309,17 +201,6 @@ static SubstrateLattice sublattice_of(const hexify::HexGridForm& form) {
 // the cell centres in the quad's substrate box. It spans [0, 7^res) exactly.
 // ============================================================================
 
-// The 30-degree Class II lattice of aperture 3's odd resolutions: one substrate
-// point in three is a cell, those with (i + j) % 3 == 0.
-static const SubstrateLattice kOffsetLatticeAp3 = {3, 2};
-
-// Substrate lattice of a pure single-aperture grid. Aperture 7 stores
-// surrogates rather than substrate coordinates and packs them aligned.
-static SubstrateLattice lattice_for_aperture(int aperture, int resolution) {
-    if (aperture == 3 && !is_aligned_grid_ap3(resolution)) return kOffsetLatticeAp3;
-    return kAlignedLattice;
-}
-
 // The same sublattice written as its generator a + b*omega, in the (i, j)
 // coordinates cpp_cell_to_quad_ij() returns. The cells of a quad are its
 // multiples over the Eisenstein integers, so multiplying by the six units
@@ -329,14 +210,6 @@ struct LatticeGenerator {
     long long a;
     long long b;
 };
-
-static const LatticeGenerator kAlignedGenerator = {1, 0};
-static const LatticeGenerator kOffsetGeneratorAp3 = {2, 1};
-
-static LatticeGenerator generator_for_aperture(int aperture, int resolution) {
-    if (aperture == 3 && !is_aligned_grid_ap3(resolution)) return kOffsetGeneratorAp3;
-    return kAlignedGenerator;
-}
 
 // The six cells one step away, as offsets in (i, j): the generator times each
 // unit of the Eisenstein integers, using omega^2 = -1 - omega.
@@ -352,118 +225,211 @@ static void lattice_unit_steps(const LatticeGenerator& g, long long steps[6][2])
     }
 }
 
-// [[Rcpp::export]]
-NumericVector cpp_cell_lattice_generator(int aperture, int resolution) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_lattice_generator: aperture must be 3, 4, or 7");
-    }
-    LatticeGenerator g = generator_for_aperture(aperture, resolution);
-    return NumericVector::create(static_cast<double>(g.a),
-                                 static_cast<double>(g.b));
+// ============================================================================
+// Quad frame of a grid
+// ============================================================================
+// How a grid lays its cells out in a quad: how many cells a quad holds, how
+// many substrate steps a quad edge measures, which coordinates a cell is
+// stored by, and how a stored coordinate maps to and from the quad plane. A
+// pure aperture and a mixed aperture sequence differ only in these, so every
+// conversion below reads one frame.
+//
+// Apertures 3 and 4 and every mixed sequence store a cell by the substrate
+// coordinates of its centre, which lie on the sublattice of the grid's form.
+// Aperture 7 stores its surrogate, the cell's own Class I coordinate, so its
+// stored coordinates pack and step as the aligned lattice.
+// ============================================================================
+
+struct QuadFrame {
+    std::vector<int> ap_seq;      // empty for a pure aperture
+    int aperture;                 // 0 for a mixed sequence
+    int resolution;
+    hexify::HexGridForm form;
+    uint64_t nCells;              // ten quads of cells plus the two poles
+    uint64_t offsetPerQuad;       // cells per quad, the product of the apertures
+    long long dim;                // substrate steps along a quad edge
+    SubstrateLattice lattice;     // which stored (i, j) are cells
+    LatticeGenerator generator;   // that lattice's generator, in stored (i, j)
+};
+
+// The sublattice generator m + n*w (w = exp(pi*i/3)) of a form, written in
+// the substrate's (i, j) as (m + n) + n*omega.
+static LatticeGenerator generator_of(const hexify::HexGridForm& form) {
+    return {form.m + form.n, form.n};
 }
 
-// Calculate cell count and offset per quad for any aperture: each of the 10
-// quads owns aperture^res cells and the two poles bring the total to
-// 10 * aperture^res + 2.
-static void calc_grid_params(int resolution, int aperture,
-                             uint64_t& nCells, uint64_t& offsetPerQuad) {
+// The frame of a pure aperture at a resolution (empty 'ap_seq'), or of a mixed
+// sequence, whose resolution is one less than its length.
+static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_seq) {
+    const bool mixed = !ap_seq.empty();
+    if (mixed) {
+        resolution = static_cast<int>(ap_seq.size()) - 1;
+        aperture = 0;
+    } else if (aperture != 3 && aperture != 4 && aperture != 7) {
+        Rcpp::stop("aperture must be 3, 4, or 7");
+    }
     if (resolution < hexify::kMinResolution || resolution > hexify::kMaxResolution) {
         Rcpp::stop("resolution must be between %d and %d",
                    hexify::kMinResolution, hexify::kMaxResolution);
     }
-    nCells = 10;
-    for (int r = 0; r < resolution; r++) {
-        nCells *= aperture;
-    }
-    nCells += 2;
-    offsetPerQuad = (nCells - 2) / 10;
-}
 
-// Grid dimension (per-axis) for a given resolution/aperture. Used by every
-// cell-ID <-> (quad,i,j) conversion below to select which calc_max_grid_dim_*
-// helper applies. Aperture 7 reports its Class I substrate scale; its cell
-// index comes from the surrogate rather than a row-major walk of that box.
-static long long grid_dim_for_aperture(int resolution, int aperture) {
-    if (aperture == 3) {
-        return calc_max_grid_dim_ap3(resolution) + 1;
-    } else if (aperture == 4) {
-        return calc_max_grid_dim_ap4(resolution) + 1;
+    QuadFrame f;
+    f.aperture = aperture;
+    f.resolution = resolution;
+    f.form = mixed ? hexify::hex_form_sequence(ap_seq)
+                   : hexify::hex_form_pure(aperture, resolution);
+    f.dim = mixed ? hexify::quad_edge_dim(ap_seq)
+                  : hexify::quad_edge_dim(aperture, resolution);
+    f.offsetPerQuad = 1;
+    for (int k = 1; k <= resolution; k++) {
+        f.offsetPerQuad *= static_cast<uint64_t>(mixed ? ap_seq[k] : aperture);
+    }
+    f.nCells = 10 * f.offsetPerQuad + 2;
+    if (aperture == 7) {
+        f.lattice = kAlignedLattice;
+        f.generator = {1, 0};
     } else {
-        return hexify::ap7_classI_scale(resolution);
+        f.lattice = sublattice_of(f.form);
+        f.generator = generator_of(f.form);
     }
+    f.ap_seq = std::move(ap_seq);
+    return f;
 }
 
-// Decode a validated 1-based cell ID into (quad, i, j). Throws via
-// Rcpp::stop() if cell_id_raw is non-finite (NA/NaN/Inf) or outside
-// [1, nCells], so callers never index a static lookup table with a garbage
-// quad/i/j derived from an out-of-range or NA cell ID.
-//
-// handle_ap7_south_pole preserves existing per-caller behavior: some call
-// sites special-case quad 11 under aperture 7 as the south pole pentagon
-// (i=j=0) and some decode it like any other cell; this parameter keeps that
-// distinction rather than silently changing either behavior during the
-// dedup of this decode logic.
-static void decode_cell_id(double cell_id_raw, int resolution, int aperture,
-                            long long dim, uint64_t offsetPerQuad, uint64_t nCells,
-                            const SubstrateLattice& lat, bool handle_ap7_south_pole,
-                            int& quad, long long& i, long long& j) {
-    if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
-        cell_id_raw > static_cast<double>(nCells)) {
-        Rcpp::stop("cell_id must be a finite value in [1, %.0f] for resolution %d, aperture %d",
-                   static_cast<double>(nCells), resolution, aperture);
+// The frame an entry point's (resolution, aperture, ap_seq) names. An empty
+// ap_seq names the pure aperture; a mixed sequence comes with aperture 0 and
+// the resolution its length gives.
+static QuadFrame grid_frame(int resolution, int aperture, const IntegerVector& ap_seq) {
+    if (ap_seq.size() == 0) {
+        return quad_frame(resolution, aperture, {});
     }
+    if (aperture != 0 || resolution != ap_seq.size() - 1) {
+        Rcpp::stop("a mixed aperture sequence takes aperture 0 and resolution "
+                   "length(ap_seq) - 1");
+    }
+    return quad_frame(resolution, 0, std::vector<int>(ap_seq.begin(), ap_seq.end()));
+}
 
-    uint64_t idx = static_cast<uint64_t>(cell_id_raw);
-    idx--;  // Convert to 0-based
+// The ID, from 1, of the cell at stored (i, j) of a quad. Quad 0 holds the
+// north pole alone, ID 1; quad q > 0 follows it and the q - 1 quads before.
+static inline double frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
+    uint64_t offset = (quad == 0) ? 0 : 1 + static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
+    uint64_t within_quad = (f.aperture == 7)
+        ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
+        : cell_index_2d(i, j, f.dim, f.lattice);
+    return static_cast<double>(offset + within_quad + 1);
+}
 
+// The 0-based index of a cell ID. Stops unless the ID names a cell of the
+// grid, so no table is ever indexed with a quad, i or j read from NA or an
+// out-of-range ID.
+static inline uint64_t frame_cell_index(const QuadFrame& f, double cell_id_raw) {
+    if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
+        cell_id_raw > static_cast<double>(f.nCells)) {
+        Rcpp::stop("cell_id must be a finite value in [1, %.0f] for resolution %d",
+                   static_cast<double>(f.nCells), f.resolution);
+    }
+    return static_cast<uint64_t>(cell_id_raw) - 1;
+}
+
+// A cell's quad and stored (i, j) from its 0-based index
+static inline void frame_decode_index(const QuadFrame& f, uint64_t idx,
+                                      int& quad, long long& i, long long& j) {
     if (idx == 0) {
-        // First cell: quad 0 (north pole), i=0, j=0
         quad = 0;
         i = 0;
         j = 0;
         return;
     }
-
-    // Adjust for quad 0
     idx--;
-
-    // Determine quad
-    quad = static_cast<int>(idx / offsetPerQuad) + 1;
-    idx -= (quad - 1) * offsetPerQuad;
-
-    if (handle_ap7_south_pole && quad == 11 && aperture == 7) {
-        // South pole pentagon
-        i = 0;
-        j = 0;
-    } else if (aperture == 7) {
-        // Decode to surrogate (i,j stored as surrogates for ap7)
-        hexify::ap7_quad_index_to_surrogate(idx, resolution, i, j);
+    quad = static_cast<int>(idx / f.offsetPerQuad) + 1;
+    uint64_t within_quad = idx - static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
+    if (f.aperture == 7) {
+        hexify::ap7_quad_index_to_surrogate(within_quad, f.resolution, i, j);
     } else {
-        ij_from_cell_index(idx, dim, lat, i, j);
+        ij_from_cell_index(within_quad, f.dim, f.lattice, i, j);
     }
+}
+
+// A cell's quad and stored (i, j) from its ID
+static inline void frame_decode(const QuadFrame& f, double cell_id_raw,
+                                int& quad, long long& i, long long& j) {
+    frame_decode_index(f, frame_cell_index(f, cell_id_raw), quad, i, j);
+}
+
+static inline bool frame_in_quad(const QuadFrame& f, long long i, long long j) {
+    if (f.aperture == 7) {
+        return hexify::ap7_surrogate_in_quad(i, j, f.resolution);
+    }
+    return i >= 0 && j >= 0 && i < f.dim && j < f.dim;
+}
+
+// The quad-plane centre of the cell at stored (i, j)
+static inline void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, long long j,
+                                  double& x, double& y) {
+    if (f.ap_seq.empty()) {
+        hexify::quad_ij_to_xy(quad, i, j, f.aperture, f.resolution, x, y);
+    } else {
+        hexify::center_form(f.form, i, j, x, y);
+    }
+}
+
+// Re-express a stored coordinate that has stepped outside its quad in the quad
+// that owns it. False where no quad owns it, at the icosahedron's fold around
+// a vertex.
+static inline bool frame_canonicalize(const QuadFrame& f, int& quad,
+                                      long long& i, long long& j) {
+    if (f.ap_seq.empty()) {
+        return hexify::quad_ij_canonicalize(quad, i, j, f.aperture, f.resolution);
+    }
+    return hexify::substrate_ij_canonicalize(quad, i, j, f.dim);
+}
+
+// The cell a lon/lat point falls in: its quad and stored (i, j)
+static inline void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
+                                int& quad, long long& i, long long& j) {
+    hexify::ProjectionResult fwd = hexify::snyder_forward(lon_deg, lat_deg);
+
+    if (f.ap_seq.empty()) {
+        hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
+                                     fwd.icosa_triangle_y, f.aperture,
+                                     f.resolution, quad, i, j);
+        return;
+    }
+
+    int quad_pre;
+    double quad_x, quad_y;
+    hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x,
+                                 fwd.icosa_triangle_y, quad_pre, quad_x, quad_y);
+    hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, f.form, f.dim,
+                                quad, i, j);
+}
+
+// Substrate steps along a quad edge of a grid
+// [[Rcpp::export]]
+double cpp_quad_edge_dim(int resolution, int aperture, IntegerVector ap_seq) {
+    return static_cast<double>(grid_frame(resolution, aperture, ap_seq).dim);
+}
+
+// The generator a + b*omega of the lattice the stored (i, j) of a grid's
+// cells occupy, in the coordinates cpp_cell_to_quad_ij() returns
+// [[Rcpp::export]]
+NumericVector cpp_cell_lattice_generator(int resolution, int aperture,
+                                         IntegerVector ap_seq) {
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    return NumericVector::create(static_cast<double>(f.generator.a),
+                                 static_cast<double>(f.generator.b));
 }
 
 // [[Rcpp::export]]
 NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
-                                   NumericVector j, int resolution, int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_quad_ij_to_cell: aperture must be 3, 4, or 7");
-    }
-
-    int n = quad.size();
+                                  NumericVector j, int resolution, int aperture,
+                                  IntegerVector ap_seq) {
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    R_xlen_t n = quad.size();
     NumericVector result(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    // Grid dimension depends on aperture
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    // Check if using offset grid (only aperture 3 odd resolutions)
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int q = quad[k];
         long long ii = static_cast<long long>(i[k]);
         long long jj = static_cast<long long>(j[k]);
@@ -473,27 +439,13 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
         // up and down the cell hierarchy reaches these: an ancestor of a cell
         // near a quad edge need not lie in the same quad. Coordinates already
         // inside their quad pass through unchanged.
-        if (!hexify::quad_ij_canonicalize(q, ii, jj, aperture, resolution)) {
+        if (!frame_canonicalize(f, q, ii, jj)) {
             // Outside every adjacent quad, which is where the icosahedron
             // folds at a vertex. No cell owns the coordinate.
             result[k] = NA_REAL;
             continue;
         }
-
-        uint64_t offset = 0;
-        if (q > 0) {
-            offset = 1 + (q - 1) * offsetPerQuad;
-        }
-
-        // 2D cell index within quad. For ap7 the input (i,j) are surrogates.
-        uint64_t bnd2D_idx = (aperture == 7)
-            ? hexify::ap7_surrogate_to_quad_index(ii, jj, resolution)
-            : cell_index_2d(ii, jj, dim, sub_lat);
-
-        // Final cell ID (1-based)
-        uint64_t cell_id = offset + bnd2D_idx + 1;
-
-        result[k] = static_cast<double>(cell_id);
+        result[k] = frame_encode(f, q, ii, jj);
     }
 
     return result;
@@ -502,112 +454,48 @@ NumericVector cpp_quad_ij_to_cell(IntegerVector quad, NumericVector i,
 // [[Rcpp::export]]
 NumericVector cpp_lonlat_to_cell(NumericVector icosa,
                                  NumericVector lon, NumericVector lat,
-                                  int resolution, int aperture) {
+                                 int resolution, int aperture, IntegerVector ap_seq) {
     activate_icosa(icosa);
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_lonlat_to_cell: aperture must be 3, 4, or 7");
-    }
-
-    int n = lon.size();
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    R_xlen_t n = lon.size();
     NumericVector result(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    // Grid dimension depends on aperture
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    // Aperture 3 odd resolutions use offset grid; all others use aligned
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
-        hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
-
-        uint64_t bnd2D_seq;
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
-
-        if (aperture == 7) {
-            // AP7: exact-integer quantization straight to the surrogate (the
-            // resolution-r cell IJK). icosa_tri_to_quad_ij() now returns the
-            // canonical surrogate directly (clean Class I quantize + DGGRID
-            // edgeTable canonicalization + exact coarsen).
-            long long sur_i, sur_j;
-            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
-                                         fwd.icosa_triangle_y,
-                                         7, resolution, quad, sur_i, sur_j);
-            bnd2D_seq = hexify::ap7_surrogate_to_quad_index(sur_i, sur_j, resolution);
-        } else {
-            // AP3/AP4: standard substrate-based encoding
-            long long i, j;
-            hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
-                                         aperture, resolution, quad, i, j);
-            bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
-        }
-
-        // Calculate cell ID offset within quad
-        uint64_t offset = 0;
-        if (quad > 0) {
-            offset = 1 + (quad - 1) * offsetPerQuad;
-        }
-
-        uint64_t cid = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(cid);
+        long long i, j;
+        frame_locate(f, lon[k], lat[k], quad, i, j);
+        result[k] = frame_encode(f, quad, i, j);
     }
 
     return result;
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_lonlat(NumericVector icosa,
-                             NumericVector cell_id, int resolution,
-                              int aperture) {
+DataFrame cpp_cell_to_lonlat(NumericVector icosa, NumericVector cell_id,
+                             int resolution, int aperture, IntegerVector ap_seq) {
     activate_icosa(icosa);
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_lonlat: aperture must be 3, 4, or 7");
-    }
-
-    int n = cell_id.size();
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    R_xlen_t n = cell_id.size();
     NumericVector lon(n);
     NumericVector lat(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    // Grid dimension depends on aperture
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/true,
-                        quad, i, j);
+        frame_decode(f, cell_id[k], quad, i, j);
 
-        // Convert to lon/lat
         double quad_x, quad_y;
-        if (aperture == 7) {
-            // AP7: surrogate IJ → quad XY directly
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
-        } else {
-            // AP3/AP4: substrate IJ → quad XY
-            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
-        }
+        frame_ij_to_xy(f, quad, i, j, quad_x, quad_y);
 
-        // quad_xy -> icosa triangle coords
         int icosa_triangle_face;
         double icosa_triangle_x, icosa_triangle_y;
-        if (!hexify::try_quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)) {
-            // Surrogate center falls in an invalid region (e.g. pentagon gap)
+        if (!hexify::try_quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face,
+                                              icosa_triangle_x, icosa_triangle_y)) {
             lon[k] = NA_REAL;
             lat[k] = NA_REAL;
             continue;
         }
 
-        // Step 3: icosa triangle coords -> lon/lat
         auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
         lon[k] = ll.first;
         lat[k] = ll.second;
@@ -619,41 +507,21 @@ DataFrame cpp_cell_to_lonlat(NumericVector icosa,
     );
 }
 
-// ============================================================================
-// Cell ID to Quad IJ Conversion
-// ============================================================================
-// Converts cell IDs to Quad IJ coordinates.
-// This is the inverse of cpp_quad_ij_to_cell.
-// ============================================================================
-
+// Cell IDs to the quad and stored (i, j) each cell is packed from; the inverse
+// of cpp_quad_ij_to_cell().
 // [[Rcpp::export]]
-DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
-                               int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_quad_ij: aperture must be 3, 4, or 7");
-    }
-
-    int n = cell_id.size();
+DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution, int aperture,
+                              IntegerVector ap_seq) {
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    R_xlen_t n = cell_id.size();
     IntegerVector out_quad(n);
     NumericVector out_i(n);
     NumericVector out_j(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    // Grid dimension depends on aperture
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/true,
-                        quad, i, j);
-
+        frame_decode(f, cell_id[k], quad, i, j);
         out_quad[k] = quad;
         out_i[k] = static_cast<double>(i);
         out_j[k] = static_cast<double>(j);
@@ -677,36 +545,19 @@ DataFrame cpp_cell_to_quad_ij(NumericVector cell_id, int resolution,
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
                                int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_quad_xy: aperture must be 3, 4, or 7");
-    }
-
-    int n = cell_id.size();
+    QuadFrame f = quad_frame(resolution, aperture, {});
+    R_xlen_t n = cell_id.size();
     IntegerVector out_quad(n);
     NumericVector out_qx(n);
     NumericVector out_qy(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
+        frame_decode(f, cell_id[k], quad, i, j);
 
-        // Convert to Quad XY
         double quad_x, quad_y;
-        if (aperture == 7) {
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
-        } else {
-            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
-        }
+        frame_ij_to_xy(f, quad, i, j, quad_x, quad_y);
 
         out_quad[k] = quad;
         out_qx[k] = quad_x;
@@ -732,54 +583,30 @@ DataFrame cpp_cell_to_quad_xy(NumericVector cell_id, int resolution,
 NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
                                    NumericVector quad_y, int resolution,
                                    int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_quad_xy_to_cell: aperture must be 3, 4, or 7");
-    }
-
-    int n = quad.size();
+    QuadFrame f = quad_frame(resolution, aperture, {});
+    R_xlen_t n = quad.size();
     NumericVector result(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int q = quad[k];
         double qx = quad_x[k];
         double qy = quad_y[k];
 
-        uint64_t bnd2D_seq;
         int out_quad;
-
+        long long i, j;
         if (aperture == 7) {
             // AP7: exact-integer quantization straight to the surrogate.
-            long long sur_i, sur_j;
-            hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, sur_i, sur_j);
-            bnd2D_seq = hexify::ap7_surrogate_to_quad_index(sur_i, sur_j, resolution);
+            hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, i, j);
         } else {
-            // AP3/AP4: standard substrate path
+            // AP3/AP4: through the face the point lies on, which names its quad
             int icosa_triangle_face;
             double icosa_triangle_x, icosa_triangle_y;
             hexify::quad_xy_to_icosa_tri(q, qx, qy, icosa_triangle_face,
                                          icosa_triangle_x, icosa_triangle_y);
-            long long i, j;
             hexify::icosa_tri_to_quad_ij(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y,
                                          aperture, resolution, out_quad, i, j);
-            bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
         }
-
-        // Calculate cell ID
-        uint64_t offset = 0;
-        if (out_quad > 0) {
-            offset = 1 + (out_quad - 1) * offsetPerQuad;
-        }
-
-        uint64_t cid = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(cid);
+        result[k] = frame_encode(f, out_quad, i, j);
     }
 
     return result;
@@ -795,38 +622,20 @@ NumericVector cpp_quad_xy_to_cell(IntegerVector quad, NumericVector quad_x,
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_icosa_tri(NumericVector cell_id, int resolution,
                                  int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_icosa_tri: aperture must be 3, 4, or 7");
-    }
-
-    int n = cell_id.size();
+    QuadFrame f = quad_frame(resolution, aperture, {});
+    R_xlen_t n = cell_id.size();
     IntegerVector out_face(n);
     NumericVector out_tx(n);
     NumericVector out_ty(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
+        frame_decode(f, cell_id[k], quad, i, j);
 
-        // Convert to Quad XY
         double quad_x, quad_y;
-        if (aperture == 7) {
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
-        } else {
-            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
-        }
+        frame_ij_to_xy(f, quad, i, j, quad_x, quad_y);
 
-        // Convert Quad XY → Icosa Triangle
         int icosa_triangle_face;
         double icosa_triangle_x, icosa_triangle_y;
         hexify::quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face,
@@ -1226,254 +1035,6 @@ static NumericMatrix closed_ring(const std::vector<double>& lon,
     return coords;
 }
 
-// The same boundaries as one long data frame, numbering the points of each
-// ring from 1.
-static DataFrame rings_to_frame(NumericVector cell_id, const List& rings) {
-    int n = rings.size();
-
-    int total = 0;
-    for (int k = 0; k < n; k++) {
-        total += NumericMatrix(rings[k]).nrow();
-    }
-
-    NumericVector out_cell_id(total);
-    NumericVector out_lon(total);
-    NumericVector out_lat(total);
-    IntegerVector out_order(total);
-
-    int out_idx = 0;
-    for (int k = 0; k < n; k++) {
-        NumericMatrix coords(rings[k]);
-        for (int v = 0; v < coords.nrow(); v++) {
-            out_cell_id[out_idx] = cell_id[k];
-            out_lon[out_idx] = coords(v, 0);
-            out_lat[out_idx] = coords(v, 1);
-            out_order[out_idx] = v + 1;
-            out_idx++;
-        }
-    }
-
-    return DataFrame::create(
-        _["hex_id"] = out_cell_id,
-        _["lon"] = out_lon,
-        _["lat"] = out_lat,
-        _["order"] = out_order
-    );
-}
-
-// ============================================================================
-// Mixed Aperture Sequence Cell ID Conversion
-// ============================================================================
-// A mixed grid refines by a different aperture at each level, given as the
-// sequence ap_seq (see aperture_sequence.h). ISEA43H is aperture 4 for the
-// first 'mixed_aperture_level' resolutions and aperture 3 for the rest.
-//
-// Cell count: N = 10 * (product of the apertures) + 2
-// ============================================================================
-
-// Which substrate points a mixed sequence's cells sit on
-static SubstrateLattice lattice_for_mixed(const std::vector<int>& ap_seq) {
-    return sublattice_of(hexify::hex_form_sequence(ap_seq));
-}
-
-// An aperture sequence from R. Entry 0 names the base grid and entries 1.. are
-// the refinement steps, so the resolution is one less than the length; the
-// entries themselves are validated by hex_form_sequence().
-static std::vector<int> as_ap_seq(const IntegerVector& ap_seq, const char* fn) {
-    if (ap_seq.size() < 1) {
-        Rcpp::stop(std::string(fn) + ": ap_seq must name at least the base grid");
-    }
-    return std::vector<int>(ap_seq.begin(), ap_seq.end());
-}
-
-// Cell count and per-quad offset for a mixed aperture sequence
-static void calc_grid_params_mixed(const std::vector<int>& ap_seq,
-                                    uint64_t& nCells, uint64_t& offsetPerQuad) {
-    int resolution = static_cast<int>(ap_seq.size()) - 1;
-    if (resolution < hexify::kMinResolution || resolution > hexify::kMaxResolution) {
-        Rcpp::stop("resolution must be between %d and %d",
-                   hexify::kMinResolution, hexify::kMaxResolution);
-    }
-
-    nCells = 10;
-    for (size_t k = 1; k < ap_seq.size(); k++) {
-        nCells *= static_cast<uint64_t>(ap_seq[k]);
-    }
-
-    nCells += 2;
-    offsetPerQuad = (nCells - 2) / 10;
-}
-
-// [[Rcpp::export]]
-double cpp_ap_seq_edge_dim(IntegerVector ap_seq_in) {
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_ap_seq_edge_dim");
-    return static_cast<double>(hexify::quad_edge_coord_mixed(ap_seq));
-}
-
-// [[Rcpp::export]]
-NumericVector cpp_lonlat_to_cell_seq(NumericVector icosa,
-                                     NumericVector lon, NumericVector lat,
-                                     IntegerVector ap_seq_in) {
-    activate_icosa(icosa);
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_lonlat_to_cell_seq");
-
-    int n = lon.size();
-    NumericVector result(n);
-
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-
-    // Grid dimension
-    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-
-    // Check if using offset grid
-    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
-
-    for (int k = 0; k < n; k++) {
-        hexify::ProjectionResult fwd = hexify::snyder_forward(lon[k], lat[k]);
-
-        int quad_pre;
-        double quad_x, quad_y;
-        hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y,
-                                     quad_pre, quad_x, quad_y);
-
-        int quad;
-        long long i, j;
-        hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, ap_seq, quad, i, j);
-
-        // Calculate cell ID offset within quad
-        uint64_t offset = 0;
-        if (quad > 0) {
-            offset = 1 + (quad - 1) * offsetPerQuad;
-        }
-
-        // Calculate 2D cell index based on grid pattern
-        uint64_t bnd2D_seq = cell_index_2d(i, j, dim, sub_lat);
-
-        uint64_t cid = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(cid);
-    }
-
-    return result;
-}
-
-// [[Rcpp::export]]
-DataFrame cpp_cell_to_lonlat_seq(NumericVector icosa,
-                                 NumericVector cell_id, IntegerVector ap_seq_in) {
-    activate_icosa(icosa);
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_lonlat_seq");
-    int resolution = static_cast<int>(ap_seq.size()) - 1;
-
-    int n = cell_id.size();
-    NumericVector lon(n);
-    NumericVector lat(n);
-
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-
-    // Grid dimension
-    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-
-    // Check if using offset grid
-    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
-
-    for (int k = 0; k < n; k++) {
-        int quad;
-        long long i, j;
-        // Any aperture other than 7 selects decode_cell_id's substrate branch,
-        // which is the one a mixed sequence stores its cells on.
-        decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
-
-        // Convert quad IJ to lon/lat via quad_xy -> icosa triangle -> lon/lat
-        double quad_x, quad_y;
-        hexify::quad_ij_to_xy_mixed(quad, i, j, ap_seq, quad_x, quad_y);
-
-        int icosa_triangle_face;
-        double icosa_triangle_x, icosa_triangle_y;
-        hexify::quad_xy_to_icosa_tri(quad, quad_x, quad_y, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y);
-
-        auto ll = hexify::face_xy_to_ll(icosa_triangle_x, icosa_triangle_y, icosa_triangle_face);
-        lon[k] = ll.first;
-        lat[k] = ll.second;
-    }
-
-    return DataFrame::create(
-        _["lon_deg"] = lon,
-        _["lat_deg"] = lat
-    );
-}
-
-// [[Rcpp::export]]
-DataFrame cpp_cell_to_quad_ij_seq(NumericVector cell_id, IntegerVector ap_seq_in) {
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_to_quad_ij_seq");
-    int resolution = static_cast<int>(ap_seq.size()) - 1;
-
-    int n = cell_id.size();
-    IntegerVector out_quad(n);
-    NumericVector out_i(n);
-    NumericVector out_j(n);
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
-
-    for (int k = 0; k < n; k++) {
-        int quad;
-        long long i, j;
-        // Any aperture other than 7 selects decode_cell_id's substrate branch,
-        // which is the one a mixed sequence stores its cells on.
-        decode_cell_id(cell_id[k], resolution, /*aperture=*/3, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
-        out_quad[k] = quad;
-        out_i[k] = static_cast<double>(i);
-        out_j[k] = static_cast<double>(j);
-    }
-
-    return DataFrame::create(
-        _["quad"] = out_quad,
-        _["i"] = out_i,
-        _["j"] = out_j
-    );
-}
-
-// [[Rcpp::export]]
-NumericVector cpp_quad_ij_to_cell_seq(IntegerVector quad, NumericVector i,
-                                      NumericVector j, IntegerVector ap_seq_in) {
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_quad_ij_to_cell_seq");
-
-    int n = quad.size();
-    NumericVector result(n);
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-    long long dim = hexify::quad_edge_coord_mixed(ap_seq);
-    SubstrateLattice sub_lat = lattice_for_mixed(ap_seq);
-
-    for (int k = 0; k < n; k++) {
-        int q = quad[k];
-        long long ii = static_cast<long long>(i[k]);
-        long long jj = static_cast<long long>(j[k]);
-
-        // Mirror the cell-ID packing of cpp_lonlat_to_cell_seq(): offset by quad,
-        // then the 2D boundary sequence index within the quad's substrate.
-        uint64_t offset = 0;
-        if (q > 0) {
-            offset = 1 + (q - 1) * offsetPerQuad;
-        }
-
-        uint64_t bnd2D_seq = cell_index_2d(ii, jj, dim, sub_lat);
-
-        uint64_t cid = offset + bnd2D_seq + 1;
-        result[k] = static_cast<double>(cid);
-    }
-
-    return result;
-}
-
 // ============================================================================
 // Cell Boundaries
 // ============================================================================
@@ -1487,66 +1048,32 @@ struct CellPlane {
 };
 
 // The cells of a grid in the quad plane, with the hexagon's circumradius and
-// turn there. An empty 'ap_seq' reads 'aperture' as a pure aperture; otherwise
-// the cells are those of the mixed sequence.
+// turn there.
 struct CellPlanes {
     double radius;
     double rotation_deg;
     std::vector<CellPlane> cells;
 };
 
-static CellPlanes cell_planes(const NumericVector& cell_id, int aperture,
-                              int resolution, const std::vector<int>& ap_seq) {
-    bool mixed = !ap_seq.empty();
-    if (mixed) {
-        resolution = static_cast<int>(ap_seq.size()) - 1;
-    } else if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("aperture must be 3, 4, or 7");
-    }
-
-    uint64_t nCells, offsetPerQuad;
-    long long dim;
-    SubstrateLattice sub_lat;
-    hexify::HexGridForm form;
-    if (mixed) {
-        calc_grid_params_mixed(ap_seq, nCells, offsetPerQuad);
-        dim = hexify::quad_edge_coord_mixed(ap_seq);
-        sub_lat = lattice_for_mixed(ap_seq);
-        form = hexify::hex_form_sequence(ap_seq);
-    } else {
-        calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-        dim = grid_dim_for_aperture(resolution, aperture);
-        sub_lat = lattice_for_aperture(aperture, resolution);
-        form = hexify::hex_form_pure(aperture, resolution);
-    }
-
+static CellPlanes cell_planes(const NumericVector& cell_id, const QuadFrame& f) {
     CellPlanes out;
-    out.radius = kHexCircumradius / form.scale;
-    out.rotation_deg = hexify::form_rotation_deg(form);
+    out.radius = kHexCircumradius / f.form.scale;
+    out.rotation_deg = hexify::form_rotation_deg(f.form);
     out.cells.resize(cell_id.size());
 
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
         CellPlane& c = out.cells[k];
         long long i, j;
-        // A mixed sequence stores its cells on the substrate, which is
-        // decode_cell_id's branch for any aperture other than 7.
-        decode_cell_id(cell_id[k], resolution, mixed ? 3 : aperture, dim,
-                       offsetPerQuad, nCells, sub_lat,
-                       /*handle_ap7_south_pole=*/false, c.quad, i, j);
-        if (mixed) {
-            hexify::quad_ij_to_xy_mixed(c.quad, i, j, ap_seq, c.qx, c.qy);
-        } else {
-            hexify::quad_ij_to_xy(c.quad, i, j, aperture, resolution, c.qx, c.qy);
-        }
+        frame_decode(f, cell_id[k], c.quad, i, j);
+        frame_ij_to_xy(f, c.quad, i, j, c.qx, c.qy);
         c.at_vertex = (i == 0 && j == 0);
     }
     return out;
 }
 
-static List cell_rings(const NumericVector& cell_id, int aperture,
-                       int resolution, const std::vector<int>& ap_seq,
+static List cell_rings(const NumericVector& cell_id, const QuadFrame& f,
                        double tolerance) {
-    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+    CellPlanes g = cell_planes(cell_id, f);
     List result(cell_id.size());
     std::vector<double> lon, lat;
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
@@ -1562,10 +1089,9 @@ static List cell_rings(const NumericVector& cell_id, int aperture,
 // `tolerance` of each edge's length and the polygon summed as spherical
 // triangles fanned from the mean of its boundary points (Van Oosterom and
 // Strackee's formula for a triangle's solid angle).
-static NumericVector cell_solid_angles(const NumericVector& cell_id, int aperture,
-                                       int resolution, const std::vector<int>& ap_seq,
-                                       double tolerance) {
-    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+static NumericVector cell_solid_angles(const NumericVector& cell_id,
+                                       const QuadFrame& f, double tolerance) {
+    CellPlanes g = cell_planes(cell_id, f);
     NumericVector out(cell_id.size());
     std::vector<double> lon, lat;
     std::vector<std::array<double, 3>> v;
@@ -1603,40 +1129,19 @@ static NumericVector cell_solid_angles(const NumericVector& cell_id, int apertur
 
 // [[Rcpp::export]]
 NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
-                                   int resolution, int aperture, double tolerance) {
+                                   int resolution, int aperture, IntegerVector ap_seq,
+                                   double tolerance) {
     activate_icosa(icosa);
-    return cell_solid_angles(cell_id, aperture, resolution, {}, tolerance);
-}
-
-// [[Rcpp::export]]
-NumericVector cpp_cell_solid_angle_seq(NumericVector icosa, NumericVector cell_id,
-                                       IntegerVector ap_seq_in, double tolerance) {
-    activate_icosa(icosa);
-    return cell_solid_angles(cell_id, 0, 0,
-                             as_ap_seq(ap_seq_in, "cpp_cell_solid_angle_seq"), tolerance);
+    return cell_solid_angles(cell_id, grid_frame(resolution, aperture, ap_seq),
+                             tolerance);
 }
 
 // [[Rcpp::export]]
 List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id,
-                         int resolution, int aperture, double tolerance = 0.0) {
+                         int resolution, int aperture, IntegerVector ap_seq,
+                         double tolerance = 0.0) {
     activate_icosa(icosa);
-    return cell_rings(cell_id, aperture, resolution, {}, tolerance);
-}
-
-// [[Rcpp::export]]
-DataFrame cpp_cell_to_polygon(NumericVector icosa, NumericVector cell_id,
-                              int resolution, int aperture, double tolerance = 0.0) {
-    activate_icosa(icosa);
-    return rings_to_frame(cell_id,
-                          cell_rings(cell_id, aperture, resolution, {}, tolerance));
-}
-
-// [[Rcpp::export]]
-List cpp_cell_to_corners_seq(NumericVector icosa, NumericVector cell_id,
-                             IntegerVector ap_seq_in, double tolerance = 0.0) {
-    activate_icosa(icosa);
-    return cell_rings(cell_id, 0, 0,
-                      as_ap_seq(ap_seq_in, "cpp_cell_to_corners_seq"), tolerance);
+    return cell_rings(cell_id, grid_frame(resolution, aperture, ap_seq), tolerance);
 }
 
 // Closed lon/lat rings whose edges are great-circle arcs between corners, as
@@ -1722,13 +1227,6 @@ static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
     }
 }
 
-// The aperture sequence of a surface call: empty for a pure aperture.
-static std::vector<int> surface_ap_seq(const IntegerVector& ap_seq_in,
-                                       const char* fn) {
-    if (ap_seq_in.size() == 0) return {};
-    return as_ap_seq(ap_seq_in, fn);
-}
-
 // The boundaries of cells on the icosahedron and on the sphere, from the same
 // points. Each cell edge is cut where it crosses a face edge, and every piece
 // is split into steps no longer than 'step' in triangle coordinates (a face
@@ -1742,12 +1240,11 @@ static std::vector<int> surface_ap_seq(const IntegerVector& ap_seq_in,
 // [[Rcpp::export]]
 NumericMatrix cpp_cell_surface_paths(NumericVector icosa,
                                      NumericVector cell_id, int resolution,
-                                     int aperture, IntegerVector ap_seq_in,
+                                     int aperture, IntegerVector ap_seq,
                                      double step) {
     activate_icosa(icosa);
     if (!(step > 0.0)) stop("step must be positive");
-    std::vector<int> ap_seq = surface_ap_seq(ap_seq_in, "cpp_cell_surface_paths");
-    CellPlanes g = cell_planes(cell_id, aperture, resolution, ap_seq);
+    CellPlanes g = cell_planes(cell_id, grid_frame(resolution, aperture, ap_seq));
 
     constexpr int n_col = 10;
     std::vector<double> rows;
@@ -1879,56 +1376,6 @@ static const int kBaseCellNeighbors[12][5] = {
     { 6,  7,  8,  9, 10}
 };
 
-// How a grid lays its cells out in a quad: what a quad edge measures, which
-// substrate lattice the cells sit on, and how a quad coordinate maps to and
-// from the plane. A pure aperture and a mixed aperture sequence differ only in
-// these, so one neighbour walk serves both.
-struct QuadFrame {
-    std::vector<int> ap_seq;   // empty for a pure aperture
-    int aperture;              // 0 for a mixed sequence
-    int resolution;
-    uint64_t nCells;
-    uint64_t offsetPerQuad;
-    long long dim;
-    long long max_ij;
-    long long edge;            // coordinate of the quad's far corner
-    SubstrateLattice lattice;
-    LatticeGenerator generator;
-};
-
-static QuadFrame quad_frame_pure(int aperture, int resolution) {
-    QuadFrame f;
-    f.aperture = aperture;
-    f.resolution = resolution;
-    calc_grid_params(resolution, aperture, f.nCells, f.offsetPerQuad);
-    f.dim = grid_dim_for_aperture(resolution, aperture);
-    f.max_ij = hexify::get_max_ij(aperture, resolution);
-    f.edge = (aperture == 7) ? hexify::ap7_classI_scale(resolution)
-                             : f.max_ij + 1;
-    f.lattice = lattice_for_aperture(aperture, resolution);
-    f.generator = generator_for_aperture(aperture, resolution);
-    return f;
-}
-
-static QuadFrame quad_frame_seq(const std::vector<int>& ap_seq) {
-    QuadFrame f;
-    f.ap_seq = ap_seq;
-    f.aperture = 0;
-    f.resolution = static_cast<int>(ap_seq.size()) - 1;
-    calc_grid_params_mixed(ap_seq, f.nCells, f.offsetPerQuad);
-    f.dim = hexify::quad_edge_coord_mixed(ap_seq);
-    f.max_ij = f.dim - 1;
-    f.edge = f.dim;
-
-    // A mixed sequence stores its cells on the substrate its own form names,
-    // so the sublattice and its generator both come from that form.
-    hexify::HexGridForm form = hexify::hex_form_sequence(ap_seq);
-    f.lattice = sublattice_of(form);
-    f.generator.a = form.m + form.n;
-    f.generator.b = form.n;
-    return f;
-}
-
 // What a renderer needs to find the cell of a quad-plane point by itself.
 // Scaled by 'dim', the quad's side in substrate steps, a point's nearest cell
 // centre is its nearest multiple of the generator a + b*omega (omega =
@@ -1938,106 +1385,18 @@ static QuadFrame quad_frame_seq(const std::vector<int>& ap_seq) {
 // sublattice j = c * i (mod index). Aperture 7 stores surrogates but numbers
 // its cells by their substrate centres, which is the same count.
 // [[Rcpp::export]]
-List cpp_globe_frame(int resolution, int aperture, IntegerVector ap_seq_in) {
-    QuadFrame f;
-    hexify::HexGridForm form;
-    if (ap_seq_in.size() > 0) {
-        std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_globe_frame");
-        f = quad_frame_seq(ap_seq);
-        form = hexify::hex_form_sequence(ap_seq);
-    } else {
-        if (aperture != 3 && aperture != 4 && aperture != 7) {
-            stop("cpp_globe_frame: aperture must be 3, 4, or 7");
-        }
-        f = quad_frame_pure(aperture, resolution);
-        form = hexify::hex_form_pure(aperture, resolution);
-    }
-    SubstrateLattice lattice = sublattice_of(form);
+List cpp_globe_frame(int resolution, int aperture, IntegerVector ap_seq) {
+    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    SubstrateLattice lattice = sublattice_of(f.form);
+    LatticeGenerator generator = generator_of(f.form);
     return List::create(
-        _["dim"] = static_cast<double>(f.edge),
+        _["dim"] = static_cast<double>(f.dim),
         _["index"] = static_cast<double>(lattice.index),
         _["c"] = static_cast<double>(lattice.c),
-        _["generator"] = NumericVector::create(
-            static_cast<double>(form.m + form.n), static_cast<double>(form.n)),
+        _["generator"] = NumericVector::create(static_cast<double>(generator.a),
+                                               static_cast<double>(generator.b)),
         _["per_quad"] = static_cast<double>(f.offsetPerQuad),
         _["n_cells"] = static_cast<double>(f.nCells));
-}
-
-static bool frame_in_quad(const QuadFrame& f, long long i, long long j) {
-    if (f.aperture == 7) {
-        return hexify::ap7_surrogate_in_quad(i, j, f.resolution);
-    }
-    return i >= 0 && j >= 0 && i <= f.max_ij && j <= f.max_ij;
-}
-
-static double frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
-    if (quad == 0 && i == 0 && j == 0) {
-        return 1.0;
-    }
-    uint64_t offset = 1 + (quad - 1) * f.offsetPerQuad;
-    uint64_t within_quad = (f.aperture == 7)
-        ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
-        : cell_index_2d(i, j, f.dim, f.lattice);
-    return static_cast<double>(offset + within_quad + 1);
-}
-
-static void frame_decode(const QuadFrame& f, uint64_t idx,
-                         int& quad, long long& i, long long& j) {
-    quad = static_cast<int>(idx / f.offsetPerQuad) + 1;
-    uint64_t within_quad = idx - (quad - 1) * f.offsetPerQuad;
-    if (f.aperture == 7) {
-        hexify::ap7_quad_index_to_surrogate(within_quad, f.resolution, i, j);
-    } else {
-        ij_from_cell_index(within_quad, f.dim, f.lattice, i, j);
-    }
-}
-
-static void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, long long j,
-                           double& x, double& y) {
-    if (f.ap_seq.empty()) {
-        hexify::quad_ij_to_xy(quad, i, j, f.aperture, f.resolution, x, y);
-    } else {
-        hexify::quad_ij_to_xy_mixed(quad, i, j, f.ap_seq, x, y);
-    }
-}
-
-// Re-express a coordinate that has stepped outside its quad in the quad that
-// owns it. A mixed sequence stores substrate coordinates, so its quad edge is
-// all the edge table needs; a pure aperture goes through the call that also
-// unpacks aperture 7's surrogate.
-static bool frame_canonicalize(const QuadFrame& f, int& quad,
-                               long long& i, long long& j) {
-    if (f.ap_seq.empty()) {
-        return hexify::quad_ij_canonicalize(quad, i, j, f.aperture, f.resolution);
-    }
-    return hexify::substrate_ij_canonicalize(quad, i, j, f.edge);
-}
-
-// The quad a point falls in, and its coordinates there
-static void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
-                         int& quad, long long& i, long long& j) {
-    hexify::ProjectionResult fwd = hexify::snyder_forward(lon_deg, lat_deg);
-
-    if (f.ap_seq.empty()) {
-        hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
-                                      fwd.icosa_triangle_y, f.aperture,
-                                      f.resolution, quad, i, j);
-        return;
-    }
-
-    int quad_pre;
-    double quad_x, quad_y;
-    hexify::icosa_tri_to_quad_xy(fwd.face, fwd.icosa_triangle_x,
-                                  fwd.icosa_triangle_y, quad_pre, quad_x, quad_y);
-    hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, f.ap_seq, quad, i, j);
-}
-
-// [[Rcpp::export]]
-NumericVector cpp_cell_lattice_generator_seq(IntegerVector ap_seq_in) {
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_cell_lattice_generator_seq");
-    QuadFrame f = quad_frame_seq(ap_seq);
-    return NumericVector::create(static_cast<double>(f.generator.a),
-                                 static_cast<double>(f.generator.b));
 }
 
 // The six cells adjacent to each of `cell_id`, in the frame's own grid.
@@ -2046,7 +1405,7 @@ NumericVector cpp_cell_lattice_generator_seq(IntegerVector ap_seq_in) {
 // integers, so one step table serves every lattice. A step leaving the quad is
 // sent back through the forward pipeline, which names the quad that owns it.
 static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
-                                      const QuadFrame& f, const char* fn) {
+                                      const QuadFrame& f) {
     int n = cell_id.size();
     Rcpp::List out(n);
 
@@ -2054,14 +1413,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
     lattice_unit_steps(f.generator, offsets);
 
     for (int k = 0; k < n; k++) {
-        double cell_id_raw = cell_id[k];
-        if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
-            cell_id_raw > static_cast<double>(f.nCells)) {
-            Rcpp::stop("%s: cell_id must be a finite value in [1, %.0f] for resolution %d",
-                       fn, static_cast<double>(f.nCells), f.resolution);
-        }
-        uint64_t idx = static_cast<uint64_t>(cell_id_raw);
-        idx--;
+        uint64_t idx = frame_cell_index(f, cell_id[k]);
 
         std::vector<double> neighbor_ids;
         neighbor_ids.reserve(6);
@@ -2085,8 +1437,8 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
             // sits at the corner coordinate the edge tables fold into the pole,
             // and take the six offsets from there.
             bool north = (idx == 0);
-            long long ci = north ? 0 : f.edge;
-            long long cj = north ? f.edge : 0;
+            long long ci = north ? 0 : f.dim;
+            long long cj = north ? f.dim : 0;
             quad = north ? 1 : 6;
             if (f.aperture == 7) {
                 hexify::ap7_substrate_to_surrogate_ijk(ci, cj, f.resolution, i, j);
@@ -2095,7 +1447,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
                 j = cj;
             }
         } else {
-            frame_decode(f, idx - 1, quad, i, j);
+            frame_decode_index(f, idx, quad, i, j);
         }
 
         for (int d = 0; d < 6; d++) {
@@ -2152,65 +1504,10 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
 }
 
 // [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_isea(NumericVector icosa,
-                                  Rcpp::NumericVector cell_id, int resolution,
-                                   int aperture) {
+Rcpp::List cpp_get_neighbors_isea(NumericVector icosa, Rcpp::NumericVector cell_id,
+                                  int resolution, int aperture, IntegerVector ap_seq) {
     activate_icosa(icosa);
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        Rcpp::stop("cpp_get_neighbors_isea: aperture must be 3, 4, or 7");
-    }
-    return neighbors_in_frame(cell_id, quad_frame_pure(aperture, resolution),
-                              "cpp_get_neighbors_isea");
-}
-
-// [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_isea_seq(NumericVector icosa, Rcpp::NumericVector cell_id,
-                                       IntegerVector ap_seq_in) {
-    activate_icosa(icosa);
-    std::vector<int> ap_seq = as_ap_seq(ap_seq_in, "cpp_get_neighbors_isea_seq");
-    return neighbors_in_frame(cell_id, quad_frame_seq(ap_seq),
-                              "cpp_get_neighbors_isea_seq");
-}
-
-// [[Rcpp::export]]
-Rcpp::List cpp_get_neighbors_z7(Rcpp::CharacterVector index_ids, int resolution) {
-    int n = index_ids.size();
-    Rcpp::List out(n);
-
-    for (int k = 0; k < n; k++) {
-        if (index_ids[k] == NA_STRING) {
-            out[k] = Rcpp::CharacterVector(0);
-            continue;
-        }
-
-        std::string idx = Rcpp::as<std::string>(index_ids[k]);
-
-        int quadNum;
-        long long ci, cj;
-        hexify::z7::decode(idx, resolution, quadNum, ci, cj);
-
-        hexify::z7::IVec3D coord(ci, cj);
-
-        std::vector<std::string> neighbors;
-        neighbors.reserve(6);
-
-        for (int d = 1; d <= 6; d++) {
-            hexify::z7::IVec3D nbr = coord;
-            nbr.neighbor(static_cast<hexify::z7::IVec3D::Direction>(d));
-
-            try {
-                std::string nbr_idx = hexify::z7::encode(quadNum, nbr.i(), nbr.j(), resolution);
-                nbr_idx = hexify::z7::canonical_form(nbr_idx);
-                neighbors.push_back(nbr_idx);
-            } catch (...) {
-                // Skip invalid neighbors (edge/boundary)
-            }
-        }
-
-        out[k] = Rcpp::wrap(neighbors);
-    }
-
-    return out;
+    return neighbors_in_frame(cell_id, grid_frame(resolution, aperture, ap_seq));
 }
 
 // ============================================================================
@@ -2253,37 +1550,19 @@ DataFrame cpp_icosa_tri_to_plane(IntegerVector icosa_triangle_face,
 
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_plane(NumericVector cell_id, int resolution, int aperture) {
-    if (aperture != 3 && aperture != 4 && aperture != 7) {
-        stop("cpp_cell_to_plane: aperture must be 3, 4, or 7");
-    }
-
-    int n = cell_id.size();
+    QuadFrame f = quad_frame(resolution, aperture, {});
+    R_xlen_t n = cell_id.size();
     NumericVector out_px(n);
     NumericVector out_py(n);
 
-    // Calculate grid parameters
-    uint64_t nCells, offsetPerQuad;
-    calc_grid_params(resolution, aperture, nCells, offsetPerQuad);
-
-    long long dim = grid_dim_for_aperture(resolution, aperture);
-    SubstrateLattice sub_lat = lattice_for_aperture(aperture, resolution);
-
-    for (int k = 0; k < n; k++) {
+    for (R_xlen_t k = 0; k < n; k++) {
         int quad;
         long long i, j;
-        decode_cell_id(cell_id[k], resolution, aperture, dim, offsetPerQuad,
-                        nCells, sub_lat, /*handle_ap7_south_pole=*/false,
-                        quad, i, j);
+        frame_decode(f, cell_id[k], quad, i, j);
 
-        // Convert to Quad XY
         double quad_x, quad_y;
-        if (aperture == 7) {
-            hexify::surrogate_ij_to_quad_xy_ap7(i, j, resolution, quad_x, quad_y);
-        } else {
-            hexify::quad_ij_to_xy(quad, i, j, aperture, resolution, quad_x, quad_y);
-        }
+        frame_ij_to_xy(f, quad, i, j, quad_x, quad_y);
 
-        // Convert Quad XY → Icosa Triangle
         int tri_face;
         double tri_x, tri_y;
         hexify::quad_xy_to_icosa_tri(quad, quad_x, quad_y, tri_face,

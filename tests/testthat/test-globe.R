@@ -237,7 +237,7 @@ test_that("the frame names the substrate sublattice of each grid", {
   expect_equal(f[c("dim", "index", "c")], list(dim = 49, index = 7, c = 5))
   f <- hexify:::cpp_globe_frame(4L, 4L, integer(0))
   expect_equal(f[c("dim", "index", "per_quad")], list(dim = 16, index = 1, per_quad = 256))
-  f <- hexify:::cpp_globe_frame(0L, 0L, c(4L, 3L, 7L))
+  f <- hexify:::cpp_globe_frame(2L, 0L, c(4L, 3L, 7L))
   expect_equal(f$index, 21)
   expect_equal(f$per_quad, 21)
 })

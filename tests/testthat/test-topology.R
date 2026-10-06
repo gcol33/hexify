@@ -80,7 +80,7 @@ test_that("ISEA distances match breadth-first search over the neighbours", {
 
     for (step in seq_len(depth)) {
       reached <- unique(unlist(cpp_get_neighbors_isea(numeric(0), frontier, resolution,
-                                                      aperture)))
+                                                      aperture, integer(0))))
       reached <- reached[!(as.character(reached) %in% names(hops))]
       if (length(reached) == 0) break
       hops[as.character(reached)] <- step
@@ -117,10 +117,11 @@ test_that("aperture 3 odd resolutions read the rotated cell lattice", {
   expect_equal(hex_distance(cell, neighbours, grid),
                rep(1L, length(neighbours)))
 
-  expect_equal(cpp_cell_lattice_generator(3L, 3L), c(2, 1))
-  expect_equal(cpp_cell_lattice_generator(3L, 4L), c(1, 0))
-  expect_equal(cpp_cell_lattice_generator(4L, 3L), c(1, 0))
-  expect_equal(cpp_cell_lattice_generator(7L, 3L), c(1, 0))
+  expect_equal(cpp_cell_lattice_generator(3L, 3L, integer(0)), c(2, 1))
+  expect_equal(cpp_cell_lattice_generator(4L, 3L, integer(0)), c(1, 0))
+  expect_equal(cpp_cell_lattice_generator(3L, 4L, integer(0)), c(1, 0))
+  expect_equal(cpp_cell_lattice_generator(3L, 7L, integer(0)), c(1, 0))
+  expect_equal(cpp_cell_lattice_generator(1L, 0L, c(4L, 3L)), c(2, 1))
 })
 
 test_that("a mixed aperture sequence walks like a pure one", {

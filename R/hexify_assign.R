@@ -31,9 +31,9 @@ hexify_assign <- function(lon, lat, effective_res, make_polygons = FALSE) {
   lat <- as.numeric(lat)
   res <- as.integer(effective_res)
 
-  cell_id <- cpp_lonlat_to_cell(numeric(0), lon, lat, res, 3L)
-  center <- cpp_cell_to_lonlat(numeric(0), cell_id, res, 3L)
-  quad_ij <- cpp_cell_to_quad_ij(cell_id, res, 3L)
+  cell_id <- cpp_lonlat_to_cell(numeric(0), lon, lat, res, 3L, integer(0))
+  center <- cpp_cell_to_lonlat(numeric(0), cell_id, res, 3L, integer(0))
+  quad_ij <- cpp_cell_to_quad_ij(cell_id, res, 3L, integer(0))
 
   df <- data.frame(
     id = cpp_cell_to_index(quad_ij$quad, quad_ij$i, quad_ij$j, res, 3L, "z3"),

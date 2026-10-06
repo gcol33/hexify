@@ -117,7 +117,7 @@ test_that("exactly 12 pentagons exist for all ISEA apertures", {
   # full valid cell-ID range rather than a handful of specific candidates.
   max_cell_id <- function(res, ap) {
     err <- tryCatch({
-      hexify:::cpp_cell_to_quad_ij(.Machine$integer.max, res, ap)
+      hexify:::cpp_cell_to_quad_ij(.Machine$integer.max, res, ap, integer(0))
       NA_real_
     }, error = function(e) conditionMessage(e))
     as.numeric(sub(".*\\[1, ([0-9]+)\\].*", "\\1", err))

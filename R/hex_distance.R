@@ -15,10 +15,8 @@
 #' @return Numeric vector `c(a, b)`
 #' @noRd
 grid_cell_lattice <- function(g) {
-  if (is_mixed_aperture(g@aperture)) {
-    return(cpp_cell_lattice_generator_seq(grid_ap_seq(g)))
-  }
-  cpp_cell_lattice_generator(aperture_to_int(g@aperture), g@resolution)
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_cell_lattice_generator(lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 #' Cell steps between two cells of one quad

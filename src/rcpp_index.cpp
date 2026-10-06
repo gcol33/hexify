@@ -17,7 +17,6 @@
 #include "icosahedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
-#include "aperture.h"
 #include "coordinate_transforms.h"
 #include "cell_index.h"
 #include "index_z3.h"

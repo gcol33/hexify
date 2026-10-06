@@ -439,10 +439,40 @@ void dggrid_canonicalize_q2di(long long topEdge, int& quadNum,
 
 } // anonymous namespace
 
-long long ap7_classI_scale(int resolution) {   // 7^numClassI, numClassI = (res+1)/2
-    long long s = 1;
-    for (int k = 0, n = (resolution + 1) / 2; k < n; ++k) s *= 7;
-    return s;
+// Substrate steps along a quad edge after n3, n4 and n7 refinement steps of
+// apertures 3, 4 and 7, in any order. The square of the substrate scale is the
+// product of the apertures times the norm of the grid form's generator. Two
+// aperture-3 steps compose to 3 times a unit, two aperture-7 steps to 7 times
+// a unit and an aperture-4 step is 2, so that norm is 3 after an odd number of
+// aperture-3 steps, 7 after an odd number of aperture-7 steps, 21 after both
+// and 1 otherwise. The edge is therefore 2^n4 * 3^ceil(n3/2) * 7^ceil(n7/2).
+static long long edge_dim_of_steps(int n3, int n4, int n7) {
+    long long d = 1;
+    for (int k = 0; k < n4; ++k) d *= 2;
+    for (int k = 0; k < (n3 + 1) / 2; ++k) d *= 3;
+    for (int k = 0; k < (n7 + 1) / 2; ++k) d *= 7;
+    return d;
+}
+
+long long quad_edge_dim(int aperture, int resolution) {
+    switch (aperture) {
+        case 3: return edge_dim_of_steps(resolution, 0, 0);
+        case 4: return edge_dim_of_steps(0, resolution, 0);
+        case 7: return edge_dim_of_steps(0, 0, resolution);
+        default: throw std::runtime_error("quad_edge_dim: aperture must be 3, 4, or 7");
+    }
+}
+
+long long quad_edge_dim(const std::vector<int>& ap_seq) {
+    int n[8] = {0};
+    for (size_t k = 1; k < ap_seq.size(); ++k) {
+        int a = ap_seq[k];
+        if (a != 3 && a != 4 && a != 7) {
+            throw std::runtime_error("quad_edge_dim: aperture must be 3, 4, or 7");
+        }
+        n[a]++;
+    }
+    return edge_dim_of_steps(n[3], n[4], n[7]);
 }
 
 void ap7_substrate_to_surrogate_ijk(long long sub_i, long long sub_j, int resolution,
@@ -494,7 +524,7 @@ void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
 }
 
 uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution) {
-    const long long S = ap7_classI_scale(resolution);
+    const long long S = quad_edge_dim(7, resolution);
     long long u, v;
     ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
     if (resolution % 2 == 0) {
@@ -507,7 +537,7 @@ uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resol
 
 void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
                                  long long& sur_i, long long& sur_j) {
-    const long long S = ap7_classI_scale(resolution);
+    const long long S = quad_edge_dim(7, resolution);
     const long long idx = static_cast<long long>(index);
     long long u, v;
     if (resolution % 2 == 0) {
@@ -539,14 +569,14 @@ bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
 
 bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
                           int aperture, int resolution) {
+    const long long edge = quad_edge_dim(aperture, resolution);
     if (aperture != 7) {
-        return substrate_ij_canonicalize(quad, i, j,
-                                         get_max_ij(aperture, resolution) + 1);
+        return substrate_ij_canonicalize(quad, i, j, edge);
     }
 
     long long ci, cj;
     ap7_surrogate_to_substrate_ijk(i, j, resolution, ci, cj);
-    if (!substrate_ij_canonicalize(quad, ci, cj, ap7_classI_scale(resolution))) {
+    if (!substrate_ij_canonicalize(quad, ci, cj, edge)) {
         return false;
     }
 
@@ -555,7 +585,7 @@ bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
 }
 
 bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution) {
-    const long long S = ap7_classI_scale(resolution);
+    const long long S = quad_edge_dim(7, resolution);
     long long u, v;
     ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
     return u >= 0 && u < S && v >= 0 && v < S;
@@ -563,7 +593,7 @@ bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution) {
 
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
                                   double& out_quad_x, double& out_quad_y) {
-    long long S = ap7_classI_scale(resolution);
+    long long S = quad_edge_dim(7, resolution);
     long long sub_i, sub_j;
     ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, sub_i, sub_j);
     double cx, cy;
@@ -620,30 +650,6 @@ void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, doub
     out_quad_y -= mapping.offset_y;
 }
 
-long long get_max_ij(int aperture, int resolution) {
-    if (resolution <= 0) return 0;
-
-    double factor;
-    if (aperture == 3) {
-        factor = std::pow(kSqrt3, resolution);
-        // Class II (odd res) uses finer substrate
-        if (resolution % 2 != 0) {
-            factor *= kSqrt3;
-        }
-    } else if (aperture == 4) {
-        factor = std::pow(2.0, resolution);
-    } else if (aperture == 7) {
-        factor = std::pow(std::sqrt(7.0), resolution);
-        // Class III-I (even res) uses sqrt(7) substrate, Class III-II (odd res) uses sqrt(21)
-        bool is_class3i = (resolution % 2 == 0);
-        factor *= is_class3i ? kSqrt7 : kSqrt21;
-    } else {
-        return 0;
-    }
-
-    return static_cast<long long>(factor + 1e-9) - 1;
-}
-
 // Handle edge overflow for upper hemisphere quads (1-5)
 // Returns true if overflow was handled
 inline bool handle_upper_edge(int& quad, long long& i, long long& j,
@@ -698,7 +704,7 @@ inline bool handle_lower_edge(int& quad, long long& i, long long& j,
 
 bool handle_edge_overflow(int& quad, long long& i, long long& j,
                           int aperture, int resolution) {
-    long long edge_coord = get_max_ij(aperture, resolution) + 1;
+    long long edge_coord = quad_edge_dim(aperture, resolution);
 
     // Quick exit: not on edge
     if (i != edge_coord && j != edge_coord) return false;
@@ -733,7 +739,7 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
             handle_edge_overflow(out_quad, out_i, out_j, 7, 0);
             return;
         }
-        long long S = ap7_classI_scale(resolution);
+        long long S = quad_edge_dim(7, resolution);
         double px = quad_x * static_cast<double>(S);
         double py = quad_y * static_cast<double>(S);
         long long sub_i, sub_j;
@@ -777,7 +783,7 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
     // that edge can quantize to a centre more than one row outside the quad;
     // DGGRID's edgeTable map reassigns any such centre, not only the first row.
     out_quad = quad;
-    dggrid_canonicalize_q2di(get_max_ij(aperture, resolution) + 1, out_quad, out_i, out_j);
+    dggrid_canonicalize_q2di(quad_edge_dim(aperture, resolution), out_quad, out_i, out_j);
 }
 
 void icosa_tri_to_quad_ij(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
@@ -824,24 +830,9 @@ void quad_ij_to_xy(int quad, long long i, long long j,
     out_quad_y = y / scale;
 }
 
-long long quad_edge_coord_mixed(const std::vector<int>& ap_seq) {
-    HexGridForm form = hex_form_sequence(ap_seq);
-
-    // The substrate scale is form.scale * sqrt(norm), and its square is the
-    // product of the apertures times the norm -- an exact integer, so the edge
-    // coordinate comes out of integer arithmetic rather than a chain of
-    // sqrt(3) multiplications.
-    long long squared = eisenstein_norm(form.m, form.n);
-    for (size_t k = 1; k < ap_seq.size(); ++k) {
-        squared *= static_cast<long long>(ap_seq[k]);
-    }
-    return std::llround(std::sqrt(static_cast<double>(squared)));
-}
-
 void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
-                         const std::vector<int>& ap_seq,
+                         const HexGridForm& form, long long edge,
                          int& out_quad, long long& out_i, long long& out_j) {
-    HexGridForm form = hex_form_sequence(ap_seq);
     quantize_form(form, quad_x, quad_y, out_i, out_j);
 
     out_quad = quad;
@@ -850,18 +841,10 @@ void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
     // A lattice rotated off the substrate axes by an odd number of aperture-7
     // steps has no mirror symmetry across a quad edge, so the cells along an
     // edge straddle it and the nearest centre of a point inside the quad can
-    // lie outside [0, edge_coord]^2. That centre is a cell of the neighbouring
+    // lie outside [0, edge]^2. That centre is a cell of the neighbouring
     // quad; the edge table moves it there, and sends a centre on the far edges
     // or vertices to the quad that owns it.
-    dggrid_canonicalize_q2di(quad_edge_coord_mixed(ap_seq), out_quad, out_i, out_j);
-}
-
-void quad_ij_to_xy_mixed(int quad, long long i, long long j,
-                         const std::vector<int>& ap_seq,
-                         double& out_quad_x, double& out_quad_y) {
-    (void)quad;
-    HexGridForm form = hex_form_sequence(ap_seq);
-    center_form(form, i, j, out_quad_x, out_quad_y);
+    dggrid_canonicalize_q2di(edge, out_quad, out_i, out_j);
 }
 
 // ============================================================================

@@ -314,7 +314,8 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
     i = as.numeric(i),
     j = as.numeric(j),
     resolution = as.integer(resolution),
-    aperture = as.integer(aperture)
+    aperture = as.integer(aperture),
+    ap_seq = integer(0)
   )
 }
 
@@ -516,7 +517,7 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
   validate_resolution(resolution)
   validate_aperture(aperture)
   validate_cell_id(cell_id, resolution, aperture)
-  as.data.frame(cpp_cell_to_quad_ij(cell_id, resolution, aperture))
+  as.data.frame(cpp_cell_to_quad_ij(cell_id, resolution, aperture, integer(0)))
 }
 
 #' Convert Cell ID to Icosa Triangle coordinates

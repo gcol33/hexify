@@ -528,13 +528,9 @@ icosa_solid <- function(icosa) {
 grid_surface_paths <- function(g, cells, step) {
   cells <- surface_cells(g, cells)
   if (is_h3_grid(g)) return(h3_sphere_paths(as.character(cells), step))
-  mixed <- is_mixed_aperture(g@aperture)
-  cpp_cell_surface_paths(
-    icosa_arg(g), as.numeric(cells), g@resolution,
-    if (mixed) 0L else aperture_to_int(g@aperture),
-    if (mixed) grid_ap_seq(g) else integer(0),
-    step
-  )
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_cell_surface_paths(icosa_arg(g), as.numeric(cells), lv$resolution,
+                         lv$aperture, lv$ap_seq, step)
 }
 
 #' The cells to draw: those given, or every cell of the grid

@@ -265,7 +265,7 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
   validate_lat(lat)
   validate_resolution(resolution)
   validate_aperture(aperture)
-  cpp_lonlat_to_cell(numeric(0), lon, lat, resolution, aperture)
+  cpp_lonlat_to_cell(numeric(0), lon, lat, resolution, aperture, integer(0))
 }
 
 #' Convert cell ID to longitude/latitude
@@ -291,7 +291,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
   validate_cell_id(cell_id, resolution, aperture)
-  cpp_cell_to_lonlat(numeric(0), cell_id, resolution, aperture)
+  cpp_cell_to_lonlat(numeric(0), cell_id, resolution, aperture, integer(0))
 }
 
 # =============================================================================

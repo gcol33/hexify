@@ -281,8 +281,8 @@ test_that("cell boundaries separate the cell from its neighbours", {
 
 test_that("a vertex cell of a 4,4,7,3 sequence drops the corner no face reads", {
   g <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
-  seq <- hexify:::grid_ap_seq(g)
-  qij <- hexify:::cpp_cell_to_quad_ij_seq(as.numeric(seq_len(n_cells(g))), seq)
+  seq <- hexify:::isea_levels(g@aperture, g@resolution)$ap_seq
+  qij <- hexify:::cpp_cell_to_quad_ij(as.numeric(seq_len(n_cells(g))), 4L, 0L, seq)
   vertex <- which(qij$i == 0 & qij$j == 0)
   expect_length(vertex, 12L)
   P <- hexify:::cpp_cell_surface_paths(numeric(0), as.numeric(vertex), 4L, 0L, seq, 0.05)

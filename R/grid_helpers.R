@@ -197,12 +197,9 @@ wrap_cells_at_dateline <- function(x) {
 #' @noRd
 isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
                             tolerance = CELL_EDGE_TOLERANCE) {
-  if (is_mixed_aperture(aperture)) {
-    return(cpp_cell_to_corners_seq(icosa, as.numeric(cell_id),
-                                   mixed_ap_seq(aperture, resolution), tolerance))
-  }
-  cpp_cell_to_corners(icosa, as.numeric(cell_id), as.integer(resolution),
-                      as.integer(aperture), tolerance)
+  lv <- isea_levels(aperture, resolution)
+  cpp_cell_to_corners(icosa, as.numeric(cell_id), lv$resolution, lv$aperture,
+                      lv$ap_seq, tolerance)
 }
 
 #' Build hexagon polygons for ISEA cell IDs
@@ -270,22 +267,9 @@ lonlat_to_cell <- function(lon, lat, grid) {
     return(cpp_h3_latLngToCell(as.numeric(lon), as.numeric(lat), g@resolution))
   }
 
-  if (is_mixed_aperture(g@aperture)) {
-    cpp_lonlat_to_cell_seq(
-      icosa_arg(g),
-      as.numeric(lon),
-      as.numeric(lat),
-      grid_ap_seq(g)
-    )
-  } else {
-    cpp_lonlat_to_cell(
-      icosa_arg(g),
-      as.numeric(lon),
-      as.numeric(lat),
-      g@resolution,
-      as.integer(g@aperture)
-    )
-  }
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_lonlat_to_cell(icosa_arg(g), as.numeric(lon), as.numeric(lat),
+                     lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 #' Convert cell ID to longitude/latitude
@@ -312,20 +296,9 @@ cell_to_lonlat <- function(cell_id, grid) {
     return(data.frame(lon_deg = result$lon, lat_deg = result$lat))
   }
 
-  if (is_mixed_aperture(g@aperture)) {
-    cpp_cell_to_lonlat_seq(
-      icosa_arg(g),
-      as.numeric(cell_id),
-      grid_ap_seq(g)
-    )
-  } else {
-    cpp_cell_to_lonlat(
-      icosa_arg(g),
-      as.numeric(cell_id),
-      g@resolution,
-      as.integer(g@aperture)
-    )
-  }
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_cell_to_lonlat(icosa_arg(g), as.numeric(cell_id),
+                     lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 #' Convert cell IDs to sf polygons
@@ -838,14 +811,9 @@ cell_area <- function(cell_id = NULL, grid) {
   per_id <- if (is_h3_grid(g)) {
     scale_area_to_body(cpp_h3_cellAreaKm2(ids), grid_radius_km(g))
   } else if (identical(grid_projection(g), "fuller")) {
-    sr <- if (is_mixed_aperture(g@aperture)) {
-      cpp_cell_solid_angle_seq(icosa_arg(g), ids,
-                               mixed_ap_seq(g@aperture, g@resolution),
-                               CELL_AREA_TOLERANCE)
-    } else {
-      cpp_cell_solid_angle(icosa_arg(g), ids, g@resolution,
-                           aperture_to_int(g@aperture), CELL_AREA_TOLERANCE)
-    }
+    lv <- isea_levels(g@aperture, g@resolution)
+    sr <- cpp_cell_solid_angle(icosa_arg(g), ids, lv$resolution, lv$aperture,
+                               lv$ap_seq, CELL_AREA_TOLERANCE)
     sr / (4 * pi) * surface
   } else {
     hexagon <- surface / (aperture_n_cells(g@aperture, g@resolution) - 2)
@@ -865,19 +833,15 @@ cell_area <- function(cell_id = NULL, grid) {
 #' Quad coordinates of cells on any ISEA grid
 #'
 #' A pure aperture and a mixed sequence pack their cells the same way and are
-#' read by the same walk, through one entry point taking the aperture and one
-#' taking the sequence.
+#' read by the same walk.
 #'
 #' @param cell_id Numeric vector of cell IDs
 #' @param g HexGridInfo object
 #' @return Data frame with quad, i and j columns
 #' @noRd
 grid_quad_ij <- function(cell_id, g) {
-  if (is_mixed_aperture(g@aperture)) {
-    return(cpp_cell_to_quad_ij_seq(as.numeric(cell_id), grid_ap_seq(g)))
-  }
-  cpp_cell_to_quad_ij(as.numeric(cell_id), g@resolution,
-                      aperture_to_int(g@aperture))
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_cell_to_quad_ij(as.numeric(cell_id), lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 #' The cells adjacent to given cells on any ISEA grid
@@ -887,12 +851,9 @@ grid_quad_ij <- function(cell_id, g) {
 #' @return List of numeric vectors, the neighbours of each cell
 #' @noRd
 grid_neighbors_isea <- function(cell_id, g) {
-  if (is_mixed_aperture(g@aperture)) {
-    return(cpp_get_neighbors_isea_seq(icosa_arg(g), as.numeric(cell_id),
-                                      grid_ap_seq(g)))
-  }
-  cpp_get_neighbors_isea(icosa_arg(g), as.numeric(cell_id), g@resolution,
-                         aperture_to_int(g@aperture))
+  lv <- isea_levels(g@aperture, g@resolution)
+  cpp_get_neighbors_isea(icosa_arg(g), as.numeric(cell_id), lv$resolution,
+                         lv$aperture, lv$ap_seq)
 }
 
 #' Hierarchical index strings of cells on a pure-aperture grid
@@ -908,7 +869,7 @@ grid_neighbors_isea <- function(cell_id, g) {
 #' @return Character vector of index strings
 #' @noRd
 isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type) {
-  qij <- cpp_cell_to_quad_ij(as.numeric(cell_id), resolution, aperture_int)
+  qij <- cpp_cell_to_quad_ij(as.numeric(cell_id), resolution, aperture_int, integer(0))
   cpp_cell_to_index(qij$quad, qij$i, qij$j, resolution, aperture_int, index_type)
 }
 
@@ -930,7 +891,8 @@ isea_index_to_cells <- function(index, aperture_int, index_type) {
   for (resolution in unique(stats::na.omit(cell$resolution))) {
     at_res <- !is.na(cell$resolution) & cell$resolution == resolution
     out[at_res] <- cpp_quad_ij_to_cell(cell$face[at_res], cell$i[at_res],
-                                       cell$j[at_res], resolution, aperture_int)
+                                       cell$j[at_res], resolution, aperture_int,
+                                       integer(0))
   }
 
   out

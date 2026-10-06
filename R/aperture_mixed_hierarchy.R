@@ -26,27 +26,32 @@
 # ISEA orientation on the ISEA projection, the frame the pole probes below are
 # placed in.
 
-mixed_ap_seq <- function(aperture, resolution) {
-  parse_aperture_seq(aperture_at_resolution(aperture, resolution), resolution)
-}
-
 mixed_cell_center <- function(cell_id, resolution, aperture) {
-  cpp_cell_to_lonlat_seq(standard_icosa(), as.numeric(cell_id),
-                         mixed_ap_seq(aperture, resolution))
+  lv <- isea_levels(aperture, resolution)
+  cpp_cell_to_lonlat(standard_icosa(), as.numeric(cell_id),
+                     lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 mixed_point_to_cell <- function(lon, lat, resolution, aperture) {
-  cpp_lonlat_to_cell_seq(standard_icosa(), as.numeric(lon), as.numeric(lat),
-                         mixed_ap_seq(aperture, resolution))
+  lv <- isea_levels(aperture, resolution)
+  cpp_lonlat_to_cell(standard_icosa(), as.numeric(lon), as.numeric(lat),
+                     lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 mixed_cell_qij <- function(cell_id, resolution, aperture) {
-  cpp_cell_to_quad_ij_seq(as.numeric(cell_id), mixed_ap_seq(aperture, resolution))
+  lv <- isea_levels(aperture, resolution)
+  cpp_cell_to_quad_ij(as.numeric(cell_id), lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 mixed_qij_cell <- function(quad, i, j, resolution, aperture) {
-  cpp_quad_ij_to_cell_seq(as.integer(quad), as.numeric(i), as.numeric(j),
-                          mixed_ap_seq(aperture, resolution))
+  lv <- isea_levels(aperture, resolution)
+  cpp_quad_ij_to_cell(as.integer(quad), as.numeric(i), as.numeric(j),
+                      lv$resolution, lv$aperture, lv$ap_seq)
+}
+
+mixed_edge_dim <- function(resolution, aperture) {
+  lv <- isea_levels(aperture, resolution)
+  cpp_quad_edge_dim(lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 #' All valid cells within a band of the (i,j) boundary of the ten body quads,
@@ -57,7 +62,7 @@ mixed_qij_cell <- function(quad, i, j, resolution, aperture) {
 #' set is O(w * sqrt(n_cells)), still cheap against the full grid.
 #' @noRd
 mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L) {
-  m <- cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution)) - 1L
+  m <- mixed_edge_dim(resolution, aperture) - 1L
   w <- min(w, as.integer(m) + 1L)
   lo <- 0:(w - 1L)
   hi <- (m - w + 1L):m
@@ -141,8 +146,9 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   # BFS over neighbours, keeping only genuine children.
   for (iter in seq_len(64)) {
     if (length(frontier) == 0) break
-    nb <- unlist(cpp_get_neighbors_isea_seq(standard_icosa(), frontier,
-                                            mixed_ap_seq(aperture, child_res)))
+    lv <- isea_levels(aperture, child_res)
+    nb <- unlist(cpp_get_neighbors_isea(standard_icosa(), frontier,
+                                        lv$resolution, lv$aperture, lv$ap_seq))
     nb <- setdiff(nb[!is.na(nb)], visited)
     visited <- c(visited, nb)
     if (length(nb) == 0) break
@@ -159,7 +165,7 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   # and add any cell whose exact parent is this cell. Interior parents keep all
   # children in-quad, so the fast walk above is already complete for them.
   pq <- mixed_cell_qij(cell_id, resolution, aperture)
-  m_parent <- cpp_ap_seq_edge_dim(mixed_ap_seq(aperture, resolution)) - 1L
+  m_parent <- mixed_edge_dim(resolution, aperture) - 1L
   gate <- 3L
   near_boundary <- min(pq$i, pq$j, m_parent - pq$i, m_parent - pq$j) < gate
   if (near_boundary) {

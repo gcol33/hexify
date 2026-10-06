@@ -321,3 +321,27 @@ test_that("batch processing handles large datasets", {
   uniqueness <- length(unique(cell_ids)) / n
   expect_gt(uniqueness, 0.8)
 })
+
+test_that("cells on a quad's last column keep their quad at every aperture-3 resolution", {
+  # A quad edge measures exactly 3^ceil(res / 2) substrate steps, so the cells
+  # at i = edge - 1 belong to the quad they are packed in. At odd resolutions
+  # the cells are the substrate points with (i + j) %% 3 == 0.
+  for (res in c(5L, 6L, 24:30)) {
+    g <- hex_grid(resolution = res, aperture = 3)
+    edge <- 3^ceiling(res / 2)
+    i <- c(edge - 1, edge - 1, floor(edge / 2))
+    j <- c(1, floor(edge / 2), edge - 1)
+    if (res %% 2 == 1) j <- j - (i + j) %% 3
+    quad <- c(3L, 7L, 3L)
+
+    ids <- hexify_quad_ij_to_cell(quad, i, j, resolution = res, aperture = 3)
+    qij <- hexify_cell_to_quad_ij(ids, resolution = res, aperture = 3)
+    expect_equal(qij$quad, quad, info = sprintf("res %d: quad", res))
+    expect_equal(qij$i, i, info = sprintf("res %d: i", res))
+    expect_equal(qij$j, j, info = sprintf("res %d: j", res))
+
+    centres <- cell_to_lonlat(ids, g)
+    expect_equal(lonlat_to_cell(centres$lon_deg, centres$lat_deg, g), ids,
+                 info = sprintf("res %d: centre round trip", res))
+  }
+})

@@ -25,20 +25,6 @@
 namespace hexify {
 namespace z7 {
 
-// Base cell adjacency tables derived from icosahedral topology.
-// The icosahedron has 12 vertices; each base cell corresponds to one vertex.
-// adjacentBaseCellTable[cell][dir] gives the adjacent cell in direction dir.
-// Directions: 0=self, 1=edge1, 2=edge2, 3=edge3 (varies by hemisphere)
-extern const int adjacentBaseCellTable[12][4];
-
-// Inverse adjacency for decoding: maps encoded cell back to original quad
-extern const int inverseAdjacentBaseCellTable[12][2];
-
-std::string encode(int quadNum, long long i, long long j, int resolution);
-
-void decode(const std::string& z7_str, int resolution,
-            int& quadNum, long long& i, long long& j);
-
 // Bijective aperture-7 hierarchical index (hexify-native). Keeps the quad fixed
 // (no DGGRID base-cell reassignment / pentagon skip), so every (quad, i, j)
 // round-trips. The leading field is quad + 12 * seed, seed being the unit digit

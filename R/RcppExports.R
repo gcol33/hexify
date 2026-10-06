@@ -129,10 +129,6 @@ cpp_batch_test_roundtrip_ap7 <- function(tx_vec, ty_vec, resolution) {
     .Call(`_hexify_cpp_batch_test_roundtrip_ap7`, tx_vec, ty_vec, resolution)
 }
 
-cpp_decode_z7 <- function(index_body, aperture) {
-    .Call(`_hexify_cpp_decode_z7`, index_body, aperture)
-}
-
 cpp_icosa_tri_to_quad_ij <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution) {
     .Call(`_hexify_cpp_icosa_tri_to_quad_ij`, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution)
 }
@@ -153,24 +149,28 @@ cpp_lonlat_to_quad_ij <- function(icosa, lon_deg, lat_deg, aperture, resolution)
     .Call(`_hexify_cpp_lonlat_to_quad_ij`, icosa, lon_deg, lat_deg, aperture, resolution)
 }
 
-cpp_cell_lattice_generator <- function(aperture, resolution) {
-    .Call(`_hexify_cpp_cell_lattice_generator`, aperture, resolution)
+cpp_quad_edge_dim <- function(resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_quad_edge_dim`, resolution, aperture, ap_seq)
 }
 
-cpp_quad_ij_to_cell <- function(quad, i, j, resolution, aperture) {
-    .Call(`_hexify_cpp_quad_ij_to_cell`, quad, i, j, resolution, aperture)
+cpp_cell_lattice_generator <- function(resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_cell_lattice_generator`, resolution, aperture, ap_seq)
 }
 
-cpp_lonlat_to_cell <- function(icosa, lon, lat, resolution, aperture) {
-    .Call(`_hexify_cpp_lonlat_to_cell`, icosa, lon, lat, resolution, aperture)
+cpp_quad_ij_to_cell <- function(quad, i, j, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_quad_ij_to_cell`, quad, i, j, resolution, aperture, ap_seq)
 }
 
-cpp_cell_to_lonlat <- function(icosa, cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_lonlat`, icosa, cell_id, resolution, aperture)
+cpp_lonlat_to_cell <- function(icosa, lon, lat, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_lonlat_to_cell`, icosa, lon, lat, resolution, aperture, ap_seq)
 }
 
-cpp_cell_to_quad_ij <- function(cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_quad_ij`, cell_id, resolution, aperture)
+cpp_cell_to_lonlat <- function(icosa, cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_cell_to_lonlat`, icosa, cell_id, resolution, aperture, ap_seq)
+}
+
+cpp_cell_to_quad_ij <- function(cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_cell_to_quad_ij`, cell_id, resolution, aperture, ap_seq)
 }
 
 cpp_cell_to_quad_xy <- function(cell_id, resolution, aperture) {
@@ -189,52 +189,20 @@ cpp_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, quad, i, j, resolution, aperture)
 }
 
-cpp_ap_seq_edge_dim <- function(ap_seq_in) {
-    .Call(`_hexify_cpp_ap_seq_edge_dim`, ap_seq_in)
+cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
+    .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
-cpp_lonlat_to_cell_seq <- function(icosa, lon, lat, ap_seq_in) {
-    .Call(`_hexify_cpp_lonlat_to_cell_seq`, icosa, lon, lat, ap_seq_in)
-}
-
-cpp_cell_to_lonlat_seq <- function(icosa, cell_id, ap_seq_in) {
-    .Call(`_hexify_cpp_cell_to_lonlat_seq`, icosa, cell_id, ap_seq_in)
-}
-
-cpp_cell_to_quad_ij_seq <- function(cell_id, ap_seq_in) {
-    .Call(`_hexify_cpp_cell_to_quad_ij_seq`, cell_id, ap_seq_in)
-}
-
-cpp_quad_ij_to_cell_seq <- function(quad, i, j, ap_seq_in) {
-    .Call(`_hexify_cpp_quad_ij_to_cell_seq`, quad, i, j, ap_seq_in)
-}
-
-cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, tolerance) {
-    .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, tolerance)
-}
-
-cpp_cell_solid_angle_seq <- function(icosa, cell_id, ap_seq_in, tolerance) {
-    .Call(`_hexify_cpp_cell_solid_angle_seq`, icosa, cell_id, ap_seq_in, tolerance)
-}
-
-cpp_cell_to_corners <- function(icosa, cell_id, resolution, aperture, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_corners`, icosa, cell_id, resolution, aperture, tolerance)
-}
-
-cpp_cell_to_polygon <- function(icosa, cell_id, resolution, aperture, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_polygon`, icosa, cell_id, resolution, aperture, tolerance)
-}
-
-cpp_cell_to_corners_seq <- function(icosa, cell_id, ap_seq_in, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_corners_seq`, icosa, cell_id, ap_seq_in, tolerance)
+cpp_cell_to_corners <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance = 0.0) {
+    .Call(`_hexify_cpp_cell_to_corners`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
 cpp_densify_great_circle <- function(rings, tolerance) {
     .Call(`_hexify_cpp_densify_great_circle`, rings, tolerance)
 }
 
-cpp_cell_surface_paths <- function(icosa, cell_id, resolution, aperture, ap_seq_in, step) {
-    .Call(`_hexify_cpp_cell_surface_paths`, icosa, cell_id, resolution, aperture, ap_seq_in, step)
+cpp_cell_surface_paths <- function(icosa, cell_id, resolution, aperture, ap_seq, step) {
+    .Call(`_hexify_cpp_cell_surface_paths`, icosa, cell_id, resolution, aperture, ap_seq, step)
 }
 
 cpp_icosa_solid <- function(icosa) {
@@ -249,24 +217,12 @@ cpp_face_tri_to_solid <- function(icosa, face, tx, ty) {
     .Call(`_hexify_cpp_face_tri_to_solid`, icosa, face, tx, ty)
 }
 
-cpp_globe_frame <- function(resolution, aperture, ap_seq_in) {
-    .Call(`_hexify_cpp_globe_frame`, resolution, aperture, ap_seq_in)
+cpp_globe_frame <- function(resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_globe_frame`, resolution, aperture, ap_seq)
 }
 
-cpp_cell_lattice_generator_seq <- function(ap_seq_in) {
-    .Call(`_hexify_cpp_cell_lattice_generator_seq`, ap_seq_in)
-}
-
-cpp_get_neighbors_isea <- function(icosa, cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_get_neighbors_isea`, icosa, cell_id, resolution, aperture)
-}
-
-cpp_get_neighbors_isea_seq <- function(icosa, cell_id, ap_seq_in) {
-    .Call(`_hexify_cpp_get_neighbors_isea_seq`, icosa, cell_id, ap_seq_in)
-}
-
-cpp_get_neighbors_z7 <- function(index_ids, resolution) {
-    .Call(`_hexify_cpp_get_neighbors_z7`, index_ids, resolution)
+cpp_get_neighbors_isea <- function(icosa, cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_get_neighbors_isea`, icosa, cell_id, resolution, aperture, ap_seq)
 }
 
 cpp_icosa_tri_to_plane <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {

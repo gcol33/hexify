@@ -286,10 +286,8 @@ globe_shader_cells <- function(grid, xyz, timeout = 120) {
 #' drawn, and IDs are sent only to carry values.
 #' @noRd
 globe_grid <- function(g, cells, values, limits) {
-  mixed <- is_mixed_aperture(g@aperture)
-  frame <- cpp_globe_frame(g@resolution,
-                           if (mixed) 0L else aperture_to_int(g@aperture),
-                           if (mixed) grid_ap_seq(g) else integer(0))
+  lv <- isea_levels(g@aperture, g@resolution)
+  frame <- cpp_globe_frame(lv$resolution, lv$aperture, lv$ap_seq)
   # The shader reads a point to 32-bit float precision, a few millionths of
   # a radian; past this quad side its cells are finer than that.
   if (frame$dim >= 2^24) {

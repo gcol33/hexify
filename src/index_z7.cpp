@@ -8,8 +8,8 @@
 // Algorithm:
 // 1. Start at finest resolution, repeatedly coarsen using upAp7/upAp7r
 // 2. At each level, compute child position as difference from parent center
-// 3. Handle pentagon base cells (0, 11) with rotation adjustments
-// 4. Encode digits 0-6 representing the 7 child positions
+// 3. Encode digits 0-6 representing the 7 child positions, led by the quad
+//    and the unit digit the walk arrives at
 //
 // References:
 // - Sahr, White, Kimerling (2003) "Geodesic Discrete Global Grid Systems"
@@ -19,7 +19,6 @@
 
 #include "index_z7.h"
 #include <stdexcept>
-#include <cstdlib>
 #include <sstream>
 #include <iomanip>
 #include <unordered_set>
@@ -29,7 +28,10 @@
 namespace hexify {
 namespace z7 {
 
-const int adjacentBaseCellTable[12][4] = {
+// Base cell adjacency derived from icosahedral topology: the base cell each
+// quad shares an edge with, in the three directions a hierarchy walk can leave
+// the quad's rhombus by.
+static const int adjacentBaseCellTable[12][4] = {
     { 0, 0, 0, 0 },
     { 1, 6, 2, 0 },
     { 2, 7, 3, 0 },
@@ -43,328 +45,6 @@ const int adjacentBaseCellTable[12][4] = {
     { 10, 11, 6, 1 },
     { 11, 11, 0, 0 }
 };
-
-const int inverseAdjacentBaseCellTable[12][2] = {
-    { 0,  0 },
-    { 5, 10 },
-    { 1,  6 },
-    { 2,  7 },
-    { 3,  8 },
-    { 4,  9 },
-    { 10, 1 },
-    { 6,  2 },
-    { 7,  3 },
-    { 8,  4 },
-    { 9,  5 },
-    { 11, 11 }
-};
-
-std::string encode(int quadNum, long long i, long long j, int resolution) {
-    // Format base cell as 2 digits
-    std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(2) << quadNum;
-    std::string bcstr = oss.str();
-    
-    // Resolution 0 is just the base cell
-    if (resolution == 0) {
-        return bcstr;
-    }
-    
-    IVec3D ijk(i, j, 0);
-    int baseCell = quadNum;
-    IVec3D baseCellIjk = ijk;
-    int res = resolution;
-    
-    bool isClassIII = (res % 2);
-    int effectiveRes = (isClassIII) ? res + 1 : res;
-    
-    // Allocate (res + 1) elements for digit storage
-    // Index 0 unused; indices 1..res store the hierarchical path digits
-    std::vector<IVec3D::Direction> digits_vec(res + 1, IVec3D::INVALID_DIGIT);
-    IVec3D::Direction* digits = digits_vec.data();
-    
-    bool first = true;
-    for (int r = effectiveRes; r >= 0; r--) {
-        IVec3D lastIJK = ijk;
-        IVec3D lastCenter;
-        
-        if (r % 2) {
-            ijk.upAp7();
-            lastCenter = ijk;
-            lastCenter.downAp7();
-        } else {
-            ijk.upAp7r();
-            lastCenter = ijk;
-            lastCenter.downAp7r();
-        }
-        
-        if (r == 1) {
-            baseCellIjk = ijk;
-        }
-        
-        if (first && isClassIII) {
-            first = false;
-            continue;
-        }
-        
-        IVec3D diff = lastIJK.diffVec(lastCenter);
-        digits[r] = diff.unitIjkPlusToDigit();
-    }
-    
-    int quadOriginBaseCell = baseCell;
-    
-    // Apply adjacency transformations
-    if (baseCellIjk.i() == 1) {
-        if (baseCellIjk.j() == 0) {
-            baseCell = adjacentBaseCellTable[baseCell][1];
-        } else {
-            baseCell = adjacentBaseCellTable[baseCell][2];
-        }
-    } else if (baseCellIjk.j() == 1) {
-        baseCell = adjacentBaseCellTable[baseCell][3];
-    }
-    
-    // Handle the single-cell quads 0 and 11
-    if (baseCell != quadOriginBaseCell) {
-        if (baseCell == 0) {
-            // must be quad 1 - 5
-            // rotate once for each quad past 1
-            for (int q = 1; q < quadOriginBaseCell; q++) {
-                IVec3D::rotateDigitVecCCW(digits, res, 
-                    (IVec3D::Direction)IVec3D::PENTAGON_SKIPPED_DIGIT_TYPE1);
-            }
-        } else if (baseCell == 11) {
-            // must be quad 6 - 10
-            // rotate once for each quad less than 10
-            int numRots = 10 - quadOriginBaseCell;
-            for (int q = 0; q < numRots; q++) {
-                IVec3D::rotateDigitVecCCW(digits, res,
-                    (IVec3D::Direction)IVec3D::PENTAGON_SKIPPED_DIGIT_TYPE2);
-            }
-        }
-    }
-    
-    // Format the base cell for output
-    oss.str("");
-    oss << std::setfill('0') << std::setw(2) << baseCell;
-    std::string addstr = oss.str();
-    
-    // Pentagon digit skip handling for base cells near poles
-    // Pentagons have only 5 neighbors (not 6), so one digit direction is invalid.
-    // Type 1 (north pole region, cells 0-5): skip digit 2 (J_AXES_DIGIT)
-    // Type 2 (south pole region, cells 6-11): skip digit 5 (IJ_AXES_DIGIT)
-    IVec3D::Direction skipDigit = ((baseCell < 6) ?
-        (IVec3D::Direction)IVec3D::PENTAGON_SKIPPED_DIGIT_TYPE1 :
-        (IVec3D::Direction)IVec3D::PENTAGON_SKIPPED_DIGIT_TYPE2);
-
-    // Rotation adjustment for pentagon continuity
-    // When the first non-zero digit equals the skipped digit, rotate all
-    // subsequent digits to maintain consistent indexing across the pentagon gap.
-    bool skipRotate = false;
-    bool firstNonZero = false;
-
-    for (int r = 1; r < res + 1; r++) {
-        IVec3D::Direction d = digits[r];
-
-        // Check if this is the first non-zero digit
-        if (!firstNonZero && d != IVec3D::CENTER_DIGIT) {
-            firstNonZero = true;
-            if (d == skipDigit)
-                skipRotate = true;
-        }
-
-        // Apply rotation to all digits when skip condition is triggered
-        if (skipRotate) {
-            d = IVec3D::rotate60ccw(d);
-        }
-        
-        addstr += std::to_string((int)d);
-    }
-    
-    return addstr;
-}
-
-void decode(const std::string& z7_index, int resolution,
-            int& quadNum, long long& i, long long& j) {
-    
-    if (z7_index.length() < 2) {
-        throw std::runtime_error("Z7 index too short");
-    }
-    
-    std::string bcStr = z7_index.substr(0, 2);
-    if (bcStr[0] == '0') {
-        bcStr = bcStr.substr(1, 1);
-    }
-    int bcNum = std::stoi(bcStr);
-    
-    if (bcNum < 0 || bcNum > 11) {
-        throw std::runtime_error("Invalid base cell number");
-    }
-    
-    std::string z7str = z7_index.substr(2);
-    int res = (int) z7str.length();
-    
-    // Resolution 0 is just the base cell
-    if (res == 0) {
-        quadNum = bcNum;
-        i = 0;
-        j = 0;
-        return;
-    }
-    
-    if (res % 2) {
-        z7str += "0";
-        res++;
-    }
-    
-    IVec3D ijk(0, 0, 0);
-    for (int r = 0; r < res; r++) {
-        if ((r + 1) % 2) {
-            ijk.downAp7();
-        } else {
-            ijk.downAp7r();
-        }
-        
-        ijk.neighbor((IVec3D::Direction) (z7str.c_str()[r] - '0'));
-    }
-    
-    IVec2D ij(ijk);
-    i = ij.i();
-    j = ij.j();
-    quadNum = bcNum;
-    
-    if (i == 0 && j == 0) {
-        return;
-    }
-    
-    int numClassI = (resolution + 1) / 2;
-    unsigned long long int unitScaleClassIres = 1;
-    for (int r = 0; r < numClassI; r++) {
-        unitScaleClassIres *= 7;
-    }
-    
-    bool negI = (i < 0);
-    bool negJ = (j < 0);
-    
-    long long origI = i;
-    
-    // Apply adjacency transformations
-    if (bcNum == 0) {
-        if (!negI) {
-            if (!negJ) {
-                if (i > j) {
-                    quadNum = 2;
-                    i = j;
-                    j = unitScaleClassIres - (origI - j);
-                } else {
-                    quadNum = 3;
-                    i = j - i;
-                    j = unitScaleClassIres - origI;
-                }
-            } else {
-                quadNum = 1;
-                j = j + unitScaleClassIres;
-            }
-        } else {
-            if (!negJ) {
-                if (j == 0) {
-                    quadNum = 4;
-                    j = unitScaleClassIres + i;
-                    i = 0;
-                } else {
-                    quadNum = 3;
-                    i = -i;
-                    j = unitScaleClassIres - j;
-                }
-            } else {
-                if (i < j) {
-                    quadNum = 4;
-                    i = -j;
-                    j = unitScaleClassIres - (-origI + j);
-                } else {
-                    quadNum = 5;
-                    i = origI - j;
-                    j = unitScaleClassIres + origI;
-                }
-            }
-        }
-    }
-    else if (bcNum == 11) {
-        if (!negI) {
-            if (!negJ) {
-                if (i == 0) {
-                    quadNum = 6;
-                    i = unitScaleClassIres - j;
-                    j = 0;
-                } else if (j == 0) {
-                    quadNum = 8;
-                    i = unitScaleClassIres - i;
-                    j = 0;
-                } else if (j > i) {
-                    quadNum = 6;
-                    i = unitScaleClassIres - (j - i);
-                    j = origI;
-                } else {
-                    quadNum = 7;
-                    i = unitScaleClassIres - j;
-                    j = origI - j;
-                }
-            } else {
-                quadNum = 8;
-                i = unitScaleClassIres - i;
-                j = -j;
-            }
-        } else {
-            if (negJ) {
-                if (i > j) {
-                    quadNum = 8;
-                    i = unitScaleClassIres - (-j + i);
-                    j = -origI;
-                } else {
-                    quadNum = 9;
-                    i = unitScaleClassIres + j;
-                    j = -origI + j;
-                }
-            } else {
-                quadNum = 10;
-                i = unitScaleClassIres + i;
-            }
-        }
-    }
-    else if (bcNum < 6) {
-        if (negJ) {
-            j = j + unitScaleClassIres;
-            if (negI) {
-                i = i + unitScaleClassIres;
-                quadNum = inverseAdjacentBaseCellTable[bcNum][0];
-            } else {
-                quadNum = inverseAdjacentBaseCellTable[bcNum][1];
-            }
-        } else if (negI) {
-            IVec3D ijk_temp(i, j);
-            ijk_temp.ijkRotate60cw();
-            IVec2D ij_temp(ijk_temp);
-            i = ij_temp.i();
-            j = ij_temp.j();
-        }
-    }
-    else {
-        if (negI) {
-            i = i + unitScaleClassIres;
-            if (negJ) {
-                j = j + unitScaleClassIres;
-                quadNum = inverseAdjacentBaseCellTable[bcNum][0];
-            } else {
-                quadNum = inverseAdjacentBaseCellTable[bcNum][1];
-            }
-        } else if (negJ) {
-            i = j + unitScaleClassIres;
-            j = j + unitScaleClassIres - origI;
-            
-            quadNum = inverseAdjacentBaseCellTable[bcNum][0];
-        }
-    }
-}
 
 // ============================================================================
 // Bijective aperture-7 hierarchical index (hexify-native)
@@ -380,8 +60,7 @@ void decode(const std::string& z7_index, int resolution,
 // merge distinct cells. Every (quad, i, j) then maps to a unique string and
 // back. The string equals the DGGRID Z7 string for cells DGGRID does not
 // reassign, and deviates only for the pentagon-region cells where DGGRID's own
-// encoder collides. Input/output (i,j) are the Class I substrate coordinate
-// (the same convention encode()/decode() use).
+// encoder collides. Input/output (i,j) are the Class I substrate coordinate.
 
 // The level-0 coordinate a walk arrives at. A cell whose whole ancestry lies
 // inside its quad arrives at the origin, and decoding from the origin recovers
@@ -402,8 +81,8 @@ static IVec3D z7_seed_coord(int digit) {
 // The seed is the lattice point the hierarchy walk arrives at, at resolution 0.
 // The quad's own origin means the whole ancestry lies inside the quad; any
 // other arrival has crossed the quad's rhombic boundary into one of the three
-// base cells it shares an edge with, which is the step encode() takes through
-// the same table on the same coordinate.
+// base cells it shares an edge with, the one DGGRID's Z7 encoder reassigns
+// such a cell to through the same table.
 static int seed_base_cell(int quadNum, int seed) {
     const IVec3D arrival = z7_seed_coord(seed);
     if (arrival.i() == 1) {

@@ -647,12 +647,10 @@ index_type_for_aperture <- function(aperture) {
 
 #' Integer aperture for the C++ functions that take a single one
 #'
-#' A mixed sequence has no single aperture, and the 3 it reports names only
-#' decode_cell_id()'s substrate branch, which is the one a mixed sequence
-#' stores its cells on. Anything that reads the aperture as a refinement
-#' factor -- cell geometry, hierarchy, cell counts -- is wrong on a mixed grid
-#' with this integer and belongs on the sequence API, which takes one aperture
-#' per level.
+#' A mixed sequence has no single aperture, and the 3 it reports is not a
+#' refinement factor of the grid. Anything that reads the aperture as one --
+#' cell geometry, hierarchy, cell counts -- takes the grid's levels from
+#' isea_levels() instead, which carry one aperture per level.
 #' @param aperture Character or numeric aperture spelling
 #' @return Integer aperture (3L, 4L, or 7L)
 #' @noRd
@@ -667,7 +665,7 @@ aperture_to_int <- function(aperture) {
 #' @noRd
 max_cell_id <- function(resolution, aperture) {
   # Cell count formula: N = 10 * aperture^res + 2 (cell IDs are 1..N,
-  # matching calc_grid_params() in rcpp_cell.cpp)
+  # matching quad_frame() in rcpp_cell.cpp)
   10 * (aperture^resolution) + 2
 }
 

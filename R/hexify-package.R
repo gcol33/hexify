@@ -20,7 +20,7 @@ utils::globalVariables(c(
   "cpp_h3_gridDisk", "cpp_h3_gridDiskDistances", "cpp_h3_gridRingUnsafe",
   "cpp_h3_compactCells", "cpp_h3_uncompactCells",
   "cpp_h3_isPentagon", "cpp_h3_gridDistance",
-  "cpp_get_neighbors_isea", "cpp_get_neighbors_z7"
+  "cpp_get_neighbors_isea"
 ))
 
 #' @importFrom sf st_crs

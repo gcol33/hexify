@@ -82,11 +82,23 @@ parse_aperture_seq <- function(aperture, resolution) {
   as.integer(c(base, steps))
 }
 
-#' Aperture sequence of a grid object
-#' @param g HexGridInfo object
+#' Levels of an ISEA grid as the C++ entry points take them
+#'
+#' Every ISEA entry point takes `resolution, aperture, ap_seq`. A pure
+#' aperture passes itself and an empty `ap_seq`; a mixed spelling passes
+#' aperture 0 and its sequence read at `resolution`.
+#' @param aperture Character or numeric aperture spelling
+#' @param resolution Integer resolution
+#' @return List with integer `resolution`, `aperture` and `ap_seq`
 #' @noRd
-grid_ap_seq <- function(g) {
-  parse_aperture_seq(g@aperture, g@resolution)
+isea_levels <- function(aperture, resolution) {
+  resolution <- as.integer(resolution)
+  if (is_mixed_aperture(aperture)) {
+    return(list(resolution = resolution, aperture = 0L,
+                ap_seq = parse_aperture_seq(aperture_at_resolution(aperture, resolution),
+                                            resolution)))
+  }
+  list(resolution = resolution, aperture = as.integer(aperture), ap_seq = integer(0))
 }
 
 #' The same spelling read at a coarser resolution
@@ -106,7 +118,7 @@ aperture_at_resolution <- function(aperture, resolution) {
 #' Cell count of an aperture sequence
 #'
 #' N = 10 * (product of the refinement apertures) + 2, the formula
-#' calc_grid_params_mixed() in src/rcpp_cell.cpp packs cell IDs for.
+#' quad_frame() in src/rcpp_cell.cpp packs cell IDs for.
 #' @param ap_seq Integer aperture sequence
 #' @noRd
 ap_seq_n_cells <- function(ap_seq) {
