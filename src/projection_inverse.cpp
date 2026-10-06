@@ -237,21 +237,20 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face,
   while (azimuth <= -kPi) azimuth += kTwoPi;
   while (azimuth >   kPi) azimuth -= kTwoPi;
 
-  // Great-circle from face center
-  double sinlat = center_sinlat * std::cos(z) + center_coslat * std::sin(z) * std::cos(azimuth);
-  sinlat = clampd(sinlat, -1.0, 1.0);
-  const double lat = std::asin(sinlat);
-
-  double lon;
-  if (std::abs(std::abs(lat) - (kPi/2.0)) < 1e-12) {
-    lon = center_lon; // poles: azimuth undefined, keep center longitude
-  } else {
-    double sinlon = std::sin(azimuth) * std::sin(z) / std::cos(lat);
-    double coslon = (std::cos(z) - center_sinlat * std::sin(lat)) / (center_coslat * std::cos(lat));
-    sinlon = clampd(sinlon, -1.0, 1.0);
-    coslon = clampd(coslon, -1.0, 1.0);
-    lon = wrap_lon_rad(center_lon + std::atan2(sinlon, coslon));
-  }
+  // Great circle from the face centre, in the centre's east/north frame taken
+  // at its longitude, which stays defined when the centre lies at a pole.
+  const double north = std::sin(z) * std::cos(azimuth);
+  const double east  = std::sin(z) * std::sin(azimuth);
+  const double up    = std::cos(z);
+  const double radial = up * center_coslat - north * center_sinlat;
+  const double sl = std::sin(center_lon), cl = std::cos(center_lon);
+  const double px = radial * cl - east * sl;
+  const double py = radial * sl + east * cl;
+  const double pz = up * center_sinlat + north * center_coslat;
+  const double rho = std::hypot(px, py);
+  const double lat = std::atan2(pz, rho);
+  // A pole has no longitude; it keeps the centre's.
+  const double lon = rho < 1e-12 ? wrap_lon_rad(center_lon) : std::atan2(py, px);
 
   return { rad2deg(lon), rad2deg(lat) };
 }
