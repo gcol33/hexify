@@ -1235,51 +1235,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_snyder_inv_set_precision
-void cpp_snyder_inv_set_precision(std::string mode, Rcpp::Nullable<double> tol, Rcpp::Nullable<int> max_iters);
-RcppExport SEXP _hexify_cpp_snyder_inv_set_precision(SEXP modeSEXP, SEXP tolSEXP, SEXP max_itersSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type mode(modeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type max_iters(max_itersSEXP);
-    cpp_snyder_inv_set_precision(mode, tol, max_iters);
-    return R_NilValue;
-END_RCPP
-}
-// cpp_snyder_inv_get_precision
-Rcpp::NumericVector cpp_snyder_inv_get_precision();
-RcppExport SEXP _hexify_cpp_snyder_inv_get_precision() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(cpp_snyder_inv_get_precision());
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_snyder_inv_set_verbose
-void cpp_snyder_inv_set_verbose(bool v);
-RcppExport SEXP _hexify_cpp_snyder_inv_set_verbose(SEXP vSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< bool >::type v(vSEXP);
-    cpp_snyder_inv_set_verbose(v);
-    return R_NilValue;
-END_RCPP
-}
-// cpp_snyder_inv_get_stats_and_reset
-Rcpp::IntegerVector cpp_snyder_inv_get_stats_and_reset();
-RcppExport SEXP _hexify_cpp_snyder_inv_get_stats_and_reset() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(cpp_snyder_inv_get_stats_and_reset());
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_face_xy_to_ll
-Rcpp::NumericVector cpp_face_xy_to_ll(NumericVector icosa, double x, double y, int face, Rcpp::Nullable<double> tol, Rcpp::Nullable<int> max_iters);
-RcppExport SEXP _hexify_cpp_face_xy_to_ll(SEXP icosaSEXP, SEXP xSEXP, SEXP ySEXP, SEXP faceSEXP, SEXP tolSEXP, SEXP max_itersSEXP) {
+Rcpp::NumericVector cpp_face_xy_to_ll(NumericVector icosa, double x, double y, int face, bool newton);
+RcppExport SEXP _hexify_cpp_face_xy_to_ll(SEXP icosaSEXP, SEXP xSEXP, SEXP ySEXP, SEXP faceSEXP, SEXP newtonSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -1287,9 +1245,36 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type x(xSEXP);
     Rcpp::traits::input_parameter< double >::type y(ySEXP);
     Rcpp::traits::input_parameter< int >::type face(faceSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type max_iters(max_itersSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_face_xy_to_ll(icosa, x, y, face, tol, max_iters));
+    Rcpp::traits::input_parameter< bool >::type newton(newtonSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_face_xy_to_ll(icosa, x, y, face, newton));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_snyder_triangle_forward
+NumericMatrix cpp_snyder_triangle_forward(NumericVector v0, NumericVector v1, NumericVector v2, NumericMatrix v);
+RcppExport SEXP _hexify_cpp_snyder_triangle_forward(SEXP v0SEXP, SEXP v1SEXP, SEXP v2SEXP, SEXP vSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type v0(v0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type v1(v1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type v2(v2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_snyder_triangle_forward(v0, v1, v2, v));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_snyder_triangle_inverse
+NumericMatrix cpp_snyder_triangle_inverse(NumericVector v0, NumericVector v1, NumericVector v2, NumericMatrix b);
+RcppExport SEXP _hexify_cpp_snyder_triangle_inverse(SEXP v0SEXP, SEXP v1SEXP, SEXP v2SEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type v0(v0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type v1(v1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type v2(v2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_snyder_triangle_inverse(v0, v1, v2, b));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1306,8 +1291,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_hex_index_face_to_lonlat
-Rcpp::NumericVector cpp_hex_index_face_to_lonlat(NumericVector icosa, double x, double y, double cen_lat, double cen_lon, double face_azimuth_offset, bool degrees, Rcpp::Nullable<double> tol, Rcpp::Nullable<int> max_iters);
-RcppExport SEXP _hexify_cpp_hex_index_face_to_lonlat(SEXP icosaSEXP, SEXP xSEXP, SEXP ySEXP, SEXP cen_latSEXP, SEXP cen_lonSEXP, SEXP face_azimuth_offsetSEXP, SEXP degreesSEXP, SEXP tolSEXP, SEXP max_itersSEXP) {
+Rcpp::NumericVector cpp_hex_index_face_to_lonlat(NumericVector icosa, double x, double y, double cen_lat, double cen_lon, double face_azimuth_offset, bool degrees);
+RcppExport SEXP _hexify_cpp_hex_index_face_to_lonlat(SEXP icosaSEXP, SEXP xSEXP, SEXP ySEXP, SEXP cen_latSEXP, SEXP cen_lonSEXP, SEXP face_azimuth_offsetSEXP, SEXP degreesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -1318,9 +1303,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type cen_lon(cen_lonSEXP);
     Rcpp::traits::input_parameter< double >::type face_azimuth_offset(face_azimuth_offsetSEXP);
     Rcpp::traits::input_parameter< bool >::type degrees(degreesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type max_iters(max_itersSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex_index_face_to_lonlat(icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees, tol, max_iters));
+    rcpp_result_gen = Rcpp::wrap(cpp_hex_index_face_to_lonlat(icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1418,13 +1401,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_face_centers", (DL_FUNC) &_hexify_cpp_face_centers, 1},
     {"_hexify_cpp_icosa_forward", (DL_FUNC) &_hexify_cpp_icosa_forward, 3},
     {"_hexify_cpp_project_to_icosa_triangle", (DL_FUNC) &_hexify_cpp_project_to_icosa_triangle, 4},
-    {"_hexify_cpp_snyder_inv_set_precision", (DL_FUNC) &_hexify_cpp_snyder_inv_set_precision, 3},
-    {"_hexify_cpp_snyder_inv_get_precision", (DL_FUNC) &_hexify_cpp_snyder_inv_get_precision, 0},
-    {"_hexify_cpp_snyder_inv_set_verbose", (DL_FUNC) &_hexify_cpp_snyder_inv_set_verbose, 1},
-    {"_hexify_cpp_snyder_inv_get_stats_and_reset", (DL_FUNC) &_hexify_cpp_snyder_inv_get_stats_and_reset, 0},
-    {"_hexify_cpp_face_xy_to_ll", (DL_FUNC) &_hexify_cpp_face_xy_to_ll, 6},
+    {"_hexify_cpp_face_xy_to_ll", (DL_FUNC) &_hexify_cpp_face_xy_to_ll, 5},
+    {"_hexify_cpp_snyder_triangle_forward", (DL_FUNC) &_hexify_cpp_snyder_triangle_forward, 4},
+    {"_hexify_cpp_snyder_triangle_inverse", (DL_FUNC) &_hexify_cpp_snyder_triangle_inverse, 4},
     {"_hexify_cpp_icosa_face_params", (DL_FUNC) &_hexify_cpp_icosa_face_params, 2},
-    {"_hexify_cpp_hex_index_face_to_lonlat", (DL_FUNC) &_hexify_cpp_hex_index_face_to_lonlat, 9},
+    {"_hexify_cpp_hex_index_face_to_lonlat", (DL_FUNC) &_hexify_cpp_hex_index_face_to_lonlat, 7},
     {NULL, NULL, 0}
 };
 

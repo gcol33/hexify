@@ -12,7 +12,7 @@ CPP_OBJECTS = RcppExports.o aperture.o aperture_sequence.o cell_index.o \
     index_z3.o index_z7.o index_zorder.o polyhedron.o \
     projection_forward.o projection_fuller.o projection_inverse.o \
     rcpp_aperture.o rcpp_cell.o rcpp_index.o rcpp_projection.o \
-    rcpp_h3.o
+    rcpp_h3.o snyder_triangle.o
 
 OBJECTS = $(CPP_OBJECTS) $(H3_OBJECTS)
 

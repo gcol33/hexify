@@ -158,8 +158,6 @@ hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fulle
 #' @param x X coordinate on face plane
 #' @param y Y coordinate on face plane
 #' @param face Face index (0-19 on the icosahedron)
-#' @param tol Convergence tolerance (NULL for default)
-#' @param max_iters Maximum iterations (NULL for default)
 #' @inheritParams hexify_forward
 #'
 #' @return Named numeric vector: c(lon_deg, lat_deg)
@@ -168,76 +166,10 @@ hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fulle
 #' @export
 #' @examples
 #' coords <- hexify_inverse(0.5, 0.3, face = 2)
-hexify_inverse <- function(x, y, face, tol = NULL, max_iters = NULL,
+hexify_inverse <- function(x, y, face,
                            projection = c("isea", "fuller"),
                            polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
   stopifnot(length(x) == 1L, length(y) == 1L, length(face) == 1L)
   cpp_face_xy_to_ll(projection_icosa(projection, polyhedron), as.numeric(x),
-                    as.numeric(y), as.integer(face), tol, max_iters)
+                    as.numeric(y), as.integer(face))
 }
-
-# =============================================================================
-# PRECISION CONTROL
-# =============================================================================
-
-#' Set inverse projection precision
-#'
-#' Controls the accuracy/speed tradeoff for inverse Snyder projection.
-#'
-#' @param mode Preset mode: "fast", "default", "high", or "ultra"
-#' @param tol Custom tolerance (overrides mode if provided)
-#' @param max_iters Custom max iterations (overrides mode if provided)
-#'
-#' @return Invisible NULL
-#'
-#' @family projection
-#' @export
-#' @examples
-#' hexify_set_precision("high")
-#' hexify_set_precision(tol = 1e-12, max_iters = 100)
-hexify_set_precision <- function(mode = c("fast", "default", "high", "ultra"),
-                                  tol = NULL, max_iters = NULL) {
-  mode <- match.arg(mode)
-  cpp_snyder_inv_set_precision(mode, tol, max_iters)
-  invisible(NULL)
-}
-
-#' Get current precision settings
-#'
-#' @return List with tol and max_iters
-#'
-#' @family projection
-#' @export
-hexify_get_precision <- function() {
-  cpp_snyder_inv_get_precision()
-}
-
-#' Set verbose mode for inverse projection
-#'
-#' When enabled, prints convergence information.
-#'
-#' @param verbose Logical
-#'
-#' @return Invisible NULL
-#'
-#' @family projection
-#' @export
-hexify_set_verbose <- function(verbose = TRUE) {
-  cpp_snyder_inv_set_verbose(isTRUE(verbose))
-  invisible(NULL)
-}
-
-#' Get inverse projection statistics
-#'
-#' Returns and optionally resets convergence statistics.
-#'
-#' @param reset Whether to reset statistics after retrieval (default TRUE)
-#'
-#' @return List with statistics (iterations, convergence info, etc.)
-#'
-#' @family projection
-#' @export
-hexify_projection_stats <- function(reset = TRUE) {
-  cpp_snyder_inv_get_stats_and_reset()
-}
-

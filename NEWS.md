@@ -13,6 +13,14 @@
 * `hexify_cell_id_to_quad_ij()` is removed. `hexify_cell_to_quad_ij()` takes
   the same arguments and returns the same `quad`, `i`, `j` data frame.
 
+* The inverse of Snyder's projection is now in closed form (Recht 2021), so
+  `hexify_set_precision()`, `hexify_get_precision()`, `hexify_set_verbose()`
+  and `hexify_projection_stats()` are removed, and `hexify_inverse()` no
+  longer takes `tol` or `max_iters`. The inverse agrees with the previous
+  Newton iteration to within 1e-13 radians on the icosahedron, octahedron and
+  tetrahedron, returns a forward-projected point to within a few times 1e-15
+  radians, and is about twice as fast (#84).
+
 ## New features
 
 * `hex_grid(polyhedron = "octahedron")` builds an ISEA-family grid on the

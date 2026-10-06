@@ -8,8 +8,6 @@ hexify_inverse(
   x,
   y,
   face,
-  tol = NULL,
-  max_iters = NULL,
   projection = c("isea", "fuller"),
   polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
@@ -20,10 +18,6 @@ hexify_inverse(
 \item{y}{Y coordinate on face plane}
 
 \item{face}{Face index (0-19 on the icosahedron)}
-
-\item{tol}{Convergence tolerance (NULL for default)}
-
-\item{max_iters}{Maximum iterations (NULL for default)}
 
 \item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
 projection) or \code{"fuller"} (Fuller's projection, defined on the
@@ -49,10 +43,6 @@ Other projection:
 \code{\link[=hexify_face_centers]{hexify_face_centers()}},
 \code{\link[=hexify_forward]{hexify_forward()}},
 \code{\link[=hexify_forward_to_face]{hexify_forward_to_face()}},
-\code{\link[=hexify_get_precision]{hexify_get_precision()}},
-\code{\link[=hexify_projection_stats]{hexify_projection_stats()}},
-\code{\link[=hexify_set_precision]{hexify_set_precision()}},
-\code{\link[=hexify_set_verbose]{hexify_set_verbose()}},
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}

@@ -153,7 +153,6 @@ reference:
   - hexify_grid_to_cell
   - hexify_grid_cell_to_lonlat
   - hex_corners_to_sf
-  - hexify_projection_stats
   - dg_closest_res_to_area
   - hexify_area_to_eff_res
   - hexify_eff_res_to_area
@@ -165,12 +164,9 @@ reference:
   - cell_to_index
   - hexify_get_children
   - hexify_get_parent
-  - hexify_get_precision
   - hexify_get_resolution
-  - hexify_set_precision
   - hexify_z7_canonical
   - hexify_roundtrip_test
-  - hexify_set_verbose
 - title: Internal
   desc: Package internals
   contents:

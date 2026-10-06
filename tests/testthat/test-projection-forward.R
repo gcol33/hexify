@@ -162,7 +162,6 @@ test_that("forward projection handles antimeridian", {
 test_that("forward projection matches reference data", {
   skip_on_cran()
   hexify_build_icosa(11.25, 58.282525588538995, 0)
-  hexify_set_precision("ultra")
 
   truth <- read.csv(testthat::test_path("data/truth_txty.csv"),
                     stringsAsFactors = FALSE)

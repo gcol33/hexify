@@ -16,6 +16,7 @@
 // solid from its face list. Where the solid sits on the sphere is a PolyData,
 // built once per (solid, orientation) and made active by use_solid().
 
+#include "snyder_triangle.h"
 #include <array>
 #include <vector>
 
@@ -67,6 +68,10 @@ struct SnyderParams {
   double origin_y_off;   // the triangle's inradius
   double r1, r1_squared; // Snyder's R' and its square
   double dh_tolerance;   // largest distance from a face centre, with slack
+  // The 120-degree sector of a face from its first vertex, (centre, vertex,
+  // next vertex), in the frame with the centre at +z and the first vertex
+  // towards +y; the azimuth atan2(x, y) is Snyder's.
+  SnyderTriangle sector;
 };
 
 // The face a region of the quad plane around a quad's origin lies on, and how

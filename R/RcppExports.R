@@ -369,31 +369,23 @@ cpp_project_to_icosa_triangle <- function(icosa, face, lon_deg, lat_deg) {
     .Call(`_hexify_cpp_project_to_icosa_triangle`, icosa, face, lon_deg, lat_deg)
 }
 
-cpp_snyder_inv_set_precision <- function(mode = "", tol = NULL, max_iters = NULL) {
-    invisible(.Call(`_hexify_cpp_snyder_inv_set_precision`, mode, tol, max_iters))
+cpp_face_xy_to_ll <- function(icosa, x, y, face, newton = FALSE) {
+    .Call(`_hexify_cpp_face_xy_to_ll`, icosa, x, y, face, newton)
 }
 
-cpp_snyder_inv_get_precision <- function() {
-    .Call(`_hexify_cpp_snyder_inv_get_precision`)
+cpp_snyder_triangle_forward <- function(v0, v1, v2, v) {
+    .Call(`_hexify_cpp_snyder_triangle_forward`, v0, v1, v2, v)
 }
 
-cpp_snyder_inv_set_verbose <- function(v = TRUE) {
-    invisible(.Call(`_hexify_cpp_snyder_inv_set_verbose`, v))
-}
-
-cpp_snyder_inv_get_stats_and_reset <- function() {
-    .Call(`_hexify_cpp_snyder_inv_get_stats_and_reset`)
-}
-
-cpp_face_xy_to_ll <- function(icosa, x, y, face, tol = NULL, max_iters = NULL) {
-    .Call(`_hexify_cpp_face_xy_to_ll`, icosa, x, y, face, tol, max_iters)
+cpp_snyder_triangle_inverse <- function(v0, v1, v2, b) {
+    .Call(`_hexify_cpp_snyder_triangle_inverse`, v0, v1, v2, b)
 }
 
 cpp_icosa_face_params <- function(icosa, face) {
     .Call(`_hexify_cpp_icosa_face_params`, icosa, face)
 }
 
-cpp_hex_index_face_to_lonlat <- function(icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees = TRUE, tol = NULL, max_iters = NULL) {
-    .Call(`_hexify_cpp_hex_index_face_to_lonlat`, icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees, tol, max_iters)
+cpp_hex_index_face_to_lonlat <- function(icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees = TRUE) {
+    .Call(`_hexify_cpp_hex_index_face_to_lonlat`, icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees)
 }
 

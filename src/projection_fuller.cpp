@@ -42,8 +42,12 @@ std::pair<double,double> fuller_face_xy(double z, double az) {
   return {xpp / kFullerArc + ORIGIN_X, ypp / kFullerArc + ORIGIN_Y};
 }
 
-std::pair<double,double> fuller_face_polar(double x, double y, double tol,
-                                           int max_iters, int* iters) {
+std::pair<double,double> fuller_face_polar(double x, double y) {
+  // The step after one of size d is of size ~d^2, so a step below 1e-14
+  // leaves u at full double precision.
+  constexpr double kTol = 1e-14;
+  constexpr int kMaxIters = 100;
+
   const double xpp = (x - ORIGIN_X) * kFullerArc;
   const double ypp = (y - ORIGIN_Y) * kFullerArc;
 
@@ -55,8 +59,7 @@ std::pair<double,double> fuller_face_polar(double x, double y, double tol,
   const double A = xpp - SQRT3 * ypp;
   const double B = 2.0 * xpp;
   double u = (A + B - kFullerTanAlpha) / 3.0;
-  int k = 0;
-  for (; k < max_iters; ++k) {
+  for (int k = 0; k < kMaxIters; ++k) {
     const double t1 = std::tan(u - A);
     const double t2 = std::tan(u);
     const double t3 = std::tan(u - B);
@@ -64,9 +67,8 @@ std::pair<double,double> fuller_face_polar(double x, double y, double tol,
     const double dg = 3.0 + t1 * t1 + t2 * t2 + t3 * t3;
     const double du = g / dg;
     u -= du;
-    if (std::fabs(du) <= tol) { ++k; break; }
+    if (std::fabs(du) <= kTol) break;
   }
-  if (iters) *iters = k;
 
   // a1 - alpha = u - A (Crider eq. 35); back to the secondary plane triangle
   // (Crider eqs. 36-38).

@@ -12,6 +12,7 @@
 #include "polyhedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
+#include "snyder_triangle.h"
 #include "rcpp_icosa.h"
 
 using namespace Rcpp;
@@ -100,52 +101,44 @@ NumericVector cpp_project_to_icosa_triangle(NumericVector icosa, int face,
 // Inverse Projection
 // ============================================================================
 
-// [[Rcpp::export]]
-void cpp_snyder_inv_set_precision(std::string mode = "",
-                                  Rcpp::Nullable<double> tol = R_NilValue,
-                                  Rcpp::Nullable<int>    max_iters = R_NilValue) {
-  double tol_v = -1.0;
-  int    mi_v  = -1;
-  if (tol.isNotNull())       tol_v = Rcpp::as<double>(tol);
-  if (max_iters.isNotNull()) mi_v  = Rcpp::as<int>(max_iters);
-  hexify::snyder_inv_set_precision(mode, tol_v, mi_v);
-}
-
-// [[Rcpp::export]]
-Rcpp::NumericVector cpp_snyder_inv_get_precision() {
-  auto pr = hexify::snyder_inv_get_precision();
-  return Rcpp::NumericVector::create(_["tol"] = pr.first,
-                                     _["max_iters"] = pr.second);
-}
-
-// [[Rcpp::export]]
-void cpp_snyder_inv_set_verbose(bool v = true) {
-  hexify::snyder_inv_set_verbose(v);
-}
-
-// [[Rcpp::export]]
-Rcpp::IntegerVector cpp_snyder_inv_get_stats_and_reset() {
-  auto t = hexify::snyder_inv_get_stats_and_reset();
-  return Rcpp::IntegerVector::create(
-    _["calls"]       = std::get<0>(t),
-    _["iters_total"] = std::get<1>(t),
-    _["iters_max"]   = std::get<2>(t),
-    _["capped"]      = std::get<3>(t)
-  );
-}
-
+// 'newton' solves the ISEA inverse by Newton's method instead of in closed
+// form, to check the closed form against.
 // [[Rcpp::export]]
 Rcpp::NumericVector cpp_face_xy_to_ll(NumericVector icosa, double x, double y, int face,
-                                      Rcpp::Nullable<double> tol = R_NilValue,
-                                      Rcpp::Nullable<int>    max_iters = R_NilValue) {
+                                      bool newton = false) {
   activate_icosa(icosa);
-  double tol_v = -1.0;
-  int    mi_v  = -1;
-  if (tol.isNotNull())       tol_v = Rcpp::as<double>(tol);
-  if (max_iters.isNotNull()) mi_v  = Rcpp::as<int>(max_iters);
-  auto ll = hexify::face_xy_to_ll(x, y, face, tol_v, mi_v);
+  auto ll = hexify::face_xy_to_ll(x, y, face,
+                                  newton ? hexify::InverseSolver::Newton
+                                         : hexify::InverseSolver::Closed);
   return Rcpp::NumericVector::create(_["lon"] = ll.first,
                                      _["lat"] = ll.second);
+}
+
+// Snyder's map on the spherical triangle (v0, v1, v2): unit vectors (rows of
+// 'v') -> barycentric (b1, b2), and back.
+// [[Rcpp::export]]
+NumericMatrix cpp_snyder_triangle_forward(NumericVector v0, NumericVector v1,
+                                          NumericVector v2, NumericMatrix v) {
+  const hexify::SnyderTriangle t = hexify::make_snyder_triangle(v0.begin(), v1.begin(), v2.begin());
+  NumericMatrix out(v.nrow(), 2);
+  for (int i = 0; i < v.nrow(); ++i) {
+    const double p[3] = {v(i, 0), v(i, 1), v(i, 2)};
+    hexify::snyder_triangle_forward(t, p, out(i, 0), out(i, 1));
+  }
+  return out;
+}
+
+// [[Rcpp::export]]
+NumericMatrix cpp_snyder_triangle_inverse(NumericVector v0, NumericVector v1,
+                                          NumericVector v2, NumericMatrix b) {
+  const hexify::SnyderTriangle t = hexify::make_snyder_triangle(v0.begin(), v1.begin(), v2.begin());
+  NumericMatrix out(b.nrow(), 3);
+  for (int i = 0; i < b.nrow(); ++i) {
+    double p[3];
+    hexify::snyder_triangle_inverse(t, b(i, 0), b(i, 1), p);
+    for (int k = 0; k < 3; ++k) out(i, k) = p[k];
+  }
+  return out;
 }
 
 // [[Rcpp::export]]
@@ -164,9 +157,7 @@ Rcpp::NumericVector cpp_icosa_face_params(NumericVector icosa, int face) {
 Rcpp::NumericVector cpp_hex_index_face_to_lonlat(NumericVector icosa, double x, double y,
                                                  double cen_lat, double cen_lon,
                                                  double face_azimuth_offset,
-                                                 bool degrees = true,
-                                                 Rcpp::Nullable<double> tol = R_NilValue,
-                                                 Rcpp::Nullable<int>    max_iters = R_NilValue) {
+                                                 bool degrees = true) {
   activate_icosa(icosa);
   const auto& S = hexify::poly();
   int face = 0;
@@ -178,12 +169,7 @@ Rcpp::NumericVector cpp_hex_index_face_to_lonlat(NumericVector icosa, double x, 
     if (d < best) { best = d; face = f; }
   }
 
-  double tol_v = -1.0;
-  int    mi_v  = -1;
-  if (tol.isNotNull())       tol_v = Rcpp::as<double>(tol);
-  if (max_iters.isNotNull()) mi_v  = Rcpp::as<int>(max_iters);
-
-  auto ll_deg = hexify::face_xy_to_ll(x, y, face, tol_v, mi_v);
+  auto ll_deg = hexify::face_xy_to_ll(x, y, face);
 
   if (!degrees) {
     const double lon_rad = hexify::deg2rad(ll_deg.first);

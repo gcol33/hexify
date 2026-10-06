@@ -134,6 +134,11 @@ SnyderParams snyder_params(double el_angle, double g_deg, int n_faces) {
   s.r1 = s.edge / (std::sqrt(3.0) * std::tan(el_angle));
   s.r1_squared = s.r1 * s.r1;
   s.dh_tolerance = el_angle + 1e-10;
+  const double sg = std::sin(el_angle), cg = std::cos(el_angle);
+  const double centre[3] = {0.0, 0.0, 1.0};
+  const double vert_a[3] = {0.0, sg, cg};
+  const double vert_b[3] = {0.5 * std::sqrt(3.0) * sg, -0.5 * sg, cg};
+  s.sector = make_snyder_triangle(centre, vert_a, vert_b);
   return s;
 }
 

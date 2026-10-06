@@ -208,7 +208,6 @@ ggplot(cell_polys) +
 - **H3 grids**: Fixed aperture 7, maximum resolution 15 (~0.9 m² cells). ISEA grids support apertures 3, 4 and 7 in any sequence up to resolution 30.
 - **H3 cell area**: H3 cells are not equal-area. Hexagon area varies by about a factor of 2 within a resolution, and about 2.4 once the twelve pentagons are counted. The variation follows position on the icosahedron rather than latitude, with the smallest cells near face centers. Use ISEA where equal area matters, and `cell_area()` to read the area of a given H3 cell.
 - **Pentagons**: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use `is_pentagon()` to detect them.
-- **Projection precision**: The inverse Snyder projection uses iterative Newton-Raphson convergence. Default precision is sufficient for sub-meter accuracy; use `hexify_set_precision()` to adjust the speed/accuracy trade-off.
 
 ## Documentation
 

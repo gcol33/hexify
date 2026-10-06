@@ -32,3 +32,4 @@ hexify_*.tar.gz
 
 # Claude Code
 .claude/
+refs/
