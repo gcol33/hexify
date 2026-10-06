@@ -49,6 +49,36 @@
 
 ## New features
 
+* `projection_distortion()` gives Tissot's indicatrix of a grid's face
+  projection at any point: the scale factors, the maximum angular
+  deformation, the areal scale and the direction of the longer axis. The
+  derivative is exact, from forward-mode automatic differentiation of the
+  projection code. Snyder's projection reproduces his Table 1 (17.27 degrees,
+  scale factors 1.163 and 0.860) and keeps areas to 1e-14; Fuller's areal
+  scale averages 1. `plot(<grid>, distortion = "angular" / "areal")` colours
+  the sphere, the solid or a net by it, and `tissot =` draws the ellipses on
+  the solid and the net (#88).
+
+* Densified cell boundaries, the cell paths `plot()` draws and the globe's
+  face and land meshes put a vertex where an edge crosses an arc from a face
+  centre to a corner, where Snyder's projection bends, and densified
+  boundaries also where they cross a face edge (#88).
+
+* `plot(<grid>, parents = )` outlines the cells one or more resolutions up
+  over the grid's cells; on a net, `area_legend = TRUE` draws one cell of
+  each resolution at the map's scale with its area, and `tabs = TRUE` adds
+  glue tabs along the seams so a printed net folds into the solid (#90).
+
+* `hex_rays()` draws Carr's ray glyphs, whose angle shows a value, with
+  confidence arcs and a second ray for a second variable, and
+  `hex_triangles()` cuts cells into one triangle per wall carrying the change
+  towards that neighbour (#90).
+
+* `net_cells()` cuts cells into their parts on the pieces of a net layout,
+  with each part's map area and which parts the map shows joined, so the
+  cells a seam cuts can be counted; on Snyder's projection the parts of a
+  cell add up to its area (#90).
+
 * `hex_grid(polyhedron = "octahedron")` builds an ISEA-family grid on the
   octahedron: Snyder's equal-area projection with g = 54.73561032 deg, G = 45
   deg (Snyder 1992), four diamonds, and six square vertex cells, each two

@@ -1363,6 +1363,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_lonlat_tissot
+DataFrame cpp_lonlat_tissot(NumericVector icosa, NumericVector lon, NumericVector lat, IntegerVector face);
+RcppExport SEXP _hexify_cpp_lonlat_tissot(SEXP icosaSEXP, SEXP lonSEXP, SEXP latSEXP, SEXP faceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lon(lonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type face(faceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_lonlat_tissot(icosa, lon, lat, face));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_face_tri_tissot
+DataFrame cpp_face_tri_tissot(NumericVector icosa, int face, NumericVector tx, NumericVector ty);
+RcppExport SEXP _hexify_cpp_face_tri_tissot(SEXP icosaSEXP, SEXP faceSEXP, SEXP txSEXP, SEXP tySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< int >::type face(faceSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tx(txSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type ty(tySEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_face_tri_tissot(icosa, face, tx, ty));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_globe_faces", (DL_FUNC) &_hexify_cpp_globe_faces, 2},
@@ -1466,6 +1494,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_snyder_triangle_inverse", (DL_FUNC) &_hexify_cpp_snyder_triangle_inverse, 4},
     {"_hexify_cpp_icosa_face_params", (DL_FUNC) &_hexify_cpp_icosa_face_params, 2},
     {"_hexify_cpp_hex_index_face_to_lonlat", (DL_FUNC) &_hexify_cpp_hex_index_face_to_lonlat, 7},
+    {"_hexify_cpp_lonlat_tissot", (DL_FUNC) &_hexify_cpp_lonlat_tissot, 4},
+    {"_hexify_cpp_face_tri_tissot", (DL_FUNC) &_hexify_cpp_face_tri_tissot, 4},
     {NULL, NULL, 0}
 };
 

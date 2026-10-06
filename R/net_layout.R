@@ -679,6 +679,52 @@ net_edges <- function(layout, tol = 1e-9) {
   e
 }
 
+#' Glue tabs on the seams of a net, to fold a printed net into the solid
+#'
+#' The seams are the piece edges across which the map is not continuous.
+#' Each edge of the sphere along a seam is printed on two (or more) pieces,
+#' and one of them gets a tab: a trapezoid on the side away from its piece,
+#' as deep as a fifth of the edge with sides at 45 degrees. The tab goes on
+#' the first copy, in the order of the pieces, whose tab covers no piece,
+#' or on the first copy when every tab would. Returns one closed ring (rows)
+#' per tab.
+#' @noRd
+net_tabs <- function(layout) {
+  e <- net_edges(layout)
+  e <- e[!e$joined, , drop = FALSE]
+  placed <- lapply(layout$pieces, function(p) place_points(p$region, p))
+  tab_of <- function(i) {
+    p0 <- c(e$x0[i], e$y0[i])
+    p1 <- c(e$x1[i], e$y1[i])
+    inside <- colMeans(placed[[e$piece[i]]])
+    len <- sqrt(sum((p1 - p0)^2))
+    along <- (p1 - p0) / len
+    out <- c(-along[2], along[1])
+    if (sum(out * (inside - p0)) > 0) out <- -out
+    h <- 0.2 * len
+    rbind(p0, p0 + h * (out + along), p1 + h * (out - along), p1, p0)
+  }
+  covers <- function(tab) {
+    probe <- rbind(tab[2:3, ], colMeans(tab[1:4, ]),
+                   (tab[2, ] + tab[3, ]) / 2)
+    any(vapply(placed, function(r) any(in_triangle(probe, r, tol = -1e-9)),
+               logical(1)))
+  }
+  lapply(split(seq_len(nrow(e)), factor(e$key, levels = unique(e$key))), function(rows) {
+    tabs <- lapply(rows, tab_of)
+    free <- which(!vapply(tabs, covers, logical(1)))
+    tabs[[if (length(free)) free[1] else 1L]]
+  })
+}
+
+#' Draw glue tabs
+#' @noRd
+draw_net_tabs <- function(tabs) {
+  for (t in tabs) {
+    graphics::polygon(t, col = "#E6E9EC", border = "#8C969F", lwd = 0.8)
+  }
+}
+
 #' Clip segments to a triangle (Cyrus-Beck), with slack `tol`
 #'
 #' `p0` and `p1` are the segments' ends (rows). Returns the kept parts as a

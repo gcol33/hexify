@@ -1,5 +1,6 @@
 #include "projection_fuller.h"
 #include "constants.h"
+#include "dual.h"
 #include <algorithm>
 #include <cmath>
 
@@ -17,31 +18,39 @@ const double ORIGIN_Y = 1.0 / (2.0 * SQRT3);
 
 } // anon
 
-std::pair<double,double> fuller_face_xy(double z, double az) {
+template <class T>
+std::pair<T,T> fuller_face_xy(T z, T az) {
+  using std::atan;
+  using std::cos;
+  using std::sin;
+  using std::tan;
   // The point on the secondary plane triangle (Gray eqs. 14-16), with the
   // azimuth measured from the vertex SV1 on the +y axis.
-  const double r = kFullerZ0 * std::tan(z);
-  const double xs = r * std::sin(az);
-  const double ys = r * std::cos(az);
+  const T r = kFullerZ0 * tan(z);
+  const T xs = r * sin(az);
+  const T ys = r * cos(az);
 
   // Lengths along the secondary triangle's edges (Gray eqs. 20, 22, 24),
   // each less EL/2.
-  const double a1s = 2.0 * ys / SQRT3 + kFullerEL / 3.0 - 0.5 * kFullerEL;
-  const double a2s = xs - ys / SQRT3 + kFullerEL / 3.0 - 0.5 * kFullerEL;
-  const double a3s = kFullerEL / 3.0 - xs - ys / SQRT3 - 0.5 * kFullerEL;
+  const T a1s = 2.0 * ys / SQRT3 + kFullerEL / 3.0 - 0.5 * kFullerEL;
+  const T a2s = xs - ys / SQRT3 + kFullerEL / 3.0 - 0.5 * kFullerEL;
+  const T a3s = kFullerEL / 3.0 - xs - ys / SQRT3 - 0.5 * kFullerEL;
 
   // Arc lengths a_i - alpha along the spherical triangle's edges
   // (Gray eqs. 29-31).
-  const double b1 = std::atan(a1s / kFullerDVE);
-  const double b2 = std::atan(a2s / kFullerDVE);
-  const double b3 = std::atan(a3s / kFullerDVE);
+  const T b1 = atan(a1s / kFullerDVE);
+  const T b2 = atan(a2s / kFullerDVE);
+  const T b3 = atan(a3s / kFullerDVE);
 
   // The plane point (Gray eqs. 36, 38).
-  const double xpp = 0.5 * (b2 - b3);
-  const double ypp = (2.0 * b1 - b2 - b3) / (2.0 * SQRT3);
+  const T xpp = 0.5 * (b2 - b3);
+  const T ypp = (2.0 * b1 - b2 - b3) / (2.0 * SQRT3);
 
   return {xpp / kFullerArc + ORIGIN_X, ypp / kFullerArc + ORIGIN_Y};
 }
+
+template std::pair<double,double> fuller_face_xy<double>(double, double);
+template std::pair<Dual2,Dual2> fuller_face_xy<Dual2>(Dual2, Dual2);
 
 namespace {
 

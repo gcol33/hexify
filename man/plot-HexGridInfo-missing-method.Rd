@@ -32,6 +32,15 @@
   graticule = FALSE,
   graticule_col = "#9AA3AB",
   graticule_lwd = 0.5,
+  distortion = c("none", "angular", "areal"),
+  tissot = FALSE,
+  tissot_col = "#2E3439",
+  tissot_lwd = 0.8,
+  parents = NULL,
+  parent_col = "#1B2A38",
+  parent_lwd = 1.8,
+  area_legend = FALSE,
+  tabs = FALSE,
   step = 0.01,
   main = NULL,
   ...
@@ -113,6 +122,34 @@ parallels every 30 degrees, or a number of degrees between them.}
 
 \item{graticule_lwd}{Line width of the graticule.}
 
+\item{distortion}{\code{"none"}, \code{"angular"} for the maximum angular
+deformation of the face projection, or \code{"areal"} for its areal
+scale (1 everywhere on Snyder's equal-area projection). Needs an ISEA
+grid; a colour bar is drawn along the bottom.}
+
+\item{tissot}{\code{FALSE} for none, \code{TRUE} for Tissot ellipses at
+points about 30 degrees apart, or a number of degrees between them. Each
+ellipse is the image of a circle a fifth of that spacing in radius.
+Drawn on the net and the solid.}
+
+\item{tissot_col}{Colour of Tissot ellipses.}
+
+\item{tissot_lwd}{Line width of Tissot ellipses.}
+
+\item{parents}{Resolutions up whose cell outlines are drawn over the
+cells, such as \code{1} or \code{1:2}; \code{NULL} for none.}
+
+\item{parent_col}{Colour of parent outlines, recycled over \code{parents}.}
+
+\item{parent_lwd}{Line width of parent outlines, recycled over
+\code{parents}.}
+
+\item{area_legend}{For \code{surface = "net"} of a grid on Snyder's
+equal-area projection, draw one hexagonal cell of each drawn resolution
+at the scale of the map, labelled with its area.}
+
+\item{tabs}{For \code{surface = "net"}, draw glue tabs on the seams.}
+
 \item{step}{Spacing of the points along a cell boundary, as a fraction of
 a face edge.}
 
@@ -139,6 +176,22 @@ without a camera, so \code{center}, \code{projection}, \code{distance},
 \code{tilt}, \code{rotation} and \code{fov} apply to the other two
 surfaces.
 
+\code{distortion} colours the surface by the distortion of the face
+projection that maps the sphere onto the faces (see
+\code{\link{projection_distortion}}), and \code{tissot} draws Tissot's
+indicatrix on the faces: the ellipse each small circle of the sphere maps
+to. With \code{graticule} on the net, Snyder's projection shows small bends
+in the meridians and parallels where they cross the arcs from each face's
+centre to its corners.
+
+\code{parents} draws the outlines of the cells some resolutions up over
+the grid's own cells, to show the hierarchy. On a net of an equal-area
+grid, \code{area_legend} draws one cell at the scale of the map, with its
+area, and the same for each resolution \code{parents} draws. \code{tabs}
+adds glue tabs along the seams of a net, one on each pair of edges glued
+together, so a printed net (for example through \code{\link{pdf}}) folds into
+the solid (Carr et al. 1997).
+
 The view is an orthographic projection by default: parallel lines of sight,
 so the whole near half of the sphere shows. \code{projection =
 "perspective"} places a camera \code{distance} sphere radii from the
@@ -162,7 +215,25 @@ plot(grid, surface = "net")
 octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron",
                  orientation = "gosper")
 plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
+
+# Distortion of the face projections, with Tissot's indicatrix
+plot(grid, surface = "net", land = FALSE, distortion = "angular",
+     tissot = TRUE, graticule = 15, cells = numeric(0))
+fuller <- hex_grid(resolution = 3, aperture = 3, projection = "fuller")
+plot(fuller, distortion = "areal", land = FALSE, cells = numeric(0))
+
+# Two resolutions with an area legend, and a net to print and fold
+fine <- hex_grid(resolution = 4, aperture = 3)
+plot(fine, surface = "net", land = FALSE, parents = 1, area_legend = TRUE)
+plot(grid, surface = "net", layout = "land", land = FALSE, seams = TRUE,
+     tabs = TRUE)
+}
+\references{
+Carr, D. B., Kahn, R., Sahr, K., Olsen, A. R. (1997). ISEA
+discrete global grids. Statistical Computing & Graphics Newsletter
+8(2/3): 31-39.
 }
 \seealso{
-\code{\link{grid_global}} for the cells as sf polygons
+\code{\link{grid_global}} for the cells as sf polygons,
+\code{\link{projection_distortion}}, \code{\link{net_cells}}
 }

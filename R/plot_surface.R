@@ -58,6 +58,22 @@ globe_centers <- list(
 #' \code{tilt}, \code{rotation} and \code{fov} apply to the other two
 #' surfaces.
 #'
+#' \code{distortion} colours the surface by the distortion of the face
+#' projection that maps the sphere onto the faces (see
+#' \code{\link{projection_distortion}}), and \code{tissot} draws Tissot's
+#' indicatrix on the faces: the ellipse each small circle of the sphere maps
+#' to. With \code{graticule} on the net, Snyder's projection shows small bends
+#' in the meridians and parallels where they cross the arcs from each face's
+#' centre to its corners.
+#'
+#' \code{parents} draws the outlines of the cells some resolutions up over
+#' the grid's own cells, to show the hierarchy. On a net of an equal-area
+#' grid, \code{area_legend} draws one cell at the scale of the map, with its
+#' area, and the same for each resolution \code{parents} draws. \code{tabs}
+#' adds glue tabs along the seams of a net, one on each pair of edges glued
+#' together, so a printed net (for example through \code{\link{pdf}}) folds into
+#' the solid (Carr et al. 1997).
+#'
 #' The view is an orthographic projection by default: parallel lines of sight,
 #' so the whole near half of the sphere shows. \code{projection =
 #' "perspective"} places a camera \code{distance} sphere radii from the
@@ -117,6 +133,25 @@ globe_centers <- list(
 #'   parallels every 30 degrees, or a number of degrees between them.
 #' @param graticule_col Colour of the graticule.
 #' @param graticule_lwd Line width of the graticule.
+#' @param distortion \code{"none"}, \code{"angular"} for the maximum angular
+#'   deformation of the face projection, or \code{"areal"} for its areal
+#'   scale (1 everywhere on Snyder's equal-area projection). Needs an ISEA
+#'   grid; a colour bar is drawn along the bottom.
+#' @param tissot \code{FALSE} for none, \code{TRUE} for Tissot ellipses at
+#'   points about 30 degrees apart, or a number of degrees between them. Each
+#'   ellipse is the image of a circle a fifth of that spacing in radius.
+#'   Drawn on the net and the solid.
+#' @param tissot_col Colour of Tissot ellipses.
+#' @param tissot_lwd Line width of Tissot ellipses.
+#' @param parents Resolutions up whose cell outlines are drawn over the
+#'   cells, such as \code{1} or \code{1:2}; \code{NULL} for none.
+#' @param parent_col Colour of parent outlines, recycled over \code{parents}.
+#' @param parent_lwd Line width of parent outlines, recycled over
+#'   \code{parents}.
+#' @param area_legend For \code{surface = "net"} of a grid on Snyder's
+#'   equal-area projection, draw one hexagonal cell of each drawn resolution
+#'   at the scale of the map, labelled with its area.
+#' @param tabs For \code{surface = "net"}, draw glue tabs on the seams.
 #' @param step Spacing of the points along a cell boundary, as a fraction of
 #'   a face edge.
 #' @param main Plot title.
@@ -124,7 +159,12 @@ globe_centers <- list(
 #'
 #' @return The grid, invisibly
 #'
-#' @seealso \code{\link{grid_global}} for the cells as sf polygons
+#' @references Carr, D. B., Kahn, R., Sahr, K., Olsen, A. R. (1997). ISEA
+#'   discrete global grids. Statistical Computing & Graphics Newsletter
+#'   8(2/3): 31-39.
+#'
+#' @seealso \code{\link{grid_global}} for the cells as sf polygons,
+#'   \code{\link{projection_distortion}}, \code{\link{net_cells}}
 #'
 #' @export
 #' @examples
@@ -139,6 +179,18 @@ globe_centers <- list(
 #' octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron",
 #'                  orientation = "gosper")
 #' plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
+#'
+#' # Distortion of the face projections, with Tissot's indicatrix
+#' plot(grid, surface = "net", land = FALSE, distortion = "angular",
+#'      tissot = TRUE, graticule = 15, cells = numeric(0))
+#' fuller <- hex_grid(resolution = 3, aperture = 3, projection = "fuller")
+#' plot(fuller, distortion = "areal", land = FALSE, cells = numeric(0))
+#'
+#' # Two resolutions with an area legend, and a net to print and fold
+#' fine <- hex_grid(resolution = 4, aperture = 3)
+#' plot(fine, surface = "net", land = FALSE, parents = 1, area_legend = TRUE)
+#' plot(grid, surface = "net", layout = "land", land = FALSE, seams = TRUE,
+#'      tabs = TRUE)
 setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
   function(x, y,
            surface = c("sphere", "solid", "net"),
@@ -166,12 +218,23 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            graticule = FALSE,
            graticule_col = "#9AA3AB",
            graticule_lwd = 0.5,
+           distortion = c("none", "angular", "areal"),
+           tissot = FALSE,
+           tissot_col = "#2E3439",
+           tissot_lwd = 0.8,
+           parents = NULL,
+           parent_col = "#1B2A38",
+           parent_lwd = 1.8,
+           area_legend = FALSE,
+           tabs = FALSE,
            step = 0.01,
            main = NULL,
            ...) {
     surface <- match.arg(surface)
+    distortion <- match.arg(distortion)
     g <- extract_grid(x)
     face_edges <- resolve_surface(surface, face_edges, g)
+    tissot <- resolve_distortion(distortion, tissot, surface, g)
 
     projection <- match.arg(projection)
     if (surface == "net" && (!missing(center) || projection != "orthographic" ||
@@ -181,29 +244,41 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            "rotation and fov apply to the sphere and the solid",
            call. = FALSE)
     }
-    if (surface != "net" && (!missing(layout) || !isFALSE(seams))) {
-      stop("layout and seams apply to surface = \"net\"", call. = FALSE)
+    if (surface != "net" && (!missing(layout) || !isFALSE(seams) ||
+                             !isFALSE(tabs) || !isFALSE(area_legend))) {
+      stop("layout, seams, tabs and area_legend apply to surface = \"net\"",
+           call. = FALSE)
     }
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
     view <- surface_view(resolve_center(center), camera$distance, tilt, rotation)
     paths <- grid_surface_paths(g, cells, step)
+    hierarchy <- parent_levels(parents, g, cells, step, parent_col, parent_lwd)
     land <- surface_land(land)
     icosa <- icosa_arg(g)
     grat <- graticule_paths(resolve_graticule(graticule), icosa)
+    dist <- if (distortion != "none") distortion_mesh(icosa, distortion)
+    if (isTRUE(area_legend) && !identical(grid_projection(g), "isea")) {
+      stop("area_legend needs an equal-area net; Fuller's projection is not ",
+           "equal-area", call. = FALSE)
+    }
     style <- list(ocean_fill = ocean_fill, land_fill = land_fill,
                   land_border = land_border, land_lwd = land_lwd,
                   grid_border = grid_border, grid_lwd = grid_lwd,
                   face_edges = face_edges, edge_col = edge_col,
                   edge_lwd = edge_lwd, seams = isTRUE(seams),
                   seam_col = seam_col, seam_lwd = seam_lwd,
-                  graticule_col = graticule_col, graticule_lwd = graticule_lwd)
+                  graticule_col = graticule_col, graticule_lwd = graticule_lwd,
+                  distortion = dist, tissot = tissot, tissot_col = tissot_col,
+                  tissot_lwd = tissot_lwd, hierarchy = hierarchy)
 
     old <- graphics::par(mar = c(0, 0, if (is.null(main)) 0 else 2, 0))
     on.exit(graphics::par(old), add = TRUE)
     graphics::plot.new()
     if (surface == "net") {
       net <- resolve_layout(layout, g)
-      xy <- do.call(rbind, lapply(net$pieces, function(p) place_points(p$region, p)))
+      style$tabs <- if (isTRUE(tabs)) net_tabs(net)
+      xy <- do.call(rbind, c(lapply(net$pieces, function(p) place_points(p$region, p)),
+                             style$tabs))
       pad <- 0.02 * diff(range(xy[, 1]))
       xlim <- range(xy[, 1]) + c(-1, 1) * pad
       ylim <- range(xy[, 2]) + c(-1, 1) * pad
@@ -212,6 +287,10 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
       xlim <- frame[1] + c(-1, 1) * frame[3]
       ylim <- frame[2] + c(-1, 1) * frame[3]
     }
+    # Room below the drawing for its legends
+    if (!is.null(dist) || isTRUE(area_legend)) {
+      ylim[1] <- ylim[1] - 0.14 * diff(ylim)
+    }
     graphics::plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
     graphics::clip(xlim[1], xlim[2], ylim[1], ylim[2])
     switch(surface,
@@ -219,6 +298,8 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
       solid = draw_solid(paths, land, view, style, icosa, grat),
       net = draw_net(paths, land, net, style, grat)
     )
+    if (!is.null(dist)) draw_distortion_legend(dist$scale, xlim, ylim)
+    if (isTRUE(area_legend)) draw_area_legend(g, net, style, xlim, ylim)
     if (!is.null(main)) graphics::title(main = main)
     invisible(x)
   }
@@ -698,6 +779,10 @@ draw_sphere <- function(paths, land, view, style, icosa, grat = NULL) {
   rim <- horizon_ring(view)
   disc <- project_ring(rim, view)
   if (!is.null(disc)) graphics::polygon(disc, col = style$ocean_fill, border = NA)
+  if (!is.null(style$distortion)) {
+    draw_distortion_surface(style$distortion, view, "sphere", icosa)
+    style$land_fill <- NA
+  }
   d <- view$dir
   center_ll <- vec_lonlat(d)
   cap_deg <- acos(view$horizon) * 180 / pi - 0.5
@@ -722,10 +807,10 @@ draw_sphere <- function(paths, land, view, style, icosa, grat = NULL) {
                   vis & c(vis[-1], FALSE), style$graticule_col, style$graticule_lwd)
   }
 
-  S <- paths[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE]
-  front <- faces_camera(S, view)
-  draw_segments(S, view, c(TRUE, diff(paths[, "cell"]) != 0),
-                front & c(front[-1], FALSE), style$grid_border, style$grid_lwd)
+  draw_cell_paths("sphere", paths, view, icosa, NULL, style$grid_border, style$grid_lwd)
+  for (h in style$hierarchy) {
+    draw_cell_paths("sphere", h$paths, view, icosa, NULL, h$col, h$lwd)
+  }
 
   if (style$face_edges) {
     solid <- icosa_solid(icosa)
@@ -757,7 +842,18 @@ draw_solid <- function(paths, land, view, style, icosa, grat = NULL) {
     if (!is.null(flat)) {
       graphics::polygon(flat, col = shade_col(style$ocean_fill, shade[f]), border = NA)
     }
-    if (!is.null(land)) draw_face_land(f - 1L, tri, land, view, style, shade[f], icosa)
+    if (!is.null(land) && is.null(style$distortion)) {
+      draw_face_land(f - 1L, tri, land, view, style, shade[f], icosa)
+    }
+  }
+  if (!is.null(style$distortion)) {
+    draw_distortion_surface(style$distortion, view, "solid", icosa)
+    if (!is.null(land)) {
+      style$land_fill <- NA
+      for (f in which(front)) {
+        draw_face_land(f - 1L, V[solid$faces[f, ], ], land, view, style, shade[f], icosa)
+      }
+    }
   }
 
   if (!is.null(grat)) {
@@ -766,10 +862,14 @@ draw_solid <- function(paths, land, view, style, icosa, grat = NULL) {
                   front[grat[, "face"] + 1L], style$graticule_col, style$graticule_lwd)
   }
 
-  face <- paths[, "face"] + 1L
-  Q <- paths[, c("solid_x", "solid_y", "solid_z"), drop = FALSE]
-  draw_segments(Q, view, c(TRUE, diff(paths[, "cell"]) != 0), front[face],
-                style$grid_border, style$grid_lwd)
+  draw_cell_paths("solid", paths, view, icosa, NULL, style$grid_border, style$grid_lwd)
+  for (h in style$hierarchy) {
+    draw_cell_paths("solid", h$paths, view, icosa, NULL, h$col, h$lwd)
+  }
+  if (!is.null(style$tissot)) {
+    draw_tissot_solid(tissot_paths(style$tissot, icosa), view, icosa,
+                      style$tissot_col, style$tissot_lwd)
+  }
 
   if (style$face_edges) {
     E <- solid$edges
@@ -868,8 +968,13 @@ draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
 #' Draw the grid on the unfolded solid, in the pieces of a net layout
 #' @noRd
 draw_net <- function(paths, land, net, style, grat = NULL) {
+  if (!is.null(style$tabs)) draw_net_tabs(style$tabs)
   for (p in net$pieces) {
     graphics::polygon(place_points(p$region, p), col = style$ocean_fill, border = NA)
+  }
+  if (!is.null(style$distortion)) {
+    draw_distortion_net(style$distortion, net)
+    style$land_fill <- NA
   }
 
   if (!is.null(land)) {
@@ -886,16 +991,23 @@ draw_net <- function(paths, land, net, style, grat = NULL) {
   if (!is.null(grat)) {
     draw_net_segments(net_segments(grat, net), style$graticule_col, style$graticule_lwd)
   }
-  draw_net_segments(net_segments(paths, net), style$grid_border, style$grid_lwd)
+  draw_cell_paths("net", paths, NULL, net$icosa, net, style$grid_border, style$grid_lwd)
+  for (h in style$hierarchy) {
+    draw_cell_paths("net", h$paths, NULL, net$icosa, net, h$col, h$lwd)
+  }
+  if (!is.null(style$tissot)) {
+    draw_tissot_net(tissot_paths(style$tissot, net$icosa), net, style$tissot_col,
+                    style$tissot_lwd)
+  }
 
-  if (style$face_edges || style$seams) {
+  if (style$face_edges || style$seams || !is.null(style$tabs)) {
     e <- net_edges(net)
     if (style$face_edges) {
       s <- e[e$solid_edge, , drop = FALSE]
       graphics::segments(s$x0, s$y0, s$x1, s$y1, col = style$edge_col,
                          lwd = style$edge_lwd)
     }
-    if (style$seams) {
+    if (style$seams || !is.null(style$tabs)) {
       s <- e[!e$joined, , drop = FALSE]
       graphics::segments(s$x0, s$y0, s$x1, s$y1, col = style$seam_col,
                          lwd = style$seam_lwd, lend = "round")
@@ -930,4 +1042,83 @@ draw_net_segments <- function(seg, col, lwd) {
   if (nrow(seg) == 0L) return(invisible())
   graphics::segments(seg[, 1], seg[, 2], seg[, 3], seg[, 4], col = col, lwd = lwd,
                      lend = "round")
+}
+# =============================================================================
+# CELL OUTLINES AND LEGENDS
+# =============================================================================
+
+#' Draw cell boundary paths on a surface
+#' @noRd
+draw_cell_paths <- function(surface, paths, view, icosa, net, col, lwd) {
+  if (nrow(paths) == 0L) return(invisible())
+  brk <- c(TRUE, diff(paths[, "cell"]) != 0)
+  switch(surface,
+    sphere = {
+      S <- paths[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE]
+      front <- faces_camera(S, view)
+      draw_segments(S, view, brk, front & c(front[-1], FALSE), col, lwd)
+    },
+    solid = {
+      front <- icosa_front(icosa_solid(icosa), view)
+      draw_segments(paths[, c("solid_x", "solid_y", "solid_z"), drop = FALSE], view,
+                    brk, front[paths[, "face"] + 1L], col, lwd)
+    },
+    net = draw_net_segments(net_segments(paths, net), col, lwd)
+  )
+}
+
+#' The parent resolutions a plot outlines: for each level up, the grid there,
+#' the boundary paths of the parents of the drawn cells, and their style
+#' @noRd
+parent_levels <- function(parents, g, cells, step, col, lwd) {
+  if (is.null(parents)) return(NULL)
+  if (!is.numeric(parents) || any(!is.finite(parents)) || any(parents < 1) ||
+      any(parents != round(parents)) || any(parents > g@resolution)) {
+    stop("parents must be whole numbers of resolutions up, from 1 to the ",
+         "grid's resolution", call. = FALSE)
+  }
+  col <- rep_len(col, length(parents))
+  lwd <- rep_len(lwd, length(parents))
+  lapply(seq_along(parents), function(k) {
+    up <- as.integer(parents[k])
+    pg <- grid_at_resolution(g, g@resolution - up)
+    pc <- if (is.null(cells)) NULL else unique(get_parent(cells, g, up))
+    list(grid = pg, paths = grid_surface_paths(pg, pc, step), col = col[k],
+         lwd = lwd[k])
+  })
+}
+
+#' One hexagonal cell of each drawn resolution at the scale of a net,
+#' labelled with its area, along the bottom left of the plot
+#' @noRd
+draw_area_legend <- function(g, net, style, xlim, ylim) {
+  grids <- c(list(list(grid = g, col = style$grid_border, lwd = style$grid_lwd)),
+             lapply(style$hierarchy, function(h) h[c("grid", "col", "lwd")]))
+  edge <- face_plane_edge(net$icosa)
+  # The rhombic layout shears every face by the same map, which scales areas
+  # by its determinant; the other layouts move faces rigidly.
+  scale <- abs(det(net$pieces[[1]]$A))
+  x <- xlim[1] + 0.02 * diff(xlim)
+  y <- ylim[1] + 0.05 * diff(ylim)
+  for (h in grids) {
+    cell <- hexagon_cell(h$grid)
+    lv <- isea_levels(h$grid@aperture, h$grid@resolution)
+    omega <- cpp_cell_solid_angle(icosa_arg(h$grid), cell, lv$resolution,
+                                  lv$aperture, lv$ap_seq, CELL_WALL_TOLERANCE)
+    side <- sqrt(2 * omega / edge^2 * scale / (3 * sqrt(3)))
+    t <- seq(0, 2 * pi, length.out = 7L)[-7L] + pi / 6
+    graphics::polygon(x + side * cos(t), y + side * sin(t), border = h$col,
+                      lwd = h$lwd, col = NA)
+    label <- sprintf("%s km\u00b2", format(signif(cell_area(cell, h$grid), 3),
+                                          big.mark = ",", scientific = FALSE))
+    graphics::text(x + side, y, labels = label, pos = 4, cex = 0.7, col = "#2E3439")
+    x <- x + 2 * side + graphics::strwidth(label, cex = 0.7) + 0.03 * diff(xlim)
+  }
+}
+
+#' A hexagonal cell of a grid: the cell holding the centre of its first face
+#' @noRd
+hexagon_cell <- function(g) {
+  ctr <- cpp_face_centers(icosa_arg(g))
+  lonlat_to_cell(ctr$lon[1] * 180 / pi, ctr$lat[1] * 180 / pi, g)
 }

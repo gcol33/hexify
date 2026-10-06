@@ -1,6 +1,7 @@
 #include "projection_forward.h"
 #include "projection_fuller.h"
 #include "constants.h"
+#include "dual.h"
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
@@ -21,26 +22,97 @@ struct ProjectionWithStatus {
   bool valid;
 };
 
-// The face projection `proj` of a point onto one face. With `validate`, a
-// point off the face comes back invalid; without it, the face's formulas are
-// applied as they stand.
-static ProjectionWithStatus project_core(const Geo& geo, const PolyData& ico_data,
-                                         int face, bool validate, FaceProjection proj) {
-  const SnyderParams& sp = ico_data.topo->snyder;
+// The face projection `proj` of the point at arc z from a face centre and
+// azimuth az from the face's first vertex, both in radians, az in [0, 2 pi),
+// to face-plane (x, y). With `validate`, a point past the sector boundary
+// returns false. T is double, or Dual2 to carry derivatives in z and az.
+template <class T>
+static bool face_xy_from_polar(const SnyderParams& sp, T z, T az, bool validate,
+                               FaceProjection proj, T& x, T& y) {
+  using std::acos;
+  using std::atan2;
+  using std::cos;
+  using std::sin;
+  const T face_az = az;
+
+  // Reduce the azimuth to its 120° sector
+  const int sector = azimuth_sector(value_of(az));
+  T azimuth = az - sector * k2PiOver3;
+
+  const T cos_azimuth = cos(azimuth);
+  const T sin_azimuth = sin(azimuth);
+
+  // Snyder's auxiliary angle for the sector (Snyder notation: δ_z)
+  const T dz_angle = atan2(sp.tan_el, cos_azimuth + sp.cot_30 * sin_azimuth);
+
+  // The point must lie inside the sector boundary
+  if (validate && value_of(z) > value_of(dz_angle) + 1e-7) return false;
+
+  if (proj == FaceProjection::Fuller) {
+    const auto xy = fuller_face_xy(z, face_az);
+    x = xy.first;
+    y = xy.second;
+    return true;
+  }
+
+  // Snyder's angle 'h' - auxiliary spherical angle (Snyder notation: h)
+  const T h_arg = clamp_to(sin_azimuth * sp.sin_g * sp.cos_el - cos_azimuth * sp.cos_g, -1.0, 1.0);
+  const T h_angle = acos(h_arg);
+
+  // Snyder's accumulated angle from azimuth (Snyder notation: A_G)
+  const T AG_angle = azimuth + sp.g_angle + h_angle - kPi;
+
+  // Transformed azimuth in the face plane (Snyder notation: Az')
+  T azimuth_transformed = atan2(2.0 * AG_angle, sp.r1_squared * sp.tan_el * sp.tan_el - 2.0 * AG_angle * sp.cot_30);
+
+  // Snyder's 'f' scale factor (Snyder notation: f)
+  const T denom = 2.0 * (cos(azimuth_transformed) + sp.cot_30 * sin(azimuth_transformed)) * sin(dz_angle / 2.0);
+  const T f_scale = (std::fabs(value_of(denom)) < 1e-15) ? T(0.0) : sp.tan_el / denom;
+
+  // Radial distance in face plane (Snyder notation: ρ)
+  const T rho = 2.0 * sp.r1 * f_scale * sin(z / 2.0);
+
+  // Restore the sector
+  azimuth_transformed = azimuth_transformed + sector * k2PiOver3;
+
+  x = (rho * sin(azimuth_transformed) + sp.origin_x_off) / sp.edge;
+  y = (rho * cos(azimuth_transformed) + sp.origin_y_off) / sp.edge;
+  return true;
+}
+
+// Arc z from a face centre and azimuth from the face's first vertex, in
+// [0, 2 pi), of a point.
+static void face_polar(const Geo& geo, const PolyData& ico_data, int face,
+                       double& z, double& azimuth) {
   const double glon = geo.lon;
   const double glat = geo.lat;
 
   const double center_sinlat = ico_data.center_sinlat[face];
   const double center_coslat = ico_data.center_coslat[face];
   const double center_lon    = ico_data.center_lon[face];
-  const double face_azimuth = ico_data.face_azimuth_offset[face];
 
   const double cosLat = std::cos(glat);
   const double sinLat = std::sin(glat);
 
   double tmp = center_sinlat * sinLat + center_coslat * cosLat * std::cos(glon - center_lon);
   tmp = clampd(tmp, -1.0, 1.0);
-  const double z = std::acos(tmp);
+  z = std::acos(tmp);
+
+  azimuth = std::atan2(cosLat * std::sin(glon - center_lon),
+                       center_coslat * sinLat - center_sinlat * cosLat * std::cos(glon - center_lon))
+            - ico_data.face_azimuth_offset[face];
+  if (azimuth < 0.0) azimuth += kTwoPi;
+  if (azimuth >= kTwoPi) azimuth -= kTwoPi;
+}
+
+// The face projection `proj` of a point onto one face. With `validate`, a
+// point off the face comes back invalid; without it, the face's formulas are
+// applied as they stand.
+static ProjectionWithStatus project_core(const Geo& geo, const PolyData& ico_data,
+                                         int face, bool validate, FaceProjection proj) {
+  const SnyderParams& sp = ico_data.topo->snyder;
+  double z, azimuth;
+  face_polar(geo, ico_data, face, z, azimuth);
 
   if (validate && z > sp.dh_tolerance) {
     return {0.0, 0.0, false};
@@ -52,60 +124,41 @@ static ProjectionWithStatus project_core(const Geo& geo, const PolyData& ico_dat
     return {sp.origin_x_off / sp.edge, sp.origin_y_off / sp.edge, true};
   }
 
-  double azimuth = std::atan2(cosLat * std::sin(glon - center_lon),
-                              center_coslat * sinLat - center_sinlat * cosLat * std::cos(glon - center_lon))
-                   - face_azimuth;
-  if (azimuth < 0.0) azimuth += kTwoPi;
-  if (azimuth >= kTwoPi) azimuth -= kTwoPi;
-  const double face_az = azimuth;
-
-  // Reduce the azimuth to its 120° sector
-  const int sector = azimuth_sector(azimuth);
-  azimuth -= sector * k2PiOver3;
-
-  const double cos_azimuth = std::cos(azimuth);
-  const double sin_azimuth = std::sin(azimuth);
-
-  // Snyder's auxiliary angle for the sector (Snyder notation: δ_z)
-  const double dz_angle = std::atan2(sp.tan_el, cos_azimuth + sp.cot_30 * sin_azimuth);
-
-  // The point must lie inside the sector boundary
-  if (validate && z > dz_angle + 1e-7) {
+  double x, y;
+  if (!face_xy_from_polar(sp, z, azimuth, validate, proj, x, y)) {
     return {0.0, 0.0, false};
   }
-
-  if (proj == FaceProjection::Fuller) {
-    const auto xy = fuller_face_xy(z, face_az);
-    return {xy.first, xy.second, true};
-  }
-
-  // Snyder's angle 'h' - auxiliary spherical angle (Snyder notation: h)
-  const double h_arg = clampd(sin_azimuth * sp.sin_g * sp.cos_el - cos_azimuth * sp.cos_g, -1.0, 1.0);
-  const double h_angle = std::acos(h_arg);
-
-  // Snyder's accumulated angle from azimuth (Snyder notation: A_G)
-  const double AG_angle = azimuth + sp.g_angle + h_angle - kPi;
-
-  // Transformed azimuth in the face plane (Snyder notation: Az')
-  double azimuth_transformed = std::atan2(2.0 * AG_angle, sp.r1_squared * sp.tan_el * sp.tan_el - 2.0 * AG_angle * sp.cot_30);
-
-  // Snyder's 'f' scale factor (Snyder notation: f)
-  const double denom = 2.0 * (std::cos(azimuth_transformed) + sp.cot_30 * std::sin(azimuth_transformed)) * std::sin(dz_angle / 2.0);
-  const double f_scale = (std::fabs(denom) < 1e-15) ? 0.0 : sp.tan_el / denom;
-
-  // Radial distance in face plane (Snyder notation: ρ)
-  const double rho = 2.0 * sp.r1 * f_scale * std::sin(z / 2.0);
-
-  // Restore the sector
-  azimuth_transformed += sector * k2PiOver3;
-
-  const double x = (rho * std::sin(azimuth_transformed) + sp.origin_x_off) / sp.edge;
-  const double y = (rho * std::cos(azimuth_transformed) + sp.origin_y_off) / sp.edge;
-
   if (validate && (!std::isfinite(x) || !std::isfinite(y))) {
     return {0.0, 0.0, false};
   }
   return {x, y, true};
+}
+
+FaceScale face_scale(const Geo& geo, int face) {
+  const PolyData& ico_data = poly();
+  if (face < 0 || face >= ico_data.n_faces()) {
+    throw std::invalid_argument("face_scale: face out of range for the solid");
+  }
+  const SnyderParams& sp = ico_data.topo->snyder;
+  double z, azimuth;
+  face_polar(geo, ico_data, face, z, azimuth);
+  // At the face centre the azimuth is undefined and the projection has a
+  // limit along each direction; read it just off the centre.
+  constexpr double kNearCentre = 1e-9;
+  if (z < kNearCentre) z = kNearCentre;
+
+  Dual2 x, y;
+  face_xy_from_polar(sp, Dual2(z, 1.0, 0.0), Dual2(azimuth, 0.0, 1.0),
+                     /*validate=*/false, active_projection(), x, y);
+  // Plane lengths in units of the unit sphere: a face edge of the plane
+  // triangle is sp.edge, so the plane triangle has the face's area.
+  const double across = 1.0 / std::sin(z);
+  FaceScale out;
+  out.j[0][0] = sp.edge * x.d[0];
+  out.j[1][0] = sp.edge * y.d[0];
+  out.j[0][1] = sp.edge * x.d[1] * across;
+  out.j[1][1] = sp.edge * y.d[1] * across;
+  return out;
 }
 
 static ProjectionWithStatus project_to_face_with_validation(const Geo& geo, const PolyData& ico_data, int face) {

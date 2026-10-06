@@ -116,6 +116,7 @@ reference:
   contents:
   - cell_metrics
   - wall_metrics
+  - projection_distortion
 - title: Visualization
   desc: Plotting functions
   contents:
@@ -125,6 +126,9 @@ reference:
   - starts_with("plot,HexGridInfo")
   - net_layout
   - net_project
+  - net_cells
+  - hex_rays
+  - hex_triangles
   - hex_globe
   - hex_globe_png
   - hexify_world

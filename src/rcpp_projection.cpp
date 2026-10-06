@@ -178,3 +178,67 @@ Rcpp::NumericVector cpp_hex_index_face_to_lonlat(NumericVector icosa, double x, 
   }
   return Rcpp::NumericVector::create(ll_deg.first, ll_deg.second);
 }
+
+// ============================================================================
+// Distortion
+// ============================================================================
+
+// Tissot's indicatrix of the face projection at a point of a face: the
+// derivative j (face_scale) is a turn by beta, a stretch by (a, b) and a
+// turn, so a small circle on the sphere maps to an ellipse with semi-axes a
+// >= b along the face-plane directions beta and beta + 90 degrees.
+static void tissot_row(const hexify::Geo& geo, int face, double& a, double& b,
+                       double& beta) {
+  const hexify::FaceScale s = hexify::face_scale(geo, face);
+  const double e = 0.5 * (s.j[0][0] + s.j[1][1]);
+  const double f = 0.5 * (s.j[0][0] - s.j[1][1]);
+  const double g = 0.5 * (s.j[1][0] + s.j[0][1]);
+  const double h = 0.5 * (s.j[1][0] - s.j[0][1]);
+  const double q = std::hypot(e, h);
+  const double r = std::hypot(f, g);
+  a = q + r;
+  b = std::fabs(q - r);
+  beta = 0.5 * (std::atan2(g, f) + std::atan2(h, e));
+}
+
+static DataFrame tissot_frame(const IntegerVector& face, const NumericVector& a,
+                              const NumericVector& b, const NumericVector& beta) {
+  return DataFrame::create(_["face"] = face, _["a"] = a, _["b"] = b,
+                           _["angle"] = beta);
+}
+
+// Tissot's indicatrix at points given in lon/lat, each read on the face it
+// lies on (or on 'face' where that is not NA): the scale factors a >= b and
+// the face-plane direction of a, in radians from the face's x axis.
+// [[Rcpp::export]]
+DataFrame cpp_lonlat_tissot(NumericVector icosa, NumericVector lon,
+                            NumericVector lat, IntegerVector face) {
+  activate_icosa(icosa);
+  const R_xlen_t n = lon.size();
+  IntegerVector f(n);
+  NumericVector a(n), b(n), beta(n);
+  for (R_xlen_t k = 0; k < n; ++k) {
+    f[k] = face[k] == NA_INTEGER ? hexify::which_face(lon[k], lat[k]) : face[k];
+    if (f[k] < 0 || f[k] >= hexify::poly().n_faces()) stop("face out of range for the solid");
+    const hexify::Geo g(hexify::deg2rad(lon[k]), hexify::deg2rad(lat[k]));
+    tissot_row(g, f[k], a[k], b[k], beta[k]);
+  }
+  return tissot_frame(f, a, b, beta);
+}
+
+// The same at points of one face given in its triangle coordinates.
+// [[Rcpp::export]]
+DataFrame cpp_face_tri_tissot(NumericVector icosa, int face, NumericVector tx,
+                              NumericVector ty) {
+  activate_icosa(icosa);
+  if (face < 0 || face >= hexify::poly().n_faces()) stop("face out of range for the solid");
+  const R_xlen_t n = tx.size();
+  IntegerVector f(n, face);
+  NumericVector a(n), b(n), beta(n);
+  for (R_xlen_t k = 0; k < n; ++k) {
+    const auto ll = hexify::face_xy_to_ll(tx[k], ty[k], face);
+    const hexify::Geo g(hexify::deg2rad(ll.first), hexify::deg2rad(ll.second));
+    tissot_row(g, face, a[k], b[k], beta[k]);
+  }
+  return tissot_frame(f, a, b, beta);
+}

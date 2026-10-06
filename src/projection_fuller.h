@@ -11,8 +11,10 @@ namespace hexify {
 // it. Face-plane coordinates are those of the ISEA projection: the face's
 // plane triangle with unit edge, origin at its lower-left vertex.
 
-// (z, az) -> face-plane (x, y)
-std::pair<double,double> fuller_face_xy(double z, double az);
+// (z, az) -> face-plane (x, y), for T = double, or Dual2 to carry the
+// derivatives along with the point
+template <class T>
+std::pair<T,T> fuller_face_xy(T z, T az);
 
 // Face-plane (x, y) -> (z, az), solving Gray's equation (39) in closed form
 std::pair<double,double> fuller_face_polar(double x, double y);

@@ -18,6 +18,18 @@ std::pair<double,double> project_to_face(const Geo& geo, const PolyData& ico_dat
 std::pair<double,double> project_to_face(const Geo& geo, const PolyData& ico_data, int face,
                                          FaceProjection proj);
 
+// The derivative of the face projection at a point of a face: j[r][c] is the
+// rate of change of face-plane coordinate r (x, y) along unit direction c on
+// the sphere, c = 0 away from the face centre and c = 1 a quarter turn
+// clockwise from it seen from outside (the direction of increasing azimuth).
+// Plane lengths are in units of the unit sphere, so the plane triangle has
+// the face's area; the singular values of j are Tissot's scale factors.
+struct FaceScale { double j[2][2]; };
+
+// The face projection's derivative at `geo` on `face` of the active solid,
+// exact (forward-mode automatic differentiation of the projection).
+FaceScale face_scale(const Geo& geo, int face);
+
 // High-level projection result
 struct ProjectionResult { int face; double icosa_triangle_x; double icosa_triangle_y; };
 

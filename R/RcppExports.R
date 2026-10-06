@@ -405,3 +405,11 @@ cpp_hex_index_face_to_lonlat <- function(icosa, x, y, cen_lat, cen_lon, face_azi
     .Call(`_hexify_cpp_hex_index_face_to_lonlat`, icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees)
 }
 
+cpp_lonlat_tissot <- function(icosa, lon, lat, face) {
+    .Call(`_hexify_cpp_lonlat_tissot`, icosa, lon, lat, face)
+}
+
+cpp_face_tri_tissot <- function(icosa, face, tx, ty) {
+    .Call(`_hexify_cpp_face_tri_tissot`, icosa, face, tx, ty)
+}
+

@@ -611,14 +611,14 @@ private:
   }
 };
 
-// The part of a spherical polygon on one face: Sutherland-Hodgman clipping
-// against the face's three great circles. The polygon's edges are
-// great-circle arcs shorter than a half circle, so a point of an edge is
-// a normalised blend of its ends, and the clip stays exact.
-void clip_to_face(int f, std::vector<V3>& poly) {
-  const auto n = face_normals(f);
+// The part of a spherical polygon on the inner side of great circles, given
+// by their normals: Sutherland-Hodgman clipping. The polygon's edges are
+// great-circle arcs shorter than a half circle, so a point of an edge is a
+// normalised blend of its ends, and the clip stays exact.
+template <size_t N>
+void clip_to_planes(const std::array<V3, N>& n, std::vector<V3>& poly) {
   std::vector<V3> out;
-  for (int k = 0; k < 3 && !poly.empty(); k++) {
+  for (size_t k = 0; k < N && !poly.empty(); k++) {
     out.clear();
     size_t m = poly.size();
     for (size_t i = 0; i < m; i++) {
@@ -633,6 +633,25 @@ void clip_to_face(int f, std::vector<V3>& poly) {
   }
 }
 
+// The three sectors of face f, each between the face's centre and one of its
+// edges: sector k holds the edge from corner k to corner k + 1. The arcs
+// from the centre to the corners are where Snyder's projection creases, so a
+// mesh cut into sectors has a vertex on every crease it crosses. Each sector
+// is the region inside three great circles: the face edge and the two arcs.
+std::array<V3, 3> sector_normals(int f, int k) {
+  const PolyData& S = poly();
+  const Geo& gc = S.centers[f];
+  const V3 c = lonlat_vec(gc.lon * kRadToDeg, gc.lat * kRadToDeg);
+  const Geo& g0 = S.verts[S.topo->faces[f][k]];
+  const Geo& g1 = S.verts[S.topo->faces[f][(k + 1) % 3]];
+  const V3 v0 = lonlat_vec(g0.lon * kRadToDeg, g0.lat * kRadToDeg);
+  const V3 v1 = lonlat_vec(g1.lon * kRadToDeg, g1.lat * kRadToDeg);
+  // Each normal turned to point towards the sector's third corner.
+  auto towards = [](V3 n, V3 p) { return dot(n, p) < 0.0 ? (-1.0) * n : n; };
+  return {towards(cross(v0, v1), c), towards(cross(c, v0), v1),
+          towards(cross(c, v1), v0)};
+}
+
 } // namespace
 
 } // namespace hexify
@@ -640,7 +659,9 @@ void clip_to_face(int f, std::vector<V3>& poly) {
 using namespace hexify;
 
 // The faces of the solid as one mesh, refined until no edge is longer than
-// 'max_len' (a face edge is 1). Item k is face k - 1.
+// 'max_len' (a face edge is 1). Item k is face k - 1. Each face is laid down
+// as its three sectors (sector_normals), so the mesh has edges along the
+// projection's creases.
 // [[Rcpp::export]]
 List cpp_globe_faces(NumericVector icosa, double max_len) {
   activate_icosa(icosa);
@@ -648,7 +669,12 @@ List cpp_globe_faces(NumericVector icosa, double max_len) {
   double tx[3], ty[3];
   for (int f = 0; f < poly().n_faces(); f++) {
     face_tri_corners(f, tx, ty);
-    mesh.convex_polygon(f + 1, f, {tx[0], tx[1], tx[2]}, {ty[0], ty[1], ty[2]});
+    const double cx = (tx[0] + tx[1] + tx[2]) / 3.0;
+    const double cy = (ty[0] + ty[1] + ty[2]) / 3.0;
+    for (int k = 0; k < 3; k++) {
+      const int k1 = (k + 1) % 3;
+      mesh.convex_polygon(f + 1, f, {cx, tx[k], tx[k1]}, {cy, ty[k], ty[k1]});
+    }
   }
   mesh.refine(max_len);
   return mesh.to_list();
@@ -728,8 +754,9 @@ List cpp_globe_projection(NumericVector icosa) {
 // polygons, each a list of closed rings (n x 2 matrices of lon/lat, outer
 // ring first, then holes). Each polygon is triangulated in the gnomonic
 // projection about its centre, where its great-circle edges are straight;
-// every triangle is cut into its parts on the faces it crosses, and the parts
-// are refined along great circles until no edge is longer than 'max_len'.
+// every triangle is cut into its parts on the sectors of the faces it crosses
+// (sector_normals), and the parts are refined along great circles until no
+// edge is longer than 'max_len'.
 // Item k is polygon k.
 // [[Rcpp::export]]
 List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
@@ -737,7 +764,7 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
   FaceMesh mesh(/*great_circle=*/true);
   EarSlicer slicer;
   std::vector<double> gx, gy;
-  std::vector<V3> pts, part;
+  std::vector<V3> pts, part, whole;
   std::vector<int> ring_start, tri;
   std::vector<double> tx, ty;
 
@@ -785,25 +812,31 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
       V3 a = pts[tri[t]], b = pts[tri[t + 1]], d = pts[tri[t + 2]];
       for (int f = 0; f < poly().n_faces(); f++) {
         part.assign({a, b, d});
-        clip_to_face(f, part);
+        clip_to_planes(face_normals(f), part);
         if (part.size() < 3) continue;
-        tx.clear();
-        ty.clear();
-        for (const V3& p : part) {
-          auto t2 = face_tri(f, p);
-          tx.push_back(t2.first);
-          ty.push_back(t2.second);
-        }
-        int first = -1, prev = -1;
-        for (size_t i = 0; i < part.size(); i++) {
-          double s[3] = {part[i].x, part[i].y, part[i].z};
-          int id = mesh.vertex(static_cast<int>(k + 1), f, tx[i], ty[i], s);
-          if (i == 0) {
-            first = id;
-          } else if (i >= 2) {
-            mesh.triangle(first, prev, id);
+        whole.swap(part);
+        for (int sector = 0; sector < 3; sector++) {
+          part = whole;
+          clip_to_planes(sector_normals(f, sector), part);
+          if (part.size() < 3) continue;
+          tx.clear();
+          ty.clear();
+          for (const V3& p : part) {
+            auto t2 = face_tri(f, p);
+            tx.push_back(t2.first);
+            ty.push_back(t2.second);
           }
-          prev = id;
+          int first = -1, prev = -1;
+          for (size_t i = 0; i < part.size(); i++) {
+            double s[3] = {part[i].x, part[i].y, part[i].z};
+            int id = mesh.vertex(static_cast<int>(k + 1), f, tx[i], ty[i], s);
+            if (i == 0) {
+              first = id;
+            } else if (i >= 2) {
+              mesh.triangle(first, prev, id);
+            }
+            prev = id;
+          }
         }
       }
     }

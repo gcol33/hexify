@@ -1042,6 +1042,133 @@ static void cell_plane_edges(int quad, double qx_center, double qy_center,
     }
 }
 
+// Where a point of the quad plane lies on the solid: its face and
+// triangle coordinates. False for a point past the far vertex of every quad,
+// which lies in no face.
+static bool quad_point_face(int quad, double qx, double qy,
+                            int& face, double& tx, double& ty) {
+    return hexify::quad_xy_canonicalize(quad, qx, qy) &&
+           hexify::try_quad_xy_to_icosa_tri(quad, qx, qy, face, tx, ty);
+}
+
+// A straight piece of a cell edge on one face, in its triangle coordinates,
+// the cell wall it belongs to, and where it starts and ends along the plane
+// segment it was cut from (0 to 1).
+struct FacePiece {
+    int face;
+    double ax, ay, bx, by;
+    int wall;
+    double s0, s1;
+};
+
+// Snyder's projection has a crease along each line from a face's centre to
+// its corners: its derivative jumps there, so the image of a straight piece
+// bends where it crosses one. The face triangle is the same in every face's
+// triangle coordinates, with unit edge and its first corner at the top.
+// Returns how many such lines the piece a -> b crosses strictly between its
+// ends, with the crossings' places along it, ascending, in 'u'. Fuller's
+// projection is smooth inside a face, so it has none.
+static int radius_crossings(double ax, double ay, double bx, double by,
+                            double u[3]) {
+    if (hexify::active_projection() != hexify::FaceProjection::ISEA) return 0;
+    constexpr double kCx = 0.5;
+    constexpr double kCy = 0.28867513459481288225;   // 1 / (2 sqrt(3))
+    static const double corner[3][2] = {
+        {0.5, 0.86602540378443864676}, {0.0, 0.0}, {1.0, 0.0}};
+    // A crossing this close to an end is that end.
+    constexpr double kEndSlack = 1e-12;
+    const double dx = bx - ax, dy = by - ay;
+    int n = 0;
+    for (int k = 0; k < 3; k++) {
+        const double ex = corner[k][0] - kCx, ey = corner[k][1] - kCy;
+        const double den = dx * ey - dy * ex;
+        if (den == 0.0) continue;
+        // a + t d = c + r e, solved for t (along the piece) and r (along the
+        // line from the centre, 0 to 1)
+        const double wx = kCx - ax, wy = kCy - ay;
+        const double t = (wx * ey - wy * ex) / den;
+        const double r = (wx * dy - wy * dx) / den;
+        if (t > kEndSlack && t < 1.0 - kEndSlack && r >= 0.0 && r <= 1.0) u[n++] = t;
+    }
+    for (int i = 1; i < n; i++) {
+        for (int j = i; j > 0 && u[j] < u[j - 1]; j--) std::swap(u[j], u[j - 1]);
+    }
+    return n;
+}
+
+// Each face piece cut where it crosses a crease of the projection
+// (radius_crossings), so a vertex lies on every crease it crosses.
+static void split_at_creases(std::vector<FacePiece>& pieces) {
+    std::vector<FacePiece> out;
+    out.reserve(pieces.size());
+    double u[3];
+    for (const FacePiece& p : pieces) {
+        int n = radius_crossings(p.ax, p.ay, p.bx, p.by, u);
+        double prev_u = 0.0, px = p.ax, py = p.ay;
+        for (int i = 0; i <= n; i++) {
+            double t = i < n ? u[i] : 1.0;
+            double qx = i < n ? p.ax + t * (p.bx - p.ax) : p.bx;
+            double qy = i < n ? p.ay + t * (p.by - p.ay) : p.by;
+            out.push_back({p.face, px, py, qx, qy, p.wall,
+                           p.s0 + prev_u * (p.s1 - p.s0), p.s0 + t * (p.s1 - p.s0)});
+            prev_u = t;
+            px = qx;
+            py = qy;
+        }
+    }
+    pieces.swap(out);
+}
+
+// The plane segment a -> b cut where it crosses from one face to the next.
+// Each face is a convex triangle of the plane, so the segment's points on the
+// face it is in form one interval: bisection on face membership finds where
+// the segment leaves it, and the walk goes on from the face it enters there.
+// Returns NULL, or what went wrong when part of the segment lies on no face.
+static const char* plane_segment_faces(int quad, double ax, double ay,
+                                       double bx, double by, int wall,
+                                       std::vector<FacePiece>& out) {
+    int face_b;
+    double bt_x, bt_y;
+    if (!quad_point_face(quad, bx, by, face_b, bt_x, bt_y)) {
+        return "cell edge ends outside every face of the solid";
+    }
+    double s = 0.0;
+    int face;
+    double tx, ty;
+    if (!quad_point_face(quad, ax, ay, face, tx, ty)) {
+        return "cell edge starts outside every face of the solid";
+    }
+    // Two faces meet along an edge and at most five around a vertex, so a segment
+    // shorter than a face crosses at most a few.
+    for (int guard = 0; guard < 8; guard++) {
+        if (face == face_b) {
+            out.push_back({face, tx, ty, bt_x, bt_y, wall, s, 1.0});
+            return nullptr;
+        }
+        double lo = s, hi = 1.0;
+        int f;
+        double fx, fy;
+        for (int it = 0; it < 60; it++) {
+            double mid = 0.5 * (lo + hi);
+            if (quad_point_face(quad, ax + mid * (bx - ax), ay + mid * (by - ay),
+                                f, fx, fy) && f == face) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        double ex, ey;
+        quad_point_face(quad, ax + lo * (bx - ax), ay + lo * (by - ay), f, ex, ey);
+        out.push_back({face, tx, ty, ex, ey, wall, s, lo});
+        if (!quad_point_face(quad, ax + hi * (bx - ax), ay + hi * (by - ay),
+                             face, tx, ty)) {
+            return "cell edge passes outside every face of the solid";
+        }
+        s = hi;
+    }
+    return "cell edge crosses more faces than a cell edge can";
+}
+
 // The boundary of one cell in lon/lat, counter-clockwise and left open. A
 // cell edge is straight in the quad plane and curved in lon/lat, so with a
 // positive 'tolerance' each edge is split in the plane, as DGGRID's
@@ -1087,6 +1214,13 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
         out_lon.push_back(alon);
         out_lat.push_back(alat);
     };
+    // Cuts closer than this, as a share of the edge, to each other or to an
+    // end are one point.
+    constexpr double kCutSlack = 1e-9;
+    // Densified, an edge is first cut where it crosses a face edge or a crease
+    // of the projection (split_at_creases), where its image bends, so a
+    // vertex lies on each bend.
+    std::vector<FacePiece> pieces;
     auto add_edge = [&](double ax, double ay, double bx, double by) {
         double alon, alat, blon, blat;
         project(ax, ay, alon, alat);
@@ -1098,7 +1232,31 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             out_lat.push_back(alat);
             return;
         }
-        add_segment(ax, ay, alon, alat, bx, by, blon, blat, 0);
+        pieces.clear();
+        if (tolerance > 0.0 &&
+            plane_segment_faces(quad, ax, ay, bx, by, 0, pieces) == nullptr) {
+            split_at_creases(pieces);
+        } else {
+            pieces.clear();
+        }
+        double px = ax, py = ay, plon = alon, plat = alat;
+        double last = 0.0;
+        for (size_t i = 0; i + 1 < pieces.size(); i++) {
+            const double t = pieces[i].s1;
+            // A corner on a face edge leaves a piece of rounding length
+            // there; a cut at it would be a second copy of the corner.
+            if (t <= last + kCutSlack || t >= 1.0 - kCutSlack) continue;
+            last = t;
+            const double qx = ax + t * (bx - ax), qy = ay + t * (by - ay);
+            double qlon, qlat;
+            project(qx, qy, qlon, qlat);
+            add_segment(px, py, plon, plat, qx, qy, qlon, qlat, 0);
+            px = qx;
+            py = qy;
+            plon = qlon;
+            plat = qlat;
+        }
+        add_segment(px, py, plon, plat, bx, by, blon, blat, 0);
     };
 
     for (const PlaneEdge& e : edges) {
@@ -1108,72 +1266,6 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             project(e.cx, e.cy, out_lon[start], out_lat[start]);
         }
     }
-}
-
-// Where a point of the quad plane lies on the solid: its face and
-// triangle coordinates. False for a point past the far vertex of every quad,
-// which lies in no face.
-static bool quad_point_face(int quad, double qx, double qy,
-                            int& face, double& tx, double& ty) {
-    return hexify::quad_xy_canonicalize(quad, qx, qy) &&
-           hexify::try_quad_xy_to_icosa_tri(quad, qx, qy, face, tx, ty);
-}
-
-// A straight piece of a cell edge on one face, in its triangle coordinates,
-// and the cell wall it belongs to.
-struct FacePiece {
-    int face;
-    double ax, ay, bx, by;
-    int wall;
-};
-
-// The plane segment a -> b cut where it crosses from one face to the next.
-// Each face is a convex triangle of the plane, so the segment's points on the
-// face it is in form one interval: bisection on face membership finds where
-// the segment leaves it, and the walk goes on from the face it enters there.
-static void plane_segment_faces(int quad, double ax, double ay,
-                                double bx, double by, int wall,
-                                std::vector<FacePiece>& out) {
-    int face_b;
-    double bt_x, bt_y;
-    if (!quad_point_face(quad, bx, by, face_b, bt_x, bt_y)) {
-        Rcpp::stop("cell edge ends outside every face of the solid");
-    }
-    double s = 0.0;
-    int face;
-    double tx, ty;
-    if (!quad_point_face(quad, ax, ay, face, tx, ty)) {
-        Rcpp::stop("cell edge starts outside every face of the solid");
-    }
-    // Two faces meet along an edge and at most five around a vertex, so a segment
-    // shorter than a face crosses at most a few.
-    for (int guard = 0; guard < 8; guard++) {
-        if (face == face_b) {
-            out.push_back({face, tx, ty, bt_x, bt_y, wall});
-            return;
-        }
-        double lo = s, hi = 1.0;
-        int f;
-        double fx, fy;
-        for (int it = 0; it < 60; it++) {
-            double mid = 0.5 * (lo + hi);
-            if (quad_point_face(quad, ax + mid * (bx - ax), ay + mid * (by - ay),
-                                f, fx, fy) && f == face) {
-                lo = mid;
-            } else {
-                hi = mid;
-            }
-        }
-        double ex, ey;
-        quad_point_face(quad, ax + lo * (bx - ax), ay + lo * (by - ay), f, ex, ey);
-        out.push_back({face, tx, ty, ex, ey, wall});
-        if (!quad_point_face(quad, ax + hi * (bx - ax), ay + hi * (by - ay),
-                             face, tx, ty)) {
-            Rcpp::stop("cell edge passes outside every face of the solid");
-        }
-        s = hi;
-    }
-    Rcpp::stop("cell edge crosses more faces than a cell edge can");
 }
 
 // A boundary as an (n + 1) x 2 lon/lat matrix, the first point repeated last.
@@ -1328,8 +1420,10 @@ static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
                      c.at_vertex, /*fold_vertex=*/true, edges);
     pieces.clear();
     for (const PlaneEdge& e : edges) {
-        plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, e.wall, pieces);
+        const char* err = plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, e.wall, pieces);
+        if (err) Rcpp::stop(err);
     }
+    split_at_creases(pieces);
 }
 
 // Deepest halving of one face piece when a wall is measured, 2^20 pieces. A
