@@ -212,7 +212,7 @@ test_that("aperture-7 quad IJ -> XY lands on the cell centre", {
     g <- hex_grid(resolution = res, aperture = 7)
     cells <- lonlat_to_cell(lon, lat, g)
     ctr <- cell_to_lonlat(cells, g)
-    qij <- cpp_cell_to_quad_ij(cells, res, 7L, integer(0))
+    qij <- cpp_cell_to_quad_ij(numeric(0), cells, res, 7L, integer(0))
 
     # Polar quads are pentagons that cell_to_lonlat() answers directly.
     keep <- which(qij$quad >= 1 & qij$quad <= 10 & !is.na(ctr$lon))
@@ -220,7 +220,7 @@ test_that("aperture-7 quad IJ -> XY lands on the cell centre", {
 
     for (k in keep) {
       xy <- cpp_quad_ij_to_xy(qij$quad[k], qij$i[k], qij$j[k], 7L, res)
-      tri <- cpp_quad_xy_to_icosa_tri(qij$quad[k], xy$quad_x, xy$quad_y)
+      tri <- cpp_quad_xy_to_icosa_tri(numeric(0), qij$quad[k], xy$quad_x, xy$quad_y)
       ll <- cpp_face_xy_to_ll(numeric(0), tri[["icosa_triangle_x"]],
                               tri[["icosa_triangle_y"]],
                               tri[["icosa_triangle_face"]])

@@ -2,12 +2,12 @@
 % Please edit documentation in R/plot_surface.R
 \name{plot,HexGridInfo,missing-method}
 \alias{plot,HexGridInfo,missing-method}
-\title{Plot a grid on the sphere, on its icosahedron, or on the unfolded net}
+\title{Plot a grid on the sphere, on its solid, or on the unfolded net}
 \usage{
 \S4method{plot}{HexGridInfo,missing}(
   x,
   y,
-  surface = c("sphere", "icosahedron", "net"),
+  surface = c("sphere", "solid", "net"),
   center = c(lon = 15, lat = 32),
   projection = c("orthographic", "perspective"),
   distance = NULL,
@@ -35,8 +35,10 @@
 
 \item{y}{Ignored}
 
-\item{surface}{\code{"sphere"}, \code{"icosahedron"} or \code{"net"}.
-The icosahedron and the net need an ISEA grid; an H3 grid is drawn on the
+\item{surface}{\code{"sphere"}, \code{"solid"} or \code{"net"}.
+\code{"solid"} draws the flat faces of the grid's polyhedron (the
+icosahedron, or the octahedron of a grid built on it). The solid and the
+net need an ISEA grid; an H3 grid is drawn on the
 sphere.}
 
 \item{center}{Point the view looks down on: a preset name from
@@ -77,7 +79,7 @@ frames the whole visible sphere instead.}
 
 \item{grid_lwd}{Line width of cell boundaries.}
 
-\item{face_edges}{Draw the edges of the icosahedron's faces. \code{NULL}
+\item{face_edges}{Draw the edges of the solid's faces. \code{NULL}
 draws them for an ISEA grid; H3 is built on an icosahedron of its own,
 so its grid takes none.}
 
@@ -97,9 +99,9 @@ The grid, invisibly
 }
 \description{
 Draws the cells of a grid in 3D, seen from above a chosen point: on the
-sphere, or on the flat faces of the icosahedron the grid is built on. All
+sphere, or on the flat faces of the solid the grid is built on. All
 surfaces take their cell boundaries from the same points, so a cell on the
-icosahedron is the cell on the sphere folded flat.
+solid is the cell on the sphere folded flat.
 }
 \details{
 \code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
@@ -123,10 +125,10 @@ in either projection.
 \examples{
 grid <- hex_grid(resolution = 3, aperture = 3)
 plot(grid)
-plot(grid, surface = "icosahedron")
-plot(grid, surface = "icosahedron", land = FALSE, center = "pacific")
+plot(grid, surface = "solid")
+plot(grid, surface = "solid", land = FALSE, center = "pacific")
 plot(grid, projection = "perspective", distance = 2, center = "europe")
-plot(grid, surface = "icosahedron", projection = "perspective",
+plot(grid, surface = "solid", projection = "perspective",
      distance = 2.5, tilt = 25, rotation = 30)
 plot(grid, surface = "net")
 }

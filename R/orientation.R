@@ -1,14 +1,69 @@
 # orientation.R
-# Where an ISEA grid's icosahedron sits on the sphere.
+# The solid an ISEA-family grid is built on, and where it sits on the sphere.
 #
-# An orientation is vertex 0 of the icosahedron (vert0_lon, vert0_lat) and the
+# An orientation is vertex 0 of the solid (vert0_lon, vert0_lat) and the
 # azimuth of vertex 1 seen from vertex 0, in degrees: DGGRID's dggs_vert0_lon,
 # dggs_vert0_lat and dggs_vert0_azimuth. A rotation of the sphere carries one
 # orientation to another and the grid with it, so cell IDs, the hierarchy and
 # neighbours read the same under every orientation; only where cells sit on the
 # sphere changes.
 
-#' Orientation of an ISEA grid's icosahedron
+#' Solids a grid or face projection can be built on
+#'
+#' The codes the C++ layer reads (\code{hexify::Solid}). The tetrahedron
+#' carries the face projection only: its faces do not pair into the diamond
+#' quads cell IDs are numbered in.
+#' @noRd
+POLYHEDRA <- c(icosahedron = 0, octahedron = 1, tetrahedron = 2)
+
+#' Solids that carry a hexagonal grid
+#' @noRd
+GRID_POLYHEDRA <- c("icosahedron", "octahedron")
+
+#' The standard orientation of each solid: the ISEA orientation for the
+#' icosahedron; vertex 0 at the north pole and vertex 1 on the prime meridian
+#' for the octahedron and the tetrahedron
+#' @noRd
+POLYHEDRON_ORIENTATION <- list(
+  icosahedron = ISEA_ORIENTATION,
+  octahedron = c(vert0_lon = 0, vert0_lat = 90, azimuth = 180),
+  tetrahedron = c(vert0_lon = 0, vert0_lat = 90, azimuth = 180)
+)
+
+#' Solid of a grid
+#'
+#' A grid saved before grids carried a solid, and a legacy \code{hexify_grid}
+#' list, is built on the icosahedron. H3 grids have none.
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @return \code{"icosahedron"} or \code{"octahedron"}, or \code{NA} for an
+#'   H3 grid
+#' @noRd
+grid_polyhedron <- function(x) {
+  if (isS4(x)) {
+    if (is_h3_grid(x)) return(NA_character_)
+    if (.hasSlot(x, "polyhedron") && length(x@polyhedron) == 1L) return(x@polyhedron)
+    return("icosahedron")
+  }
+  if (is.null(x$polyhedron)) "icosahedron" else tolower(x$polyhedron)
+}
+
+#' What the C++ layer knows of a solid
+#'
+#' Its numbers of faces, vertices and diamond quads, whether it carries a
+#' grid, each vertex's valence, Snyder's g and G, and the arc of an edge.
+#' @param polyhedron Name of the solid
+#' @noRd
+solid_info <- function(polyhedron = "icosahedron") {
+  cpp_solid_info(c(FACE_PROJECTIONS[["isea"]], POLYHEDRA[[polyhedron]]))
+}
+
+#' Number of diamond quads of a solid: the faces paired, 10 on the icosahedron
+#' @noRd
+polyhedron_diamonds <- function(polyhedron = "icosahedron") {
+  solid_info(polyhedron)$n_diamonds
+}
+
+#' Orientation of an ISEA grid's solid
 #'
 #' A grid saved before grids carried an orientation, and a legacy
 #' \code{hexify_grid} list without the DGGRID fields, has the standard ISEA
@@ -58,42 +113,57 @@ grid_projection <- function(x) {
   if (is.null(x$projection)) "isea" else tolower(x$projection)
 }
 
-#' The icosa argument for a projection on the default orientation
+#' The icosa argument for a projection and solid on the solid's default
+#' orientation
 #' @param projection \code{"isea"} or \code{"fuller"}, or the choices vector
 #'   of a function argument
+#' @param polyhedron Name of the solid, or the choices vector of a function
+#'   argument
 #' @noRd
-projection_icosa <- function(projection) {
+projection_icosa <- function(projection, polyhedron = "icosahedron") {
   projection <- match.arg(projection, names(FACE_PROJECTIONS))
-  unname(FACE_PROJECTIONS[projection])
+  polyhedron <- match.arg(polyhedron, names(POLYHEDRA))
+  if (projection == "fuller" && polyhedron != "icosahedron") {
+    stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
+  }
+  c(unname(FACE_PROJECTIONS[projection]), unname(POLYHEDRA[polyhedron]))
 }
 
-#' The icosa argument of the standard ISEA orientation on the ISEA projection
+#' The icosa argument of a solid in its standard orientation on the ISEA
+#' projection
+#'
+#' Cell IDs, the hierarchy and neighbours do not depend on where the solid
+#' sits, so code that reads only those runs in this frame.
+#' @param polyhedron Name of the solid
 #' @noRd
-standard_icosa <- function() {
-  c(unname(ISEA_ORIENTATION), FACE_PROJECTIONS[["isea"]])
+standard_icosa <- function(polyhedron = "icosahedron") {
+  c(unname(POLYHEDRON_ORIENTATION[[polyhedron]]), FACE_PROJECTIONS[["isea"]],
+    POLYHEDRA[[polyhedron]])
 }
 
 #' The icosa argument the C++ layer takes
 #'
-#' A grid's own orientation and face projection,
-#' \code{c(vert0_lon, vert0_lat, azimuth, projection)};
+#' A grid's own orientation, face projection and solid,
+#' \code{c(vert0_lon, vert0_lat, azimuth, projection, solid)};
 #' \code{numeric(0)} for no grid or an H3 grid, which the C++ layer reads as
-#' the default orientation set by \code{hexify_build_icosa()} with the ISEA
-#' projection.
+#' the icosahedron in the default orientation set by
+#' \code{hexify_build_icosa()} with the ISEA projection.
 #' @param g HexGridInfo object, legacy hexify_grid list, or NULL
 #' @noRd
 icosa_arg <- function(g) {
   if (is.null(g)) return(numeric(0))
   o <- grid_orientation(g)
   if (length(o) == 0L) return(numeric(0))
-  c(unname(o), unname(FACE_PROJECTIONS[grid_projection(g)]))
+  c(unname(o), unname(FACE_PROJECTIONS[grid_projection(g)]),
+    unname(POLYHEDRA[grid_polyhedron(g)]))
 }
 
-#' Is this the standard ISEA orientation?
+#' Is this the standard orientation of the solid?
 #' @noRd
-is_standard_orientation <- function(o) {
-  length(o) == 3L && isTRUE(all.equal(unname(o), unname(ISEA_ORIENTATION),
-                                      tolerance = 0, check.attributes = FALSE))
+is_standard_orientation <- function(o, polyhedron = "icosahedron") {
+  length(o) == 3L &&
+    isTRUE(all.equal(unname(o), unname(POLYHEDRON_ORIENTATION[[polyhedron]]),
+                     tolerance = 0, check.attributes = FALSE))
 }
 
 #' Resolve hex_grid()'s orientation argument
@@ -101,10 +171,12 @@ is_standard_orientation <- function(o) {
 #' @param orientation "standard", "random", "region", "face", or a numeric
 #'   \code{c(vert0_lon, vert0_lat, azimuth)}
 #' @param region The area "region" and "face" centre the grid on
+#' @param polyhedron The solid the orientation places
 #' @return Named numeric \code{c(vert0_lon, vert0_lat, azimuth)}, longitude in
 #'   [-180, 180) and azimuth in [0, 360)
 #' @noRd
-resolve_orientation <- function(orientation, region = NULL) {
+resolve_orientation <- function(orientation, region = NULL,
+                                polyhedron = "icosahedron") {
   placed <- c("region", "face")
   region_misuse <- "region applies to orientation = \"region\" or \"face\""
   if (is.numeric(orientation)) {
@@ -127,14 +199,14 @@ resolve_orientation <- function(orientation, region = NULL) {
     centre <- region_centre(region)
   }
   switch(orientation,
-    standard = ISEA_ORIENTATION,
+    standard = POLYHEDRON_ORIENTATION[[polyhedron]],
     random = check_orientation(c(
       stats::runif(1, -180, 180),
       asin(stats::runif(1, -1, 1)) * 180 / pi,
       stats::runif(1, 0, 360)
     )),
-    region = region_orientation(centre[1], centre[2]),
-    face = face_orientation(centre[1], centre[2])
+    region = region_orientation(centre[1], centre[2], polyhedron),
+    face = face_orientation(centre[1], centre[2], polyhedron)
   )
 }
 
@@ -193,17 +265,32 @@ region_centre <- function(region) {
   unname(centre[1, 1:2])
 }
 
-#' Orientation that places a region centre where DGGRID's REGION_CENTER does
+#' Orientation that places a region centre on the midpoint of an edge
 #'
-#' DGGRID places vertex 0 and reads the azimuth from two fixed points of the
-#' gnomonic projection about the centre. The centre then lies at the midpoint of
-#' an icosahedron edge, the middle of the two faces that share it.
+#' On the icosahedron this is DGGRID's REGION_CENTER: DGGRID places vertex 0
+#' and reads the azimuth from two fixed points of the gnomonic projection about
+#' the centre. The centre then lies at the midpoint of an icosahedron edge, the
+#' middle of the two faces that share it. On another solid vertex 0 lies half
+#' an edge arc due north of the centre and vertex 1 the same distance due
+#' south, so the centre is the midpoint of the edge they span; the north
+#' direction at a pole is read from the centre's longitude.
 #' @param lon,lat Region centre in degrees
+#' @param polyhedron The solid the orientation places
 #' @noRd
-region_orientation <- function(lon, lat) {
-  p0 <- gnomonic_inverse(lon, lat, DGGRID_REGION_VERT0_M / DGGRID_AUTHALIC_RADIUS_M)
-  p1 <- gnomonic_inverse(lon, lat, DGGRID_REGION_AZ_POINT_M / DGGRID_AUTHALIC_RADIUS_M)
-  check_orientation(c(p0[1], p0[2], gc_azimuth_deg(p0, p1)))
+region_orientation <- function(lon, lat, polyhedron = "icosahedron") {
+  if (polyhedron == "icosahedron") {
+    p0 <- gnomonic_inverse(lon, lat, DGGRID_REGION_VERT0_M / DGGRID_AUTHALIC_RADIUS_M)
+    p1 <- gnomonic_inverse(lon, lat, DGGRID_REGION_AZ_POINT_M / DGGRID_AUTHALIC_RADIUS_M)
+    return(check_orientation(c(p0[1], p0[2], gc_azimuth_deg(p0, p1))))
+  }
+  r <- pi / 180
+  half <- solid_info(polyhedron)$edge_arc_deg / 2 * r
+  centre <- drop(unit_vec(lon, lat))
+  north <- c(-sin(lat * r) * cos(lon * r), -sin(lat * r) * sin(lon * r), cos(lat * r))
+  v0 <- cos(half) * centre + sin(half) * north
+  v1 <- cos(half) * centre - sin(half) * north
+  p <- vec_lonlat(rbind(v0, v1))
+  check_orientation(c(p[1, 1], p[1, 2], gc_azimuth_deg(p[1, ], p[2, ])))
 }
 
 #' Orientation that places a region centre on the centre of a face
@@ -213,12 +300,17 @@ region_orientation <- function(lon, lat) {
 #' they span with the third such vertex is centred on the region. The north
 #' direction at a pole is read from the centre's longitude.
 #' @param lon,lat Region centre in degrees
+#' @param polyhedron The solid the orientation places
 #' @noRd
-face_orientation <- function(lon, lat) {
+face_orientation <- function(lon, lat, polyhedron = "icosahedron") {
   r <- pi / 180
-  phi <- (1 + sqrt(5)) / 2
   # Angle between a face centre and its vertices
-  circum <- acos(sqrt((3 * phi + 2) / (3 * (phi + 2))))
+  circum <- if (polyhedron == "icosahedron") {
+    phi <- (1 + sqrt(5)) / 2
+    acos(sqrt((3 * phi + 2) / (3 * (phi + 2))))
+  } else {
+    solid_info(polyhedron)$g_deg * r
+  }
   lo <- lon * r
   la <- lat * r
   centre <- drop(unit_vec(lon, lat))

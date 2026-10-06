@@ -1,4 +1,4 @@
-// coordinate_transforms.h - Convert between ISEA DGGS coordinate systems
+// coordinate_transforms.h - Convert between the coordinate systems of a solid's DGGS
 //
 // Coordinate transformations for ISEA DGGS grids.
 // Copyright (c) 2024 hexify authors. MIT License.
@@ -12,29 +12,32 @@
 //
 // 1. Icosahedral Triangle Coordinates (from Snyder projection)
 //    - Variables: icosa_triangle_face, icosa_triangle_x, icosa_triangle_y
-//    - icosa_triangle_face: Triangle/face number (0-19), one of the 20 icosahedral faces
+//    - icosa_triangle_face: Face number of the solid (0-19 on the icosahedron)
 //    - icosa_triangle_x, icosa_triangle_y: Projected coordinates within that face, typically [0, 1]
 //    - This is what the Snyder forward projection produces from lon/lat
 //
 // 2. Quad XY (continuous quad coordinates)
 //    - Variables: quad, quad_x, quad_y
-//    - quad: Quad number (0-11), pairs of triangles forming diamond shapes
+//    - quad: Quad number, pairs of faces forming diamond shapes (0-11 on the
+//      icosahedron, 0-5 on the octahedron)
 //    - quad_x, quad_y: Continuous floating-point coordinates within the quad
 //    - Intermediate representation between icosa triangle coords and quad IJ
 //
 // 3. Quad IJ (quantized cell indices)
 //    - Variables: quad, i, j
-//    - quad: Quad number (0-11)
+//    - quad: Quad number
 //    - i, j: Integer cell indices within the quad at a given resolution
 //    - Cell IDs are derived from this
 //
-// ICOSA TRIANGLE TO QUAD MAPPING:
-// -------------------------------
-// The 20 triangular faces are grouped into 12 quads:
-//   - Quad 0:     North polar region (vertex)
-//   - Quads 1-5:  Upper hemisphere rhombi (each contains 2 triangles)
-//   - Quads 6-10: Lower hemisphere rhombi (each contains 2 triangles)
-//   - Quad 11:    South polar region (vertex)
+// FACE TO QUAD MAPPING:
+// ---------------------
+// The faces of the solid pair into diamond quads, one per vertex the diamond
+// starts at, and the two vertices no diamond starts at are single-cell quads:
+// on the icosahedron
+//   - Quad 0:     the vertex quad of vertex 0
+//   - Quads 1-5:  upper rhombi (each contains 2 triangles)
+//   - Quads 6-10: lower rhombi (each contains 2 triangles)
+//   - Quad 11:    the vertex quad of vertex 11
 //
 // ============================================================================
 
@@ -52,28 +55,18 @@ struct HexGridForm;
 // This applies triTable rotation and translation
 //
 // Parameters:
-//   icosa_triangle_face: Triangle/face number (0-19)
+//   icosa_triangle_face: Face number of the solid
 //   icosa_triangle_x, icosa_triangle_y: Projected triangle coordinates
-//   out_quad: Output quad number (0-11)
+//   out_quad: Output quad number
 //   out_quad_x, out_quad_y: Output continuous quad coordinates
 void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
                           int& out_quad, double& out_quad_x, double& out_quad_y);
-
-// How icosa_tri_to_quad_xy() places a face in its quad: the quad, the number
-// of 60-degree counter-clockwise turns, and the offset subtracted after them.
-void face_quad_placement(int face, int& quad, int& rotations,
-                         double& offset_x, double& offset_y);
-
-// DGGRID's edge table for a quad: whether it is an upper (type 0) quad, the
-// vertex quad of its lone vertex, and the quads across its four edges.
-void quad_edge_table(int quad, bool& is_type0, int& lone_vert,
-                     int& up, int& down, int& right, int& left);
 
 // Convert from quad XY to quad IJ (cell indices)
 // This quantizes continuous coords to integer cell indices
 //
 // Parameters:
-//   quad: Quad number (0-11)
+//   quad: Quad number
 //   quad_x, quad_y: Continuous quad coordinates
 //   aperture: Grid aperture (3, 4, or 7)
 //   resolution: Grid resolution level
@@ -115,11 +108,6 @@ bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
 long long quad_edge_dim(int aperture, int resolution);
 long long quad_edge_dim(const std::vector<int>& ap_seq);
 
-// Edge handling: map edge cells to adjacent quads
-// Returns true if coord was on edge and was adjusted
-bool handle_edge_overflow(int& quad, long long& i, long long& j,
-                          int aperture, int resolution);
-
 // Aperture 7: exact-integer conversion between the Class I substrate IJK (what
 // z7 operates on) and the resolution-r surrogate IJK (hexify's stored cell
 // coordinate). Even resolutions are the identity; odd resolutions apply one
@@ -144,7 +132,8 @@ void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
 // therefore holds S/7 centres and the index counts those.
 //
 // The result spans [0, 7^resolution) with no gaps, so cell IDs run 1 ..
-// 10 * 7^resolution + 2 exactly as they do for apertures 3 and 4.
+// (number of diamonds) * 7^resolution + 2 exactly as they do for apertures 3
+// and 4.
 uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution);
 void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
                                  long long& sur_i, long long& sur_j);
@@ -157,7 +146,7 @@ bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution);
 // it, via DGGRID's edge table. Coordinates are the aperture's own cell
 // coordinate (the aperture-7 surrogate is expanded and coarsened around the
 // call). Returns false when the coordinate lands outside every adjacent quad,
-// which happens where the icosahedron folds at a vertex.
+// which happens where the solid folds at a vertex.
 bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
                           int aperture, int resolution);
 
@@ -178,6 +167,7 @@ void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolutio
 void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
                          const HexGridForm& form, long long edge,
                          int& out_quad, long long& out_i, long long& out_j);
+
 
 } // namespace hexify
 

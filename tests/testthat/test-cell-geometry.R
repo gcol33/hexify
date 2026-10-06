@@ -160,7 +160,7 @@ test_that("a point goes to the cell with the nearest centre", {
 
     nearest <- vapply(seq_along(cells), function(k) {
       cand <- c(cells[k], neighbours[[k]])
-      ctr <- cpp_cell_to_plane(cand, case[2], case[1])
+      ctr <- cpp_cell_to_plane(numeric(0), cand, case[2], case[1])
       d <- (ctr$plane_x - plane$plane_x[k])^2 + (ctr$plane_y - plane$plane_y[k])^2
       which.min(d) == 1L
     }, logical(1))

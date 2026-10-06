@@ -57,7 +57,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
   # aperture-7 Z7 index packs its hierarchy seed in there too -- so read the
   # face back through the decoder that owns the format.
   faces <- as.integer(
-    cpp_index_to_cell(cell_indices, as.integer(grid$aperture),
+    cpp_index_to_cell(icosa_arg(grid), cell_indices, as.integer(grid$aperture),
                       grid$index_type)$face
   )
   
@@ -310,6 +310,7 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_quad_ij_to_cell(
+    icosa = numeric(0),
     quad = as.integer(quad),
     i = as.numeric(i),
     j = as.numeric(j),
@@ -387,6 +388,7 @@ hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
                                          icosa_triangle_x,
                                          icosa_triangle_y) {
   cpp_icosa_tri_to_quad_xy(
+    icosa = numeric(0),
     icosa_triangle_face = as.integer(icosa_triangle_face),
     icosa_triangle_x = as.numeric(icosa_triangle_x),
     icosa_triangle_y = as.numeric(icosa_triangle_y)
@@ -434,6 +436,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
   validate_aperture(aperture)
 
   cpp_icosa_tri_to_quad_ij(
+    icosa = numeric(0),
     icosa_triangle_face = as.integer(icosa_triangle_face),
     icosa_triangle_x = as.numeric(icosa_triangle_x),
     icosa_triangle_y = as.numeric(icosa_triangle_y),
@@ -465,6 +468,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
 #' print(tri)
 hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
   cpp_quad_xy_to_icosa_tri(
+    icosa = numeric(0),
     quad = as.integer(quad),
     quad_x = as.numeric(quad_x),
     quad_y = as.numeric(quad_y)
@@ -517,7 +521,8 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
   validate_resolution(resolution)
   validate_aperture(aperture)
   validate_cell_id(cell_id, resolution, aperture)
-  as.data.frame(cpp_cell_to_quad_ij(cell_id, resolution, aperture, integer(0)))
+  as.data.frame(cpp_cell_to_quad_ij(numeric(0), cell_id, resolution, aperture,
+                                    integer(0)))
 }
 
 #' Convert Cell ID to Icosa Triangle coordinates
@@ -558,6 +563,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_cell_to_icosa_tri(
+    icosa = numeric(0),
     cell_id = as.numeric(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
@@ -600,6 +606,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_quad_ij_to_icosa_tri(
+    icosa = numeric(0),
     quad = as.integer(quad),
     i = as.numeric(i),
     j = as.numeric(j),
@@ -653,6 +660,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_cell_to_quad_xy(
+    icosa = numeric(0),
     cell_id = as.numeric(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
@@ -692,6 +700,7 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
   validate_resolution(resolution)
 
   cpp_quad_xy_to_cell(
+    icosa = numeric(0),
     quad = as.integer(quad),
     quad_x = as.numeric(quad_x),
     quad_y = as.numeric(quad_y),
@@ -704,9 +713,10 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 # PLANE COORDINATE CONVERSIONS
 # =============================================================================
 #
-# PLANE coordinates represent the unfolded icosahedron in 2D space.
-# Each triangle face is rotated and translated to form a contiguous layout
-# covering approximately 5.5 x 1.73 units.
+# PLANE coordinates represent the unfolded solid in 2D space. Each triangle
+# face is rotated and translated to its place in a layout covering
+# approximately 5.5 x 1.73 units on the icosahedron, 4 x 1.73 on the octahedron
+# and 2 x 1.73 on the tetrahedron.
 #
 # These functions are useful for:
 # - Visualizing the entire DGGS on a flat surface
@@ -722,19 +732,26 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #'
 #' Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 #'
-#' @param icosa_triangle_face Triangle face number (0-19), integer or vector
+#' @param icosa_triangle_face Triangle face number (0-19 on the icosahedron),
+#'   integer or vector
 #' @param icosa_triangle_x X coordinate on triangle face
 #' @param icosa_triangle_y Y coordinate on triangle face
+#' @param polyhedron The solid whose faces are unfolded: "icosahedron"
+#'   (default), "octahedron" or "tetrahedron"
 #'
 #' @return Data frame with columns:
-#'   \item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5)}
+#'   \item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5 on the
+#'     icosahedron)}
 #'   \item{plane_y}{Y coordinate in PLANE space (range ~0 to 1.73)}
 #'
 #' @details
-#' The PLANE layout arranges all 20 icosahedral faces into a roughly
+#' The PLANE layout of the icosahedron arranges all 20 faces into a roughly
 #' rectangular region. Faces 0-4 and 5-9 form the upper row, while
 #' faces 10-14 and 15-19 form the lower row. Adjacent faces share
-#' edges in this representation.
+#' edges in this representation. The octahedron lays its four diamonds side
+#' by side, each a northern face over its southern one; the tetrahedron lays
+#' face 3 in the middle of a triangle of edge 2 with the three faces around
+#' vertex 0 at its corners.
 #'
 #' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_plane}} for direct cell ID conversion,
@@ -753,8 +770,11 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 #' print(plane)
 hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
                                        icosa_triangle_x,
-                                       icosa_triangle_y) {
+                                       icosa_triangle_y,
+                                       polyhedron = c("icosahedron", "octahedron",
+                                                      "tetrahedron")) {
   cpp_icosa_tri_to_plane(
+    icosa = projection_icosa("isea", match.arg(polyhedron)),
     icosa_triangle_face = as.integer(icosa_triangle_face),
     icosa_triangle_x = as.numeric(icosa_triangle_x),
     icosa_triangle_y = as.numeric(icosa_triangle_y)
@@ -793,6 +813,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
   validate_resolution(resolution)
 
   cpp_cell_to_plane(
+    icosa = numeric(0),
     cell_id = as.numeric(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
@@ -802,13 +823,15 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' Convert longitude/latitude to PLANE coordinates
 #'
 #' Converts geographic coordinates directly to PLANE coordinates
-#' (unfolded icosahedron). Combines forward 'Snyder' projection with
+#' (the unfolded solid). Combines forward 'Snyder' projection with
 #' the PLANE transformation.
 #'
-#' Equivalent to 'dggridR' dgGEO_to_PLANE().
+#' Equivalent to 'dggridR' dgGEO_to_PLANE() on the icosahedron.
 #'
 #' @param lon Longitude in degrees (-180 to 180)
 #' @param lat Latitude in degrees (-90 to 90)
+#' @param polyhedron The solid whose faces are unfolded: "icosahedron"
+#'   (default), "octahedron" or "tetrahedron", in its standard orientation
 #'
 #' @return Data frame with columns:
 #'   \item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5)}
@@ -828,9 +851,13 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 #' )
 #' plane <- hexify_lonlat_to_plane(cities$lon, cities$lat)
 #' plot(plane$plane_x, plane$plane_y)
-hexify_lonlat_to_plane <- function(lon, lat) {
+hexify_lonlat_to_plane <- function(lon, lat,
+                                   polyhedron = c("icosahedron", "octahedron",
+                                                  "tetrahedron")) {
+  polyhedron <- match.arg(polyhedron)
   cpp_lonlat_to_plane(
-    icosa = numeric(0),
+    icosa = if (polyhedron == "icosahedron") numeric(0)
+            else standard_icosa(polyhedron),
     lon = as.numeric(lon),
     lat = as.numeric(lat)
   )

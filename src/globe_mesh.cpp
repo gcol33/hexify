@@ -1,17 +1,16 @@
 // globe_mesh.cpp
-// Surfaces, land and lines placed on the icosahedron and on the sphere
+// Surfaces, land and lines placed on the solid and on the sphere
 //
-// Every point here carries two positions: on the flat face of the
-// icosahedron it lies on, and on the unit sphere, through the Snyder
-// projection of that face. A renderer can then fold the icosahedron into the
-// sphere by blending the two.
+// Every point here carries two positions: on the flat face of the solid it
+// lies on, and on the unit sphere, through the face projection of that face.
+// A renderer can then fold the solid into the sphere by blending the two.
 //
 // Copyright (c) 2024-2025 hexify authors. MIT License.
 
 #include "globe_mesh.h"
 #include "constants.h"
 #include "coordinate_transforms.h"
-#include "icosahedron.h"
+#include "polyhedron.h"
 #include "projection_forward.h"
 #include <algorithm>
 #include <array>
@@ -100,7 +99,7 @@ void FaceMesh::refine(double max_len) {
         len = std::sqrt(len);
         for (int r = 0; r < 3; r++) s[r] /= len;
         Geo g(std::atan2(s[1], s[0]), std::atan2(s[2], std::hypot(s[0], s[1])));
-        auto t = project_to_face(g, ico(), face_[a]);
+        auto t = project_to_face(g, poly(), face_[a]);
         m = vertex(item_[a], face_[a], t.first, t.second, s);
       } else {
         m = vertex(item_[a], face_[a], 0.5 * (tx_[a] + tx_[b]),
@@ -180,9 +179,9 @@ List FaceMesh::to_list() const {
 }
 
 void face_tri_corners(int face, double tx[3], double ty[3]) {
-  const IcosaData& S = ico();
+  const PolyData& S = poly();
   for (int k = 0; k < 3; k++) {
-    const auto t = project_to_face(S.verts[S.face_verts[face][k]], S, face);
+    const auto t = project_to_face(S.verts[S.topo->faces[face][k]], S, face);
     tx[k] = t.first;
     ty[k] = t.second;
   }
@@ -218,38 +217,19 @@ inline Geo vec_geo(V3 v) {
              std::atan2(v.z, std::sqrt(v.x * v.x + v.y * v.y)));
 }
 
-// Each face of the spherical icosahedron is the region on the inner side of
-// the three great circles through its edges: n . p >= 0 for the three
-// normals n, each pointing towards the face's centre.
-struct FacePlanes {
-  std::array<std::array<V3, 3>, 20> normal;
-  FacePlanes() {
-    const IcosaData& S = ico();
-    for (int f = 0; f < 20; f++) {
-      V3 v[3];
-      for (int k = 0; k < 3; k++) {
-        const Geo& g = S.verts[S.face_verts[f][k]];
-        v[k] = {std::cos(g.lat) * std::cos(g.lon),
-                std::cos(g.lat) * std::sin(g.lon), std::sin(g.lat)};
-      }
-      V3 c = v[0] + v[1] + v[2];
-      for (int k = 0; k < 3; k++) {
-        V3 n = unit(cross(v[k], v[(k + 1) % 3]));
-        normal[f][k] = dot(n, c) < 0.0 ? -1.0 * n : n;
-      }
-    }
-  }
-};
-
-const FacePlanes& face_planes() {
-  static const FacePlanes planes;
-  return planes;
+// Each face of the spherical solid is the region on the inner side of the
+// three great circles through its edges: n . p >= 0 for the three normals n
+// (PolyData::edge_normal), each pointing towards the face's centre.
+inline std::array<V3, 3> face_normals(int f) {
+  const auto& e = poly().edge_normal[f];
+  return {V3{e[0][0], e[0][1], e[0][2]}, V3{e[1][0], e[1][1], e[1][2]},
+          V3{e[2][0], e[2][1], e[2][2]}};
 }
 
 // How far inside face f the point p lies: the least of its three plane
 // distances, negative outside.
 inline double face_margin(int f, V3 p) {
-  const auto& n = face_planes().normal[f];
+  const auto n = face_normals(f);
   return std::min(dot(n[0], p), std::min(dot(n[1], p), dot(n[2], p)));
 }
 
@@ -258,7 +238,7 @@ inline double face_margin(int f, V3 p) {
 int sphere_face(V3 p) {
   int best = 0;
   double best_m = -std::numeric_limits<double>::infinity();
-  for (int f = 0; f < 20; f++) {
+  for (int f = 0; f < poly().n_faces(); f++) {
     double m = face_margin(f, p);
     if (m > best_m) {
       best_m = m;
@@ -269,7 +249,7 @@ int sphere_face(V3 p) {
 }
 
 inline std::pair<double, double> face_tri(int face, V3 p) {
-  return project_to_face(vec_geo(p), ico(), face);
+  return project_to_face(vec_geo(p), poly(), face);
 }
 
 // ============================================================================
@@ -636,7 +616,7 @@ private:
 // great-circle arcs shorter than a half circle, so a point of an edge is
 // a normalised blend of its ends, and the clip stays exact.
 void clip_to_face(int f, std::vector<V3>& poly) {
-  const auto& n = face_planes().normal[f];
+  const auto n = face_normals(f);
   std::vector<V3> out;
   for (int k = 0; k < 3 && !poly.empty(); k++) {
     out.clear();
@@ -659,14 +639,14 @@ void clip_to_face(int f, std::vector<V3>& poly) {
 
 using namespace hexify;
 
-// The faces of the icosahedron as one mesh, refined until no edge is longer
-// than 'max_len' (a face edge is 1). Item k is face k - 1.
+// The faces of the solid as one mesh, refined until no edge is longer than
+// 'max_len' (a face edge is 1). Item k is face k - 1.
 // [[Rcpp::export]]
 List cpp_globe_faces(NumericVector icosa, double max_len) {
   activate_icosa(icosa);
   FaceMesh mesh;
   double tx[3], ty[3];
-  for (int f = 0; f < 20; f++) {
+  for (int f = 0; f < poly().n_faces(); f++) {
     face_tri_corners(f, tx, ty);
     mesh.convex_polygon(f + 1, f, {tx[0], tx[1], tx[2]}, {ty[0], ty[1], ty[2]});
   }
@@ -677,25 +657,28 @@ List cpp_globe_faces(NumericVector icosa, double max_len) {
 // What a renderer needs to run the forward projection and the quad layout
 // itself. 'constants': tan, cos of the edge angle, cot 30 degrees, sin, cos
 // and value of the vertex angle G, R', R'^2, the face-plane origin (x, y),
-// the face edge, and the face projection (0 ISEA, 1 Fuller). 'faces': 16 numbers per face: the centre as a
-// unit vector, then the two unit vectors along which the face's azimuth is
-// read (azimuth = atan2(p . b, p . a)), each followed by a zero, then the
-// face's quad, its 60-degree turns into the quad and the offset after them.
-// 'edges': 8 integers per quad of DGGRID's edge table: type 0, lone vertex,
-// up, down, right and left quads, then two zeros.
+// the face edge, and the face projection (0 ISEA, 1 Fuller). 'faces': 16
+// numbers per face: the centre as a unit vector, then the two unit vectors
+// along which the face's azimuth is read (azimuth = atan2(p . b, p . a)), each
+// followed by a zero, then the face's quad, its 60-degree turns into the quad
+// and the offset after them. 'edges': 36 integers per quad: the quad of its
+// far corner, whether it is a vertex quad, two zeros, then for each edge in
+// QuadEdge order its QuadEdgeMap: the quad across it, the vertex quad of a
+// far edge's starting corner (-1 for none), and the six coefficients.
+// 'n_faces' and 'n_quads' count the solid's faces and quads.
 // [[Rcpp::export]]
 List cpp_globe_projection(NumericVector icosa) {
-  activate_icosa(icosa);
-  const IcosaData& S = ico();
-  const SnyderConstants k = snyder_constants();
+  activate_grid(icosa);
+  const PolyData& S = poly();
+  const SolidTopology& t = *S.topo;
+  const SnyderParams& k = t.snyder;
   NumericVector constants = NumericVector::create(
-      k.tan_el, k.cos_el, k.cot_30, k.sin_g, k.cos_g, kSnyderGAngle,
-      kSnyderR1, kSnyderR1Squared, kSnyderOriginXOff, kSnyderOriginYOff,
-      kSnyderIcosaEdge,
+      k.tan_el, k.cos_el, k.cot_30, k.sin_g, k.cos_g, k.g_angle,
+      k.r1, k.r1_squared, k.origin_x_off, k.origin_y_off, k.edge,
       active_projection() == FaceProjection::Fuller ? 1.0 : 0.0);
 
-  NumericVector faces(20 * 16);
-  for (int f = 0; f < 20; f++) {
+  NumericVector faces(t.n_faces * 16);
+  for (int f = 0; f < t.n_faces; f++) {
     const double lon = S.centers[f].lon, lat = S.centers[f].lat;
     const double centre[3] = {std::cos(lat) * std::cos(lon),
                               std::cos(lat) * std::sin(lon), std::sin(lat)};
@@ -712,31 +695,33 @@ List cpp_globe_projection(NumericVector icosa) {
       row[4 + r] = north[r] * ca + east[r] * sa;
       row[8 + r] = east[r] * ca - north[r] * sa;
     }
-    int quad, rotations;
-    double offset_x, offset_y;
-    face_quad_placement(f, quad, rotations, offset_x, offset_y);
-    row[12] = quad;
-    row[13] = rotations;
-    row[14] = offset_x;
-    row[15] = offset_y;
+    const FacePlacement& pl = t.placement[f];
+    row[12] = pl.quad;
+    row[13] = pl.rotations;
+    row[14] = pl.offset_x;
+    row[15] = pl.offset_y;
   }
 
-  IntegerVector edges(12 * 8);
-  for (int q = 0; q < 12; q++) {
-    bool type0;
-    int lone, up, down, right, left;
-    quad_edge_table(q, type0, lone, up, down, right, left);
-    int* row = &edges[8 * q];
-    row[0] = type0 ? 1 : 0;
-    row[1] = lone;
-    row[2] = up;
-    row[3] = down;
-    row[4] = right;
-    row[5] = left;
+  IntegerVector edges(t.n_quads() * 36);
+  for (int q = 0; q < t.n_quads(); q++) {
+    int* row = &edges[36 * q];
+    row[0] = t.corner[q][kCornerFar];
+    row[1] = t.is_pole(q) ? 1 : 0;
+    if (t.is_pole(q)) continue;
+    for (int e = 0; e < 4; e++) {
+      const QuadEdgeMap& m = t.edge[q][e];
+      int* em = row + 4 + 8 * e;
+      em[0] = m.quad;
+      em[1] = m.pole;
+      for (int c = 0; c < 2; c++) {
+        for (int d = 0; d < 3; d++) em[2 + 3 * c + d] = m.k[c][d];
+      }
+    }
   }
 
   return List::create(_["constants"] = constants, _["faces"] = faces,
-                      _["edges"] = edges);
+                      _["edges"] = edges, _["n_faces"] = t.n_faces,
+                      _["n_quads"] = t.n_quads());
 }
 
 // Polygons of the sphere as one mesh on the faces. 'polygons' is a list of
@@ -798,7 +783,7 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
 
     for (size_t t = 0; t < tri.size(); t += 3) {
       V3 a = pts[tri[t]], b = pts[tri[t + 1]], d = pts[tri[t + 2]];
-      for (int f = 0; f < 20; f++) {
+      for (int f = 0; f < poly().n_faces(); f++) {
         part.assign({a, b, d});
         clip_to_face(f, part);
         if (part.size() < 3) continue;
@@ -862,7 +847,7 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
     int face = sphere_face(a);
     // A segment shorter than a half circle crosses few faces.
     for (int guard = 0; guard < 20; guard++) {
-      const auto& nrm = face_planes().normal[face];
+      const auto nrm = face_normals(face);
       double t_out = 1.0;
       for (int e = 0; e < 3; e++) {
         double da = dot(nrm[e], a), db = dot(nrm[e], b);
@@ -884,7 +869,7 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
       V3 next = unit(a + std::min(1.0, s + 1e-9) * (b - a));
       int best = -1;
       double best_m = -std::numeric_limits<double>::infinity();
-      for (int f = 0; f < 20; f++) {
+      for (int f = 0; f < poly().n_faces(); f++) {
         if (f == face) continue;
         double m = face_margin(f, next);
         if (m > best_m) {

@@ -103,7 +103,7 @@ test_that("the default frame holds the whole visible sphere of a tilted camera",
 
 test_that("an icosahedron is framed by the corners of the faces the camera sees", {
   view <- hexify:::surface_view(c(lon = 10, lat = 45), distance = 1.8, tilt = 35)
-  ico <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("icosahedron", view, numeric(0)))
+  ico <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("solid", view, numeric(0)))
   sph <- hexify:::view_frame(view, NA_real_, hexify:::surface_outline("sphere", view, numeric(0)))
   expect_lt(ico[3], sph[3])
   s <- hexify:::icosa_solid(numeric(0))
@@ -282,7 +282,7 @@ test_that("cell boundaries separate the cell from its neighbours", {
 test_that("a vertex cell of a 4,4,7,3 sequence drops the corner no face reads", {
   g <- hex_grid(resolution = 4, aperture = c(4, 4, 7, 3))
   seq <- hexify:::isea_levels(g@aperture, g@resolution)$ap_seq
-  qij <- hexify:::cpp_cell_to_quad_ij(as.numeric(seq_len(n_cells(g))), 4L, 0L, seq)
+  qij <- hexify:::cpp_cell_to_quad_ij(numeric(0), as.numeric(seq_len(n_cells(g))), 4L, 0L, seq)
   vertex <- which(qij$i == 0 & qij$j == 0)
   expect_length(vertex, 12L)
   P <- hexify:::cpp_cell_surface_paths(numeric(0), as.numeric(vertex), 4L, 0L, seq, 0.05)
@@ -302,8 +302,8 @@ draws <- function(expr) {
 test_that("plot draws a grid on the sphere and on the icosahedron", {
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g)), g)
-  expect_identical(draws(plot(g, surface = "icosahedron")), g)
-  expect_identical(draws(plot(g, surface = "icosahedron", land = FALSE,
+  expect_identical(draws(plot(g, surface = "solid")), g)
+  expect_identical(draws(plot(g, surface = "solid", land = FALSE,
                               center = "pacific")), g)
   expect_identical(draws(plot(g, cells = 1:5, land_border = NA,
                               center = c(-60, -15))), g)
@@ -312,12 +312,12 @@ test_that("plot draws a grid on the sphere and on the icosahedron", {
 test_that("plot draws perspective, tilted and rotated views", {
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g, projection = "perspective", distance = 1.5)), g)
-  expect_identical(draws(plot(g, surface = "icosahedron", projection = "perspective",
+  expect_identical(draws(plot(g, surface = "solid", projection = "perspective",
                               distance = 2, tilt = 30, rotation = -45)), g)
   expect_identical(draws(plot(g, rotation = 120, center = "arctic")), g)
   expect_identical(draws(plot(g, projection = "perspective", distance = 1.3,
                               tilt = 30, fov = 40)), g)
-  expect_identical(draws(plot(g, surface = "icosahedron", projection = "perspective",
+  expect_identical(draws(plot(g, surface = "solid", projection = "perspective",
                               distance = 1.15, tilt = 80, fov = 70)), g)
   expect_error(draws(plot(g, distance = 2)), "perspective camera")
 })
@@ -325,14 +325,14 @@ test_that("plot draws perspective, tilted and rotated views", {
 test_that("plot takes land as an sf object", {
   g <- hex_grid(resolution = 1, aperture = 4)
   europe <- hexify_world[hexify_world$continent == "Europe", ]
-  expect_identical(draws(plot(g, surface = "icosahedron", land = europe)), g)
+  expect_identical(draws(plot(g, surface = "solid", land = europe)), g)
   expect_error(draws(plot(g, land = "europe")), "land must be")
 })
 
 test_that("an H3 grid draws on the sphere only", {
   h <- hex_grid(resolution = 0, type = "h3")
   expect_identical(suppressMessages(draws(plot(h, land = FALSE))), h)
-  expect_error(draws(plot(h, surface = "icosahedron")), "needs an ISEA grid")
+  expect_error(draws(plot(h, surface = "solid")), "needs an ISEA grid")
   expect_error(draws(plot(h, face_edges = TRUE)), "not built on")
 })
 

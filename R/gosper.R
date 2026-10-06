@@ -184,7 +184,7 @@ gosper_cell_rings <- function(cell_id, g, depth,
   frames <- icosa_face_frames(icosa)
 
   rings <- open_corner_rings(cell_id, g)
-  topo <- ring_edges(rings, aperture_n_cells(g@aperture, g@resolution))
+  topo <- ring_edges(rings, grid_n_cells(g))
 
   # Each edge once, from its lower corner label to its higher
   span <- nrow(topo$corners) + 1
@@ -572,8 +572,7 @@ descendant_cell_rings <- function(cell_id, g, depth,
   owner <- rep(seq_along(cell_id), lengths(kids))
 
   rings <- open_corner_rings(fine, fine_grid)
-  topo <- ring_edges(rings, aperture_n_cells(fine_grid@aperture,
-                                             fine_grid@resolution))
+  topo <- ring_edges(rings, grid_n_cells(fine_grid))
   from <- topo$from
   to <- topo$to
   island <- owner[topo$cell]

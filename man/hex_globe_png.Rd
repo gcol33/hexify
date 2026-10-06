@@ -34,7 +34,7 @@ browser is started with its GPU, which WebGPU draws on.
 \examples{
 \dontrun{
 grid <- hex_grid(resolution = 3, aperture = 3)
-globe <- hex_globe(grid, surface = "icosahedron", center = "pacific")
+globe <- hex_globe(grid, surface = "solid", center = "pacific")
 hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 }
 }

@@ -1,4 +1,4 @@
-// coordinate_transforms.cpp - Convert between ISEA DGGS coordinate systems
+// coordinate_transforms.cpp - Convert between the coordinate systems of a solid's DGGS
 //
 // ============================================================================
 // COORDINATE TRANSFORMATION FLOW
@@ -17,11 +17,11 @@
 //     coordinates                 coordinates            cell indices
 //
 // Icosa Triangle: Output from Snyder forward projection
-//   - icosa_triangle_face: Triangle index (0-19)
+//   - icosa_triangle_face: Face index of the solid
 //   - icosa_triangle_x, icosa_triangle_y: Normalized coords within triangle [0,1]
 //
 // Quad XY: Quad with continuous (double) coordinates
-//   - quad: Quad index (0-11; 0 and 11 are the vertex quads, see below)
+//   - quad: Quad index (the first and last are the vertex quads, see below)
 //   - quad_x, quad_y: Continuous position within quad
 //
 // Quad IJ: Quad with integer cell indices (used for cell ID computation)
@@ -29,33 +29,35 @@
 //   - i, j: Integer cell coordinates (resolution-dependent)
 //
 // ============================================================================
-// ICOSAHEDRON GEOMETRY
+// SOLID GEOMETRY
 // ============================================================================
 //
-// The icosahedron has 20 triangular faces grouped into 12 quads:
+// The faces of the solid (polyhedron.h) pair into diamonds across shared
+// edges, one diamond per quad. On the icosahedron the 20 faces form 12 quads:
 //
 //           Quad 0 (vertex 0)
 //                  /\
 //                 /  \
 //           +----+----+----+----+----+
-//           | Q1 | Q2 | Q3 | Q4 | Q5 |  <- Upper hemisphere (quads 1-5)
+//           | Q1 | Q2 | Q3 | Q4 | Q5 |  <- Upper quads 1-5
 //           +----+----+----+----+----+
-//           | Q6 | Q7 | Q8 | Q9 |Q10 |  <- Lower hemisphere (quads 6-10)
+//           | Q6 | Q7 | Q8 | Q9 |Q10 |  <- Lower quads 6-10
 //           +----+----+----+----+----+
 //                 \  /
 //                  \/
 //           Quad 11 (antipode of vertex 0)
 //
-// Quads 0 and 11 are the two degenerate quads: each holds the single pentagon
-// at the icosahedron vertex its neighbours share -- vertex 0 for the upper
-// quads, its antipode for the lower ones. Those vertices sit at the poles only
-// under a pole-aligned orientation; under the ISEA default (vertex 0 at 11.25,
-// 58.28) they do not, so their lon/lat comes from folding (0, 0) through the
-// quad frame like any other cell.
+// and on the octahedron the 8 faces form 6: four diamonds, each a northern and
+// a southern face, and the two vertices they meet at. Quad q's origin corner
+// is the solid's vertex q, so the first and last quads are the two degenerate
+// quads: each holds the single cell at a vertex no diamond starts at. Those
+// vertices sit at the poles only under a pole-aligned orientation; under the
+// ISEA default (vertex 0 at 11.25, 58.28) they do not, so their lon/lat comes
+// from folding (0, 0) through the quad frame like any other cell.
 //
-// Each non-polar quad contains 2 triangles forming a rhombus.
-// Triangles 0-4 and 5-9 map to quads 1-5
-// Triangles 10-14 and 15-19 map to quads 6-10
+// Every table the conversions below read -- which quad a face lies in, which
+// face holds each region around a quad's origin, and the map across each quad
+// edge -- is derived from the solid's face list (SolidTopology).
 //
 // ============================================================================
 // QUANTIZATION CLASSES
@@ -84,6 +86,7 @@
 #include "ijk_coordinates.h"
 #include "index_z7.h"
 #include "constants.h"
+#include "polyhedron.h"
 #include <cmath>
 #include <stdexcept>
 #include <string>
@@ -93,57 +96,6 @@
 namespace hexify {
 
 namespace {
-
-// ============================================================================
-// Triangle to Quad Mapping
-// ============================================================================
-//
-// Icosahedron face layout (20 triangles -> 12 quads):
-//
-// North Pole (Quad 0) at top, South Pole (Quad 11) at bottom.
-// Quads 1-5: upper hemisphere, Quads 6-10: lower hemisphere.
-// Each quad contains 2 triangles forming a rhombus shape.
-//
-// Each non-polar quad contains 2 triangles. The mapping specifies:
-//   - Which quad a triangle belongs to
-//   - Rotation and translation to align triangle coords with quad coords
-
-struct TriangleMapping {
-    int quad;           // Target quad (1-10 for regular quads)
-    int sub_triangle;   // 0 = primary, 1 = secondary (rotated/translated)
-    double offset_x;    // X offset after rotation
-    double offset_y;    // Y offset after rotation
-    int rotations;      // Number of 60° clockwise rotations
-};
-
-// Mapping table derived from ISEA icosahedron geometry
-// Triangle indices 0-19 map to quads 1-10 (polar quads 0,11 handled separately)
-const TriangleMapping kTriangleMap[20] = {
-    // Upper cap triangles (0-4) -> quads 1-5, primary position
-    {1, 0, 0.0, 0.0, 1},
-    {2, 0, 0.0, 0.0, 1},
-    {3, 0, 0.0, 0.0, 1},
-    {4, 0, 0.0, 0.0, 1},
-    {5, 0, 0.0, 0.0, 1},
-    // Upper-middle triangles (5-9) -> quads 1-5, secondary position
-    {1, 1, -0.5, -kSin60, 4},
-    {2, 1, -0.5, -kSin60, 4},
-    {3, 1, -0.5, -kSin60, 4},
-    {4, 1, -0.5, -kSin60, 4},
-    {5, 1, -0.5, -kSin60, 4},
-    // Lower-middle triangles (10-14) -> quads 6-10, primary position
-    {6,  0, 0.0, 0.0, 1},
-    {7,  0, 0.0, 0.0, 1},
-    {8,  0, 0.0, 0.0, 1},
-    {9,  0, 0.0, 0.0, 1},
-    {10, 0, 0.0, 0.0, 1},
-    // Lower cap triangles (15-19) -> quads 6-10, secondary position
-    {6,  1, -0.5, -kSin60, 4},
-    {7,  1, -0.5, -kSin60, 4},
-    {8,  1, -0.5, -kSin60, 4},
-    {9,  1, -0.5, -kSin60, 4},
-    {10, 1, -0.5, -kSin60, 4},
-};
 
 // ============================================================================
 // Rotation Helper
@@ -324,34 +276,6 @@ void quantize_class2(double x, double y, long long& out_i, long long& out_j) {
 }
 
 
-// ============================================================================
-// Quad Edge Adjacency
-// ============================================================================
-//
-// When a cell falls on the edge of a quad, it may belong to an adjacent quad.
-// This table defines the adjacency relationships.
-
-struct QuadAdjacency {
-    bool is_upper;      // Upper hemisphere quad (1-5) vs lower (6-10)
-    int up_neighbor;    // Quad above (for top edge overflow)
-    int right_neighbor; // Quad to the right (for right edge overflow)
-};
-
-const QuadAdjacency kQuadAdjacency[12] = {
-    {true,  0,  0},  // Quad 0: north pole (unused)
-    {true,  2,  6},  // Quad 1
-    {true,  3,  7},  // Quad 2
-    {true,  4,  8},  // Quad 3
-    {true,  5,  9},  // Quad 4
-    {true,  1, 10},  // Quad 5
-    {false, 2,  7},  // Quad 6
-    {false, 3,  8},  // Quad 7
-    {false, 4,  9},  // Quad 8
-    {false, 5, 10},  // Quad 9
-    {false, 1,  6},  // Quad 10
-    {false, 0,  0},  // Quad 11: south pole (unused)
-};
-
 } // anonymous namespace
 
 // ============================================================================
@@ -368,34 +292,46 @@ const QuadAdjacency kQuadAdjacency[12] = {
 
 namespace {
 
-// DgIDGGBase::edgeTable_[12]: quads 0/11 are pole placeholders (never occur).
-struct DgQuadEdge { int quadNum; bool isType0; int loneVert, up, down, right, left; };
-const DgQuadEdge kDggridEdgeTable[12] = {
-    {0,  true,  0,  0,  0,  0,  0},
-    {1,  true,  0,  2,  10, 6,  5},
-    {2,  true,  0,  3,  6,  7,  1},
-    {3,  true,  0,  4,  7,  8,  2},
-    {4,  true,  0,  5,  8,  9,  3},
-    {5,  true,  0,  1,  9,  10, 4},
-    {6,  false, 11, 2,  10, 7,  1},
-    {7,  false, 11, 3,  6,  8,  2},
-    {8,  false, 11, 4,  7,  9,  3},
-    {9,  false, 11, 5,  8,  10, 4},
-    {10, false, 11, 1,  9,  6,  5},
-    {11, false, 11, 0,  0,  0,  0},
-};
+// Folds one term of an edge map into a running sum: the first nonzero term
+// starts the sum, later ones are added or subtracted.
+template <typename T>
+inline void edge_map_term(int coef, T value, bool& started, T& sum) {
+    if (coef == 0) return;
+    if (!started) {
+        sum = (coef == 1) ? value : (coef == -1) ? -value : static_cast<T>(coef) * value;
+        started = true;
+    } else if (coef == 1) {
+        sum = sum + value;
+    } else if (coef == -1) {
+        sum = sum - value;
+    } else {
+        sum = sum + static_cast<T>(coef) * value;
+    }
+}
 
-// Reassign an out-of-box quad coordinate (i,j) to the quad that owns it.
-// topEdge = maxI + 1 = maxJ + 1. Port of DgQ2DDtoIConverter's reassignment.
-// Every edge map is affine in (i, j), so the same maps carry a continuous
-// coordinate across a quad edge when topEdge is the quad's side. Returns false
-// when the coordinate lies beyond both far edges or below both near edges,
-// which a cell centre never does: an integer centre beyond both far edges is
-// the far vertex, and is moved there.
+// One coordinate of an edge map: k[0] * topEdge + k[1] * along + k[2] * d,
+// summed in that order.
+template <typename T>
+inline T edge_map_coord(const int k[3], T topEdge, T along, T d) {
+    bool started = false;
+    T sum = 0;
+    edge_map_term(k[0], topEdge, started, sum);
+    edge_map_term(k[1], along, started, sum);
+    edge_map_term(k[2], d, started, sum);
+    return started ? sum : T(0);
+}
+
+// Reassign an out-of-box quad coordinate (i,j) to the quad that owns it, as
+// DGGRID's DgQ2DDtoIConverter does through its edge table, with the solid's
+// edge maps (QuadEdgeMap). topEdge = maxI + 1 = maxJ + 1. Every edge map is
+// affine in (i, j), so the same maps carry a continuous coordinate across a
+// quad edge when topEdge is the quad's side. Returns false when the
+// coordinate lies beyond both far edges or below both near edges, which a
+// cell centre never does: an integer centre beyond both far edges is the far
+// vertex, and is moved there. A vertex quad has no box to leave.
 template <typename T>
 bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
     const T maxI = topEdge - 1, maxJ = topEdge - 1;
-    const T topEdgeI = topEdge, topEdgeJ = topEdge;
     const bool integral = std::is_integral<T>::value;
 
     bool underI = i < 0, underJ = j < 0;
@@ -404,31 +340,32 @@ bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
     int numOver = (int)underI + (int)underJ + (int)overI + (int)overJ;
     if (!numOver) return true;
 
-    const DgQuadEdge& ec = kDggridEdgeTable[quadNum];
+    const SolidTopology& t = topo();
+    if (t.is_pole(quadNum)) return false;
 
     if (overI && overJ) {
         if (!integral) return false;
-        quadNum = ec.isType0 ? ec.up : ec.right;
+        quadNum = t.corner[quadNum][kCornerFar];
         i = 0; j = 0;
-    } else if (numOver > 1) {
-        return false;
-    } else if (underI) {
-        quadNum = ec.left;
-        if (ec.isType0) { T ni = topEdgeJ - j + i, nj = topEdgeJ + i; i = ni; j = nj; }
-        else            { i = topEdgeI + i; }
-    } else if (underJ) {
-        quadNum = ec.down;
-        if (ec.isType0) { j = topEdgeJ + j; }
-        else            { T ni = topEdgeJ + j, nj = (topEdgeI - i) + j; i = ni; j = nj; }
-    } else if (overI) {
-        if (ec.isType0) { quadNum = ec.right; i = i - topEdgeI; }
-        else if (j == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
-        else { quadNum = ec.right; T iOver = i - topEdgeI; T ni = (topEdgeJ - j) + iOver; i = ni; j = iOver; }
-    } else if (overJ) {
-        if (!ec.isType0) { quadNum = ec.up; j = j - topEdgeJ; }
-        else if (i == 0) { quadNum = ec.loneVert; i = 0; j = 0; }
-        else { quadNum = ec.up; T jOver = j - topEdgeJ; T nj = topEdgeI - i + jOver; i = jOver; j = nj; }
+        return true;
     }
+    if (numOver > 1) return false;
+
+    const int e = underI ? kEdgeLeft : underJ ? kEdgeDown : overI ? kEdgeRight : kEdgeUp;
+    const QuadEdgeMap& m = t.edge[quadNum][e];
+    const T along = (e == kEdgeLeft || e == kEdgeRight) ? j : i;
+    const T d = (e == kEdgeLeft) ? i : (e == kEdgeDown) ? j
+              : (e == kEdgeRight) ? i - topEdge : j - topEdge;
+    if (m.pole >= 0 && along == 0) {
+        quadNum = m.pole;
+        i = 0; j = 0;
+        return true;
+    }
+    const T ni = edge_map_coord(m.k[0], topEdge, along, d);
+    const T nj = edge_map_coord(m.k[1], topEdge, along, d);
+    quadNum = m.quad;
+    i = ni;
+    j = nj;
     return true;
 }
 
@@ -606,39 +543,14 @@ void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolutio
 // Public API Implementation
 // ============================================================================
 
-void face_quad_placement(int face, int& quad, int& rotations,
-                         double& offset_x, double& offset_y) {
-    if (face < 0 || face >= 20) {
-        throw std::runtime_error("face_quad_placement: face must be 0-19");
-    }
-    const TriangleMapping& m = kTriangleMap[face];
-    quad = m.quad;
-    rotations = m.rotations;
-    offset_x = m.offset_x;
-    offset_y = m.offset_y;
-}
-
-void quad_edge_table(int quad, bool& is_type0, int& lone_vert,
-                     int& up, int& down, int& right, int& left) {
-    if (quad < 0 || quad >= 12) {
-        throw std::runtime_error("quad_edge_table: quad must be 0-11");
-    }
-    const DgQuadEdge& e = kDggridEdgeTable[quad];
-    is_type0 = e.isType0;
-    lone_vert = e.loneVert;
-    up = e.up;
-    down = e.down;
-    right = e.right;
-    left = e.left;
-}
-
 void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, double icosa_triangle_y,
                           int& out_quad, double& out_quad_x, double& out_quad_y) {
-    if (icosa_triangle_face < 0 || icosa_triangle_face >= 20) {
-        throw std::runtime_error("icosa_tri_to_quad_xy: icosa_triangle_face must be 0-19");
+    const SolidTopology& t = topo();
+    if (icosa_triangle_face < 0 || icosa_triangle_face >= t.n_faces) {
+        throw std::runtime_error("icosa_tri_to_quad_xy: face out of range for the solid");
     }
 
-    const TriangleMapping& mapping = kTriangleMap[icosa_triangle_face];
+    const FacePlacement& mapping = t.placement[icosa_triangle_face];
 
     out_quad = mapping.quad;
     out_quad_x = icosa_triangle_x;
@@ -650,75 +562,6 @@ void icosa_tri_to_quad_xy(int icosa_triangle_face, double icosa_triangle_x, doub
     out_quad_y -= mapping.offset_y;
 }
 
-// Handle edge overflow for upper hemisphere quads (1-5)
-// Returns true if overflow was handled
-inline bool handle_upper_edge(int& quad, long long& i, long long& j,
-                              long long edge_coord, const QuadAdjacency& adj) {
-    if (j == edge_coord) {
-        // Top edge
-        if (i == 0) {
-            quad = 0;  // North pole
-            i = j = 0;
-        } else {
-            quad = adj.up_neighbor;
-            long long new_j = edge_coord - i;
-            i = 0;
-            j = new_j;
-        }
-        return true;
-    }
-    if (i == edge_coord) {
-        // Right edge -> right neighbor
-        quad = adj.right_neighbor;
-        i = 0;
-        return true;
-    }
-    return false;
-}
-
-// Handle edge overflow for lower hemisphere quads (6-10)
-// Returns true if overflow was handled
-inline bool handle_lower_edge(int& quad, long long& i, long long& j,
-                              long long edge_coord, const QuadAdjacency& adj) {
-    if (i == edge_coord) {
-        // Right edge
-        if (j == 0) {
-            quad = 11;  // South pole
-            i = j = 0;
-        } else {
-            quad = adj.right_neighbor;
-            long long new_i = edge_coord - j;
-            i = new_i;
-            j = 0;
-        }
-        return true;
-    }
-    if (j == edge_coord) {
-        // Top edge -> up neighbor
-        quad = adj.up_neighbor;
-        j = 0;
-        return true;
-    }
-    return false;
-}
-
-bool handle_edge_overflow(int& quad, long long& i, long long& j,
-                          int aperture, int resolution) {
-    long long edge_coord = quad_edge_dim(aperture, resolution);
-
-    // Quick exit: not on edge
-    if (i != edge_coord && j != edge_coord) return false;
-
-    // Polar quads don't overflow
-    if (quad < 1 || quad > 10) return false;
-
-    const QuadAdjacency& adj = kQuadAdjacency[quad];
-
-    return adj.is_upper
-        ? handle_upper_edge(quad, i, j, edge_coord, adj)
-        : handle_lower_edge(quad, i, j, edge_coord, adj);
-}
-
 void quad_xy_to_ij(int quad, double quad_x, double quad_y,
                    int aperture, int resolution,
                    int& out_quad, long long& out_i, long long& out_j) {
@@ -728,15 +571,15 @@ void quad_xy_to_ij(int quad, double quad_x, double quad_y,
     // coordinate belongs to the neighbouring quad), then (odd res) one exact
     // aperture-7 coarsen -- yielding the exact resolution-r cell IJK. This keeps
     // forward/inverse geometry consistent and replaces the float-rotation Class
-    // III quantization + handle_edge_overflow, which rounded boundary cells.
+    // III quantization, which rounded boundary cells.
     if (aperture == 7) {
         if (resolution == 0) {
-            // Resolution 0: one cell per quad plus the two poles. Poles arise
-            // from the edge-overflow mapping (a point at an icosa vertex), so
-            // keep that here rather than the z7 hierarchy (empty at res 0).
+            // Resolution 0: one cell per vertex. A point nearest a corner of
+            // the quad other than its origin goes to that corner's vertex,
+            // which the edge maps name; the z7 hierarchy is empty at res 0.
             quantize_class1(quad_x, quad_y, out_i, out_j);
             out_quad = quad;
-            handle_edge_overflow(out_quad, out_i, out_j, 7, 0);
+            dggrid_canonicalize_q2di(1, out_quad, out_i, out_j);
             return;
         }
         long long S = quad_edge_dim(7, resolution);
@@ -848,357 +691,6 @@ void quad_xy_to_ij_mixed(int quad, double quad_x, double quad_y,
 }
 
 // ============================================================================
-// vertTable - Derived from First Principles
-// ============================================================================
-//
-// This table maps (quad, subTriRegion) -> (triNum, trans, rot60)
-//
-// Each quad is divided into 6 regions based on the hex geometry:
-//   Region 0: Upper (y > sqrt(3)*x AND y >= -sqrt(3)*x)
-//   Region 1: Upper-right (y <= sqrt(3)*x AND y >= 0)
-//   Region 2: Lower-right (y < 0 AND y > -sqrt(3)*x)
-//   Region 3: Lower (y <= -sqrt(3)*x AND y < sqrt(3)*x)
-//   Region 4: Lower-left (y >= sqrt(3)*x AND y < 0)
-//   Region 5: Upper-left (y >= 0 AND y < -sqrt(3)*x)
-//
-// ============================================================================
-// DERIVATION FROM FIRST PRINCIPLES
-// ============================================================================
-//
-// The vertTable is the inverse of the triTable. For each (quad, region), we
-// need to find which triangle contains that region and what transformation
-// brings Quad XY coordinates back to Icosa Triangle coordinates.
-//
-// ICOSAHEDRON STRUCTURE:
-// ---------------------
-// 20 triangular faces are numbered 0-19:
-//   - Faces 0-4:   North cap (around vertex 0, touching north pole)
-//   - Faces 5-9:   Upper-middle band (connecting north cap to lower band)
-//   - Faces 10-14: Lower-middle band (connecting upper band to south cap)
-//   - Faces 15-19: South cap (around vertex 11, touching south pole)
-//
-// QUAD STRUCTURE:
-// ---------------
-// 12 quads (rhombus shapes), each containing 2 triangles:
-//   - Quad 0:     North pole vertex (special - not a rhombus)
-//   - Quads 1-5:  Upper hemisphere, each contains triangles (n-1, n+4) for n=1..5
-//   - Quads 6-10: Lower hemisphere, each contains triangles (n+4, n+9) for n=6..10
-//   - Quad 11:    South pole vertex (special - not a rhombus)
-//
-// TRIANGLE-TO-QUAD MAPPING (triTable, forward direction):
-// -------------------------------------------------------
-// From the triTable, each triangle maps to a quad with a transformation:
-//
-//   Triangle | Quad | Rotation | Translation
-//   ---------|------|----------|-------------
-//   0        |  1   |    1     | (0, 0)        <- primary
-//   1        |  2   |    1     | (0, 0)        <- primary
-//   2        |  3   |    1     | (0, 0)        <- primary
-//   3        |  4   |    1     | (0, 0)        <- primary
-//   4        |  5   |    1     | (0, 0)        <- primary
-//   5        |  1   |    4     | (-0.5, -sin60) <- secondary
-//   6        |  2   |    4     | (-0.5, -sin60) <- secondary
-//   7        |  3   |    4     | (-0.5, -sin60) <- secondary
-//   8        |  4   |    4     | (-0.5, -sin60) <- secondary
-//   9        |  5   |    4     | (-0.5, -sin60) <- secondary
-//   10       |  6   |    1     | (0, 0)        <- primary
-//   11       |  7   |    1     | (0, 0)        <- primary
-//   12       |  8   |    1     | (0, 0)        <- primary
-//   13       |  9   |    1     | (0, 0)        <- primary
-//   14       | 10   |    1     | (0, 0)        <- primary
-//   15       |  6   |    4     | (-0.5, -sin60) <- secondary
-//   16       |  7   |    4     | (-0.5, -sin60) <- secondary
-//   17       |  8   |    4     | (-0.5, -sin60) <- secondary
-//   18       |  9   |    4     | (-0.5, -sin60) <- secondary
-//   19       | 10   |    4     | (-0.5, -sin60) <- secondary
-//
-// Forward transform: rotate(rot * 60°) then subtract(trans)
-// Inverse transform: add(trans) then rotate(-rot * 60°)
-//
-// QUAD-TO-TRIANGLE MAPPING (vertTable, inverse direction):
-// --------------------------------------------------------
-// For each quad, the 6 regions map to triangles based on adjacency:
-//
-// Upper quads (1-5) - each contains primary triangle P and secondary S:
-//   Region 0: Primary triangle P (rot=-1, trans=negate of primary's)
-//   Region 1: Secondary triangle S (rot=-4, trans=negate of secondary's)
-//   Region 2: Lower-mid triangle (adjacent via icosahedron edge)
-//   Region 3: INVALID (extends beyond icosahedron)
-//   Region 4: Adjacent upper-mid secondary triangle
-//   Region 5: Previous quad's primary triangle
-//
-// Lower quads (6-10) - similar structure but mirrored:
-//   Region 0: Primary triangle (from lower-mid band)
-//   Region 1: Secondary triangle (from south cap)
-//   Region 2: Adjacent south cap triangle
-//   Region 3: Upper quad's secondary triangle
-//   Region 4: INVALID
-//   Region 5: Adjacent upper-mid secondary triangle
-//
-// ADJACENCY DERIVATION:
-// ---------------------
-// From icosahedron face definition:
-//   faces[20][3] = {
-//     {0,1,2},{0,2,3},{0,3,4},{0,4,5},{0,5,1},     // 0-4: North cap
-//     {6,2,1},{7,3,2},{8,4,3},{9,5,4},{10,1,5},    // 5-9: Upper-mid band
-//     {2,6,7},{3,7,8},{4,8,9},{5,9,10},{1,10,6},   // 10-14: Lower-mid band
-//     {11,7,6},{11,8,7},{11,9,8},{11,10,9},{11,6,10} // 15-19: South cap
-//   }
-//
-// Two faces are adjacent if they share 2 vertices. For each quad region,
-// the adjacent triangle is determined by which face shares the edge
-// corresponding to that region's direction.
-//
-// For quad q (1-5):
-//   - Region 0 → triangle (q-1): primary triangle of this quad
-//   - Region 1 → triangle (q+4): secondary triangle of this quad
-//   - Region 2 → triangle (q+9): lower-mid band (shares edge going southeast)
-//   - Region 3 → INVALID (no icosahedron face in this direction)
-//   - Region 4 → triangle ((q+3)%5+5): previous quad's secondary
-//   - Region 5 → triangle ((q-2+5)%5): next quad's primary
-//
-// For quad q (6-10):
-//   - Region 0 → triangle (q+4): lower-mid band primary
-//   - Region 1 → triangle (q+9): south cap secondary
-//   - Region 2 → triangle ((q-6+4)%5+15): adjacent south cap
-//   - Region 3 → triangle (q-6+10): this quad's lower-mid adjacent
-//   - Region 4 → INVALID
-//   - Region 5 → triangle ((q-6+4)%5+5): upper-mid secondary
-//
-// TRANSFORMATION DERIVATION:
-// --------------------------
-// The inverse transformation parameters are computed as:
-//   - rot60: Negate the forward rotation
-//   - trans: The translation needed to move from Quad XY back to Icosa Triangle
-//
-// For a primary triangle (forward: rot=1, trans=(0,0)):
-//   Inverse: rot=-1, stored as 1 with sign applied during usage
-//
-// For a secondary triangle (forward: rot=4, trans=(-0.5,-sin60)):
-//   Inverse: rot=-4, trans is negated after rotation adjustment
-//
-// Cross-quad adjacencies require additional transformations based on how
-// the triangles are oriented relative to each other.
-//
-// ============================================================================
-
-struct VertTriVals {
-    int triNum;       // Output triangle number
-    double trans_x;   // Translation x (added to Quad XY before rotation)
-    double trans_y;   // Translation y (added to Quad XY before rotation)
-    int rot60;        // Number of 60-degree rotations (multiply by -60 for actual rotation)
-    bool keep;        // Whether to keep this vertex
-};
-
-// vertTable[quad][subTri] - Derived from icosahedron geometry
-//
-// The derivation uses these key relationships:
-//
-// 1. Primary triangles of quads 1-5 are faces 0-4 (north cap)
-// 2. Secondary triangles of quads 1-5 are faces 5-9 (upper-mid band)
-// 3. Primary triangles of quads 6-10 are faces 10-14 (lower-mid band)
-// 4. Secondary triangles of quads 6-10 are faces 15-19 (south cap)
-//
-// 5. Each region maps to an adjacent triangle with a specific transformation:
-//    - Region 0: The "upper" direction in Quad XY space
-//    - Region 1: The "upper-right" direction (60° clockwise from up)
-//    - Region 2: The "lower-right" direction (120° clockwise from up)
-//    - Region 3: The "lower" direction (180° from up)
-//    - Region 4: The "lower-left" direction (240° clockwise from up)
-//    - Region 5: The "upper-left" direction (300° clockwise from up)
-//
-// 6. The transformations are computed to reverse the forward triTable mapping
-//    while accounting for the hexagonal geometry.
-//
-static const VertTriVals kVertTable[12][6] = {
-    // ========================================================================
-    // Quad 0 (North pole vertex)
-    // ========================================================================
-    // The north pole (vertex 0) is surrounded by triangles 0-4.
-    // This is a special case where 5 triangles meet at a point.
-    // The 6 regions map to these 5 triangles with one invalid region.
-    //
-    // From vertex 0, going around counter-clockwise:
-    //   Triangle 0: shares edge with triangles 4 and 1
-    //   Triangle 1: shares edge with triangles 0 and 2
-    //   Triangle 2: shares edge with triangles 1 and 3
-    //   Triangle 3: shares edge with triangles 2 and 4
-    //   Triangle 4: shares edge with triangles 3 and 0
-    //
-    // Region assignments (empirically verified):
-    //   Region 0 → Triangle 1 (rot=3)
-    //   Region 1 → Triangle 0 (rot=2)
-    //   Region 2 → Triangle 4 (rot=1)
-    //   Region 3 → INVALID (pentagon vertex, no 6th triangle)
-    //   Region 4 → Triangle 3 (rot=-1)
-    //   Region 5 → Triangle 2 (rot=-2)
-    {
-        { 1, -0.5, -kSin60,  3, true},   // Region 0 → tri 1
-        { 0, -1.0,  0.0,     2, true},   // Region 1 → tri 0
-        { 4, -0.5,  kSin60,  1, true},   // Region 2 → tri 4
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 3,  1.0,  0.0,    -1, true},   // Region 4 → tri 3
-        { 2,  0.5, -kSin60, -2, true}    // Region 5 → tri 2
-    },
-
-    // ========================================================================
-    // Quads 1-5 (Upper hemisphere)
-    // ========================================================================
-    // Each quad q contains:
-    //   - Primary triangle: (q-1) from north cap (faces 0-4)
-    //   - Secondary triangle: (q+4) from upper-mid band (faces 5-9)
-    //
-    // The primary triangle transformation is: rot=1, trans=(0,0)
-    // The secondary triangle transformation is: rot=4, trans=(-0.5,-sin60)
-    //
-    // Inverse transformations:
-    //   - For primary: add (0,0), rotate -1*60° = rotate(-60°)
-    //   - For secondary: add (0.5,sin60) rotated, then rotate -4*60°
-    //
-    // Cross-quad adjacencies (computed from icosahedron edge sharing):
-    //   Region 2: Lower-mid band triangle (q+9) with special transform
-    //   Region 4: Previous quad's secondary triangle
-    //   Region 5: Next quad's primary triangle (wrapping around)
-    //
-    // Quad 1: primary=tri0, secondary=tri5
-    {
-        { 0,  0.0,  0.0,     1, true},   // Region 0 → tri 0 (primary)
-        { 5, -0.5, -kSin60,  4, true},   // Region 1 → tri 5 (secondary)
-        {14, -0.5,  kSin60,  1, true},   // Region 2 → tri 14 (lower-mid, adjacent)
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 9,  0.0,  0.0,     3, true},   // Region 4 → tri 9 (quad5's secondary)
-        { 4,  1.0,  0.0,     0, true}    // Region 5 → tri 4 (quad5's primary)
-    },
-    // Quad 2: primary=tri1, secondary=tri6
-    {
-        { 1,  0.0,  0.0,     1, true},   // Region 0 → tri 1 (primary)
-        { 6, -0.5, -kSin60,  4, true},   // Region 1 → tri 6 (secondary)
-        {10, -0.5,  kSin60,  1, true},   // Region 2 → tri 10 (lower-mid, adjacent)
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 5,  0.0,  0.0,     3, true},   // Region 4 → tri 5 (quad1's secondary)
-        { 0,  1.0,  0.0,     0, true}    // Region 5 → tri 0 (quad1's primary)
-    },
-    // Quad 3: primary=tri2, secondary=tri7
-    {
-        { 2,  0.0,  0.0,     1, true},   // Region 0 → tri 2 (primary)
-        { 7, -0.5, -kSin60,  4, true},   // Region 1 → tri 7 (secondary)
-        {11, -0.5,  kSin60,  1, true},   // Region 2 → tri 11 (lower-mid, adjacent)
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 6,  0.0,  0.0,     3, true},   // Region 4 → tri 6 (quad2's secondary)
-        { 1,  1.0,  0.0,     0, true}    // Region 5 → tri 1 (quad2's primary)
-    },
-    // Quad 4: primary=tri3, secondary=tri8
-    {
-        { 3,  0.0,  0.0,     1, true},   // Region 0 → tri 3 (primary)
-        { 8, -0.5, -kSin60,  4, true},   // Region 1 → tri 8 (secondary)
-        {12, -0.5,  kSin60,  1, true},   // Region 2 → tri 12 (lower-mid, adjacent)
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 7,  0.0,  0.0,     3, true},   // Region 4 → tri 7 (quad3's secondary)
-        { 2,  1.0,  0.0,     0, true}    // Region 5 → tri 2 (quad3's primary)
-    },
-    // Quad 5: primary=tri4, secondary=tri9
-    {
-        { 4,  0.0,  0.0,     1, true},   // Region 0 → tri 4 (primary)
-        { 9, -0.5, -kSin60,  4, true},   // Region 1 → tri 9 (secondary)
-        {13, -0.5,  kSin60,  1, true},   // Region 2 → tri 13 (lower-mid, adjacent)
-        {-1, -0.5,  kSin60,  1, false},  // Region 3 → INVALID
-        { 8,  0.0,  0.0,     3, true},   // Region 4 → tri 8 (quad4's secondary)
-        { 3,  1.0,  0.0,     0, true}    // Region 5 → tri 3 (quad4's primary)
-    },
-
-    // ========================================================================
-    // Quads 6-10 (Lower hemisphere)
-    // ========================================================================
-    // Each quad q contains:
-    //   - Primary triangle: (q+4) from lower-mid band (faces 10-14)
-    //   - Secondary triangle: (q+9) from south cap (faces 15-19)
-    //
-    // Lower hemisphere quads have different adjacency patterns:
-    //   Region 0: Primary triangle (lower-mid band)
-    //   Region 1: Secondary triangle (south cap)
-    //   Region 2: Adjacent south cap triangle (wrapping)
-    //   Region 3: Upper quad's lower-mid triangle (cross-hemisphere)
-    //   Region 4: INVALID
-    //   Region 5: Upper quad's secondary triangle
-    //
-    // Quad 6: primary=tri10, secondary=tri15
-    {
-        {10,  0.0,  0.0,     1, true},   // Region 0 → tri 10 (primary)
-        {15, -0.5, -kSin60,  4, true},   // Region 1 → tri 15 (secondary)
-        {19,  0.0,  0.0,    -1, true},   // Region 2 → tri 19 (adjacent south cap)
-        {14, -0.5,  kSin60,  2, true},   // Region 3 → tri 14 (lower-mid, cross)
-        {-1, -0.5,  kSin60,  1, false},  // Region 4 → INVALID
-        { 5,  0.5, -kSin60,  4, true}    // Region 5 → tri 5 (upper secondary)
-    },
-    // Quad 7: primary=tri11, secondary=tri16
-    {
-        {11,  0.0,  0.0,     1, true},   // Region 0 → tri 11 (primary)
-        {16, -0.5, -kSin60,  4, true},   // Region 1 → tri 16 (secondary)
-        {15,  0.0,  0.0,    -1, true},   // Region 2 → tri 15 (adjacent south cap)
-        {10, -0.5,  kSin60,  2, true},   // Region 3 → tri 10 (lower-mid, cross)
-        {-1, -0.5,  kSin60,  1, false},  // Region 4 → INVALID
-        { 6,  0.5, -kSin60,  4, true}    // Region 5 → tri 6 (upper secondary)
-    },
-    // Quad 8: primary=tri12, secondary=tri17
-    {
-        {12,  0.0,  0.0,     1, true},   // Region 0 → tri 12 (primary)
-        {17, -0.5, -kSin60,  4, true},   // Region 1 → tri 17 (secondary)
-        {16,  0.0,  0.0,    -1, true},   // Region 2 → tri 16 (adjacent south cap)
-        {11, -0.5,  kSin60,  2, true},   // Region 3 → tri 11 (lower-mid, cross)
-        {-1, -0.5,  kSin60,  1, false},  // Region 4 → INVALID
-        { 7,  0.5, -kSin60,  4, true}    // Region 5 → tri 7 (upper secondary)
-    },
-    // Quad 9: primary=tri13, secondary=tri18
-    {
-        {13,  0.0,  0.0,     1, true},   // Region 0 → tri 13 (primary)
-        {18, -0.5, -kSin60,  4, true},   // Region 1 → tri 18 (secondary)
-        {17,  0.0,  0.0,    -1, true},   // Region 2 → tri 17 (adjacent south cap)
-        {12, -0.5,  kSin60,  2, true},   // Region 3 → tri 12 (lower-mid, cross)
-        {-1, -0.5,  kSin60,  1, false},  // Region 4 → INVALID
-        { 8,  0.5, -kSin60,  4, true}    // Region 5 → tri 8 (upper secondary)
-    },
-    // Quad 10: primary=tri14, secondary=tri19
-    {
-        {14,  0.0,  0.0,     1, true},   // Region 0 → tri 14 (primary)
-        {19, -0.5, -kSin60,  4, true},   // Region 1 → tri 19 (secondary)
-        {18,  0.0,  0.0,    -1, true},   // Region 2 → tri 18 (adjacent south cap)
-        {13, -0.5,  kSin60,  2, true},   // Region 3 → tri 13 (lower-mid, cross)
-        {-1, -0.5,  kSin60,  1, false},  // Region 4 → INVALID
-        { 9,  0.5, -kSin60,  4, true}    // Region 5 → tri 9 (upper secondary)
-    },
-
-    // ========================================================================
-    // Quad 11 (South pole vertex)
-    // ========================================================================
-    // The south pole (vertex 11) is surrounded by triangles 15-19.
-    // This is a special case where 5 triangles meet at a point.
-    // The 6 regions map to these 5 triangles with one invalid region.
-    //
-    // From vertex 11, going around counter-clockwise:
-    //   Triangle 15: shares edge with triangles 19 and 16
-    //   Triangle 16: shares edge with triangles 15 and 17
-    //   Triangle 17: shares edge with triangles 16 and 18
-    //   Triangle 18: shares edge with triangles 17 and 19
-    //   Triangle 19: shares edge with triangles 18 and 15
-    //
-    // Region assignments (empirically verified):
-    //   Region 0 → Triangle 17 (rot=3)
-    //   Region 1 → Triangle 18 (rot=2)
-    //   Region 2 → Triangle 19 (rot=1)
-    //   Region 3 → Triangle 15 (rot=0)
-    //   Region 4 → INVALID (pentagon vertex, no 6th triangle)
-    //   Region 5 → Triangle 16 (rot=-2)
-    {
-        {17, -0.5, -kSin60,  3, true},   // Region 0 → tri 17
-        {18, -1.0,  0.0,     2, true},   // Region 1 → tri 18
-        {19, -0.5,  kSin60,  1, true},   // Region 2 → tri 19
-        {15,  0.5,  kSin60,  0, true},   // Region 3 → tri 15
-        {-1,  0.0,  0.0,     0, false},  // Region 4 → INVALID
-        {16,  0.5, -kSin60, -2, true}    // Region 5 → tri 16
-    }
-};
-
-// ============================================================================
 // Sub-triangle Region Detection
 // ============================================================================
 //
@@ -1214,7 +706,8 @@ static const VertTriVals kVertTable[12][6] = {
 //             \/
 //          Region 3 (Lower)
 //
-// Each region maps to a different triangle in the icosahedron.
+// Each region maps to a face of the solid around the quad's origin
+// (SolidTopology::region).
 
 // Check if point is at origin (within tolerance)
 inline bool is_origin(double x, double y, double tol) {
@@ -1261,13 +754,14 @@ static int compute_subtriangle(double x, double y) {
 // Try to convert quad XY to icosa triangle coords. Returns true on success,
 // false if the point is in an invalid region (e.g., outside the valid quad bounds).
 bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y) {
-    if (quad < 1 || quad > 10) return true;
+    const SolidTopology& t = topo();
+    if (t.is_pole(quad)) return true;
     // The quad box is the unit rhombus of the Class I lattice basis.
     double v = quad_y / kSin60;
     double u = quad_x + v / 2.0;
-    // Below a near edge the point is still in the hexagon of triangles around
-    // the quad's origin vertex, which try_quad_xy_to_icosa_tri() reads
-    // directly, dropped sector included.
+    // Below a near edge the point is still in the fan of faces around the
+    // quad's origin vertex, which try_quad_xy_to_icosa_tri() reads directly,
+    // dropped sectors included.
     if (u < 1.0 && v < 1.0) return true;
     int q = quad;
     if (!canonicalize_q2d<double>(1.0, q, u, v)) return false;
@@ -1277,24 +771,25 @@ bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y) {
     return true;
 }
 
+
 bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
                               int& out_icosa_triangle_face, double& out_icosa_triangle_x, double& out_icosa_triangle_y) {
-    if (quad < kMinQuad || quad > kMaxQuad) {
-        throw std::invalid_argument("try_quad_xy_to_icosa_tri: quad must be between 0 and 11");
+    const SolidTopology& t = topo();
+    if (quad < 0 || quad >= t.n_quads()) {
+        throw std::invalid_argument("try_quad_xy_to_icosa_tri: quad out of range for the solid");
     }
 
     // Detect which of 6 sub-regions the point falls into
     int subTri = compute_subtriangle(quad_x, quad_y);
 
-    // Look up transformation from vertTable
-    const VertTriVals& triVal = kVertTable[quad][subTri];
+    const QuadRegion& triVal = t.region[quad][subTri];
 
-    if (!triVal.keep || triVal.triNum < 0) {
-        // This region maps to an invalid/dropped vertex
+    if (!triVal.keep) {
+        // The region lies in the solid's angular deficit at the vertex
         return false;
     }
 
-    out_icosa_triangle_face = triVal.triNum;
+    out_icosa_triangle_face = triVal.face;
 
     // Apply inverse transformation:
     //   coord += trans

@@ -104,10 +104,10 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 //
 // The faces mesh carries each vertex's face and triangle coordinates. A
 // fragment's triangle coordinates are the interpolated ones on the flat
-// icosahedron, where they are linear, and the face projection (Snyder's or
+// solid, where they are linear, and the face projection (Snyder's or
 // Fuller's) of its direction on the sphere, blended by the fold. The point goes into its
 // face's quad, is scaled to the substrate, and its cell is the nearest
-// multiple of the grid's generator; DGGRID's edge table moves that centre
+// multiple of the grid's generator; the solid's edge maps move that centre
 // into the quad that owns it, and the cell ID follows hexify's numbering.
 
 struct Face {
@@ -123,12 +123,13 @@ struct Grid {
   snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller)
   frame: vec4u,      // quad side in substrate steps, sublattice index, c, number of keys
   generator: vec4i,  // generator a + b omega
-  flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1
+  flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1, faces
   per_quad: vec4u,   // cells per quad: high and low 32 bits
   na_fill: vec4f,    // fill of a cell whose value is NA
   ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
   faces: array<Face, 20>,
-  edges: array<vec4i, 24>,   // per quad: type 0, lone vertex, up, down; right, left
+  edges: array<vec4i, 108>,  // per quad nine rows: its far corner's quad and whether
+                             // it is a vertex quad, then each edge's map in two rows
 };
 
 @group(1) @binding(4) var<uniform> grid: Grid;
@@ -209,7 +210,7 @@ fn face_xy(p: vec3f, f: u32) -> vec2f {
 fn nearest_face(p: vec3f) -> u32 {
   var best = 0u;
   var best_dot = -2.0;
-  for (var f = 0u; f < 20u; f++) {
+  for (var f = 0u; f < grid.flags.w; f++) {
     let d = dot(p, grid.faces[f].centre.xyz);
     if (d > best_dot) {
       best_dot = d;
@@ -239,73 +240,53 @@ fn add64(a: vec2u, b: vec2u) -> vec2u {
 }
 
 // The point (i, j) of a quad that has stepped outside it, in the quad that
-// owns it (DgQ2DDtoIConverter's reassignment through the edge table).
+// owns it: DgQ2DDtoIConverter's reassignment, through the solid's edge maps.
+// Across an edge, with d the point's distance past it along the crossed axis
+// and 'along' the other coordinate, each new coordinate is
+// k0 * top + k_along * along + k_d * d. A point beyond the far corner goes to
+// that corner's vertex, a far edge's starting corner to its vertex quad when
+// that corner is one, and a vertex quad has no box to leave.
 fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
-  var quad = i32(quad_in);
-  var i = i_in;
-  var j = j_in;
+  let quad = i32(quad_in);
+  let i = i_in;
+  let j = j_in;
   let under_i = i < 0;
   let under_j = j < 0;
   let over_i = i >= top;
   let over_j = j >= top;
   let n_over = u32(under_i) + u32(under_j) + u32(over_i) + u32(over_j);
-  if (n_over == 0u) {
+  let head = grid.edges[9 * quad];   // far-corner quad, vertex quad
+  if (n_over == 0u || head.y == 1) {
     return vec3i(quad, i, j);
   }
-  let e0 = grid.edges[2 * quad];       // type 0, lone vertex, up, down
-  let e1 = grid.edges[2 * quad + 1];   // right, left
-  let type0 = e0.x == 1;
   if (over_i && over_j) {
-    quad = select(e1.x, e0.z, type0);
-    i = 0;
-    j = 0;
-  } else if (n_over > 1u) {
-  } else if (under_i) {
-    quad = e1.y;
-    if (type0) {
-      let ni = top - j + i;
-      j = top + i;
-      i = ni;
-    } else {
-      i = top + i;
-    }
-  } else if (under_j) {
-    quad = e0.w;
-    if (type0) {
-      j = top + j;
-    } else {
-      let ni = top + j;
-      j = (top - i) + j;
-      i = ni;
-    }
-  } else if (over_i) {
-    if (type0) {
-      quad = e1.x;
-      i = i - top;
-    } else if (j == 0) {
-      quad = e0.y;
-      i = 0;
-    } else {
-      quad = e1.x;
-      let over = i - top;
-      i = (top - j) + over;
-      j = over;
-    }
-  } else {
-    if (!type0) {
-      quad = e0.z;
-      j = j - top;
-    } else if (i == 0) {
-      quad = e0.y;
-      j = 0;
-    } else {
-      quad = e0.z;
-      let over = j - top;
-      j = top - i + over;
-      i = over;
-    }
+    return vec3i(head.x, 0, 0);
   }
-  return vec3i(quad, i, j);
+  if (n_over > 1u) {
+    return vec3i(quad, i, j);
+  }
+  var e = 3;
+  var along = i;
+  var d = j - top;
+  if (under_i) {
+    e = 0;
+    along = j;
+    d = i;
+  } else if (under_j) {
+    e = 1;
+    d = j;
+  } else if (over_i) {
+    e = 2;
+    along = j;
+    d = i - top;
+  }
+  let m0 = grid.edges[9 * quad + 1 + 2 * e];   // quad across, vertex quad, k[0][0], k[0][1]
+  let m1 = grid.edges[9 * quad + 2 + 2 * e];   // k[0][2], k[1][0], k[1][1], k[1][2]
+  if (m0.y >= 0 && along == 0) {
+    return vec3i(m0.y, 0, 0);
+  }
+  return vec3i(m0.x, m0.z * top + m0.w * along + m1.x * d,
+               m1.y * top + m1.z * along + m1.w * d);
 }
 
 struct Cell {

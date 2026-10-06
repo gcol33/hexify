@@ -14,7 +14,7 @@
 
 #include <Rcpp.h>
 #include "constants.h"
-#include "icosahedron.h"
+#include "polyhedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "coordinate_transforms.h"
@@ -59,10 +59,11 @@ static void require_same_length(R_xlen_t n, R_xlen_t m, const char* fn,
 // ============================================================================
 
 // [[Rcpp::export]]
-CharacterVector cpp_cell_to_index(IntegerVector face, NumericVector i,
-                                   NumericVector j, int resolution,
-                                   int aperture,
+CharacterVector cpp_cell_to_index(NumericVector icosa, IntegerVector face,
+                                   NumericVector i, NumericVector j,
+                                   int resolution, int aperture,
                                    std::string index_type = "auto") {
+  activate_grid(icosa);
   R_xlen_t n = face.size();
   require_same_length(n, i.size(), "cpp_cell_to_index", "face", "i");
   require_same_length(n, j.size(), "cpp_cell_to_index", "face", "j");
@@ -86,8 +87,9 @@ CharacterVector cpp_cell_to_index(IntegerVector face, NumericVector i,
 }
 
 // [[Rcpp::export]]
-DataFrame cpp_index_to_cell(CharacterVector index, int aperture,
+DataFrame cpp_index_to_cell(NumericVector icosa, CharacterVector index, int aperture,
                              std::string index_type = "auto") {
+  activate_grid(icosa);
   R_xlen_t n = index.size();
   hexify::IndexType idx_type = parse_index_type(index_type);
 
@@ -148,8 +150,9 @@ CharacterVector cpp_get_parent_index(CharacterVector index, int aperture,
 }
 
 // [[Rcpp::export]]
-List cpp_get_children_indices(CharacterVector index, int aperture,
+List cpp_get_children_indices(NumericVector icosa, CharacterVector index, int aperture,
                                std::string index_type = "auto") {
+  activate_grid(icosa);
   R_xlen_t n = index.size();
   hexify::IndexType idx_type = parse_index_type(index_type);
   List out(n);
@@ -233,11 +236,11 @@ std::string cpp_get_default_index_type(int aperture) {
 // ============================================================================
 
 // cell_to_index()/z3::encode() read (i,j) as non-negative offsets from the
-// corner of a quad, and for aperture 4 and 7 they take a quad (0-11) rather
-// than a raw icosahedron triangle (0-19). Quantizing the triangle-frame
+// corner of a quad, and for aperture 4 and 7 they take a quad rather than a
+// raw face of the solid. Quantizing the triangle-frame
 // coordinates directly gives (i,j) centered on the triangle's local origin,
-// which can be negative, and leaves a point on triangle 12-19 carrying a face
-// number the encoder rejects. icosa_tri_to_quad_ij() performs the fold, the
+// which can be negative, and leaves a point on a high-numbered face carrying a
+// face number the encoder rejects. icosa_tri_to_quad_ij() performs the fold, the
 // same step cpp_lonlat_to_cell() takes.
 static std::string lonlat_to_index_one(double lon_deg, double lat_deg,
                                         int resolution, int aperture,
@@ -278,7 +281,7 @@ CharacterVector cpp_lonlat_to_index(NumericVector icosa, NumericVector lon_deg,
                                      NumericVector lat_deg,
                                      int resolution, int aperture,
                                      std::string index_type = "auto") {
-  activate_icosa(icosa);
+  activate_grid(icosa);
   if (aperture != 3 && aperture != 4 && aperture != 7) {
     Rcpp::stop("Invalid aperture. Must be 3, 4, or 7");
   }
@@ -293,7 +296,7 @@ CharacterVector cpp_lonlat_to_index(NumericVector icosa, NumericVector lon_deg,
 // [[Rcpp::export]]
 DataFrame cpp_index_to_lonlat(NumericVector icosa, CharacterVector index, int aperture,
                                std::string index_type = "auto") {
-  activate_icosa(icosa);
+  activate_grid(icosa);
   R_xlen_t n = index.size();
   hexify::IndexType idx_type = parse_index_type(index_type);
 
@@ -312,9 +315,9 @@ DataFrame cpp_index_to_lonlat(NumericVector icosa, CharacterVector index, int ap
     hexify::index_to_cell(Rcpp::as<std::string>(index[k]), aperture, idx_type,
                           face, i, j, resolution);
 
-    // `face` decoded from the index is a quad (0-11 for aperture 3 too, since
-    // the forward direction folds through icosa_tri_to_quad_ij()), not a raw
-    // icosahedron triangle face -- it is folded back to the triangle frame
+    // `face` decoded from the index is a quad (for aperture 3 too, since the
+    // forward direction folds through icosa_tri_to_quad_ij()), not a raw face
+    // of the solid -- it is folded back to the triangle frame
     // before face_xy_to_ll(), mirroring that forward fold.
     double quad_x, quad_y;
     hexify::quad_ij_to_xy(face, i, j, aperture, resolution, quad_x, quad_y);
@@ -339,8 +342,9 @@ DataFrame cpp_index_to_lonlat(NumericVector icosa, CharacterVector index, int ap
 // ============================================================================
 
 // [[Rcpp::export]]
-CharacterVector cpp_z7_canonical_form(CharacterVector index,
+CharacterVector cpp_z7_canonical_form(NumericVector icosa, CharacterVector index,
                                        int max_iterations = 128) {
+  activate_grid(icosa);
   R_xlen_t n = index.size();
   CharacterVector out(n);
 

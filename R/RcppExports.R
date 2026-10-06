@@ -129,16 +129,16 @@ cpp_batch_test_roundtrip_ap7 <- function(tx_vec, ty_vec, resolution) {
     .Call(`_hexify_cpp_batch_test_roundtrip_ap7`, tx_vec, ty_vec, resolution)
 }
 
-cpp_icosa_tri_to_quad_ij <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution) {
-    .Call(`_hexify_cpp_icosa_tri_to_quad_ij`, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution)
+cpp_icosa_tri_to_quad_ij <- function(icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution) {
+    .Call(`_hexify_cpp_icosa_tri_to_quad_ij`, icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y, aperture, resolution)
 }
 
-cpp_icosa_tri_to_quad_xy <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
-    .Call(`_hexify_cpp_icosa_tri_to_quad_xy`, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)
+cpp_icosa_tri_to_quad_xy <- function(icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
+    .Call(`_hexify_cpp_icosa_tri_to_quad_xy`, icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)
 }
 
-cpp_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
-    .Call(`_hexify_cpp_quad_xy_to_icosa_tri`, quad, quad_x, quad_y)
+cpp_quad_xy_to_icosa_tri <- function(icosa, quad, quad_x, quad_y) {
+    .Call(`_hexify_cpp_quad_xy_to_icosa_tri`, icosa, quad, quad_x, quad_y)
 }
 
 cpp_quad_ij_to_xy <- function(quad, i, j, aperture, resolution) {
@@ -157,8 +157,8 @@ cpp_cell_lattice_generator <- function(resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_cell_lattice_generator`, resolution, aperture, ap_seq)
 }
 
-cpp_quad_ij_to_cell <- function(quad, i, j, resolution, aperture, ap_seq) {
-    .Call(`_hexify_cpp_quad_ij_to_cell`, quad, i, j, resolution, aperture, ap_seq)
+cpp_quad_ij_to_cell <- function(icosa, quad, i, j, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_quad_ij_to_cell`, icosa, quad, i, j, resolution, aperture, ap_seq)
 }
 
 cpp_lonlat_to_cell <- function(icosa, lon, lat, resolution, aperture, ap_seq) {
@@ -169,24 +169,24 @@ cpp_cell_to_lonlat <- function(icosa, cell_id, resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_cell_to_lonlat`, icosa, cell_id, resolution, aperture, ap_seq)
 }
 
-cpp_cell_to_quad_ij <- function(cell_id, resolution, aperture, ap_seq) {
-    .Call(`_hexify_cpp_cell_to_quad_ij`, cell_id, resolution, aperture, ap_seq)
+cpp_cell_to_quad_ij <- function(icosa, cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_cell_to_quad_ij`, icosa, cell_id, resolution, aperture, ap_seq)
 }
 
-cpp_cell_to_quad_xy <- function(cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_quad_xy`, cell_id, resolution, aperture)
+cpp_cell_to_quad_xy <- function(icosa, cell_id, resolution, aperture) {
+    .Call(`_hexify_cpp_cell_to_quad_xy`, icosa, cell_id, resolution, aperture)
 }
 
-cpp_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution, aperture) {
-    .Call(`_hexify_cpp_quad_xy_to_cell`, quad, quad_x, quad_y, resolution, aperture)
+cpp_quad_xy_to_cell <- function(icosa, quad, quad_x, quad_y, resolution, aperture) {
+    .Call(`_hexify_cpp_quad_xy_to_cell`, icosa, quad, quad_x, quad_y, resolution, aperture)
 }
 
-cpp_cell_to_icosa_tri <- function(cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_icosa_tri`, cell_id, resolution, aperture)
+cpp_cell_to_icosa_tri <- function(icosa, cell_id, resolution, aperture) {
+    .Call(`_hexify_cpp_cell_to_icosa_tri`, icosa, cell_id, resolution, aperture)
 }
 
-cpp_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture) {
-    .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, quad, i, j, resolution, aperture)
+cpp_quad_ij_to_icosa_tri <- function(icosa, quad, i, j, resolution, aperture) {
+    .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, icosa, quad, i, j, resolution, aperture)
 }
 
 cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
@@ -217,20 +217,20 @@ cpp_face_tri_to_solid <- function(icosa, face, tx, ty) {
     .Call(`_hexify_cpp_face_tri_to_solid`, icosa, face, tx, ty)
 }
 
-cpp_globe_frame <- function(resolution, aperture, ap_seq) {
-    .Call(`_hexify_cpp_globe_frame`, resolution, aperture, ap_seq)
+cpp_globe_frame <- function(icosa, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_globe_frame`, icosa, resolution, aperture, ap_seq)
 }
 
 cpp_get_neighbors_isea <- function(icosa, cell_id, resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_get_neighbors_isea`, icosa, cell_id, resolution, aperture, ap_seq)
 }
 
-cpp_icosa_tri_to_plane <- function(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
-    .Call(`_hexify_cpp_icosa_tri_to_plane`, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)
+cpp_icosa_tri_to_plane <- function(icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
+    .Call(`_hexify_cpp_icosa_tri_to_plane`, icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y)
 }
 
-cpp_cell_to_plane <- function(cell_id, resolution, aperture) {
-    .Call(`_hexify_cpp_cell_to_plane`, cell_id, resolution, aperture)
+cpp_cell_to_plane <- function(icosa, cell_id, resolution, aperture) {
+    .Call(`_hexify_cpp_cell_to_plane`, icosa, cell_id, resolution, aperture)
 }
 
 cpp_lonlat_to_plane <- function(icosa, lon, lat) {
@@ -301,20 +301,20 @@ cpp_h3_gridDistance <- function(origin, destination) {
     .Call(`_hexify_cpp_h3_gridDistance`, origin, destination)
 }
 
-cpp_cell_to_index <- function(face, i, j, resolution, aperture, index_type = "auto") {
-    .Call(`_hexify_cpp_cell_to_index`, face, i, j, resolution, aperture, index_type)
+cpp_cell_to_index <- function(icosa, face, i, j, resolution, aperture, index_type = "auto") {
+    .Call(`_hexify_cpp_cell_to_index`, icosa, face, i, j, resolution, aperture, index_type)
 }
 
-cpp_index_to_cell <- function(index, aperture, index_type = "auto") {
-    .Call(`_hexify_cpp_index_to_cell`, index, aperture, index_type)
+cpp_index_to_cell <- function(icosa, index, aperture, index_type = "auto") {
+    .Call(`_hexify_cpp_index_to_cell`, icosa, index, aperture, index_type)
 }
 
 cpp_get_parent_index <- function(index, aperture, index_type = "auto") {
     .Call(`_hexify_cpp_get_parent_index`, index, aperture, index_type)
 }
 
-cpp_get_children_indices <- function(index, aperture, index_type = "auto") {
-    .Call(`_hexify_cpp_get_children_indices`, index, aperture, index_type)
+cpp_get_children_indices <- function(icosa, index, aperture, index_type = "auto") {
+    .Call(`_hexify_cpp_get_children_indices`, icosa, index, aperture, index_type)
 }
 
 cpp_get_index_resolution <- function(index, aperture, index_type = "auto") {
@@ -341,20 +341,24 @@ cpp_index_to_lonlat <- function(icosa, index, aperture, index_type = "auto") {
     .Call(`_hexify_cpp_index_to_lonlat`, icosa, index, aperture, index_type)
 }
 
-cpp_z7_canonical_form <- function(index, max_iterations = 128L) {
-    .Call(`_hexify_cpp_z7_canonical_form`, index, max_iterations)
+cpp_z7_canonical_form <- function(icosa, index, max_iterations = 128L) {
+    .Call(`_hexify_cpp_z7_canonical_form`, icosa, index, max_iterations)
 }
 
 cpp_build_icosa <- function(vert0_lon_deg = 11.25, vert0_lat_deg = 58.282525588538995, azimuth_deg = 0.0) {
     invisible(.Call(`_hexify_cpp_build_icosa`, vert0_lon_deg, vert0_lat_deg, azimuth_deg))
 }
 
-cpp_which_face <- function(lon_deg, lat_deg) {
-    .Call(`_hexify_cpp_which_face`, lon_deg, lat_deg)
+cpp_solid_info <- function(icosa) {
+    .Call(`_hexify_cpp_solid_info`, icosa)
 }
 
-cpp_face_centers <- function() {
-    .Call(`_hexify_cpp_face_centers`)
+cpp_which_face <- function(icosa, lon_deg, lat_deg) {
+    .Call(`_hexify_cpp_which_face`, icosa, lon_deg, lat_deg)
+}
+
+cpp_face_centers <- function(icosa) {
+    .Call(`_hexify_cpp_face_centers`, icosa)
 }
 
 cpp_icosa_forward <- function(icosa, lon_deg, lat_deg) {
@@ -385,11 +389,11 @@ cpp_face_xy_to_ll <- function(icosa, x, y, face, tol = NULL, max_iters = NULL) {
     .Call(`_hexify_cpp_face_xy_to_ll`, icosa, x, y, face, tol, max_iters)
 }
 
-cpp_icosa_face_params <- function(face) {
-    .Call(`_hexify_cpp_icosa_face_params`, face)
+cpp_icosa_face_params <- function(icosa, face) {
+    .Call(`_hexify_cpp_icosa_face_params`, icosa, face)
 }
 
-cpp_hex_index_face_to_lonlat <- function(x, y, cen_lat, cen_lon, face_azimuth_offset, degrees = TRUE, tol = NULL, max_iters = NULL) {
-    .Call(`_hexify_cpp_hex_index_face_to_lonlat`, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees, tol, max_iters)
+cpp_hex_index_face_to_lonlat <- function(icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees = TRUE, tol = NULL, max_iters = NULL) {
+    .Call(`_hexify_cpp_hex_index_face_to_lonlat`, icosa, x, y, cen_lat, cen_lon, face_azimuth_offset, degrees, tol, max_iters)
 }
 

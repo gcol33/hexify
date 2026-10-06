@@ -27,8 +27,9 @@ namespace z7 {
 
 // Bijective aperture-7 hierarchical index (hexify-native). Keeps the quad fixed
 // (no DGGRID base-cell reassignment / pentagon skip), so every (quad, i, j)
-// round-trips. The leading field is quad + 12 * seed, seed being the unit digit
-// the hierarchy walk arrives at; it is the plain two-digit quad DGGRID writes
+// round-trips. The leading field is quad + n * seed, n the solid's number of
+// quads and seed the unit digit the hierarchy walk arrives at; it is the plain
+// two-digit quad DGGRID writes
 // for a cell whose whole ancestry lies inside its quad, and about two cells in
 // three sit on a quad boundary and carry a nonzero seed instead. (i,j) are
 // Class I substrate.

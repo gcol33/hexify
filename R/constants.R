@@ -158,9 +158,11 @@ h3_n_cells <- function(resolution) {
 #' @param aperture Aperture spelling (pure or mixed)
 #' @param resolution Resolution
 #' @param radius_km Radius of the body in km
+#' @param polyhedron The solid the grid is built on
 #' @noRd
-mean_cell_area_km2 <- function(aperture, resolution, radius_km = EARTH_RADIUS_KM) {
-  body_surface_km2(radius_km) / aperture_n_cells(aperture, resolution)
+mean_cell_area_km2 <- function(aperture, resolution, radius_km = EARTH_RADIUS_KM,
+                               polyhedron = "icosahedron") {
+  body_surface_km2(radius_km) / aperture_n_cells(aperture, resolution, polyhedron)
 }
 
 #' Radius a grid is sized against, in km
@@ -659,14 +661,17 @@ aperture_to_int <- function(aperture) {
 }
 
 #' Calculate maximum cell ID for given resolution and aperture
+#'
+#' Cell count formula: N = d * aperture^res + 2, d the solid's diamond quads
+#' (10 on the icosahedron, 4 on the octahedron); cell IDs are 1..N, matching
+#' quad_frame() in rcpp_cell.cpp.
 #' @param resolution Integer resolution value
 #' @param aperture Integer aperture value
+#' @param polyhedron The solid the grid is built on
 #' @return Maximum valid cell ID (numeric)
 #' @noRd
-max_cell_id <- function(resolution, aperture) {
-  # Cell count formula: N = 10 * aperture^res + 2 (cell IDs are 1..N,
-  # matching quad_frame() in rcpp_cell.cpp)
-  10 * (aperture^resolution) + 2
+max_cell_id <- function(resolution, aperture, polyhedron = "icosahedron") {
+  polyhedron_diamonds(polyhedron) * (aperture^resolution) + 2
 }
 
 #' Validate cell ID values
@@ -674,13 +679,15 @@ max_cell_id <- function(resolution, aperture) {
 #' @param resolution Integer resolution value
 #' @param aperture Integer aperture value
 #' @param warn Whether to warn on out-of-range values (default TRUE)
+#' @param polyhedron The solid the grid is built on
 #' @return Logical vector indicating valid values
 #' @noRd
-validate_cell_id <- function(cell_id, resolution, aperture, warn = TRUE) {
+validate_cell_id <- function(cell_id, resolution, aperture, warn = TRUE,
+                             polyhedron = "icosahedron") {
   if (!is.numeric(cell_id)) {
     stop("Cell ID must be numeric")
   }
-  max_id <- max_cell_id(resolution, aperture)
+  max_id <- max_cell_id(resolution, aperture, polyhedron)
   valid <- is.na(cell_id) | (cell_id >= 1 & cell_id <= max_id)
   if (warn && any(!valid, na.rm = TRUE)) {
     warning(sprintf(

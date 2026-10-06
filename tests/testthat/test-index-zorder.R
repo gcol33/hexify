@@ -38,8 +38,8 @@ test_that("Z-Order aperture 3: basic encode/decode", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 3, "zorder")
-    result <- cpp_index_to_cell(index, 3, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 3, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "zorder")
     
     expect_equal(result$face, tc$face, 
                  label = sprintf("face[%d,%d,%d]", tc$i, tc$j, tc$res))
@@ -57,11 +57,11 @@ test_that("Z-Order aperture 3: digit alternation pattern", {
   # For res=2 (Class I), eff_res=1: alternates i,j digits
   
   # i=1, j=2 → radix-3: "1", "2" → alternation: "12"
-  index <- cpp_cell_to_index(0, 1, 2, 2, 3, "zorder")
+  index <- cpp_cell_to_index(numeric(0), 0, 1, 2, 2, 3, "zorder")
   expect_match(index, "^0012$")
   
   # i=2, j=1 → radix-3: "2", "1" → alternation: "21"
-  index <- cpp_cell_to_index(0, 2, 1, 2, 3, "zorder")
+  index <- cpp_cell_to_index(numeric(0), 0, 2, 1, 2, 3, "zorder")
   expect_match(index, "^0021$")
 })
 
@@ -78,8 +78,8 @@ test_that("Z-Order aperture 3: Class II j-digit inference", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, 3, "zorder")
-    result <- cpp_index_to_cell(index, 3, "zorder")
+    index <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, 3, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "zorder")
     
     expect_equal(result$i, tc$i,
                  label = sprintf("i inference[%d,%d]", tc$i, tc$j))
@@ -93,7 +93,7 @@ test_that("Z-Order aperture 3: Class I vs Class II string length", {
   # Class II (odd res): odd number of digits after face
   
   for (res in 1:6) {
-    index <- cpp_cell_to_index(0, 0, 0, res, 3, "zorder")
+    index <- cpp_cell_to_index(numeric(0), 0, 0, 0, res, 3, "zorder")
     digits_after_face <- nchar(index) - 2
     
     if (res %% 2 == 0) {
@@ -131,8 +131,8 @@ test_that("Z-Order aperture 3: comprehensive roundtrip", {
     }
 
     # Roundtrip test
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 3, "zorder")
-    result <- cpp_index_to_cell(index, 3, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 3, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "zorder")
 
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
@@ -173,7 +173,7 @@ test_that("Z-Order aperture 4: bit interleaving formula", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, 4, "zorder")
+    index <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, 4, "zorder")
     expect_equal(index, tc$expected,
                  label = sprintf("i=%d,j=%d,res=%d", tc$i, tc$j, tc$res))
   }
@@ -188,8 +188,8 @@ test_that("Z-Order aperture 4: basic encode/decode", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 4, "zorder")
-    result <- cpp_index_to_cell(index, 4, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 4, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 4, "zorder")
     
     expect_equal(result$face, tc$face)
     expect_equal(result$i, tc$i)
@@ -215,8 +215,8 @@ test_that("Z-Order aperture 4: comprehensive roundtrip", {
     if (tc$i > max_coord || tc$j > max_coord) next
 
     # Roundtrip test
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 4, "zorder")
-    result <- cpp_index_to_cell(index, 4, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 4, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 4, "zorder")
 
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
@@ -238,8 +238,8 @@ test_that("Z-Order aperture 7: basic encode/decode", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 7, "zorder")
-    result <- cpp_index_to_cell(index, 7, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 7, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 7, "zorder")
     
     expect_equal(result$face, tc$face)
     expect_equal(result$i, tc$i)
@@ -265,8 +265,8 @@ test_that("Z-Order aperture 7: comprehensive roundtrip", {
     if (tc$i > max_coord || tc$j > max_coord) next
 
     # Roundtrip test
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 7, "zorder")
-    result <- cpp_index_to_cell(index, 7, "zorder")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 7, "zorder")
+    result <- cpp_index_to_cell(numeric(0), index, 7, "zorder")
 
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
@@ -282,14 +282,14 @@ test_that("Z-Order aperture 7: comprehensive roundtrip", {
 test_that("Z-Order: resolution 0 works for all apertures", {
   for (face in c(0, 5, 10, 11)) {  # Changed from c(0, 5, 10, 19) to only valid faces
     for (ap in c(3, 4, 7)) {
-      index <- cpp_cell_to_index(face, 0, 0, 0, ap, "zorder")
+      index <- cpp_cell_to_index(numeric(0), face, 0, 0, 0, ap, "zorder")
       
       # Should be just face number
       expect_equal(nchar(index), 2)
       expect_equal(substr(index, 1, 2), sprintf("%02d", face))
       
       # Decode should work
-      result <- cpp_index_to_cell(index, ap, "zorder")
+      result <- cpp_index_to_cell(numeric(0), index, ap, "zorder")
       expect_equal(result$face, face)
       expect_equal(result$resolution, 0)
       expect_equal(result$i, 0)
@@ -301,23 +301,23 @@ test_that("Z-Order: resolution 0 works for all apertures", {
 test_that("Z-Order: face encoding correct for all apertures", {
   for (ap in c(3, 4, 7)) {
     # Single digit faces
-    expect_equal(substr(cpp_cell_to_index(0, 0, 0, 1, ap, "zorder"), 1, 2), "00")
-    expect_equal(substr(cpp_cell_to_index(5, 0, 0, 1, ap, "zorder"), 1, 2), "05")
-    expect_equal(substr(cpp_cell_to_index(9, 0, 0, 1, ap, "zorder"), 1, 2), "09")
+    expect_equal(substr(cpp_cell_to_index(numeric(0), 0, 0, 0, 1, ap, "zorder"), 1, 2), "00")
+    expect_equal(substr(cpp_cell_to_index(numeric(0), 5, 0, 0, 1, ap, "zorder"), 1, 2), "05")
+    expect_equal(substr(cpp_cell_to_index(numeric(0), 9, 0, 0, 1, ap, "zorder"), 1, 2), "09")
     
     # Double digit faces
-    expect_equal(substr(cpp_cell_to_index(10, 0, 0, 1, ap, "zorder"), 1, 2), "10")
+    expect_equal(substr(cpp_cell_to_index(numeric(0), 10, 0, 0, 1, ap, "zorder"), 1, 2), "10")
     # Face 19 is only valid for aperture 3 at resolution > 0
     if (ap == 3) {
-      expect_equal(substr(cpp_cell_to_index(19, 0, 0, 1, ap, "zorder"), 1, 2), "19")
+      expect_equal(substr(cpp_cell_to_index(numeric(0), 19, 0, 0, 1, ap, "zorder"), 1, 2), "19")
     }
   }
 })
 
 test_that("Z-Order: index comparison works", {
-  idx1 <- cpp_cell_to_index(0, 0, 0, 1, 4, "zorder")
-  idx2 <- cpp_cell_to_index(0, 1, 0, 1, 4, "zorder")
-  idx3 <- cpp_cell_to_index(1, 0, 0, 1, 4, "zorder")
+  idx1 <- cpp_cell_to_index(numeric(0), 0, 0, 0, 1, 4, "zorder")
+  idx2 <- cpp_cell_to_index(numeric(0), 0, 1, 0, 1, 4, "zorder")
+  idx3 <- cpp_cell_to_index(numeric(0), 1, 0, 0, 1, 4, "zorder")
   
   expect_equal(cpp_compare_indices(idx1, idx1), 0)
   expect_true(cpp_compare_indices(idx1, idx2) != 0)
@@ -334,7 +334,7 @@ test_that("Z-Order: parent/child relationships", {
   
   for (tc in test_cases) {
     # Create child at higher resolution
-    child_idx <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, tc$ap, "zorder")
+    child_idx <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, tc$ap, "zorder")
     
     # Get parent
     parent_idx <- cpp_get_parent_index(child_idx, tc$ap, "zorder")
@@ -344,7 +344,7 @@ test_that("Z-Order: parent/child relationships", {
                 label = sprintf("ap=%d", tc$ap))
     
     # Get children
-    children <- cpp_get_children_indices(parent_idx, tc$ap, "zorder")[[1]]
+    children <- cpp_get_children_indices(numeric(0), parent_idx, tc$ap, "zorder")[[1]]
     
     # Child should be in children list
     expect_true(child_idx %in% children,
@@ -359,7 +359,7 @@ test_that("Z-Order: parent/child relationships", {
 test_that("Z-Order: resolution extraction works", {
   for (ap in c(3, 4, 7)) {
     for (res in 0:3) {
-      index <- cpp_cell_to_index(0, 0, 0, res, ap, "zorder")
+      index <- cpp_cell_to_index(numeric(0), 0, 0, 0, res, ap, "zorder")
       extracted <- cpp_get_index_resolution(index, ap, "zorder")
       expect_equal(extracted, res,
                    label = sprintf("ap=%d, res=%d", ap, res))

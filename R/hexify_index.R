@@ -57,7 +57,7 @@ hexify_cell_to_index <- function(face, i, j, resolution, aperture = 3L,
   validate_aperture(aperture)
   validate_same_length(list(face = face, i = i, j = j), "hexify_cell_to_index")
   cpp_cell_to_index(
-    as.integer(face), as.numeric(i), as.numeric(j),
+    numeric(0), as.integer(face), as.numeric(i), as.numeric(j),
     as.integer(resolution), as.integer(aperture), index_type
   )
 }
@@ -89,7 +89,7 @@ hexify_index_to_cell <- function(index, aperture = 3L,
                                   index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
   validate_aperture(aperture)
-  cpp_index_to_cell(as.character(index), as.integer(aperture), index_type)
+  cpp_index_to_cell(numeric(0), as.character(index), as.integer(aperture), index_type)
 }
 
 #' Convert longitude/latitude to index string
@@ -190,7 +190,8 @@ hexify_get_children <- function(index, aperture = 3L,
                                  index_type = c("auto", "z3", "z7", "zorder")) {
   index_type <- match.arg(index_type)
   validate_aperture(aperture)
-  cpp_get_children_indices(as.character(index), as.integer(aperture), index_type)
+  cpp_get_children_indices(numeric(0), as.character(index), as.integer(aperture),
+                           index_type)
 }
 
 #' Get index resolution
@@ -326,7 +327,7 @@ hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
 #'   "110001"
 #' )
 hexify_z7_canonical <- function(index, max_iterations = 128L) {
-  cpp_z7_canonical_form(as.character(index), as.integer(max_iterations))
+  cpp_z7_canonical_form(numeric(0), as.character(index), as.integer(max_iterations))
 }
 
 # =============================================================================

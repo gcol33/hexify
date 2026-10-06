@@ -602,7 +602,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
   }
 
   # Estimate cell count for warning (ISEA)
-  n_cells <- aperture_n_cells(g@aperture, g@resolution)
+  n_cells <- grid_n_cells(g)
   if (n_cells > 100000) {
     warning(sprintf(
       "This will generate approximately %.0f cells. Consider larger area_km2.",
@@ -797,9 +797,9 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' Compute per-cell area in km²
 #'
 #' Returns the area of each cell in square kilometers. On the ISEA projection
-#' every hexagon of a resolution has the same area and the 12 pentagons 5/6 of
-#' it. On the Fuller projection and for H3 grids, the area varies from cell to
-#' cell.
+#' every hexagon of a resolution has the same area, the 12 pentagons of the
+#' icosahedron 5/6 of it and the 6 squares of the octahedron 4/6 of it. On the
+#' Fuller projection and for H3 grids, the area varies from cell to cell.
 #'
 #' @param cell_id Cell IDs to compute area for. For ISEA grids, these are
 #'   numeric; for H3 grids, character strings. When \code{grid} is a HexData
@@ -811,11 +811,12 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #'
 #' @details
 #' On the ISEA projection, Snyder's equal-area projection gives every hexagon
-#' of a resolution the same area. Each of the 12 pentagons, centred on an
-#' icosahedron vertex, covers five of a hexagon's six sixths, so a grid of
-#' \eqn{N} cells on a body of area \eqn{S} has hexagons of area
-#' \eqn{S / (N - 2)} and pentagons of \eqn{(5/6) S / (N - 2)}. The grid's
-#' \code{area_km2} is the mean, \eqn{S / N}.
+#' of a resolution the same area. A vertex cell, centred on a vertex of the
+#' solid where \eqn{k} faces meet, covers \eqn{k} of a hexagon's six sixths,
+#' so a grid of \eqn{N} cells on a body of area \eqn{S} has hexagons of area
+#' \eqn{S / (N - 2)}, pentagons of \eqn{(5/6) S / (N - 2)} on the
+#' icosahedron and squares of \eqn{(4/6) S / (N - 2)} on the octahedron. The
+#' grid's \code{area_km2} is the mean, \eqn{S / N}.
 #'
 #' On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are
 #' not equal-area. Each cell's area is its solid angle, summed over its true
@@ -861,8 +862,11 @@ cell_area <- function(cell_id = NULL, grid) {
                                lv$ap_seq, CELL_AREA_TOLERANCE)
     sr / (4 * pi) * surface
   } else {
-    hexagon <- surface / (aperture_n_cells(g@aperture, g@resolution) - 2)
-    ifelse(is_pentagon(ids, g), 5 / 6, 1) * hexagon
+    # The vertex cells together cover as much as the solid's diamond count of
+    # hexagons, so a hexagon is the surface over n_cells - 2 and a vertex cell
+    # with k sides is k / 6 of one.
+    hexagon <- surface / (grid_n_cells(g) - 2)
+    isea_cell_sides(ids, g) / 6 * hexagon
   }
 
   areas <- per_id[match(cell_id, ids)]
@@ -886,7 +890,26 @@ cell_area <- function(cell_id = NULL, grid) {
 #' @noRd
 grid_quad_ij <- function(cell_id, g) {
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_cell_to_quad_ij(as.numeric(cell_id), lv$resolution, lv$aperture, lv$ap_seq)
+  cpp_cell_to_quad_ij(icosa_arg(g), as.numeric(cell_id), lv$resolution,
+                      lv$aperture, lv$ap_seq)
+}
+
+#' Number of sides of cells on any ISEA grid
+#'
+#' Six, except for the cell at each vertex of the solid, which has one side per
+#' face meeting there: five on the icosahedron, four on the octahedron. Every
+#' cell of resolution 0 is a vertex cell, and every other vertex cell is the
+#' (0, 0) cell of its quad.
+#'
+#' @param cell_id Numeric vector of cell IDs
+#' @param g HexGridInfo object
+#' @return Integer vector of side counts
+#' @noRd
+isea_cell_sides <- function(cell_id, g) {
+  valence <- solid_info(grid_polyhedron(g))$valence
+  qij <- grid_quad_ij(cell_id, g)
+  at_vertex <- g@resolution == 0L | (qij$i == 0 & qij$j == 0)
+  ifelse(at_vertex, valence[qij$quad + 1L], 6L)
 }
 
 #' The cells adjacent to given cells on any ISEA grid
@@ -911,11 +934,15 @@ grid_neighbors_isea <- function(cell_id, g) {
 #' @param resolution Resolution the cell IDs belong to
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
+#' @param icosa The grid's solid as the C++ layer takes it (icosa_arg())
 #' @return Character vector of index strings
 #' @noRd
-isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type) {
-  qij <- cpp_cell_to_quad_ij(as.numeric(cell_id), resolution, aperture_int, integer(0))
-  cpp_cell_to_index(qij$quad, qij$i, qij$j, resolution, aperture_int, index_type)
+isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type,
+                                icosa) {
+  qij <- cpp_cell_to_quad_ij(icosa, as.numeric(cell_id), resolution, aperture_int,
+                             integer(0))
+  cpp_cell_to_index(icosa, qij$quad, qij$i, qij$j, resolution, aperture_int,
+                    index_type)
 }
 
 #' Cell IDs of hierarchical index strings on a pure-aperture grid
@@ -927,15 +954,16 @@ isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type) {
 #' @param index Character vector of index strings
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
+#' @param icosa The grid's solid as the C++ layer takes it (icosa_arg())
 #' @return Numeric vector of cell IDs
 #' @noRd
-isea_index_to_cells <- function(index, aperture_int, index_type) {
-  cell <- cpp_index_to_cell(as.character(index), aperture_int, index_type)
+isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
+  cell <- cpp_index_to_cell(icosa, as.character(index), aperture_int, index_type)
   out <- rep(NA_real_, nrow(cell))
 
   for (resolution in unique(stats::na.omit(cell$resolution))) {
     at_res <- !is.na(cell$resolution) & cell$resolution == resolution
-    out[at_res] <- cpp_quad_ij_to_cell(cell$face[at_res], cell$i[at_res],
+    out[at_res] <- cpp_quad_ij_to_cell(icosa, cell$face[at_res], cell$i[at_res],
                                        cell$j[at_res], resolution, aperture_int,
                                        integer(0))
   }
@@ -967,7 +995,8 @@ cell_to_index <- function(cell_id, grid) {
   # R/aperture_mixed_hierarchy.R); pure apertures use the Z7/Z3/zorder encoders.
   if (is_mixed_aperture(g@aperture)) {
     return(vapply(as.numeric(cell_id),
-                  function(id) mixed_cell_to_index_one(id, g@resolution, g@aperture),
+                  function(id) mixed_cell_to_index_one(id, g@resolution, g@aperture,
+                                                       grid_polyhedron(g)),
                   character(1)))
   }
 
@@ -975,7 +1004,7 @@ cell_to_index <- function(cell_id, grid) {
   index_type <- index_type_for_aperture(g@aperture)
   aperture_int <- aperture_to_int(g@aperture)
 
-  isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type)
+  isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type, icosa_arg(g))
 }
 
 #' Get parent cell
@@ -1013,7 +1042,7 @@ get_parent <- function(cell_id, grid, levels = 1L) {
   # Mixed sequences: geometric parent (centre re-quantised at the coarser resolution).
   if (is_mixed_aperture(g@aperture)) {
     return(mixed_get_parent(as.numeric(cell_id), g@resolution, g@aperture,
-                            as.integer(levels)))
+                            as.integer(levels), grid_polyhedron(g)))
   }
 
   index_type <- index_type_for_aperture(g@aperture)
@@ -1022,11 +1051,12 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   # cpp_get_parent_index() strips one level off the index string, so `levels`
   # levels up is that many strips.
-  idx <- isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type)
+  icosa <- icosa_arg(g)
+  idx <- isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type, icosa)
   for (step in seq_len(levels)) {
     idx <- cpp_get_parent_index(idx, aperture_int, index_type)
   }
-  isea_index_to_cells(idx, aperture_int, index_type)
+  isea_index_to_cells(idx, aperture_int, index_type, icosa)
 }
 
 #' Get children cells
@@ -1082,9 +1112,10 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
   # Mixed sequences: geometric children (cells whose geometric parent is this cell).
   if (is_mixed_aperture(g@aperture)) {
     child_res <- g@resolution + as.integer(levels)
-    ncc <- aperture_n_cells(g@aperture, child_res)
+    ncc <- aperture_n_cells(g@aperture, child_res, grid_polyhedron(g))
     return(lapply(as.numeric(cell_id), function(id)
-      mixed_get_children_one(id, g@resolution, child_res, g@aperture, ncc)))
+      mixed_get_children_one(id, g@resolution, child_res, g@aperture, ncc,
+                             grid_polyhedron(g))))
   }
 
   levels <- as.integer(levels)
@@ -1100,8 +1131,8 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
 
 #' The same grid at another resolution
 #'
-#' Keeps the grid's type, aperture, radius, CRS, orientation and face
-#' projection. A per-level aperture spelling is read at the new resolution
+#' Keeps the grid's type, aperture, radius, CRS, orientation, face projection
+#' and solid. A per-level aperture spelling is read at the new resolution
 #' through aperture_at_resolution(), which takes its leading levels.
 #' @param g HexGridInfo object
 #' @param resolution Resolution of the returned grid
@@ -1116,7 +1147,8 @@ grid_at_resolution <- function(g, resolution) {
            aperture = aperture_at_resolution(g@aperture, resolution),
            crs = g@crs, radius_km = grid_radius_km(g),
            orientation = grid_orientation(g),
-           projection = grid_projection(g))
+           projection = grid_projection(g),
+           polyhedron = grid_polyhedron(g))
 }
 
 #' Children of ISEA cells, one resolution down
@@ -1124,8 +1156,8 @@ grid_at_resolution <- function(g, resolution) {
 #' A child is a cell whose parent is this one, so the children are read back
 #' from `get_parent()` over a candidate set. Two things generate candidates.
 #' Appending a digit to the parent's index names the children directly, which is
-#' what makes the two operations inverse, but the twelve icosahedron vertices sit
-#' at the corner of several quads and so have an index spelling in each: the
+#' what makes the two operations inverse, but the vertices of the solid sit at
+#' the corner of several quads and so have an index spelling in each: the
 #' children spelled under the other quads are not reached from the one spelling
 #' `cell_to_index()` returns, and a digit that names no cell at all comes back
 #' out of range or NA. The ring of child cells around the parent's centre reaches
@@ -1149,13 +1181,15 @@ isea_children_one_level <- function(front, resolution, g) {
 
   parent_grid <- grid_at_resolution(g, resolution)
   child_grid <- grid_at_resolution(g, child_res)
-  n_child <- aperture_n_cells(g@aperture, child_res)
+  n_child <- aperture_n_cells(g@aperture, child_res, grid_polyhedron(g))
 
-  parent_idx <- isea_cells_to_index(parents, resolution, aperture_int, index_type)
-  kids <- cpp_get_children_indices(parent_idx, aperture = aperture_int,
+  icosa <- icosa_arg(g)
+  parent_idx <- isea_cells_to_index(parents, resolution, aperture_int, index_type,
+                                    icosa)
+  kids <- cpp_get_children_indices(icosa, parent_idx, aperture = aperture_int,
                                    index_type = index_type)
   flat <- isea_index_to_cells(unlist(kids, use.names = FALSE), aperture_int,
-                              index_type)
+                              index_type, icosa)
   expansion <- unname(split(flat, factor(rep(seq_along(kids), lengths(kids)),
                                          levels = seq_along(kids))))
 

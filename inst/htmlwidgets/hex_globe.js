@@ -3,7 +3,7 @@
 //
 // The scene arrives from R as binary buffers (base64): triangle meshes for
 // the faces and land, and polylines for coastlines and face edges. Every
-// point carries its place on the icosahedron and on the sphere, and the
+// point carries its place on the solid and on the sphere, and the
 // shader folds one into the other. An ISEA grid comes as its frame and the
 // IDs and values of its cells, and the shader finds each pixel's cell on the
 // faces mesh; an H3 grid comes as cell meshes and boundary polylines. The
@@ -88,7 +88,7 @@
   }
 
   // view_frame(): centre and half width of the square of screen shown. The
-  // whole sphere is framed, which holds the icosahedron inscribed in it at
+  // whole sphere is framed, which holds the solid inscribed in it at
   // every stage of the fold.
   function viewFrame(view, fov) {
     if (!view.eye) return [0, 0, 1.02];
@@ -313,13 +313,14 @@
     // The Grid uniform of globe.wgsl: the projection, the grid's frame, and
     // the fill of NA cells.
     gridUniform(g, naFill) {
-      const buf = new ArrayBuffer(1808);
+      const buf = new ArrayBuffer(3152);
       const f = new Float32Array(buf), u = new Uint32Array(buf), i = new Int32Array(buf);
       const c = this.x.projection.constants;
       f.set(c.slice(0, 12), 0);
       u.set([g.dim, g.index, g.c, g.n_keys], 12);
       i.set(g.generator, 16);
-      u.set([g.all ? 1 : 0, g.values ? 1 : 0, g.dense ? 1 : 0], 20);
+      u.set([g.all ? 1 : 0, g.values ? 1 : 0, g.dense ? 1 : 0,
+             this.x.projection.n_faces], 20);
       u.set(g.per_quad, 24);
       f.set(naFill || [0, 0, 0, 0], 28);
       f.set(g.ramp_map || [0, 0, 0, 0], 32);

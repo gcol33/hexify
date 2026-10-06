@@ -6,6 +6,7 @@
 #include "index_zorder.h"
 #include "index_z7.h"
 #include "coordinate_transforms.h"
+#include "polyhedron.h"
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
@@ -23,7 +24,8 @@ namespace hexify {
 // The digits follow DGGRID's DgZ7StringRF except in the pentagon regions where
 // DGGRID's own encoder is non-injective (it collides distinct cells); there
 // hexify keeps a distinct, round-tripping index instead of the colliding one.
-// The leading field is quad + 12 * seed rather than the bare quad, seed naming
+// The leading field is quad + n * seed rather than the bare quad, n the solid's
+// number of quads and seed naming
 // the level-0 point the hierarchy walk arrives at, which is the origin only for
 // a cell whose whole ancestry lies inside its quad.
 // ---------------------------------------------------------------------------
@@ -76,21 +78,11 @@ std::string cell_to_index(int face, long long i, long long j,
                           int resolution, int aperture,
                           IndexType index_type) {
   // Face validation depends on aperture and resolution
-  if (aperture == 3) {
-    if (resolution == 0) {
-      if (face < 0 || face > 11) {
-        throw std::runtime_error("hex_index: invalid face number for aperture 3 resolution 0 (must be 0-11)");
-      }
-    } else {
-      if (face < 0 || face > 19) {
-        throw std::runtime_error("hex_index: invalid face number for aperture 3 (must be 0-19)");
-      }
-    }
-  } else {
-    // Aperture 4 and 7 only use faces 0-11
-    if (face < 0 || face > 11) {
-      throw std::runtime_error("hex_index: invalid face number (must be 0-11)");
-    }
+  const SolidTopology& t = topo();
+  const int max_face = (aperture == 3 && resolution > 0) ? t.n_faces - 1 : t.n_quads() - 1;
+  if (face < 0 || face > max_face) {
+    throw std::runtime_error("hex_index: invalid face number (must be 0-" +
+                             std::to_string(max_face) + ")");
   }
   
   if (resolution < 0) {
@@ -164,7 +156,7 @@ void index_to_cell(const std::string& index, int aperture,
     resolution = 0;
     i = 0;
     j = 0;
-    // A Z7 index spells its leading field as quad + 12 * seed, so a
+    // A Z7 index spells its leading field as quad + n * seed, so a
     // two-character one is not a bare quad: the seed names which of the base
     // cells meeting at the quad's corner the index reaches.
     if (index_type == IndexType::Z7) {
@@ -206,7 +198,7 @@ void index_to_cell(const std::string& index, int aperture,
 uint64_t index_to_uint64(const std::string& index, int aperture,
                          IndexType index_type) {
   // Pack index string into a 64-bit integer:
-  // Bits 60-63: face/quad (4 bits, 0-11)
+  // Bits 60-63: face/quad (4 bits; a solid has at most 12 quads)
   // Bits 57-59: aperture-7 Z7 hierarchy seed (3 bits), 0 for every other index
   // Remaining bits: resolution digits packed per aperture
   if (index.length() < 2) {
@@ -214,8 +206,9 @@ uint64_t index_to_uint64(const std::string& index, int aperture,
   }
 
   int lead = parse_quad(index);
-  uint64_t result = (static_cast<uint64_t>(lead % 12) << 60) |
-                    (static_cast<uint64_t>(lead / 12) << 57);
+  const int n_quads = topo().n_quads();
+  uint64_t result = (static_cast<uint64_t>(lead % n_quads) << 60) |
+                    (static_cast<uint64_t>(lead / n_quads) << 57);
 
   if (index.length() == 2) return result;
 
@@ -247,7 +240,7 @@ std::string uint64_to_index(uint64_t value, int resolution, int aperture,
   // Unpack uint64 back to index string
   int face = static_cast<int>((value >> 60) & 0xF);
   int seed = static_cast<int>((value >> 57) & 0x7);
-  std::string result = format_quad(face + 12 * seed);
+  std::string result = format_quad(face + topo().n_quads() * seed);
 
   if (resolution == 0) return result;
 

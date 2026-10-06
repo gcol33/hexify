@@ -20,33 +20,38 @@
 # coarser grid a parent lives on is the same spelling read at that resolution
 # (see aperture_at_resolution()).
 #
-# The hierarchy is a relation between cell IDs, and a rotation of the
-# icosahedron carries cells and their centres together, so it is the same under
-# every orientation and both face projections. It is computed in the standard
-# ISEA orientation on the ISEA projection, the frame the pole probes below are
-# placed in.
+# The hierarchy is a relation between cell IDs, and a rotation of the solid
+# carries cells and their centres together, so it is the same under every
+# orientation and both face projections. It is computed with the grid's solid in
+# its standard orientation on the ISEA projection, the frame the pole probes
+# below are placed in. Every helper takes that solid as `polyhedron`.
 
-mixed_cell_center <- function(cell_id, resolution, aperture) {
+mixed_cell_center <- function(cell_id, resolution, aperture,
+                              polyhedron = "icosahedron") {
   lv <- isea_levels(aperture, resolution)
-  cpp_cell_to_lonlat(standard_icosa(), as.numeric(cell_id),
+  cpp_cell_to_lonlat(standard_icosa(polyhedron), as.numeric(cell_id),
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
-mixed_point_to_cell <- function(lon, lat, resolution, aperture) {
+mixed_point_to_cell <- function(lon, lat, resolution, aperture,
+                                polyhedron = "icosahedron") {
   lv <- isea_levels(aperture, resolution)
-  cpp_lonlat_to_cell(standard_icosa(), as.numeric(lon), as.numeric(lat),
+  cpp_lonlat_to_cell(standard_icosa(polyhedron), as.numeric(lon), as.numeric(lat),
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
-mixed_cell_qij <- function(cell_id, resolution, aperture) {
+mixed_cell_qij <- function(cell_id, resolution, aperture,
+                           polyhedron = "icosahedron") {
   lv <- isea_levels(aperture, resolution)
-  cpp_cell_to_quad_ij(as.numeric(cell_id), lv$resolution, lv$aperture, lv$ap_seq)
-}
-
-mixed_qij_cell <- function(quad, i, j, resolution, aperture) {
-  lv <- isea_levels(aperture, resolution)
-  cpp_quad_ij_to_cell(as.integer(quad), as.numeric(i), as.numeric(j),
+  cpp_cell_to_quad_ij(standard_icosa(polyhedron), as.numeric(cell_id),
                       lv$resolution, lv$aperture, lv$ap_seq)
+}
+
+mixed_qij_cell <- function(quad, i, j, resolution, aperture,
+                           polyhedron = "icosahedron") {
+  lv <- isea_levels(aperture, resolution)
+  cpp_quad_ij_to_cell(standard_icosa(polyhedron), as.integer(quad), as.numeric(i),
+                      as.numeric(j), lv$resolution, lv$aperture, lv$ap_seq)
 }
 
 mixed_edge_dim <- function(resolution, aperture) {
@@ -54,14 +59,15 @@ mixed_edge_dim <- function(resolution, aperture) {
   cpp_quad_edge_dim(lv$resolution, lv$aperture, lv$ap_seq)
 }
 
-#' All valid cells within a band of the (i,j) boundary of the ten body quads,
-#' plus the poles. Non-nested ISEA seams -- especially near the twelve
-#' icosahedron vertices (pentagon points), where a parent's children spread into
-#' a polar cap rather than onto a single edge line -- put children a few cells
-#' inside the quad edge, so the band has width `w` (not just the edge line). The
-#' set is O(w * sqrt(n_cells)), still cheap against the full grid.
+#' All valid cells within a band of the (i,j) boundary of the diamond quads,
+#' plus the poles. Non-nested ISEA seams -- especially near the vertices of the
+#' solid (the vertex cells), where a parent's children spread into a polar cap
+#' rather than onto a single edge line -- put children a few cells inside the
+#' quad edge, so the band has width `w` (not just the edge line). The set is
+#' O(w * sqrt(n_cells)), still cheap against the full grid.
 #' @noRd
-mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L) {
+mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L,
+                                 polyhedron = "icosahedron") {
   m <- mixed_edge_dim(resolution, aperture) - 1L
   w <- min(w, as.integer(m) + 1L)
   lo <- 0:(w - 1L)
@@ -73,28 +79,30 @@ mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L) {
   gi <- c(rep(band, times = length(full)), rep(full, times = length(band)))
   gj <- c(rep(full, each = length(band)), rep(band, each = length(full)))
   ne <- length(gi)
-  q <- rep(1:10, each = ne)
-  ii <- rep(gi, times = 10)
-  jj <- rep(gj, times = 10)
-  cells <- mixed_qij_cell(q, ii, jj, resolution, aperture)
+  n_diamonds <- polyhedron_diamonds(polyhedron)
+  q <- rep(seq_len(n_diamonds), each = ne)
+  ii <- rep(gi, times = n_diamonds)
+  jj <- rep(gj, times = n_diamonds)
+  cells <- mixed_qij_cell(q, ii, jj, resolution, aperture, polyhedron)
   cells <- c(cells,
-             mixed_point_to_cell(0, 90, resolution, aperture),
-             mixed_point_to_cell(0, -90, resolution, aperture))
+             mixed_point_to_cell(0, 90, resolution, aperture, polyhedron),
+             mixed_point_to_cell(0, -90, resolution, aperture, polyhedron))
   cells <- unique(cells)
   cells <- cells[is.finite(cells) & cells >= 1 & cells <= n_cells]
   # Keep only (i,j) that round-trip to a real cell.
   if (length(cells) == 0) return(cells)
-  q2 <- mixed_cell_qij(cells, resolution, aperture)
-  rt <- mixed_qij_cell(q2$quad, q2$i, q2$j, resolution, aperture)
+  q2 <- mixed_cell_qij(cells, resolution, aperture, polyhedron)
+  rt <- mixed_qij_cell(q2$quad, q2$i, q2$j, resolution, aperture, polyhedron)
   cells[rt == cells]
 }
 
 #' Geometric parent of mixed cells (center-containment)
 #' @noRd
-mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L) {
+mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L,
+                             polyhedron = "icosahedron") {
   parent_res <- resolution - as.integer(levels)
-  ll <- mixed_cell_center(cell_id, resolution, aperture)
-  mixed_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res, aperture)
+  ll <- mixed_cell_center(cell_id, resolution, aperture, polyhedron)
+  mixed_point_to_cell(ll$lon_deg, ll$lat_deg, parent_res, aperture, polyhedron)
 }
 
 #' Geometric children of a single mixed cell.
@@ -108,31 +116,34 @@ mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L) {
 #' them all without relying on sampling density. Returns child IDs sorted.
 #' @noRd
 mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
-                                   n_cells_child) {
+                                   n_cells_child, polyhedron = "icosahedron") {
   # Coarse levels: exhaustive filter (no locality assumptions, cheap).
   if (n_cells_child <= 2000) {
     all_child <- seq_len(n_cells_child)
-    par <- mixed_get_parent(all_child, child_res, aperture, child_res - resolution)
+    par <- mixed_get_parent(all_child, child_res, aperture, child_res - resolution,
+                            polyhedron)
     return(sort(all_child[par == cell_id]))
   }
 
-  ll <- mixed_cell_center(cell_id, resolution, aperture)
+  ll <- mixed_cell_center(cell_id, resolution, aperture, polyhedron)
 
   # Seed set: (i,j) box around the central child, plus the pole cells.
-  central <- mixed_point_to_cell(ll$lon_deg, ll$lat_deg, child_res, aperture)
-  cq <- mixed_cell_qij(central, child_res, aperture)
+  central <- mixed_point_to_cell(ll$lon_deg, ll$lat_deg, child_res, aperture,
+                                 polyhedron)
+  cq <- mixed_cell_qij(central, child_res, aperture, polyhedron)
   box <- 3L
   di <- rep(-box:box, times = 2 * box + 1)
   dj <- rep(-box:box, each = 2 * box + 1)
-  seed <- mixed_qij_cell(cq$quad, cq$i + di, cq$j + dj, child_res, aperture)
+  seed <- mixed_qij_cell(cq$quad, cq$i + di, cq$j + dj, child_res, aperture,
+                         polyhedron)
   seed <- c(seed, central,
-            mixed_point_to_cell(0, 90, child_res, aperture),
-            mixed_point_to_cell(0, -90, child_res, aperture))
+            mixed_point_to_cell(0, 90, child_res, aperture, polyhedron),
+            mixed_point_to_cell(0, -90, child_res, aperture, polyhedron))
   seed <- unique(seed)
   seed <- seed[is.finite(seed) & seed >= 1 & seed <= n_cells_child]
 
   parent_of <- function(x) {
-    mixed_get_parent(x, child_res, aperture, child_res - resolution)
+    mixed_get_parent(x, child_res, aperture, child_res - resolution, polyhedron)
   }
 
   found <- seed[parent_of(seed) == cell_id]
@@ -147,7 +158,7 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   for (iter in seq_len(64)) {
     if (length(frontier) == 0) break
     lv <- isea_levels(aperture, child_res)
-    nb <- unlist(cpp_get_neighbors_isea(standard_icosa(), frontier,
+    nb <- unlist(cpp_get_neighbors_isea(standard_icosa(polyhedron), frontier,
                                         lv$resolution, lv$aperture, lv$ap_seq))
     nb <- setdiff(nb[!is.na(nb)], visited)
     visited <- c(visited, nb)
@@ -157,19 +168,20 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
     frontier <- kids
   }
 
-  # Seam children: non-nested ISEA seams (and the twelve icosahedron vertices,
+  # Seam children: non-nested ISEA seams (and the vertices of the solid,
   # which are quad corners) put a few children on a distant quad boundary that
   # the interior walk cannot reach. This can only happen when the PARENT's own
   # footprint touches a seam, i.e. its (i,j) is near a quad edge or corner. For
   # such parents -- an O(sqrt(n)) minority -- sweep the O(sqrt(n)) boundary band
   # and add any cell whose exact parent is this cell. Interior parents keep all
   # children in-quad, so the fast walk above is already complete for them.
-  pq <- mixed_cell_qij(cell_id, resolution, aperture)
+  pq <- mixed_cell_qij(cell_id, resolution, aperture, polyhedron)
   m_parent <- mixed_edge_dim(resolution, aperture) - 1L
   gate <- 3L
   near_boundary <- min(pq$i, pq$j, m_parent - pq$i, m_parent - pq$j) < gate
   if (near_boundary) {
-    bnd <- mixed_boundary_cells(child_res, aperture, n_cells_child)
+    bnd <- mixed_boundary_cells(child_res, aperture, n_cells_child,
+                                polyhedron = polyhedron)
     if (length(bnd) > 0) {
       found <- c(found, bnd[parent_of(bnd) == cell_id])
     }
@@ -182,16 +194,17 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
 # Hierarchical index string
 # -----------------------------------------------------------------------------
 # The index is prefix-hierarchical: a 2-digit base cell (the resolution-0 cell,
-# 1..12) followed by a 2-digit ordinal per resolution level, giving which child
-# of its parent the cell is (children sorted ascending by cell ID). Two digits
-# per level because near the twelve icosahedron vertices centre-containment can
-# gather more than nine children into one coarse cell. Dropping the last two
+# one per vertex of the solid) followed by a 2-digit ordinal per resolution
+# level, giving which child of its parent the cell is (children sorted ascending
+# by cell ID). Two digits per level because near the vertices of the solid
+# centre-containment can gather more than nine children into one coarse cell. Dropping the last two
 # digits yields the parent's index, so the string sorts by spatial ancestry.
 mixed_index_digit_width <- 2L
 
 #' Encode a single mixed cell to its hierarchical index string.
 #' @noRd
-mixed_cell_to_index_one <- function(cell_id, resolution, aperture) {
+mixed_cell_to_index_one <- function(cell_id, resolution, aperture,
+                                    polyhedron = "icosahedron") {
   if (resolution == 0) {
     return(sprintf("%02d", as.integer(cell_id)))
   }
@@ -199,13 +212,14 @@ mixed_cell_to_index_one <- function(cell_id, resolution, aperture) {
   anc <- numeric(resolution + 1)
   anc[resolution + 1] <- cell_id
   for (k in resolution:1) {
-    anc[k] <- mixed_get_parent(anc[k + 1], k, aperture, 1L)
+    anc[k] <- mixed_get_parent(anc[k + 1], k, aperture, 1L, polyhedron)
   }
   w <- mixed_index_digit_width
   digits <- integer(resolution)
   for (k in 1:resolution) {
     kids <- mixed_get_children_one(anc[k], k - 1L, k, aperture,
-                                   aperture_n_cells(aperture, k))
+                                   aperture_n_cells(aperture, k, polyhedron),
+                                   polyhedron)
     pos <- match(anc[k + 1], kids)
     if (is.na(pos)) {
       stop("hexify internal error: mixed child enumeration missed a descendant ",

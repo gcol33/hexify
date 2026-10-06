@@ -4,12 +4,19 @@
 \alias{hexify_lonlat_to_plane}
 \title{Convert longitude/latitude to PLANE coordinates}
 \usage{
-hexify_lonlat_to_plane(lon, lat)
+hexify_lonlat_to_plane(
+  lon,
+  lat,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
+)
 }
 \arguments{
 \item{lon}{Longitude in degrees (-180 to 180)}
 
 \item{lat}{Latitude in degrees (-90 to 90)}
+
+\item{polyhedron}{The solid whose faces are unfolded: "icosahedron"
+(default), "octahedron" or "tetrahedron", in its standard orientation}
 }
 \value{
 Data frame with columns:
@@ -18,11 +25,11 @@ Data frame with columns:
 }
 \description{
 Converts geographic coordinates directly to PLANE coordinates
-(unfolded icosahedron). Combines forward 'Snyder' projection with
+(the unfolded solid). Combines forward 'Snyder' projection with
 the PLANE transformation.
 }
 \details{
-Equivalent to 'dggridR' dgGEO_to_PLANE().
+Equivalent to 'dggridR' dgGEO_to_PLANE() on the icosahedron.
 }
 \examples{
 # Plot world cities in PLANE coordinates

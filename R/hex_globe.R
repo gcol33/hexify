@@ -4,7 +4,7 @@
 #' Interactive globe of a grid
 #'
 #' Draws the cells of a grid on a globe that turns under the mouse, rendered
-#' on the graphics card through WebGPU. A slider folds the icosahedron the
+#' on the graphics card through WebGPU. A slider folds the solid the
 #' grid is built on into the sphere, and the shader blends the two surfaces.
 #' Values given per cell fill the cells through a colour ramp.
 #'
@@ -29,8 +29,9 @@
 #' @param values Numeric values, one per cell in \code{cells}, filling the
 #'   cells. \code{NULL} draws no fill.
 #' @param cells Cell IDs to draw. \code{NULL} draws every cell of the grid.
-#' @param surface Surface shown first, \code{"sphere"} or
-#'   \code{"icosahedron"}; the slider folds one into the other. An H3 grid
+#' @param surface Surface shown first, \code{"sphere"} or \code{"solid"},
+#'   the flat faces of the grid's polyhedron; the slider folds one into the
+#'   other. An H3 grid
 #'   is drawn on the sphere only.
 #' @param palette Colours of the ramp from low to high values, or the name of
 #'   a palette of \code{\link[grDevices]{hcl.colors}}.
@@ -51,7 +52,7 @@
 #' if (requireNamespace("htmlwidgets", quietly = TRUE)) {
 #'   grid <- hex_grid(resolution = 3, aperture = 3)
 #'   hex_globe(grid)
-#'   hex_globe(grid, surface = "icosahedron", center = "pacific")
+#'   hex_globe(grid, surface = "solid", center = "pacific")
 #'
 #'   cells <- seq_len(n_cells(grid))
 #'   centres <- cell_to_lonlat(cells, grid)
@@ -60,7 +61,7 @@
 hex_globe <- function(x,
                       values = NULL,
                       cells = NULL,
-                      surface = c("sphere", "icosahedron"),
+                      surface = c("sphere", "solid"),
                       center = c(lon = 15, lat = 32),
                       projection = c("orthographic", "perspective"),
                       distance = NULL,
@@ -189,7 +190,7 @@ hex_globe <- function(x,
 #' @examples
 #' \dontrun{
 #' grid <- hex_grid(resolution = 3, aperture = 3)
-#' globe <- hex_globe(grid, surface = "icosahedron", center = "pacific")
+#' globe <- hex_globe(grid, surface = "solid", center = "pacific")
 #' hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 #' }
 hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
@@ -287,7 +288,7 @@ globe_shader_cells <- function(grid, xyz, timeout = 120) {
 #' @noRd
 globe_grid <- function(g, cells, values, limits) {
   lv <- isea_levels(g@aperture, g@resolution)
-  frame <- cpp_globe_frame(lv$resolution, lv$aperture, lv$ap_seq)
+  frame <- cpp_globe_frame(icosa_arg(g), lv$resolution, lv$aperture, lv$ap_seq)
   # The shader reads a point to 32-bit float precision, a few millionths of
   # a radian; past this quad side its cells are finer than that.
   if (frame$dim >= 2^24) {
@@ -360,7 +361,7 @@ land_surface_paths <- function(land, max_angle, icosa) {
   cpp_sphere_paths_on_faces(icosa, ll[, 1], ll[, 2], path, max_angle)
 }
 
-#' The icosahedron's edges placed on the faces, one path per edge
+#' The solid's edges placed on the faces, one path per edge
 #' @noRd
 edge_surface_paths <- function(max_angle, icosa) {
   solid <- icosa_solid(icosa)
@@ -425,7 +426,7 @@ globe_rgba <- function(col) {
   as.vector(grDevices::col2rgb(col, alpha = TRUE)) / 255
 }
 
-#' A mesh as the widget reads it: per vertex its icosahedron and sphere
+#' A mesh as the widget reads it: per vertex its solid and sphere
 #' positions (six 32-bit floats) and item (from 0), with `tri` also its
 #' triangle coordinates on its face, and the triangles' vertex indices, each
 #' as base64 text
@@ -441,7 +442,7 @@ globe_mesh <- function(m, tri = FALSE) {
   )
 }
 
-#' Paths as the widget reads them: per point its icosahedron and sphere
+#' Paths as the widget reads them: per point its solid and sphere
 #' positions, and the first point (from 0) of every segment between two
 #' points of one path. A path with sphere positions only, as an H3 cell's,
 #' takes them for both surfaces.

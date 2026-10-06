@@ -16,7 +16,7 @@
 #include <Rcpp.h>
 #include <array>
 #include <cmath>
-#include "icosahedron.h"
+#include "polyhedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
 #include "aperture.h"

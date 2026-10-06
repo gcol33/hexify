@@ -2,19 +2,25 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_face_centers}
 \alias{hexify_face_centers}
-\title{Get icosahedron face centers}
+\title{Get face centers of a solid}
 \usage{
-hexify_face_centers()
+hexify_face_centers(polyhedron = c("icosahedron", "octahedron", "tetrahedron"))
+}
+\arguments{
+\item{polyhedron}{The solid: "icosahedron" (default), "octahedron" or
+"tetrahedron", in its default orientation}
 }
 \value{
-Data frame with 20 rows and columns lon, lat (degrees)
+Data frame with one row per face and columns lon, lat (radians)
 }
 \description{
-Returns the center coordinates of all 20 icosahedral faces.
+Returns the center coordinates of every face of the solid: 20 on the
+icosahedron, 8 on the octahedron, 4 on the tetrahedron.
 }
 \examples{
 centers <- hexify_face_centers()
 plot(centers$lon, centers$lat)
+nrow(hexify_face_centers("octahedron"))
 }
 \seealso{
 Other projection:

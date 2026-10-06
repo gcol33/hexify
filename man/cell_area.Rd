@@ -19,17 +19,18 @@ Named numeric vector of areas in km², one per \code{cell_id}.
 }
 \description{
 Returns the area of each cell in square kilometers. On the ISEA projection
-every hexagon of a resolution has the same area and the 12 pentagons 5/6 of
-it. On the Fuller projection and for H3 grids, the area varies from cell to
-cell.
+every hexagon of a resolution has the same area, the 12 pentagons of the
+icosahedron 5/6 of it and the 6 squares of the octahedron 4/6 of it. On the
+Fuller projection and for H3 grids, the area varies from cell to cell.
 }
 \details{
 On the ISEA projection, Snyder's equal-area projection gives every hexagon
-of a resolution the same area. Each of the 12 pentagons, centred on an
-icosahedron vertex, covers five of a hexagon's six sixths, so a grid of
-\eqn{N} cells on a body of area \eqn{S} has hexagons of area
-\eqn{S / (N - 2)} and pentagons of \eqn{(5/6) S / (N - 2)}. The grid's
-\code{area_km2} is the mean, \eqn{S / N}.
+of a resolution the same area. A vertex cell, centred on a vertex of the
+solid where \eqn{k} faces meet, covers \eqn{k} of a hexagon's six sixths,
+so a grid of \eqn{N} cells on a body of area \eqn{S} has hexagons of area
+\eqn{S / (N - 2)}, pentagons of \eqn{(5/6) S / (N - 2)} on the
+icosahedron and squares of \eqn{(4/6) S / (N - 2)} on the octahedron. The
+grid's \code{area_km2} is the mean, \eqn{S / N}.
 
 On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are
 not equal-area. Each cell's area is its solid angle, summed over its true

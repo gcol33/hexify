@@ -157,7 +157,7 @@ test_that("hex_globe builds a widget with every layer", {
   skip_if_not_installed("htmlwidgets")
   g <- hex_grid(resolution = 2, aperture = 3)
   ids <- seq_len(grid_n_cells(g))
-  w <- hex_globe(g, values = ids, surface = "icosahedron",
+  w <- hex_globe(g, values = ids, surface = "solid",
                  projection = "perspective", distance = 2, tilt = 20)
   expect_s3_class(w, "htmlwidget")
   x <- w$x
@@ -176,7 +176,8 @@ test_that("hex_globe builds a widget with every layer", {
   expect_true(x$grid$all)
   expect_equal(x$grid$ramp_map, c(1, 1 / (length(ids) - 1), 0))
   expect_length(x$projection$faces, 20 * 16)
-  expect_length(x$projection$edges, 12 * 8)
+  expect_length(x$projection$edges, 12 * 36)
+  expect_equal(x$projection$n_faces, 20)
   expect_null(x$cells)
   expect_null(x$grid_lines)
   expect_equal(x$camera$distance, 2)
@@ -230,14 +231,14 @@ test_that("cell IDs above 2^32 split into two words", {
 })
 
 test_that("the frame names the substrate sublattice of each grid", {
-  f <- hexify:::cpp_globe_frame(3L, 3L, integer(0))
+  f <- hexify:::cpp_globe_frame(numeric(0), 3L, 3L, integer(0))
   expect_equal(f[c("dim", "index", "c")], list(dim = 9, index = 3, c = 2))
   expect_equal(f$generator, c(2, 1))
-  f <- hexify:::cpp_globe_frame(3L, 7L, integer(0))
+  f <- hexify:::cpp_globe_frame(numeric(0), 3L, 7L, integer(0))
   expect_equal(f[c("dim", "index", "c")], list(dim = 49, index = 7, c = 5))
-  f <- hexify:::cpp_globe_frame(4L, 4L, integer(0))
+  f <- hexify:::cpp_globe_frame(numeric(0), 4L, 4L, integer(0))
   expect_equal(f[c("dim", "index", "per_quad")], list(dim = 16, index = 1, per_quad = 256))
-  f <- hexify:::cpp_globe_frame(2L, 0L, c(4L, 3L, 7L))
+  f <- hexify:::cpp_globe_frame(numeric(0), 2L, 0L, c(4L, 3L, 7L))
   expect_equal(f$index, 21)
   expect_equal(f$per_quad, 21)
 })
@@ -260,7 +261,7 @@ test_that("hex_globe draws an H3 grid on the sphere only", {
   x <- hex_globe(h3, values = seq_along(h3_all_cells(0)), land = FALSE)$x
   expect_false(x$foldable)
   expect_true(x$cells$n_index > 0)
-  expect_error(hex_globe(h3, surface = "icosahedron"), "ISEA grid")
+  expect_error(hex_globe(h3, surface = "solid"), "ISEA grid")
 })
 
 test_that("hex_globe checks its arguments", {

@@ -381,7 +381,7 @@ test_that("mixed aperture (i,j) matches the mixed-radix grid dimension, not pure
   res <- 5
   mixed_level <- 2
   cells <- cpp_lonlat_to_cell(numeric(0), lons, lats, res, 0L, seq43(res, mixed_level))
-  qij <- cpp_cell_to_quad_ij(cells, res, 0L, seq43(res, mixed_level))
+  qij <- cpp_cell_to_quad_ij(numeric(0), cells, res, 0L, seq43(res, mixed_level))
 
   # True mixed-radix dim: 2^2 * sqrt(3)^3 (+ substrate boost if class II)
   ap3_count <- res - mixed_level
@@ -707,8 +707,8 @@ test_that("mixed sequence cell IDs are a bijection with (quad, i, j)", {
       lv <- hexify:::isea_levels(g@aperture, g@resolution)
       ids <- seq_len(hexify:::aperture_n_cells(ap, res))
 
-      qij <- cpp_cell_to_quad_ij(as.numeric(ids), lv$resolution, lv$aperture, lv$ap_seq)
-      back <- cpp_quad_ij_to_cell(qij$quad, qij$i, qij$j, lv$resolution,
+      qij <- cpp_cell_to_quad_ij(numeric(0), as.numeric(ids), lv$resolution, lv$aperture, lv$ap_seq)
+      back <- cpp_quad_ij_to_cell(numeric(0), qij$quad, qij$i, qij$j, lv$resolution,
                                   lv$aperture, lv$ap_seq)
 
       expect_equal(back, as.numeric(ids),

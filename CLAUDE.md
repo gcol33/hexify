@@ -5,7 +5,9 @@
 hexify supports **all** major hexagonal DGGS through two backends:
 
 - **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30,
-  on Snyder's equal-area projection or Fuller's (`hex_grid(projection = "fuller")`).
+  on Snyder's equal-area projection or Fuller's (`hex_grid(projection = "fuller")`),
+  on the icosahedron or, with Snyder's projection, the octahedron
+  (`hex_grid(polyhedron = "octahedron")`).
   `hex_grid(aperture = "4/3")` / `"4/7"` / `"7/4"` name a family (first `floor(res/2)` levels
   take the first aperture), and `aperture = c(4, 4, 7, 3)` names one aperture per level.
 - **H3** (vendored H3 v4.4.1 C source in `src/h3`): fixed aperture 7 — resolutions 0-15
@@ -38,20 +40,34 @@ Earth-read topology; a grid on another body is that topology on that body, and
 
 ## Orientation and face projection
 
-An ISEA grid carries its icosahedron's orientation in the `orientation` slot,
+An ISEA grid carries its solid in the `polyhedron` slot (`"icosahedron"` or
+`"octahedron"`), the solid's orientation in the `orientation` slot,
 `c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`), and its face
-projection in the `projection` slot, `"isea"` (Snyder) or `"fuller"`. The C++
-layer keeps one face table per orientation (`src/icosahedron.cpp`) and reads
-the active one through `ico()`; `project_core()` and `face_xy_to_ll()` read
-the active projection (`active_projection()`). Every Rcpp entry point that
-reaches either takes `icosa` as its FIRST argument and calls
-`activate_icosa(icosa)` (`src/rcpp_icosa.h`) on entry; R passes
-`icosa_arg(g)` = `c(orientation, projection code)`, `numeric(0)` for the
-default orientation that `hexify_build_icosa()` sets on ISEA, or
-`projection_icosa(projection)` for the default orientation on a given
-projection. Test-only entry points call `activate_default_icosa()` instead.
-A new entry point reaching `ico()` or a projection must do one of the two, or
-it reads whatever the previous call left.
+projection in the `projection` slot, `"isea"` (Snyder) or `"fuller"`.
+
+`src/polyhedron.cpp` describes each solid (icosahedron, octahedron,
+tetrahedron) by its vertices, faces and Snyder constants, and derives the
+quad scheme from them (`SolidTopology`, read through `topo()`): quad q is
+vertex q, quads 1..V-2 are diamonds of two faces, quads 0 and V-1 are
+single-cell vertex quads, and every face pairing, region table and edge map
+is derived, not hand-written. Code below the projection reads counts and
+tables from `topo()`, never 20/12/10. The tetrahedron has no quad scheme
+(`has_quads` false: its four valence-3 vertices would all have to be vertex
+quads), so it carries the projection only.
+
+The C++ layer keeps one face table per (solid, orientation) and reads the
+active one through `poly()`; `project_core()` and `face_xy_to_ll()` read the
+active projection (`active_projection()`). Every Rcpp entry point that reaches
+either takes `icosa` as its FIRST argument and calls `activate_icosa(icosa)`,
+or `activate_grid(icosa)` where it needs cells (it stops on a solid without a
+grid) (`src/rcpp_icosa.h`). R passes `icosa_arg(g)` =
+`c(orientation, projection code, solid code)`, `numeric(0)` for the
+icosahedron's default orientation that `hexify_build_icosa()` sets on ISEA,
+`projection_icosa(projection, polyhedron)` = `c(projection, solid)` for a
+solid's default orientation, or `standard_icosa(polyhedron)`. Test-only entry
+points call `activate_default_icosa()` instead. A new entry point reaching
+`poly()`, `topo()` or a projection must do one of these, or it reads
+whatever the previous call left.
 
 Fuller (`src/projection_fuller.cpp`) is written from Gray (1995) and Crider
 (2008), DGGRID's `DgProjFuller` used as a reference only. Both projections

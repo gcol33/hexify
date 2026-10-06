@@ -54,6 +54,9 @@
 #'   to centre the grid
 #'   on: \code{c(lon, lat)} in degrees, or an sf, sfc or bbox object, whose
 #'   spherical centroid is used.
+#' @param polyhedron The solid an ISEA-family grid is built on:
+#'   "icosahedron" (default) or "octahedron". See the Polyhedron section. H3
+#'   grids are built on the icosahedron and take only the default.
 #'
 #' @return A HexGridInfo object containing the grid specification.
 #'
@@ -61,8 +64,9 @@
 #' Exactly one of \code{area_km2} or \code{resolution} must be provided.
 #'
 #' When \code{area_km2} is provided, the resolution is calculated automatically
-#' using the cell count formula: N = 10 * aperture^res + 2 (ISEA) or by
-#' matching the closest H3 resolution.
+#' using the cell count formula: N = 10 * aperture^res + 2 (ISEA on the
+#' icosahedron, 4 * aperture^res + 2 on the octahedron) or by matching the
+#' closest H3 resolution.
 #'
 #' H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 #' H3 cells are NOT exactly equal-area: hexagon area varies by about a factor
@@ -94,27 +98,31 @@
 #'
 #' @section Orientation:
 #'
-#' An ISEA grid is built on an icosahedron, and its orientation places that
-#' icosahedron on the sphere: vertex 0 at longitude \code{vert0_lon} and
-#' latitude \code{vert0_lat}, and vertex 1 at azimuth \code{azimuth} seen from
-#' vertex 0, all in degrees, as DGGRID's \code{dggs_vert0_lon},
-#' \code{dggs_vert0_lat} and \code{dggs_vert0_azimuth} do.
+#' An ISEA grid is built on a solid, an icosahedron unless \code{polyhedron}
+#' names another, and its orientation places that solid on the sphere: vertex
+#' 0 at longitude \code{vert0_lon} and latitude \code{vert0_lat}, and vertex 1
+#' at azimuth \code{azimuth} seen from vertex 0, all in degrees, as DGGRID's
+#' \code{dggs_vert0_lon}, \code{dggs_vert0_lat} and \code{dggs_vert0_azimuth}
+#' do.
 #'
 #' \itemize{
-#'   \item "standard" is the ISEA orientation: vertex 0 at 11.25E, 58.28N,
-#'     azimuth 0, which places the twelve pentagons over the oceans.
+#'   \item "standard" is the ISEA orientation on the icosahedron: vertex 0 at
+#'     11.25E, 58.28N, azimuth 0, which places the twelve pentagons over the
+#'     oceans. On the octahedron it puts vertices at both poles and at
+#'     longitudes 0, 90E, 180 and 90W on the equator.
 #'   \item "random" draws vertex 0 uniformly on the sphere and the azimuth
 #'     uniformly in [0, 360), from R's random number generator, so
 #'     \code{set.seed()} repeats it. Grids in several random orientations show
 #'     how much a result depends on where the cell boundaries fall.
 #'   \item "region" places the grid as DGGRID's \code{REGION_CENTER} does: the
-#'     centre of \code{region} lands on the midpoint of an icosahedron edge,
-#'     the middle of the two faces sharing it, far from the twelve vertices
-#'     where the pentagons and the largest distortion sit.
-#'   \item "face" places the centre of \code{region} on the centre of a face,
-#'     about 20.9 degrees from the nearest face edge and 37.4 degrees from the
-#'     nearest vertex, so a region up to about 40 degrees across lies on one
-#'     face, away from the face edges where the projection bends.
+#'     centre of \code{region} lands on the midpoint of an edge of the solid,
+#'     the middle of the two faces sharing it, far from the vertices where the
+#'     vertex cells and the largest distortion sit.
+#'   \item "face" places the centre of \code{region} on the centre of a face.
+#'     On the icosahedron that is about 20.9 degrees from the nearest face edge
+#'     and 37.4 degrees from the nearest vertex, so a region up to about 40
+#'     degrees across lies on one face, away from the face edges where the
+#'     projection bends.
 #' }
 #'
 #' Rotating the icosahedron rotates the grid with it, so cell IDs, the cell
@@ -142,6 +150,25 @@
 #'
 #' \preformatted{
 #' hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
+#' }
+#'
+#' @section Polyhedron:
+#'
+#' Snyder's equal-area projection is defined on every regular solid with
+#' triangular faces, and a hexagonal grid lies on the icosahedron and on the
+#' octahedron alike: each pair of faces sharing an edge forms a diamond of
+#' cells, and the cell at each vertex has one side per face meeting there.
+#' The icosahedron has twelve pentagons and the octahedron six squares; every
+#' other cell is a hexagon, and every cell of a resolution has the same area
+#' (the vertex cells two thirds or five sixths of it, by their sides). The
+#' octahedron's cells are more distorted than the icosahedron's, so it suits
+#' layouts that need its four-fold symmetry rather than analysis. Fuller's
+#' projection is defined on the icosahedron only. The tetrahedron carries the
+#' face projection (see \code{\link{hexify_forward}}) but no grid: its faces
+#' do not pair into diamonds.
+#'
+#' \preformatted{
+#' hex_grid(resolution = 5, aperture = 4, polyhedron = "octahedron")
 #' }
 #'
 #' @seealso \code{\link{hexify}} for assigning points to cells,
@@ -215,10 +242,12 @@ hex_grid <- function(area_km2 = NULL,
                      radius_km = EARTH_RADIUS_KM,
                      orientation = "standard",
                      projection = c("isea", "fuller"),
-                     region = NULL) {
+                     region = NULL,
+                     polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
 
   type <- match.arg(type)
   projection <- match.arg(projection)
+  polyhedron <- match.arg(polyhedron)
 
   radius_km <- resolve_radius_km(radius_km)
   crs <- resolve_crs(crs, radius_km)
@@ -236,6 +265,10 @@ hex_grid <- function(area_km2 = NULL,
     }
     if (projection != "isea") {
       stop("H3 fixes its own projection; projection applies to ISEA grids",
+           call. = FALSE)
+    }
+    if (polyhedron != "icosahedron") {
+      stop("H3 is built on the icosahedron; polyhedron applies to ISEA grids",
            call. = FALSE)
     }
 
@@ -297,13 +330,25 @@ hex_grid <- function(area_km2 = NULL,
                 grid_type = "h3",
                 radius_km = radius_km,
                 orientation = numeric(0),
-                projection = character(0))
+                projection = character(0),
+                polyhedron = character(0))
     return(grid)
   }
 
   # =========================================================================
   # ISEA grid path
   # =========================================================================
+
+  if (!polyhedron %in% GRID_POLYHEDRA) {
+    stop("the ", polyhedron, " carries no hexagonal grid: a vertex shared by ",
+         "three faces would start a diamond of cells with all three, so every ",
+         "such vertex must be one of the two single-cell quads, and the ",
+         "tetrahedron has four. Its face projection is available through ",
+         "hexify_forward() and hexify_inverse().", call. = FALSE)
+  }
+  if (projection == "fuller" && polyhedron != "icosahedron") {
+    stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
+  }
 
   # -------------------------------------------------------------------------
   # Parse aperture: a single aperture, a family such as "4/3", or one aperture
@@ -337,7 +382,7 @@ hex_grid <- function(area_km2 = NULL,
       stop("area_km2 must be a positive number")
     }
     resolution <- resolve_resolution_from_area(area_km2, aperture_str,
-                                               radius_km, resround)
+                                               radius_km, resround, polyhedron)
   } else {
     if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
       stop("resolution must be a single non-NA number")
@@ -352,7 +397,8 @@ hex_grid <- function(area_km2 = NULL,
   # -------------------------------------------------------------------------
   # Calculate actual area and diagonal for this resolution
   # -------------------------------------------------------------------------
-  actual_area <- mean_cell_area_km2(aperture_str, resolution, radius_km)
+  actual_area <- mean_cell_area_km2(aperture_str, resolution, radius_km,
+                                    polyhedron)
   actual_diagonal <- hex_spacing_km(actual_area)
 
   # -------------------------------------------------------------------------
@@ -366,8 +412,9 @@ hex_grid <- function(area_km2 = NULL,
               crs = crs,
               grid_type = "isea",
               radius_km = radius_km,
-              orientation = resolve_orientation(orientation, region),
-              projection = projection)
+              orientation = resolve_orientation(orientation, region, polyhedron),
+              projection = projection,
+              polyhedron = polyhedron)
 
   # Validation happens automatically via setValidity
   grid

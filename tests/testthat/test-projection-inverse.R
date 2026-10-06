@@ -286,7 +286,7 @@ test_that("cpp_icosa_face_params returns valid face parameters", {
   hexify_build_icosa()
 
   for (face in 0:19) {
-    params <- cpp_icosa_face_params(face)
+    params <- cpp_icosa_face_params(numeric(0), face)
 
     expect_true("cen_lat" %in% names(params))
     expect_true("cen_lon" %in% names(params))
@@ -300,17 +300,17 @@ test_that("cpp_icosa_face_params returns valid face parameters", {
 test_that("cpp_icosa_face_params errors on invalid face", {
   hexify_build_icosa()
 
-  expect_error(cpp_icosa_face_params(-1), "face must be 0..19")
-  expect_error(cpp_icosa_face_params(20), "face must be 0..19")
+  expect_error(cpp_icosa_face_params(numeric(0), -1), "face out of range")
+  expect_error(cpp_icosa_face_params(numeric(0), 20), "face out of range")
 })
 
 test_that("cpp_hex_index_face_to_lonlat works with degrees=TRUE", {
   hexify_build_icosa()
 
   # Get face 0 parameters
-  params <- cpp_icosa_face_params(0)
+  params <- cpp_icosa_face_params(numeric(0), 0)
 
-  result <- cpp_hex_index_face_to_lonlat(
+  result <- cpp_hex_index_face_to_lonlat(numeric(0), 
     x = 0.5,
     y = 0.3,
     cen_lat = params["cen_lat"],
@@ -328,9 +328,9 @@ test_that("cpp_hex_index_face_to_lonlat works with degrees=FALSE", {
   hexify_build_icosa()
 
   # Get face 0 parameters
-  params <- cpp_icosa_face_params(0)
+  params <- cpp_icosa_face_params(numeric(0), 0)
 
-  result <- cpp_hex_index_face_to_lonlat(
+  result <- cpp_hex_index_face_to_lonlat(numeric(0), 
     x = 0.5,
     y = 0.3,
     cen_lat = params["cen_lat"],
@@ -348,9 +348,9 @@ test_that("cpp_hex_index_face_to_lonlat works with degrees=FALSE", {
 test_that("cpp_hex_index_face_to_lonlat works with custom tolerance", {
   hexify_build_icosa()
 
-  params <- cpp_icosa_face_params(5)
+  params <- cpp_icosa_face_params(numeric(0), 5)
 
-  result <- cpp_hex_index_face_to_lonlat(
+  result <- cpp_hex_index_face_to_lonlat(numeric(0), 
     x = 0.5,
     y = 0.3,
     cen_lat = params["cen_lat"],

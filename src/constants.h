@@ -76,39 +76,6 @@ inline int azimuth_sector(double az) {
 }
 
 // =============================================================================
-// Snyder ISEA Projection Constants (from Snyder 1992)
-// =============================================================================
-// Reference: Snyder, J.P. (1992). "An Equal-Area Map Projection for Polyhedral Globes"
-// Cartographica 29(1): 10-21.
-
-// Each constant below is computed from its closed form on the unit sphere, so
-// it carries full double precision.
-
-// SNYDER_EL_ANGLE: θ - spherical angle from a face centre to a vertex of the
-// face (37.377...°). On the icosahedron tan θ = 3 - sqrt(5).
-inline const double kSnyderElAngle = std::atan(3.0 - std::sqrt(5.0));
-inline const double kSnyderElAngleDeg = kSnyderElAngle * kRadToDeg;
-
-// SNYDER_G_ANGLE: G - angle at icosahedron vertices (36° exactly)
-constexpr double kSnyderGAngleDeg = 36.0;
-constexpr double kSnyderGAngle = kSnyderGAngleDeg * kDegToRad;
-
-// Edge of the planar face triangle. Its area (sqrt(3)/4) e^2 equals a
-// twentieth of the sphere, 4π/20, so e = sqrt(4π / (5 sqrt(3))).
-inline const double kSnyderIcosaEdge = std::sqrt(4.0 * kPi / (5.0 * std::sqrt(3.0)));
-
-// Face-plane origin offsets: half the edge, and the triangle's inradius
-// e / (2 sqrt(3)).
-inline const double kSnyderOriginXOff = 0.5 * kSnyderIcosaEdge;
-inline const double kSnyderOriginYOff = kSnyderIcosaEdge / (2.0 * std::sqrt(3.0));
-
-// R1: Scale factor for equal-area property (Snyder notation: R'). A face
-// vertex lies at plane distance R' tan θ from the centre, which is the
-// triangle's circumradius e / sqrt(3).
-inline const double kSnyderR1 = kSnyderIcosaEdge / (std::sqrt(3.0) * std::tan(kSnyderElAngle));
-inline const double kSnyderR1Squared = kSnyderR1 * kSnyderR1;
-
-// =============================================================================
 // Fuller Projection Constants (Gray 1995, Crider 2008)
 // =============================================================================
 // References: Gray, R.W. (1995). "Exact Transformation Equations for Fuller's
@@ -143,49 +110,6 @@ inline const double kFullerTanAlpha = kFullerEL / (2.0 * kFullerDVE);
 inline const double kIcosaVertexLatDeg = std::atan(0.5) * kRadToDeg;
 
 // =============================================================================
-// PLANE Coordinate Layout Table (Icosahedron Unfolding)
-// =============================================================================
-// Each triangle has a rotation (in 60° increments) and an offset position
-// in the unfolded PLANE coordinate system. Standard ISEA icosahedron layout.
-
-// Structure to hold triangle transformation parameters
-struct PlaneTriLayout {
-    int rot60;      // Rotation in 60° increments (0, 3, etc.)
-    double offset_x;  // X offset in PLANE coordinates
-    double offset_y;  // Y offset in PLANE coordinates
-};
-
-// M_SIN60 = sqrt(3)/2 ≈ 0.866025...
-// The layout creates a 5.5 × ~1.73 unit rectangle containing all 20 triangles
-
-constexpr PlaneTriLayout kPlaneLayout[20] = {
-    // Upper row (faces 0-4): rot60=0, y = 2*sin60
-    {0, 0.0, 2.0 * kSin60},  // face 0
-    {0, 1.0, 2.0 * kSin60},  // face 1
-    {0, 2.0, 2.0 * kSin60},  // face 2
-    {0, 3.0, 2.0 * kSin60},  // face 3
-    {0, 4.0, 2.0 * kSin60},  // face 4
-    // Upper row continued (faces 5-9): rot60=3, y = 2*sin60
-    {3, 1.0, 2.0 * kSin60},  // face 5
-    {3, 2.0, 2.0 * kSin60},  // face 6
-    {3, 3.0, 2.0 * kSin60},  // face 7
-    {3, 4.0, 2.0 * kSin60},  // face 8
-    {3, 5.0, 2.0 * kSin60},  // face 9
-    // Lower row (faces 10-14): rot60=0, y = sin60
-    {0, 0.5, kSin60},        // face 10
-    {0, 1.5, kSin60},        // face 11
-    {0, 2.5, kSin60},        // face 12
-    {0, 3.5, kSin60},        // face 13
-    {0, 4.5, kSin60},        // face 14
-    // Lower row continued (faces 15-19): rot60=3, y = sin60
-    {3, 1.5, kSin60},        // face 15
-    {3, 2.5, kSin60},        // face 16
-    {3, 3.5, kSin60},        // face 17
-    {3, 4.5, kSin60},        // face 18
-    {3, 5.5, kSin60}         // face 19
-};
-
-// =============================================================================
 // Grid Bounds
 // =============================================================================
 // Mirrors R/constants.R's MIN_RESOLUTION/MAX_RESOLUTION. Resolutions outside
@@ -194,15 +118,6 @@ constexpr PlaneTriLayout kPlaneLayout[20] = {
 
 constexpr int kMinResolution = 0;
 constexpr int kMaxResolution = 30;
-
-// Valid range for a quad index (12 quads: 0 = north pole, 1-10 = equatorial
-// belt, 11 = south pole)
-constexpr int kMinQuad = 0;
-constexpr int kMaxQuad = 11;
-
-// Valid range for an icosahedron triangle face index
-constexpr int kMinFace = 0;
-constexpr int kMaxFace = 19;
 
 // =============================================================================
 // Numerical Precision Constants

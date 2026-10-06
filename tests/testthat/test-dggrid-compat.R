@@ -215,7 +215,7 @@ test_that("hexify face assignment matches dggridR tnum", {
     ref <- load_validation_data(3, res)
 
     for (i in seq_len(nrow(ref))) {
-      face <- cpp_which_face(ref$lon[i], ref$lat[i])
+      face <- cpp_which_face(numeric(0), ref$lon[i], ref$lat[i])
 
       expect_equal(face, ref$tnum[i],
                    info = sprintf("Res %d, row %d: face mismatch for lon=%.4f, lat=%.4f (got %d, expected %d)",

@@ -42,14 +42,17 @@ CRS on the sphere of \code{radius_km} on any other body.}
 \item{\code{radius_km}}{Numeric. Radius of the body the grid covers, in kilometers.
 \code{NA} reads as Earth's mean radius.}
 
-\item{\code{orientation}}{Numeric. Where an ISEA grid's icosahedron sits:
+\item{\code{orientation}}{Numeric. Where an ISEA grid's solid sits:
 \code{c(vert0_lon, vert0_lat, azimuth)} in degrees, vertex 0 and the
 azimuth of vertex 1 seen from it. Empty for H3 grids, whose orientation
 H3 fixes.}
 
-\item{\code{projection}}{Character. How an ISEA-family grid projects each
-icosahedron face onto its plane triangle: "isea" (Snyder's equal-area
+\item{\code{projection}}{Character. How an ISEA-family grid projects each face of
+its solid onto its plane triangle: "isea" (Snyder's equal-area
 projection) or "fuller" (Fuller's projection). Empty for H3 grids.}
+
+\item{\code{polyhedron}}{Character. The solid an ISEA-family grid is built on:
+"icosahedron" or "octahedron". Empty for H3 grids.}
 }}
 
 \seealso{

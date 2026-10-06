@@ -14,7 +14,8 @@ hex_grid(
   radius_km = EARTH_RADIUS_KM,
   orientation = "standard",
   projection = c("isea", "fuller"),
-  region = NULL
+  region = NULL,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 }
 \arguments{
@@ -67,6 +68,10 @@ H3 fixes its own projection, so H3 grids take only "isea".}
 to centre the grid
 on: \code{c(lon, lat)} in degrees, or an sf, sfc or bbox object, whose
 spherical centroid is used.}
+
+\item{polyhedron}{The solid an ISEA-family grid is built on:
+"icosahedron" (default) or "octahedron". See the Polyhedron section. H3
+grids are built on the icosahedron and take only the default.}
 }
 \value{
 A HexGridInfo object containing the grid specification.
@@ -80,8 +85,9 @@ downstream functions.
 Exactly one of \code{area_km2} or \code{resolution} must be provided.
 
 When \code{area_km2} is provided, the resolution is calculated automatically
-using the cell count formula: N = 10 * aperture^res + 2 (ISEA) or by
-matching the closest H3 resolution.
+using the cell count formula: N = 10 * aperture^res + 2 (ISEA on the
+icosahedron, 4 * aperture^res + 2 on the octahedron) or by matching the
+closest H3 resolution.
 
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
 H3 cells are NOT exactly equal-area: hexagon area varies by about a factor
@@ -116,27 +122,31 @@ interchangeable with Earth 'H3' data.
 \section{Orientation}{
 
 
-An ISEA grid is built on an icosahedron, and its orientation places that
-icosahedron on the sphere: vertex 0 at longitude \code{vert0_lon} and
-latitude \code{vert0_lat}, and vertex 1 at azimuth \code{azimuth} seen from
-vertex 0, all in degrees, as DGGRID's \code{dggs_vert0_lon},
-\code{dggs_vert0_lat} and \code{dggs_vert0_azimuth} do.
+An ISEA grid is built on a solid, an icosahedron unless \code{polyhedron}
+names another, and its orientation places that solid on the sphere: vertex
+0 at longitude \code{vert0_lon} and latitude \code{vert0_lat}, and vertex 1
+at azimuth \code{azimuth} seen from vertex 0, all in degrees, as DGGRID's
+\code{dggs_vert0_lon}, \code{dggs_vert0_lat} and \code{dggs_vert0_azimuth}
+do.
 
 \itemize{
-\item "standard" is the ISEA orientation: vertex 0 at 11.25E, 58.28N,
-azimuth 0, which places the twelve pentagons over the oceans.
+\item "standard" is the ISEA orientation on the icosahedron: vertex 0 at
+11.25E, 58.28N, azimuth 0, which places the twelve pentagons over the
+oceans. On the octahedron it puts vertices at both poles and at
+longitudes 0, 90E, 180 and 90W on the equator.
 \item "random" draws vertex 0 uniformly on the sphere and the azimuth
 uniformly in [0, 360), from R's random number generator, so
 \code{set.seed()} repeats it. Grids in several random orientations show
 how much a result depends on where the cell boundaries fall.
 \item "region" places the grid as DGGRID's \code{REGION_CENTER} does: the
-centre of \code{region} lands on the midpoint of an icosahedron edge,
-the middle of the two faces sharing it, far from the twelve vertices
-where the pentagons and the largest distortion sit.
-\item "face" places the centre of \code{region} on the centre of a face,
-about 20.9 degrees from the nearest face edge and 37.4 degrees from the
-nearest vertex, so a region up to about 40 degrees across lies on one
-face, away from the face edges where the projection bends.
+centre of \code{region} lands on the midpoint of an edge of the solid,
+the middle of the two faces sharing it, far from the vertices where the
+vertex cells and the largest distortion sit.
+\item "face" places the centre of \code{region} on the centre of a face.
+On the icosahedron that is about 20.9 degrees from the nearest face edge
+and 37.4 degrees from the nearest vertex, so a region up to about 40
+degrees across lies on one face, away from the face edges where the
+projection bends.
 }
 
 Rotating the icosahedron rotates the grid with it, so cell IDs, the cell
@@ -166,6 +176,27 @@ and corners sit on the sphere differs.
 
 \preformatted{
 hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
+}
+}
+
+\section{Polyhedron}{
+
+
+Snyder's equal-area projection is defined on every regular solid with
+triangular faces, and a hexagonal grid lies on the icosahedron and on the
+octahedron alike: each pair of faces sharing an edge forms a diamond of
+cells, and the cell at each vertex has one side per face meeting there.
+The icosahedron has twelve pentagons and the octahedron six squares; every
+other cell is a hexagon, and every cell of a resolution has the same area
+(the vertex cells two thirds or five sixths of it, by their sides). The
+octahedron's cells are more distorted than the icosahedron's, so it suits
+layouts that need its four-fold symmetry rather than analysis. Fuller's
+projection is defined on the icosahedron only. The tetrahedron carries the
+face projection (see \code{\link{hexify_forward}}) but no grid: its faces
+do not pair into diamonds.
+
+\preformatted{
+hex_grid(resolution = 5, aperture = 4, polyhedron = "octahedron")
 }
 }
 

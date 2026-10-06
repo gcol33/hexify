@@ -39,13 +39,15 @@ setClassUnion("HexCRS", c("integer", "character"))
 #' @slot grid_type Character. Grid system: "isea" (default) or "h3".
 #' @slot radius_km Numeric. Radius of the body the grid covers, in kilometers.
 #'   \code{NA} reads as Earth's mean radius.
-#' @slot orientation Numeric. Where an ISEA grid's icosahedron sits:
+#' @slot orientation Numeric. Where an ISEA grid's solid sits:
 #'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees, vertex 0 and the
 #'   azimuth of vertex 1 seen from it. Empty for H3 grids, whose orientation
 #'   H3 fixes.
-#' @slot projection Character. How an ISEA-family grid projects each
-#'   icosahedron face onto its plane triangle: "isea" (Snyder's equal-area
+#' @slot projection Character. How an ISEA-family grid projects each face of
+#'   its solid onto its plane triangle: "isea" (Snyder's equal-area
 #'   projection) or "fuller" (Fuller's projection). Empty for H3 grids.
+#' @slot polyhedron Character. The solid an ISEA-family grid is built on:
+#'   "icosahedron" or "octahedron". Empty for H3 grids.
 #'
 #' @details
 #' Create HexGridInfo objects using the \code{\link{hex_grid}} constructor function.
@@ -73,7 +75,8 @@ setClass(
     grid_type = "character",
     radius_km = "numeric",
     orientation = "numeric",
-    projection = "character"
+    projection = "character",
+    polyhedron = "character"
   ),
   prototype = list(
     aperture = "3",
@@ -84,7 +87,8 @@ setClass(
     grid_type = "isea",
     radius_km = NA_real_,
     orientation = ISEA_ORIENTATION,
-    projection = "isea"
+    projection = "isea",
+    polyhedron = "icosahedron"
   )
 )
 
@@ -163,6 +167,9 @@ setValidity("HexGridInfo", function(object) {
     if (length(object@projection) != 0L) {
       errors <- c(errors, "H3 grids carry no face projection; H3 fixes its own")
     }
+    if (length(object@polyhedron) != 0L) {
+      errors <- c(errors, "H3 grids carry no polyhedron; H3 is built on the icosahedron")
+    }
   } else {
     o <- object@orientation
     if (length(o) != 3L || !all(is.finite(o)) || o[2] < -90 || o[2] > 90) {
@@ -172,6 +179,12 @@ setValidity("HexGridInfo", function(object) {
     if (length(object@projection) != 1L ||
         !object@projection %in% names(FACE_PROJECTIONS)) {
       errors <- c(errors, "projection must be \"isea\" or \"fuller\"")
+    }
+    poly <- grid_polyhedron(object)
+    if (length(poly) != 1L || !poly %in% GRID_POLYHEDRA) {
+      errors <- c(errors, "polyhedron must be \"icosahedron\" or \"octahedron\"")
+    } else if (poly != "icosahedron" && identical(object@projection, "fuller")) {
+      errors <- c(errors, "Fuller's projection is defined on the icosahedron only")
     }
     # ISEA validation
     ap_ok <- tryCatch({
@@ -324,7 +337,7 @@ grid_n_cells <- function(grid) {
   if (gt == "h3") {
     h3_n_cells(grid@resolution)
   } else {
-    aperture_n_cells(grid@aperture, grid@resolution)
+    aperture_n_cells(grid@aperture, grid@resolution, grid_polyhedron(grid))
   }
 }
 
@@ -569,7 +582,8 @@ setMethod("show", "HexGridInfo", function(object) {
 #'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
 #'   \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
 #'   empty for H3), \code{projection} (\code{"isea"} or \code{"fuller"},
-#'   \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
+#'   \code{NA} for H3), \code{polyhedron} (\code{"icosahedron"} or
+#'   \code{"octahedron"}, \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
 #'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
 #'   \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
 #'   and a \code{preview} of the first rows. The print methods return their
@@ -601,6 +615,7 @@ setMethod("summary", "HexGridInfo", function(object, ...) {
       earth = is_earth_grid(object),
       orientation = grid_orientation(object),
       projection = grid_projection(object),
+      polyhedron = grid_polyhedron(object),
       n_cells = grid_n_cells(object)
     ),
     class = "hexify_grid_summary"
@@ -625,6 +640,9 @@ print.hexify_grid_summary <- function(x, ...) {
   } else {
     cat("HexGridInfo Specification\n")
     cat("-------------------------\n")
+    if (!is.null(x$polyhedron) && !identical(x$polyhedron, "icosahedron")) {
+      cat(sprintf("Polyhedron:  %s\n", x$polyhedron))
+    }
     if (identical(x$projection, "fuller")) {
       cat("Projection:  Fuller (cells not equal-area)\n")
     }
@@ -646,7 +664,8 @@ print.hexify_grid_summary <- function(x, ...) {
     cat(sprintf("Radius:      %.2f km\n", x$radius_km))
   }
 
-  if (length(x$orientation) == 3L && !is_standard_orientation(x$orientation)) {
+  poly <- if (is.null(x$polyhedron) || is.na(x$polyhedron)) "icosahedron" else x$polyhedron
+  if (length(x$orientation) == 3L && !is_standard_orientation(x$orientation, poly)) {
     cat(sprintf("Orientation: vertex 0 at %.6f, %.6f; azimuth %.6f\n",
                 x$orientation[1], x$orientation[2], x$orientation[3]))
   }
@@ -784,7 +803,8 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
     grid_type = x@grid_type,
     radius_km = grid_radius_km(x),
     orientation = grid_orientation(x),
-    projection = grid_projection(x)
+    projection = grid_projection(x),
+    polyhedron = grid_polyhedron(x)
   )
 })
 
@@ -918,7 +938,8 @@ hexify_grid_to_HexGridInfo <- function(x) {
       crs = resolve_crs(x$crs, grid_radius_km(x)),
       radius_km = grid_radius_km(x),
       orientation = grid_orientation(x),
-      projection = grid_projection(x))
+      projection = grid_projection(x),
+      polyhedron = grid_polyhedron(x))
 }
 
 #' Convert HexGridInfo to legacy hexify_grid
@@ -948,6 +969,7 @@ HexGridInfo_to_hexify_grid <- function(x) {
     aperture = aperture_num,
     topology = "HEXAGON",
     projection = toupper(grid_projection(x)),
+    polyhedron = grid_polyhedron(x),
     metric = TRUE,
     radius_km = grid_radius_km(x),
     index_type = legacy_index,

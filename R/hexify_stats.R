@@ -44,7 +44,7 @@ dgearthstat <- function(dggs) {
       return(h3_level_stats(dggs@resolution, grid_radius_km(dggs)))
     }
     return(grid_level_stats(body_surface_km2(grid_radius_km(dggs)),
-                            aperture_n_cells(dggs@aperture, dggs@resolution),
+                            grid_n_cells(dggs),
                             dggs@resolution, aperture_to_int(dggs@aperture)))
   }
 
@@ -54,7 +54,7 @@ dgearthstat <- function(dggs) {
 
   resolution <- get_grid_resolution(dggs, require = TRUE)
   grid_level_stats(body_surface_km2(grid_radius_km(dggs)),
-                   aperture_n_cells(dggs$aperture, resolution),
+                   aperture_n_cells(dggs$aperture, resolution, grid_polyhedron(dggs)),
                    resolution, dggs$aperture)
 }
 

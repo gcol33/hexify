@@ -10,7 +10,8 @@ hexify_inverse(
   face,
   tol = NULL,
   max_iters = NULL,
-  projection = c("isea", "fuller")
+  projection = c("isea", "fuller"),
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 }
 \arguments{
@@ -18,14 +19,20 @@ hexify_inverse(
 
 \item{y}{Y coordinate on face plane}
 
-\item{face}{Face index (0-19)}
+\item{face}{Face index (0-19 on the icosahedron)}
 
 \item{tol}{Convergence tolerance (NULL for default)}
 
 \item{max_iters}{Maximum iterations (NULL for default)}
 
 \item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
-projection) or \code{"fuller"} (Fuller's projection)}
+projection) or \code{"fuller"} (Fuller's projection, defined on the
+icosahedron only)}
+
+\item{polyhedron}{The solid: "icosahedron" (default), "octahedron" or
+"tetrahedron", in its default orientation. Snyder (1992) gives his
+equal-area projection for each; its angular distortion grows with the
+faces' size.}
 }
 \value{
 Named numeric vector: c(lon_deg, lat_deg)

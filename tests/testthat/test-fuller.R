@@ -29,7 +29,7 @@ test_that("forward and inverse Fuller projections invert each other", {
 test_that("Fuller keeps lengths along face edges", {
   # A point a fraction s along a spherical face edge lands the same fraction
   # along the plane triangle's edge.
-  fc <- cpp_face_centers()
+  fc <- cpp_face_centers(numeric(0))
   for (s in c(0.1, 0.37, 0.5, 0.81)) {
     f0 <- hexify_forward(fc$lon[1] * 180 / pi, fc$lat[1] * 180 / pi, projection = "fuller")
     v1 <- hexify_inverse(0, 0, 0, projection = "fuller")

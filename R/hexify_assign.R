@@ -33,10 +33,11 @@ hexify_assign <- function(lon, lat, effective_res, make_polygons = FALSE) {
 
   cell_id <- cpp_lonlat_to_cell(numeric(0), lon, lat, res, 3L, integer(0))
   center <- cpp_cell_to_lonlat(numeric(0), cell_id, res, 3L, integer(0))
-  quad_ij <- cpp_cell_to_quad_ij(cell_id, res, 3L, integer(0))
+  quad_ij <- cpp_cell_to_quad_ij(numeric(0), cell_id, res, 3L, integer(0))
 
   df <- data.frame(
-    id = cpp_cell_to_index(quad_ij$quad, quad_ij$i, quad_ij$j, res, 3L, "z3"),
+    id = cpp_cell_to_index(numeric(0), quad_ij$quad, quad_ij$i, quad_ij$j, res, 3L,
+                           "z3"),
     face = quad_ij$quad,
     effective_res = res,
     center_lon = center$lon_deg,

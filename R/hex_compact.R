@@ -5,13 +5,13 @@
 #' @noRd
 isea_index_cells <- function(indices, g) {
   isea_index_to_cells(indices, aperture_to_int(g@aperture),
-                      index_type_for_aperture(g@aperture))
+                      index_type_for_aperture(g@aperture), icosa_arg(g))
 }
 
 #' Stop unless every index names a cell of the grid
 #'
 #' An index string is arithmetic, so one can be written that names nothing --
-#' by appending a digit to a cell at an icosahedron vertex, for instance. Saying
+#' by appending a digit to a cell at a vertex of the solid, for instance. Saying
 #' so here names the string, rather than letting a cell-ID range check further
 #' down report a number the caller never wrote.
 #'
@@ -30,7 +30,8 @@ check_isea_indices <- function(indices, g, what) {
   }
 
   cells <- isea_index_cells(indices, g)
-  limit <- vapply(resolutions, function(r) aperture_n_cells(g@aperture, r),
+  limit <- vapply(resolutions,
+                  function(r) aperture_n_cells(g@aperture, r, grid_polyhedron(g)),
                   numeric(1))
   named_nothing <- is.na(cells) | cells < 1 | cells > limit
 
@@ -148,10 +149,10 @@ hex_compact <- function(cell_ids, grid) {
 
     # Every cell in a group has this parent, so a group holding as many
     # distinct cells as the parent has children holds all of them. That is the
-    # aperture, fewer at the twelve icosahedron vertices, which are read rather
+    # aperture, fewer at the vertex cells of the solid, which are read rather
     # than assumed.
     expected <- rep(ap, length(candidates))
-    vertex <- is_pentagon(candidates, parent_grid)
+    vertex <- isea_cell_sides(candidates, parent_grid) != 6L
     if (any(vertex)) {
       expected[vertex] <- lengths(get_children(candidates[vertex], parent_grid))
     }

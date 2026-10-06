@@ -18,6 +18,7 @@
 // Copyright (c) 2024-2025 hexify authors. MIT License.
 
 #include "index_z7.h"
+#include "polyhedron.h"
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
@@ -27,24 +28,6 @@
 
 namespace hexify {
 namespace z7 {
-
-// Base cell adjacency derived from icosahedral topology: the base cell each
-// quad shares an edge with, in the three directions a hierarchy walk can leave
-// the quad's rhombus by.
-static const int adjacentBaseCellTable[12][4] = {
-    { 0, 0, 0, 0 },
-    { 1, 6, 2, 0 },
-    { 2, 7, 3, 0 },
-    { 3, 8, 4, 0 },
-    { 4, 9, 5, 0 },
-    { 5, 10, 1, 0 },
-    { 6, 11, 7, 2 },
-    { 7, 11, 8, 3 },
-    { 8, 11, 9, 4 },
-    { 9, 11, 10, 5 },
-    { 10, 11, 6, 1 },
-    { 11, 11, 0, 0 }
-};
 
 // ============================================================================
 // Bijective aperture-7 hierarchical index (hexify-native)
@@ -68,8 +51,9 @@ static const int adjacentBaseCellTable[12][4] = {
 // quad boundary cuts through the parents of the cells along it; those arrive at
 // one of the six neighbours of the origin instead, which the walk alone does
 // not record. The arrival point is a unit digit, so the index carries it in its
-// leading field as quad + 12 * digit: two digits still, and the plain quad
-// DGGRID writes whenever the cell does not spill.
+// leading field as quad + n * digit, n the solid's number of quads (12 on the
+// icosahedron): two digits still, and the plain quad DGGRID writes whenever
+// the cell does not spill.
 static IVec3D z7_seed_coord(int digit) {
     IVec3D ijk(0, 0, 0);
     ijk.neighbor((IVec3D::Direction) digit);
@@ -80,17 +64,19 @@ static IVec3D z7_seed_coord(int digit) {
 //
 // The seed is the lattice point the hierarchy walk arrives at, at resolution 0.
 // The quad's own origin means the whole ancestry lies inside the quad; any
-// other arrival has crossed the quad's rhombic boundary into one of the three
-// base cells it shares an edge with, the one DGGRID's Z7 encoder reassigns
-// such a cell to through the same table.
+// other arrival has crossed the quad's rhombic boundary towards one of its
+// other three corners, whose vertex is the base cell DGGRID's Z7 encoder
+// reassigns such a cell to. A vertex quad has no other corners.
 static int seed_base_cell(int quadNum, int seed) {
+    const SolidTopology& t = topo();
+    if (t.is_pole(quadNum)) return quadNum;
     const IVec3D arrival = z7_seed_coord(seed);
     if (arrival.i() == 1) {
-        return (arrival.j() == 0) ? adjacentBaseCellTable[quadNum][1]
-                                  : adjacentBaseCellTable[quadNum][2];
+        return (arrival.j() == 0) ? t.corner[quadNum][kCornerI]
+                                  : t.corner[quadNum][kCornerFar];
     }
     if (arrival.j() == 1) {
-        return adjacentBaseCellTable[quadNum][3];
+        return t.corner[quadNum][kCornerJ];
     }
     return quadNum;
 }
@@ -147,7 +133,7 @@ std::string encode_bijective(int quadNum, long long i, long long j, int resoluti
     }
 
     std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(2) << (quadNum + 12 * seed);
+    oss << std::setfill('0') << std::setw(2) << (quadNum + topo().n_quads() * seed);
     std::string out = oss.str();
     for (int r = 1; r <= resolution; r++) {
         out += std::to_string((int) digits[r]);
@@ -161,8 +147,9 @@ void decode_bijective(const std::string& index, int resolution,
         throw std::runtime_error("Z7 index too short");
     }
     const int lead = std::stoi(index.substr(0, 2));
-    quadNum = lead % 12;
-    const int seed = lead / 12;
+    const int n_quads = topo().n_quads();
+    quadNum = lead % n_quads;
+    const int seed = lead / n_quads;
     if (lead < 0 || seed >= IVec3D::NUM_DIGITS) {
         throw std::runtime_error("Invalid base cell number");
     }
@@ -170,7 +157,7 @@ void decode_bijective(const std::string& index, int resolution,
     std::string z7str = index.substr(2);
     int res = (int) z7str.length();
     if (res == 0) {
-        // Resolution 0 is one cell per icosahedron vertex, so the seed is all
+        // Resolution 0 is one cell per vertex of the solid, so the seed is all
         // that says which of the base cells meeting at the quad's corner the
         // index names. encode_bijective() writes the quad's own, and stripping
         // a digit off a deeper index leaves whichever the ancestry came from.

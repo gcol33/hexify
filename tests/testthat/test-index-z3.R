@@ -27,7 +27,7 @@ test_that("Z3: lookup table matches DGGRID exactly", {
   # Test all 9 lookup table entries at resolution 2 (Class I)
   for (i in 0:2) {
     for (j in 0:2) {
-      index <- cpp_cell_to_index(0, i, j, 2, 3, "z3")
+      index <- cpp_cell_to_index(numeric(0), 0, i, j, 2, 3, "z3")
       expected <- paste0("00", z3_table[i+1, j+1])
       
       expect_equal(index, expected,
@@ -38,17 +38,17 @@ test_that("Z3: lookup table matches DGGRID exactly", {
 
 test_that("Z3: specific lookup table entries", {
   # Test specific entries explicitly
-  expect_equal(cpp_cell_to_index(0, 0, 0, 2, 3, "z3"), "0000")  # [0][0]→"00"
-  expect_equal(cpp_cell_to_index(0, 0, 1, 2, 3, "z3"), "0022")  # [0][1]→"22"
-  expect_equal(cpp_cell_to_index(0, 0, 2, 2, 3, "z3"), "0021")  # [0][2]→"21"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 0, 0, 2, 3, "z3"), "0000")  # [0][0]→"00"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 0, 1, 2, 3, "z3"), "0022")  # [0][1]→"22"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 0, 2, 2, 3, "z3"), "0021")  # [0][2]→"21"
   
-  expect_equal(cpp_cell_to_index(0, 1, 0, 2, 3, "z3"), "0001")  # [1][0]→"01"
-  expect_equal(cpp_cell_to_index(0, 1, 1, 2, 3, "z3"), "0002")  # [1][1]→"02"
-  expect_equal(cpp_cell_to_index(0, 1, 2, 2, 3, "z3"), "0020")  # [1][2]→"20"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 1, 0, 2, 3, "z3"), "0001")  # [1][0]→"01"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 1, 1, 2, 3, "z3"), "0002")  # [1][1]→"02"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 1, 2, 2, 3, "z3"), "0020")  # [1][2]→"20"
   
-  expect_equal(cpp_cell_to_index(0, 2, 0, 2, 3, "z3"), "0012")  # [2][0]→"12"
-  expect_equal(cpp_cell_to_index(0, 2, 1, 2, 3, "z3"), "0010")  # [2][1]→"10"
-  expect_equal(cpp_cell_to_index(0, 2, 2, 2, 3, "z3"), "0011")  # [2][2]→"11"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 2, 0, 2, 3, "z3"), "0012")  # [2][0]→"12"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 2, 1, 2, 3, "z3"), "0010")  # [2][1]→"10"
+  expect_equal(cpp_cell_to_index(numeric(0), 0, 2, 2, 2, 3, "z3"), "0011")  # [2][2]→"11"
 })
 
 # =============================================================================
@@ -69,7 +69,7 @@ test_that("Z3: decode all 9 lookup table entries", {
   )
   
   for (tc in z3_codes) {
-    result <- cpp_index_to_cell(tc$code, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), tc$code, 3, "z3")
     
     expect_equal(result$face, 0)
     expect_equal(result$i, tc$i,
@@ -97,7 +97,7 @@ test_that("Z3: decode reverse lookup table correctness", {
   
   for (tc in reverse_cases) {
     index <- paste0("00", tc$z3)
-    result <- cpp_index_to_cell(index, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     
     expect_equal(result$i, tc$i,
                  label = sprintf("z3='%s'", tc$z3))
@@ -122,7 +122,7 @@ test_that("Z3: Class I string length (even resolutions)", {
   )
   
   for (tc in class_i_cases) {
-    index <- cpp_cell_to_index(0, 0, 0, tc$res, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), 0, 0, 0, tc$res, 3, "z3")
     expect_equal(nchar(index), tc$length,
                  label = sprintf("Class I res=%d", tc$res))
   }
@@ -140,7 +140,7 @@ test_that("Z3: Class II string length (odd resolutions)", {
   )
   
   for (tc in class_ii_cases) {
-    index <- cpp_cell_to_index(0, 0, 0, tc$res, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), 0, 0, 0, tc$res, 3, "z3")
     expect_equal(nchar(index), tc$length,
                  label = sprintf("Class II res=%d", tc$res))
   }
@@ -151,16 +151,16 @@ test_that("Z3: Class II trimming behavior", {
   # Test by checking that indices differ in expected ways
   
   # Resolution 2 (Class I) vs 3 (Class II)
-  idx_r2 <- cpp_cell_to_index(0, 1, 2, 2, 3, "z3")  # Valid: i%3=1, j%3=2
-  idx_r3 <- cpp_cell_to_index(0, 1, 2, 3, 3, "z3")  # Valid: i%3=1, j%3=2
+  idx_r2 <- cpp_cell_to_index(numeric(0), 0, 1, 2, 2, 3, "z3")  # Valid: i%3=1, j%3=2
+  idx_r3 <- cpp_cell_to_index(numeric(0), 0, 1, 2, 3, 3, "z3")  # Valid: i%3=1, j%3=2
   
   # Class I should be 4 chars, Class II should be 5 chars
   expect_equal(nchar(idx_r2), 4)
   expect_equal(nchar(idx_r3), 5)
   
   # Resolution 4 (Class I) vs 5 (Class II)
-  idx_r4 <- cpp_cell_to_index(0, 2, 1, 4, 3, "z3")  # Valid: i%3=2, j%3=1
-  idx_r5 <- cpp_cell_to_index(0, 2, 1, 5, 3, "z3")  # Valid: i%3=2, j%3=1
+  idx_r4 <- cpp_cell_to_index(numeric(0), 0, 2, 1, 4, 3, "z3")  # Valid: i%3=2, j%3=1
+  idx_r5 <- cpp_cell_to_index(numeric(0), 0, 2, 1, 5, 3, "z3")  # Valid: i%3=2, j%3=1
   
   expect_equal(nchar(idx_r4), 6)
   expect_equal(nchar(idx_r5), 7)
@@ -184,8 +184,8 @@ test_that("Z3: Class II j-digit inference", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, 3, "z3")
-    result <- cpp_index_to_cell(index, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     
     expect_equal(result$i, tc$i,
                  label = sprintf("infer i[%d,%d,r%d]", tc$i, tc$j, tc$res))
@@ -204,11 +204,11 @@ test_that("Z3: multi-digit encoding at resolution 4", {
   # i=3, j=5 in radix-3: i="10", j="12"
   # Z3 codes: [1][1]→"02", [0][2]→"21"
   # Expected: "00" + "02" + "21" = "000221"
-  index <- cpp_cell_to_index(0, 3, 5, 4, 3, "z3")
+  index <- cpp_cell_to_index(numeric(0), 0, 3, 5, 4, 3, "z3")
   expect_equal(index, "000221")
   
   # Roundtrip
-  result <- cpp_index_to_cell(index, 3, "z3")
+  result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
   expect_equal(result$i, 3)
   expect_equal(result$j, 5)
   expect_equal(result$resolution, 4)
@@ -220,11 +220,11 @@ test_that("Z3: multi-digit encoding at resolution 6", {
   # i=13, j=17 in radix-3: i="111", j="122"
   # Z3 codes: [1][1]→"02", [1][2]→"20", [1][2]→"20"
   # Expected: "00" + "02" + "20" + "20" = "00022020"
-  index <- cpp_cell_to_index(0, 13, 17, 6, 3, "z3")
+  index <- cpp_cell_to_index(numeric(0), 0, 13, 17, 6, 3, "z3")
   expect_equal(index, "00022020")
   
   # Roundtrip
-  result <- cpp_index_to_cell(index, 3, "z3")
+  result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
   expect_equal(result$i, 13)
   expect_equal(result$j, 17)
   expect_equal(result$resolution, 6)
@@ -269,8 +269,8 @@ test_that("Z3: basic roundtrip for small coordinates", {
     tc <- test_cases[idx, ]
     
     # Roundtrip
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 3, "z3")
-    result <- cpp_index_to_cell(index, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     
     expect_equal(result$face, tc$face, label = sprintf("idx=%d", idx))
     expect_equal(result$i, tc$i, label = sprintf("idx=%d", idx))
@@ -295,8 +295,8 @@ test_that("Z3: roundtrip for higher resolutions", {
   )
   
   for (tc in test_cases) {
-    index <- cpp_cell_to_index(tc$face, tc$i, tc$j, tc$res, 3, "z3")
-    result <- cpp_index_to_cell(index, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), tc$face, tc$i, tc$j, tc$res, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     
     expect_equal(result$face, tc$face)
     expect_equal(result$i, tc$i)
@@ -312,11 +312,11 @@ test_that("Z3: roundtrip for higher resolutions", {
 test_that("Z3: face number encoding", {
   # All faces should encode with leading zero if needed
   for (face in 0:19) {
-    index <- cpp_cell_to_index(face, 0, 0, 1, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), face, 0, 0, 1, 3, "z3")
     expect_equal(substr(index, 1, 2), sprintf("%02d", face))
     
     # Decode should work
-    result <- cpp_index_to_cell(index, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     expect_equal(result$face, face)
   }
 })
@@ -325,13 +325,13 @@ test_that("Z3: resolution 0 (face only)", {
   # At resolution 0, only faces 0-11 are valid (the 12 pentagons)
   # Faces 12-19 only appear at resolution 1+
   for (face in c(0, 5, 10, 11)) {  # Changed from c(0, 5, 10, 15, 19)
-    index <- cpp_cell_to_index(face, 0, 0, 0, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), face, 0, 0, 0, 3, "z3")
     
     # Should be exactly 2 chars
     expect_equal(nchar(index), 2)
     
     # Decode
-    result <- cpp_index_to_cell(index, 3, "z3")
+    result <- cpp_index_to_cell(numeric(0), index, 3, "z3")
     expect_equal(result$face, face)
     expect_equal(result$resolution, 0)
     expect_equal(result$i, 0)
@@ -346,7 +346,7 @@ test_that("Z3: resolution 0 (face only)", {
 test_that("Z3: parent/child relationships", {
   # Create a cell at resolution 5 (Class II) with valid coordinates
   # i=10, j=11: i%3=1, j%3=2 ✓
-  child <- cpp_cell_to_index(0, 10, 11, 5, 3, "z3")
+  child <- cpp_cell_to_index(numeric(0), 0, 10, 11, 5, 3, "z3")
   
   # Get parent
   parent <- cpp_get_parent_index(child, 3, "z3")
@@ -355,7 +355,7 @@ test_that("Z3: parent/child relationships", {
   expect_true(substr(child, 1, nchar(parent)) == parent)
   
   # Get children
-  children <- cpp_get_children_indices(parent, 3, "z3")[[1]]
+  children <- cpp_get_children_indices(numeric(0), parent, 3, "z3")[[1]]
   
   # Original child should be in list
   expect_true(child %in% children)
@@ -366,7 +366,7 @@ test_that("Z3: parent/child relationships", {
 
 test_that("Z3: multi-level parent traversal", {
   # Start at resolution 6 with valid coordinates
-  idx_r6 <- cpp_cell_to_index(0, 20, 22, 6, 3, "z3")  # i%3=2, j%3=1 ✓
+  idx_r6 <- cpp_cell_to_index(numeric(0), 0, 20, 22, 6, 3, "z3")  # i%3=2, j%3=1 ✓
   
   # Get parent at each level
   idx_r5 <- cpp_get_parent_index(idx_r6, 3, "z3")
@@ -389,9 +389,9 @@ test_that("Z3: multi-level parent traversal", {
 # =============================================================================
 
 test_that("Z3: index comparison", {
-  idx1 <- cpp_cell_to_index(0, 0, 0, 2, 3, "z3")
-  idx2 <- cpp_cell_to_index(0, 1, 0, 2, 3, "z3")
-  idx3 <- cpp_cell_to_index(1, 0, 0, 2, 3, "z3")
+  idx1 <- cpp_cell_to_index(numeric(0), 0, 0, 0, 2, 3, "z3")
+  idx2 <- cpp_cell_to_index(numeric(0), 0, 1, 0, 2, 3, "z3")
+  idx3 <- cpp_cell_to_index(numeric(0), 1, 0, 0, 2, 3, "z3")
   
   expect_equal(cpp_compare_indices(idx1, idx1), 0)
   expect_true(cpp_compare_indices(idx1, idx2) != 0)
@@ -406,7 +406,7 @@ test_that("Z3: resolution extraction", {
   class_i_resolutions <- c(0, 2, 4, 6)
   
   for (res in class_i_resolutions) {
-    index <- cpp_cell_to_index(0, 0, 0, res, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), 0, 0, 0, res, 3, "z3")
     extracted <- cpp_get_index_resolution(index, 3, "z3")
     expect_equal(extracted, res,
                  label = sprintf("Class I res=%d", res))
@@ -416,7 +416,7 @@ test_that("Z3: resolution extraction", {
   class_ii_resolutions <- c(1, 3, 5, 7)
   
   for (res in class_ii_resolutions) {
-    index <- cpp_cell_to_index(0, 0, 0, res, 3, "z3")
+    index <- cpp_cell_to_index(numeric(0), 0, 0, 0, res, 3, "z3")
     extracted <- cpp_get_index_resolution(index, 3, "z3")
     expect_equal(extracted, res,
                  label = sprintf("Class II res=%d", res))
@@ -437,16 +437,16 @@ test_that("Z3: produces different results than Z-Order", {
   )
   
   for (tc in test_cases) {
-    idx_z3 <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, 3, "z3")
-    idx_zo <- cpp_cell_to_index(0, tc$i, tc$j, tc$res, 3, "zorder")
+    idx_z3 <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, 3, "z3")
+    idx_zo <- cpp_cell_to_index(numeric(0), 0, tc$i, tc$j, tc$res, 3, "zorder")
     
     # Should be different
     expect_false(idx_z3 == idx_zo,
                  label = sprintf("i=%d,j=%d,res=%d", tc$i, tc$j, tc$res))
     
     # But both should decode correctly
-    result_z3 <- cpp_index_to_cell(idx_z3, 3, "z3")
-    result_zo <- cpp_index_to_cell(idx_zo, 3, "zorder")
+    result_z3 <- cpp_index_to_cell(numeric(0), idx_z3, 3, "z3")
+    result_zo <- cpp_index_to_cell(numeric(0), idx_zo, 3, "zorder")
     
     expect_equal(result_z3$i, tc$i,
                  label = sprintf("Z3 i for (%d,%d)", tc$i, tc$j))
@@ -464,9 +464,9 @@ test_that("Z3: provides better spatial locality than Z-Order", {
   # We test that neighboring cells have similar indices
   
   # Get indices for a small neighborhood
-  idx_00 <- cpp_cell_to_index(0, 0, 0, 2, 3, "z3")
-  idx_01 <- cpp_cell_to_index(0, 0, 1, 2, 3, "z3")
-  idx_10 <- cpp_cell_to_index(0, 1, 0, 2, 3, "z3")
+  idx_00 <- cpp_cell_to_index(numeric(0), 0, 0, 0, 2, 3, "z3")
+  idx_01 <- cpp_cell_to_index(numeric(0), 0, 0, 1, 2, 3, "z3")
+  idx_10 <- cpp_cell_to_index(numeric(0), 0, 1, 0, 2, 3, "z3")
   
   # All should start with same face
   expect_equal(substr(idx_00, 1, 2), "00")

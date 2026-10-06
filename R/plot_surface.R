@@ -1,5 +1,5 @@
 # plot_surface.R
-# A grid drawn on the sphere and on the icosahedron it is built on
+# A grid drawn on the sphere and on the solid it is built on
 
 #' Globe center presets
 #'
@@ -42,12 +42,12 @@ globe_centers <- list(
   antarctic     = c(lon = 0,    lat = -90)
 )
 
-#' Plot a grid on the sphere, on its icosahedron, or on the unfolded net
+#' Plot a grid on the sphere, on its solid, or on the unfolded net
 #'
 #' Draws the cells of a grid in 3D, seen from above a chosen point: on the
-#' sphere, or on the flat faces of the icosahedron the grid is built on. All
+#' sphere, or on the flat faces of the solid the grid is built on. All
 #' surfaces take their cell boundaries from the same points, so a cell on the
-#' icosahedron is the cell on the sphere folded flat.
+#' solid is the cell on the sphere folded flat.
 #'
 #' \code{surface = "net"} lays the 20 faces out flat in the PLANE layout of
 #' DGGRID (\code{\link{hexify_cell_to_plane}} gives cell centres in the same
@@ -69,8 +69,10 @@ globe_centers <- list(
 #'
 #' @param x A HexGridInfo object from \code{\link{hex_grid}}
 #' @param y Ignored
-#' @param surface \code{"sphere"}, \code{"icosahedron"} or \code{"net"}.
-#'   The icosahedron and the net need an ISEA grid; an H3 grid is drawn on the
+#' @param surface \code{"sphere"}, \code{"solid"} or \code{"net"}.
+#'   \code{"solid"} draws the flat faces of the grid's polyhedron (the
+#'   icosahedron, or the octahedron of a grid built on it). The solid and the
+#'   net need an ISEA grid; an H3 grid is drawn on the
 #'   sphere.
 #' @param center Point the view looks down on: a preset name from
 #'   \code{\link{globe_centers}} or \code{c(lon, lat)}.
@@ -96,7 +98,7 @@ globe_centers <- list(
 #' @param land_lwd Line width of country outlines.
 #' @param grid_border Colour of cell boundaries.
 #' @param grid_lwd Line width of cell boundaries.
-#' @param face_edges Draw the edges of the icosahedron's faces. \code{NULL}
+#' @param face_edges Draw the edges of the solid's faces. \code{NULL}
 #'   draws them for an ISEA grid; H3 is built on an icosahedron of its own,
 #'   so its grid takes none.
 #' @param edge_col Colour of face edges.
@@ -114,15 +116,15 @@ globe_centers <- list(
 #' @examples
 #' grid <- hex_grid(resolution = 3, aperture = 3)
 #' plot(grid)
-#' plot(grid, surface = "icosahedron")
-#' plot(grid, surface = "icosahedron", land = FALSE, center = "pacific")
+#' plot(grid, surface = "solid")
+#' plot(grid, surface = "solid", land = FALSE, center = "pacific")
 #' plot(grid, projection = "perspective", distance = 2, center = "europe")
-#' plot(grid, surface = "icosahedron", projection = "perspective",
+#' plot(grid, surface = "solid", projection = "perspective",
 #'      distance = 2.5, tilt = 25, rotation = 30)
 #' plot(grid, surface = "net")
 setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
   function(x, y,
-           surface = c("sphere", "icosahedron", "net"),
+           surface = c("sphere", "solid", "net"),
            center = c(lon = 15, lat = 32),
            projection = c("orthographic", "perspective"),
            distance = NULL,
@@ -152,7 +154,7 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
                              !is.null(distance) || !is.null(fov) ||
                              tilt != 0 || rotation != 0)) {
       stop("the net is drawn flat; center, projection, distance, tilt, ",
-           "rotation and fov apply to the sphere and the icosahedron",
+           "rotation and fov apply to the sphere and the solid",
            call. = FALSE)
     }
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
@@ -184,7 +186,7 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     graphics::clip(xlim[1], xlim[2], ylim[1], ylim[2])
     switch(surface,
       sphere = draw_sphere(paths, land, view, style, icosa),
-      icosahedron = draw_icosahedron(paths, land, view, style, icosa),
+      solid = draw_solid(paths, land, view, style, icosa),
       net = draw_net(paths, land, tris, style, icosa)
     )
     if (!is.null(main)) graphics::title(main = main)
@@ -234,7 +236,7 @@ resolve_surface <- function(surface, face_edges, g) {
   }
   if (is.null(face_edges)) face_edges <- !is_h3_grid(g)
   if (face_edges && is_h3_grid(g)) {
-    stop("face_edges = TRUE draws the ISEA icosahedron, which an H3 grid is ",
+    stop("face_edges = TRUE draws the ISEA solid, which an H3 grid is ",
          "not built on", call. = FALSE)
   }
   face_edges
@@ -309,8 +311,8 @@ view_frame <- function(view, fov, outline = horizon_ring(view, 721L)) {
 
 #' Points that bound the drawing of a surface
 #'
-#' The sphere's rim, or the vertices of the icosahedron faces that face the
-#' camera: the icosahedron's outline runs along edges between a face that
+#' The sphere's rim, or the vertices of the solid's faces that face the
+#' camera: the solid's outline runs along edges between a face that
 #' faces the camera and one that does not, so its corners are among these.
 #' @noRd
 surface_outline <- function(surface, view, icosa) {
@@ -492,11 +494,11 @@ shade_col <- function(col, s) {
 # GEOMETRY
 # =============================================================================
 
-#' The icosahedron of the ISEA grids
+#' The solid of an ISEA grid
 #'
 #' Vertices on the unit sphere, the vertex indices of each face, each face's
-#' outward normal, and its 30 edges as vertex pairs with the two faces that
-#' share them.
+#' outward normal, and its edges (30 on the icosahedron) as vertex pairs with
+#' the two faces that share them.
 #' @noRd
 icosa_solid <- function(icosa) {
   s <- cpp_icosa_solid(icosa)
@@ -518,7 +520,7 @@ icosa_solid <- function(icosa) {
   list(vertices = V, faces = Fv, normals = N, edges = edges)
 }
 
-#' Cell boundaries of a grid on the sphere and on the icosahedron
+#' Cell boundaries of a grid on the sphere and on its solid
 #'
 #' One closed path per cell, as a matrix with columns cell, face, solid_x/y/z,
 #' sphere_x/y/z and plane_x/y. An ISEA grid reads them from its faces; an H3
@@ -665,9 +667,9 @@ draw_sphere <- function(paths, land, view, style, icosa) {
   graphics::lines(project(rim, view), col = "#9AA3AB", lwd = 0.8)
 }
 
-#' Draw the grid on the icosahedron
+#' Draw the grid on its solid
 #' @noRd
-draw_icosahedron <- function(paths, land, view, style, icosa) {
+draw_solid <- function(paths, land, view, style, icosa) {
   solid <- icosa_solid(icosa)
   V <- solid$vertices
   front <- icosa_front(solid, view)
@@ -746,7 +748,7 @@ face_land <- function(face, tri, land, icosa) {
   list(fill = fill, lines = lines)
 }
 
-#' Land and country outlines on one face of the icosahedron
+#' Land and country outlines on one face of the solid
 #' @noRd
 draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
   part <- face_land(face, tri, land, icosa)
@@ -766,7 +768,7 @@ draw_face_land <- function(face, tri, land, view, style, shade, icosa) {
 # NET
 # =============================================================================
 
-#' The faces of the icosahedron laid out flat
+#' The faces of the solid laid out flat
 #'
 #' One entry per face (from 0): its vertices on the unit sphere and its
 #' triangle in the PLANE layout.
@@ -777,18 +779,18 @@ net_triangles <- function(icosa) {
     tri <- solid$vertices[solid$faces[f, ], ]
     ll <- vec_lonlat(tri)
     t <-cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
-    list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE]))
+    list(tri = tri, plane = to_plane(f - 1L, t[, c("tx", "ty"), drop = FALSE], icosa))
   })
 }
 
 #' Triangle coordinates of one face in the PLANE layout
 #' @noRd
-to_plane <- function(face, m) {
-  p <- cpp_icosa_tri_to_plane(rep(as.integer(face), nrow(m)), m[, 1], m[, 2])
+to_plane <- function(face, m, icosa) {
+  p <- cpp_icosa_tri_to_plane(icosa, rep(as.integer(face), nrow(m)), m[, 1], m[, 2])
   cbind(p$plane_x, p$plane_y)
 }
 
-#' Draw the grid on the unfolded icosahedron
+#' Draw the grid on the unfolded solid
 #' @noRd
 draw_net <- function(paths, land, tris, style, icosa) {
   for (t in tris) graphics::polygon(t$plane, col = style$ocean_fill, border = NA)
@@ -799,7 +801,7 @@ draw_net <- function(paths, land, tris, style, icosa) {
       if (!is.na(style$land_fill) && !is.null(part$fill)) {
         xy <- do.call(rbind, lapply(part$fill, function(p) {
           do.call(rbind, lapply(seq_along(p), function(k) {
-            rbind(orient_ring(to_plane(f - 1L, p[[k]]), anticlockwise = k == 1L), NA)
+            rbind(orient_ring(to_plane(f - 1L, p[[k]], icosa), anticlockwise = k == 1L), NA)
           }))
         }))
         xy <- xy[-nrow(xy), , drop = FALSE]
@@ -808,7 +810,7 @@ draw_net <- function(paths, land, tris, style, icosa) {
       }
       if (!is.na(style$land_border) && !is.null(part$lines)) {
         for (l in part$lines) {
-          graphics::lines(to_plane(f - 1L, l), col = style$land_border,
+          graphics::lines(to_plane(f - 1L, l, icosa), col = style$land_border,
                           lwd = style$land_lwd)
         }
       }

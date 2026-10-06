@@ -117,45 +117,50 @@ aperture_at_resolution <- function(aperture, resolution) {
 
 #' Cell count of an aperture sequence
 #'
-#' N = 10 * (product of the refinement apertures) + 2, the formula
-#' quad_frame() in src/rcpp_cell.cpp packs cell IDs for.
+#' N = d * (product of the refinement apertures) + 2, d the solid's diamond
+#' quads, the formula quad_frame() in src/rcpp_cell.cpp packs cell IDs for.
 #' @param ap_seq Integer aperture sequence
+#' @param polyhedron The solid the grid is built on
 #' @noRd
-ap_seq_n_cells <- function(ap_seq) {
-  10 * prod(as.numeric(ap_seq[-1])) + 2
+ap_seq_n_cells <- function(ap_seq, polyhedron = "icosahedron") {
+  polyhedron_diamonds(polyhedron) * prod(as.numeric(ap_seq[-1])) + 2
 }
 
 #' Cell count of an aperture spelling at a resolution
 #' @param aperture Character aperture spelling
 #' @param resolution Integer resolution
+#' @param polyhedron The solid the grid is built on
 #' @noRd
-aperture_n_cells <- function(aperture, resolution) {
+aperture_n_cells <- function(aperture, resolution, polyhedron = "icosahedron") {
   if (is_mixed_aperture(aperture)) {
-    ap_seq_n_cells(parse_aperture_seq(aperture, resolution))
+    ap_seq_n_cells(parse_aperture_seq(aperture, resolution), polyhedron)
   } else {
-    max_cell_id(resolution, as.integer(aperture))
+    max_cell_id(resolution, as.integer(aperture), polyhedron)
   }
 }
 
 #' Calculate resolution for target area
 #'
-#' Uses the 'ISEA3H'/'ISEA4H'/'ISEA7H' cell count formula
-#' N = 10 * aperture^res + 2, which matches 'dggridR' resolution numbering
-#' exactly.
+#' Uses the cell count formula N = d * aperture^res + 2, d the solid's diamond
+#' quads; on the icosahedron (d = 10) this is the 'ISEA3H'/'ISEA4H'/'ISEA7H'
+#' count, which matches 'dggridR' resolution numbering exactly.
 #'
 #' @param target_area_km2 Target area in square kilometers
 #' @param aperture Aperture (3, 4, or 7)
 #' @param radius_km Radius of the body, in kilometers
+#' @param polyhedron The solid the grid is built on
 #' @return Resolution level, not rounded. A target larger than the cells of
 #'   resolution 0 gives -Inf.
 #' @keywords internal
 calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
-                                          radius_km = EARTH_RADIUS_KM) {
+                                          radius_km = EARTH_RADIUS_KM,
+                                          polyhedron = "icosahedron") {
   n_cells <- body_surface_km2(radius_km) / target_area_km2
+  d <- polyhedron_diamonds(polyhedron)
 
-  # Solving N = 10 * aperture^res + 2 for res:
-  # res = log((surface / area - 2) / 10) / log(aperture)
-  log(pmax((n_cells - 2) / 10, 0)) / log(aperture)
+  # Solving N = d * aperture^res + 2 for res:
+  # res = log((surface / area - 2) / d) / log(aperture)
+  log(pmax((n_cells - 2) / d, 0)) / log(aperture)
 }
 
 #' Resolution whose cells have a target area, for a mixed sequence
@@ -167,13 +172,15 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
 #' @param area_km2 Target cell area
 #' @param aperture Character aperture spelling
 #' @param radius_km Radius of the body, in kilometers
+#' @param polyhedron The solid the grid is built on
 #' @return Numeric resolution, not rounded
 #' @noRd
 calculate_resolution_for_area_mixed <- function(area_km2, aperture,
-                                                radius_km = EARTH_RADIUS_KM) {
+                                                radius_km = EARTH_RADIUS_KM,
+                                                polyhedron = "icosahedron") {
   res <- seq.int(MIN_RESOLUTION, MAX_RESOLUTION)
   log_area <- vapply(res, function(r) {
-    log(mean_cell_area_km2(aperture, r, radius_km))
+    log(mean_cell_area_km2(aperture, r, radius_km, polyhedron))
   }, numeric(1))
   target <- log(area_km2)
 
@@ -194,15 +201,18 @@ calculate_resolution_for_area_mixed <- function(area_km2, aperture,
 #' @param aperture Aperture spelling, pure or mixed
 #' @param radius_km Radius of the body, in kilometers
 #' @param round "nearest", "up" (finer cells) or "down" (coarser cells)
+#' @param polyhedron The solid the grid is built on
 #' @return Resolution, a whole number
 #' @noRd
 resolve_resolution_from_area <- function(area_km2, aperture,
                                          radius_km = EARTH_RADIUS_KM,
-                                         round = "nearest") {
+                                         round = "nearest",
+                                         polyhedron = "icosahedron") {
   res_exact <- if (is_mixed_aperture(aperture)) {
-    calculate_resolution_for_area_mixed(area_km2, aperture, radius_km)
+    calculate_resolution_for_area_mixed(area_km2, aperture, radius_km, polyhedron)
   } else {
-    calculate_resolution_for_area(area_km2, as.integer(aperture), radius_km)
+    calculate_resolution_for_area(area_km2, as.integer(aperture), radius_km,
+                                  polyhedron)
   }
 
   resolution <- switch(round,

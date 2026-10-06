@@ -8,7 +8,7 @@ hex_globe(
   x,
   values = NULL,
   cells = NULL,
-  surface = c("sphere", "icosahedron"),
+  surface = c("sphere", "solid"),
   center = c(lon = 15, lat = 32),
   projection = c("orthographic", "perspective"),
   distance = NULL,
@@ -42,8 +42,9 @@ cells. \code{NULL} draws no fill.}
 
 \item{cells}{Cell IDs to draw. \code{NULL} draws every cell of the grid.}
 
-\item{surface}{Surface shown first, \code{"sphere"} or
-\code{"icosahedron"}; the slider folds one into the other. An H3 grid
+\item{surface}{Surface shown first, \code{"sphere"} or \code{"solid"},
+the flat faces of the grid's polyhedron; the slider folds one into the
+other. An H3 grid
 is drawn on the sphere only.}
 
 \item{center}{Point the view looks down on: a preset name from
@@ -82,7 +83,7 @@ frames the whole visible sphere instead.}
 
 \item{grid_lwd}{Line width of cell boundaries.}
 
-\item{face_edges}{Draw the edges of the icosahedron's faces. \code{NULL}
+\item{face_edges}{Draw the edges of the solid's faces. \code{NULL}
 draws them for an ISEA grid; H3 is built on an icosahedron of its own,
 so its grid takes none.}
 
@@ -111,7 +112,7 @@ An htmlwidget.
 }
 \description{
 Draws the cells of a grid on a globe that turns under the mouse, rendered
-on the graphics card through WebGPU. A slider folds the icosahedron the
+on the graphics card through WebGPU. A slider folds the solid the
 grid is built on into the sphere, and the shader blends the two surfaces.
 Values given per cell fill the cells through a colour ramp.
 }
@@ -137,7 +138,7 @@ WebGPU; without WebGPU the widget shows a notice instead.
 if (requireNamespace("htmlwidgets", quietly = TRUE)) {
   grid <- hex_grid(resolution = 3, aperture = 3)
   hex_globe(grid)
-  hex_globe(grid, surface = "icosahedron", center = "pacific")
+  hex_globe(grid, surface = "solid", center = "pacific")
 
   cells <- seq_len(n_cells(grid))
   centres <- cell_to_lonlat(cells, grid)

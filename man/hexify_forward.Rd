@@ -4,7 +4,12 @@
 \alias{hexify_forward}
 \title{Forward face projection}
 \usage{
-hexify_forward(lon, lat, projection = c("isea", "fuller"))
+hexify_forward(
+  lon,
+  lat,
+  projection = c("isea", "fuller"),
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
+)
 }
 \arguments{
 \item{lon}{Longitude in degrees}
@@ -12,13 +17,19 @@ hexify_forward(lon, lat, projection = c("isea", "fuller"))
 \item{lat}{Latitude in degrees}
 
 \item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
-projection) or \code{"fuller"} (Fuller's projection)}
+projection) or \code{"fuller"} (Fuller's projection, defined on the
+icosahedron only)}
+
+\item{polyhedron}{The solid: "icosahedron" (default), "octahedron" or
+"tetrahedron", in its default orientation. Snyder (1992) gives his
+equal-area projection for each; its angular distortion grows with the
+faces' size.}
 }
 \value{
 Named numeric vector: c(face, tx, ty)
 }
 \description{
-Projects geographic coordinates onto the icosahedron, returning
+Projects geographic coordinates onto a face of the solid, returning
 face index and planar coordinates (tx, ty).
 }
 \details{
@@ -28,6 +39,7 @@ typically in range [0, 1].
 \examples{
 result <- hexify_forward(16.37, 48.21)
 # result["face"], result["icosa_triangle_x"], result["icosa_triangle_y"]
+hexify_forward(16.37, 48.21, polyhedron = "tetrahedron")
 }
 \seealso{
 Other projection:

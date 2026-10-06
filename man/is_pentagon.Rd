@@ -15,21 +15,21 @@ is_pentagon(cell_id, grid)
 A logical vector. \code{TRUE} for pentagon cells, \code{FALSE} for hexagons.
 }
 \description{
-Identifies which cells are pentagons. Any hexagonal tiling of the sphere
-must contain exactly 12 pentagons (at the icosahedron vertices).
-Pentagon cells have 5 neighbors instead of 6.
+Identifies which cells are pentagons. A hexagonal grid on the icosahedron
+has exactly 12 pentagons, one at each icosahedron vertex, with 5 neighbors
+instead of 6. A grid on the octahedron has none: its six vertex cells are
+squares.
 }
 \details{
 \strong{H3 backend:} Uses the vendored H3 \code{isPentagon} function.
 
-\strong{ISEA backend:} The 12 pentagons are located at icosahedron vertices,
-which are always the (i, j) = (0, 0) cell of their quad. Pentagon status
-is checked by decoding each input cell ID's own (quad, i, j) coordinates
-via \code{\link[=cell_to_lonlat]{cell_to_lonlat()}}'s underlying grid math and testing whether i and j
-are both zero, rather than by re-deriving each vertex's cell ID (the
-forward direction has aperture-specific quirks -- e.g. aperture 7's
-substrate/surrogate coordinate distinction -- that make a single fixed
-formula for "the (0,0) cell ID of quad Q" unreliable across apertures).
+\strong{ISEA backend:} A vertex cell sits at a vertex of the solid, which is
+the (i, j) = (0, 0) cell of its quad, and has one side per face meeting
+there. Each input cell ID is decoded to its own (quad, i, j) and tested,
+rather than by re-deriving each vertex's cell ID (the forward direction has
+aperture-specific quirks -- e.g. aperture 7's substrate/surrogate
+coordinate distinction -- that make a single fixed formula for "the (0,0)
+cell ID of quad Q" unreliable across apertures).
 }
 \examples{
 \donttest{

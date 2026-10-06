@@ -7,19 +7,25 @@
 hexify_icosa_tri_to_plane(
   icosa_triangle_face,
   icosa_triangle_x,
-  icosa_triangle_y
+  icosa_triangle_y,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 }
 \arguments{
-\item{icosa_triangle_face}{Triangle face number (0-19), integer or vector}
+\item{icosa_triangle_face}{Triangle face number (0-19 on the icosahedron),
+integer or vector}
 
 \item{icosa_triangle_x}{X coordinate on triangle face}
 
 \item{icosa_triangle_y}{Y coordinate on triangle face}
+
+\item{polyhedron}{The solid whose faces are unfolded: "icosahedron"
+(default), "octahedron" or "tetrahedron"}
 }
 \value{
 Data frame with columns:
-\item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5)}
+\item{plane_x}{X coordinate in PLANE space (range ~0 to 5.5 on the
+icosahedron)}
 \item{plane_y}{Y coordinate in PLANE space (range ~0 to 1.73)}
 }
 \description{
@@ -30,10 +36,13 @@ position in the unfolded layout.
 \details{
 Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 
-The PLANE layout arranges all 20 icosahedral faces into a roughly
+The PLANE layout of the icosahedron arranges all 20 faces into a roughly
 rectangular region. Faces 0-4 and 5-9 form the upper row, while
 faces 10-14 and 15-19 form the lower row. Adjacent faces share
-edges in this representation.
+edges in this representation. The octahedron lays its four diamonds side
+by side, each a northern face over its southern one; the tetrahedron lays
+face 3 in the middle of a triangle of edge 2 with the three faces around
+vertex 0 at its corners.
 }
 \examples{
 # Get PLANE coordinates from triangle coordinates

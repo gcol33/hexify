@@ -396,7 +396,7 @@ test_that("the index consumers take the vector cell_to_index returns", {
 
 test_that("hexify_cell_to_index reads face, i and j in step", {
   g <- hex_grid(resolution = 3, aperture = 3)
-  qij <- cpp_cell_to_quad_ij(1:5, 3L, 3L, integer(0))
+  qij <- cpp_cell_to_quad_ij(numeric(0), 1:5, 3L, 3L, integer(0))
 
   expect_identical(
     hexify_cell_to_index(qij$quad, qij$i, qij$j, resolution = 3, aperture = 3),

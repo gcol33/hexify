@@ -3,17 +3,35 @@
 ## Breaking changes
 
 * `plot_globe()` is removed. `plot(<grid>)` draws a grid in 3D, on the sphere
-  (`surface = "sphere"`) or on the flat faces of the icosahedron the grid is
-  built on (`surface = "icosahedron"`), with land fill and country outlines
+  (`surface = "sphere"`) or on the flat faces of the solid the grid is
+  built on (`surface = "solid"`), with land fill and country outlines
   from `hexify_world` or any sf polygons (`land =`), a `center` to look down
-  on, and the icosahedron's face edges. It takes the grid object, so any
-  aperture, mixed sequence, resolution or body reaches it; an H3 grid is
-  drawn on the sphere. `globe_centers` names the views as before.
+  on, and the solid's face edges. It takes the grid object, so any
+  aperture, mixed sequence, resolution, solid or body reaches it; an H3 grid
+  is drawn on the sphere. `globe_centers` names the views as before.
 
 * `hexify_cell_id_to_quad_ij()` is removed. `hexify_cell_to_quad_ij()` takes
   the same arguments and returns the same `quad`, `i`, `j` data frame.
 
 ## New features
+
+* `hex_grid(polyhedron = "octahedron")` builds an ISEA-family grid on the
+  octahedron: Snyder's equal-area projection with g = 54.73561032 deg, G = 45
+  deg (Snyder 1992), four diamonds, and six square vertex cells, each two
+  thirds of a hexagon's area. Apertures 3, 4, 7 and mixed sequences, the
+  hierarchy, indices, neighbours, `cell_area()`, `plot()` and `hex_globe()`
+  work as on the icosahedron. The solid is a descriptor (vertices, faces,
+  Snyder's constants) from which the face pairing, the quad adjacency and
+  the vertex cells are derived, so the icosahedron's grids are unchanged
+  bit for bit. Fuller's projection stays icosahedron-only (#94).
+
+* `hexify_forward()`, `hexify_inverse()`, `hexify_which_face()`,
+  `hexify_face_centers()` and `hexify_lonlat_to_plane()` take
+  `polyhedron = "octahedron"` or `"tetrahedron"`. The tetrahedron carries the
+  projection only, and `hex_grid(polyhedron = "tetrahedron")` says why: the
+  cell numbering pairs faces into diamonds that leave exactly two vertices as
+  single-cell poles, a vertex where three faces meet has to be one of them,
+  and all four vertices of the tetrahedron are such vertices.
 
 * `cell_to_sf(shape = , depth = )` draws ISEA cells as Gosper islands
   (`"gosper"`) or as the outline of their descendants (`"descendants"`);
