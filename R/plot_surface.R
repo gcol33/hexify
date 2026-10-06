@@ -528,19 +528,13 @@ icosa_solid <- function(icosa) {
 #' positions only.
 #' @noRd
 grid_surface_paths <- function(g, cells, step) {
-  cells <- surface_cells(g, cells)
+  cells <- grid_cells(g, cells)
   if (is_h3_grid(g)) return(h3_sphere_paths(as.character(cells), step))
   lv <- isea_levels(g@aperture, g@resolution)
   cpp_cell_surface_paths(icosa_arg(g), as.numeric(cells), lv$resolution,
                          lv$aperture, lv$ap_seq, step)
 }
 
-#' The cells to draw: those given, or every cell of the grid
-#' @noRd
-surface_cells <- function(g, cells) {
-  if (!is.null(cells)) return(cells)
-  if (is_h3_grid(g)) h3_all_cells(g@resolution) else seq_len(grid_n_cells(g))
-}
 
 #' H3 cell boundaries as great-circle arcs on the sphere
 #' @noRd

@@ -103,7 +103,7 @@ hex_globe <- function(x,
   fill <- NULL
   grid_lines <- NULL
   if (is_h3_grid(g)) {
-    cells <- surface_cells(g, cells)
+    cells <- grid_cells(g, cells)
     if (!is.null(values)) {
       fill <- c(globe_mesh(h3_surface_mesh(cells, GLOBE_MESH_SPACING)),
                 values = cpp_base64_buffer(ramp_position(values, cells, limits), "f32"))

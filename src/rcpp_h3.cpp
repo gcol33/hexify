@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstring>
 #include <vector>
+#include "cell_walls.h"
 
 extern "C" {
 #include "h3/h3api.h"
@@ -599,6 +600,66 @@ Rcpp::IntegerVector cpp_h3_gridDistance(Rcpp::CharacterVector origin,
         } else {
             out[i] = static_cast<int>(dist);
         }
+    }
+    return out;
+}
+
+// Perimeter of each cell on the unit sphere and, with 'walls', one row per
+// wall as cpp_cell_walls() gives it. H3 draws a cell edge as great-circle
+// arcs between its corners, with an extra corner where the edge crosses an
+// icosahedron edge, and a directed edge to each neighbour carries exactly the
+// corners of the wall between them, so the walls need neither densifying nor
+// matching to their neighbours.
+// [[Rcpp::export]]
+Rcpp::List cpp_h3_cell_walls(Rcpp::CharacterVector cell_ids, bool walls) {
+    R_xlen_t n = cell_ids.size();
+    Rcpp::NumericVector perimeter(n);
+    hexify::WallRows rows;
+    std::vector<std::string> row_nbr;
+    std::vector<hexify::UnitVec> pts;
+
+    auto unit = [](const LatLng& ll) {
+        return hexify::unit_from_lonlat(ll.lng * RAD_TO_DEG, ll.lat * RAD_TO_DEG);
+    };
+
+    for (R_xlen_t i = 0; i < n; i++) {
+        H3Index h = cell_ids[i] == NA_STRING ? H3_NULL : string_to_h3(CHAR(cell_ids[i]));
+        if (h == H3_NULL || !hexify_h3_isValidCell(h)) {
+            Rcpp::stop("not a valid H3 cell: %s",
+                       cell_ids[i] == NA_STRING ? "NA" : CHAR(cell_ids[i]));
+        }
+        LatLng c;
+        hexify_h3_cellToLatLng(h, &c);
+        const hexify::UnitVec centre = unit(c);
+
+        H3Index edges[6];
+        hexify_h3_originToDirectedEdges(h, edges);
+        double p = 0.0;
+        for (int e = 0; e < 6; e++) {
+            if (edges[e] == H3_NULL) continue;
+            CellBoundary cb;
+            H3Index dest;
+            if (hexify_h3_directedEdgeToBoundary(edges[e], &cb) != E_SUCCESS ||
+                hexify_h3_getDirectedEdgeDestination(edges[e], &dest) != E_SUCCESS) {
+                Rcpp::stop("H3 could not read an edge of cell %s", CHAR(cell_ids[i]));
+            }
+            pts.clear();
+            for (int v = 0; v < cb.numVerts; v++) pts.push_back(unit(cb.verts[v]));
+            const hexify::WallShape w = hexify::wall_shape(hexify::great_circle_wall(pts));
+            p += w.length;
+            if (!walls) continue;
+            LatLng d;
+            hexify_h3_cellToLatLng(dest, &d);
+            rows.add(i, hexify::measure_wall(w, centre, unit(d)));
+            row_nbr.push_back(h3_to_string(dest));
+        }
+        perimeter[i] = p;
+    }
+
+    Rcpp::List out = Rcpp::List::create(Rcpp::Named("perimeter") = perimeter);
+    if (walls) {
+        out["walls"] = rows.frame("neighbor_id",
+                                  Rcpp::CharacterVector(row_nbr.begin(), row_nbr.end()));
     }
     return out;
 }

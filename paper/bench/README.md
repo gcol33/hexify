@@ -13,6 +13,8 @@ versions and the processor.
 | `make_dggrid_fixture.R` | DGGRID cells and centres under non-standard orientations and on the FULLER projection, and DGGRID's Z7 strings, for the test suite | `tests/testthat/data/dggrid_reference.csv`, `tests/testthat/data/dggrid_z7.csv` |
 | `bench_h3_agreement.R` | H3 cells and centres against the H3 library (h3r), resolutions 0 to 15 | `h3_agreement.csv` |
 | `bench_cell_area.R` | Cell area against latitude, measured with s2, for ISEA, H3 and a 1-degree grid of about 12,400 km2 per cell | `cell_area_by_latitude.csv`, `cell_area_summary.csv` |
+| `bench_grid_metrics.R` | Compactness, intercell distance and cell wall midpoint ratio of every cell and wall of ISEA and FULLER grids of apertures 3, 4 and 7 and of H3, with the spread of cell areas | `grid_metrics.csv` |
+| `bench_dggrid_walls.R` | Cell wall midpoint ratio of hexify's and DGGRID's aperture-7 cells at resolutions 3 and 5, both read as corners joined by great-circle arcs; counts the DGGRID walls above hexify's largest ratio and how many of them border a cell whose DGGRID corners differ from hexify's | `dggrid_wall_ratio.csv` |
 | `bench_speed.R` | Run time of point assignment (one million points) and polygon generation (10,000 cells) for hexify, dggridR, h3r and h3o | `speed.csv` |
 | `example_world_cities.R` | The article's example: population of `maps::world.cities` per equal-area cell | `example_world_cities.csv`, `.gpkg` |
 

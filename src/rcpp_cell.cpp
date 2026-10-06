@@ -25,6 +25,7 @@
 #include "grid_math.h"
 #include "coordinate_transforms.h"
 #include "rcpp_icosa.h"
+#include "cell_walls.h"
 
 using namespace Rcpp;
 
@@ -971,11 +972,13 @@ static void dropped_corners(int quad, const double vx[6], const double vy[6],
 // One straight piece of a cell's boundary in the quad plane, a -> b. A piece
 // that leaves a vertex cell's dropped sector starts at the point of the globe
 // where the other piece entered it; when that point is a corner of the cell,
-// 'from_corner' names it so the corner keeps its own reading.
+// 'from_corner' names it so the corner keeps its own reading. 'wall' counts
+// the cell's walls from 0, and both pieces of a folded edge carry one wall.
 struct PlaneEdge {
     double ax, ay, bx, by;
     bool from_corner;
     double cx, cy;
+    int wall;
 };
 
 // The boundary of one cell as straight pieces of the quad plane,
@@ -1028,13 +1031,13 @@ static void cell_plane_edges(int quad, double qx_center, double qy_center,
             double piece_min = kEdgePieceMin * radius;
             bool from_c0 = std::hypot(ax - vx[c0], ay - vy[c0]) > piece_min;
             if (from_c0) {
-                out.push_back({vx[c0], vy[c0], ax, ay, false, 0.0, 0.0});
+                out.push_back({vx[c0], vy[c0], ax, ay, false, 0.0, 0.0, k});
             }
             if (std::hypot(vx[c1] - bx, vy[c1] - by) > piece_min) {
-                out.push_back({bx, by, vx[c1], vy[c1], !from_c0, vx[c0], vy[c0]});
+                out.push_back({bx, by, vx[c1], vy[c1], !from_c0, vx[c0], vy[c0], k});
             }
         } else {
-            out.push_back({vx[c0], vy[c0], vx[c1], vy[c1], false, 0.0, 0.0});
+            out.push_back({vx[c0], vy[c0], vx[c1], vy[c1], false, 0.0, 0.0, k});
         }
     }
 }
@@ -1116,10 +1119,12 @@ static bool quad_point_face(int quad, double qx, double qy,
            hexify::try_quad_xy_to_icosa_tri(quad, qx, qy, face, tx, ty);
 }
 
-// A straight piece of a cell edge on one face, in its triangle coordinates.
+// A straight piece of a cell edge on one face, in its triangle coordinates,
+// and the cell wall it belongs to.
 struct FacePiece {
     int face;
     double ax, ay, bx, by;
+    int wall;
 };
 
 // The plane segment a -> b cut where it crosses from one face to the next.
@@ -1127,7 +1132,7 @@ struct FacePiece {
 // face it is in form one interval: bisection on face membership finds where
 // the segment leaves it, and the walk goes on from the face it enters there.
 static void plane_segment_faces(int quad, double ax, double ay,
-                                double bx, double by,
+                                double bx, double by, int wall,
                                 std::vector<FacePiece>& out) {
     int face_b;
     double bt_x, bt_y;
@@ -1144,7 +1149,7 @@ static void plane_segment_faces(int quad, double ax, double ay,
     // shorter than a face crosses at most a few.
     for (int guard = 0; guard < 8; guard++) {
         if (face == face_b) {
-            out.push_back({face, tx, ty, bt_x, bt_y});
+            out.push_back({face, tx, ty, bt_x, bt_y, wall});
             return;
         }
         double lo = s, hi = 1.0;
@@ -1161,7 +1166,7 @@ static void plane_segment_faces(int quad, double ax, double ay,
         }
         double ex, ey;
         quad_point_face(quad, ax + lo * (bx - ax), ay + lo * (by - ay), f, ex, ey);
-        out.push_back({face, tx, ty, ex, ey});
+        out.push_back({face, tx, ty, ex, ey, wall});
         if (!quad_point_face(quad, ax + hi * (bx - ax), ay + hi * (by - ay),
                              face, tx, ty)) {
             Rcpp::stop("cell edge passes outside every face of the solid");
@@ -1234,57 +1239,6 @@ static List cell_rings(const NumericVector& cell_id, const QuadFrame& f,
         result[k] = closed_ring(lon, lat);
     }
     return result;
-}
-
-// Solid angle of each cell, in steradians: its boundary is walked to within
-// `tolerance` of each edge's length and the polygon summed as spherical
-// triangles fanned from the mean of its boundary points (Van Oosterom and
-// Strackee's formula for a triangle's solid angle).
-static NumericVector cell_solid_angles(const NumericVector& cell_id,
-                                       const QuadFrame& f, double tolerance) {
-    CellPlanes g = cell_planes(cell_id, f);
-    NumericVector out(cell_id.size());
-    std::vector<double> lon, lat;
-    std::vector<std::array<double, 3>> v;
-    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-        const CellPlane& c = g.cells[k];
-        cell_boundary_lonlat(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
-                             c.at_vertex, tolerance, lon, lat);
-        const size_t n = lon.size();
-        v.resize(n);
-        double o[3] = {0.0, 0.0, 0.0};
-        for (size_t i = 0; i < n; i++) {
-            const double la = lat[i] * hexify::kDegToRad, lo = lon[i] * hexify::kDegToRad;
-            v[i] = {std::cos(la) * std::cos(lo), std::cos(la) * std::sin(lo), std::sin(la)};
-            for (int d = 0; d < 3; d++) o[d] += v[i][d];
-        }
-        const double on = std::sqrt(o[0] * o[0] + o[1] * o[1] + o[2] * o[2]);
-        for (int d = 0; d < 3; d++) o[d] /= on;
-        double omega = 0.0;
-        for (size_t i = 0; i < n; i++) {
-            const auto& a = v[i];
-            const auto& b = v[(i + 1) % n];
-            const double cx = a[1] * b[2] - a[2] * b[1];
-            const double cy = a[2] * b[0] - a[0] * b[2];
-            const double cz = a[0] * b[1] - a[1] * b[0];
-            const double triple = o[0] * cx + o[1] * cy + o[2] * cz;
-            const double denom = 1.0 + (o[0] * a[0] + o[1] * a[1] + o[2] * a[2])
-                                     + (a[0] * b[0] + a[1] * b[1] + a[2] * b[2])
-                                     + (b[0] * o[0] + b[1] * o[1] + b[2] * o[2]);
-            omega += 2.0 * std::atan2(triple, denom);
-        }
-        out[k] = std::fabs(omega);
-    }
-    return out;
-}
-
-// [[Rcpp::export]]
-NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
-                                   int resolution, int aperture, IntegerVector ap_seq,
-                                   double tolerance) {
-    activate_grid(icosa);
-    return cell_solid_angles(cell_id, grid_frame(resolution, aperture, ap_seq),
-                             tolerance);
 }
 
 // [[Rcpp::export]]
@@ -1374,8 +1328,104 @@ static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
                      c.at_vertex, /*fold_vertex=*/true, edges);
     pieces.clear();
     for (const PlaneEdge& e : edges) {
-        plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, pieces);
+        plane_segment_faces(c.quad, e.ax, e.ay, e.bx, e.by, e.wall, pieces);
     }
+}
+
+// Deepest halving of one face piece when a wall is measured, 2^20 pieces. A
+// piece across a cusp of the projection halves at the cusp until here.
+constexpr int kMaxMeasureSplits = 20;
+
+// The face piece a -> b on the unit sphere as a wall in the form cell_walls.h
+// describes, from a and short of b: a, then the point the piece's midpoint
+// projects to, the piece halved while that point lies further than
+// 'tolerance' times the chord from the plane of the great circle through a
+// and b. A point's place along the curve does not enter the test.
+static void face_piece_sphere(int face, double ax, double ay, const hexify::UnitVec& a,
+                              double bx, double by, const hexify::UnitVec& b,
+                              double tolerance, int depth,
+                              std::vector<hexify::UnitVec>& out) {
+    const double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
+    hexify::UnitVec m;
+    hexify::face_tri_to_sphere(face, mx, my, m.data());
+    if (depth < kMaxMeasureSplits) {
+        // |a x b| is the chord times the cosine of half the arc, the chord to
+        // within a part in 10^4 for any piece of a cell wall.
+        const double nx = a[1] * b[2] - a[2] * b[1];
+        const double ny = a[2] * b[0] - a[0] * b[2];
+        const double nz = a[0] * b[1] - a[1] * b[0];
+        const double chord = std::sqrt(nx * nx + ny * ny + nz * nz);
+        const double off = std::fabs(m[0] * nx + m[1] * ny + m[2] * nz);
+        if (off > tolerance * chord * chord) {
+            face_piece_sphere(face, ax, ay, a, mx, my, m, tolerance, depth + 1, out);
+            face_piece_sphere(face, mx, my, m, bx, by, b, tolerance, depth + 1, out);
+            return;
+        }
+    }
+    out.push_back(a);
+    out.push_back(m);
+}
+
+// The walls of one cell on the unit sphere in the form cell_walls.h
+// describes, each from one corner to the next, counter-clockwise, densified to
+// 'tolerance' (face_piece_sphere).
+static void cell_walls_sphere(const CellPlanes& g, const CellPlane& c, double tolerance,
+                              std::vector<PlaneEdge>& edges,
+                              std::vector<FacePiece>& pieces,
+                              std::vector<std::vector<hexify::UnitVec>>& walls) {
+    cell_face_pieces(g, c, edges, pieces);
+    int n_wall = 0;
+    for (const FacePiece& p : pieces) n_wall = std::max(n_wall, p.wall + 1);
+    walls.assign(n_wall, {});
+    hexify::UnitVec a, b;
+    for (size_t i = 0; i < pieces.size(); i++) {
+        const FacePiece& p = pieces[i];
+        hexify::face_tri_to_sphere(p.face, p.ax, p.ay, a.data());
+        hexify::face_tri_to_sphere(p.face, p.bx, p.by, b.data());
+        face_piece_sphere(p.face, p.ax, p.ay, a, p.bx, p.by, b, tolerance, 0,
+                          walls[p.wall]);
+        if (i + 1 == pieces.size() || pieces[i + 1].wall != p.wall) {
+            walls[p.wall].push_back(b);
+        }
+    }
+}
+
+// A cell's centre on the unit sphere.
+static hexify::UnitVec cell_centre_sphere(const CellPlane& c) {
+    int face;
+    double tx, ty;
+    if (!hexify::try_quad_xy_to_icosa_tri(c.quad, c.qx, c.qy, face, tx, ty)) {
+        Rcpp::stop("cell centre lies on no face of the solid");
+    }
+    hexify::UnitVec v;
+    hexify::face_tri_to_sphere(face, tx, ty, v.data());
+    return v;
+}
+
+// Solid angle of each cell, in steradians: its walls are followed on the
+// sphere to 'tolerance' (cell_walls_sphere) and the area they enclose summed
+// (enclosed_solid_angle).
+static NumericVector cell_solid_angles(const NumericVector& cell_id,
+                                       const QuadFrame& f, double tolerance) {
+    CellPlanes g = cell_planes(cell_id, f);
+    NumericVector out(cell_id.size());
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    std::vector<std::vector<hexify::UnitVec>> walls;
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, walls);
+        out[k] = hexify::enclosed_solid_angle(walls);
+    }
+    return out;
+}
+
+// [[Rcpp::export]]
+NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
+                                   int resolution, int aperture, IntegerVector ap_seq,
+                                   double tolerance) {
+    activate_grid(icosa);
+    return cell_solid_angles(cell_id, grid_frame(resolution, aperture, ap_seq),
+                             tolerance);
 }
 
 // The boundaries of cells on the flat solid and on the sphere, from the same
@@ -1666,6 +1716,104 @@ Rcpp::List cpp_get_neighbors_isea(NumericVector icosa, Rcpp::NumericVector cell_
                                   int resolution, int aperture, IntegerVector ap_seq) {
     activate_grid(icosa);
     return neighbors_in_frame(cell_id, grid_frame(resolution, aperture, ap_seq));
+}
+
+// Perimeter of each cell, on the unit sphere, its walls followed to within
+// 'tolerance' (face_piece_sphere). With 'walls', also one row per wall: the
+// cell (position in 'cell_id', from 1), the neighbour across it, and its
+// WallMeasure.
+// [[Rcpp::export]]
+List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
+                    int aperture, IntegerVector ap_seq, double tolerance, bool walls) {
+    activate_grid(icosa);
+    if (!(tolerance > 0.0)) stop("tolerance must be positive");
+    const QuadFrame f = grid_frame(resolution, aperture, ap_seq);
+    const CellPlanes g = cell_planes(cell_id, f);
+    const R_xlen_t n = cell_id.size();
+
+    List nbrs = walls ? neighbors_in_frame(cell_id, f) : List(0);
+    NumericVector perimeter(n);
+    hexify::WallRows rows;
+    std::vector<double> row_nbr;
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    std::vector<std::vector<hexify::UnitVec>> lines;
+    std::vector<hexify::WallShape> shapes;
+    std::vector<hexify::UnitVec> nbr_centres;
+    std::vector<int> wall_of;
+
+    for (R_xlen_t k = 0; k < n; k++) {
+        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, lines);
+        shapes.clear();
+        double p = 0.0;
+        for (const auto& line : lines) {
+            shapes.push_back(hexify::wall_shape(line));
+            p += shapes.back().length;
+        }
+        perimeter[k] = p;
+        if (!walls) continue;
+
+        NumericVector nb = nbrs[k];
+        const CellPlanes ng = cell_planes(nb, f);
+        nbr_centres.clear();
+        for (const CellPlane& c : ng.cells) nbr_centres.push_back(cell_centre_sphere(c));
+        if (!hexify::walls_of_neighbours(shapes, nbr_centres, wall_of)) {
+            stop("cell %.0f: its %d walls do not pair one to one with its %d neighbours",
+                 cell_id[k], static_cast<int>(shapes.size()), static_cast<int>(nb.size()));
+        }
+        const hexify::UnitVec centre = cell_centre_sphere(g.cells[k]);
+        for (R_xlen_t j = 0; j < nb.size(); j++) {
+            rows.add(k, hexify::measure_wall(shapes[wall_of[j]], centre, nbr_centres[j]));
+            row_nbr.push_back(nb[j]);
+        }
+    }
+
+    List out = List::create(_["perimeter"] = perimeter);
+    if (walls) {
+        out["walls"] = rows.frame("neighbor_id",
+                                  NumericVector(row_nbr.begin(), row_nbr.end()));
+    }
+    return out;
+}
+
+// The same measures for cells given as closed lon/lat rings whose walls are
+// great-circle arcs between consecutive corners, such as another program's
+// corner output: one row per neighbour, the wall chosen as walls_of_neighbours()
+// chooses it. 'centres' is a two-column lon/lat matrix, one row per ring, and
+// 'neighbour_centres' a list of such matrices; the 'neighbor' column is the
+// row of the neighbour's centre there.
+// [[Rcpp::export]]
+DataFrame cpp_ring_walls(List rings, NumericMatrix centres, List neighbour_centres) {
+    hexify::WallRows rows;
+    std::vector<double> row_nbr;
+    std::vector<hexify::WallShape> shapes;
+    std::vector<hexify::UnitVec> nbr_centres;
+    std::vector<int> wall_of;
+    for (R_xlen_t k = 0; k < rings.size(); k++) {
+        NumericMatrix ring = rings[k];
+        NumericMatrix nc = neighbour_centres[k];
+        shapes.clear();
+        for (int i = 0; i + 1 < ring.nrow(); i++) {
+            shapes.push_back(hexify::wall_shape(hexify::great_circle_wall(
+                {hexify::unit_from_lonlat(ring(i, 0), ring(i, 1)),
+                 hexify::unit_from_lonlat(ring(i + 1, 0), ring(i + 1, 1))})));
+        }
+        nbr_centres.clear();
+        for (int j = 0; j < nc.nrow(); j++) {
+            nbr_centres.push_back(hexify::unit_from_lonlat(nc(j, 0), nc(j, 1)));
+        }
+        if (!hexify::walls_of_neighbours(shapes, nbr_centres, wall_of)) {
+            stop("ring %d: its %d walls do not pair one to one with its %d neighbours",
+                 static_cast<int>(k + 1), static_cast<int>(shapes.size()),
+                 static_cast<int>(nbr_centres.size()));
+        }
+        const hexify::UnitVec centre = hexify::unit_from_lonlat(centres(k, 0), centres(k, 1));
+        for (size_t j = 0; j < nbr_centres.size(); j++) {
+            rows.add(k, hexify::measure_wall(shapes[wall_of[j]], centre, nbr_centres[j]));
+            row_nbr.push_back(static_cast<double>(j + 1));
+        }
+    }
+    return rows.frame("neighbor", NumericVector(row_nbr.begin(), row_nbr.end()));
 }
 
 // ============================================================================

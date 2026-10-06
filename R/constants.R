@@ -24,12 +24,15 @@ EARTH_RADIUS_KM <- 6371.0088
 #' @noRd
 CELL_EDGE_TOLERANCE <- 1e-3
 
-#' Edge tolerance for the area of a cell on a grid that is not equal-area
+#' How closely cell walls are followed on the sphere to measure them
 #'
-#' The cell's boundary is followed to within this fraction of each edge's
-#' length and its area summed as spherical triangles.
+#' Each wall is halved until the true wall's midpoint between two consecutive
+#' points lies within this fraction of their distance of the great-circle
+#' plane through them; lengths and areas are then corrected for the curve
+#' between them. Cell areas and perimeters come out within about 1e-8 of their
+#' converged values, and areas of a whole grid add up to the body's to 1e-14.
 #' @noRd
-CELL_AREA_TOLERANCE <- 1e-7
+CELL_WALL_TOLERANCE <- 1e-4
 
 #' Longest edge of the triangles hex_globe() draws surfaces with
 #'

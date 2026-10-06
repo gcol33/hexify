@@ -161,6 +161,14 @@
   azimuth 7.46658, with all twelve pentagons in the ocean. With
   `projection = "fuller"` the grid lies on Fuller's Dymaxion map.
 
+* New `cell_metrics()` and `wall_metrics()` measure a grid's cells: area,
+  perimeter and compactness (White et al. 1998) per cell, and per wall
+  between adjacent cells its length, the distance between the two centres and
+  the cell wall midpoint ratio (Gregory et al. 2008). Without `cell_id` they
+  measure every cell of the grid. ISEA walls are followed on the sphere as the
+  projection curves them, for Snyder's and Fuller's projections alike; H3
+  walls are read from H3's directed edges.
+
 ## Bug fixes
 
 * `get_parent()` on a mixed aperture grid finds the parent in exact lattice

@@ -193,16 +193,16 @@ cpp_quad_ij_to_icosa_tri <- function(icosa, quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, icosa, quad, i, j, resolution, aperture)
 }
 
-cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
-    .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
-}
-
 cpp_cell_to_corners <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance = 0.0) {
     .Call(`_hexify_cpp_cell_to_corners`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
 cpp_densify_great_circle <- function(rings, tolerance) {
     .Call(`_hexify_cpp_densify_great_circle`, rings, tolerance)
+}
+
+cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
+    .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
 cpp_cell_surface_paths <- function(icosa, cell_id, resolution, aperture, ap_seq, step) {
@@ -227,6 +227,14 @@ cpp_globe_frame <- function(icosa, resolution, aperture, ap_seq) {
 
 cpp_get_neighbors_isea <- function(icosa, cell_id, resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_get_neighbors_isea`, icosa, cell_id, resolution, aperture, ap_seq)
+}
+
+cpp_cell_walls <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance, walls) {
+    .Call(`_hexify_cpp_cell_walls`, icosa, cell_id, resolution, aperture, ap_seq, tolerance, walls)
+}
+
+cpp_ring_walls <- function(rings, centres, neighbour_centres) {
+    .Call(`_hexify_cpp_ring_walls`, rings, centres, neighbour_centres)
 }
 
 cpp_icosa_tri_to_plane <- function(icosa, icosa_triangle_face, icosa_triangle_x, icosa_triangle_y) {
@@ -303,6 +311,10 @@ cpp_h3_isPentagon <- function(cell_ids) {
 
 cpp_h3_gridDistance <- function(origin, destination) {
     .Call(`_hexify_cpp_h3_gridDistance`, origin, destination)
+}
+
+cpp_h3_cell_walls <- function(cell_ids, walls) {
+    .Call(`_hexify_cpp_h3_cell_walls`, cell_ids, walls)
 }
 
 cpp_cell_to_index <- function(icosa, face, i, j, resolution, aperture, index_type = "auto") {

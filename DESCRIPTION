@@ -49,6 +49,7 @@ Collate:
     'RcppExports.R'
     'aperture_mixed_hierarchy.R'
     'aperture_sequence.R'
+    'cell_metrics.R'
     'constants.R'
     'classes.R'
     'constructors.R'

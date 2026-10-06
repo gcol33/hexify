@@ -669,22 +669,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_cell_solid_angle
-NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance);
-RcppExport SEXP _hexify_cpp_cell_solid_angle(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
-    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_solid_angle(icosa, cell_id, resolution, aperture, ap_seq, tolerance));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_cell_to_corners
 List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance);
 RcppExport SEXP _hexify_cpp_cell_to_corners(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP) {
@@ -710,6 +694,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type rings(ringsSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_densify_great_circle(rings, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_cell_solid_angle
+NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_solid_angle(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_solid_angle(icosa, cell_id, resolution, aperture, ap_seq, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -794,6 +794,36 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_neighbors_isea(icosa, cell_id, resolution, aperture, ap_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_cell_walls
+List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance, bool walls);
+RcppExport SEXP _hexify_cpp_cell_walls(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP, SEXP wallsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< bool >::type walls(wallsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_walls(icosa, cell_id, resolution, aperture, ap_seq, tolerance, walls));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_ring_walls
+DataFrame cpp_ring_walls(List rings, NumericMatrix centres, List neighbour_centres);
+RcppExport SEXP _hexify_cpp_ring_walls(SEXP ringsSEXP, SEXP centresSEXP, SEXP neighbour_centresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type rings(ringsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type centres(centresSEXP);
+    Rcpp::traits::input_parameter< List >::type neighbour_centres(neighbour_centresSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_ring_walls(rings, centres, neighbour_centres));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1023,6 +1053,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type origin(originSEXP);
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type destination(destinationSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_h3_gridDistance(origin, destination));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_h3_cell_walls
+Rcpp::List cpp_h3_cell_walls(Rcpp::CharacterVector cell_ids, bool walls);
+RcppExport SEXP _hexify_cpp_h3_cell_walls(SEXP cell_idsSEXP, SEXP wallsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type cell_ids(cell_idsSEXP);
+    Rcpp::traits::input_parameter< bool >::type walls(wallsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_h3_cell_walls(cell_ids, walls));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1371,15 +1413,17 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_xy_to_cell", (DL_FUNC) &_hexify_cpp_quad_xy_to_cell, 6},
     {"_hexify_cpp_cell_to_icosa_tri", (DL_FUNC) &_hexify_cpp_cell_to_icosa_tri, 4},
     {"_hexify_cpp_quad_ij_to_icosa_tri", (DL_FUNC) &_hexify_cpp_quad_ij_to_icosa_tri, 6},
-    {"_hexify_cpp_cell_solid_angle", (DL_FUNC) &_hexify_cpp_cell_solid_angle, 6},
     {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 6},
     {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 2},
+    {"_hexify_cpp_cell_solid_angle", (DL_FUNC) &_hexify_cpp_cell_solid_angle, 6},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 6},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 1},
     {"_hexify_cpp_lonlat_to_face_solid", (DL_FUNC) &_hexify_cpp_lonlat_to_face_solid, 4},
     {"_hexify_cpp_face_tri_to_solid", (DL_FUNC) &_hexify_cpp_face_tri_to_solid, 4},
     {"_hexify_cpp_globe_frame", (DL_FUNC) &_hexify_cpp_globe_frame, 4},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 5},
+    {"_hexify_cpp_cell_walls", (DL_FUNC) &_hexify_cpp_cell_walls, 7},
+    {"_hexify_cpp_ring_walls", (DL_FUNC) &_hexify_cpp_ring_walls, 3},
     {"_hexify_cpp_icosa_tri_to_plane", (DL_FUNC) &_hexify_cpp_icosa_tri_to_plane, 4},
     {"_hexify_cpp_cell_to_plane", (DL_FUNC) &_hexify_cpp_cell_to_plane, 4},
     {"_hexify_cpp_lonlat_to_plane", (DL_FUNC) &_hexify_cpp_lonlat_to_plane, 3},
@@ -1399,6 +1443,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_h3_uncompactCells", (DL_FUNC) &_hexify_cpp_h3_uncompactCells, 2},
     {"_hexify_cpp_h3_isPentagon", (DL_FUNC) &_hexify_cpp_h3_isPentagon, 1},
     {"_hexify_cpp_h3_gridDistance", (DL_FUNC) &_hexify_cpp_h3_gridDistance, 2},
+    {"_hexify_cpp_h3_cell_walls", (DL_FUNC) &_hexify_cpp_h3_cell_walls, 2},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 7},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 4},
     {"_hexify_cpp_get_parent_index", (DL_FUNC) &_hexify_cpp_get_parent_index, 3},

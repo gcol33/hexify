@@ -873,20 +873,33 @@ extract_grid <- function(x, allow_null = FALSE) {
 #' Cell IDs and grid of a call that takes a grid or a HexData object
 #'
 #' A HexData object supplies its own cells when none are given; a grid needs
-#' them.
+#' them, unless `all` lets it supply every cell it has.
 #' @param cell_id Cell IDs, or NULL to read a HexData object's own
 #' @param grid A HexGridInfo, HexData or legacy hexify_grid object
+#' @param all Whether a grid given without cells stands for all of its cells
 #' @return List with `cell_id` and `grid`, the HexGridInfo from extract_grid()
 #' @noRd
-resolve_cells_grid <- function(cell_id, grid) {
+resolve_cells_grid <- function(cell_id, grid, all = FALSE) {
   g <- extract_grid(grid)
   if (is.null(cell_id)) {
-    if (!is_hex_data(grid)) {
+    if (is_hex_data(grid)) {
+      cell_id <- grid@cell_id
+    } else if (all) {
+      cell_id <- grid_cells(g)
+    } else {
       stop("cell_id required when grid is not HexData")
     }
-    cell_id <- grid@cell_id
   }
   list(cell_id = cell_id, grid = g)
+}
+
+#' The cells given, or every cell of the grid
+#' @param g HexGridInfo object
+#' @param cells Cell IDs, or NULL for all of them
+#' @noRd
+grid_cells <- function(g, cells = NULL) {
+  if (!is.null(cells)) return(cells)
+  if (is_h3_grid(g)) h3_all_cells(g@resolution) else seq_len(grid_n_cells(g))
 }
 
 #' Stop unless an object is a legacy hexify_grid

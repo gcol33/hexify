@@ -859,7 +859,7 @@ cell_area <- function(cell_id = NULL, grid) {
   } else if (identical(grid_projection(g), "fuller")) {
     lv <- isea_levels(g@aperture, g@resolution)
     sr <- cpp_cell_solid_angle(icosa_arg(g), ids, lv$resolution, lv$aperture,
-                               lv$ap_seq, CELL_AREA_TOLERANCE)
+                               lv$ap_seq, CELL_WALL_TOLERANCE)
     sr / (4 * pi) * surface
   } else {
     # The vertex cells together cover as much as the solid's diamond count of
