@@ -169,7 +169,18 @@
   projection curves them, for Snyder's and Fuller's projections alike; H3
   walls are read from H3's directed edges.
 
+* New `hex_smooth()` smooths cell values over neighbouring cells (#90): each
+  step replaces a value by the weighted mean of the cell and its listed
+  neighbours, the neighbour-matrix smoother of Carr et al. (1997). `group`
+  keeps groups such as land and ocean apart; `NA` values and unlisted cells
+  do not contribute.
+
 ## Bug fixes
+
+* `grid_global()` returns every cell of an ISEA grid. It sampled points and
+  kept the cells they hit, which missed small polar cells from about 40,000
+  cells on: 2 of 40,962 cells at aperture 4 resolution 6, 54 of 168,072 at
+  aperture 7 resolution 5. It now lists the cell IDs 1 to n.
 
 * `get_parent()` on a mixed aperture grid finds the parent in exact lattice
   coordinates (#85). After an aperture-3 step a child centre sits on a

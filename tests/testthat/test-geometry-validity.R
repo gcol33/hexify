@@ -163,6 +163,14 @@ test_that("grid_global covers the poles without warning", {
   }
 })
 
+test_that("grid_global returns every cell once", {
+  skip_on_cran()
+  skip_if_not_installed("sf")
+
+  global <- grid_global(hex_grid(resolution = 6, aperture = 4))
+  expect_identical(global$cell_id, as.numeric(seq_len(10 * 4^6 + 2)))
+})
+
 test_that("the dateline wrap keeps each cell's area", {
   skip_on_cran()
   skip_if_not_installed("sf")

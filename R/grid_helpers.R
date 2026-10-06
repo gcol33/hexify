@@ -570,9 +570,9 @@ h3_all_cells <- function(resolution) {
 #' @return sf object with hexagon polygons
 #'
 #' @details
-#' This function generates a complete global grid by sampling points
-#' densely across the globe. For large grids (many small cells),
-#' consider using \code{grid_rect()} to generate regional subsets.
+#' Every cell of the grid, one row each, in cell ID order for ISEA grids.
+#' For large grids (many small cells), consider using \code{grid_rect()} to
+#' generate regional subsets.
 #'
 #' @seealso \code{\link{grid_rect}} for regional grids
 #'
@@ -610,30 +610,8 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
     ))
   }
 
-  # Dense sampling at a fraction of the cell centre spacing
-  spacing_deg <- hex_spacing_km(g@area_km2) / km_per_degree(grid_radius_km(g)) * 0.7
-
-  lons <- seq(-180, 180, by = spacing_deg)
-  lats <- seq(-85, 85, by = spacing_deg)
-  grid_pts <- expand.grid(lon = lons, lat = lats)
-
-  # Add polar cap sampling (±85 to ±90 degrees)
-  # The regular grid misses polar cells because lat stops at ±85
-  # Near poles, longitude spacing must be DENSER not coarser - at 89°N,
-  # the entire circumference is only ~6.3° of longitude-equivalent distance.
-  # Use the same spacing_deg (or denser) to ensure we catch all cells.
-  polar_lon_spacing <- min(spacing_deg, 15)  # At most 15°, or cell-based spacing
-  polar_lons <- seq(-180, 180, by = polar_lon_spacing)
-  polar_lats <- c(seq(85.5, 89.99, by = 0.5), seq(-89.99, -85.5, by = 0.5))
-  polar_pts <- expand.grid(lon = polar_lons, lat = polar_lats)
-
-  # Combine main grid with polar samples
-  grid_pts <- rbind(grid_pts, polar_pts)
-
-  cell_ids <- lonlat_to_cell(grid_pts$lon, grid_pts$lat, g)
-  unique_cells <- unique(cell_ids)
-
-  cell_to_sf(unique_cells, g, wrap_dateline = wrap_dateline)
+  # ISEA cell IDs number the grid's cells 1..n
+  cell_to_sf(as.numeric(seq_len(n_cells)), g, wrap_dateline = wrap_dateline)
 }
 
 #' Clip hexagon grid to polygon boundary

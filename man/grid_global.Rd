@@ -20,9 +20,9 @@ sf object with hexagon polygons
 Creates hexagon polygons covering the entire Earth.
 }
 \details{
-This function generates a complete global grid by sampling points
-densely across the globe. For large grids (many small cells),
-consider using \code{grid_rect()} to generate regional subsets.
+Every cell of the grid, one row each, in cell ID order for ISEA grids.
+For large grids (many small cells), consider using \code{grid_rect()} to
+generate regional subsets.
 }
 \examples{
 # Coarse global grid
