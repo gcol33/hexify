@@ -158,7 +158,7 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
   grid$azimuth_deg <- orientation[["azimuth"]]
 
   # Calculate actual area for this resolution
-  n_cells <- max_cell_id(grid$resolution, grid$aperture, grid_polyhedron(grid))
+  n_cells <- aperture_n_cells(grid$aperture, grid$resolution, grid_polyhedron(grid))
   grid$area <- body_surface_km2(grid_radius_km(grid)) / n_cells
 
   grid

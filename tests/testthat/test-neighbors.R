@@ -77,7 +77,7 @@ test_that("ISEA neighbours stay inside the grid's cell ID range", {
     for (res in 0:4) {
       n_cells <- 10 * ap^res + 2
       nbrs <- get_neighbors(seq_len(n_cells), hex_grid(resolution = res, aperture = ap))
-      ids <- unlist(nbrs)
+      ids <- cell_id_unlist(nbrs)
 
       expect_true(all(ids >= 1 & ids <= n_cells),
                   info = sprintf("aperture %d res %d neighbour ID range", ap, res))
@@ -115,7 +115,7 @@ test_that("ISEA adjacency is symmetric", {
       nbrs <- get_neighbors(cells, hex_grid(resolution = res, aperture = ap))
 
       from <- rep(cells, lengths(nbrs))
-      to <- unlist(nbrs)
+      to <- as.character(cell_id_unlist(nbrs))
 
       expect_setequal(paste(from, to), paste(to, from))
     }
@@ -134,7 +134,7 @@ test_that("ISEA neighbours are the adjacent cells, not the ring beyond", {
 
       ll <- cell_to_lonlat(cells, g)
       from <- rep(cells, lengths(nbrs))
-      to <- unlist(nbrs)
+      to <- as.integer(cell_id_unlist(nbrs))
       p <- pi / 180
       h <- sin((ll$lat[to] - ll$lat[from]) * p / 2)^2 +
         cos(ll$lat[from] * p) * cos(ll$lat[to] * p) *

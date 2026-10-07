@@ -133,28 +133,31 @@ aperture_at_resolution <- function(aperture, resolution) {
   paste(parts[seq_len(max(resolution, 1L))], collapse = ",")
 }
 
-#' Cell count of an aperture sequence
+#' Cell count of an aperture spelling at a resolution, exact
 #'
 #' N = d * (product of the refinement apertures) + 2, d the solid's diamond
-#' quads, the formula quad_frame() in src/rcpp_cell.cpp packs cell IDs for.
-#' @param ap_seq Integer aperture sequence
+#' quads, as quad_frame() in src/rcpp_cell.cpp counts the cells it numbers;
+#' the largest cell ID. `NA` where N passes 2^63 - 1.
+#' @param aperture Character aperture spelling
+#' @param resolution Integer resolution
 #' @param polyhedron The solid the grid is built on
+#' @return integer64
 #' @noRd
-ap_seq_n_cells <- function(ap_seq, polyhedron = "icosahedron") {
-  polyhedron_diamonds(polyhedron) * prod(as.numeric(ap_seq[-1])) + 2
+isea_cell_count <- function(aperture, resolution, polyhedron = "icosahedron") {
+  lv <- isea_levels(aperture, resolution)
+  cpp_grid_n_cells(standard_icosa(polyhedron), lv$resolution, lv$aperture,
+                   lv$ap_seq)
 }
 
-#' Cell count of an aperture spelling at a resolution
+#' Cell count of an aperture spelling at a resolution, as a double
 #' @param aperture Character aperture spelling
 #' @param resolution Integer resolution
 #' @param polyhedron The solid the grid is built on
 #' @noRd
 aperture_n_cells <- function(aperture, resolution, polyhedron = "icosahedron") {
-  if (is_mixed_aperture(aperture)) {
-    ap_seq_n_cells(parse_aperture_seq(aperture, resolution), polyhedron)
-  } else {
-    max_cell_id(resolution, as.integer(aperture), polyhedron)
-  }
+  # Above 2^53 the count rounds to the nearest double, which is all a cell
+  # area or a spacing reads from it
+  suppressWarnings(as.numeric(isea_cell_count(aperture, resolution, polyhedron)))
 }
 
 #' Calculate resolution for target area
@@ -196,14 +199,14 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
 calculate_resolution_for_area_mixed <- function(area_km2, aperture,
                                                 radius_km = EARTH_RADIUS_KM,
                                                 polyhedron = "icosahedron") {
-  res <- seq.int(MIN_RESOLUTION, MAX_RESOLUTION)
+  res <- seq.int(MIN_RESOLUTION, isea_max_resolution(aperture, polyhedron))
   log_area <- vapply(res, function(r) {
     log(mean_cell_area_km2(aperture, r, radius_km, polyhedron))
   }, numeric(1))
   target <- log(area_km2)
 
   if (target >= log_area[1]) return(as.numeric(MIN_RESOLUTION))
-  if (target <= log_area[length(log_area)]) return(as.numeric(MAX_RESOLUTION))
+  if (target <= log_area[length(log_area)]) return(as.numeric(res[length(res)]))
 
   k <- max(which(log_area > target))
   frac <- (log_area[k] - target) / (log_area[k] - log_area[k + 1])
@@ -213,8 +216,8 @@ calculate_resolution_for_area_mixed <- function(area_km2, aperture,
 #' ISEA resolution for a target cell area
 #'
 #' The resolution whose mean cell area is closest to the target in the
-#' direction `round` asks for, clamped to the resolutions the ISEA backend
-#' supports.
+#' direction `round` asks for, clamped to the resolutions whose cell IDs fit
+#' in 64 bits (isea_max_resolution()).
 #' @param area_km2 Target cell area in km^2
 #' @param aperture Aperture spelling, pure or mixed
 #' @param radius_km Radius of the body, in kilometers
@@ -240,5 +243,5 @@ resolve_resolution_from_area <- function(area_km2, aperture,
     stop("resround must be 'nearest', 'up', or 'down'")
   )
 
-  max(MIN_RESOLUTION, min(MAX_RESOLUTION, resolution))
+  max(MIN_RESOLUTION, min(isea_max_resolution(aperture, polyhedron), resolution))
 }

@@ -86,12 +86,12 @@ test_that("Z7: every cell round-trips through its index (#53)", {
       hexify_cell_to_index(qij$quad[k], qij$i[k], qij$j[k], res, 7L, "z7")
     }, character(1))
 
-    back <- vapply(idx, function(s) {
+    back <- cell_id_unlist(lapply(idx, function(s) {
       r <- hexify_index_to_cell(s, 7L, "z7")
       hexify_quad_ij_to_cell(r$face, r$i, r$j, r$resolution, 7L)
-    }, numeric(1), USE.NAMES = FALSE)
+    }))
 
-    expect_equal(back, as.numeric(ids),
+    expect_equal(back, as_cell_id(ids),
                  info = sprintf("resolution %d round-trip", res))
     expect_equal(length(unique(idx)), length(idx),
                  info = sprintf("resolution %d indices are distinct", res))

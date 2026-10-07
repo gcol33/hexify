@@ -13,7 +13,7 @@ hexify_quad_ij_to_icosa_tri(quad, i, j, resolution, aperture = 3L)
 
 \item{j}{Cell index along second axis, integer or vector}
 
-\item{resolution}{Grid resolution level (0-30)}
+\item{resolution}{Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }

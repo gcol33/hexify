@@ -16,7 +16,9 @@
 #'
 #' @param area_km2 Target cell area in square kilometers. Mutually exclusive
 #'   with \code{resolution}.
-#' @param resolution Grid resolution level (0-30 for ISEA, 0-15 for H3).
+#' @param resolution Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+#'   on the icosahedron, where the cell count stays within the 2^63 - 1
+#'   cell IDs a 64-bit integer numbers; 0-15 for H3.
 #'   Mutually exclusive with \code{area_km2}. For H3, typical use cases by
 #'   resolution:
 #'   \itemize{
@@ -407,6 +409,7 @@ hex_grid <- function(area_km2 = NULL,
       stop(sprintf("Resolution must be between %d and %d",
                    MIN_RESOLUTION, MAX_RESOLUTION))
     }
+    check_isea_resolution(aperture_str, resolution, polyhedron)
   }
 
   # -------------------------------------------------------------------------
@@ -446,7 +449,7 @@ hex_grid <- function(area_km2 = NULL,
 #'
 #' @param data Data frame or sf object (original user data, untouched)
 #' @param grid HexGridInfo object
-#' @param cell_id Numeric vector of cell IDs for each row
+#' @param cell_id Cell IDs for each row: integer64, or whole numbers below 2^53
 #' @param cell_center Matrix with columns lon, lat for cell centers
 #'
 #' @return A HexData object
@@ -473,11 +476,10 @@ new_hex_data <- function(data,
     colnames(cell_center) <- c("lon", "lat")
   }
 
-  # For ISEA grids, coerce to numeric; for H3, keep as character
   if (is_h3_grid(grid)) {
     cell_id <- as.character(cell_id)
   } else {
-    cell_id <- as.numeric(cell_id)
+    cell_id <- as_cell_id(cell_id)
   }
 
   new("HexData",

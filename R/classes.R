@@ -28,7 +28,8 @@ setClassUnion("HexCRS", c("integer", "character"))
 #'
 #' @slot aperture Character. Grid aperture: "3", "4", "7", a mixed family such
 #'   as "4/3" or "4/7", or one aperture per resolution level ("4,4,7,3").
-#' @slot resolution Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).
+#' @slot resolution Integer. Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+#'   on the icosahedron (cell IDs fit in 64 bits); 0-15 for H3.
 #' @slot area_km2 Numeric. Cell area in square kilometers.
 #' @slot diagonal_km Numeric. Centre spacing in kilometers: the short
 #'   (flat-to-flat) diagonal of a regular hexagon of area \code{area_km2},
@@ -109,8 +110,8 @@ setClass(
 #'
 #' @slot data Data frame or sf object. The original user data (untouched).
 #' @slot grid HexGridInfo object. The grid specification used.
-#' @slot cell_id Cell IDs for each row of data. Numeric for ISEA grids,
-#'   character for H3 grids.
+#' @slot cell_id Cell IDs for each row of data: \code{bit64::integer64} for
+#'   ISEA grids, character for H3 grids.
 #' @slot cell_center Matrix. Two-column matrix (lon, lat) of cell centers.
 #'
 #' @details
@@ -129,13 +130,13 @@ setClass(
   slots = c(
     data = "ANY",  # data.frame or sf
     grid = "HexGridInfo",
-    cell_id = "ANY",  # numeric for ISEA, character for H3
+    cell_id = "ANY",  # integer64 for ISEA, character for H3
     cell_center = "matrix"
   ),
   prototype = list(
     data = data.frame(),
     grid = new("HexGridInfo"),
-    cell_id = numeric(0),
+    cell_id = bit64::integer64(0),
     cell_center = matrix(numeric(0), ncol = 2, dimnames = list(NULL, c("lon", "lat")))
   )
 )
@@ -253,8 +254,8 @@ setValidity("HexData", function(object) {
       errors <- c(errors, "H3 cell_id must be character")
     }
   } else {
-    if (!is.numeric(object@cell_id) && length(object@cell_id) > 0) {
-      errors <- c(errors, "ISEA cell_id must be numeric")
+    if (!bit64::is.integer64(object@cell_id)) {
+      errors <- c(errors, "ISEA cell_id must be integer64")
     }
   }
 
@@ -890,6 +891,7 @@ resolve_cells_grid <- function(cell_id, grid, all = FALSE) {
       stop("cell_id required when grid is not HexData")
     }
   }
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   list(cell_id = cell_id, grid = g)
 }
 
@@ -898,8 +900,12 @@ resolve_cells_grid <- function(cell_id, grid, all = FALSE) {
 #' @param cells Cell IDs, or NULL for all of them
 #' @noRd
 grid_cells <- function(g, cells = NULL) {
-  if (!is.null(cells)) return(cells)
-  if (is_h3_grid(g)) h3_all_cells(g@resolution) else seq_len(grid_n_cells(g))
+  if (!is.null(cells)) return(if (is_h3_grid(g)) cells else as_cell_id(cells))
+  if (is_h3_grid(g)) {
+    h3_all_cells(g@resolution)
+  } else {
+    as_cell_id(seq_len(grid_n_cells(g)))
+  }
 }
 
 #' Stop unless an object is a legacy hexify_grid

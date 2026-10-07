@@ -26,6 +26,7 @@
 #include "coordinate_transforms.h"
 #include "rcpp_icosa.h"
 #include "cell_walls.h"
+#include "cell_id.h"
 
 using namespace Rcpp;
 
@@ -262,6 +263,36 @@ static LatticeGenerator generator_of(const hexify::HexGridForm& form) {
     return {form.m + form.n, form.n};
 }
 
+// Cells per diamond quad and in all, for the apertures of levels 1..resolution
+// (`step(k)`), on the active solid. False where the count passes the largest
+// int64, so that the grid's cell IDs cannot all be written.
+template <typename Step>
+static bool grid_cell_count(int resolution, Step step,
+                            int64_t& per_quad, int64_t& n_cells) {
+    const int64_t n_diamonds = hexify::topo().n_diamonds();
+    per_quad = 1;
+    for (int k = 1; k <= resolution; k++) {
+        const int64_t a = step(k);
+        if (per_quad > hexify::kCellIdMax / a) return false;
+        per_quad *= a;
+    }
+    if (per_quad > (hexify::kCellIdMax - 2) / n_diamonds) return false;
+    n_cells = n_diamonds * per_quad + 2;
+    return true;
+}
+
+// The finest resolution of a pure aperture whose cell IDs fit in an int64
+static int pure_max_resolution(int aperture) {
+    int64_t per_quad, n_cells;
+    int r = hexify::kMinResolution;
+    while (r < hexify::kMaxResolution &&
+           grid_cell_count(r + 1, [&](int) { return int64_t(aperture); },
+                           per_quad, n_cells)) {
+        r++;
+    }
+    return r;
+}
+
 // The frame of a pure aperture at a resolution (empty 'ap_seq'), or of a mixed
 // sequence, whose resolution is one less than its length.
 static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_seq) {
@@ -278,17 +309,26 @@ static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_se
     }
 
     QuadFrame f;
+    int64_t per_quad, n_cells;
+    if (!grid_cell_count(resolution,
+                         [&](int k) { return int64_t(mixed ? ap_seq[k] : aperture); },
+                         per_quad, n_cells)) {
+        if (mixed) {
+            Rcpp::stop("this aperture sequence has more cells than 64-bit cell IDs "
+                       "can number (2^63 - 1)");
+        }
+        Rcpp::stop("aperture %d at resolution %d has more cells than 64-bit cell "
+                   "IDs can number (2^63 - 1); its finest resolution on this solid "
+                   "is %d", aperture, resolution, pure_max_resolution(aperture));
+    }
     f.aperture = aperture;
     f.resolution = resolution;
     f.form = mixed ? hexify::hex_form_sequence(ap_seq)
                    : hexify::hex_form_pure(aperture, resolution);
     f.dim = mixed ? hexify::quad_edge_dim(ap_seq)
                   : hexify::quad_edge_dim(aperture, resolution);
-    f.offsetPerQuad = 1;
-    for (int k = 1; k <= resolution; k++) {
-        f.offsetPerQuad *= static_cast<uint64_t>(mixed ? ap_seq[k] : aperture);
-    }
-    f.nCells = static_cast<uint64_t>(hexify::topo().n_diamonds()) * f.offsetPerQuad + 2;
+    f.offsetPerQuad = static_cast<uint64_t>(per_quad);
+    f.nCells = static_cast<uint64_t>(n_cells);
     if (aperture == 7) {
         f.lattice = kAlignedLattice;
         f.generator = {1, 0};
@@ -316,24 +356,28 @@ static QuadFrame grid_frame(int resolution, int aperture, const IntegerVector& a
 
 // The ID, from 1, of the cell at stored (i, j) of a quad. Quad 0 holds the
 // north pole alone, ID 1; quad q > 0 follows it and the q - 1 quads before.
-static inline double frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
+static inline int64_t frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
     uint64_t offset = (quad == 0) ? 0 : 1 + static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
     uint64_t within_quad = (f.aperture == 7)
         ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
         : cell_index_2d(i, j, f.dim, f.lattice);
-    return static_cast<double>(offset + within_quad + 1);
+    return static_cast<int64_t>(offset + within_quad + 1);
 }
 
 // The 0-based index of a cell ID. Stops unless the ID names a cell of the
 // grid, so no table is ever indexed with a quad, i or j read from NA or an
 // out-of-range ID.
-static inline uint64_t frame_cell_index(const QuadFrame& f, double cell_id_raw) {
-    if (!std::isfinite(cell_id_raw) || cell_id_raw < 1.0 ||
-        cell_id_raw > static_cast<double>(f.nCells)) {
-        Rcpp::stop("cell_id must be a finite value in [1, %.0f] for resolution %d",
-                   static_cast<double>(f.nCells), f.resolution);
+static inline uint64_t frame_cell_index(const QuadFrame& f, int64_t id) {
+    if (id == hexify::kCellIdNA || id < 1 || static_cast<uint64_t>(id) > f.nCells) {
+        Rcpp::stop("cell_id must be a whole number in [1, %lld] for resolution %d",
+                   static_cast<long long>(f.nCells), f.resolution);
     }
-    return static_cast<uint64_t>(cell_id_raw) - 1;
+    return static_cast<uint64_t>(id) - 1;
+}
+
+// The 0-based index of the ID in integer64 slot `slot`
+static inline uint64_t frame_cell_index(const QuadFrame& f, double slot) {
+    return frame_cell_index(f, hexify::cell_id_get(slot));
 }
 
 // A cell's quad and stored (i, j) from its 0-based index
@@ -475,6 +519,23 @@ double cpp_quad_edge_dim(int resolution, int aperture, IntegerVector ap_seq) {
     return static_cast<double>(grid_frame(resolution, aperture, ap_seq).dim);
 }
 
+// The number of cells of a grid, as integer64; NA where it passes the largest
+// int64, so that its cell IDs cannot all be written
+// [[Rcpp::export]]
+NumericVector cpp_grid_n_cells(NumericVector icosa, int resolution, int aperture,
+                               IntegerVector ap_seq) {
+    activate_grid(icosa);
+    const bool mixed = ap_seq.size() > 0;
+    if (mixed) resolution = static_cast<int>(ap_seq.size()) - 1;
+    int64_t per_quad, n_cells;
+    if (!grid_cell_count(resolution,
+                         [&](int k) { return int64_t(mixed ? ap_seq[k] : aperture); },
+                         per_quad, n_cells)) {
+        return hexify::cell_id_na(1);
+    }
+    return hexify::cell_id_vector(std::vector<int64_t>{n_cells});
+}
+
 // The generator a + b*omega of the lattice the stored (i, j) of a grid's
 // cells occupy, in the coordinates cpp_cell_to_quad_ij() returns
 // [[Rcpp::export]]
@@ -492,7 +553,7 @@ NumericVector cpp_quad_ij_to_cell(NumericVector icosa, IntegerVector quad, Numer
     activate_grid(icosa);
     QuadFrame f = grid_frame(resolution, aperture, ap_seq);
     R_xlen_t n = quad.size();
-    NumericVector result(n);
+    NumericVector result = hexify::cell_id_na(n);
 
     for (R_xlen_t k = 0; k < n; k++) {
         int q = quad[k];
@@ -507,10 +568,9 @@ NumericVector cpp_quad_ij_to_cell(NumericVector icosa, IntegerVector quad, Numer
         if (!frame_canonicalize(f, q, ii, jj)) {
             // Outside every adjacent quad, which is where the solid
             // folds at a vertex. No cell owns the coordinate.
-            result[k] = NA_REAL;
             continue;
         }
-        result[k] = frame_encode(f, q, ii, jj);
+        result[k] = hexify::cell_id_slot(frame_encode(f, q, ii, jj));
     }
 
     return result;
@@ -542,18 +602,16 @@ NumericVector cpp_mixed_parent(NumericVector icosa, NumericVector cell_id,
     const QuadFrame parent = quad_frame(0, 0, std::vector<int>(parent_seq.begin(),
                                                                parent_seq.end()));
 
+    hexify::require_cell_ids(cell_id);
     R_xlen_t n = cell_id.size();
-    NumericVector result(n);
+    NumericVector result = hexify::cell_id_na(n);
     for (R_xlen_t k = 0; k < n; k++) {
-        if (ISNAN(cell_id[k])) {
-            result[k] = NA_REAL;
-            continue;
-        }
+        if (hexify::cell_id_get(cell_id[k]) == hexify::kCellIdNA) continue;
         int quad;
         long long i, j;
         frame_decode(child, cell_id[k], quad, i, j);
         frame_parent(child, parent, quad, i, j);
-        result[k] = frame_encode(parent, quad, i, j);
+        result[k] = hexify::cell_id_slot(frame_encode(parent, quad, i, j));
     }
     return result;
 }
@@ -565,13 +623,14 @@ NumericVector cpp_lonlat_to_cell(NumericVector icosa,
     activate_grid(icosa);
     QuadFrame f = grid_frame(resolution, aperture, ap_seq);
     R_xlen_t n = lon.size();
-    NumericVector result(n);
+    NumericVector result = hexify::cell_id_na(n);
 
     for (R_xlen_t k = 0; k < n; k++) {
+        if (ISNAN(lon[k]) || ISNAN(lat[k])) continue;
         int quad;
         long long i, j;
         frame_locate(f, lon[k], lat[k], quad, i, j);
-        result[k] = frame_encode(f, quad, i, j);
+        result[k] = hexify::cell_id_slot(frame_encode(f, quad, i, j));
     }
 
     return result;
@@ -581,6 +640,7 @@ NumericVector cpp_lonlat_to_cell(NumericVector icosa,
 DataFrame cpp_cell_to_lonlat(NumericVector icosa, NumericVector cell_id,
                              int resolution, int aperture, IntegerVector ap_seq) {
     activate_grid(icosa);
+    hexify::require_cell_ids(cell_id);
     QuadFrame f = grid_frame(resolution, aperture, ap_seq);
     R_xlen_t n = cell_id.size();
     NumericVector lon(n);
@@ -620,6 +680,7 @@ DataFrame cpp_cell_to_lonlat(NumericVector icosa, NumericVector cell_id,
 DataFrame cpp_cell_to_quad_ij(NumericVector icosa, NumericVector cell_id, int resolution, int aperture,
                               IntegerVector ap_seq) {
     activate_grid(icosa);
+    hexify::require_cell_ids(cell_id);
     QuadFrame f = grid_frame(resolution, aperture, ap_seq);
     R_xlen_t n = cell_id.size();
     IntegerVector out_quad(n);
@@ -654,6 +715,7 @@ DataFrame cpp_cell_to_quad_ij(NumericVector icosa, NumericVector cell_id, int re
 DataFrame cpp_cell_to_quad_xy(NumericVector icosa, NumericVector cell_id, int resolution,
                                int aperture) {
     activate_grid(icosa);
+    hexify::require_cell_ids(cell_id);
     QuadFrame f = quad_frame(resolution, aperture, {});
     R_xlen_t n = cell_id.size();
     IntegerVector out_quad(n);
@@ -695,7 +757,7 @@ NumericVector cpp_quad_xy_to_cell(NumericVector icosa, IntegerVector quad, Numer
     activate_grid(icosa);
     QuadFrame f = quad_frame(resolution, aperture, {});
     R_xlen_t n = quad.size();
-    NumericVector result(n);
+    NumericVector result = hexify::cell_id_na(n);
 
     for (R_xlen_t k = 0; k < n; k++) {
         int q = quad[k];
@@ -716,7 +778,7 @@ NumericVector cpp_quad_xy_to_cell(NumericVector icosa, IntegerVector quad, Numer
             hexify::icosa_tri_to_quad_ij(icosa_triangle_face, icosa_triangle_x, icosa_triangle_y,
                                          aperture, resolution, out_quad, i, j);
         }
-        result[k] = frame_encode(f, out_quad, i, j);
+        result[k] = hexify::cell_id_slot(frame_encode(f, out_quad, i, j));
     }
 
     return result;
@@ -733,6 +795,7 @@ NumericVector cpp_quad_xy_to_cell(NumericVector icosa, IntegerVector quad, Numer
 DataFrame cpp_cell_to_icosa_tri(NumericVector icosa, NumericVector cell_id, int resolution,
                                  int aperture) {
     activate_grid(icosa);
+    hexify::require_cell_ids(cell_id);
     QuadFrame f = quad_frame(resolution, aperture, {});
     R_xlen_t n = cell_id.size();
     IntegerVector out_face(n);
@@ -1357,6 +1420,7 @@ struct CellPlanes {
 };
 
 static CellPlanes cell_planes(const NumericVector& cell_id, const QuadFrame& f) {
+    hexify::require_cell_ids(cell_id);
     CellPlanes out;
     out.radius = kHexCircumradius / f.form.scale;
     out.rotation_deg = hexify::form_rotation_deg(f.form);
@@ -1730,8 +1794,10 @@ List cpp_globe_frame(NumericVector icosa, int resolution, int aperture, IntegerV
         _["c"] = static_cast<double>(lattice.c),
         _["generator"] = NumericVector::create(static_cast<double>(generator.a),
                                                static_cast<double>(generator.b)),
-        _["per_quad"] = static_cast<double>(f.offsetPerQuad),
-        _["n_cells"] = static_cast<double>(f.nCells));
+        _["per_quad"] = hexify::cell_id_vector(
+            std::vector<int64_t>{static_cast<int64_t>(f.offsetPerQuad)}),
+        _["n_cells"] = hexify::cell_id_vector(
+            std::vector<int64_t>{static_cast<int64_t>(f.nCells)}));
 }
 
 // The cells adjacent to a vertex quad's cell. The vertex is a corner of every
@@ -1740,7 +1806,7 @@ List cpp_globe_frame(NumericVector icosa, int resolution, int aperture, IntegerV
 // steps from the corner that land in the box, over every quad the vertex is a
 // corner of. No step leaves a box, so none is read across a face edge.
 static void pole_neighbors(const QuadFrame& f, int pole, const long long offsets[6][2],
-                           std::vector<double>& out) {
+                           std::vector<int64_t>& out) {
     const hexify::SolidTopology& t = hexify::topo();
     for (int q = 1; q <= t.n_diamonds(); q++) {
         const auto& c = t.corner[q];
@@ -1768,6 +1834,7 @@ static void pole_neighbors(const QuadFrame& f, int pole, const long long offsets
 // sent back through the forward pipeline, which names the quad that owns it.
 static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
                                       const QuadFrame& f) {
+    hexify::require_cell_ids(cell_id);
     int n = cell_id.size();
     Rcpp::List out(n);
 
@@ -1777,19 +1844,15 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
     for (int k = 0; k < n; k++) {
         uint64_t idx = frame_cell_index(f, cell_id[k]);
 
-        std::vector<double> neighbor_ids;
+        std::vector<int64_t> neighbor_ids;
         neighbor_ids.reserve(6);
 
         // Resolution 0 is one base cell per vertex of the solid, a vertex cell
         // each, and each quad holds a single cell, so adjacency there is the
         // solid's vertex graph rather than a step through a quad frame.
         if (f.resolution == 0) {
-            const std::vector<int>& nb = hexify::topo().neighbors[idx];
-            Rcpp::NumericVector base(nb.size());
-            for (size_t d = 0; d < nb.size(); d++) {
-                base[d] = nb[d] + 1;
-            }
-            out[k] = base;
+            for (int v : hexify::topo().neighbors[idx]) neighbor_ids.push_back(v + 1);
+            out[k] = hexify::cell_id_vector(neighbor_ids);
             continue;
         }
 
@@ -1805,7 +1868,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
             std::sort(neighbor_ids.begin(), neighbor_ids.end());
             neighbor_ids.erase(std::unique(neighbor_ids.begin(), neighbor_ids.end()),
                                neighbor_ids.end());
-            out[k] = Rcpp::NumericVector(neighbor_ids.begin(), neighbor_ids.end());
+            out[k] = hexify::cell_id_vector(neighbor_ids);
             continue;
         }
         frame_decode_index(f, idx, quad, i, j);
@@ -1852,12 +1915,12 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
         neighbor_ids.erase(std::unique(neighbor_ids.begin(), neighbor_ids.end()),
                            neighbor_ids.end());
         // Remove self
-        double self_id = cell_id[k];
+        const int64_t self_id = static_cast<int64_t>(idx) + 1;
         neighbor_ids.erase(
             std::remove(neighbor_ids.begin(), neighbor_ids.end(), self_id),
             neighbor_ids.end());
 
-        out[k] = Rcpp::NumericVector(neighbor_ids.begin(), neighbor_ids.end());
+        out[k] = hexify::cell_id_vector(neighbor_ids);
     }
 
     return out;
@@ -1886,7 +1949,7 @@ List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
     List nbrs = walls ? neighbors_in_frame(cell_id, f) : List(0);
     NumericVector perimeter(n);
     hexify::WallRows rows;
-    std::vector<double> row_nbr;
+    std::vector<int64_t> row_nbr;
     std::vector<PlaneEdge> edges;
     std::vector<FacePiece> pieces;
     std::vector<std::vector<hexify::UnitVec>> lines;
@@ -1910,20 +1973,20 @@ List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
         nbr_centres.clear();
         for (const CellPlane& c : ng.cells) nbr_centres.push_back(cell_centre_sphere(c));
         if (!hexify::walls_of_neighbours(shapes, nbr_centres, wall_of)) {
-            stop("cell %.0f: its %d walls do not pair one to one with its %d neighbours",
-                 cell_id[k], static_cast<int>(shapes.size()), static_cast<int>(nb.size()));
+            stop("cell %lld: its %d walls do not pair one to one with its %d neighbours",
+                 static_cast<long long>(hexify::cell_id_get(cell_id[k])),
+                 static_cast<int>(shapes.size()), static_cast<int>(nb.size()));
         }
         const hexify::UnitVec centre = cell_centre_sphere(g.cells[k]);
         for (R_xlen_t j = 0; j < nb.size(); j++) {
             rows.add(k, hexify::measure_wall(shapes[wall_of[j]], centre, nbr_centres[j]));
-            row_nbr.push_back(nb[j]);
+            row_nbr.push_back(hexify::cell_id_get(nb[j]));
         }
     }
 
     List out = List::create(_["perimeter"] = perimeter);
     if (walls) {
-        out["walls"] = rows.frame("neighbor_id",
-                                  NumericVector(row_nbr.begin(), row_nbr.end()));
+        out["walls"] = rows.frame("neighbor_id", hexify::cell_id_vector(row_nbr));
     }
     return out;
 }
@@ -2011,6 +2074,7 @@ DataFrame cpp_icosa_tri_to_plane(NumericVector icosa, IntegerVector icosa_triang
 // [[Rcpp::export]]
 DataFrame cpp_cell_to_plane(NumericVector icosa, NumericVector cell_id, int resolution, int aperture) {
     activate_grid(icosa);
+    hexify::require_cell_ids(cell_id);
     QuadFrame f = quad_frame(resolution, aperture, {});
     R_xlen_t n = cell_id.size();
     NumericVector out_px(n);

@@ -11,7 +11,7 @@
 #' where analysis is done in ISEA (exact equal-area) and reporting in H3
 #' (industry-standard).
 #'
-#' @param cell_id Cell IDs to translate. Numeric for ISEA, character for H3.
+#' @param cell_id Cell IDs to translate. integer64 for ISEA, character for H3.
 #'   When \code{grid} is a HexData object and \code{cell_id} is \code{NULL},
 #'   all cell IDs from the data are used.
 #' @param grid A HexGridInfo or HexData object. For \code{direction =
@@ -29,7 +29,7 @@
 #'
 #' @return A data frame with columns:
 #' \describe{
-#'   \item{isea_cell_id}{ISEA cell ID (numeric)}
+#'   \item{isea_cell_id}{ISEA cell ID (integer64)}
 #'   \item{h3_cell_id}{H3 cell ID (character)}
 #'   \item{isea_area_km2}{Area of the ISEA cell in km2, as \code{\link{cell_area}}
 #'     returns it}

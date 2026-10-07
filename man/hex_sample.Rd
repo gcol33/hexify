@@ -7,7 +7,7 @@
 hex_sample(cell_id, grid, n = 1L)
 }
 \arguments{
-\item{cell_id}{Cell IDs. Numeric for ISEA grids, character for H3 grids.}
+\item{cell_id}{Cell IDs. integer64 for ISEA grids, character for H3 grids.}
 
 \item{grid}{A HexGridInfo or HexData object.}
 

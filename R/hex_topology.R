@@ -8,7 +8,7 @@
 #' instead of 6. A grid on the octahedron has none: its six vertex cells are
 #' squares.
 #'
-#' @param cell_id Cell IDs to check. Numeric for ISEA, character for H3.
+#' @param cell_id Cell IDs to check. integer64 for ISEA, character for H3.
 #' @param grid A HexGridInfo or HexData object specifying the grid.
 #'
 #' @return A logical vector. `TRUE` for pentagon cells, `FALSE` for hexagons.

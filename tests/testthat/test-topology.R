@@ -64,7 +64,7 @@ test_that("adjacent ISEA cells are one hop apart, at every aperture", {
 
       neighbours <- get_neighbors(seq_len(n_cells), grid)
       from <- rep(seq_len(n_cells), lengths(neighbours))
-      to <- unlist(neighbours, use.names = FALSE)
+      to <- cell_id_unlist(neighbours)
 
       expect_equal(hex_distance(from, to, grid),
                    rep(1L, length(from)), info = label)
@@ -79,8 +79,9 @@ test_that("ISEA distances match breadth-first search over the neighbours", {
     frontier <- source
 
     for (step in seq_len(depth)) {
-      reached <- unique(unlist(cpp_get_neighbors_isea(numeric(0), frontier, resolution,
-                                                      aperture, integer(0))))
+      reached <- unique(cell_id_unlist(cpp_get_neighbors_isea(numeric(0), as_cell_id(frontier),
+                                                              resolution, aperture,
+                                                              integer(0))))
       reached <- reached[!(as.character(reached) %in% names(hops))]
       if (length(reached) == 0) break
       hops[as.character(reached)] <- step
@@ -138,7 +139,7 @@ test_that("a mixed aperture sequence walks like a pure one", {
       expect_equal(sum(lengths(neighbours) == 6L), n_cells - 12L, info = label)
 
       from <- rep(seq_len(n_cells), lengths(neighbours))
-      to <- unlist(neighbours, use.names = FALSE)
+      to <- cell_id_unlist(neighbours)
       expect_equal(hex_distance(from, to, grid), rep(1L, length(from)),
                    info = label)
     }
@@ -152,7 +153,7 @@ test_that("mixed-sequence distances match breadth-first search", {
     frontier <- source
 
     for (step in seq_len(depth)) {
-      reached <- unique(unlist(grid_neighbors_isea(frontier, grid)))
+      reached <- unique(cell_id_unlist(grid_neighbors_isea(frontier, grid)))
       reached <- reached[!(as.character(reached) %in% names(hops))]
       if (length(reached) == 0) break
       hops[as.character(reached)] <- step

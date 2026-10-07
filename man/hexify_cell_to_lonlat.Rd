@@ -7,7 +7,7 @@
 hexify_cell_to_lonlat(cell_id, resolution, aperture)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based)}
+\item{cell_id}{Cell IDs, from 1: integer64, or whole numbers below 2^53}
 
 \item{resolution}{Grid resolution (integer >= 0)}
 

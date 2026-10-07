@@ -7,7 +7,8 @@
 get_children(cell_id, grid, levels = 1L, as_sf = FALSE)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs}
+\item{cell_id}{Cell IDs: integer64 for ISEA grids (whole numbers below
+2^53 and digit strings are accepted), character for H3 grids}
 
 \item{grid}{A HexGridInfo or HexData object}
 
@@ -17,7 +18,7 @@ get_children(cell_id, grid, levels = 1L, as_sf = FALSE)
 per child with its \code{parent_id}.}
 }
 \value{
-List of numeric vectors containing child cell IDs, one per input
+List of vectors of child cell IDs, one per input
 cell; with \code{as_sf = TRUE}, an sf object with columns
 \code{parent_id}, \code{cell_id} and \code{geometry}.
 }

@@ -27,7 +27,8 @@ For H3 grids, the aperture is fixed at "7" and resolution ranges from 0 to 15.
 \item{\code{aperture}}{Character. Grid aperture: "3", "4", "7", a mixed family such
 as "4/3" or "4/7", or one aperture per resolution level ("4,4,7,3").}
 
-\item{\code{resolution}}{Integer. Grid resolution level (0-30 for ISEA, 0-15 for H3).}
+\item{\code{resolution}}{Integer. Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+on the icosahedron (cell IDs fit in 64 bits); 0-15 for H3.}
 
 \item{\code{area_km2}}{Numeric. Cell area in square kilometers.}
 

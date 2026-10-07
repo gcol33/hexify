@@ -2,6 +2,28 @@
 
 ## Breaking changes
 
+* ISEA cell IDs are 64-bit integers (`bit64::integer64`, a new import), exact
+  at every resolution (#99). They were doubles, which hold whole numbers
+  exactly only below 2^53: aperture 4 from resolution 25 and aperture 7 from
+  resolution 18 returned IDs that decoded to other cells, and aperture 7 from
+  resolution 22 IDs that did not decode. `lonlat_to_cell()`, `get_parent()`,
+  `get_children()`, `get_neighbors()`, `cell_to_sf()`, `hexify()` and every
+  other function returning ISEA cell IDs return integer64; functions taking
+  them also accept whole numbers below 2^53 and digit strings, and refuse a
+  double of 2^53 or more, which cannot name a cell exactly. H3 cell IDs stay
+  character. `n_cells()` stays a double: it is a count, not an ID.
+  `unlist()`, `sapply()`, `ifelse()` and `for` loops drop the integer64
+  class, leaving raw bits that read as numbers between 0 and 1: combine the
+  lists `get_neighbors()` and `get_children()` return with `do.call(c, x)`.
+  A value between 0 and 1 passed as a cell ID is refused with that hint.
+
+* A grid's resolution is capped where its cell count passes 2^63 - 1, the
+  largest integer64: on the icosahedron aperture 3 keeps resolutions 0-30,
+  aperture 4 stops at 29 and aperture 7 at 21 (on the octahedron, aperture 4
+  reaches 30). `hex_grid()` names the finest resolution when asked for a finer
+  one, and an `area_km2` finer than that clamps to it. Aperture 7's Z7 index
+  strings, previously limited to resolution 20, follow the grid to 21.
+
 * `plot_globe()` is removed. `plot(<grid>)` draws a grid in 3D, on the sphere
   (`surface = "sphere"`) or on the flat faces of the solid the grid is
   built on (`surface = "solid"`), with land fill and country outlines

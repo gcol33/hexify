@@ -476,23 +476,24 @@ globe_grid <- function(g, cells, values, limits) {
   all <- is.null(cells)
   # Values for the whole grid are read by cell ID; any other cells are found
   # among their sorted IDs.
-  dense <- all && !is.null(values) && frame$n_cells <= 2^32
-  if (all && !is.null(values) && !dense) cells <- seq_len(frame$n_cells)
+  n_cells <- as.numeric(frame$n_cells)
+  dense <- all && !is.null(values) && n_cells <= 2^32
+  if (all && !is.null(values) && !dense) cells <- seq_len(n_cells)
   keys <- NULL
   if (dense) {
-    check_values(values, frame$n_cells)
+    check_values(values, n_cells)
   } else if (!is.null(cells)) {
-    if (!is.numeric(cells) || anyNA(cells) || any(cells != floor(cells)) ||
-        any(cells < 1 | cells > frame$n_cells)) {
-      stop("cells must be cell IDs of the grid, from 1 to ", frame$n_cells,
-           call. = FALSE)
+    cells <- as_cell_id(cells, "cells")
+    if (anyNA(cells) || any(cells < 1L | cells > frame$n_cells)) {
+      stop("cells must be cell IDs of the grid, from 1 to ",
+           as.character(frame$n_cells), call. = FALSE)
     }
     o <- order(cells)
     if (!is.null(values)) {
       check_values(values, length(cells))
       values <- values[o]
     }
-    keys <- split_u64(as.numeric(cells)[o])
+    keys <- split_u64(cells[o])
   }
   list(
     dim = frame$dim,
@@ -509,11 +510,13 @@ globe_grid <- function(g, cells, values, limits) {
   )
 }
 
-#' Whole numbers below 2^53 as their high and low 32-bit words, interleaved
+#' Non-negative integer64 values as their high and low 32-bit words,
+#' interleaved, each as a double
 #' @noRd
 split_u64 <- function(x) {
-  hi <- floor(x / 2^32)
-  as.vector(rbind(hi, x - hi * 2^32))
+  word <- bit64::as.integer64(2^32)
+  hi <- x %/% word
+  as.vector(rbind(as.numeric(hi), as.numeric(x - hi * word)))
 }
 
 #' H3 cells filled as one mesh of the sphere, item k being cell k of `cells`;

@@ -94,5 +94,6 @@ raster_target_cells <- function(grid, g, cells = NULL, boundary = NULL) {
   } else {
     stop("Provide a HexData object, cell IDs via 'cells', or a 'boundary' polygon")
   }
+  if (!is_h3_grid(g)) ids <- as_cell_id(ids)
   unique(ids[!is.na(ids)])
 }

@@ -117,7 +117,8 @@ test_that("exactly 12 pentagons exist for all ISEA apertures", {
   # full valid cell-ID range rather than a handful of specific candidates.
   max_cell_id <- function(res, ap) {
     err <- tryCatch({
-      hexify:::cpp_cell_to_quad_ij(numeric(0), .Machine$integer.max, res, ap, integer(0))
+      hexify:::cpp_cell_to_quad_ij(numeric(0), as_cell_id(.Machine$integer.max),
+                                   res, ap, integer(0))
       NA_real_
     }, error = function(e) conditionMessage(e))
     as.numeric(sub(".*\\[1, ([0-9]+)\\].*", "\\1", err))
@@ -164,10 +165,12 @@ test_that("neighbors are symmetric for interior cells", {
   cell <- lonlat_to_cell(10, 45, g)
   nbrs <- get_neighbors(cell, g)[[1]]
 
-  for (nbr in nbrs) {
+  for (k in seq_along(nbrs)) {
+    nbr <- nbrs[k]
     nbr_nbrs <- get_neighbors(nbr, g)[[1]]
     expect_true(cell %in% nbr_nbrs,
-                info = sprintf("cell %s not in neighbors of %s", cell, nbr))
+                info = sprintf("cell %s not in neighbors of %s", as.character(cell),
+                               as.character(nbr)))
   }
 })
 

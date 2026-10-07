@@ -971,7 +971,7 @@ digit of the neighbour of the quad's vertex that the walk arrives at.
 g7 <- hex_grid(resolution = 4, aperture = 7)
 cell <- lonlat_to_cell(16.37, 48.21, g7)
 idx <- cell_to_index(cell, g7)
-cat(sprintf("Cell %d -> Z7 index: %s\n", cell, idx))
+cat(sprintf("Cell %s -> Z7 index: %s\n", as.character(cell), idx))
 cat(sprintf("  Leading field: %s (quad %d), Digits: %s\n",
             substr(idx, 1, 2), as.integer(substr(idx, 1, 2)) %% 12L,
             substr(idx, 3, nchar(idx))))
@@ -1005,7 +1005,7 @@ Each $(i_d, j_d)$ digit pair is mapped through a lookup table to a Z3 code pair.
 g3 <- hex_grid(resolution = 8, aperture = 3)
 cell <- lonlat_to_cell(16.37, 48.21, g3)
 idx <- cell_to_index(cell, g3)
-cat(sprintf("Cell %d -> Z3 index: %s\n", cell, idx))
+cat(sprintf("Cell %s -> Z3 index: %s\n", as.character(cell), idx))
 cat(sprintf("  Base cell: %s, Digits: %s (%d digit pairs)\n",
             substr(idx, 1, 2), substr(idx, 3, nchar(idx)),
             (nchar(idx) - 2) / 2))
@@ -1026,7 +1026,7 @@ The Z-order (Morton) index uses bit-interleaving of the $(i, j)$ coordinates, pr
 g4 <- hex_grid(resolution = 8, aperture = 4)
 cell <- lonlat_to_cell(16.37, 48.21, g4)
 idx <- cell_to_index(cell, g4)
-cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
+cat(sprintf("Aperture 4: Cell %s -> Z-order index: %s\n", as.character(cell), idx))
 ```
 
 ### Index Type Comparison
@@ -1167,8 +1167,8 @@ for (ap in c(3, 4, 7)) {
   recovered <- cell_to_lonlat(cell_id, grid)
   error_km <- sqrt((recovered$lon - original_lon)^2 +
                    (recovered$lat - original_lat)^2) * 111
-  cat(sprintf("Aperture %d (res %2d): cell %d -> (%.4f, %.4f), ~%.1f km from center\n",
-              ap, res, cell_id,
+  cat(sprintf("Aperture %d (res %2d): cell %s -> (%.4f, %.4f), ~%.1f km from center\n",
+              ap, res, as.character(cell_id),
               recovered$lon, recovered$lat, error_km))
 }
 ```

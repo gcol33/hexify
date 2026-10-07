@@ -144,7 +144,7 @@ wall_metrics <- function(cell_id = NULL, grid) {
 #' Cell IDs in the type a grid's backend takes
 #' @noRd
 metric_ids <- function(cell_id, g) {
-  if (is_h3_grid(g)) as.character(cell_id) else as.numeric(cell_id)
+  if (is_h3_grid(g)) as.character(cell_id) else as_cell_id(cell_id)
 }
 
 #' Perimeters and walls of cells on the unit sphere

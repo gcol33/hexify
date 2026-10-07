@@ -109,7 +109,7 @@ hex_browse <- function(hex_data, grid = NULL, value = NULL,
 
   # Build popup text
   popup_text <- paste0(
-    "<b>Cell ID:</b> ", cell_ids, "<br>",
+    "<b>Cell ID:</b> ", as.character(cell_ids), "<br>",
     "<b>Center:</b> (",
     round(cell_df$cell_cen_lon, 4), ", ",
     round(cell_df$cell_cen_lat, 4), ")<br>"

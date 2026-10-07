@@ -25,7 +25,7 @@ test_that("corners fall between the neighbouring cell centres", {
       cells <- cells[!is_pentagon(cells, g)]
 
       centres <- lonlat_matrix(cell_to_lonlat(cells, g))
-      rings <- cpp_cell_to_corners(numeric(0), as.numeric(cells), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as_cell_id(cells), as.integer(res),
                                    as.integer(ap), integer(0))
 
       ratios <- numeric(0)
@@ -61,7 +61,7 @@ test_that("a cell at an icosahedral vertex is a pentagon", {
       pentagons <- seq_len(n)[is_pentagon(seq_len(n), g)]
       expect_length(pentagons, 12)
 
-      rings <- cpp_cell_to_corners(numeric(0), as.numeric(pentagons), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as_cell_id(pentagons), as.integer(res),
                                    as.integer(ap), integer(0))
       for (ring in rings) {
         expect_equal(nrow(ring), 6L)
@@ -82,7 +82,7 @@ test_that("every pentagon corner is shared with a neighbour", {
       pentagons <- seq_len(n)[is_pentagon(seq_len(n), g)]
 
       centres <- lonlat_matrix(cell_to_lonlat(pentagons, g))
-      rings <- cpp_cell_to_corners(numeric(0), as.numeric(pentagons), as.integer(res),
+      rings <- cpp_cell_to_corners(numeric(0), as_cell_id(pentagons), as.integer(res),
                                    as.integer(ap), integer(0))
 
       for (k in seq_along(pentagons)) {

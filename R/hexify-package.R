@@ -9,6 +9,8 @@
 #' @importFrom graphics points polygon
 #' @importFrom utils head
 #' @importFrom rlang .data
+#' @importFrom bit64 %in% match order rank table factor as.factor intersect
+#'   setdiff union is.element setequal
 "_PACKAGE"
 
 # Global variables to avoid R CMD check notes

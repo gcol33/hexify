@@ -11,7 +11,7 @@ new_hex_data(data, grid, cell_id, cell_center)
 
 \item{grid}{HexGridInfo object}
 
-\item{cell_id}{Numeric vector of cell IDs for each row}
+\item{cell_id}{Cell IDs for each row: integer64, or whole numbers below 2^53}
 
 \item{cell_center}{Matrix with columns lon, lat for cell centers}
 }

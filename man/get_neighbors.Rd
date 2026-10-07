@@ -14,8 +14,8 @@ get_neighbors(
 )
 }
 \arguments{
-\item{cell_id}{Cell IDs to find neighbors for. Numeric vector for ISEA
-grids, character vector for H3 grids.}
+\item{cell_id}{Cell IDs to find neighbors for: integer64 (or whole
+numbers) for ISEA grids, character for H3 grids.}
 
 \item{grid}{A HexGridInfo or HexData object specifying the grid.}
 

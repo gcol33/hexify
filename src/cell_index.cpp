@@ -7,6 +7,7 @@
 #include "index_z7.h"
 #include "coordinate_transforms.h"
 #include "polyhedron.h"
+#include "constants.h"
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
@@ -24,10 +25,6 @@ namespace hexify {
 // always the cell's quad.
 // ---------------------------------------------------------------------------
 namespace {
-  const int MAX_RES_AP3 = 30;
-  const int MAX_RES_AP4 = 30;
-  const int MAX_RES_AP7 = 20;
-  
   std::string format_quad(int quadNum) {
     std::ostringstream oss;
     oss << std::setw(2) << std::setfill('0') << quadNum;
@@ -82,15 +79,8 @@ std::string cell_to_index(int face, long long i, long long j,
   if (resolution < 0) {
     throw std::runtime_error("hex_index: invalid resolution");
   }
-  
-  if (aperture == 7 && resolution > MAX_RES_AP7) {
-    throw std::runtime_error("hex_index: resolution exceeds max for aperture 7");
-  }
-  if (aperture == 3 && resolution > MAX_RES_AP3) {
-    throw std::runtime_error("hex_index: resolution exceeds max for aperture 3");
-  }
-  if (aperture == 4 && resolution > MAX_RES_AP4) {
-    throw std::runtime_error("hex_index: resolution exceeds max for aperture 4");
+  if (resolution > kMaxResolution) {
+    throw std::runtime_error("hex_index: resolution exceeds the maximum resolution");
   }
 
   if (index_type == IndexType::AUTO) {
@@ -301,10 +291,7 @@ std::vector<std::string> get_children_indices(const std::string& index,
   // children), so this is checked explicitly up front rather than relying
   // on a catch-all around cell_to_index() below to swallow the resulting
   // "resolution exceeds max" error -- which would also hide unrelated bugs.
-  int max_res_for_aperture = (aperture == 7) ? MAX_RES_AP7 :
-                             (aperture == 3) ? MAX_RES_AP3 :
-                             (aperture == 4) ? MAX_RES_AP4 : -1;
-  if (max_res_for_aperture >= 0 && child_res > max_res_for_aperture) {
+  if (child_res > kMaxResolution) {
     return children;
   }
 

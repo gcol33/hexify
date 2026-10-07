@@ -30,7 +30,7 @@
 mixed_cell_center <- function(cell_id, resolution, aperture,
                               polyhedron = "icosahedron") {
   lv <- isea_levels(aperture, resolution)
-  cpp_cell_to_lonlat(standard_icosa(polyhedron), as.numeric(cell_id),
+  cpp_cell_to_lonlat(standard_icosa(polyhedron), as_cell_id(cell_id),
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
@@ -44,7 +44,7 @@ mixed_point_to_cell <- function(lon, lat, resolution, aperture,
 mixed_cell_qij <- function(cell_id, resolution, aperture,
                            polyhedron = "icosahedron") {
   lv <- isea_levels(aperture, resolution)
-  cpp_cell_to_quad_ij(standard_icosa(polyhedron), as.numeric(cell_id),
+  cpp_cell_to_quad_ij(standard_icosa(polyhedron), as_cell_id(cell_id),
                       lv$resolution, lv$aperture, lv$ap_seq)
 }
 
@@ -89,7 +89,7 @@ mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L,
              mixed_point_to_cell(0, 90, resolution, aperture, polyhedron),
              mixed_point_to_cell(0, -90, resolution, aperture, polyhedron))
   cells <- unique(cells)
-  cells <- cells[is.finite(cells) & cells >= 1 & cells <= n_cells]
+  cells <- cells[!is.na(cells) & cells >= 1L & cells <= n_cells]
   # Keep only (i,j) that round-trip to a real cell.
   if (length(cells) == 0) return(cells)
   q2 <- mixed_cell_qij(cells, resolution, aperture, polyhedron)
@@ -109,7 +109,7 @@ mixed_boundary_cells <- function(resolution, aperture, n_cells, w = 4L,
 mixed_get_parent <- function(cell_id, resolution, aperture, levels = 1L,
                              polyhedron = "icosahedron") {
   icosa <- standard_icosa(polyhedron)
-  cell_id <- as.numeric(cell_id)
+  cell_id <- as_cell_id(cell_id)
   for (r in seq(resolution, length.out = as.integer(levels), by = -1L)) {
     cell_id <- cpp_mixed_parent(icosa, cell_id, isea_levels(aperture, r)$ap_seq,
                                 isea_levels(aperture, r - 1L)$ap_seq)
@@ -131,7 +131,7 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
                                    n_cells_child, polyhedron = "icosahedron") {
   # Coarse levels: exhaustive filter (no locality assumptions, cheap).
   if (n_cells_child <= 2000) {
-    all_child <- seq_len(n_cells_child)
+    all_child <- as_cell_id(seq_len(n_cells_child))
     par <- mixed_get_parent(all_child, child_res, aperture, child_res - resolution,
                             polyhedron)
     return(sort(all_child[par == cell_id]))
@@ -152,7 +152,7 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
             mixed_point_to_cell(0, 90, child_res, aperture, polyhedron),
             mixed_point_to_cell(0, -90, child_res, aperture, polyhedron))
   seed <- unique(seed)
-  seed <- seed[is.finite(seed) & seed >= 1 & seed <= n_cells_child]
+  seed <- seed[!is.na(seed) & seed >= 1L & seed <= n_cells_child]
 
   parent_of <- function(x) {
     mixed_get_parent(x, child_res, aperture, child_res - resolution, polyhedron)
@@ -170,8 +170,8 @@ mixed_get_children_one <- function(cell_id, resolution, child_res, aperture,
   for (iter in seq_len(64)) {
     if (length(frontier) == 0) break
     lv <- isea_levels(aperture, child_res)
-    nb <- unlist(cpp_get_neighbors_isea(standard_icosa(polyhedron), frontier,
-                                        lv$resolution, lv$aperture, lv$ap_seq))
+    nb <- cell_id_unlist(cpp_get_neighbors_isea(standard_icosa(polyhedron), frontier,
+                                                lv$resolution, lv$aperture, lv$ap_seq))
     nb <- setdiff(nb[!is.na(nb)], visited)
     visited <- c(visited, nb)
     if (length(nb) == 0) break
@@ -221,8 +221,8 @@ mixed_cell_to_index_one <- function(cell_id, resolution, aperture,
     return(sprintf("%02d", as.integer(cell_id)))
   }
   # Ancestor chain a[0..resolution]; a[resolution] = cell_id.
-  anc <- numeric(resolution + 1)
-  anc[resolution + 1] <- cell_id
+  anc <- as_cell_id(rep(NA, resolution + 1))
+  anc[resolution + 1] <- as_cell_id(cell_id)
   for (k in resolution:1) {
     anc[k] <- mixed_get_parent(anc[k + 1], k, aperture, 1L, polyhedron)
   }
@@ -235,7 +235,7 @@ mixed_cell_to_index_one <- function(cell_id, resolution, aperture,
     pos <- match(anc[k + 1], kids)
     if (is.na(pos)) {
       stop("hexify internal error: mixed child enumeration missed a descendant ",
-           "(cell ", format(cell_id, scientific = FALSE), ", level ", k, ")")
+           "(cell ", as.character(cell_id), ", level ", k, ")")
     }
     digits[k] <- pos - 1L
   }

@@ -149,31 +149,37 @@ test_that("validate_aperture errors on vector input", {
 })
 
 # =============================================================================
-# MAX_CELL_ID
+# ISEA_CELL_COUNT
 # =============================================================================
 
-test_that("max_cell_id returns 12 for resolution 0", {
+test_that("isea_cell_count returns 12 for resolution 0", {
   # N = 10 * aperture^0 + 2 = 12, independent of aperture
-  expect_equal(hexify:::max_cell_id(0, 3), 12)
-  expect_equal(hexify:::max_cell_id(0, 4), 12)
-  expect_equal(hexify:::max_cell_id(0, 7), 12)
+  for (ap in c(3, 4, 7)) {
+    expect_identical(hexify:::isea_cell_count(ap, 0), bit64::as.integer64(12))
+  }
 })
 
-test_that("max_cell_id increases with resolution", {
-  max_res1 <- hexify:::max_cell_id(1, 3)
-  max_res2 <- hexify:::max_cell_id(2, 3)
-  max_res3 <- hexify:::max_cell_id(3, 3)
-
-  expect_true(max_res2 > max_res1)
-  expect_true(max_res3 > max_res2)
+test_that("isea_cell_count increases with resolution", {
+  n <- vapply(1:3, function(r) as.numeric(hexify:::isea_cell_count(3, r)),
+              numeric(1))
+  expect_true(all(diff(n) > 0))
 })
 
-test_that("max_cell_id formula is correct", {
+test_that("isea_cell_count formula is correct", {
   # Formula: 10 * aperture^res + 2, one formula for every aperture
-  expect_equal(hexify:::max_cell_id(1, 3), 10 * 3^1 + 2)
-  expect_equal(hexify:::max_cell_id(2, 4), 10 * 4^2 + 2)
-  expect_equal(hexify:::max_cell_id(1, 7), 10 * 7^1 + 2)
-  expect_equal(hexify:::max_cell_id(3, 7), 10 * 7^3 + 2)
+  expect_identical(hexify:::isea_cell_count(3, 1), bit64::as.integer64(10 * 3^1 + 2))
+  expect_identical(hexify:::isea_cell_count(4, 2), bit64::as.integer64(10 * 4^2 + 2))
+  expect_identical(hexify:::isea_cell_count(7, 1), bit64::as.integer64(10 * 7^1 + 2))
+  expect_identical(hexify:::isea_cell_count(7, 3), bit64::as.integer64(10 * 7^3 + 2))
+})
+
+test_that("isea_cell_count is exact past 2^53 and NA past 2^63 - 1", {
+  expect_identical(hexify:::isea_cell_count(7, 21),
+                   bit64::as.integer64("5585458640832840072"))
+  expect_identical(hexify:::isea_cell_count(4, 29),
+                   bit64::as.integer64("2882303761517117442"))
+  expect_true(is.na(hexify:::isea_cell_count(7, 22)))
+  expect_true(is.na(hexify:::isea_cell_count(4, 30)))
 })
 
 # =============================================================================
@@ -208,10 +214,11 @@ test_that("validate_cell_id warns on invalid values", {
   )
 })
 
-test_that("validate_cell_id errors on non-numeric input", {
+test_that("validate_cell_id reads digit strings and refuses other text", {
+  expect_true(hexify:::validate_cell_id("1", resolution = 0, aperture = 3))
   expect_error(
-    hexify:::validate_cell_id("1", resolution = 0, aperture = 3),
-    "must be numeric"
+    hexify:::validate_cell_id("one", resolution = 0, aperture = 3),
+    "whole-number"
   )
 })
 

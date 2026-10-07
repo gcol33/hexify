@@ -9,7 +9,7 @@ hexify_grid_cell_to_lonlat(grid, cell_id)
 \arguments{
 \item{grid}{Grid specification from hexify_grid()}
 
-\item{cell_id}{Numeric vector of cell IDs (1-based)}
+\item{cell_id}{Cell IDs, from 1: integer64, or whole numbers below 2^53}
 }
 \value{
 Data frame with lon_deg and lat_deg columns

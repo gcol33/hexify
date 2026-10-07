@@ -157,6 +157,10 @@ cpp_quad_edge_dim <- function(resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_quad_edge_dim`, resolution, aperture, ap_seq)
 }
 
+cpp_grid_n_cells <- function(icosa, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_grid_n_cells`, icosa, resolution, aperture, ap_seq)
+}
+
 cpp_cell_lattice_generator <- function(resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_cell_lattice_generator`, resolution, aperture, ap_seq)
 }

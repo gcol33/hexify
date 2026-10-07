@@ -64,7 +64,8 @@ net_cells <- function(layout, grid, cells = NULL) {
     p <- paths[rows[[k]], , drop = FALSE]
     parts <- cell_net_parts(p, layout)
     if (is.null(parts)) return(NULL)
-    data.frame(cell_id = cells[as.integer(k)], piece = parts$piece,
+    data.frame(cell_id = rep(cells[as.integer(k)], length(parts$piece)),
+               piece = parts$piece,
                group = join_groups(parts, joins), area = parts$area,
                x = parts$x, y = parts$y)
   })

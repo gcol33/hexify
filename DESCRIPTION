@@ -38,7 +38,7 @@ Suggests:
     leaflet
 VignetteBuilder: knitr
 LinkingTo: Rcpp
-Imports: sf, Rcpp, methods, rlang
+Imports: sf, Rcpp, methods, rlang, bit64
 Remotes: gcol33/hexglobe
 URL: https://gillescolling.com/hexify/
 BugReports: https://github.com/gcol33/hexify/issues
@@ -51,6 +51,7 @@ Collate:
     'RcppExports.R'
     'aperture_mixed_hierarchy.R'
     'aperture_sequence.R'
+    'cell_id.R'
     'cell_metrics.R'
     'constants.R'
     'classes.R'

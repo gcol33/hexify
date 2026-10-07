@@ -10,8 +10,8 @@
 #' For `k = 1`, returns the immediate 6 neighbors (5 for pentagons).
 #' For `k > 1`, returns all cells within `k` grid hops.
 #'
-#' @param cell_id Cell IDs to find neighbors for. Numeric vector for ISEA
-#'   grids, character vector for H3 grids.
+#' @param cell_id Cell IDs to find neighbors for: integer64 (or whole
+#'   numbers) for ISEA grids, character for H3 grids.
 #' @param grid A HexGridInfo or HexData object specifying the grid.
 #' @param k Integer. Ring distance (default 1). `k = 1` returns immediate
 #'   neighbors, `k = 2` includes neighbors-of-neighbors, etc.
@@ -68,6 +68,7 @@
 get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
                            distances = FALSE, as_sf = FALSE) {
   g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   if (as_sf) return(neighbor_links(cell_id, g, k, include_self))
   k <- as.integer(k)
 
@@ -75,11 +76,11 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
   if (k == 0L) {
     if (include_self) {
       if (distances) {
-        return(lapply(cell_id, function(cid) {
-          data.frame(cell_id = cid, ring_distance = 0L)
+        return(lapply(seq_along(cell_id), function(i) {
+          data.frame(cell_id = cell_id[i], ring_distance = 0L)
         }))
       }
-      return(as.list(cell_id))
+      return(lapply(seq_along(cell_id), function(i) cell_id[i]))
     }
     n <- length(cell_id)
     if (distances) {
@@ -130,14 +131,13 @@ get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
   if (k == 1L && !distances) {
     result <- get_k1(cell_id)
     if (include_self) {
-      result <- mapply(function(nbrs, origin) c(origin, nbrs),
-                        result, cell_id, SIMPLIFY = FALSE, USE.NAMES = FALSE)
+      result <- lapply(seq_along(result), function(i) c(cell_id[i], result[[i]]))
     }
     return(result)
   }
 
-  lapply(cell_id, function(origin) {
-    rings <- isea_rings(origin, grid, k)
+  lapply(seq_along(cell_id), function(i) {
+    rings <- isea_rings(cell_id[i], grid, k)
     keep <- include_self | rings$ring_distance > 0L
     if (distances) {
       data.frame(cell_id = rings$cell_id[keep],
@@ -169,7 +169,8 @@ isea_rings <- function(source, g, k, targets = NULL) {
 
   for (ring in seq_len(k)) {
     if (!is.null(targets) && length(remaining) == 0L) break
-    frontier <- setdiff(unique(unlist(grid_neighbors_isea(frontier, g))), visited)
+    frontier <- setdiff(unique(cell_id_unlist(grid_neighbors_isea(frontier, g))),
+                        visited)
     if (length(frontier) == 0L) break
     visited <- c(visited, frontier)
     ring_distance <- c(ring_distance, rep(ring, length(frontier)))
@@ -188,7 +189,8 @@ isea_rings <- function(source, g, k, targets = NULL) {
 neighbor_links <- function(cell_id, g, k, include_self) {
   rings <- get_neighbors(cell_id, g, k, include_self, distances = TRUE)
   from <- rep(cell_id, vapply(rings, nrow, integer(1)))
-  to <- unlist(lapply(rings, `[[`, "cell_id"), use.names = FALSE)
+  to <- lapply(rings, `[[`, "cell_id")
+  to <- if (is_h3_grid(g)) unlist(to, use.names = FALSE) else cell_id_unlist(to)
   ring_distance <- unlist(lapply(rings, `[[`, "ring_distance"), use.names = FALSE)
 
   ids <- unique(c(from, to))

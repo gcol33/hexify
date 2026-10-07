@@ -672,22 +672,8 @@ aperture_to_int <- function(aperture) {
   if (is_mixed_aperture(aperture)) 3L else as.integer(aperture)
 }
 
-#' Calculate maximum cell ID for given resolution and aperture
-#'
-#' Cell count formula: N = d * aperture^res + 2, d the solid's diamond quads
-#' (10 on the icosahedron, 4 on the octahedron); cell IDs are 1..N, matching
-#' quad_frame() in rcpp_cell.cpp.
-#' @param resolution Integer resolution value
-#' @param aperture Integer aperture value
-#' @param polyhedron The solid the grid is built on
-#' @return Maximum valid cell ID (numeric)
-#' @noRd
-max_cell_id <- function(resolution, aperture, polyhedron = "icosahedron") {
-  polyhedron_diamonds(polyhedron) * (aperture^resolution) + 2
-}
-
 #' Validate cell ID values
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs, in any form as_cell_id() reads
 #' @param resolution Integer resolution value
 #' @param aperture Integer aperture value
 #' @param warn Whether to warn on out-of-range values (default TRUE)
@@ -696,15 +682,13 @@ max_cell_id <- function(resolution, aperture, polyhedron = "icosahedron") {
 #' @noRd
 validate_cell_id <- function(cell_id, resolution, aperture, warn = TRUE,
                              polyhedron = "icosahedron") {
-  if (!is.numeric(cell_id)) {
-    stop("Cell ID must be numeric")
-  }
-  max_id <- max_cell_id(resolution, aperture, polyhedron)
-  valid <- is.na(cell_id) | (cell_id >= 1 & cell_id <= max_id)
+  cell_id <- as_cell_id(cell_id)
+  max_id <- isea_cell_count(aperture, resolution, polyhedron)
+  valid <- is.na(cell_id) | (cell_id >= 1L & cell_id <= max_id)
   if (warn && any(!valid, na.rm = TRUE)) {
     warning(sprintf(
-      "Some cell IDs are outside valid range [1, %.0f] for res %d, ap %d",
-      max_id, resolution, aperture
+      "Some cell IDs are outside valid range [1, %s] for res %d, ap %d",
+      as.character(max_id), resolution, aperture
     ))
   }
   valid

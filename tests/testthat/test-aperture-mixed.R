@@ -641,11 +641,13 @@ test_that("mixed 4/3 get_children is exactly the geometric-parent inverse", {
     all_child <- seq_len(ncc)
     par_of_child <- get_parent(all_child, cgrid)
     parents <- sort(unique(par_of_child))
-    for (p in parents) {
-      truth <- sort(all_child[par_of_child == p])
+    for (k in seq_along(parents)) {
+      p <- parents[k]
+      truth <- as_cell_id(sort(all_child[par_of_child == p]))
       got <- get_children(p, grid)[[1]]
       expect_equal(got, truth,
-                   info = sprintf("res=%d parent=%.0f exact children", res, p))
+                   info = sprintf("res=%d parent=%s exact children", res,
+                                  as.character(p)))
     }
   }
 })
@@ -730,11 +732,11 @@ test_that("mixed sequence cell IDs are a bijection with (quad, i, j)", {
       lv <- hexify:::isea_levels(g@aperture, g@resolution)
       ids <- seq_len(hexify:::aperture_n_cells(ap, res))
 
-      qij <- cpp_cell_to_quad_ij(numeric(0), as.numeric(ids), lv$resolution, lv$aperture, lv$ap_seq)
+      qij <- cpp_cell_to_quad_ij(numeric(0), as_cell_id(ids), lv$resolution, lv$aperture, lv$ap_seq)
       back <- cpp_quad_ij_to_cell(numeric(0), qij$quad, qij$i, qij$j, lv$resolution,
                                   lv$aperture, lv$ap_seq)
 
-      expect_equal(back, as.numeric(ids),
+      expect_equal(back, as_cell_id(ids),
                    info = sprintf("%s res %d: cell ID round-trip", ap, res))
       expect_equal(length(unique(paste(qij$quad, qij$i, qij$j))), length(ids),
                    info = sprintf("%s res %d: distinct (quad, i, j) per cell", ap, res))
@@ -804,7 +806,7 @@ test_that("mixed sequence cell boundaries enclose the points assigned to them", 
 
     ctr <- cell_to_lonlat(ids, g)
     lv <- hexify:::isea_levels(g@aperture, g@resolution)
-    corners <- cpp_cell_to_corners(numeric(0), as.numeric(ids), lv$resolution,
+    corners <- cpp_cell_to_corners(numeric(0), as_cell_id(ids), lv$resolution,
                                    lv$aperture, lv$ap_seq, 1e-3)
     owner <- rep(ids, vapply(corners, nrow, 1L))
     vert <- do.call(rbind, corners)
@@ -831,7 +833,7 @@ test_that("mixed sequence cell boundaries enclose the points assigned to them", 
 
 mixed_pentagon <- function(ids, res, ap) {
   lv <- hexify:::isea_levels(ap, res)
-  nb <- cpp_get_neighbors_isea(numeric(0), as.numeric(ids), lv$resolution,
+  nb <- cpp_get_neighbors_isea(numeric(0), as_cell_id(ids), lv$resolution,
                                lv$aperture, lv$ap_seq)
   vapply(nb, length, 1L) == 5L
 }
@@ -869,15 +871,15 @@ test_that("mixed parents agree with centre containment and break ties among the 
     ap <- cs[[1]]
     res <- cs[[2]]
     ids <- seq_len(hexify:::aperture_n_cells(ap, res))
-    par <- hexify:::mixed_get_parent(ids, res, ap)
+    par <- as.character(hexify:::mixed_get_parent(ids, res, ap))
     ll <- hexify:::mixed_cell_center(ids, res, ap)
 
     # The parents the centre falls in when moved a hair in eight directions
     e <- 1e-6 * sqrt(41253 / length(ids))
     near <- sapply(0:7, function(k) {
       lat <- pmax(-89.999999, pmin(89.999999, ll$lat_deg + e * sinpi(k / 4)))
-      hexify:::mixed_point_to_cell(ll$lon_deg + e * cospi(k / 4) / cospi(lat / 180),
-                                   lat, res - 1L, ap)
+      as.character(hexify:::mixed_point_to_cell(ll$lon_deg + e * cospi(k / 4) / cospi(lat / 180),
+                                                lat, res - 1L, ap))
     })
     tied <- apply(near, 1, function(x) length(unique(x)) > 1)
 

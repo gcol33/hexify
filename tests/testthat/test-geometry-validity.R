@@ -46,7 +46,8 @@ test_that("cell_to_sf produces valid geometries for polar pentagon cells", {
     )
 
     # Both are pentagons: 5 corners, the first repeated last
-    rings <- cpp_cell_to_corners(numeric(0), polar_cells, grid@resolution, aperture, integer(0))
+    rings <- cpp_cell_to_corners(numeric(0), as_cell_id(polar_cells), grid@resolution,
+                                 aperture, integer(0))
     expect_true(all(vapply(rings, nrow, integer(1)) == 6),
       info = sprintf("Aperture %d: polar pentagon cells should have 6 coordinates", aperture)
     )
@@ -75,7 +76,7 @@ test_that("exactly the 12 vertex cells are pentagons", {
   global <- grid_global(grid)
 
   # The 12 cells at icosahedral vertices are pentagons, every other a hexagon
-  rings <- cpp_cell_to_corners(numeric(0), as.numeric(global$cell_id), grid@resolution,
+  rings <- cpp_cell_to_corners(numeric(0), global$cell_id, grid@resolution,
                                as.integer(grid@aperture), integer(0))
   corner_counts <- vapply(rings, nrow, integer(1)) - 1L
   expect_equal(sum(corner_counts == 5L), 12L)
@@ -168,7 +169,7 @@ test_that("grid_global returns every cell once", {
   skip_if_not_installed("sf")
 
   global <- grid_global(hex_grid(resolution = 6, aperture = 4))
-  expect_identical(global$cell_id, as.numeric(seq_len(10 * 4^6 + 2)))
+  expect_identical(global$cell_id, as_cell_id(seq_len(10 * 4^6 + 2)))
 })
 
 test_that("the dateline wrap keeps each cell's area", {

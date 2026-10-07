@@ -16,7 +16,7 @@ hexify_lonlat_to_cell(lon, lat, resolution, aperture)
 \item{aperture}{Grid aperture (3, 4, or 7)}
 }
 \value{
-Numeric vector of cell IDs (1-based)
+\code{bit64::integer64} vector of cell IDs, from 1
 }
 \description{
 Converts geographic coordinates to DGGRID-compatible cell identifiers.

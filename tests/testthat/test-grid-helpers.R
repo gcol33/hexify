@@ -146,7 +146,8 @@ test_that("cell_to_sf returns valid geometries for all cells", {
   expect_true(all(validity))
 
   # These pentagon cells have 5 corners (6 coords with closing)
-  rings <- cpp_cell_to_corners(numeric(0), polar_cells, grid@resolution, as.integer(grid@aperture), integer(0))
+  rings <- cpp_cell_to_corners(numeric(0), as_cell_id(polar_cells), grid@resolution,
+                               as.integer(grid@aperture), integer(0))
   expect_true(all(vapply(rings, nrow, integer(1)) == 6L))
 })
 
@@ -312,7 +313,7 @@ test_that("get_neighbors(as_sf = TRUE) links each cell to its neighbours", {
   rings <- get_neighbors(cells, g, k = 2, distances = TRUE)
   expect_s3_class(links, "sf")
   expect_equal(links$cell_id, rep(cells, vapply(rings, nrow, integer(1))))
-  expect_equal(links$neighbor_id, unlist(lapply(rings, `[[`, "cell_id")))
+  expect_equal(links$neighbor_id, cell_id_unlist(lapply(rings, `[[`, "cell_id")))
   expect_equal(links$ring_distance, unlist(lapply(rings, `[[`, "ring_distance")))
   ends <- t(vapply(sf::st_geometry(links), function(l) {
     xy <- sf::st_coordinates(l)
@@ -339,8 +340,8 @@ test_that("get_children(as_sf = TRUE) returns each child with its parent", {
     parents <- c(1, 5, 5)
     kids <- get_children(parents, g, levels = 2, as_sf = TRUE)
     ids <- get_children(parents, g, levels = 2)
-    expect_equal(kids$parent_id, rep(parents, lengths(ids)), info = ap)
-    expect_equal(kids$cell_id, unlist(ids), info = ap)
+    expect_equal(kids$parent_id, rep(as_cell_id(parents), lengths(ids)), info = ap)
+    expect_equal(kids$cell_id, cell_id_unlist(ids), info = ap)
     expect_false(any(sf::st_is_empty(kids)), info = ap)
   }
   h <- suppressMessages(hex_grid(resolution = 1, type = "h3"))

@@ -15,7 +15,7 @@ cell_to_sf(
 )
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs. If NULL and x is HexData,
+\item{cell_id}{Cell IDs (integer64 for ISEA, character for H3). If NULL and x is HexData,
 uses cells from x.}
 
 \item{grid}{A HexGridInfo or HexData object. If HexData and cell_id is NULL,

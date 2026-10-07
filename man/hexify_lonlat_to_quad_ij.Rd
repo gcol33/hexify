@@ -11,7 +11,7 @@ hexify_lonlat_to_quad_ij(lon, lat, resolution, aperture = 3L)
 
 \item{lat}{Latitude in degrees (-90 to 90)}
 
-\item{resolution}{Grid resolution level (0-30)}
+\item{resolution}{Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }

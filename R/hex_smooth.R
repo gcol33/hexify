@@ -56,6 +56,7 @@
 hex_smooth <- function(cell_id, value, grid, steps = 1L, self_weight = 1,
                        group = NULL) {
   g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   n <- length(cell_id)
   validate_same_length(list(cell_id = cell_id, value = value), "hex_smooth")
   if (!is.numeric(value)) stop("value must be numeric", call. = FALSE)
@@ -75,7 +76,8 @@ hex_smooth <- function(cell_id, value, grid, steps = 1L, self_weight = 1,
   # Directed links i <- j from each cell to its listed neighbours
   nbrs <- get_neighbors(cell_id, g)
   i <- rep.int(seq_len(n), lengths(nbrs))
-  j <- match(unlist(nbrs, use.names = FALSE), cell_id)
+  nbrs <- if (is_h3_grid(g)) unlist(nbrs, use.names = FALSE) else cell_id_unlist(nbrs)
+  j <- match(nbrs, cell_id)
   keep <- !is.na(j)
   if (!is.null(group)) {
     keep <- keep & !is.na(group[i]) & !is.na(group[j]) & group[i] == group[j]

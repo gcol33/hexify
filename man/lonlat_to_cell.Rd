@@ -14,12 +14,18 @@ lonlat_to_cell(lon, lat, grid)
 \item{grid}{A HexGridInfo or HexData object, or legacy hexify_grid}
 }
 \value{
-Numeric vector of cell IDs
+Cell IDs: a \code{bit64::integer64} vector for an ISEA grid, a
+character vector of H3 indices for an H3 grid
 }
 \description{
 Converts geographic coordinates to DGGS cell IDs using a grid specification.
 }
 \details{
+ISEA cell IDs number a grid's cells from 1 and pass 2^53, the largest whole
+number a double holds exactly, at fine resolutions, so they are returned
+as 64-bit integers. Functions taking cell IDs also accept whole numbers
+below 2^53 and character strings of digits.
+
 This function accepts either a HexGridInfo object from \code{hex_grid()} or
 a HexData object from \code{hexify()}. If a HexData object is provided,
 its grid specification is extracted automatically.

@@ -18,7 +18,8 @@
 #' @param area_km2 Target cell area in km^2 (mutually exclusive with diagonal).
 #' @param diagonal Target cell spacing in km: the short (flat-to-flat)
 #'   diagonal, equal to the distance between neighbouring cell centres
-#' @param resolution Grid resolution (0-30). Alternative to area_km2.
+#' @param resolution Grid resolution (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+#'   on the icosahedron). Alternative to area_km2.
 #' @param aperture Grid aperture: 3, 4, 7, a mixed family such as "4/3" or
 #'   "4/7", or one aperture per resolution level, e.g. \code{c(4, 4, 7, 3)}
 #'   (default 3)
@@ -30,7 +31,8 @@
 #'   \itemize{
 #'     \item \code{data}: The original input data (unchanged)
 #'     \item \code{grid}: The HexGridInfo specification
-#'     \item \code{cell_id}: Numeric vector of cell IDs for each row
+#'     \item \code{cell_id}: Cell IDs for each row (integer64 for ISEA, character
+#'       for H3)
 #'     \item \code{cell_center}: Matrix of cell center coordinates (lon, lat)
 #'   }
 #'

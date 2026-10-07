@@ -252,7 +252,7 @@ hexify uses two S4 classes to make spatial workflows clean and error-free:
 | Slot | Type | Description |
 |------|------|-------------|
 | `aperture` | character | Grid aperture ("3", "4", "7", or "4/3") |
-| `resolution` | integer | Resolution level (0-30) |
+| `resolution` | integer | Resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7) |
 | `area_km2` | numeric | Cell area in km² |
 | `diagonal_km` | numeric | Cell centre spacing (short diagonal) in km |
 | `crs` | integer or character | EPSG code, or a PROJ or WKT string |

@@ -50,16 +50,13 @@ cell_shape_depth <- function(g, shape, depth) {
       "shape = \"descendants\" needs a grid of aperture 7, whose cells nest exactly; this grid's aperture is %s",
       g@aperture))
   }
-  if (g@resolution + depth > MAX_RESOLUTION) {
-    stop(sprintf("resolution %d plus depth %d exceeds the maximum resolution %d",
-                 g@resolution, depth, MAX_RESOLUTION))
-  }
+  check_isea_resolution(g@aperture, g@resolution + depth, grid_polyhedron(g))
   depth
 }
 
 #' Polygons of ISEA cells drawn as Gosper islands or descendant outlines
 #'
-#' @param cell_id Numeric vector of cell IDs of grid `g`
+#' @param cell_id integer64 vector of cell IDs of grid `g`
 #' @param g HexGridInfo object
 #' @param shape "gosper" or "descendants"
 #' @param depth Validated depth
@@ -171,7 +168,7 @@ open_corner_rings <- function(cell_id, g) {
 
 #' Outline rings of Gosper islands
 #'
-#' @param cell_id Numeric vector of cell IDs of grid `g`
+#' @param cell_id integer64 vector of cell IDs of grid `g`
 #' @param g HexGridInfo object of an ISEA grid
 #' @param depth Number of replacement steps
 #' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
@@ -557,7 +554,7 @@ face_plane_to_lonlat <- function(frames, icosa, face, start, z) {
 #' edges left over chain into rings: three cells meet at every corner, so a
 #' corner on the outline starts exactly one outline edge of that union.
 #'
-#' @param cell_id Numeric vector of cell IDs of grid `g`
+#' @param cell_id integer64 vector of cell IDs of grid `g`
 #' @param g HexGridInfo object of aperture 7
 #' @param depth Number of levels the outline is drawn down
 #' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
@@ -570,7 +567,7 @@ descendant_cell_rings <- function(cell_id, g, depth,
   fine_grid <- grid_at_resolution(g, g@resolution + depth)
 
   kids <- get_children(cell_id, g, levels = depth)
-  fine <- unlist(kids, use.names = FALSE)
+  fine <- cell_id_unlist(kids)
   owner <- rep(seq_along(cell_id), lengths(kids))
 
   rings <- open_corner_rings(fine, fine_grid)

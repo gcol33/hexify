@@ -129,6 +129,20 @@ exportMethods(show)
 exportMethods(summary)
 import(methods)
 importFrom(Rcpp,sourceCpp)
+importFrom(bit64,
+  "%in%",
+  as.factor,
+  factor,
+  intersect,
+  is.element,
+  match,
+  order,
+  rank,
+  setdiff,
+  setequal,
+  table,
+  union
+)
 importFrom(grDevices,adjustcolor)
 importFrom(graphics,
   points,

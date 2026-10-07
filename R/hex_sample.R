@@ -12,7 +12,7 @@
 #' Points are drawn uniformly in a spherical cap around the cell centre that
 #' holds the whole cell, and those outside the cell are drawn again.
 #'
-#' @param cell_id Cell IDs. Numeric for ISEA grids, character for H3 grids.
+#' @param cell_id Cell IDs. integer64 for ISEA grids, character for H3 grids.
 #' @param grid A HexGridInfo or HexData object.
 #' @param n Number of points per cell: one number, or one per cell.
 #'
@@ -32,6 +32,7 @@
 #' points(pts$lon, pts$lat, pch = 20, cex = 0.5)
 hex_sample <- function(cell_id, grid, n = 1L) {
   g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   if (!is.numeric(n) || !(length(n) %in% c(1L, length(cell_id))) ||
       anyNA(n) || any(n < 0) || any(n != round(n))) {
     stop("n must be a non-negative whole number, or one per cell")

@@ -7,7 +7,7 @@
 is_pentagon(cell_id, grid)
 }
 \arguments{
-\item{cell_id}{Cell IDs to check. Numeric for ISEA, character for H3.}
+\item{cell_id}{Cell IDs to check. integer64 for ISEA, character for H3.}
 
 \item{grid}{A HexGridInfo or HexData object specifying the grid.}
 }

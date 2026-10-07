@@ -96,8 +96,8 @@ test_that("a descendant outline is the union of its children's outlines", {
   # Centres of the resolution-5 cells around the parent fall in the outline
   # exactly when they fall in a child's outline
   fine <- hex_grid(resolution = 5, aperture = 7)
-  near <- unique(unlist(get_children(c(parent, unlist(get_neighbors(parent, g))),
-                                     g, levels = 3)))
+  near <- unique(cell_id_unlist(get_children(
+    c(parent, cell_id_unlist(get_neighbors(parent, g))), g, levels = 3)))
   centre <- cell_to_lonlat(near, fine)
   pts <- sf::st_as_sf(centre, coords = c("lon_deg", "lat_deg"), crs = 4326)
   in_parent <- lengths(sf::st_intersects(pts, outline)) > 0
@@ -127,7 +127,7 @@ test_that("cell shapes reject grids they are not defined on", {
   g <- hex_grid(resolution = 2, aperture = 7)
   expect_error(cell_to_sf(1, g, shape = "gosper", depth = 0), "positive whole")
   expect_error(cell_to_sf(1, g, shape = "descendants", depth = 29),
-               "maximum resolution")
+               "finest resolution is 21")
 })
 
 test_that("plots and sf exports draw cell shapes", {

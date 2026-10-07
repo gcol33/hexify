@@ -146,7 +146,7 @@ test_that("get_children honours levels on pure ISEA grids", {
     cells <- lonlat_to_cell(lon = c(0, 120), lat = c(45, -20), grid = g)
 
     twice <- lapply(get_children(cells, g), function(kids) {
-      sort(unique(unlist(get_children(kids, mid), use.names = FALSE)))
+      sort(unique(cell_id_unlist(get_children(kids, mid))))
     })
     direct <- lapply(get_children(cells, g, levels = 2), sort)
 
@@ -194,7 +194,7 @@ test_that("get_children returns cells that exist in the child grid", {
       n_child <- 2 + 10 * aperture^(resolution + 1)
       label <- sprintf("aperture %d, resolution %d", aperture, resolution)
 
-      kids <- unlist(get_children(seq_len(n_parent), grid))
+      kids <- cell_id_unlist(get_children(seq_len(n_parent), grid))
 
       expect_false(anyNA(kids), info = label)
       expect_true(all(kids >= 1 & kids <= n_child), info = label)
@@ -215,13 +215,13 @@ test_that("get_children inverts get_parent, pentagons included", {
 
     # Every child names its parent back
     for (k in seq_len(n_parent)) {
-      expect_equal(unique(get_parent(kids[[k]], child_grid)), k,
+      expect_equal(unique(get_parent(kids[[k]], child_grid)), as_cell_id(k),
                    info = sprintf("%s, parent %d", label, k))
     }
 
     # And between them the parents claim the whole child grid, once each
-    claimed <- unlist(kids)
-    expect_equal(sort(claimed), seq_len(n_child), info = label)
+    claimed <- cell_id_unlist(kids)
+    expect_equal(sort(claimed), as_cell_id(seq_len(n_child)), info = label)
   }
 })
 
@@ -259,10 +259,10 @@ test_that("resolution 0 holds twelve cells and every aperture reaches them", {
     expect_equal(length(unique(parents)), 12L, info = label)
 
     children <- get_children(seq_len(12), base)
-    expect_equal(sort(unlist(children, use.names = FALSE)),
-                 as.numeric(seq_len(n_first)), info = label)
-    expect_equal(get_parent(unlist(children, use.names = FALSE), first),
-                 as.numeric(rep(seq_len(12), lengths(children))), info = label)
+    expect_equal(sort(cell_id_unlist(children)),
+                 as_cell_id(seq_len(n_first)), info = label)
+    expect_equal(get_parent(cell_id_unlist(children), first),
+                 as_cell_id(rep(seq_len(12), lengths(children))), info = label)
   }
 })
 

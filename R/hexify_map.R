@@ -173,6 +173,7 @@ prepare_hex_sf <- function(data, aperture, shape = "hexagon", depth = 3L) {
 
   area <- if ("cell_area_km2" %in% names(data)) data$cell_area_km2[1] else data$cell_area[1]
   grid <- hex_grid(area_km2 = area, aperture = aperture)
+  data$cell_id <- as_cell_id(data$cell_id)
   merge_first_rows(cell_to_sf(data$cell_id, grid, shape = shape, depth = depth),
                    data, data$cell_id,
                    setdiff(names(data), c("cell_id", "geometry")))

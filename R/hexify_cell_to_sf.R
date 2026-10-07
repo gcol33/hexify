@@ -73,9 +73,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
     g <- hex_grid(resolution = resolution, aperture = aperture)
   }
 
-  if (!is_h3_grid(g) && !is.numeric(cell_id)) {
-    stop("cell_id must be numeric (integer cell IDs)")
-  }
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   if (is_h3_grid(g) || return_sf) {
     return(cell_to_sf(cell_id, g, wrap_dateline = wrap_dateline))
   }

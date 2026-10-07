@@ -530,6 +530,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_grid_n_cells
+NumericVector cpp_grid_n_cells(NumericVector icosa, int resolution, int aperture, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_grid_n_cells(SEXP icosaSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_grid_n_cells(icosa, resolution, aperture, ap_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_lattice_generator
 NumericVector cpp_cell_lattice_generator(int resolution, int aperture, IntegerVector ap_seq);
 RcppExport SEXP _hexify_cpp_cell_lattice_generator(SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
@@ -1464,6 +1478,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_ij_to_xy", (DL_FUNC) &_hexify_cpp_quad_ij_to_xy, 5},
     {"_hexify_cpp_lonlat_to_quad_ij", (DL_FUNC) &_hexify_cpp_lonlat_to_quad_ij, 5},
     {"_hexify_cpp_quad_edge_dim", (DL_FUNC) &_hexify_cpp_quad_edge_dim, 3},
+    {"_hexify_cpp_grid_n_cells", (DL_FUNC) &_hexify_cpp_grid_n_cells, 4},
     {"_hexify_cpp_cell_lattice_generator", (DL_FUNC) &_hexify_cpp_cell_lattice_generator, 3},
     {"_hexify_cpp_quad_ij_to_cell", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell, 7},
     {"_hexify_cpp_mixed_parent", (DL_FUNC) &_hexify_cpp_mixed_parent, 4},

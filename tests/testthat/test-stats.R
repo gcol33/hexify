@@ -85,19 +85,19 @@ test_that("dgearthstat validates input", {
 # MAX CELL
 # =============================================================================
 
-test_that("max_cell_id returns correct number of cells", {
+test_that("isea_cell_count returns correct number of cells", {
   grid <- hexify_grid(area = 10000, aperture = 3)
-  max_cells <- max_cell_id(grid$resolution, grid$aperture)
+  max_cells <- isea_cell_count(grid$aperture, grid$resolution)
 
   stats <- dgearthstat(grid)
-  expect_equal(max_cells, stats$n_cells)
+  expect_equal(as.numeric(max_cells), stats$n_cells)
 })
 
-test_that("max_cell_id handles resolution 0", {
+test_that("isea_cell_count handles resolution 0", {
   # Resolution 0 returns 12 (10 * aperture^0 + 2 = 12 cells: 12 icosahedron vertices)
-  expect_equal(max_cell_id(0, 3), 12)
-  expect_equal(max_cell_id(0, 4), 12)
-  expect_equal(max_cell_id(0, 7), 12)
+  for (ap in c(3, 4, 7)) {
+    expect_identical(isea_cell_count(ap, 0), bit64::as.integer64(12))
+  }
 })
 
 # =============================================================================

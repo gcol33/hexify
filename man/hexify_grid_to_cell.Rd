@@ -14,7 +14,7 @@ hexify_grid_to_cell(grid, lon, lat)
 \item{lat}{Numeric vector of latitudes in degrees}
 }
 \value{
-Numeric vector of cell IDs (1-based)
+\code{bit64::integer64} vector of cell IDs, from 1
 }
 \description{
 Grid-based wrapper for \code{\link{hexify_lonlat_to_cell}}. Converts

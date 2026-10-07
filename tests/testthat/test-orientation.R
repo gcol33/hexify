@@ -227,7 +227,7 @@ test_that("cells and centres match DGGRID under other orientations and on Fuller
                        projection = d$projection[1]),
       standard = hex_grid(resolution = d$resolution[1], aperture = d$aperture[1],
                           projection = d$projection[1]))
-    expect_identical(lonlat_to_cell(d$lon, d$lat, g), as.numeric(d$seqnum), info = key)
+    expect_identical(lonlat_to_cell(d$lon, d$lat, g), as_cell_id(d$seqnum), info = key)
     ctr <- cell_to_lonlat(d$seqnum, g)
     # DGGRID writes centres to 12 decimals
     gap <- row_angle(hexify:::unit_vec(ctr[[1]], ctr[[2]]), hexify:::unit_vec(d$centre_lon, d$centre_lat))

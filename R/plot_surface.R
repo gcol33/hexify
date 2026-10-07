@@ -671,7 +671,7 @@ grid_surface_paths <- function(g, cells, step) {
   cells <- grid_cells(g, cells)
   if (is_h3_grid(g)) return(h3_sphere_paths(as.character(cells), step))
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_cell_surface_paths(icosa_arg(g), as.numeric(cells), lv$resolution,
+  cpp_cell_surface_paths(icosa_arg(g), cells, lv$resolution,
                          lv$aperture, lv$ap_seq, step)
 }
 

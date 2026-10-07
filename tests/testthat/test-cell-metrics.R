@@ -40,8 +40,9 @@ test_that("every wall of a grid is measured once", {
 
 test_that("a wall measures the same from either side", {
   g <- hex_grid(resolution = 3, aperture = 7, projection = "fuller")
-  w <- cell_wall_measures(seq_len(grid_n_cells(g)), g, walls = TRUE)$walls
-  key <- paste(pmin(w$cell, w$neighbor_id), pmax(w$cell, w$neighbor_id))
+  w <- cell_wall_measures(as_cell_id(seq_len(grid_n_cells(g))), g, walls = TRUE)$walls
+  nbr <- as.integer(w$neighbor_id)
+  key <- paste(pmin(w$cell, nbr), pmax(w$cell, nbr))
   expect_true(all(table(key) == 2L))
   spread <- function(x) tapply(x, key, function(v) diff(range(v)))
   expect_lt(max(spread(w$wall) / tapply(w$wall, key, mean)), 1e-9)
@@ -64,7 +65,7 @@ test_that("an ISEA perimeter matches its boundary densified in lon/lat", {
   # of the solid, it cuts the bend and comes out short by up to about 1e-5.
   for (proj in c("isea", "fuller")) {
     g <- hex_grid(resolution = 3, aperture = 7, projection = proj)
-    ids <- c(1, 2, 100, 500, 1000, grid_n_cells(g))
+    ids <- as_cell_id(c(1, 2, 100, 500, 1000, grid_n_cells(g)))
     lv <- isea_levels(g@aperture, g@resolution)
     rings <- cpp_cell_to_corners(icosa_arg(g), ids, lv$resolution, lv$aperture,
                                  lv$ap_seq, 1e-7)
@@ -90,7 +91,7 @@ test_that("an H3 perimeter is the great-circle length of its boundary", {
 test_that("compactness is at most that of the regular polygon", {
   g <- hex_grid(resolution = 6, aperture = 4)
   vertex <- c(1, 2, grid_n_cells(g))
-  ids <- c(vertex, lonlat_to_cell(c(0, 45, 100), c(10, 30, -60), g))
+  ids <- c(as_cell_id(vertex), lonlat_to_cell(c(0, 45, 100), c(10, 30, -60), g))
   m <- cell_metrics(ids, g)
   # A small regular k-gon scores 2 sqrt(pi A) / P, up to the sphere's
   # curvature across the cell, about 1e-4 here. Each wall of a vertex cell
@@ -129,14 +130,14 @@ test_that("walls of resolution 0 have midpoint ratio 0 by symmetry", {
 
 test_that("corner rings give the same walls as the grid's own geometry", {
   g <- hex_grid(resolution = 3, aperture = 3)
-  ids <- seq_len(grid_n_cells(g))
+  ids <- as_cell_id(seq_len(grid_n_cells(g)))
   lv <- isea_levels(g@aperture, g@resolution)
   corners <- cpp_cell_to_corners(icosa_arg(g), ids, lv$resolution, lv$aperture,
                                  lv$ap_seq, 0)
   ctr <- cell_to_lonlat(ids, g)
   centres <- cbind(ctr$lon_deg, ctr$lat_deg)
   nb <- grid_neighbors_isea(ids, g)
-  rw <- cpp_ring_walls(corners, centres, lapply(nb, function(x) centres[x, , drop = FALSE]))
+  rw <- cpp_ring_walls(corners, centres, lapply(nb, function(x) centres[as.integer(x), , drop = FALSE]))
   own <- cell_wall_measures(ids, g, walls = TRUE)$walls
   expect_equal(nrow(rw), nrow(own))
   # Rows run cell by cell and neighbour by neighbour in both

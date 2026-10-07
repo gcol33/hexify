@@ -2,7 +2,7 @@
 
 solid_angles <- function(g, ids) {
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_cell_solid_angle(icosa_arg(g), as.numeric(ids), lv$resolution, lv$aperture,
+  cpp_cell_solid_angle(icosa_arg(g), as_cell_id(ids), lv$resolution, lv$aperture,
                        lv$ap_seq, CELL_WALL_TOLERANCE)
 }
 

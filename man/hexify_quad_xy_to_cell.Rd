@@ -13,12 +13,12 @@ hexify_quad_xy_to_cell(quad, quad_x, quad_y, resolution, aperture = 3L)
 
 \item{quad_y}{Continuous Y coordinate in quad space}
 
-\item{resolution}{Grid resolution level (0-30)}
+\item{resolution}{Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }
 \value{
-Numeric vector of cell IDs
+\code{bit64::integer64} vector of cell IDs
 }
 \description{
 Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible

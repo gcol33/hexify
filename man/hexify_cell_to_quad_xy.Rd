@@ -7,9 +7,9 @@
 hexify_cell_to_quad_xy(cell_id, resolution, aperture = 3L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs (1-based)}
+\item{cell_id}{Cell IDs, from 1: integer64, or whole numbers below 2^53}
 
-\item{resolution}{Grid resolution level (0-30)}
+\item{resolution}{Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)}
 
 \item{aperture}{Grid aperture: 3, 4, or 7}
 }

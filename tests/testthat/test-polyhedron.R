@@ -50,7 +50,7 @@ test_that("octahedral cells tile the sphere with equal areas", {
     expect_equal(sum(area), hexify:::body_surface_km2(hexify:::grid_radius_km(g)),
                  tolerance = 1e-12)
     lv <- hexify:::isea_levels(g@aperture, g@resolution)
-    sa <- hexify:::cpp_cell_solid_angle(hexify:::icosa_arg(g), ids, lv$resolution,
+    sa <- hexify:::cpp_cell_solid_angle(hexify:::icosa_arg(g), as_cell_id(ids), lv$resolution,
                                          lv$aperture, lv$ap_seq, 1e-4)
     hex <- 4 * pi / (length(ids) - 2)
     expect_equal(sa[sides == 6] / hex, rep(1, sum(sides == 6)), tolerance = 1e-5)
@@ -76,11 +76,14 @@ test_that("octahedral cells round-trip and their neighbours are symmetric", {
     g <- octa_grid(s)
     ids <- seq_len(n_cells(g))
     ctr <- cell_to_lonlat(ids, g)
-    expect_equal(lonlat_to_cell(ctr$lon_deg, ctr$lat_deg, g), ids)
+    expect_equal(lonlat_to_cell(ctr$lon_deg, ctr$lat_deg, g), as_cell_id(ids))
     sides <- hexify:::isea_cell_sides(ids, g)
     nb <- get_neighbors(ids, g)
     expect_equal(lengths(nb), sides)
-    for (k in ids) expect_true(all(vapply(nb[[k]], function(m) k %in% nb[[m]], logical(1))))
+    for (k in ids) {
+      expect_true(all(vapply(as.integer(nb[[k]]), function(m) k %in% nb[[m]],
+                             logical(1))))
+    }
   }
 })
 

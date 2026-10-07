@@ -65,7 +65,7 @@ check_isea_indices <- function(indices, g, what) {
 isea_child_indices <- function(indices, resolution, g) {
   cells <- isea_index_cells(indices, g)
   children <- get_children(cells, grid_at_resolution(g, resolution))
-  cell_to_index(unique(unlist(children, use.names = FALSE)),
+  cell_to_index(unique(cell_id_unlist(children)),
                 grid_at_resolution(g, resolution + 1L))
 }
 
@@ -145,7 +145,7 @@ hex_compact <- function(cell_ids, grid) {
     parent_grid <- grid_at_resolution(g, level - 1L)
     cells <- isea_index_cells(ids[at_level], g)
     groups <- split(cells, get_parent(cells, grid_at_resolution(g, level)))
-    candidates <- as.numeric(names(groups))
+    candidates <- as_cell_id(names(groups))
 
     # Every cell in a group has this parent, so a group holding as many
     # distinct cells as the parent has children holds all of them. That is the
@@ -162,7 +162,7 @@ hex_compact <- function(cell_ids, grid) {
     if (!any(full)) next
 
     merged <- cell_to_index(candidates[full], parent_grid)
-    covered <- unlist(groups[full], use.names = FALSE)
+    covered <- cell_id_unlist(groups[full])
     ids <- unique(c(setdiff(ids[!at_level], merged),
                     ids[at_level][!(cells %in% covered)],
                     merged))

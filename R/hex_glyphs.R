@@ -52,6 +52,7 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
                      value2 = NULL, lower2 = NULL, upper2 = NULL,
                      limits = NULL, limits2 = NULL, length = 0.85) {
   g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   n <- length(cell_id)
   check_glyph_values(n, value = value, lower = lower, upper = upper,
                      value2 = value2, lower2 = lower2, upper2 = upper2)
@@ -135,6 +136,7 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
 #' plot(tri["change"], border = NA)
 hex_triangles <- function(cell_id, grid, value = NULL) {
   g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   if (anyDuplicated(cell_id)) stop("cell_id must list each cell once", call. = FALSE)
   if (!is.null(value)) {
     check_glyph_values(length(cell_id), value = value)
@@ -144,18 +146,18 @@ hex_triangles <- function(cell_id, grid, value = NULL) {
 
   geoms <- list()
   from <- integer(0)
-  nb <- numeric(0)
+  nb <- list()
   for (i in seq_along(cell_id)) {
     walls <- ring_walls(rings[[i]], c(ctr$lon_deg[i], ctr$lat_deg[i]), g)
     for (w in walls) {
       geoms[[length(geoms) + 1L]] <- sf::st_polygon(list(
         triangle_ring(c(ctr$lon_deg[i], ctr$lat_deg[i]), w$points)))
       from <- c(from, i)
-      nb <- c(nb, w$neighbor)
+      nb[[length(nb) + 1L]] <- w$neighbor
     }
   }
+  nb <- if (is_h3_grid(g)) as.character(unlist(nb)) else cell_id_unlist(nb)
   out <- data.frame(cell_id = cell_id[from], neighbor_id = nb)
-  if (is_h3_grid(g)) out$neighbor_id <- as.character(nb)
   if (!is.null(value)) {
     out$value <- value[from]
     out$neighbor_value <- value[match(out$neighbor_id, cell_id)]

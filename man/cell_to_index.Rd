@@ -7,7 +7,8 @@
 cell_to_index(cell_id, grid)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs}
+\item{cell_id}{Cell IDs: integer64 for ISEA grids (whole numbers below
+2^53 and digit strings are accepted), character for H3 grids}
 
 \item{grid}{A HexGridInfo or HexData object}
 }

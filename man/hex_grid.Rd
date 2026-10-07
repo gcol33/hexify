@@ -22,7 +22,9 @@ hex_grid(
 \item{area_km2}{Target cell area in square kilometers. Mutually exclusive
 with \code{resolution}.}
 
-\item{resolution}{Grid resolution level (0-30 for ISEA, 0-15 for H3).
+\item{resolution}{Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+on the icosahedron, where the cell count stays within the 2^63 - 1
+cell IDs a 64-bit integer numbers; 0-15 for H3.
 Mutually exclusive with \code{area_km2}. For H3, typical use cases by
 resolution:
 \itemize{

@@ -7,14 +7,15 @@
 get_parent(cell_id, grid, levels = 1L)
 }
 \arguments{
-\item{cell_id}{Numeric vector of cell IDs}
+\item{cell_id}{Cell IDs: integer64 for ISEA grids (whole numbers below
+2^53 and digit strings are accepted), character for H3 grids}
 
 \item{grid}{A HexGridInfo or HexData object}
 
 \item{levels}{Number of levels up (default 1)}
 }
 \value{
-Numeric vector of parent cell IDs
+Parent cell IDs, of the type the grid's cell IDs have
 }
 \description{
 Returns the parent cell at a coarser resolution.

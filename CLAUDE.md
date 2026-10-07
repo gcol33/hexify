@@ -4,7 +4,8 @@
 
 hexify supports **all** major hexagonal DGGS through two backends:
 
-- **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30,
+- **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30
+  where the cell count fits a signed 64-bit integer (icosahedron: ap3 30, ap4 29, ap7 21),
   on Snyder's equal-area projection or Fuller's (`hex_grid(projection = "fuller")`),
   on the icosahedron or, with Snyder's projection, the octahedron
   (`hex_grid(polyhedron = "octahedron")`).
@@ -23,6 +24,24 @@ This covers every hexagonal grid system that matters:
 - rHEALPix = diamond-based, not hexagonal — out of scope
 
 No additional grid backends needed.
+
+## Cell IDs
+
+ISEA cell IDs are `bit64::integer64` in R and `int64_t` in C++ (`src/cell_id.h`):
+a double is exact only below 2^53, which aperture 4 passes at resolution 25 and
+aperture 7 at 18 (#99). Every Rcpp entry point taking IDs calls
+`require_cell_ids()`, so a plain double never reaches the decoder as raw bits;
+every R function taking IDs passes them through `as_cell_id()` (accepts
+integer64, whole doubles below 2^53, digit strings). `quad_frame()` refuses a
+grid whose cell count passes 2^63 - 1 (`grid_cell_count()`), the one source of
+the resolution cap (`isea_cell_count()`, `isea_max_resolution()` in R).
+
+integer64 loses its class silently in `unlist()`, `ifelse()`,
+`vapply(numeric(1))`, `rep_len()`, `for (x in ids)`, `paste()`/`sprintf()` and
+`c(<double>, <integer64>)`: use `cell_id_unlist()`, `seq_along()` loops,
+`rep(length.out =)` and `as.character()`. `match`, `%in%`, `order`, `table`,
+`factor` and the set functions are imported from bit64, so they are safe inside
+the package.
 
 ## Bodies
 

@@ -222,7 +222,7 @@ wrap_cell_corners <- function(sfc) {
 isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
                             tolerance = CELL_EDGE_TOLERANCE, max_arc = 0) {
   lv <- isea_levels(aperture, resolution)
-  cpp_cell_to_corners(icosa, as.numeric(cell_id), lv$resolution, lv$aperture,
+  cpp_cell_to_corners(icosa, as_cell_id(cell_id), lv$resolution, lv$aperture,
                       lv$ap_seq, tolerance, max_arc)
 }
 
@@ -233,7 +233,7 @@ isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
 #' contiguous; callers that render on a flat map pass the result through
 #' `sf::st_wrap_dateline()` to split them at +/-180.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs (integer64, or any form as_cell_id() reads)
 #' @param resolution Grid resolution level
 #' @param aperture Grid aperture: 3, 4, 7, or a mixed sequence spelling
 #' @param icosa Orientation argument of the C++ layer (see icosa_arg())
@@ -267,9 +267,15 @@ isea_cells_to_sfc <- function(cell_id, resolution, aperture, icosa, crs = 4326,
 #' @param lat Numeric vector of latitudes in degrees
 #' @param grid A HexGridInfo or HexData object, or legacy hexify_grid
 #'
-#' @return Numeric vector of cell IDs
+#' @return Cell IDs: a \code{bit64::integer64} vector for an ISEA grid, a
+#'   character vector of H3 indices for an H3 grid
 #'
 #' @details
+#' ISEA cell IDs number a grid's cells from 1 and pass 2^53, the largest whole
+#' number a double holds exactly, at fine resolutions, so they are returned
+#' as 64-bit integers. Functions taking cell IDs also accept whole numbers
+#' below 2^53 and character strings of digits.
+#'
 #' This function accepts either a HexGridInfo object from \code{hex_grid()} or
 #' a HexData object from \code{hexify()}. If a HexData object is provided,
 #' its grid specification is extracted automatically.
@@ -302,7 +308,8 @@ lonlat_to_cell <- function(lon, lat, grid) {
 #'
 #' Converts DGGS cell IDs back to geographic coordinates (cell centers).
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
 #'
 #' @return Data frame with lon_deg and lat_deg columns
@@ -323,7 +330,7 @@ cell_to_lonlat <- function(cell_id, grid) {
   }
 
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_cell_to_lonlat(icosa_arg(g), as.numeric(cell_id),
+  cpp_cell_to_lonlat(icosa_arg(g), as_cell_id(cell_id),
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
@@ -331,7 +338,7 @@ cell_to_lonlat <- function(cell_id, grid) {
 #'
 #' Creates sf polygon geometries for hexagonal grid cells.
 #'
-#' @param cell_id Numeric vector of cell IDs. If NULL and x is HexData,
+#' @param cell_id Cell IDs (integer64 for ISEA, character for H3). If NULL and x is HexData,
 #'   uses cells from x.
 #' @param grid A HexGridInfo or HexData object. If HexData and cell_id is NULL,
 #'   polygons are generated for all cells in the data.
@@ -443,6 +450,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
   }
 
   # Remove NA and duplicates
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
   cell_id <- unique(cell_id[!is.na(cell_id)])
   if (length(cell_id) == 0) {
     stop("No valid cell_id values")
@@ -559,7 +567,7 @@ grid_rect <- function(bbox, grid) {
 #' @param seeds Cell IDs known to meet the box
 #' @param bbox c(xmin, ymin, xmax, ymax)
 #' @param g HexGridInfo object
-#' @return Numeric vector of cell IDs
+#' @return integer64 vector of cell IDs
 #' @noRd
 isea_cells_meeting_box <- function(seeds, bbox, g) {
   old <- suppressMessages(sf::sf_use_s2(FALSE))
@@ -572,7 +580,8 @@ isea_cells_meeting_box <- function(seeds, bbox, g) {
   tested <- seeds
   frontier <- seeds
   while (length(frontier) > 0L) {
-    candidates <- setdiff(unique(unlist(grid_neighbors_isea(frontier, g))), tested)
+    candidates <- setdiff(unique(cell_id_unlist(grid_neighbors_isea(frontier, g))),
+                          tested)
     candidates <- candidates[!is.na(candidates)]
     if (length(candidates) == 0L) break
     tested <- c(tested, candidates)
@@ -650,7 +659,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
   }
 
   # ISEA cell IDs number the grid's cells 1..n
-  cell_to_sf(as.numeric(seq_len(n_cells)), g, wrap_dateline = wrap_dateline)
+  cell_to_sf(as_cell_id(seq_len(n_cells)), g, wrap_dateline = wrap_dateline)
 }
 
 #' Clip hexagon grid to polygon boundary
@@ -867,7 +876,7 @@ cell_area <- function(cell_id = NULL, grid) {
   cell_id <- resolved$cell_id
   g <- resolved$grid
 
-  cell_id <- if (is_h3_grid(g)) as.character(cell_id) else as.numeric(cell_id)
+  cell_id <- if (is_h3_grid(g)) as.character(cell_id) else as_cell_id(cell_id)
   ids <- unique(cell_id)
   surface <- body_surface_km2(grid_radius_km(g))
 
@@ -901,13 +910,14 @@ cell_area <- function(cell_id = NULL, grid) {
 #' A pure aperture and a mixed sequence pack their cells the same way and are
 #' read by the same walk.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param g HexGridInfo object
 #' @return Data frame with quad, i and j columns
 #' @noRd
 grid_quad_ij <- function(cell_id, g) {
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_cell_to_quad_ij(icosa_arg(g), as.numeric(cell_id), lv$resolution,
+  cpp_cell_to_quad_ij(icosa_arg(g), as_cell_id(cell_id), lv$resolution,
                       lv$aperture, lv$ap_seq)
 }
 
@@ -918,7 +928,8 @@ grid_quad_ij <- function(cell_id, g) {
 #' cell of resolution 0 is a vertex cell, and every other vertex cell is the
 #' (0, 0) cell of its quad.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param g HexGridInfo object
 #' @return Integer vector of side counts
 #' @noRd
@@ -931,13 +942,14 @@ isea_cell_sides <- function(cell_id, g) {
 
 #' The cells adjacent to given cells on any ISEA grid
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param g HexGridInfo object
-#' @return List of numeric vectors, the neighbours of each cell
+#' @return List of integer64 vectors, the neighbours of each cell
 #' @noRd
 grid_neighbors_isea <- function(cell_id, g) {
   lv <- isea_levels(g@aperture, g@resolution)
-  cpp_get_neighbors_isea(icosa_arg(g), as.numeric(cell_id), lv$resolution,
+  cpp_get_neighbors_isea(icosa_arg(g), as_cell_id(cell_id), lv$resolution,
                          lv$aperture, lv$ap_seq)
 }
 
@@ -947,7 +959,8 @@ grid_neighbors_isea <- function(cell_id, g) {
 #' through `cpp_cell_to_quad_ij()` first. `cell_to_index()`, `get_parent()` and
 #' `get_children()` all enter the hierarchy this way.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param resolution Resolution the cell IDs belong to
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
@@ -956,7 +969,7 @@ grid_neighbors_isea <- function(cell_id, g) {
 #' @noRd
 isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type,
                                 icosa) {
-  qij <- cpp_cell_to_quad_ij(icosa, as.numeric(cell_id), resolution, aperture_int,
+  qij <- cpp_cell_to_quad_ij(icosa, as_cell_id(cell_id), resolution, aperture_int,
                              integer(0))
   cpp_cell_to_index(icosa, qij$quad, qij$i, qij$j, resolution, aperture_int,
                     index_type)
@@ -972,11 +985,11 @@ isea_cells_to_index <- function(cell_id, resolution, aperture_int, index_type,
 #' @param aperture_int Integer aperture (3, 4 or 7)
 #' @param index_type One of "z3", "z7", "zorder"
 #' @param icosa The grid's solid as the C++ layer takes it (icosa_arg())
-#' @return Numeric vector of cell IDs
+#' @return integer64 vector of cell IDs
 #' @noRd
 isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
   cell <- cpp_index_to_cell(icosa, as.character(index), aperture_int, index_type)
-  out <- rep(NA_real_, nrow(cell))
+  out <- as_cell_id(rep(NA, nrow(cell)))
 
   for (resolution in unique(stats::na.omit(cell$resolution))) {
     at_res <- !is.na(cell$resolution) & cell$resolution == resolution
@@ -993,7 +1006,8 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' Advanced function for working with hierarchical index strings.
 #' Most users don't need this - use cell IDs directly.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
 #'
 #' @return Character vector of hierarchical index strings
@@ -1011,9 +1025,10 @@ cell_to_index <- function(cell_id, grid) {
   # Mixed sequences use a geometric hierarchical index (see
   # R/aperture_mixed_hierarchy.R); pure apertures use the Z7/Z3/zorder encoders.
   if (is_mixed_aperture(g@aperture)) {
-    return(vapply(as.numeric(cell_id),
-                  function(id) mixed_cell_to_index_one(id, g@resolution, g@aperture,
-                                                       grid_polyhedron(g)),
+    ids <- as_cell_id(cell_id)
+    return(vapply(seq_along(ids),
+                  function(k) mixed_cell_to_index_one(ids[k], g@resolution, g@aperture,
+                                                      grid_polyhedron(g)),
                   character(1)))
   }
 
@@ -1028,11 +1043,12 @@ cell_to_index <- function(cell_id, grid) {
 #'
 #' Returns the parent cell at a coarser resolution.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels up (default 1)
 #'
-#' @return Numeric vector of parent cell IDs
+#' @return Parent cell IDs, of the type the grid's cell IDs have
 #'
 #' @keywords internal
 #' @export
@@ -1058,7 +1074,7 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 
   # Mixed sequences: geometric parent (centre re-quantised at the coarser resolution).
   if (is_mixed_aperture(g@aperture)) {
-    return(mixed_get_parent(as.numeric(cell_id), g@resolution, g@aperture,
+    return(mixed_get_parent(as_cell_id(cell_id), g@resolution, g@aperture,
                             as.integer(levels), grid_polyhedron(g)))
   }
 
@@ -1080,13 +1096,14 @@ get_parent <- function(cell_id, grid, levels = 1L) {
 #'
 #' Returns the child cells at a finer resolution.
 #'
-#' @param cell_id Numeric vector of cell IDs
+#' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
+#'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels down (default 1)
 #' @param as_sf If \code{TRUE}, return the children as sf polygons, one row
 #'   per child with its \code{parent_id}.
 #'
-#' @return List of numeric vectors containing child cell IDs, one per input
+#' @return List of vectors of child cell IDs, one per input
 #'   cell; with \code{as_sf = TRUE}, an sf object with columns
 #'   \code{parent_id}, \code{cell_id} and \code{geometry}.
 #'
@@ -1103,7 +1120,12 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
   if (as_sf) {
     g <- extract_grid(grid)
     children <- get_children(cell_id, g, levels)
-    child_id <- unlist(children)
+    if (is_h3_grid(g)) {
+      child_id <- unlist(children, use.names = FALSE)
+    } else {
+      cell_id <- as_cell_id(cell_id)
+      child_id <- cell_id_unlist(children)
+    }
     polys <- cell_to_sf(child_id, grid_at_resolution(g, g@resolution + as.integer(levels)))
     return(sf::st_sf(
       parent_id = rep(cell_id, lengths(children)),
@@ -1122,16 +1144,19 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
     return(cpp_h3_cellToChildren(as.character(cell_id), child_res))
   }
 
-  if (g@resolution + levels > MAX_RESOLUTION) {
+  child_res <- g@resolution + as.integer(levels)
+  if (child_res > MAX_RESOLUTION) {
     stop("Cannot get children: would exceed maximum resolution")
   }
+  check_isea_resolution(aperture_at_resolution(g@aperture, child_res), child_res,
+                        grid_polyhedron(g))
+  ids <- as_cell_id(cell_id)
 
   # Mixed sequences: geometric children (cells whose geometric parent is this cell).
   if (is_mixed_aperture(g@aperture)) {
-    child_res <- g@resolution + as.integer(levels)
     ncc <- aperture_n_cells(g@aperture, child_res, grid_polyhedron(g))
-    return(lapply(as.numeric(cell_id), function(id)
-      mixed_get_children_one(id, g@resolution, child_res, g@aperture, ncc,
+    return(lapply(seq_along(ids), function(k)
+      mixed_get_children_one(ids[k], g@resolution, child_res, g@aperture, ncc,
                              grid_polyhedron(g))))
   }
 
@@ -1139,7 +1164,7 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
 
   # One level at a time, so each level's children are read at their own
   # resolution.
-  front <- lapply(as.numeric(cell_id), identity)
+  front <- lapply(seq_along(ids), function(k) ids[k])
   for (step in seq_len(levels)) {
     front <- isea_children_one_level(front, g@resolution + step - 1L, g)
   }
@@ -1181,13 +1206,13 @@ grid_at_resolution <- function(g, resolution) {
 #' those, since neighbours are found on the sphere rather than in one quad's
 #' lattice. The parent test then decides which candidates are children.
 #'
-#' @param front List of numeric vectors of cell IDs, one per requested cell
+#' @param front List of integer64 vectors of cell IDs, one per requested cell
 #' @param resolution Resolution the cells in `front` are at
 #' @param g The grid the cells came from
 #' @return A list of the same length, each element the children, sorted
 #' @noRd
 isea_children_one_level <- function(front, resolution, g) {
-  parents <- unique(unlist(front, use.names = FALSE))
+  parents <- unique(cell_id_unlist(front))
   if (length(parents) == 0) {
     return(front)
   }
@@ -1216,10 +1241,10 @@ isea_children_one_level <- function(front, resolution, g) {
 
   candidates <- lapply(seq_along(parents), function(k) {
     cand <- unique(c(expansion[[k]], central[k], ring[[k]]))
-    cand[!is.na(cand) & cand >= 1 & cand <= n_child]
+    cand[!is.na(cand) & cand >= 1L & cand <= n_child]
   })
 
-  cand <- unlist(candidates, use.names = FALSE)
+  cand <- cell_id_unlist(candidates)
   cand_parent <- rep(seq_along(parents), lengths(candidates))
   pool <- unique(cand)
   pool_parent <- get_parent(pool, child_grid)
@@ -1227,10 +1252,10 @@ isea_children_one_level <- function(front, resolution, g) {
   children <- unname(split(cand[keep], factor(cand_parent[keep],
                                               levels = seq_along(parents))))
 
-  ids <- unlist(front, use.names = FALSE)
+  ids <- cell_id_unlist(front)
   kids <- children[match(ids, parents)]
   slot <- rep(rep(seq_along(front), lengths(front)), lengths(kids))
-  lapply(unname(split(unlist(kids, use.names = FALSE),
+  lapply(unname(split(cell_id_unlist(kids),
                       factor(slot, levels = seq_along(front)))),
          function(x) sort(unique(x)))
 }

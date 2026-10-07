@@ -119,7 +119,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 #' @param lon Numeric vector of longitudes in degrees
 #' @param lat Numeric vector of latitudes in degrees
 #'
-#' @return Numeric vector of cell IDs (1-based)
+#' @return \code{bit64::integer64} vector of cell IDs, from 1
 #'
 #' @family coordinate conversion
 #' @seealso \code{\link{lonlat_to_cell}} for the recommended S4 interface,
@@ -143,7 +143,7 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
 #' using the resolution and aperture from a grid object.
 #'
 #' @param grid Grid specification from hexify_grid()
-#' @param cell_id Numeric vector of cell IDs (1-based)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
 #'
 #' @return Data frame with lon_deg and lat_deg columns
 #'
@@ -243,7 +243,7 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 #'
 #' @param lon Longitude in degrees (-180 to 180)
 #' @param lat Latitude in degrees (-90 to 90)
-#' @param resolution Grid resolution level (0-30)
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return List with components:
@@ -291,10 +291,10 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
 #' @param quad Quad number (0-11), integer or vector
 #' @param i Cell index along first axis, integer or vector
 #' @param j Cell index along second axis, integer or vector
-#' @param resolution Grid resolution level (0-30)
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
-#' @return Numeric vector of cell IDs
+#' @return \code{bit64::integer64} vector of cell IDs
 #'
 #' @family coordinate conversion
 #' @keywords internal
@@ -490,8 +490,8 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #'
 #' Compatible with 'dggridR' dgSEQNUM_to_Q2DI().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based)
-#' @param resolution Grid resolution level (0-30)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return Data frame with columns:
@@ -515,7 +515,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 #'                                    resolution = 10, aperture = 3)
 #' # Should equal original cell_id
 hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
-  cell_id <- as.numeric(cell_id)
+  cell_id <- as_cell_id(cell_id)
   resolution <- as.integer(resolution)
   aperture <- as.integer(aperture)
   validate_resolution(resolution)
@@ -533,8 +533,8 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
 #'
 #' Compatible with 'dggridR' dgSEQNUM_to_PROJTRI().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based)
-#' @param resolution Grid resolution level (0-30)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return Data frame with columns:
@@ -564,7 +564,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 
   cpp_cell_to_icosa_tri(
     icosa = numeric(0),
-    cell_id = as.numeric(cell_id),
+    cell_id = as_cell_id(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
   )
@@ -581,7 +581,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
 #' @param quad Quad number (0-11), integer or vector
 #' @param i Cell index along first axis, integer or vector
 #' @param j Cell index along second axis, integer or vector
-#' @param resolution Grid resolution level (0-30)
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return Data frame with columns:
@@ -630,8 +630,8 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 #'
 #' Compatible with 'dggridR' dgSEQNUM_to_Q2DD().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based)
-#' @param resolution Grid resolution level (0-30)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return Data frame with columns:
@@ -661,7 +661,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 
   cpp_cell_to_quad_xy(
     icosa = numeric(0),
-    cell_id = as.numeric(cell_id),
+    cell_id = as_cell_id(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
   )
@@ -677,10 +677,10 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
 #' @param quad Quad number (0-11), integer or vector
 #' @param quad_x Continuous X coordinate in quad space
 #' @param quad_y Continuous Y coordinate in quad space
-#' @param resolution Grid resolution level (0-30)
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
-#' @return Numeric vector of cell IDs
+#' @return \code{bit64::integer64} vector of cell IDs
 #'
 #' @family coordinate conversion
 #' @seealso \code{\link{hexify_cell_to_quad_xy}} for the inverse operation,
@@ -788,8 +788,8 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
 #'
 #' Compatible with 'dggridR' dgSEQNUM_to_PLANE().
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based)
-#' @param resolution Grid resolution level (0-30)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
+#' @param resolution Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)
 #' @param aperture Grid aperture: 3, 4, or 7
 #'
 #' @return Data frame with columns:
@@ -814,7 +814,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
 
   cpp_cell_to_plane(
     icosa = numeric(0),
-    cell_id = as.numeric(cell_id),
+    cell_id = as_cell_id(cell_id),
     resolution = as.integer(resolution),
     aperture = as.integer(aperture)
   )

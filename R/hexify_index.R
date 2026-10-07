@@ -246,7 +246,7 @@ hexify_compare_indices <- function(idx1, idx2) {
 #' @param resolution Grid resolution (integer >= 0)
 #' @param aperture Grid aperture (3, 4, or 7)
 #'
-#' @return Numeric vector of cell IDs (1-based)
+#' @return \code{bit64::integer64} vector of cell IDs, from 1
 #'
 #' @details
 #' Returns DGGRID-compatible cell identifiers. The cell ID
@@ -275,7 +275,7 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
 #' Converts cell identifiers back to cell center coordinates.
 #' This is the inverse of \code{\link{hexify_lonlat_to_cell}}.
 #'
-#' @param cell_id Numeric vector of cell IDs (1-based)
+#' @param cell_id Cell IDs, from 1: integer64, or whole numbers below 2^53
 #' @param resolution Grid resolution (integer >= 0)
 #' @param aperture Grid aperture (3, 4, or 7)
 #'
@@ -292,6 +292,7 @@ hexify_lonlat_to_cell <- function(lon, lat, resolution, aperture) {
 hexify_cell_to_lonlat <- function(cell_id, resolution, aperture) {
   validate_resolution(resolution)
   validate_aperture(aperture)
+  cell_id <- as_cell_id(cell_id)
   validate_cell_id(cell_id, resolution, aperture)
   cpp_cell_to_lonlat(numeric(0), cell_id, resolution, aperture, integer(0))
 }

@@ -92,17 +92,19 @@ quad_ij_hops <- function(di, dj, generator) {
 hex_distance <- function(cell_a, cell_b, grid) {
   g <- extract_grid(grid)
 
+  if (!is_h3_grid(g)) {
+    cell_a <- as_cell_id(cell_a)
+    cell_b <- as_cell_id(cell_b)
+  }
+
   # Recycle to equal length
   n <- max(length(cell_a), length(cell_b))
-  cell_a <- rep_len(cell_a, n)
-  cell_b <- rep_len(cell_b, n)
+  cell_a <- rep(cell_a, length.out = n)
+  cell_b <- rep(cell_b, length.out = n)
 
   if (is_h3_grid(g)) {
     return(cpp_h3_gridDistance(as.character(cell_a), as.character(cell_b)))
   }
-
-  cell_a <- as.numeric(cell_a)
-  cell_b <- as.numeric(cell_b)
 
   result <- rep(NA_real_, n)
   known <- !is.na(cell_a) & !is.na(cell_b)
@@ -126,7 +128,9 @@ hex_distance <- function(cell_a, cell_b, grid) {
   # Cross-quad: breadth-first search, one expansion per distinct source
   cross <- known & !same
   if (any(cross)) {
-    for (source in unique(cell_a[cross])) {
+    sources <- unique(cell_a[cross])
+    for (s in seq_along(sources)) {
+      source <- sources[s]
       from <- cross & cell_a == source
       rings <- isea_rings(source, g, 100L, targets = cell_b[from])
       result[from] <- rings$ring_distance[match(cell_b[from], rings$cell_id)]

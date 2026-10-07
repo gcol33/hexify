@@ -194,6 +194,8 @@ hexify_compare_resolutions <- function(aperture = 3, res_range = 0:15,
     title <- "Grid Resolution Comparison (H3)"
   } else {
     surface_km2 <- body_surface_km2(radius_km)
+    res_range <- res_range[res_range >= MIN_RESOLUTION &
+                             res_range <= isea_max_resolution(aperture)]
     level_stats <- function(res) {
       grid_level_stats(surface_km2, aperture_n_cells(aperture, res), res, aperture)
     }
