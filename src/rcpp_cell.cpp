@@ -854,6 +854,58 @@ static inline bool chord_needs_split(double alon, double alat,
     return len > 0.0 && off > tolerance * len;
 }
 
+// Deepest halving of one piece for its length alone, 2^30 pieces.
+constexpr int kMaxArcSplits = 30;
+
+// How closely a drawn boundary follows the true one: 'tolerance' as for
+// chord_needs_split(), and 'max_arc' the longest arc, in radians, one drawn
+// piece may span. Zero turns either off.
+struct EdgeLimits {
+    double tolerance;
+    double max_arc;
+    bool active() const { return tolerance > 0.0 || max_arc > 0.0; }
+};
+
+// The arc between two lon/lat points, in radians.
+static inline double lonlat_arc(double alon, double alat,
+                                double blon, double blat) {
+    const double p1 = alat * hexify::kDegToRad, p2 = blat * hexify::kDegToRad;
+    const double s_lat = std::sin(0.5 * (p2 - p1));
+    const double s_lon = std::sin(0.5 * (blon - alon) * hexify::kDegToRad);
+    const double h = s_lat * s_lat + std::cos(p1) * std::cos(p2) * s_lon * s_lon;
+    return 2.0 * std::asin(std::sqrt(std::min(1.0, h)));
+}
+
+// Whether a piece a -> b, whose true midpoint is m, at halving 'depth', must
+// be halved again: its chord strays from the edge (chord_needs_split), or it
+// spans more than the longest arc allowed.
+static inline bool piece_needs_split(double alon, double alat,
+                                     double mlon, double mlat,
+                                     double blon, double blat,
+                                     const EdgeLimits& lim, int depth) {
+    if (lim.tolerance > 0.0 && depth < kMaxEdgeSplits &&
+        chord_needs_split(alon, alat, mlon, mlat, blon, blat, lim.tolerance)) {
+        return true;
+    }
+    return lim.max_arc > 0.0 && depth < kMaxArcSplits &&
+           lonlat_arc(alon, alat, blon, blat) > lim.max_arc;
+}
+
+// piece_needs_split() over vectors of pieces at one halving depth.
+// [[Rcpp::export]]
+LogicalVector cpp_pieces_need_split(NumericVector alon, NumericVector alat,
+                                    NumericVector mlon, NumericVector mlat,
+                                    NumericVector blon, NumericVector blat,
+                                    double tolerance, double max_arc, int depth) {
+    const EdgeLimits lim{tolerance, max_arc};
+    LogicalVector out(alon.size());
+    for (R_xlen_t i = 0; i < alon.size(); i++) {
+        out[i] = piece_needs_split(alon[i], alat[i], mlon[i], mlat[i],
+                                   blon[i], blat[i], lim, depth);
+    }
+    return out;
+}
+
 // A piece of a vertex cell's folded edge shorter than this fraction of the
 // cell's circumradius is a corner, not an edge.
 constexpr double kEdgePieceMin = 1e-9;
@@ -1170,20 +1222,22 @@ static const char* plane_segment_faces(int quad, double ax, double ay,
 }
 
 // The boundary of one cell in lon/lat, counter-clockwise and left open. A
-// cell edge is straight in the quad plane and curved in lon/lat, so with a
-// positive 'tolerance' each edge is split in the plane, as DGGRID's
-// densification does, until every piece is a straight lon/lat chord to within
-// that fraction of its length. Zero gives the corners alone. A pole falls
+// cell edge is straight in the quad plane and curved in lon/lat, so with
+// active limits each edge is split in the plane, as DGGRID's densification
+// does, until every piece is a straight lon/lat chord to within the
+// tolerance's fraction of its length and spans no more than the longest arc
+// (piece_needs_split). Inactive limits give the corners alone. A pole falls
 // inside a cell or on a cell edge, never on a corner, so every corner keeps
 // the position the inverse projection gives it.
 static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                  double radius, double rotation_deg,
-                                 bool at_vertex, double tolerance,
+                                 bool at_vertex, const EdgeLimits& lim,
                                  std::vector<double>& out_lon,
                                  std::vector<double>& out_lat) {
+    const bool dense = lim.active();
     std::vector<PlaneEdge> edges;
     cell_plane_edges(quad, qx_center, qy_center, radius, rotation_deg,
-                     at_vertex, /*fold_vertex=*/tolerance > 0.0, edges);
+                     at_vertex, /*fold_vertex=*/dense, edges);
 
     out_lon.clear();
     out_lat.clear();
@@ -1193,19 +1247,18 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
     };
 
     // The plane segment a -> b in lon/lat, from a and short of b, halved while
-    // its projected midpoint leaves the lon/lat chord (chord_needs_split).
+    // piece_needs_split() holds.
     std::function<void(double, double, double, double, double, double,
                        double, double, int)> add_segment;
     add_segment = [&](double ax, double ay, double alon, double alat,
                       double bx, double by, double blon, double blat,
                       int depth) {
-        if (tolerance > 0.0 && depth < kMaxEdgeSplits &&
-            R_finite(alon) && R_finite(blon)) {
+        if (dense && R_finite(alon) && R_finite(blon)) {
             double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
             double mlon, mlat;
             project(mx, my, mlon, mlat);
             if (R_finite(mlon) &&
-                chord_needs_split(alon, alat, mlon, mlat, blon, blat, tolerance)) {
+                piece_needs_split(alon, alat, mlon, mlat, blon, blat, lim, depth)) {
                 add_segment(ax, ay, alon, alat, mx, my, mlon, mlat, depth + 1);
                 add_segment(mx, my, mlon, mlat, bx, by, blon, blat, depth + 1);
                 return;
@@ -1233,7 +1286,7 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             return;
         }
         pieces.clear();
-        if (tolerance > 0.0 &&
+        if (dense &&
             plane_segment_faces(quad, ax, ay, bx, by, 0, pieces) == nullptr) {
             split_at_creases(pieces);
         } else {
@@ -1320,14 +1373,14 @@ static CellPlanes cell_planes(const NumericVector& cell_id, const QuadFrame& f) 
 }
 
 static List cell_rings(const NumericVector& cell_id, const QuadFrame& f,
-                       double tolerance) {
+                       const EdgeLimits& lim) {
     CellPlanes g = cell_planes(cell_id, f);
     List result(cell_id.size());
     std::vector<double> lon, lat;
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
         const CellPlane& c = g.cells[k];
         cell_boundary_lonlat(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
-                             c.at_vertex, tolerance, lon, lat);
+                             c.at_vertex, lim, lon, lat);
         result[k] = closed_ring(lon, lat);
     }
     return result;
@@ -1336,16 +1389,18 @@ static List cell_rings(const NumericVector& cell_id, const QuadFrame& f,
 // [[Rcpp::export]]
 List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id,
                          int resolution, int aperture, IntegerVector ap_seq,
-                         double tolerance = 0.0) {
+                         double tolerance = 0.0, double max_arc = 0.0) {
     activate_grid(icosa);
-    return cell_rings(cell_id, grid_frame(resolution, aperture, ap_seq), tolerance);
+    return cell_rings(cell_id, grid_frame(resolution, aperture, ap_seq),
+                      EdgeLimits{tolerance, max_arc});
 }
 
 // Closed lon/lat rings whose edges are great-circle arcs between corners, as
-// H3 draws its cells, with each arc halved while its midpoint leaves the
-// lon/lat chord (chord_needs_split), as ISEA cell edges are.
+// H3 draws its cells, with each arc halved while piece_needs_split() holds,
+// as ISEA cell edges are.
 // [[Rcpp::export]]
-List cpp_densify_great_circle(List rings, double tolerance) {
+List cpp_densify_great_circle(List rings, double tolerance, double max_arc = 0.0) {
+    const EdgeLimits lim{tolerance, max_arc};
     auto unit = [](double lon, double lat, double v[3]) {
         double la = lat * hexify::kDegToRad, lo = lon * hexify::kDegToRad;
         v[0] = std::cos(la) * std::cos(lo);
@@ -1357,7 +1412,7 @@ List cpp_densify_great_circle(List rings, double tolerance) {
     for (R_xlen_t r = 0; r < rings.size(); r++) {
         NumericMatrix ring = rings[r];
         int n = ring.nrow();
-        if (n < 2 || !(tolerance > 0.0)) {
+        if (n < 2 || !lim.active()) {
             out[r] = ring;
             continue;
         }
@@ -1367,20 +1422,18 @@ List cpp_densify_great_circle(List rings, double tolerance) {
                            double, double, int)> add_arc;
         add_arc = [&](const double* a, double alon, double alat,
                       const double* b, double blon, double blat, int depth) {
-            if (depth < kMaxEdgeSplits) {
-                double m[3] = {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
-                double norm = std::sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]);
-                if (norm > 0.0) {
-                    for (double& x : m) x /= norm;
-                    double mlon = std::atan2(m[1], m[0]) * hexify::kRadToDeg;
-                    double mlat = std::asin(std::max(-1.0, std::min(1.0, m[2]))) *
-                                  hexify::kRadToDeg;
-                    if (chord_needs_split(alon, alat, mlon, mlat, blon, blat,
-                                          tolerance)) {
-                        add_arc(a, alon, alat, m, mlon, mlat, depth + 1);
-                        add_arc(m, mlon, mlat, b, blon, blat, depth + 1);
-                        return;
-                    }
+            double m[3] = {a[0] + b[0], a[1] + b[1], a[2] + b[2]};
+            double norm = std::sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]);
+            if (norm > 0.0) {
+                for (double& x : m) x /= norm;
+                double mlon = std::atan2(m[1], m[0]) * hexify::kRadToDeg;
+                double mlat = std::asin(std::max(-1.0, std::min(1.0, m[2]))) *
+                              hexify::kRadToDeg;
+                if (piece_needs_split(alon, alat, mlon, mlat, blon, blat,
+                                      lim, depth)) {
+                    add_arc(a, alon, alat, m, mlon, mlat, depth + 1);
+                    add_arc(m, mlon, mlat, b, blon, blat, depth + 1);
+                    return;
                 }
             }
             lon.push_back(alon);

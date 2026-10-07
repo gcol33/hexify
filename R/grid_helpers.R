@@ -216,13 +216,14 @@ wrap_cell_corners <- function(sfc) {
 #' Boundaries of ISEA cells as closed lon/lat rings
 #'
 #' Each edge follows the true cell boundary to within `tolerance` of its
-#' length; 0 gives the corners alone.
+#' length, and no drawn piece spans an arc longer than `max_arc` radians;
+#' both 0 give the corners alone.
 #' @noRd
 isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
-                            tolerance = CELL_EDGE_TOLERANCE) {
+                            tolerance = CELL_EDGE_TOLERANCE, max_arc = 0) {
   lv <- isea_levels(aperture, resolution)
   cpp_cell_to_corners(icosa, as.numeric(cell_id), lv$resolution, lv$aperture,
-                      lv$ap_seq, tolerance)
+                      lv$ap_seq, tolerance, max_arc)
 }
 
 #' Build hexagon polygons for ISEA cell IDs
@@ -237,11 +238,13 @@ isea_cell_rings <- function(cell_id, resolution, aperture, icosa,
 #' @param aperture Grid aperture: 3, 4, 7, or a mixed sequence spelling
 #' @param icosa Orientation argument of the C++ layer (see icosa_arg())
 #' @param crs CRS the polygons carry, as sf reads it
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
 isea_cells_to_sfc <- function(cell_id, resolution, aperture, icosa, crs = 4326,
-                              tolerance = CELL_EDGE_TOLERANCE) {
-  corners_list <- isea_cell_rings(cell_id, resolution, aperture, icosa, tolerance)
+                              tolerance = CELL_EDGE_TOLERANCE, max_arc = 0) {
+  corners_list <- isea_cell_rings(cell_id, resolution, aperture, icosa,
+                                  tolerance, max_arc)
 
   polygons <- lapply(corners_list, function(coords) {
     sf::st_polygon(list(lonlat_ring_coords(coords)))
@@ -344,6 +347,13 @@ cell_to_lonlat <- function(cell_id, grid) {
 #'   points stays within \code{densify} times its length of the true edge.
 #'   \code{0} keeps the corners alone. \code{NULL} uses 0.001 for ISEA cells
 #'   and 0 for H3 cells.
+#' @param max_km Longest edge piece, in km on the grid's sphere: edges are
+#'   halved further until no straight piece between consecutive points spans
+#'   more than \code{max_km}, on top of \code{densify}. \code{NULL} (default)
+#'   sets no limit. The bound \code{densify} sets is relative to each piece's
+#'   length, so a long, gently curved edge can stand as one piece that strays
+#'   hundreds of metres from the true edge; \code{max_km} bounds that in
+#'   distance.
 #' @param shape \code{"hexagon"} (default) draws each cell's own boundary.
 #'   \code{"gosper"} draws it as a Gosper island and \code{"descendants"} as
 #'   the outline of its descendants; both need an ISEA grid, and
@@ -408,7 +418,7 @@ cell_to_lonlat <- function(cell_id, grid) {
 #' islands <- cell_to_sf(cells, g7, shape = "gosper", depth = 3)
 #' outlines <- cell_to_sf(cells, g7, shape = "descendants", depth = 2)
 cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
-                       densify = NULL,
+                       densify = NULL, max_km = NULL,
                        shape = c("hexagon", "gosper", "descendants"),
                        depth = 3L) {
   if (!requireNamespace("sf", quietly = TRUE)) {
@@ -418,11 +428,16 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
                             !is.finite(densify) || densify < 0)) {
     stop("densify must be NULL or a single non-negative number")
   }
+  if (!is.null(max_km) && (!is.numeric(max_km) || length(max_km) != 1L ||
+                           !is.finite(max_km) || max_km <= 0)) {
+    stop("max_km must be NULL or a single positive number")
+  }
   shape <- match.arg(shape)
 
   resolved <- resolve_cells_grid(cell_id, grid)
   cell_id <- resolved$cell_id
   g <- resolved$grid
+  max_arc <- if (is.null(max_km)) 0 else max_km / grid_radius_km(g)
   if (shape != "hexagon") {
     depth <- cell_shape_depth(g, shape, depth)
   }
@@ -436,8 +451,9 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
   # H3 path: use native C backend for boundaries
   if (is_h3_grid(g)) {
     boundaries <- cpp_h3_cellToBoundary(as.character(cell_id))
-    if (!is.null(densify) && densify > 0) {
-      boundaries <- cpp_densify_great_circle(boundaries, densify)
+    h3_tolerance <- if (is.null(densify)) 0 else densify
+    if (h3_tolerance > 0 || max_arc > 0) {
+      boundaries <- cpp_densify_great_circle(boundaries, h3_tolerance, max_arc)
     }
     polygons <- lapply(boundaries, function(coords) {
       if (nrow(coords) == 0) return(sf::st_polygon())
@@ -452,9 +468,10 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
     tolerance <- if (is.null(densify)) CELL_EDGE_TOLERANCE else densify
     sfc <- if (shape == "hexagon") {
       isea_cells_to_sfc(cell_id, g@resolution, g@aperture, icosa_arg(g),
-                        crs = grid_crs(g), tolerance = tolerance)
+                        crs = grid_crs(g), tolerance = tolerance,
+                        max_arc = max_arc)
     } else {
-      shaped_cells_to_sfc(cell_id, g, shape, depth, tolerance)
+      shaped_cells_to_sfc(cell_id, g, shape, depth, tolerance, max_arc)
     }
   }
 

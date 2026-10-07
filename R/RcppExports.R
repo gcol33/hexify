@@ -197,12 +197,16 @@ cpp_quad_ij_to_icosa_tri <- function(icosa, quad, i, j, resolution, aperture) {
     .Call(`_hexify_cpp_quad_ij_to_icosa_tri`, icosa, quad, i, j, resolution, aperture)
 }
 
-cpp_cell_to_corners <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance = 0.0) {
-    .Call(`_hexify_cpp_cell_to_corners`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
+cpp_pieces_need_split <- function(alon, alat, mlon, mlat, blon, blat, tolerance, max_arc, depth) {
+    .Call(`_hexify_cpp_pieces_need_split`, alon, alat, mlon, mlat, blon, blat, tolerance, max_arc, depth)
 }
 
-cpp_densify_great_circle <- function(rings, tolerance) {
-    .Call(`_hexify_cpp_densify_great_circle`, rings, tolerance)
+cpp_cell_to_corners <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance = 0.0, max_arc = 0.0) {
+    .Call(`_hexify_cpp_cell_to_corners`, icosa, cell_id, resolution, aperture, ap_seq, tolerance, max_arc)
+}
+
+cpp_densify_great_circle <- function(rings, tolerance, max_arc = 0.0) {
+    .Call(`_hexify_cpp_densify_great_circle`, rings, tolerance, max_arc)
 }
 
 cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {

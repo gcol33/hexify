@@ -9,6 +9,7 @@ cell_to_sf(
   grid,
   wrap_dateline = TRUE,
   densify = NULL,
+  max_km = NULL,
   shape = c("hexagon", "gosper", "descendants"),
   depth = 3L
 )
@@ -33,6 +34,14 @@ until the straight line in longitude and latitude between consecutive
 points stays within \code{densify} times its length of the true edge.
 \code{0} keeps the corners alone. \code{NULL} uses 0.001 for ISEA cells
 and 0 for H3 cells.}
+
+\item{max_km}{Longest edge piece, in km on the grid's sphere: edges are
+halved further until no straight piece between consecutive points spans
+more than \code{max_km}, on top of \code{densify}. \code{NULL} (default)
+sets no limit. The bound \code{densify} sets is relative to each piece's
+length, so a long, gently curved edge can stand as one piece that strays
+hundreds of metres from the true edge; \code{max_km} bounds that in
+distance.}
 
 \item{shape}{\code{"hexagon"} (default) draws each cell's own boundary.
 \code{"gosper"} draws it as a Gosper island and \code{"descendants"} as

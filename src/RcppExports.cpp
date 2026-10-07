@@ -680,9 +680,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_pieces_need_split
+LogicalVector cpp_pieces_need_split(NumericVector alon, NumericVector alat, NumericVector mlon, NumericVector mlat, NumericVector blon, NumericVector blat, double tolerance, double max_arc, int depth);
+RcppExport SEXP _hexify_cpp_pieces_need_split(SEXP alonSEXP, SEXP alatSEXP, SEXP mlonSEXP, SEXP mlatSEXP, SEXP blonSEXP, SEXP blatSEXP, SEXP toleranceSEXP, SEXP max_arcSEXP, SEXP depthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type alon(alonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alat(alatSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mlon(mlonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mlat(mlatSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type blon(blonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type blat(blatSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type max_arc(max_arcSEXP);
+    Rcpp::traits::input_parameter< int >::type depth(depthSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_pieces_need_split(alon, alat, mlon, mlat, blon, blat, tolerance, max_arc, depth));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_to_corners
-List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance);
-RcppExport SEXP _hexify_cpp_cell_to_corners(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP) {
+List cpp_cell_to_corners(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance, double max_arc);
+RcppExport SEXP _hexify_cpp_cell_to_corners(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP, SEXP max_arcSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -692,19 +711,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners(icosa, cell_id, resolution, aperture, ap_seq, tolerance));
+    Rcpp::traits::input_parameter< double >::type max_arc(max_arcSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_corners(icosa, cell_id, resolution, aperture, ap_seq, tolerance, max_arc));
     return rcpp_result_gen;
 END_RCPP
 }
 // cpp_densify_great_circle
-List cpp_densify_great_circle(List rings, double tolerance);
-RcppExport SEXP _hexify_cpp_densify_great_circle(SEXP ringsSEXP, SEXP toleranceSEXP) {
+List cpp_densify_great_circle(List rings, double tolerance, double max_arc);
+RcppExport SEXP _hexify_cpp_densify_great_circle(SEXP ringsSEXP, SEXP toleranceSEXP, SEXP max_arcSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type rings(ringsSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_densify_great_circle(rings, tolerance));
+    Rcpp::traits::input_parameter< double >::type max_arc(max_arcSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_densify_great_circle(rings, tolerance, max_arc));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1453,8 +1474,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_quad_xy_to_cell", (DL_FUNC) &_hexify_cpp_quad_xy_to_cell, 6},
     {"_hexify_cpp_cell_to_icosa_tri", (DL_FUNC) &_hexify_cpp_cell_to_icosa_tri, 4},
     {"_hexify_cpp_quad_ij_to_icosa_tri", (DL_FUNC) &_hexify_cpp_quad_ij_to_icosa_tri, 6},
-    {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 6},
-    {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 2},
+    {"_hexify_cpp_pieces_need_split", (DL_FUNC) &_hexify_cpp_pieces_need_split, 9},
+    {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 7},
+    {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 3},
     {"_hexify_cpp_cell_solid_angle", (DL_FUNC) &_hexify_cpp_cell_solid_angle, 6},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 6},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 1},

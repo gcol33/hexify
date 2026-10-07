@@ -259,6 +259,52 @@ test_that("cell_to_sf densifies H3 edges along their great circles", {
   expect_lt(max(off), 1e-10)
 })
 
+piece_km <- function(ring, radius_km) {
+  p <- ring[-nrow(ring), , drop = FALSE] * pi / 180
+  q <- ring[-1L, , drop = FALSE] * pi / 180
+  h <- sin((q[, 2] - p[, 2]) / 2)^2 +
+    cos(p[, 2]) * cos(q[, 2]) * sin((q[, 1] - p[, 1]) / 2)^2
+  2 * asin(sqrt(pmin(1, h))) * radius_km
+}
+
+test_that("cell_to_sf(max_km) bounds every drawn piece in km", {
+  g <- hex_grid(resolution = 3, aperture = 3)
+  # Cell 82 has an 880 km edge the relative tolerance leaves as one piece
+  default <- ring_of(cell_to_sf(82, g, wrap_dateline = FALSE))
+  capped <- ring_of(cell_to_sf(82, g, wrap_dateline = FALSE, max_km = 50))
+  expect_gt(max(piece_km(default, grid_radius_km(g))), 800)
+  expect_lte(max(piece_km(capped, grid_radius_km(g))), 50)
+  # The cap only halves pieces further, so every default point stays
+  key <- function(r) paste(signif(r[, 1], 12), signif(r[, 2], 12))
+  expect_true(all(key(default) %in% key(capped)))
+
+  h <- suppressMessages(hex_grid(resolution = 2, type = "h3"))
+  hc <- lonlat_to_cell(10, 50, h)
+  expect_lte(max(piece_km(ring_of(cell_to_sf(hc, h, wrap_dateline = FALSE,
+                                             max_km = 20)), grid_radius_km(h))), 20)
+
+  g7 <- hex_grid(resolution = 2, aperture = 7)
+  c7 <- lonlat_to_cell(10, 50, g7)
+  for (shape in c("gosper", "descendants")) {
+    ring <- ring_of(cell_to_sf(c7, g7, shape = shape, depth = 1,
+                               wrap_dateline = FALSE, max_km = 20))
+    expect_lte(max(piece_km(ring, grid_radius_km(g7))), 20)
+  }
+
+  expect_error(cell_to_sf(82, g, max_km = 0), "positive")
+  expect_error(cell_to_sf(82, g, max_km = c(1, 2)), "positive")
+})
+
+test_that("cell_to_sf(max_km) reads km on the grid's own sphere", {
+  earth <- hex_grid(resolution = 3, aperture = 3)
+  moon <- hex_grid(resolution = 3, aperture = 3, radius_km = "moon")
+  ratio <- grid_radius_km(moon) / grid_radius_km(earth)
+  expect_equal(ring_of(cell_to_sf(82, moon, wrap_dateline = FALSE,
+                                  max_km = 50 * ratio)),
+               ring_of(cell_to_sf(82, earth, wrap_dateline = FALSE,
+                                  max_km = 50)))
+})
+
 test_that("get_neighbors(as_sf = TRUE) links each cell to its neighbours", {
   g <- hex_grid(resolution = 4, aperture = 4)
   cells <- lonlat_to_cell(c(10, -60), c(50, -15), g)

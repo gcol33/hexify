@@ -63,14 +63,14 @@ cell_shape_depth <- function(g, shape, depth) {
 #' @param g HexGridInfo object
 #' @param shape "gosper" or "descendants"
 #' @param depth Validated depth
-#' @param tolerance Edge tolerance, as for `isea_cell_rings()`
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
 #' @return An sfc of POLYGON geometries, one per cell ID, in input order
 #' @noRd
 shaped_cells_to_sfc <- function(cell_id, g, shape, depth,
-                                tolerance = CELL_EDGE_TOLERANCE) {
+                                tolerance = CELL_EDGE_TOLERANCE, max_arc = 0) {
   rings <- switch(shape,
-    gosper = gosper_cell_rings(cell_id, g, depth, tolerance),
-    descendants = descendant_cell_rings(cell_id, g, depth, tolerance)
+    gosper = gosper_cell_rings(cell_id, g, depth, tolerance, max_arc),
+    descendants = descendant_cell_rings(cell_id, g, depth, tolerance, max_arc)
   )
   sf::st_sfc(lapply(rings, function(r) {
     sf::st_polygon(lapply(r, lonlat_ring_coords))
@@ -174,12 +174,12 @@ open_corner_rings <- function(cell_id, g) {
 #' @param cell_id Numeric vector of cell IDs of grid `g`
 #' @param g HexGridInfo object of an ISEA grid
 #' @param depth Number of replacement steps
-#' @param tolerance Edge tolerance, as for `isea_cell_rings()`
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
 #' @return A list with one element per cell ID, each a list holding one closed
 #'   lon/lat ring
 #' @noRd
 gosper_cell_rings <- function(cell_id, g, depth,
-                              tolerance = CELL_EDGE_TOLERANCE) {
+                              tolerance = CELL_EDGE_TOLERANCE, max_arc = 0) {
   icosa <- icosa_arg(g)
   frames <- icosa_face_frames(icosa)
 
@@ -197,7 +197,8 @@ gosper_cell_rings <- function(cell_id, g, depth,
   a_ll <- topo$corners[lo[first], , drop = FALSE]
   b_ll <- topo$corners[hi[first], , drop = FALSE]
 
-  paths <- gosper_edge_paths(a_ll, b_ll, depth, frames, icosa, tolerance)
+  paths <- gosper_edge_paths(a_ll, b_ll, depth, frames, icosa, tolerance,
+                             max_arc)
 
   forward <- topo$from == lo
   n_corner <- vapply(rings, nrow, integer(1))
@@ -219,10 +220,12 @@ gosper_cell_rings <- function(cell_id, g, depth,
 #' @param depth Number of replacement steps
 #' @param frames Face frames from `icosa_face_frames()`
 #' @param icosa Orientation argument of the C++ layer
-#' @param tolerance Edge tolerance; 0 keeps the curve's own vertices alone
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`; both 0
+#'   keep the curve's own vertices alone
 #' @return A list of lon/lat matrices, one per edge, from a to b
 #' @noRd
-gosper_edge_paths <- function(a_ll, b_ll, depth, frames, icosa, tolerance) {
+gosper_edge_paths <- function(a_ll, b_ll, depth, frames, icosa, tolerance,
+                              max_arc = 0) {
   n_edge <- nrow(a_ll)
   mid <- xyz_to_lonlat(lonlat_to_xyz(a_ll[, 1], a_ll[, 2]) +
                        lonlat_to_xyz(b_ll[, 1], b_ll[, 2]))
@@ -248,8 +251,8 @@ gosper_edge_paths <- function(a_ll, b_ll, depth, frames, icosa, tolerance) {
   pts$lon <- ll[, 1]
   pts$lat <- ll[, 2]
 
-  if (tolerance > 0) {
-    pts <- densify_plane_paths(pts, frames, icosa, tolerance)
+  if (tolerance > 0 || max_arc > 0) {
+    pts <- densify_plane_paths(pts, frames, icosa, tolerance, max_arc)
   }
 
   pts <- pts[order(pts$edge, pts$s), ]
@@ -288,29 +291,29 @@ gosper_curve <- function(z_a, z_b, depth) {
 
 #' Split plane paths until each lon/lat chord follows the path
 #'
-#' A piece is halved in the plane while its plane midpoint lies further from
-#' the middle of its lon/lat chord than `tolerance` times the chord's length,
-#' the test cell edges are densified by.
+#' A piece is halved in the plane while the test cell edges are densified by
+#' holds (`cpp_pieces_need_split()`): its plane midpoint lies further from the
+#' middle of its lon/lat chord than `tolerance` times the chord's length, or it
+#' spans an arc longer than `max_arc`.
 #'
 #' @param pts Data frame of path points: edge, s (position along the edge),
 #'   z, face, start, lon, lat
+#' @param max_arc Longest arc of one piece, in radians; 0 sets none
 #' @return The data frame with the added points
 #' @noRd
-densify_plane_paths <- function(pts, frames, icosa, tolerance) {
+densify_plane_paths <- function(pts, frames, icosa, tolerance, max_arc = 0) {
   pts <- pts[order(pts$edge, pts$s), ]
   n <- nrow(pts)
   same <- pts$edge[-1L] == pts$edge[-n]
   left <- which(same)
   right <- left + 1L
 
-  for (level in seq_len(12L)) {
+  for (depth in 0:29) {
     if (length(left) == 0L) break
-    dlon <- (pts$lon[right] - pts$lon[left] + 180) %% 360 - 180
     over_pole <- abs(abs(pts$lon[right] - pts$lon[left]) - 180) < 1e-3
     keep <- !over_pole
     left <- left[keep]
     right <- right[keep]
-    dlon <- dlon[keep]
     if (length(left) == 0L) break
 
     half <- data.frame(
@@ -324,12 +327,10 @@ densify_plane_paths <- function(pts, frames, icosa, tolerance) {
     half$lon <- ll[, 1]
     half$lat <- ll[, 2]
 
-    clat <- (pts$lat[left] + pts$lat[right]) / 2
-    coslat <- cos(clat * pi / 180)
-    off_lon <- (half$lon - (pts$lon[left] + dlon / 2) + 180) %% 360 - 180
-    off <- sqrt((off_lon * coslat)^2 + (half$lat - clat)^2)
-    len <- sqrt((dlon * coslat)^2 + (pts$lat[right] - pts$lat[left])^2)
-    split_here <- len > 0 & off > tolerance * len
+    split_here <- cpp_pieces_need_split(pts$lon[left], pts$lat[left],
+                                        half$lon, half$lat,
+                                        pts$lon[right], pts$lat[right],
+                                        tolerance, max_arc, depth)
     if (!any(split_here)) break
 
     added <- nrow(pts) + seq_len(sum(split_here))
@@ -559,12 +560,13 @@ face_plane_to_lonlat <- function(frames, icosa, face, start, z) {
 #' @param cell_id Numeric vector of cell IDs of grid `g`
 #' @param g HexGridInfo object of aperture 7
 #' @param depth Number of levels the outline is drawn down
-#' @param tolerance Edge tolerance, as for `isea_cell_rings()`
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
 #' @return A list with one element per cell ID, each a list of closed lon/lat
 #'   rings: the outline first, then any holes
 #' @noRd
 descendant_cell_rings <- function(cell_id, g, depth,
-                                  tolerance = CELL_EDGE_TOLERANCE) {
+                                  tolerance = CELL_EDGE_TOLERANCE,
+                                  max_arc = 0) {
   fine_grid <- grid_at_resolution(g, g@resolution + depth)
 
   kids <- get_children(cell_id, g, levels = depth)
@@ -619,9 +621,9 @@ descendant_cell_rings <- function(cell_id, g, depth,
   }
 
   # The path of each outline edge from its first corner up to its last
-  pieces <- if (tolerance > 0) {
+  pieces <- if (tolerance > 0 || max_arc > 0) {
     dense_edge_pieces(fine, topo$cell[e_row], topo$k[e_row], rings, fine_grid,
-                      tolerance)
+                      tolerance, max_arc)
   } else {
     lapply(e_row, function(r) topo$corners[r, , drop = FALSE])
   }
@@ -650,13 +652,15 @@ descendant_cell_rings <- function(cell_id, g, depth,
 #'   at
 #' @param rings Open corner rings of `fine`
 #' @param fine_grid HexGridInfo of `fine`
-#' @param tolerance Edge tolerance
+#' @param tolerance,max_arc Edge limits, as for `isea_cell_rings()`
 #' @return A list of lon/lat matrices, one per edge
 #' @noRd
-dense_edge_pieces <- function(fine, cell, k, rings, fine_grid, tolerance) {
+dense_edge_pieces <- function(fine, cell, k, rings, fine_grid, tolerance,
+                              max_arc = 0) {
   used <- unique(cell)
   dense <- isea_cell_rings(fine[used], fine_grid@resolution, fine_grid@aperture,
-                           icosa_arg(fine_grid), tolerance = tolerance)
+                           icosa_arg(fine_grid), tolerance = tolerance,
+                           max_arc = max_arc)
   at <- lapply(seq_along(used), function(u) {
     d <- dense[[u]]
     d <- d[-nrow(d), , drop = FALSE]
