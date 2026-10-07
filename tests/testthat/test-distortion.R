@@ -29,12 +29,12 @@ test_that("Snyder's angular deformation is largest at the face centre", {
   expect_lte(max(2 * asin((s$a - s$b) / (s$a + s$b)) * 180 / pi), peak$angular + 1e-6)
 })
 
-test_that("Snyder's projection keeps areas on every solid", {
+test_that("Snyder's projection and IVEA keep areas on every solid", {
   set.seed(88)
   lon <- runif(500, -180, 180)
   lat <- asin(runif(500, -1, 1)) * 180 / pi
-  for (poly in c("icosahedron", "octahedron")) {
-    g <- hex_grid(resolution = 1, aperture = 4, polyhedron = poly)
+  for (proj in c("isea", "ivea")) for (poly in c("icosahedron", "octahedron")) {
+    g <- hex_grid(resolution = 1, aperture = 4, polyhedron = poly, projection = proj)
     d <- projection_distortion(g, lon, lat)
     expect_lt(max(abs(d$areal - 1)), 1e-12)
     expect_true(all(d$a >= d$b))
@@ -69,7 +69,7 @@ test_that("the exact scale factors match finite differences", {
     c(a = sv[1], b = sv[2])
   }
   pts <- rbind(c(23.4, 41.2), c(-120.5, -12.3), c(77.7, 66.6), c(5.1, -50.2))
-  for (proj in c("isea", "fuller")) {
+  for (proj in c("isea", "fuller", "ivea")) {
     g <- hex_grid(resolution = 1, aperture = 3, projection = proj)
     d <- projection_distortion(g, pts[, 1], pts[, 2])
     for (i in seq_len(nrow(pts))) {
@@ -88,14 +88,19 @@ test_that("projection_distortion() refuses H3 and bad points", {
 })
 
 # Every segment of a path on one face, as rows (face, tx, ty), crosses no
-# line from the face centre to a corner strictly between its ends
-crosses_crease <- function(face, tx, ty, path = rep(1, length(tx))) {
+# crease of the projection strictly between its ends: the lines from the face
+# centre to the corners, and on IVEA to the edge midpoints as well
+crosses_crease <- function(face, tx, ty, path = rep(1, length(tx)),
+                           projection = "isea") {
   centre <- c(0.5, 1 / (2 * sqrt(3)))
   corner <- rbind(c(0.5, sqrt(3) / 2), c(0, 0), c(1, 0))
+  if (projection == "ivea") {
+    corner <- rbind(corner, c(0.25, sqrt(3) / 4), c(0.5, 0), c(0.75, sqrt(3) / 4))
+  }
   n <- length(tx)
   same <- face[-1] == face[-n] & path[-1] == path[-n]
   bad <- FALSE
-  for (k in 1:3) {
+  for (k in seq_len(nrow(corner))) {
     e <- corner[k, ] - centre
     side <- e[1] * (ty - centre[2]) - e[2] * (tx - centre[1])
     s0 <- side[-n]
@@ -113,37 +118,45 @@ crosses_crease <- function(face, tx, ty, path = rep(1, length(tx))) {
 }
 
 test_that("cell boundaries on the faces have a vertex on every crease they cross", {
-  g <- hex_grid(resolution = 2, aperture = 3)
-  p <- grid_surface_paths(g, NULL, step = 0.5)
-  expect_false(crosses_crease(p[, "face"], p[, "tx"], p[, "ty"], p[, "cell"]))
+  for (proj in c("isea", "ivea")) {
+    g <- hex_grid(resolution = 2, aperture = 3, projection = proj)
+    p <- grid_surface_paths(g, NULL, step = 0.5)
+    expect_false(crosses_crease(p[, "face"], p[, "tx"], p[, "ty"], p[, "cell"], proj),
+                 label = proj)
+  }
 })
 
 test_that("densified cell boundaries have a vertex on every crease they cross", {
-  g <- hex_grid(resolution = 2, aperture = 3)
-  ic <- icosa_arg(g)
-  rings <- isea_cell_rings(seq_len(n_cells(g)), g@resolution, g@aperture, ic)
-  hits <- vapply(rings, function(r) {
-    n <- nrow(r)
-    mid <- (unit_vec(r[-n, 1], r[-n, 2]) + unit_vec(r[-1, 1], r[-1, 2]))
-    face <- point_faces(mid / sqrt(rowSums(mid^2)), ic)
-    any(vapply(seq_len(n - 1L), function(i) {
-      t <- cpp_lonlat_to_face_solid(ic, face[i], r[i + 0:1, 1], r[i + 0:1, 2])
-      crosses_crease(c(face[i], face[i]), t[, "tx"], t[, "ty"])
-    }, logical(1)))
-  }, logical(1))
-  expect_false(any(hits))
+  for (proj in c("isea", "ivea")) {
+    g <- hex_grid(resolution = 2, aperture = 3, projection = proj)
+    ic <- icosa_arg(g)
+    rings <- isea_cell_rings(seq_len(n_cells(g)), g@resolution, g@aperture, ic)
+    hits <- vapply(rings, function(r) {
+      n <- nrow(r)
+      mid <- (unit_vec(r[-n, 1], r[-n, 2]) + unit_vec(r[-1, 1], r[-1, 2]))
+      face <- point_faces(mid / sqrt(rowSums(mid^2)), ic)
+      any(vapply(seq_len(n - 1L), function(i) {
+        t <- cpp_lonlat_to_face_solid(ic, face[i], r[i + 0:1, 1], r[i + 0:1, 2])
+        crosses_crease(c(face[i], face[i]), t[, "tx"], t[, "ty"], projection = proj)
+      }, logical(1)))
+    }, logical(1))
+    expect_false(any(hits), label = proj)
+  }
 })
 
 test_that("the face mesh is cut along the creases", {
-  g <- hex_grid(resolution = 1, aperture = 3)
-  m <- cpp_globe_faces(icosa_arg(g), 0.2)
-  idx <- matrix(m$index + 1L, ncol = 3L, byrow = TRUE)
-  tri <- matrix(m$tri, ncol = 2L, byrow = TRUE)
-  face <- m$item[idx[, 1]] - 1L
-  bad <- vapply(seq_len(nrow(idx)), function(k) {
-    crosses_crease(rep(face[k], 4L), tri[idx[k, c(1:3, 1)], 1], tri[idx[k, c(1:3, 1)], 2])
-  }, logical(1))
-  expect_false(any(bad))
+  for (proj in c("isea", "ivea")) {
+    g <- hex_grid(resolution = 1, aperture = 3, projection = proj)
+    m <- cpp_globe_faces(icosa_arg(g), 0.2)
+    idx <- matrix(m$index + 1L, ncol = 3L, byrow = TRUE)
+    tri <- matrix(m$tri, ncol = 2L, byrow = TRUE)
+    face <- m$item[idx[, 1]] - 1L
+    bad <- vapply(seq_len(nrow(idx)), function(k) {
+      crosses_crease(rep(face[k], 4L), tri[idx[k, c(1:3, 1)], 1], tri[idx[k, c(1:3, 1)], 2],
+                     projection = proj)
+    }, logical(1))
+    expect_false(any(bad), label = proj)
+  }
 })
 
 test_that("the plot method draws distortion and Tissot's indicatrix", {

@@ -103,21 +103,49 @@ grid_orientation <- function(x) {
 
 #' Face projections an ISEA-family grid can be built on
 #'
-#' Snyder's equal-area ISEA projection and Fuller's projection, with the codes
+#' Snyder's equal-area ISEA projection, Fuller's projection and van Leeuwen
+#' and Strebe's vertex-oriented equal-area projection (IVEA), with the codes
 #' the C++ layer reads (\code{hexify::FaceProjection}).
 #' @noRd
-FACE_PROJECTIONS <- c(isea = 0, fuller = 1)
+FACE_PROJECTIONS <- c(isea = 0, fuller = 1, ivea = 2)
 
-#' DGGRID's names for the face projections (\code{dggs_proj})
+#' Face projections that keep every cell of a resolution the same area
 #' @noRd
-DGGS_PROJECTIONS <- toupper(names(FACE_PROJECTIONS))
+EQUAL_AREA_PROJECTIONS <- c("isea", "ivea")
+
+#' Face projections defined on the icosahedron only; the others take every
+#' solid with triangular faces
+#' @noRd
+ICOSAHEDRON_PROJECTIONS <- "fuller"
+
+#' DGGRID's names for the face projections it has (\code{dggs_proj}); DGGRID
+#' has no IVEA
+#' @noRd
+DGGS_PROJECTIONS <- c("ISEA", "FULLER")
+
+#' Whether a face projection keeps cells equal-area
+#' @param projection A name in \code{FACE_PROJECTIONS}
+#' @noRd
+is_equal_area_projection <- function(projection) {
+  projection %in% EQUAL_AREA_PROJECTIONS
+}
+
+#' Stops when a face projection is not defined on a solid
+#' @noRd
+check_projection_solid <- function(projection, polyhedron) {
+  if (projection %in% ICOSAHEDRON_PROJECTIONS && polyhedron != "icosahedron") {
+    stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
+  }
+  invisible(TRUE)
+}
 
 #' Face projection of a grid
 #'
 #' A grid saved before grids carried a projection, and a legacy
 #' \code{hexify_grid} list, uses ISEA. H3 grids have none.
 #' @param x HexGridInfo object or legacy hexify_grid list
-#' @return \code{"isea"} or \code{"fuller"}, or \code{NA} for an H3 grid
+#' @return \code{"isea"}, \code{"fuller"} or \code{"ivea"}, or \code{NA}
+#'   for an H3 grid
 #' @noRd
 grid_projection <- function(x) {
   if (isS4(x)) {
@@ -130,7 +158,7 @@ grid_projection <- function(x) {
 
 #' The icosa argument for a projection and solid on the solid's default
 #' orientation
-#' @param projection \code{"isea"} or \code{"fuller"}, or the choices vector
+#' @param projection A name in \code{FACE_PROJECTIONS}, or the choices vector
 #'   of a function argument
 #' @param polyhedron Name of the solid, or the choices vector of a function
 #'   argument
@@ -138,9 +166,7 @@ grid_projection <- function(x) {
 projection_icosa <- function(projection, polyhedron = "icosahedron") {
   projection <- match.arg(projection, names(FACE_PROJECTIONS))
   polyhedron <- match.arg(polyhedron, names(POLYHEDRA))
-  if (projection == "fuller" && polyhedron != "icosahedron") {
-    stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
-  }
+  check_projection_solid(projection, polyhedron)
   c(unname(FACE_PROJECTIONS[projection]), unname(POLYHEDRA[polyhedron]))
 }
 

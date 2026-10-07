@@ -1,8 +1,9 @@
 # Shape and spacing metrics of whole grids: compactness (White et al. 1998),
 # intercell distance and the cell wall midpoint ratio (Gregory et al. 2008),
-# for apertures 3, 4 and 7 on Snyder's and Fuller's projections and for H3,
-# every cell and every wall of each grid. Area spread is given beside them,
-# since Fuller's projection and H3 are not equal-area.
+# for apertures 3, 4 and 7 on Snyder's, Fuller's and the vertex-oriented
+# equal-area (IVEA) projection and for H3, every cell and every wall of each
+# grid. Area spread is given beside them, since Fuller's projection and H3 are
+# not equal-area.
 #
 # Resolutions are chosen so that each grid has some 5,000 to 25,000 cells.
 #
@@ -12,9 +13,9 @@ source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE)
                  "bench_common.R"))
 
 GRIDS <- list(
-  list("ISEA3H", 3, 6, "isea"), list("FULLER3H", 3, 6, "fuller"),
-  list("ISEA4H", 4, 5, "isea"), list("FULLER4H", 4, 5, "fuller"),
-  list("ISEA7H", 7, 4, "isea"), list("FULLER7H", 7, 4, "fuller"),
+  list("ISEA3H", 3, 6, "isea"), list("FULLER3H", 3, 6, "fuller"), list("IVEA3H", 3, 6, "ivea"),
+  list("ISEA4H", 4, 5, "isea"), list("FULLER4H", 4, 5, "fuller"), list("IVEA4H", 4, 5, "ivea"),
+  list("ISEA7H", 7, 4, "isea"), list("FULLER7H", 7, 4, "fuller"), list("IVEA7H", 7, 4, "ivea"),
   list("H3", NA, 2, NA)
 )
 

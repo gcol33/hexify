@@ -74,6 +74,18 @@ struct SnyderParams {
   SnyderTriangle sector;
 };
 
+// van Leeuwen and Strebe's (2006) vertex-oriented great-circle projection of
+// one triangular face. The face splits into six right triangles (A, B, C):
+// A the midpoint of an edge, with the right angle, B a vertex, with angle
+// beta = G, and C the face centre, with angle gamma = 60 degrees. Arcs AB
+// (half an edge) and BC (= g) are the triangle's sides; 'excess' is its area,
+// beta + gamma - pi / 2.
+struct VertexGcParams {
+  double beta, gamma, excess;
+  double cos_ab, tan_ab;
+  double bc, sin_bc, cos_bc;
+};
+
 // The face a region of the quad plane around a quad's origin lies on, and how
 // a quad-plane point there maps to that face's triangle coordinates:
 // rotate (point + trans) by -60 * rot60 degrees. The six regions are the
@@ -142,6 +154,7 @@ struct SolidTopology {
   std::array<int, kMaxVerts> valence;
   std::array<std::vector<int>, kMaxVerts> neighbors;  // the vertex graph, sorted
   SnyderParams snyder;
+  VertexGcParams vgc;
   std::array<StdVertex, kMaxVerts> std_verts;
   Orientation default_orientation;
   std::array<PlaneTriLayout, kMaxFaces> plane;

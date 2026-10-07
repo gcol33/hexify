@@ -56,6 +56,7 @@
 #'   section. H3 fixes its own orientation, so H3 grids take only "standard".
 #' @param projection How an ISEA-family grid projects each icosahedron face
 #'   onto its plane triangle: "isea" (default), Snyder's equal-area
+#'   projection, "ivea", van Leeuwen and Strebe's vertex-oriented equal-area
 #'   projection, or "fuller", Fuller's projection. See the Projection section.
 #'   H3 fixes its own projection, so H3 grids take only "isea".
 #' @param region For \code{orientation = "region"} or \code{"face"}, the area
@@ -159,26 +160,36 @@
 #' An ISEA-family grid lays its cells out on the plane triangles of the
 #' icosahedron's faces, and the projection carries each spherical face onto its
 #' triangle. With \code{"isea"}, Snyder's icosahedral equal-area projection,
-#' every cell of a resolution has the same area. With \code{"fuller"}, Fuller's
+#' every cell of a resolution has the same area. With \code{"ivea"}, van
+#' Leeuwen and Strebe's (2006) vertex-oriented great-circle projection, cells
+#' are equal-area as well: the projection maps the great circles through each
+#' vertex of a face to straight lines, which leaves no cusps along the face
+#' edges and gives lower, more even angular distortion than Snyder's (their
+#' Table 1). These are DGGAL's IVEA3H and IVEA7H (Jacovella-St-Louis et al.
+#' 2025); DGGAL places the icosahedron at \code{orientation = c(11.20,
+#' 58.282525588538995, 0)}, 0.05 degrees west of the standard one, and reads
+#' latitudes as WGS84 geodetic, mapping them to the authalic sphere. With
+#' \code{"fuller"}, Fuller's
 #' projection keeps lengths along the face edges and is not equal-area, so
 #' \code{area_km2} is the mean cell area and \code{cell_area()} reports each
 #' cell's own; the Equal-Area Earth Reference System of OGC Topic 21 asks for
 #' cells of equal area, so a Fuller grid falls outside it. These are DGGRID's
 #' \code{dggs_proj ISEA} and \code{FULLER},
 #' giving FULLER3H, FULLER4H, FULLER7H and FULLER43H. Cell IDs, the hierarchy
-#' and neighbours are the same under both projections; where each cell's centre
-#' and corners sit on the sphere differs.
+#' and neighbours are the same under every projection; where each cell's
+#' centre and corners sit on the sphere differs.
 #'
 #' \preformatted{
+#' hex_grid(resolution = 5, aperture = 3, projection = "ivea")     # IVEA3H
 #' hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
 #' }
 #'
 #' @section Polyhedron:
 #'
-#' Snyder's equal-area projection is defined on every regular solid with
-#' triangular faces, and a hexagonal grid lies on the icosahedron and on the
-#' octahedron alike: each pair of faces sharing an edge forms a diamond of
-#' cells, and the cell at each vertex has one side per face meeting there.
+#' Snyder's equal-area projection and the vertex-oriented one are defined on
+#' every regular solid with triangular faces, and a hexagonal grid lies on
+#' the icosahedron and on the octahedron alike: each pair of faces sharing an
+#' edge forms a diamond of cells, and the cell at each vertex has one side per face meeting there.
 #' The icosahedron has twelve pentagons and the octahedron six squares; every
 #' other cell is a hexagon, and every cell of a resolution has the same area
 #' (the vertex cells two thirds or five sixths of it, by their sides). The
@@ -262,7 +273,7 @@ hex_grid <- function(area_km2 = NULL,
                      crs = NULL,
                      radius_km = EARTH_RADIUS_KM,
                      orientation = "standard",
-                     projection = c("isea", "fuller"),
+                     projection = c("isea", "fuller", "ivea"),
                      region = NULL,
                      polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
 
@@ -367,9 +378,7 @@ hex_grid <- function(area_km2 = NULL,
          "tetrahedron has four. Its face projection is available through ",
          "hexify_forward() and hexify_inverse().", call. = FALSE)
   }
-  if (projection == "fuller" && polyhedron != "icosahedron") {
-    stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
-  }
+  check_projection_solid(projection, polyhedron)
 
   # -------------------------------------------------------------------------
   # Parse aperture: a single aperture, a family such as "4/3", or one aperture

@@ -1,6 +1,7 @@
 #include "projection_inverse.h"
 #include "projection_forward.h"
 #include "projection_fuller.h"
+#include "projection_ivea.h"
 #include "polyhedron.h"
 #include "snyder_triangle.h"
 #include "constants.h"
@@ -127,10 +128,20 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolv
   }
 
   const bool newton = solver == InverseSolver::Newton;
-  const auto [z, face_az] =
-      active_projection() == FaceProjection::Fuller
-        ? (newton ? fuller_face_polar_newton(x, y) : fuller_face_polar(x, y))
-        : (newton ? snyder_face_polar_newton(sp, x, y) : snyder_face_polar(sp, x, y));
+  const VertexGcParams& vgc = P.topo->vgc;
+  std::pair<double,double> polar;
+  switch (active_projection()) {
+    case FaceProjection::Fuller:
+      polar = newton ? fuller_face_polar_newton(x, y) : fuller_face_polar(x, y);
+      break;
+    case FaceProjection::IVEA:
+      polar = newton ? ivea_face_polar_newton(vgc, x, y) : ivea_face_polar(vgc, x, y);
+      break;
+    case FaceProjection::ISEA:
+      polar = newton ? snyder_face_polar_newton(sp, x, y) : snyder_face_polar(sp, x, y);
+      break;
+  }
+  const auto [z, face_az] = polar;
 
   // Add the per-face azimuth bias (radians)
   double azimuth = face_az + snyder_get_face_azimuth_offset(face);

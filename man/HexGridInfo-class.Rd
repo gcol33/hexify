@@ -52,6 +52,7 @@ H3 fixes.}
 
 \item{\code{projection}}{Character. How an ISEA-family grid projects each face of
 its solid onto its plane triangle: "isea" (Snyder's equal-area
+projection), "ivea" (van Leeuwen and Strebe's vertex-oriented equal-area
 projection) or "fuller" (Fuller's projection). Empty for H3 grids.}
 
 \item{\code{polyhedron}}{Character. The solid an ISEA-family grid is built on:

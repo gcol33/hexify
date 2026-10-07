@@ -142,6 +142,20 @@ SnyderParams snyder_params(double el_angle, double g_deg, int n_faces) {
   return s;
 }
 
+VertexGcParams vertex_gc_params(double el_angle, double g_deg) {
+  VertexGcParams p;
+  p.beta = g_deg * kDegToRad;
+  p.gamma = kPiOver3;
+  p.excess = p.beta + p.gamma - kPiOver2;
+  // Right angle at A: cos(beta) = tan(AB) / tan(BC)
+  p.tan_ab = std::cos(p.beta) * std::tan(el_angle);
+  p.cos_ab = 1.0 / std::sqrt(1.0 + p.tan_ab * p.tan_ab);
+  p.bc = el_angle;
+  p.sin_bc = std::sin(el_angle);
+  p.cos_bc = std::cos(el_angle);
+  return p;
+}
+
 // The standard ISEA icosahedron: vertex 0 at the frame's north pole, five
 // vertices at latitude atan(1/2), five at -atan(1/2) half a step round, and
 // vertex 11 at the south pole.
@@ -304,6 +318,7 @@ SolidTopology derive_topology(SolidSpec s) {
   t.n_verts = V;
   t.has_quads = !s.diamonds.empty();
   t.snyder = snyder_params(s.el_angle, s.g_deg, F);
+  t.vgc = vertex_gc_params(s.el_angle, s.g_deg);
   t.default_orientation = s.default_orientation;
   for (int v = 0; v < V; ++v) t.std_verts[v] = s.std_verts[v];
   for (int f = 0; f < F; ++f) t.plane[f] = s.plane[f];

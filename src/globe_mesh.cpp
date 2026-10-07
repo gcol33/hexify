@@ -633,19 +633,39 @@ void clip_to_planes(const std::array<V3, N>& n, std::vector<V3>& poly) {
   }
 }
 
-// The three sectors of face f, each between the face's centre and one of its
-// edges: sector k holds the edge from corner k to corner k + 1. The arcs
-// from the centre to the corners are where Snyder's projection creases, so a
-// mesh cut into sectors has a vertex on every crease it crosses. Each sector
-// is the region inside three great circles: the face edge and the two arcs.
+// The sectors of a face, each between the face's centre and a piece of its
+// boundary: the arcs from the centre to the corners are where Snyder's
+// projection creases, and the vertex-oriented projection (IVEA) creases on
+// the arcs to the edge midpoints as well, so it has six sectors and the
+// others three. Sector k runs from boundary point k to k + 1 of the ring
+// corner 0, (midpoint), corner 1, (midpoint), corner 2, (midpoint). A mesh
+// cut into sectors has a vertex on every crease it crosses.
+int n_face_sectors() {
+  return active_projection() == FaceProjection::IVEA ? 6 : 3;
+}
+
+// Boundary point k of face f's sector ring (n_face_sectors()), as a unit
+// vector
+V3 sector_ring_point(int f, int k) {
+  const PolyData& S = poly();
+  const int n = n_face_sectors();
+  auto corner = [&](int i) {
+    const Geo& g = S.verts[S.topo->faces[f][i % 3]];
+    return lonlat_vec(g.lon * kRadToDeg, g.lat * kRadToDeg);
+  };
+  if (n == 3) return corner(k);
+  if (k % 2 == 0) return corner(k / 2);
+  return unit(corner(k / 2) + corner(k / 2 + 1));
+}
+
+// Sector k of face f is the region inside three great circles: the face edge
+// and the two arcs from the centre.
 std::array<V3, 3> sector_normals(int f, int k) {
   const PolyData& S = poly();
   const Geo& gc = S.centers[f];
   const V3 c = lonlat_vec(gc.lon * kRadToDeg, gc.lat * kRadToDeg);
-  const Geo& g0 = S.verts[S.topo->faces[f][k]];
-  const Geo& g1 = S.verts[S.topo->faces[f][(k + 1) % 3]];
-  const V3 v0 = lonlat_vec(g0.lon * kRadToDeg, g0.lat * kRadToDeg);
-  const V3 v1 = lonlat_vec(g1.lon * kRadToDeg, g1.lat * kRadToDeg);
+  const V3 v0 = sector_ring_point(f, k);
+  const V3 v1 = sector_ring_point(f, (k + 1) % n_face_sectors());
   // Each normal turned to point towards the sector's third corner.
   auto towards = [](V3 n, V3 p) { return dot(n, p) < 0.0 ? (-1.0) * n : n; };
   return {towards(cross(v0, v1), c), towards(cross(c, v0), v1),
@@ -660,7 +680,7 @@ using namespace hexify;
 
 // The faces of the solid as one mesh, refined until no edge is longer than
 // 'max_len' (a face edge is 1). Item k is face k - 1. Each face is laid down
-// as its three sectors (sector_normals), so the mesh has edges along the
+// as its sectors (n_face_sectors()), so the mesh has edges along the
 // projection's creases.
 // [[Rcpp::export]]
 List cpp_globe_faces(NumericVector icosa, double max_len) {
@@ -671,9 +691,20 @@ List cpp_globe_faces(NumericVector icosa, double max_len) {
     face_tri_corners(f, tx, ty);
     const double cx = (tx[0] + tx[1] + tx[2]) / 3.0;
     const double cy = (ty[0] + ty[1] + ty[2]) / 3.0;
-    for (int k = 0; k < 3; k++) {
-      const int k1 = (k + 1) % 3;
-      mesh.convex_polygon(f + 1, f, {cx, tx[k], tx[k1]}, {cy, ty[k], ty[k1]});
+    // The sector ring in triangle coordinates: corners, with the edge
+    // midpoints between them on six sectors
+    const int n = n_face_sectors();
+    double rx[6], ry[6];
+    for (int k = 0; k < n; k++) {
+      const int i = n == 3 ? k : k / 2;
+      const int i1 = (i + 1) % 3;
+      const bool mid = n == 6 && k % 2 == 1;
+      rx[k] = mid ? 0.5 * (tx[i] + tx[i1]) : tx[i];
+      ry[k] = mid ? 0.5 * (ty[i] + ty[i1]) : ty[i];
+    }
+    for (int k = 0; k < n; k++) {
+      const int k1 = (k + 1) % n;
+      mesh.convex_polygon(f + 1, f, {cx, rx[k], rx[k1]}, {cy, ry[k], ry[k1]});
     }
   }
   mesh.refine(max_len);
@@ -683,7 +714,7 @@ List cpp_globe_faces(NumericVector icosa, double max_len) {
 // What a renderer needs to run the forward projection and the quad layout
 // itself. 'constants': tan, cos of the edge angle, cot 30 degrees, sin, cos
 // and value of the vertex angle G, R', R'^2, the face-plane origin (x, y),
-// the face edge, and the face projection (0 ISEA, 1 Fuller). 'faces': 16
+// the face edge, and the face projection (0 ISEA, 1 Fuller, 2 IVEA). 'faces': 16
 // numbers per face: the centre as a unit vector, then the two unit vectors
 // along which the face's azimuth is read (azimuth = atan2(p . b, p . a)), each
 // followed by a zero, then the face's quad, its 60-degree turns into the quad
@@ -701,7 +732,7 @@ List cpp_globe_projection(NumericVector icosa) {
   NumericVector constants = NumericVector::create(
       k.tan_el, k.cos_el, k.cot_30, k.sin_g, k.cos_g, k.g_angle,
       k.r1, k.r1_squared, k.origin_x_off, k.origin_y_off, k.edge,
-      active_projection() == FaceProjection::Fuller ? 1.0 : 0.0);
+      static_cast<double>(active_projection()));
 
   NumericVector faces(t.n_faces * 16);
   for (int f = 0; f < t.n_faces; f++) {
@@ -815,7 +846,7 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
         clip_to_planes(face_normals(f), part);
         if (part.size() < 3) continue;
         whole.swap(part);
-        for (int sector = 0; sector < 3; sector++) {
+        for (int sector = 0; sector < n_face_sectors(); sector++) {
           part = whole;
           clip_to_planes(sector_normals(f, sector), part);
           if (part.size() < 3) continue;

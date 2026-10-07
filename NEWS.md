@@ -71,6 +71,18 @@
 
 ## New features
 
+* `hex_grid(projection = "ivea")` builds a grid on van Leeuwen and Strebe's
+  (2006) vertex-oriented great-circle projection, the third face projection
+  beside Snyder's and Fuller's: DGGAL's IVEA3H and IVEA7H, and any aperture,
+  aperture sequence, orientation, the octahedron, and `hex_globe()`. It is
+  equal-area, so `cell_area()` gives every hexagon of a resolution the same
+  area, and its inverse is in closed form. With DGGAL's orientation
+  (`orientation = c(11.20, 58.282525588538995, 0)`) every zone of IVEA3H at
+  levels 1 to 8 and of IVEA7H at levels 1 to 5 is a hexify cell, centres and
+  corners within a micrometre (`paper/bench/bench_dggal_agreement.R`).
+  `hexify_forward()` and `hexify_inverse()` take it on the tetrahedron too.
+  DGGRID has no IVEA, so `as_dggrid()` refuses such a grid (#92).
+
 * `projection_distortion()` gives Tissot's indicatrix of a grid's face
   projection at any point: the scale factors, the maximum angular
   deformation, the areal scale and the direction of the longer axis. The

@@ -48,6 +48,11 @@ as_dggrid <- function(grid) {
 
   check_hexify_grid(grid)
 
+  if (!toupper(grid_projection(grid)) %in% DGGS_PROJECTIONS) {
+    stop("DGGRID has no ", toupper(grid_projection(grid)), " projection; ",
+         "as_dggrid() takes ISEA and FULLER grids", call. = FALSE)
+  }
+
   if (!is_earth_grid(grid)) {
     warning("A dggs carries no body radius: this grid is sized on a radius of ",
             format(grid_radius_km(grid)), " km, and 'dggridR' will read it on ",

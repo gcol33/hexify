@@ -104,8 +104,8 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 //
 // The faces mesh carries each vertex's face and triangle coordinates. A
 // fragment's triangle coordinates are the interpolated ones on the flat
-// solid, where they are linear, and the face projection (Snyder's or
-// Fuller's) of its direction on the sphere, blended by the fold. The point goes into its
+// solid, where they are linear, and the face projection (Snyder's, Fuller's
+// or IVEA) of its direction on the sphere, blended by the fold. The point goes into its
 // face's quad, is scaled to the substrate, and its cell is the nearest
 // multiple of the grid's generator; the solid's edge maps move that centre
 // into the quad that owns it, and the cell ID follows hexify's numbering.
@@ -120,7 +120,7 @@ struct Face {
 struct Grid {
   snyder0: vec4f,    // tan, cos of the edge angle, cot 30 degrees, sin G
   snyder1: vec4f,    // cos G, G, R', R'^2
-  snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller)
+  snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller, 2 IVEA)
   frame: vec4u,      // quad side in substrate steps, sublattice index, c, number of keys
   generator: vec4i,  // generator a + b omega
   flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1, faces
@@ -276,8 +276,75 @@ fn fuller_face(p: vec3f, f: u32) -> vec2f {
   return xy / FULLER_ARC + vec2f(0.5, 0.5 / SQRT3);
 }
 
-// The grid's face projection of the unit vector p onto face f.
+// van Leeuwen and Strebe's (2006) vertex-oriented equal-area projection
+// (IVEA) of the unit vector p onto face f, as triangle coordinates; see
+// src/projection_ivea.cpp. The face splits into six right triangles (edge
+// midpoint A, vertex B, centre C); the great circle from B through p maps to
+// the line from B' to D' on C'A', placed by area, and p sits along it by
+// (B'P' / B'D') = sin(x / 2) / sin(BD / 2), x = BP.
+fn ivea_face(p: vec3f, f: u32) -> vec2f {
+  let face = grid.faces[f];
+  let tan_bc = grid.snyder0.x;
+  let cos_bc = grid.snyder0.y;
+  let sin_bc = tan_bc * cos_bc;
+  let beta = grid.snyder1.y;
+  let tan_ab = grid.snyder1.x * tan_bc;
+  let cos_ab = 1.0 / sqrt(1.0 + tan_ab * tan_ab);
+  let excess = beta - PI / 6.0;
+
+  // Arc z from the centre, from the half chord
+  let h = 0.5 * length(p - face.centre.xyz);
+  let sz = 2.0 * h * sqrt(max(1.0 - h * h, 0.0));
+  let cz = 1.0 - 2.0 * h * h;
+
+  var az = atan2_hx(dot(p, face.az_b.xyz), dot(p, face.az_a.xyz));
+  if (az < 0.0) {
+    az += 2.0 * PI;
+  }
+  var sector = 0.0;
+  if (az >= 4.0 * PI / 3.0) {
+    sector = 2.0;
+  } else if (az >= 2.0 * PI / 3.0) {
+    sector = 1.0;
+  }
+  var a = az - sector * 2.0 * PI / 3.0;
+  let mirror = a > PI / 3.0;
+  if (mirror) {
+    a = 2.0 * PI / 3.0 - a;
+  }
+
+  // The triangle's vertex B, and sin(x / 2) as half the chord to it
+  let az_v = select(sector, sector + 1.0, mirror) * 2.0 * PI / 3.0;
+  let sc_v = sincos(az_v);
+  let vb = cos_bc * face.centre.xyz + sin_bc * (sc_v.y * face.az_a.xyz + sc_v.x * face.az_b.xyz);
+  let sin_half_x = 0.5 * length(p - vb);
+
+  let sc_a = sincos(a);
+  let theta = atan2_hx(sc_a.x * sz, sin_bc * cz - cos_bc * sz * sc_a.y);
+  let rho = beta - theta;
+  let sc_rho = sincos(rho);
+  let delta = acos_hx(sc_rho.x * cos_ab);
+  let frac = (beta + PI / 3.0 - rho - delta) / excess;
+  let bd = atan_hx(tan_ab / sc_rho.y);
+  let s = sin_half_x / sincos(0.5 * bd).x;
+
+  let rv = 1.0 / SQRT3;
+  let rin = 0.5 / SQRT3;
+  var q = vec2f(s * frac * rin * SIN60, rv + s * (frac * rin * 0.5 - rv));
+  if (mirror) {
+    let u = vec2f(SIN60, 0.5);
+    q = 2.0 * dot(q, u) * u - q;
+  }
+  let sc_k = sincos(sector * 2.0 * PI / 3.0);
+  return vec2f(q.x * sc_k.y + q.y * sc_k.x + 0.5, q.y * sc_k.y - q.x * sc_k.x + rin);
+}
+
+// The grid's face projection of the unit vector p onto face f: snyder2.w is
+// 0 for ISEA, 1 for Fuller and 2 for IVEA.
 fn face_xy(p: vec3f, f: u32) -> vec2f {
+  if (grid.snyder2.w > 1.5) {
+    return ivea_face(p, f);
+  }
   if (grid.snyder2.w > 0.5) {
     return fuller_face(p, f);
   }

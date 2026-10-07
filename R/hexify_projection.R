@@ -1,5 +1,6 @@
 # hexify_projection.R
-# Snyder's equal-area projection, and Fuller's, of a solid's faces
+# Snyder's equal-area projection, the vertex-oriented equal-area one (IVEA),
+# and Fuller's, of a solid's faces
 #
 # This module handles all projection operations between geographic coordinates
 # (longitude/latitude) and the planar faces of the icosahedron, the octahedron
@@ -103,8 +104,9 @@ hexify_which_face <- function(lon, lat, polyhedron = c("icosahedron", "octahedro
 #' @param lon Longitude in degrees
 #' @param lat Latitude in degrees
 #' @param projection Face projection: \code{"isea"} (Snyder's equal-area
-#'   projection) or \code{"fuller"} (Fuller's projection, defined on the
-#'   icosahedron only)
+#'   projection), \code{"ivea"} (van Leeuwen and Strebe's vertex-oriented
+#'   equal-area projection) or \code{"fuller"} (Fuller's projection, defined
+#'   on the icosahedron only)
 #' @param polyhedron The solid: "icosahedron" (default), "octahedron" or
 #'   "tetrahedron", in its default orientation. Snyder (1992) gives his
 #'   equal-area projection for each; its angular distortion grows with the
@@ -122,7 +124,7 @@ hexify_which_face <- function(lon, lat, polyhedron = c("icosahedron", "octahedro
 #' result <- hexify_forward(16.37, 48.21)
 #' # result["face"], result["icosa_triangle_x"], result["icosa_triangle_y"]
 #' hexify_forward(16.37, 48.21, polyhedron = "tetrahedron")
-hexify_forward <- function(lon, lat, projection = c("isea", "fuller"),
+hexify_forward <- function(lon, lat, projection = c("isea", "fuller", "ivea"),
                            polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
   cpp_icosa_forward(projection_icosa(projection, polyhedron), as.numeric(lon),
                     as.numeric(lat))
@@ -141,7 +143,7 @@ hexify_forward <- function(lon, lat, projection = c("isea", "fuller"),
 #'
 #' @family projection
 #' @export
-hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fuller"),
+hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fuller", "ivea"),
                                    polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
   cpp_project_to_icosa_triangle(projection_icosa(projection, polyhedron),
                                 as.integer(face), as.numeric(lon), as.numeric(lat))
@@ -167,7 +169,7 @@ hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fulle
 #' @examples
 #' coords <- hexify_inverse(0.5, 0.3, face = 2)
 hexify_inverse <- function(x, y, face,
-                           projection = c("isea", "fuller"),
+                           projection = c("isea", "fuller", "ivea"),
                            polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
   stopifnot(length(x) == 1L, length(y) == 1L, length(face) == 1L)
   cpp_face_xy_to_ll(projection_icosa(projection, polyhedron), as.numeric(x),

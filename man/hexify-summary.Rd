@@ -28,7 +28,7 @@ For a HexGridInfo, a list of class \code{hexify_grid_summary}
 carrying \code{grid_type}, \code{aperture}, \code{resolution},
 \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
 \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
-empty for H3), \code{projection} (\code{"isea"} or \code{"fuller"},
+empty for H3), \code{projection} (\code{"isea"}, \code{"ivea"} or \code{"fuller"},
 \code{NA} for H3), \code{polyhedron} (\code{"icosahedron"} or
 \code{"octahedron"}, \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
 \code{hexify_data_summary} carrying \code{rows}, \code{columns},

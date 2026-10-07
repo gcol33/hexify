@@ -8,6 +8,8 @@ versions and the processor.
 | Script | What it measures | Output |
 |---|---|---|
 | `bench_dggrid_agreement.R` | Cell assignment, centres and corners against DGGRID for apertures 3, 4, 7, ISEA43H and a mixed sequence, 200,000 random points per grid; a cell whose corners differ by more than 1 m is checked against its neighbours in both programs. The argument `fuller` runs the same comparison on DGGRID's FULLER grids | `dggrid_agreement.csv`, `dggrid_disagreements.csv`; with `fuller`, `dggrid_agreement_fuller.csv`, `dggrid_disagreements_fuller.csv` |
+| `bench_dggal_agreement.R` | Every zone of DGGAL's IVEA3H (levels 1 to 8) and IVEA7H (1 to 5), with ISEA3H and ISEA7H as the control, against hexify's IVEA and ISEA grids on DGGAL's orientation: whether zones map one-to-one onto cells, centre distance, and distance from each DGGAL vertex to the nearest corner of the same hexify cell. `dggal_zones.py` lists the zones through DGGAL's Python package | `dggal_agreement.csv` |
+| `make_dggal_fixture.R` | DGGAL's IVEA3H zones at level 3 and a sample of IVEA7H at level 3, centroids and vertices, for the test suite | `tests/testthat/data/dggal_ivea.csv` |
 | `bench_dggrid_orientation.R` | The same comparison under three given icosahedron orientations and three DGGRID `REGION_CENTER` placements, 50,000 random points per grid | `dggrid_orientation.csv` |
 | `bench_dggrid_z7.R` | Aperture-7 Z7 strings against DGGRID's (IGEO7) for every cell at resolutions 0 to 7, and 0 to 5 under a given orientation and on FULLER; also each program's round trip and the parent named by DGGRID's string | `dggrid_z7.csv` |
 | `make_dggrid_fixture.R` | DGGRID cells and centres under non-standard orientations and on the FULLER projection, and DGGRID's Z7 strings, for the test suite | `tests/testthat/data/dggrid_reference.csv`, `tests/testthat/data/dggrid_z7.csv` |
@@ -25,6 +27,8 @@ versions and the processor.
 
 - hexify installed from this repository (`R CMD INSTALL --preclean .`).
 - dggridR, h3r, h3o, maps and sf from CRAN.
+- For the DGGAL scripts, a Python (3.6 to 3.13) with `pip install dggal`;
+  point `DGGAL_PYTHON` at it.
 - DGGRID built from source (<https://github.com/sahrk/DGGRID>), because
   dggridR supports apertures 3 and 4 only. Configure with
   `cmake -S . -B build -DWITH_GDAL=OFF` and build; point `DGGRID_EXE` at

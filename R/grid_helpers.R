@@ -822,10 +822,10 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 
 #' Compute per-cell area in km²
 #'
-#' Returns the area of each cell in square kilometers. On the ISEA projection
-#' every hexagon of a resolution has the same area, the 12 pentagons of the
-#' icosahedron 5/6 of it and the 6 squares of the octahedron 4/6 of it. On the
-#' Fuller projection and for H3 grids, the area varies from cell to cell.
+#' Returns the area of each cell in square kilometers. On the ISEA and IVEA
+#' projections every hexagon of a resolution has the same area, the 12
+#' pentagons of the icosahedron 5/6 of it and the 6 squares of the
+#' octahedron 4/6 of it. On the Fuller projection and for H3 grids, the area varies from cell to cell.
 #'
 #' @param cell_id Cell IDs to compute area for. For ISEA grids, these are
 #'   numeric; for H3 grids, character strings. When \code{grid} is a HexData
@@ -836,8 +836,8 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' @return Named numeric vector of areas in km², one per \code{cell_id}.
 #'
 #' @details
-#' On the ISEA projection, Snyder's equal-area projection gives every hexagon
-#' of a resolution the same area. A vertex cell, centred on a vertex of the
+#' On the ISEA and IVEA projections, both equal-area, every hexagon of a
+#' resolution has the same area. A vertex cell, centred on a vertex of the
 #' solid where \eqn{k} faces meet, covers \eqn{k} of a hexagon's six sixths,
 #' so a grid of \eqn{N} cells on a body of area \eqn{S} has hexagons of area
 #' \eqn{S / (N - 2)}, pentagons of \eqn{(5/6) S / (N - 2)} on the
@@ -882,7 +882,7 @@ cell_area <- function(cell_id = NULL, grid) {
 
   per_id <- if (is_h3_grid(g)) {
     scale_area_to_body(cpp_h3_cellAreaKm2(ids), grid_radius_km(g))
-  } else if (identical(grid_projection(g), "fuller")) {
+  } else if (!is_equal_area_projection(grid_projection(g))) {
     lv <- isea_levels(g@aperture, g@resolution)
     sr <- cpp_cell_solid_angle(icosa_arg(g), ids, lv$resolution, lv$aperture,
                                lv$ap_seq, CELL_WALL_TOLERANCE)

@@ -257,7 +257,7 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
     icosa <- icosa_arg(g)
     grat <- graticule_paths(resolve_graticule(graticule), icosa)
     dist <- if (distortion != "none") distortion_mesh(icosa, distortion)
-    if (isTRUE(area_legend) && !identical(grid_projection(g), "isea")) {
+    if (isTRUE(area_legend) && !is_equal_area_projection(grid_projection(g))) {
       stop("area_legend needs an equal-area net; Fuller's projection is not ",
            "equal-area", call. = FALSE)
     }

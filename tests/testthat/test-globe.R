@@ -516,7 +516,11 @@ GLOBE_AGREEMENT_CASES <- c(
   list(list(ap = 3, res = 10, proj = "fuller"),
        list(ap = 4, res = 8, proj = "fuller"),
        list(ap = 7, res = 5, proj = "fuller"),
-       list(ap = "4/3", res = 12, proj = "fuller", orient = c(-40, 20, 33)))
+       list(ap = "4/3", res = 12, proj = "fuller", orient = c(-40, 20, 33))),
+  list(list(ap = 3, res = 10, proj = "ivea"),
+       list(ap = 4, res = 8, proj = "ivea"),
+       list(ap = 7, res = 5, proj = "ivea"),
+       list(ap = "4/3", res = 12, proj = "ivea", orient = c(-40, 20, 33)))
 )
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5

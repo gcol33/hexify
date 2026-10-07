@@ -46,6 +46,7 @@ setClassUnion("HexCRS", c("integer", "character"))
 #'   H3 fixes.
 #' @slot projection Character. How an ISEA-family grid projects each face of
 #'   its solid onto its plane triangle: "isea" (Snyder's equal-area
+#'   projection), "ivea" (van Leeuwen and Strebe's vertex-oriented equal-area
 #'   projection) or "fuller" (Fuller's projection). Empty for H3 grids.
 #' @slot polyhedron Character. The solid an ISEA-family grid is built on:
 #'   "icosahedron" or "octahedron". Empty for H3 grids.
@@ -181,12 +182,14 @@ setValidity("HexGridInfo", function(object) {
     }
     if (length(object@projection) != 1L ||
         !object@projection %in% names(FACE_PROJECTIONS)) {
-      errors <- c(errors, "projection must be \"isea\" or \"fuller\"")
+      errors <- c(errors, "projection must be \"isea\", \"fuller\" or \"ivea\"")
     }
     poly <- grid_polyhedron(object)
     if (length(poly) != 1L || !poly %in% GRID_POLYHEDRA) {
       errors <- c(errors, "polyhedron must be \"icosahedron\" or \"octahedron\"")
-    } else if (poly != "icosahedron" && identical(object@projection, "fuller")) {
+    } else if (length(object@projection) == 1L &&
+               object@projection %in% ICOSAHEDRON_PROJECTIONS &&
+               poly != "icosahedron") {
       errors <- c(errors, "Fuller's projection is defined on the icosahedron only")
     }
     # ISEA validation
@@ -584,7 +587,7 @@ setMethod("show", "HexGridInfo", function(object) {
 #'   carrying \code{grid_type}, \code{aperture}, \code{resolution},
 #'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
 #'   \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
-#'   empty for H3), \code{projection} (\code{"isea"} or \code{"fuller"},
+#'   empty for H3), \code{projection} (\code{"isea"}, \code{"ivea"} or \code{"fuller"},
 #'   \code{NA} for H3), \code{polyhedron} (\code{"icosahedron"} or
 #'   \code{"octahedron"}, \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
 #'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
@@ -648,12 +651,14 @@ print.hexify_grid_summary <- function(x, ...) {
     }
     if (identical(x$projection, "fuller")) {
       cat("Projection:  Fuller (cells not equal-area)\n")
+    } else if (identical(x$projection, "ivea")) {
+      cat("Projection:  IVEA (vertex-oriented equal-area)\n")
     }
     cat(sprintf("Aperture:    %s\n", x$aperture))
     cat(sprintf("Resolution:  %d\n", x$resolution))
 
     if (!is.na(x$area_km2)) {
-      cat(sprintf(if (identical(x$projection, "fuller")) "Mean Area:   %.2f km^2\n"
+      cat(sprintf(if (!is_equal_area_projection(x$projection)) "Mean Area:   %.2f km^2\n"
                   else "Area:        %.2f km^2\n", x$area_km2))
     }
     if (!is.na(x$diagonal_km)) {

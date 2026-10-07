@@ -1176,26 +1176,40 @@ struct FacePiece {
     double s0, s1;
 };
 
-// Snyder's projection has a crease along each line from a face's centre to
-// its corners: its derivative jumps there, so the image of a straight piece
-// bends where it crosses one. The face triangle is the same in every face's
-// triangle coordinates, with unit edge and its first corner at the top.
-// Returns how many such lines the piece a -> b crosses strictly between its
-// ends, with the crossings' places along it, ascending, in 'u'. Fuller's
-// projection is smooth inside a face, so it has none.
+// The most creases a piece inside one face can cross: the lines from the
+// face centre point in six directions 60 degrees apart, and a line misses
+// the centre, so it sees them over less than 180 degrees.
+constexpr int kMaxCreaseCrossings = 3;
+
+// The face projection has a crease along lines from a face's centre: its
+// derivative jumps there, so the image of a straight piece bends where it
+// crosses one. Snyder's has one to each corner; the vertex-oriented
+// projection (IVEA) one to each corner and one to each edge midpoint;
+// Fuller's is smooth inside a face and has none. The face triangle is the
+// same in every face's triangle coordinates, with unit edge and its first
+// corner at the top. Returns how many creases the piece a -> b crosses
+// strictly between its ends, with the crossings' places along it, ascending,
+// in 'u'.
 static int radius_crossings(double ax, double ay, double bx, double by,
-                            double u[3]) {
-    if (hexify::active_projection() != hexify::FaceProjection::ISEA) return 0;
+                            double u[kMaxCreaseCrossings]) {
     constexpr double kCx = 0.5;
     constexpr double kCy = 0.28867513459481288225;   // 1 / (2 sqrt(3))
-    static const double corner[3][2] = {
-        {0.5, 0.86602540378443864676}, {0.0, 0.0}, {1.0, 0.0}};
+    // The far end of each crease: the corners, then the edge midpoints
+    static const double ends[6][2] = {
+        {0.5, 0.86602540378443864676}, {0.0, 0.0}, {1.0, 0.0},
+        {0.25, 0.43301270189221932338}, {0.5, 0.0}, {0.75, 0.43301270189221932338}};
+    int n_lines = 0;
+    switch (hexify::active_projection()) {
+        case hexify::FaceProjection::ISEA: n_lines = 3; break;
+        case hexify::FaceProjection::IVEA: n_lines = 6; break;
+        case hexify::FaceProjection::Fuller: n_lines = 0; break;
+    }
     // A crossing this close to an end is that end.
     constexpr double kEndSlack = 1e-12;
     const double dx = bx - ax, dy = by - ay;
     int n = 0;
-    for (int k = 0; k < 3; k++) {
-        const double ex = corner[k][0] - kCx, ey = corner[k][1] - kCy;
+    for (int k = 0; k < n_lines && n < kMaxCreaseCrossings; k++) {
+        const double ex = ends[k][0] - kCx, ey = ends[k][1] - kCy;
         const double den = dx * ey - dy * ex;
         if (den == 0.0) continue;
         // a + t d = c + r e, solved for t (along the piece) and r (along the
@@ -1216,7 +1230,7 @@ static int radius_crossings(double ax, double ay, double bx, double by,
 static void split_at_creases(std::vector<FacePiece>& pieces) {
     std::vector<FacePiece> out;
     out.reserve(pieces.size());
-    double u[3];
+    double u[kMaxCreaseCrossings];
     for (const FacePiece& p : pieces) {
         int n = radius_crossings(p.ax, p.ay, p.bx, p.by, u);
         double prev_u = 0.0, px = p.ax, py = p.ay;

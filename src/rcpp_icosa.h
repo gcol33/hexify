@@ -10,7 +10,8 @@
 //   - c(vert0_lon, vert0_lat, azimuth, projection) or
 //     c(vert0_lon, vert0_lat, azimuth, projection, solid): a grid's own
 //     orientation in degrees, its projection and its solid.
-// The projection is 0 for ISEA and 1 for Fuller (hexify::FaceProjection), and
+// The projection is 0 for ISEA, 1 for Fuller and 2 for IVEA
+// (hexify::FaceProjection), and
 // the solid 0 for the icosahedron, 1 for the octahedron and 2 for the
 // tetrahedron (hexify::Solid); a missing solid is the icosahedron. Setting all
 // of them on entry means no call reads a state a previous call left active.
@@ -22,7 +23,8 @@
 inline hexify::FaceProjection icosa_projection(double code) {
   if (code == 0.0) return hexify::FaceProjection::ISEA;
   if (code == 1.0) return hexify::FaceProjection::Fuller;
-  Rcpp::stop("icosa projection must be 0 (ISEA) or 1 (Fuller)");
+  if (code == 2.0) return hexify::FaceProjection::IVEA;
+  Rcpp::stop("icosa projection must be 0 (ISEA), 1 (Fuller) or 2 (IVEA)");
 }
 
 inline hexify::Solid icosa_solid(double code) {

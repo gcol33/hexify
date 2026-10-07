@@ -23,7 +23,8 @@ axis on the face plane in degrees anticlockwise from the face's x axis.
 }
 \description{
 Tissot's indicatrix of the projection that maps the sphere onto the faces
-of the grid's solid (Snyder's equal-area projection, or Fuller's): a small
+of the grid's solid (Snyder's or the vertex-oriented equal-area projection,
+or Fuller's): a small
 circle on the sphere maps to an ellipse on the face, with semi-axes
 \code{a} and \code{b} times the circle's radius.
 }
@@ -32,11 +33,13 @@ The scale factors are the singular values of the projection's derivative,
 computed exactly by forward-mode automatic differentiation of the
 projection code. Face-plane lengths are measured on the plane triangle
 that has the face's area, so the areal scale \code{a * b} is 1 everywhere
-under Snyder's projection, and its mean over a face is 1 under Fuller's.
+under Snyder's projection and IVEA, and its mean over a face is 1 under
+Fuller's.
 
 Snyder's projection bends along the arcs from each face's centre to its
-corners, where its derivative jumps; there and on face edges the result
-is the derivative on one side. Its angular deformation is largest at the
+corners, where its derivative jumps, and IVEA along those and the arcs to
+the edge midpoints; there and on face edges the result is the derivative
+on one side. Its angular deformation is largest at the
 face centre, approached along those arcs: 17.27 degrees, with scale
 factors 1.163 and 0.860 (Snyder 1992, Table 1). At a face centre the
 projection has a different derivative along each direction, and the

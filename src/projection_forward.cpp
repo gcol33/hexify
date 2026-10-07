@@ -1,5 +1,6 @@
 #include "projection_forward.h"
 #include "projection_fuller.h"
+#include "projection_ivea.h"
 #include "constants.h"
 #include "dual.h"
 #include <cmath>
@@ -27,8 +28,9 @@ struct ProjectionWithStatus {
 // to face-plane (x, y). With `validate`, a point past the sector boundary
 // returns false. T is double, or Dual2 to carry derivatives in z and az.
 template <class T>
-static bool face_xy_from_polar(const SnyderParams& sp, T z, T az, bool validate,
+static bool face_xy_from_polar(const SolidTopology& t, T z, T az, bool validate,
                                FaceProjection proj, T& x, T& y) {
+  const SnyderParams& sp = t.snyder;
   using std::acos;
   using std::atan2;
   using std::cos;
@@ -50,6 +52,12 @@ static bool face_xy_from_polar(const SnyderParams& sp, T z, T az, bool validate,
 
   if (proj == FaceProjection::Fuller) {
     const auto xy = fuller_face_xy(z, face_az);
+    x = xy.first;
+    y = xy.second;
+    return true;
+  }
+  if (proj == FaceProjection::IVEA) {
+    const auto xy = ivea_face_xy(t.vgc, z, face_az);
     x = xy.first;
     y = xy.second;
     return true;
@@ -128,7 +136,7 @@ static ProjectionWithStatus project_core(const Geo& geo, const PolyData& ico_dat
   }
 
   double x, y;
-  if (!face_xy_from_polar(sp, z, azimuth, validate, proj, x, y)) {
+  if (!face_xy_from_polar(*ico_data.topo, z, azimuth, validate, proj, x, y)) {
     return {0.0, 0.0, false};
   }
   if (validate && (!std::isfinite(x) || !std::isfinite(y))) {
@@ -151,7 +159,7 @@ FaceScale face_scale(const Geo& geo, int face) {
   if (z < kNearCentre) z = kNearCentre;
 
   Dual2 x, y;
-  face_xy_from_polar(sp, Dual2(z, 1.0, 0.0), Dual2(azimuth, 0.0, 1.0),
+  face_xy_from_polar(*ico_data.topo, Dual2(z, 1.0, 0.0), Dual2(azimuth, 0.0, 1.0),
                      /*validate=*/false, active_projection(), x, y);
   // Plane lengths in units of the unit sphere: a face edge of the plane
   // triangle is sp.edge, so the plane triangle has the face's area.

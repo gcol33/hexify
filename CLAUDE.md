@@ -18,6 +18,8 @@ hexify supports **all** major hexagonal DGGS through two backends:
 This covers every hexagonal grid system that matters:
 - ISEA3H, ISEA4H, ISEA7H, ISEA43H = ISEA backend with different aperture settings
 - FULLER3H, FULLER4H, FULLER7H, FULLER43H = the same with `projection = "fuller"`
+- IVEA3H, IVEA7H (DGGAL, van Leeuwen & Strebe 2006) = the same with `projection = "ivea"`;
+  DGGAL's grids sit at `orientation = c(11.20, 58.282525588538995, 0)` on the authalic sphere
 - H3 = H3 backend
 - IGEO7/Z7 (Kmoch, Sahr, Chan, Uuemaa 2025) = equal-area aperture-7 hex grid with Z7 indexing = already covered by `hex_grid(aperture = 7)` (ISEA7H with Z7 index). hexify uses the same Z7 hierarchical indexing (7-digit encoding, 0-6 per level) in `src/index_z7.cpp`. On the icosahedron its strings equal DGGRID's for every cell (`paper/bench/bench_dggrid_z7.R`, fixture `tests/testthat/data/dggrid_z7.csv`); DGGRID's encoder is bijective, so do not diverge from it. Octahedral grids, for which IGEO7 defines nothing, write quad + 6 * seed.
 - OpenEAGGR ISEA3H = already covered by `hex_grid(aperture = 3)`
@@ -64,7 +66,10 @@ Earth-read topology; a grid on another body is that topology on that body, and
 An ISEA grid carries its solid in the `polyhedron` slot (`"icosahedron"` or
 `"octahedron"`), the solid's orientation in the `orientation` slot,
 `c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`), and its face
-projection in the `projection` slot, `"isea"` (Snyder) or `"fuller"`.
+projection in the `projection` slot, `"isea"` (Snyder), `"ivea"` (van Leeuwen
+and Strebe's vertex-oriented equal-area) or `"fuller"`. `FACE_PROJECTIONS`,
+`EQUAL_AREA_PROJECTIONS` and `ICOSAHEDRON_PROJECTIONS` (`R/orientation.R`)
+say which is which; R code asks `is_equal_area_projection()`, never a name.
 
 `src/polyhedron.cpp` describes each solid (icosahedron, octahedron,
 tetrahedron) by its vertices, faces and Snyder constants, and derives the
@@ -96,6 +101,14 @@ share the face frame: azimuth measured from the face's first vertex, plane
 triangle of unit edge, so everything downstream of the face coordinates is
 projection-free. Fuller is not equal-area: `cell_area()` sums each cell's
 solid angle (`cpp_cell_solid_angle`).
+
+IVEA (`src/projection_ivea.cpp`) is written from van Leeuwen and Strebe
+(2006), DGGAL's `icoVertexGreatCircle.ec` used as a reference only. It works
+on any triangular face from `SolidTopology::vgc`, so it runs on every solid;
+its inverse is closed form, with a 2D Newton on the forward kept as the
+checker. It creases on the lines from a face's centre to its corners and to
+its edge midpoints, so face pieces (`radius_crossings()`) and the globe mesh
+(`n_face_sectors()`) are cut at six lines, against Snyder's three.
 The cell-ID hierarchy is orientation-free, so the mixed-aperture hierarchy
 (`R/aperture_mixed_hierarchy.R`) runs in the standard orientation.
 
