@@ -271,6 +271,32 @@
   corner of three parents, and after an aperture-4 step on an edge shared by
   two; the parent of such a child was decided by floating-point rounding of
   the projected centre, so a hexagonal parent received anywhere from 1 to 7
+* Zone queries of OGC Topic 21 (#105). `get_parent(overlapping = TRUE)`
+  returns every coarser cell a cell reaches into (Topic 21's `parent()` with
+  `inheritID` false): three for an aperture-3 cell on a parent corner, two
+  for an aperture-4 cell on a parent edge or an aperture-7 cell off the
+  parent's centre. `get_siblings()` returns the other children of a cell's
+  parent, and `get_neighbors(ring = TRUE)` the hollow ring of cells exactly
+  `k` hops away.
+
+* `hex_grid()` reads an aperture list shorter than the resolution as a
+  recurring sequence, as Topic 21 reads its list of refinement ratios:
+  `aperture = c(4, 3)` at resolution 5 refines by 4, 3, 4, 3, 4 (#105).
+
+* `dggrs_definition()` describes a grid in the DGGRS definition schema of OGC
+  API - DGGS: solid, refinement ratios and strategy, zone shapes, orientation,
+  zone identifiers and sub-zone order (#105).
+
+* `cell_metrics()` adds `normalized_area`, a cell's area over the grid's mean,
+  and `ipq`, the isoperimetric quotient 4 pi A / p^2, the two measures of
+  Kmoch et al. (2022) (#106).
+
+* The article "OGC Topic 21 Conformance" sets hexify against each
+  requirement of Topic 21, with the Earth model and its area error on WGS84,
+  the distance between cell centre and area centroid, and how often binning
+  and taking the parent disagree with binning at the parent's resolution
+  (#105, #106).
+
   children. A fixed tie rule now gives every hexagonal parent inside a quad
   exactly as many children as the step's aperture. Children whose centre
   lies strictly inside a parent keep their parent. `get_children()` and

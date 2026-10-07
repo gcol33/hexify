@@ -10,7 +10,8 @@ get_neighbors(
   k = 1L,
   include_self = FALSE,
   distances = FALSE,
-  as_sf = FALSE
+  as_sf = FALSE,
+  ring = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ and their ring distance from the origin (default \code{FALSE}).}
 
 \item{as_sf}{Logical. If \code{TRUE}, return the links from each cell to its
 neighbours as great-circle lines between cell centres.}
+
+\item{ring}{Logical. If \code{TRUE}, return only the cells exactly \code{k} hops
+away, the hollow ring, rather than the whole disk (default \code{FALSE}).}
 }
 \value{
 If \code{distances = FALSE} (default): a list of cell ID vectors, one
@@ -70,6 +74,9 @@ get_neighbors(cell_h3, g_h3, k = 2)
 
 # With distances
 get_neighbors(cell, g, k = 2, distances = TRUE)
+
+# Only the cells two hops away
+get_neighbors(cell, g, k = 2, ring = TRUE)
 
 # Links to the neighbours, drawn over the cells
 links <- get_neighbors(cell, g, k = 2, as_sf = TRUE)

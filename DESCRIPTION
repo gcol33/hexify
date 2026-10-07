@@ -60,6 +60,7 @@ Collate:
     'data.R'
     'dggrid.R'
     'dggrid_compat.R'
+    'dggrs_definition.R'
     'distortion.R'
     'gosper.R'
     'grid_helpers.R'

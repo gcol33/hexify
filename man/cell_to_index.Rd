@@ -19,4 +19,11 @@ Character vector of hierarchical index strings
 Advanced function for working with hierarchical index strings.
 Most users don't need this - use cell IDs directly.
 }
+\details{
+A cell ID numbers the cells of one resolution from 1, so it names a cell
+only together with its grid. The index string carries its resolution in
+its length and names one cell among all resolutions of the grid's family,
+and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
+its resolution in its bits.
+}
 \keyword{internal}

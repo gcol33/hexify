@@ -34,6 +34,16 @@ CELL_EDGE_TOLERANCE <- 1e-3
 #' @noRd
 CELL_WALL_TOLERANCE <- 1e-4
 
+#' How far a corner is moved towards its cell's centre to find the coarser
+#' cells it lies in
+#'
+#' As a fraction of the corner's distance from the centre. A corner on the
+#' boundary of coarser cells then lies inside one of them, and the parts of a
+#' cell in each coarser cell, a third, a half or a twelfth of it, are far
+#' wider than the step.
+#' @noRd
+CORNER_STEP <- 1e-3
+
 #' Longest edge of the triangles hex_globe() draws surfaces with
 #'
 #' In triangle coordinates, where a face edge is 1. A triangle of the sphere

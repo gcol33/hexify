@@ -17,6 +17,9 @@ versions and the processor.
 | `bench_dggrid_walls.R` | Cell wall midpoint ratio of hexify's and DGGRID's aperture-7 cells at resolutions 3 and 5, both read as corners joined by great-circle arcs; counts the walls whose ratio differs between the two programs and how many of them border a cell whose DGGRID corners differ from hexify's | `dggrid_wall_ratio.csv` |
 | `bench_speed.R` | Run time of point assignment (one million points) and polygon generation (10,000 cells) for hexify, dggridR, h3r and h3o | `speed.csv` |
 | `example_world_cities.R` | The article's example: population of `maps::world.cities` per equal-area cell | `example_world_cities.csv`, `.gpkg` |
+| `bench_kmoch_distortion.R` | Normalized area and isoperimetric quotient of every cell of ISEA and FULLER grids of apertures 3, 4, 7 and 4/3 and of H3, through the pipeline of Kmoch et al. (2022): corner polygons, antimeridian-crossing cells removed, each cell in a Lambert azimuthal equal-area plane on WGS84; beside their published tables, and cell by cell against their per-cell files (downloaded from Zenodo record 6634479 to `data/kmoch2022/`) | `kmoch_distortion.csv`, `kmoch_percell.csv` |
+| `bench_hierarchy_commutation.R` | How often a point's cell taken k levels up differs from the cell of the point at that resolution (Griffin 2026, Sec. 12), 10,000 uniform points, k = 1 to 6, against the lattice's one-level rates 4/9, 3/8 and 1/14 | `hierarchy_commutation.csv` |
+| `bench_ogc_conformance.R` | Distance between cell centre and spherical area centroid (OGC Topic 21 Req 27), and each cell's area on WGS84 relative to the sphere of equal area (Req 28) | `centroid_offset.csv`, `wgs84_area_scale.csv` |
 
 ## Requirements
 

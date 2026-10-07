@@ -9,7 +9,9 @@
 #   "4/3", "4/7"     the first floor(resolution / 2) levels refine by the first
 #                    aperture and the rest by the second, which is how DGGRID
 #                    arranges ISEA43H
-#   c(4, 4, 7, 3)    one aperture per level, in order, length = resolution
+#   c(4, 4, 7, 3)    one aperture per level, in order; a list shorter than
+#                    resolution recurs, as OGC Topic 21 reads its list of
+#                    refinement ratios, so c(4, 3) at resolution 5 is 4,3,4,3,4
 #
 # A grid stores the spelling as a string, a family with "/" ("4/7") and a
 # per-level sequence with "," ("4,4,7,3"), so a two-level sequence c(4, 7)
@@ -34,25 +36,32 @@ is_per_level_aperture <- function(aperture) {
 
 #' Aperture spelling to store on a grid
 #'
-#' A family name passes through; a per-level vector is joined with ",".
+#' A family name passes through; a per-level vector, or its comma-separated
+#' spelling, is joined with "," at one aperture per level, a shorter list
+#' recurring until it covers `resolution` levels.
 #' @param aperture Character family name or numeric vector of apertures
 #' @param resolution Integer resolution the vector spelling is given for
 #' @return Single character string
 #' @noRd
 format_aperture <- function(aperture, resolution) {
+  if (length(aperture) == 1L && is_per_level_aperture(aperture) &&
+      !is.null(resolution)) {
+    aperture <- suppressWarnings(
+      as.integer(strsplit(as.character(aperture), ",", fixed = TRUE)[[1]]))
+  }
   if (length(aperture) > 1L) {
     parts <- as.integer(aperture)
     if (anyNA(parts) || !all(parts %in% VALID_APERTURES)) {
       stop(sprintf("Aperture sequence entries must be one of: %s",
                    paste(VALID_APERTURES, collapse = ", ")))
     }
-    if (length(parts) != resolution) {
+    if (length(parts) > resolution) {
       stop(sprintf(
-        "An aperture sequence needs one aperture per resolution level: %d given for resolution %d",
+        "An aperture sequence names one aperture per resolution level: %d given for resolution %d",
         length(parts), as.integer(resolution)
       ))
     }
-    return(paste(parts, collapse = ","))
+    return(paste(rep(parts, length.out = resolution), collapse = ","))
   }
   as.character(aperture)
 }

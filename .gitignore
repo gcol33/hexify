@@ -33,3 +33,6 @@ hexify_*.tar.gz
 # Claude Code
 .claude/
 refs/
+
+# Downloaded reference data for paper/bench
+paper/bench/data/

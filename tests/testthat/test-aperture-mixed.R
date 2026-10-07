@@ -695,8 +695,22 @@ test_that("hex_grid accepts family spellings and per-level sequences", {
 
   expect_error(hex_grid(resolution = 4, aperture = c(4, 5, 3, 7)),
                "must be one of")
-  expect_error(hex_grid(resolution = 4, aperture = c(4, 7, 3)),
+  expect_error(hex_grid(resolution = 2, aperture = c(4, 7, 3)),
                "one aperture per resolution level")
+})
+
+test_that("a list shorter than the resolution recurs, as OGC Topic 21 reads it", {
+  setup_icosa()
+
+  expect_equal(hex_grid(resolution = 5, aperture = c(4, 3))@aperture, "4,3,4,3,4")
+  expect_equal(hex_grid(resolution = 4, aperture = c(4, 7, 3))@aperture, "4,7,3,4")
+  expect_equal(hex_grid(resolution = 5, aperture = "4,3")@aperture, "4,3,4,3,4")
+
+  # The recurring list and its spelled-out sequence are one grid
+  pts <- sphere_test_points(500)
+  expect_equal(lonlat_to_cell(pts$lon, pts$lat, hex_grid(resolution = 5, aperture = c(4, 3))),
+               lonlat_to_cell(pts$lon, pts$lat,
+                              hex_grid(resolution = 5, aperture = c(4, 3, 4, 3, 4))))
 })
 
 test_that("a two-level sequence is not the family of the same name", {

@@ -105,6 +105,25 @@ test_that("compactness is at most that of the regular polygon", {
   expect_true(all(hex < regular(6) + 1e-3 & hex > 0.9))
 })
 
+test_that("normalized area and ipq follow from area, perimeter and cell count", {
+  g <- hex_grid(resolution = 3, aperture = 7)
+  m <- cell_metrics(grid = g)
+  # Snyder's projection is equal-area: the twelve pentagons have 5/6 of a
+  # hexagon's area, so a hexagon has N / (N - 2) of the mean
+  n <- nrow(m)
+  pent <- is_pentagon(m$cell_id, g)
+  expect_equal(sum(pent), 12)
+  expect_equal(mean(m$normalized_area), 1, tolerance = 1e-12)
+  expect_equal(range(m$normalized_area[!pent]), rep(n / (n - 2), 2), tolerance = 1e-12)
+  expect_equal(range(m$normalized_area[pent]), rep(5 / 6 * n / (n - 2), 2),
+               tolerance = 1e-12)
+  # ipq = compactness^2 + (a / (r p))^2
+  r <- grid_radius_km(g)
+  omega <- m$area_km2 / hexify:::body_surface_km2(r) * 4 * pi
+  expect_equal(m$ipq, m$compactness^2 + (omega / (m$perimeter_km / r))^2,
+               tolerance = 1e-12)
+})
+
 test_that("a grid on another body scales its lengths and keeps its shapes", {
   earth <- hex_grid(resolution = 2, aperture = 3)
   mars <- hex_grid(resolution = 2, aperture = 3, radius_km = "mars")

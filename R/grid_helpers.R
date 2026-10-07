@@ -1012,6 +1012,13 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #'
 #' @return Character vector of hierarchical index strings
 #'
+#' @details
+#' A cell ID numbers the cells of one resolution from 1, so it names a cell
+#' only together with its grid. The index string carries its resolution in
+#' its length and names one cell among all resolutions of the grid's family,
+#' and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
+#' its resolution in its bits.
+#'
 #' @keywords internal
 #' @export
 cell_to_index <- function(cell_id, grid) {
@@ -1047,8 +1054,27 @@ cell_to_index <- function(cell_id, grid) {
 #'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
 #' @param levels Number of levels up (default 1)
+#' @param overlapping If \code{TRUE}, return every cell at the coarser
+#'   resolution that overlaps the cell, not only the one holding its centre.
 #'
-#' @return Parent cell IDs, of the type the grid's cell IDs have
+#' @return Parent cell IDs, of the type the grid's cell IDs have. With
+#'   \code{overlapping = TRUE}, a list with one vector per input cell, the
+#'   parent holding the cell's centre first.
+#'
+#' @details
+#' A cell's parent is the coarser cell holding its centre. The hexagons of
+#' successive resolutions do not nest, so a cell can also reach into one or two
+#' neighbours of that parent: an aperture-3 cell centred on a parent corner
+#' lies a third in each of three parents, an aperture-4 cell centred on a
+#' parent edge half in each of two, and an aperture-7 cell off the parent's
+#' centre 11/12 in its parent and 1/12 in one neighbour.
+#' \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
+#' of OGC Topic 21 does when \code{inheritID} is false; the default is its
+#' \code{inheritID = true} answer.
+#'
+#' Every part of a cell that lies in a coarser cell holds a corner of the
+#' cell, so the overlapping cells are the coarser cells holding the cell's
+#' corners, each taken a small step towards the centre.
 #'
 #' @keywords internal
 #' @export
@@ -1056,12 +1082,18 @@ cell_to_index <- function(cell_id, grid) {
 #' grid <- hex_grid(resolution = 10)
 #' child_cells <- lonlat_to_cell(c(0, 10), c(45, 50), grid)
 #' parent_cells <- get_parent(child_cells, grid)
-get_parent <- function(cell_id, grid, levels = 1L) {
+#'
+#' # Every coarser cell a cell reaches into
+#' g3 <- hex_grid(resolution = 5, aperture = 3)
+#' cells <- lonlat_to_cell(c(0, 10), c(45, 50), g3)
+#' get_parent(cells, g3, overlapping = TRUE)
+get_parent <- function(cell_id, grid, levels = 1L, overlapping = FALSE) {
   g <- extract_grid(grid)
 
   if (g@resolution < levels) {
     stop("Cannot get parent: already at minimum resolution")
   }
+  if (overlapping) return(overlapping_parents(cell_id, g, as.integer(levels)))
 
   # H3 path
   if (is_h3_grid(g)) {
@@ -1090,6 +1122,79 @@ get_parent <- function(cell_id, grid, levels = 1L) {
     idx <- cpp_get_parent_index(idx, aperture_int, index_type)
   }
   isea_index_to_cells(idx, aperture_int, index_type, icosa)
+}
+
+#' Coarser cells overlapping each cell
+#'
+#' Each corner is moved a fraction `CORNER_STEP` of the way to the cell's
+#' centre, on the chord between their unit vectors, and quantised at the
+#' coarser resolution.
+#' @param cell_id Cell IDs
+#' @param g HexGridInfo object
+#' @param levels Levels up
+#' @return List of cell ID vectors, the centre's parent first
+#' @noRd
+overlapping_parents <- function(cell_id, g, levels) {
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
+  pg <- grid_at_resolution(g, g@resolution - levels)
+  rings <- cell_corner_rings(cell_id, g)
+  centre <- cell_to_lonlat(cell_id, g)
+  n_corner <- vapply(rings, nrow, integer(1))
+  owner <- rep(seq_along(cell_id), n_corner)
+
+  corner <- unit_vec(unlist(lapply(rings, function(r) r[, 1]), use.names = FALSE),
+                     unlist(lapply(rings, function(r) r[, 2]), use.names = FALSE))
+  mid <- unit_vec(centre$lon_deg, centre$lat_deg)[owner, , drop = FALSE]
+  step <- corner + CORNER_STEP * (mid - corner)
+  ll <- vec_lonlat(step / sqrt(rowSums(step^2)))
+
+  own <- get_parent(cell_id, g, levels)
+  hit <- lonlat_to_cell(ll[, 1], ll[, 2], pg)
+  lapply(seq_along(cell_id), function(k) {
+    others <- hit[owner == k]
+    unique(c(own[k], others[others != own[k]]))
+  })
+}
+
+#' Corners of cells, one lon/lat matrix per cell
+#' @noRd
+cell_corner_rings <- function(cell_id, g) {
+  if (is_h3_grid(g)) return(cpp_h3_cellToBoundary(as.character(cell_id)))
+  isea_cell_rings(cell_id, g@resolution, g@aperture, icosa_arg(g),
+                  tolerance = 0, max_arc = 0)
+}
+
+#' Sibling cells
+#'
+#' Returns the other children of each cell's parent.
+#'
+#' @inheritParams get_parent
+#' @param include_self If \code{TRUE}, keep the cell itself among its
+#'   siblings.
+#'
+#' @return List with one vector of cell IDs per input cell.
+#'
+#' @details
+#' The parent is the one \code{\link{get_parent}} returns, the coarser cell
+#' holding the cell's centre, and the siblings are its children as
+#' \code{\link{get_children}} returns them: the \code{siblingOf} relation of
+#' OGC Topic 21 with \code{inheritID} true.
+#'
+#' @seealso \code{\link{get_parent}}, \code{\link{get_children}}
+#'
+#' @keywords internal
+#' @export
+#' @examples
+#' g <- hex_grid(resolution = 4, aperture = 7)
+#' cell <- lonlat_to_cell(16.37, 48.21, g)
+#' get_siblings(cell, g)
+get_siblings <- function(cell_id, grid, include_self = FALSE) {
+  g <- extract_grid(grid)
+  if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
+  parent <- get_parent(cell_id, g)
+  kids <- get_children(parent, grid_at_resolution(g, g@resolution - 1L))
+  if (include_self) return(kids)
+  lapply(seq_along(cell_id), function(k) kids[[k]][kids[[k]] != cell_id[k]])
 }
 
 #' Get children cells

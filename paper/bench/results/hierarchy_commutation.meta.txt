@@ -1,0 +1,15 @@
+script: bench_hierarchy_commutation.R
+date: 2026-10-08 00:22:45 CEST
+hexify commit: 9c3e3ae
+uncommitted changes in R/, src/ or paper/bench/: TRUE
+hexify installed version: 0.8.4
+R: R version 4.6.0 (2026-04-24 ucrt)
+platform: x86_64-w64-mingw32
+cpu: Intel(R) Core(TM) i9-14900K
+hexify: 0.8.4
+dggridR: 3.1.1
+h3o: 0.3.0
+h3r: 0.1.2
+sf: 1.1.3
+s2: 1.1.12
+points: 10000 uniform on the sphere, seed 2026

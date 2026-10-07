@@ -32,11 +32,13 @@
 #'   e.g. \code{c(4, 4, 7, 3)}. A family name refines by the first aperture for
 #'   the first \code{floor(resolution / 2)} levels and by the second for the
 #'   rest, which is how DGGRID arranges ISEA43H. A per-level vector needs
-#'   \code{resolution} rather than \code{area_km2}, and is stored as a
-#'   comma-separated string (\code{"4,4,7,3"}), which \code{aperture} also
-#'   accepts. It names no level finer than \code{resolution}, so
-#'   \code{get_children()} needs a family name. Ignored for H3 grids (fixed
-#'   at 7).
+#'   \code{resolution} rather than \code{area_km2}; one shorter than
+#'   \code{resolution} recurs, as OGC Topic 21 reads a list of refinement
+#'   ratios, so \code{c(4, 3)} at resolution 5 refines by 4, 3, 4, 3, 4. It is
+#'   stored as a comma-separated string with one aperture per level
+#'   (\code{"4,3,4,3,4"}), which \code{aperture} also accepts. It names no
+#'   level finer than \code{resolution}, so \code{get_children()} needs a
+#'   family name. Ignored for H3 grids (fixed at 7).
 #' @param type Grid type: "isea" (default) or "h3".
 #' @param resround Resolution rounding when using \code{area_km2}:
 #'   "nearest" (default), "up", or "down".
@@ -160,7 +162,9 @@
 #' every cell of a resolution has the same area. With \code{"fuller"}, Fuller's
 #' projection keeps lengths along the face edges and is not equal-area, so
 #' \code{area_km2} is the mean cell area and \code{cell_area()} reports each
-#' cell's own. These are DGGRID's \code{dggs_proj ISEA} and \code{FULLER},
+#' cell's own; the Equal-Area Earth Reference System of OGC Topic 21 asks for
+#' cells of equal area, so a Fuller grid falls outside it. These are DGGRID's
+#' \code{dggs_proj ISEA} and \code{FULLER},
 #' giving FULLER3H, FULLER4H, FULLER7H and FULLER43H. Cell IDs, the hierarchy
 #' and neighbours are the same under both projections; where each cell's centre
 #' and corners sit on the sphere differs.

@@ -41,3 +41,10 @@ face_plane_samples <- function(n = 30) {
           cy + outer(t, my - cy))
   )
 }
+
+# n points spread evenly over the sphere (Fibonacci lattice), lon/lat in degrees
+sphere_test_points <- function(n) {
+  k <- seq_len(n) - 0.5
+  data.frame(lon = ((k * 180 * (3 - sqrt(5))) %% 360) - 180,
+             lat = asin(1 - 2 * k / n) * 180 / pi)
+}

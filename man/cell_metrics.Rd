@@ -15,7 +15,8 @@ cell_metrics(cell_id = NULL, grid)
 \value{
 Data frame with one row per \code{cell_id}: \code{cell_id},
 \code{area_km2} (as \code{\link{cell_area}} gives it),
-\code{perimeter_km} and \code{compactness}.
+\code{normalized_area}, \code{perimeter_km}, \code{compactness} and
+\code{ipq}.
 }
 \description{
 Measures each cell on the sphere: its area, the length of its boundary and
@@ -33,6 +34,17 @@ cell's area over the cell's perimeter, \eqn{\sqrt{4\pi a - a^2/r^2} / p} for
 area \eqn{a}, perimeter \eqn{p} and radius \eqn{r}. A circle scores 1; a
 small regular hexagon 0.952, pentagon 0.930, square 0.886 and triangle
 0.778.
+
+The normalized area is the cell's area over the mean area of the grid's
+cells, the body's surface over the cell count; an equal-area grid of
+\eqn{N} cells gives \eqn{N / (N - 2)} for its hexagons, 5/6 of that for
+the pentagons of the icosahedron and 4/6 for the squares of the octahedron. The isoperimetric quotient
+\code{ipq} is \eqn{4\pi a / p^2}, for a circle 1, a small regular hexagon
+0.907, square 0.785 and triangle 0.605. Kmoch et al. (2022) compare
+grids by these two measures, reading area and perimeter in an equal-area
+plane centred on each cell; here both are read on the sphere, which adds
+\eqn{(a/(rp))^2} to \code{compactness}^2, a few parts in a million for
+cells of a few thousand square kilometres.
 }
 \examples{
 g <- hex_grid(resolution = 3, aperture = 3)
@@ -49,6 +61,10 @@ White, D., Kimerling, A. J., Sahr, K. and Song, L. (1998). Comparing area
 and shape distortion on polyhedral-based recursive partitions of the sphere.
 International Journal of Geographical Information Science 12(8), 805-827.
 \doi{10.1080/136588198241518}
+
+Kmoch, A., Vasilyev, I., Virro, H. and Uuemaa, E. (2022). Area and shape
+distortions in open-source discrete global grid systems. Big Earth Data
+6(3), 256-275. \doi{10.1080/20964471.2022.2094926}
 }
 \seealso{
 \code{\link{wall_metrics}} for the spacing of neighbouring cells,

@@ -49,6 +49,8 @@ navbar:
         href: articles/h3.html
       - text: Mathematical Foundations
         href: articles/theory.html
+      - text: OGC Topic 21 Conformance
+        href: articles/ogc-conformance.html
     github:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify
@@ -63,7 +65,9 @@ articles:
   - globe
   - h3
 - title: Mathematical Foundations
-  contents: theory
+  contents:
+  - theory
+  - articles/ogc-conformance
 reference:
 - title: Core
   desc: Create grids and assign points to cells
@@ -99,6 +103,7 @@ reference:
   - cell_to_lonlat
   - get_parent
   - get_children
+  - get_siblings
 - title: Cell Operations
   desc: Relations between cells and cell sets
   contents:
@@ -114,6 +119,7 @@ reference:
   - h3_crosswalk
   - cell_area
   - import_h3
+  - dggrs_definition
 - title: Cell Metrics
   desc: Shape and spacing of a grid's cells
   contents:

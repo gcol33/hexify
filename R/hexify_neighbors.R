@@ -21,6 +21,8 @@
 #'   and their ring distance from the origin (default `FALSE`).
 #' @param as_sf Logical. If `TRUE`, return the links from each cell to its
 #'   neighbours as great-circle lines between cell centres.
+#' @param ring Logical. If `TRUE`, return only the cells exactly `k` hops
+#'   away, the hollow ring, rather than the whole disk (default `FALSE`).
 #'
 #' @return If `distances = FALSE` (default): a list of cell ID vectors, one
 #'   per input cell. If `distances = TRUE`: a list of data.frames with columns
@@ -60,17 +62,30 @@
 #' # With distances
 #' get_neighbors(cell, g, k = 2, distances = TRUE)
 #'
+#' # Only the cells two hops away
+#' get_neighbors(cell, g, k = 2, ring = TRUE)
+#'
 #' # Links to the neighbours, drawn over the cells
 #' links <- get_neighbors(cell, g, k = 2, as_sf = TRUE)
 #' plot(sf::st_geometry(cell_to_sf(c(cell, links$neighbor_id), g)))
 #' plot(sf::st_geometry(links), col = "red", add = TRUE)
 #' }
 get_neighbors <- function(cell_id, grid, k = 1L, include_self = FALSE,
-                           distances = FALSE, as_sf = FALSE) {
+                           distances = FALSE, as_sf = FALSE, ring = FALSE) {
   g <- extract_grid(grid)
   if (!is_h3_grid(g)) cell_id <- as_cell_id(cell_id)
-  if (as_sf) return(neighbor_links(cell_id, g, k, include_self))
   k <- as.integer(k)
+  if (ring) {
+    if (as_sf) {
+      links <- neighbor_links(cell_id, g, k, include_self = k == 0L)
+      return(links[links$ring_distance == k, ])
+    }
+    disk <- get_neighbors(cell_id, g, k, include_self = k == 0L, distances = TRUE)
+    disk <- lapply(disk, function(d) d[d$ring_distance == k, , drop = FALSE])
+    if (distances) return(disk)
+    return(lapply(disk, `[[`, "cell_id"))
+  }
+  if (as_sf) return(neighbor_links(cell_id, g, k, include_self))
 
   if (k < 0L) stop("k must be a non-negative integer")
   if (k == 0L) {
