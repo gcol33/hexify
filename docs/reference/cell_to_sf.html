@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,8 +34,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -65,7 +67,15 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cell_to_sf</span><span class="op">(</span>cell_id <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">grid</span>, wrap_dateline <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cell_to_sf</span><span class="op">(</span></span>
+<span>  cell_id <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">grid</span>,</span>
+<span>  wrap_dateline <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  densify <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_km <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  shape <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hexagon"</span>, <span class="st">"gosper"</span>, <span class="st">"descendants"</span><span class="op">)</span>,</span>
+<span>  depth <span class="op">=</span> <span class="fl">3L</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,7 +83,7 @@
 
 
 <dl><dt id="arg-cell-id">cell_id<a class="anchor" aria-label="anchor" href="#arg-cell-id"></a></dt>
-<dd><p>Numeric vector of cell IDs. If NULL and x is HexData,
+<dd><p>Cell IDs (integer64 for ISEA, character for H3). If NULL and x is HexData,
 uses cells from x.</p></dd>
 
 
@@ -84,8 +94,44 @@ polygons are generated for all cells in the data.</p></dd>
 
 <dt id="arg-wrap-dateline">wrap_dateline<a class="anchor" aria-label="anchor" href="#arg-wrap-dateline"></a></dt>
 <dd><p>Logical. If TRUE (default), calls
-<code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> to split antimeridian-crossing polygons.
-Set to FALSE for orthographic/globe projections where wrapping creates gaps.</p></dd>
+<code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> to split antimeridian-crossing polygons,
+which flat maps and planar (GEOS) operations need.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps,
+and for spherical (s2) operations: each cell then stays one polygon whose
+corners lie in -180..180, so a cell crossing the antimeridian spans a
+flat lon/lat map.</p></dd>
+
+
+<dt id="arg-densify">densify<a class="anchor" aria-label="anchor" href="#arg-densify"></a></dt>
+<dd><p>Points added along each cell edge: every edge is halved
+until the straight line in longitude and latitude between consecutive
+points stays within <code>densify</code> times its length of the true edge.
+<code>0</code> keeps the corners alone. <code>NULL</code> uses 0.001 for ISEA cells
+and 0 for H3 cells.</p></dd>
+
+
+<dt id="arg-max-km">max_km<a class="anchor" aria-label="anchor" href="#arg-max-km"></a></dt>
+<dd><p>Longest edge piece, in km on the grid's sphere: edges are
+halved further until no straight piece between consecutive points spans
+more than <code>max_km</code>, on top of <code>densify</code>. <code>NULL</code> (default)
+sets no limit. The bound <code>densify</code> sets is relative to each piece's
+length, so a long, gently curved edge can stand as one piece that strays
+hundreds of metres from the true edge; <code>max_km</code> bounds that in
+distance.</p></dd>
+
+
+<dt id="arg-shape">shape<a class="anchor" aria-label="anchor" href="#arg-shape"></a></dt>
+<dd><p><code>"hexagon"</code> (default) draws each cell's own boundary.
+<code>"gosper"</code> draws it as a Gosper island and <code>"descendants"</code> as
+the outline of its descendants; both need an ISEA grid, and
+<code>"descendants"</code> one of aperture 7. See Details.</p></dd>
+
+
+<dt id="arg-depth">depth<a class="anchor" aria-label="anchor" href="#arg-depth"></a></dt>
+<dd><p>For <code>shape = "gosper"</code>, the number of times each edge is
+replaced, multiplying its segments by 3; for <code>"descendants"</code>, the
+number of resolutions down, multiplying the cells behind one outline
+by 7.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -97,11 +143,34 @@ Set to FALSE for orthographic/globe projections where wrapping creates gaps.</p>
     <p>When called with a HexData object and no cell_id argument, this function
 generates polygons for all unique cells in the data, which is useful for
 plotting.</p>
+<p>An ISEA cell edge is straight on its icosahedron face and curved in
+longitude and latitude, so ISEA polygons are densified by default. An H3
+cell edge is a great-circle arc between corners, which sf reads exactly
+from the corners alone when it uses s2; densify H3 cells for planar work,
+or to draw them on a flat map.</p>
+<p>A Gosper island replaces every cell edge by three segments
+\(1/\sqrt{7}\) as long, turned by \(\arctan(\sqrt{3}/5)\), and repeats
+this <code>depth</code> times; its outline approaches the flowsnake. The
+replacement is drawn on the face plane of the projection and moves as much
+area out of a cell as into it, so on an equal-area grid an island has
+exactly its cell's area, and neighbouring islands share their boundary, so
+the islands of a grid tile the sphere. The twelve pentagonal cells give
+five-sided islands.</p>
+<p>The descendant outline of an aperture-7 cell is the boundary of its
+descendants <code>depth</code> resolutions down. It covers exactly the cell's
+area, the outlines of one resolution tile the sphere, and an outline is the
+union of its children's outlines, so they nest across resolutions. The
+child lattice of an aperture-7 ISEA grid turns one way at one resolution and
+back at the next, so the outline stays close to the hexagon rather than
+approaching a Gosper island.</p>
+<p>Either shape is drawn around the cell's hexagon: a point near the boundary
+can lie in one cell's shape and be assigned to the neighbouring cell by
+<code><a href="lonlat_to_cell.html">lonlat_to_cell</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="hex_grid.html">hex_grid</a></code> for grid specifications,
-<code><a href="as_sf.html">as_sf</a></code> for converting HexData to sf</p></div>
+<code><a href="st_as_sf.HexData.html">st_as_sf</a></code> for converting HexData to sf</p></div>
     </div>
 
     <div class="section level2">
@@ -114,7 +183,13 @@ plotting.</p>
 <span><span class="co"># From HexData (all cells)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">50</span>, <span class="fl">55</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="hexify.html">hexify</a></span><span class="op">(</span><span class="va">df</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, area_km2 <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">cell_to_sf</span><span class="op">(</span>grid <span class="op">=</span> <span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">cell_to_sf</span><span class="op">(</span>grid <span class="op">=</span> <span class="va">result</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Cells drawn as Gosper islands, and as the outline of their descendants</span></span>
+<span><span class="va">g7</span> <span class="op">&lt;-</span> <span class="fu"><a href="hex_grid.html">hex_grid</a></span><span class="op">(</span>resolution <span class="op">=</span> <span class="fl">3</span>, aperture <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="lonlat_to_cell.html">lonlat_to_cell</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">50</span><span class="op">)</span>, <span class="va">g7</span><span class="op">)</span></span>
+<span><span class="va">islands</span> <span class="op">&lt;-</span> <span class="fu">cell_to_sf</span><span class="op">(</span><span class="va">cells</span>, <span class="va">g7</span>, shape <span class="op">=</span> <span class="st">"gosper"</span>, depth <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">outlines</span> <span class="op">&lt;-</span> <span class="fu">cell_to_sf</span><span class="op">(</span><span class="va">cells</span>, <span class="va">g7</span>, shape <span class="op">=</span> <span class="st">"descendants"</span>, depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
@@ -125,7 +200,7 @@ plotting.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

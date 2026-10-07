@@ -1,13 +1,17 @@
 # Convert longitude/latitude to PLANE coordinates
 
-Converts geographic coordinates directly to PLANE coordinates (unfolded
-icosahedron). Combines forward 'Snyder' projection with the PLANE
+Converts geographic coordinates directly to PLANE coordinates (the
+unfolded solid). Combines forward 'Snyder' projection with the PLANE
 transformation.
 
 ## Usage
 
 ``` r
-hexify_lonlat_to_plane(lon, lat)
+hexify_lonlat_to_plane(
+  lon,
+  lat,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
+)
 ```
 
 ## Arguments
@@ -19,6 +23,11 @@ hexify_lonlat_to_plane(lon, lat)
 - lat:
 
   Latitude in degrees (-90 to 90)
+
+- polyhedron:
+
+  The solid whose faces are unfolded: "icosahedron" (default),
+  "octahedron" or "tetrahedron", in its standard orientation
 
 ## Value
 
@@ -34,7 +43,7 @@ Data frame with columns:
 
 ## Details
 
-Equivalent to 'dggridR' dgGEO_to_PLANE().
+Equivalent to 'dggridR' dgGEO_to_PLANE() on the icosahedron.
 
 ## See also
 
@@ -44,7 +53,6 @@ for cell ID conversion,
 for triangle conversion
 
 Other coordinate conversion:
-[`hexify_cell_id_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_id_to_quad_ij.md),
 [`hexify_cell_to_icosa_tri()`](https://gillescolling.com/hexify/reference/hexify_cell_to_icosa_tri.md),
 [`hexify_cell_to_lonlat()`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md),
 [`hexify_cell_to_plane()`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md),

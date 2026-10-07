@@ -12,6 +12,9 @@ like `$`, [`names()`](https://rdrr.io/r/base/names.html),
 x$name
 
 # S4 method for class 'HexGridInfo'
+n_cells(x)
+
+# S4 method for class 'HexGridInfo'
 names(x)
 
 # S4 method for class 'HexGridInfo'
@@ -44,6 +47,8 @@ as.list(x, ...)
 - `$`: The value of the requested slot
 
 - `names`: Character vector of slot names
+
+- `n_cells`: The number of cells the grid contains
 
 - `show`: The object, invisibly (called for side effect of printing)
 

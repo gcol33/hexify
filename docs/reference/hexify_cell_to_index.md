@@ -21,15 +21,15 @@ hexify_cell_to_index(
 
 - face:
 
-  Face/quad number (0-19)
+  Face/quad numbers (0-19)
 
 - i:
 
-  I coordinate
+  I coordinates
 
 - j:
 
-  J coordinate
+  J coordinates
 
 - resolution:
 
@@ -45,7 +45,8 @@ hexify_cell_to_index(
 
 ## Value
 
-A character vector of index strings.
+A character vector of index strings, one per cell. `face`, `i` and `j`
+are read in step and must be the same length.
 
 ## Details
 
@@ -58,11 +59,12 @@ Default index types by aperture:
 - Aperture 7: Z7 (one base-7 child digit per resolution)
 
 A Z7 index has the form `BBd1...dr`, where `BB` is the two-digit base
-cell (00–11), `r` is the resolution, and every child digit is in 0–6.
-hexify's Z7 encoding is bijective: decoding and re-encoding a valid
-index returns the same string. It follows DGGRID's Z7 layout for
-ordinary cells, but retains distinct indices in pentagon regions where
-DGGRID's encoder can map different cells to the same string.
+cell (00–11), `r` is the resolution, and every child digit is in 0–6. It
+is IGEO7's Z7 index, the string DGGRID writes for the same cell, and
+decoding and re-encoding a valid index returns the same string. `BB` is
+the pentagon the cell descends from, which need not be `face`. Under
+each pentagon one direction is missing: a string whose first nonzero
+digit is 2 (base cells 00–05) or 5 (06–11) names no cell.
 
 ## See also
 

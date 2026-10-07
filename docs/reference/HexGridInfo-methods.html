@@ -22,7 +22,7 @@ like $, names(), show(), and as.list()."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,8 +36,10 @@ like $, names(), show(), and as.list()."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -70,6 +72,9 @@ like <code>$</code>, <code><a href="https://rdrr.io/r/base/names.html" class="ex
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
 <span><span class="va">x</span><span class="op">$</span><span class="va">name</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
+<span><span class="fu"><a href="n_cells.html">n_cells</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'HexGridInfo'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -106,6 +111,7 @@ like <code>$</code>, <code><a href="https://rdrr.io/r/base/names.html" class="ex
 
 <ul><li><p><code>$</code>: The value of the requested slot</p></li>
 <li><p><code>names</code>: Character vector of slot names</p></li>
+<li><p><code>n_cells</code>: The number of cells the grid contains</p></li>
 <li><p><code>show</code>: The object, invisibly (called for side effect of printing)</p></li>
 <li><p><code>as.list</code>: A named list of slot values</p></li>
 </ul></div>
@@ -119,7 +125,7 @@ like <code>$</code>, <code><a href="https://rdrr.io/r/base/names.html" class="ex
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

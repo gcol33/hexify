@@ -94,9 +94,12 @@ static void face_polar(const Geo& geo, const PolyData& ico_data, int face,
   const double cosLat = std::cos(glat);
   const double sinLat = std::sin(glat);
 
-  double tmp = center_sinlat * sinLat + center_coslat * cosLat * std::cos(glon - center_lon);
-  tmp = clampd(tmp, -1.0, 1.0);
-  z = std::acos(tmp);
+  // The haversine form keeps z precise near the centre, where acos of the
+  // dot product loses half the digits.
+  const double h_lat = std::sin(0.5 * (glat - ico_data.centers[face].lat));
+  const double h_lon = std::sin(0.5 * (glon - center_lon));
+  const double hav = clampd(h_lat * h_lat + center_coslat * cosLat * h_lon * h_lon, 0.0, 1.0);
+  z = 2.0 * std::asin(std::sqrt(hav));
 
   azimuth = std::atan2(cosLat * std::sin(glon - center_lon),
                        center_coslat * sinLat - center_sinlat * cosLat * std::cos(glon - center_lon))

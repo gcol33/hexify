@@ -21,9 +21,9 @@ h3_crosswalk(
 
 - cell_id:
 
-  Cell IDs to translate. Numeric for ISEA, character for H3. When `grid`
-  is a HexData object and `cell_id` is `NULL`, all cell IDs from the
-  data are used.
+  Cell IDs to translate. integer64 for ISEA, character for H3. When
+  `grid` is a HexData object and `cell_id` is `NULL`, all cell IDs from
+  the data are used.
 
 - grid:
 
@@ -55,7 +55,7 @@ A data frame with columns:
 
 - isea_cell_id:
 
-  ISEA cell ID (numeric)
+  ISEA cell ID (integer64)
 
 - h3_cell_id:
 
@@ -63,7 +63,9 @@ A data frame with columns:
 
 - isea_area_km2:
 
-  Area of the ISEA cell in km2
+  Area of the ISEA cell in km2, as
+  [`cell_area`](https://gillescolling.com/hexify/reference/cell_area.md)
+  returns it
 
 - h3_area_km2:
 

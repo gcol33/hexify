@@ -31,9 +31,13 @@ A character vector of cell IDs, all at `target_resolution`.
 
 **H3 backend:** Uses the vendored H3 `uncompactCells` function.
 
-**ISEA backend (aperture 7, Z7 index):** Appends digits 0-6 to expand
-each cell to its 7 children, repeating until the target resolution is
-reached.
+**ISEA backend:** Cells are expanded through
+[`get_children()`](https://gillescolling.com/hexify/reference/get_children.md),
+a level at a time, until the target resolution is reached. Appending
+each digit of the aperture names the children of a cell whose whole
+ancestry lies inside one quad, but not those of a cell at an icosahedron
+vertex, whose children carry index spellings in the several quads
+meeting there.
 
 ## See also
 
@@ -48,4 +52,8 @@ g <- hex_grid(resolution = 3, type = "h3")
 parent <- "832830fffffffff"
 hex_uncompact(parent, g, target_resolution = 4L)
 # }
+
+# ISEA, on the default aperture
+g <- hex_grid(resolution = 2, aperture = 3)
+hex_uncompact(cell_to_index(40L, g), g, target_resolution = 3L)
 ```

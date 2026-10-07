@@ -19,11 +19,11 @@ hexify_lonlat_to_index(
 
 - lon:
 
-  Longitude in degrees
+  Longitudes in degrees
 
 - lat:
 
-  Latitude in degrees
+  Latitudes in degrees
 
 - resolution:
 
@@ -39,7 +39,8 @@ hexify_lonlat_to_index(
 
 ## Value
 
-A character vector of index strings.
+A character vector of index strings, one per point. `lon` and `lat` must
+be the same length.
 
 ## See also
 

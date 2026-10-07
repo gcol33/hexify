@@ -22,7 +22,7 @@ index strings. Inputs are vectorized over lon and lat."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,8 +36,10 @@ index strings. Inputs are vectorized over lon and lat."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -82,11 +84,11 @@ index strings. Inputs are vectorized over <code>lon</code> and <code>lat</code>.
 
 
 <dl><dt id="arg-lon">lon<a class="anchor" aria-label="anchor" href="#arg-lon"></a></dt>
-<dd><p>Longitude in degrees</p></dd>
+<dd><p>Longitudes in degrees</p></dd>
 
 
 <dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
-<dd><p>Latitude in degrees</p></dd>
+<dd><p>Latitudes in degrees</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
@@ -103,7 +105,8 @@ index strings. Inputs are vectorized over <code>lon</code> and <code>lat</code>.
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A character vector of index strings.</p>
+    <p>A character vector of index strings, one per point. <code>lon</code> and <code>lat</code>
+must be the same length.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -136,7 +139,7 @@ index strings. Inputs are vectorized over <code>lon</code> and <code>lat</code>.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

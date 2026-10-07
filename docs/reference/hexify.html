@@ -26,7 +26,7 @@ in separate slots."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,8 +40,10 @@ in separate slots."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -114,11 +116,13 @@ area_km2, resolution, aperture and radius_km parameters.</p></dd>
 
 
 <dt id="arg-diagonal">diagonal<a class="anchor" aria-label="anchor" href="#arg-diagonal"></a></dt>
-<dd><p>Target cell diagonal (long diagonal) in km</p></dd>
+<dd><p>Target cell spacing in km: the short (flat-to-flat)
+diagonal, equal to the distance between neighbouring cell centres</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
-<dd><p>Grid resolution (0-30). Alternative to area_km2.</p></dd>
+<dd><p>Grid resolution (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
+on the icosahedron). Alternative to area_km2.</p></dd>
 
 
 <dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>
@@ -140,7 +144,8 @@ name such as "mars" (default Earth). See <code><a href="hex_grid.html">hex_grid<
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A HexData object containing:</p><ul><li><p><code>data</code>: The original input data (unchanged)</p></li>
 <li><p><code>grid</code>: The HexGridInfo specification</p></li>
-<li><p><code>cell_id</code>: Numeric vector of cell IDs for each row</p></li>
+<li><p><code>cell_id</code>: Cell IDs for each row (integer64 for ISEA, character
+for H3)</p></li>
 <li><p><code>cell_center</code>: Matrix of cell center coordinates (lon, lat)</p></li>
 </ul><p>Use <code>as.data.frame(result)</code> to extract the original data.
 Use <code>cells(result)</code> to get unique cell IDs.
@@ -171,7 +176,7 @@ grid parameters repeated.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="hex_grid.html">hex_grid</a></code> for grid specification,
 <code><a href="HexData-class.html">HexData-class</a></code> for return object details,
-<code><a href="as_sf.html">as_sf</a></code> for converting to sf</p>
+<code><a href="st_as_sf.HexData.html">st_as_sf</a></code> for converting to sf</p>
 <p>Other hexify main:
 <code><a href="hexify_grid.html">hexify_grid()</a></code></p></div>
     </div>
@@ -217,7 +222,7 @@ grid parameters repeated.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

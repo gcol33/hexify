@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,8 +53,10 @@
 <li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul>
 </li>
       </ul>
@@ -183,7 +185,7 @@
 <li>
 <strong><code><a href="reference/as_dggrid.html">as_dggrid()</a></code> / <code><a href="reference/from_dggrid.html">from_dggrid()</a></code></strong>: Convert to/from dggridR format</li>
 <li>
-<strong><code><a href="reference/as_sf.html">as_sf()</a></code></strong>: Export HexData to sf object</li>
+<strong><code><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf()</a></code></strong>: Export HexData to sf object</li>
 <li>
 <strong><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code></strong>: Extract data with cell assignments</li>
 <li>
@@ -244,7 +246,7 @@
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">points_sf</span>, area_km2 <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Export back to sf</span></span>
-<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/as_sf.html">as_sf</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="generating-grid-polygons">Generating Grid Polygons<a class="anchor" aria-label="anchor" href="#generating-grid-polygons"></a>
@@ -318,8 +320,6 @@
 <strong>H3 cell area</strong>: H3 cells are not equal-area. Hexagon area varies by about a factor of 2 within a resolution, and about 2.4 once the twelve pentagons are counted. The variation follows position on the icosahedron rather than latitude, with the smallest cells near face centers. Use ISEA where equal area matters, and <code><a href="reference/cell_area.html">cell_area()</a></code> to read the area of a given H3 cell.</li>
 <li>
 <strong>Pentagons</strong>: Any hexagonal tiling of a sphere requires exactly 12 pentagonal cells (at icosahedron vertices). These cells have 5 neighbors instead of 6. Use <code><a href="reference/is_pentagon.html">is_pentagon()</a></code> to detect them.</li>
-<li>
-<strong>Projection precision</strong>: The inverse Snyder projection uses iterative Newton-Raphson convergence. Default precision is sufficient for sub-meter accuracy; use <code><a href="reference/hexify_set_precision.html">hexify_set_precision()</a></code> to adjust the speed/accuracy trade-off.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -409,7 +409,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

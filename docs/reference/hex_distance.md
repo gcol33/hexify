@@ -32,9 +32,15 @@ computed (e.g., pentagon path issues in H3).
 **H3 backend:** Uses the vendored H3 `gridDistance` function. Returns
 the exact shortest path length in cell hops.
 
-**ISEA backend:** For cells on the same quad, computes the
-cube-coordinate distance: `max(|di|, |dj|, |di + dj|)`. Cross-quad
-distances use BFS expansion and may return `NA` for very distant cells.
+**ISEA backend:** Cells on the same quad are counted in the quad's own
+cell lattice, where the six neighbours are one step away and the
+distance is the axial hex distance `max(|di|, |dj|, |di - dj|)`. The
+lattice is not always the substrate the cell IDs are packed on – at
+aperture 3's odd resolutions one substrate point in three is a cell – so
+the difference is divided by the lattice generator first. Cross-quad
+distances use breadth-first search over
+[`get_neighbors()`](https://gillescolling.com/hexify/reference/get_neighbors.md)
+and return `NA` beyond a hundred rings.
 
 For geodesic (geographic) distances between cell centers, convert to
 lon/lat with
@@ -59,4 +65,9 @@ a <- lonlat_to_cell(10, 50, g)
 b <- lonlat_to_cell(10.1, 50.1, g)
 hex_distance(a, b, g)
 # }
+
+# ISEA: neighbouring cells are one hop apart
+g <- hex_grid(resolution = 3, aperture = 3)
+a <- lonlat_to_cell(10, 50, g)
+hex_distance(a, get_neighbors(a, g)[[1]], g)
 ```

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,8 +34,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -77,9 +79,13 @@
 
 
 <dt id="arg-wrap-dateline">wrap_dateline<a class="anchor" aria-label="anchor" href="#arg-wrap-dateline"></a></dt>
-<dd><p>Logical. If TRUE (default), antimeridian-crossing
-polygons are split at +/-180 degrees. Set to FALSE for orthographic/globe
-projections where wrapping creates gaps.</p></dd>
+<dd><p>Logical. If TRUE (default), calls
+<code><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">sf::st_wrap_dateline()</a></code> to split antimeridian-crossing polygons,
+which flat maps and planar (GEOS) operations need.
+Set to FALSE for orthographic/globe projections where wrapping creates gaps,
+and for spherical (s2) operations: each cell then stays one polygon whose
+corners lie in -180..180, so a cell crossing the antimeridian spans a
+flat lon/lat map.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -88,9 +94,9 @@ projections where wrapping creates gaps.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function generates a complete global grid by sampling points
-densely across the globe. For large grids (many small cells),
-consider using <code><a href="grid_rect.html">grid_rect()</a></code> to generate regional subsets.</p>
+    <p>Every cell of the grid, one row each, in cell ID order for ISEA grids.
+For large grids (many small cells), consider using <code><a href="grid_rect.html">grid_rect()</a></code> to
+generate regional subsets.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -113,7 +119,7 @@ consider using <code><a href="grid_rect.html">grid_rect()</a></code> to generate
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

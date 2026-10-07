@@ -62,7 +62,7 @@ articles:
   contents:
   - workflows
   - visualization
-  - globe
+  - articles/globe
   - h3
 - title: Mathematical Foundations
   contents:
@@ -84,6 +84,7 @@ reference:
   - st_crs.HexGridInfo
   - cells
   - n_cells
+  - hexify-summary
   - st_as_sf.HexData
   - as_tibble.HexData
   - is_hex_grid

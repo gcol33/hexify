@@ -25,8 +25,9 @@ get a combined data frame with cell columns.
 
 - `cell_id`:
 
-  Cell IDs for each row of data. Numeric for ISEA grids, character for
-  H3 grids.
+  Cell IDs for each row of data:
+  [`bit64::integer64`](https://bit64.r-lib.org/reference/bit64-package.html)
+  for ISEA grids, character for H3 grids.
 
 - `cell_center`:
 

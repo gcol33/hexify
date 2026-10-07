@@ -1,11 +1,17 @@
-# Inverse Snyder projection
+# Inverse face projection
 
 Converts face plane coordinates back to geographic coordinates.
 
 ## Usage
 
 ``` r
-hexify_inverse(x, y, face, tol = NULL, max_iters = NULL)
+hexify_inverse(
+  x,
+  y,
+  face,
+  projection = c("isea", "fuller"),
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
+)
 ```
 
 ## Arguments
@@ -20,15 +26,18 @@ hexify_inverse(x, y, face, tol = NULL, max_iters = NULL)
 
 - face:
 
-  Face index (0-19)
+  Face index (0-19 on the icosahedron)
 
-- tol:
+- projection:
 
-  Convergence tolerance (NULL for default)
+  Face projection: `"isea"` (Snyder's equal-area projection) or
+  `"fuller"` (Fuller's projection, defined on the icosahedron only)
 
-- max_iters:
+- polyhedron:
 
-  Maximum iterations (NULL for default)
+  The solid: "icosahedron" (default), "octahedron" or "tetrahedron", in
+  its default orientation. Snyder (1992) gives his equal-area projection
+  for each; its angular distortion grows with the faces' size.
 
 ## Value
 
@@ -41,10 +50,6 @@ Other projection:
 [`hexify_face_centers()`](https://gillescolling.com/hexify/reference/hexify_face_centers.md),
 [`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md),
 [`hexify_forward_to_face()`](https://gillescolling.com/hexify/reference/hexify_forward_to_face.md),
-[`hexify_get_precision()`](https://gillescolling.com/hexify/reference/hexify_get_precision.md),
-[`hexify_projection_stats()`](https://gillescolling.com/hexify/reference/hexify_projection_stats.md),
-[`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md),
-[`hexify_set_verbose()`](https://gillescolling.com/hexify/reference/hexify_set_verbose.md),
 [`hexify_which_face()`](https://gillescolling.com/hexify/reference/hexify_which_face.md)
 
 ## Examples

@@ -28,6 +28,8 @@ plot(
   crop = TRUE,
   crop_expand = 0.1,
   main = NULL,
+  shape = c("hexagon", "gosper", "descendants"),
+  depth = 3L,
   ...
 )
 ```
@@ -51,7 +53,12 @@ plot(
 
   - `FALSE` or `NULL`: No basemap
 
-  - sf object: Custom basemap
+  - `"world_hires"`: High-resolution map from 'rnaturalearth' (requires
+    the package)
+
+  - An sf object: User-supplied vector map
+
+  - A SpatRaster: User-supplied raster, drawn in grayscale
 
 - clip_basemap:
 
@@ -129,6 +136,19 @@ plot(
 - main:
 
   Plot title
+
+- shape:
+
+  `"hexagon"` (default) draws each cell's own boundary. `"gosper"` draws
+  it as a Gosper island and `"descendants"` as the outline of its
+  descendants; both need an ISEA grid, and `"descendants"` one of
+  aperture 7. See Details.
+
+- depth:
+
+  For `shape = "gosper"`, the number of times each edge is replaced,
+  multiplying its segments by 3; for `"descendants"`, the number of
+  resolutions down, multiplying the cells behind one outline by 7.
 
 - ...:
 

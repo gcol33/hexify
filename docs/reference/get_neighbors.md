@@ -7,15 +7,23 @@ Returns the k-ring (disk) of cells neighboring the input cells. For
 ## Usage
 
 ``` r
-get_neighbors(cell_id, grid, k = 1L, include_self = FALSE, distances = FALSE)
+get_neighbors(
+  cell_id,
+  grid,
+  k = 1L,
+  include_self = FALSE,
+  distances = FALSE,
+  as_sf = FALSE,
+  ring = FALSE
+)
 ```
 
 ## Arguments
 
 - cell_id:
 
-  Cell IDs to find neighbors for. Numeric vector for ISEA grids,
-  character vector for H3 grids.
+  Cell IDs to find neighbors for: integer64 (or whole numbers) for ISEA
+  grids, character for H3 grids.
 
 - grid:
 
@@ -36,11 +44,24 @@ get_neighbors(cell_id, grid, k = 1L, include_self = FALSE, distances = FALSE)
   Logical. If `TRUE`, return a data.frame with cell IDs and their ring
   distance from the origin (default `FALSE`).
 
+- as_sf:
+
+  Logical. If `TRUE`, return the links from each cell to its neighbours
+  as great-circle lines between cell centres.
+
+- ring:
+
+  Logical. If `TRUE`, return only the cells exactly `k` hops away, the
+  hollow ring, rather than the whole disk (default `FALSE`).
+
 ## Value
 
 If `distances = FALSE` (default): a list of cell ID vectors, one per
 input cell. If `distances = TRUE`: a list of data.frames with columns
-`cell_id` and `ring_distance`.
+`cell_id` and `ring_distance`. If `as_sf = TRUE`: an sf object of lines
+(MULTILINESTRINGs when one is split at the antimeridian), one row per
+cell and neighbour, with columns `cell_id`, `neighbor_id` and
+`ring_distance`.
 
 ## Details
 
@@ -78,5 +99,13 @@ get_neighbors(cell_h3, g_h3, k = 2)
 
 # With distances
 get_neighbors(cell, g, k = 2, distances = TRUE)
+
+# Only the cells two hops away
+get_neighbors(cell, g, k = 2, ring = TRUE)
+
+# Links to the neighbours, drawn over the cells
+links <- get_neighbors(cell, g, k = 2, as_sf = TRUE)
+plot(sf::st_geometry(cell_to_sf(c(cell, links$neighbor_id), g)))
+plot(sf::st_geometry(links), col = "red", add = TRUE)
 # }
 ```

@@ -14,7 +14,7 @@ hexify_cell_to_lonlat(cell_id, resolution, aperture)
 
 - cell_id:
 
-  Numeric vector of cell IDs (1-based)
+  Cell IDs, from 1: integer64, or whole numbers below 2^53
 
 - resolution:
 
@@ -36,7 +36,6 @@ for the recommended S4 interface,
 for the forward operation
 
 Other coordinate conversion:
-[`hexify_cell_id_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_id_to_quad_ij.md),
 [`hexify_cell_to_icosa_tri()`](https://gillescolling.com/hexify/reference/hexify_cell_to_icosa_tri.md),
 [`hexify_cell_to_plane()`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md),
 [`hexify_cell_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_to_quad_ij.md),

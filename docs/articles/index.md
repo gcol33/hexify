@@ -10,9 +10,13 @@
 - [Practical
   Workflows](https://gillescolling.com/hexify/articles/workflows.md):
 - [Visualization](https://gillescolling.com/hexify/articles/visualization.md):
+- [Interactive
+  Globe](https://gillescolling.com/hexify/articles/globe.md):
 - [H3 Grid Support](https://gillescolling.com/hexify/articles/h3.md):
 
 ### Mathematical Foundations
 
 - [Mathematical
   Foundations](https://gillescolling.com/hexify/articles/theory.md):
+- [OGC Topic 21
+  Conformance](https://gillescolling.com/hexify/articles/ogc-conformance.md):

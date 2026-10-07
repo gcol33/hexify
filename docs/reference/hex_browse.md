@@ -46,15 +46,15 @@ A `leaflet` map object (can be printed or embedded in Shiny).
 ## Details
 
 Requires the `leaflet` package (in Suggests). The map is built using
-[`as_sf()`](https://gillescolling.com/hexify/reference/as_sf.md) to
-generate polygon geometries, then rendered as a leaflet choropleth.
+[`st_as_sf()`](https://r-spatial.github.io/sf/reference/st_as_sf.html)
+to generate polygon geometries, then rendered as a leaflet choropleth.
 
 ## See also
 
 [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for static ggplot2 maps,
-[`as_sf()`](https://gillescolling.com/hexify/reference/as_sf.md) for sf
-conversion
+[`st_as_sf()`](https://r-spatial.github.io/sf/reference/st_as_sf.html)
+for sf conversion
 
 ## Examples
 

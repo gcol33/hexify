@@ -5,7 +5,8 @@ Convert HexData to tibble
 ## Usage
 
 ``` r
-as_tibble.HexData(x, ...)
+# S3 method for class 'HexData'
+as_tibble(x, ...)
 ```
 
 ## Arguments

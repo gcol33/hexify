@@ -93,6 +93,7 @@ grid_info(result)
 
 # Get unique cell IDs
 cells(result)
+#> integer64
 #> [1] 14092 13272 13260 13688 14247
 
 # Count unique cells
@@ -101,6 +102,7 @@ n_cells(result)
 
 # Access all cell IDs (one per row)
 result@cell_id
+#> integer64
 #> [1] 14092 13272 13260 13688 14247
 
 # Access cell centers
@@ -115,11 +117,11 @@ head(result@cell_center)
 # Extract original data as data.frame
 head(as.data.frame(result))
 #>     name   lon   lat cell_id cell_cen_lon cell_cen_lat cell_area_km2
-#> 1 Vienna 16.37 48.21   14092    15.968349     48.25028      7773.969
-#> 2  Paris  2.35 48.86   13272     2.460284     48.49334      7773.969
-#> 3 Madrid -3.70 40.42   13260    -3.482737     40.05509      7773.969
-#> 4 Berlin 13.40 52.52   13688    13.428088     52.18073      7773.969
-#> 5   Rome 12.50 41.90   14247    12.466432     41.61442      7773.969
+#> 1 Vienna 16.37 48.21   14092    15.968349     48.25028      7774.205
+#> 2  Paris  2.35 48.86   13272     2.460284     48.49334      7774.205
+#> 3 Madrid -3.70 40.42   13260    -3.482737     40.05509      7774.205
+#> 4 Berlin 13.40 52.52   13688    13.428088     52.18073      7774.205
+#> 5   Rome 12.50 41.90   14247    12.466432     41.61442      7774.205
 #>   cell_diag_km
 #> 1     94.74495
 #> 2     94.74495
@@ -296,14 +298,14 @@ error-free:
 
 #### HexGridInfo Slots
 
-| Slot          | Type                 | Description                             |
-|---------------|----------------------|-----------------------------------------|
-| `aperture`    | character            | Grid aperture (“3”, “4”, “7”, or “4/3”) |
-| `resolution`  | integer              | Resolution level (0-30)                 |
-| `area_km2`    | numeric              | Cell area in km²                        |
-| `diagonal_km` | numeric              | Cell diagonal in km                     |
-| `crs`         | integer or character | EPSG code, or a PROJ or WKT string      |
-| `grid_type`   | character            | Backend: `"isea"` or `"h3"`             |
+| Slot | Type | Description |
+|----|----|----|
+| `aperture` | character | Grid aperture (“3”, “4”, “7”, or “4/3”) |
+| `resolution` | integer | Resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7) |
+| `area_km2` | numeric | Cell area in km² |
+| `diagonal_km` | numeric | Cell centre spacing (short diagonal) in km |
+| `crs` | integer or character | EPSG code, or a PROJ or WKT string |
+| `grid_type` | character | Backend: `"isea"` or `"h3"` |
 
 #### HexData Slots
 

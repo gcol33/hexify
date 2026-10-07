@@ -18,7 +18,7 @@ hexify_index_to_cell(
 
 - index:
 
-  Index string
+  Character vector of index strings
 
 - aperture:
 
@@ -30,7 +30,8 @@ hexify_index_to_cell(
 
 ## Value
 
-A list with `face`, `i`, `j`, and `resolution`.
+A data frame with columns `face`, `i`, `j` and `resolution`, one row per
+index.
 
 ## See also
 

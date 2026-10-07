@@ -27,7 +27,8 @@ hexify_grid_to_cell(grid, lon, lat)
 
 ## Value
 
-Numeric vector of cell IDs (1-based)
+[`bit64::integer64`](https://bit64.r-lib.org/reference/bit64-package.html)
+vector of cell IDs, from 1
 
 ## See also
 
@@ -37,7 +38,6 @@ for the recommended S4 interface,
 for the inverse operation
 
 Other coordinate conversion:
-[`hexify_cell_id_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_id_to_quad_ij.md),
 [`hexify_cell_to_icosa_tri()`](https://gillescolling.com/hexify/reference/hexify_cell_to_icosa_tri.md),
 [`hexify_cell_to_lonlat()`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md),
 [`hexify_cell_to_plane()`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md),

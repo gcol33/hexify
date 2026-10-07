@@ -1,0 +1,108 @@
+# Interactive Globe
+
+[`hex_globe()`](https://gillescolling.com/hexify/reference/hex_globe.md)
+draws a grid on a globe that turns under the mouse, rendered on the
+graphics card through WebGPU. Drag to turn the globe; drag with Shift
+held to turn the view about the line of sight; the mouse wheel zooms.
+The slider folds the polyhedron the grid is built on into the sphere,
+and the pointer shows the ID and value of the cell under it.
+
+The globes on this page need a browser with WebGPU (see [Where the globe
+draws](#where-the-globe-draws)); without it each one shows a notice in
+its place.
+
+## Values per cell
+
+`values` holds one number per cell of `cells`, or one per cell of the
+grid when `cells` is `NULL`. Here each cell is filled by the latitude of
+its centre.
+
+``` r
+
+grid <- hex_grid(resolution = 3, aperture = 3)
+cells <- seq_len(n_cells(grid))
+centres <- cell_to_lonlat(cells, grid)
+hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3",
+          width = "100%", height = 560)
+```
+
+## The solid
+
+`surface = "solid"` opens on the flat faces of the icosahedron. Moving
+the slider to the right folds the faces onto the sphere.
+
+``` r
+
+hex_globe(grid, surface = "solid", center = "pacific", land = FALSE,
+          width = "100%", height = 560)
+```
+
+An octahedral grid folds the same way.
+
+``` r
+
+octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron")
+hex_globe(octa, surface = "solid", land = FALSE, width = "100%", height = 560)
+```
+
+## A fine grid
+
+The shader finds the cell of each pixel from the grid’s description, so
+the page carries no cell outlines and a fine grid draws as fast as a
+coarse one. This grid has 5,314,412 cells. The view opens about 30 km
+above Europe, with the camera tilted towards the horizon; the mouse
+wheel moves it out.
+
+``` r
+
+fine <- hex_grid(resolution = 12, aperture = 3)
+hex_globe(fine, center = "europe", land = FALSE,
+          projection = "perspective", distance = 1.005, tilt = 50,
+          width = "100%", height = 560)
+```
+
+## H3
+
+H3 cells are drawn from their outlines, on the sphere only.
+
+``` r
+
+h3 <- hex_grid(resolution = 1, type = "h3")
+hex_globe(h3, land = FALSE, width = "100%", height = 560)
+```
+
+## A still image
+
+[`hex_globe_png()`](https://gillescolling.com/hexify/reference/hex_globe_png.md)
+draws a globe with the same shader and saves the view it opens with as a
+PNG file. It draws through the companion package
+[hexglobe](https://github.com/gcol33/hexglobe), which runs WebGPU’s
+shaders through ‘wgpu’ in R’s own process, or with `renderer = "chrome"`
+in headless Chrome.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a grid draws
+the same views as a static plot without a browser.
+
+``` r
+
+globe <- hex_globe(grid, surface = "solid", center = "pacific")
+hex_globe_png(globe, "globe.png", scale = 2)
+```
+
+## Where the globe draws
+
+WebGPU ships by default in these browsers, according to the [WebGPU
+implementation
+status](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status)
+kept by the W3C GPU for the Web group:
+
+| Browser | Windows | macOS | Linux |
+|----|----|----|----|
+| Chrome, Edge | 113 | 113 | 144 (Intel Gen12+), 147 (NVIDIA on Wayland) |
+| Firefox | 141 | 145 (Apple Silicon, macOS 26), 147 | not yet |
+| Safari |  | 26 |  |
+
+RStudio’s viewer draws the globe: RStudio 2026.08 is built on Electron
+42 (Chromium 148). Where WebGPU is missing, open the widget in one of
+the browsers above, for example with
+[`htmlwidgets::saveWidget()`](https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html)
+and a browser.

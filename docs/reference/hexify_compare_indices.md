@@ -12,15 +12,16 @@ hexify_compare_indices(idx1, idx2)
 
 - idx1:
 
-  First index string
+  First index strings
 
 - idx2:
 
-  Second index string
+  Second index strings
 
 ## Value
 
-Integer: -1 if idx1 \< idx2, 0 if equal, 1 if idx1 \> idx2
+Integer vector: -1 where idx1 \< idx2, 0 where equal, 1 where idx1 \>
+idx2. The two are read in step, and either may be length one.
 
 ## See also
 

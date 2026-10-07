@@ -22,7 +22,7 @@ with an optional basemap."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,8 +36,10 @@ with an optional basemap."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -90,6 +92,8 @@ with an optional basemap.</p>
 <span>  crop <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  crop_expand <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  main <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  shape <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hexagon"</span>, <span class="st">"gosper"</span>, <span class="st">"descendants"</span><span class="op">)</span>,</span>
+<span>  depth <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -109,7 +113,10 @@ with an optional basemap.</p>
 <dt id="arg-basemap">basemap<a class="anchor" aria-label="anchor" href="#arg-basemap"></a></dt>
 <dd><p>Basemap specification:</p><ul><li><p><code>TRUE</code> or <code>"world"</code>: Use built-in world map</p></li>
 <li><p><code>FALSE</code> or <code>NULL</code>: No basemap</p></li>
-<li><p>sf object: Custom basemap</p></li>
+<li><p><code>"world_hires"</code>: High-resolution map from 'rnaturalearth'
+(requires the package)</p></li>
+<li><p>An sf object: User-supplied vector map</p></li>
+<li><p>A SpatRaster: User-supplied raster, drawn in grayscale</p></li>
 </ul></dd>
 
 
@@ -189,6 +196,20 @@ the cell centroid instead.</p></dd>
 <dd><p>Plot title</p></dd>
 
 
+<dt id="arg-shape">shape<a class="anchor" aria-label="anchor" href="#arg-shape"></a></dt>
+<dd><p><code>"hexagon"</code> (default) draws each cell's own boundary.
+<code>"gosper"</code> draws it as a Gosper island and <code>"descendants"</code> as
+the outline of its descendants; both need an ISEA grid, and
+<code>"descendants"</code> one of aperture 7. See Details.</p></dd>
+
+
+<dt id="arg-depth">depth<a class="anchor" aria-label="anchor" href="#arg-depth"></a></dt>
+<dd><p>For <code>shape = "gosper"</code>, the number of times each edge is
+replaced, multiplying its segments by 3; for <code>"descendants"</code>, the
+number of resolutions down, multiplying the cells behind one outline
+by 7.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to base plot()</p></dd>
 
@@ -230,7 +251,7 @@ to minimize memory usage.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -29,7 +29,9 @@ hexify_cell_to_sf(
 
 - aperture:
 
-  Grid aperture: 3, 4, or 7. Can be omitted if grid is provided.
+  Grid aperture: 3, 4, 7, or a mixed spelling as
+  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md)
+  takes it. Can be omitted if grid is provided.
 
 - return_sf:
 
@@ -45,8 +47,12 @@ hexify_cell_to_sf(
 
   Logical. If TRUE (default), calls
   [`sf::st_wrap_dateline()`](https://r-spatial.github.io/sf/reference/st_transform.html)
-  to split antimeridian-crossing polygons. Set to FALSE for
-  orthographic/globe projections where wrapping creates gaps.
+  to split antimeridian-crossing polygons, which flat maps and planar
+  (GEOS) operations need. Set to FALSE for orthographic/globe
+  projections where wrapping creates gaps, and for spherical (s2)
+  operations: each cell then stays one polygon whose corners lie in
+  -180..180, so a cell crossing the antimeridian spans a flat lon/lat
+  map.
 
 ## Value
 
@@ -76,7 +82,8 @@ If return_sf = FALSE: data frame with columns:
 
 - order:
 
-  Vertex order (1-7, 7 closes the polygon)
+  Vertex order along the ring; the last vertex repeats the first,
+  closing the polygon
 
 ## Details
 

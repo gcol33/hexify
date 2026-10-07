@@ -25,9 +25,16 @@ lonlat_to_cell(lon, lat, grid)
 
 ## Value
 
-Numeric vector of cell IDs
+Cell IDs: a
+[`bit64::integer64`](https://bit64.r-lib.org/reference/bit64-package.html)
+vector for an ISEA grid, a character vector of H3 indices for an H3 grid
 
 ## Details
+
+ISEA cell IDs number a grid's cells from 1 and pass 2^53, the largest
+whole number a double holds exactly, at fine resolutions, so they are
+returned as 64-bit integers. Functions taking cell IDs also accept whole
+numbers below 2^53 and character strings of digits.
 
 This function accepts either a HexGridInfo object from
 [`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)

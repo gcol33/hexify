@@ -127,7 +127,7 @@ cell at 60°N has half the area of the same cell at the equator.
   /
   [`from_dggrid()`](https://gillescolling.com/hexify/reference/from_dggrid.md)**:
   Convert to/from dggridR format
-- **[`as_sf()`](https://gillescolling.com/hexify/reference/as_sf.md)**:
+- **[`st_as_sf()`](https://r-spatial.github.io/sf/reference/st_as_sf.html)**:
   Export HexData to sf object
 - **[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)**:
   Extract data with cell assignments
@@ -188,7 +188,7 @@ points_sf <- st_as_sf(coords, coords = c("lon", "lat"), crs = 4326)
 result <- hexify(points_sf, area_km2 = 10000)
 
 # Export back to sf
-result_sf <- as_sf(result)
+result_sf <- st_as_sf(result)
 ```
 
 ### Generating Grid Polygons
@@ -272,11 +272,6 @@ ggplot(cell_polys) +
   neighbors instead of 6. Use
   [`is_pentagon()`](https://gillescolling.com/hexify/reference/is_pentagon.md)
   to detect them.
-- **Projection precision**: The inverse Snyder projection uses iterative
-  Newton-Raphson convergence. Default precision is sufficient for
-  sub-meter accuracy; use
-  [`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md)
-  to adjust the speed/accuracy trade-off.
 
 ## Documentation
 

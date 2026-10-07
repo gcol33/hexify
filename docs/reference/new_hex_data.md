@@ -22,7 +22,7 @@ new_hex_data(data, grid, cell_id, cell_center)
 
 - cell_id:
 
-  Numeric vector of cell IDs for each row
+  Cell IDs for each row: integer64, or whole numbers below 2^53
 
 - cell_center:
 

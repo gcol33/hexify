@@ -20,7 +20,7 @@ hexify_index_to_lonlat(
 
 - index:
 
-  Index string
+  Character vector of index strings
 
 - aperture:
 
@@ -32,7 +32,7 @@ hexify_index_to_lonlat(
 
 ## Value
 
-A named numeric vector with `lon` and `lat` in degrees.
+A data frame with `lon` and `lat` columns in degrees, one row per index.
 
 ## See also
 

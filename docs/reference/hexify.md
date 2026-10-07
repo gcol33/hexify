@@ -49,11 +49,13 @@ hexify(
 
 - diagonal:
 
-  Target cell diagonal (long diagonal) in km
+  Target cell spacing in km: the short (flat-to-flat) diagonal, equal to
+  the distance between neighbouring cell centres
 
 - resolution:
 
-  Grid resolution (0-30). Alternative to area_km2.
+  Grid resolution (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for
+  aperture 7 on the icosahedron). Alternative to area_km2.
 
 - aperture:
 
@@ -78,7 +80,8 @@ A HexData object containing:
 
 - `grid`: The HexGridInfo specification
 
-- `cell_id`: Numeric vector of cell IDs for each row
+- `cell_id`: Cell IDs for each row (integer64 for ISEA, character for
+  H3)
 
 - `cell_center`: Matrix of cell center coordinates (lon, lat)
 
@@ -115,8 +118,8 @@ You can create a grid specification once and reuse it:
 grid specification,
 [`HexData-class`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for return object details,
-[`as_sf`](https://gillescolling.com/hexify/reference/as_sf.md) for
-converting to sf
+[`st_as_sf`](https://gillescolling.com/hexify/reference/st_as_sf.HexData.md)
+for converting to sf
 
 Other hexify main:
 [`hexify_grid()`](https://gillescolling.com/hexify/reference/hexify_grid.md)

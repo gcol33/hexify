@@ -14,7 +14,11 @@ hex_grid(
   type = c("isea", "h3"),
   resround = "nearest",
   crs = NULL,
-  radius_km = EARTH_RADIUS_KM
+  radius_km = EARTH_RADIUS_KM,
+  orientation = "standard",
+  projection = c("isea", "fuller"),
+  region = NULL,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 ```
 
@@ -27,8 +31,11 @@ hex_grid(
 
 - resolution:
 
-  Grid resolution level (0-30 for ISEA, 0-15 for H3). Mutually exclusive
-  with `area_km2`. For H3, typical use cases by resolution:
+  Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture
+  4, 0-21 for aperture 7 on the icosahedron, where the cell count stays
+  within the 2^63 - 1 cell IDs a 64-bit integer numbers; 0-15 for H3.
+  Mutually exclusive with `area_km2`. For H3, typical use cases by
+  resolution:
 
   - 0-3: continental/country scale
 
@@ -45,8 +52,14 @@ hex_grid(
   `c(4, 4, 7, 3)`. A family name refines by the first aperture for the
   first `floor(resolution / 2)` levels and by the second for the rest,
   which is how DGGRID arranges ISEA43H. A per-level vector needs
-  `resolution` rather than `area_km2`. Ignored for H3 grids (fixed at
-  7).
+  `resolution` rather than `area_km2`; one shorter than `resolution`
+  recurs, as OGC Topic 21 reads a list of refinement ratios, so
+  `c(4, 3)` at resolution 5 refines by 4, 3, 4, 3, 4. It is stored as a
+  comma-separated string with one aperture per level (`"4,3,4,3,4"`),
+  which `aperture` also accepts. It names no level finer than
+  `resolution`, so
+  [`get_children()`](https://gillescolling.com/hexify/reference/get_children.md)
+  needs a family name. Ignored for H3 grids (fixed at 7).
 
 - type:
 
@@ -71,6 +84,33 @@ hex_grid(
   "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
   "enceladus", "titan", "uranus", "neptune", "pluto".
 
+- orientation:
+
+  Where the icosahedron of an ISEA grid sits on the sphere: "standard"
+  (default), "dymaxion", "gosper", "random", "region", "face", or
+  `c(vert0_lon, vert0_lat, azimuth)` in degrees. See the Orientation
+  section. H3 fixes its own orientation, so H3 grids take only
+  "standard".
+
+- projection:
+
+  How an ISEA-family grid projects each icosahedron face onto its plane
+  triangle: "isea" (default), Snyder's equal-area projection, or
+  "fuller", Fuller's projection. See the Projection section. H3 fixes
+  its own projection, so H3 grids take only "isea".
+
+- region:
+
+  For `orientation = "region"` or `"face"`, the area to centre the grid
+  on: `c(lon, lat)` in degrees, or an sf, sfc or bbox object, whose
+  spherical centroid is used.
+
+- polyhedron:
+
+  The solid an ISEA-family grid is built on: "icosahedron" (default) or
+  "octahedron". See the Polyhedron section. H3 grids are built on the
+  icosahedron and take only the default.
+
 ## Value
 
 A HexGridInfo object containing the grid specification.
@@ -80,8 +120,9 @@ A HexGridInfo object containing the grid specification.
 Exactly one of `area_km2` or `resolution` must be provided.
 
 When `area_km2` is provided, the resolution is calculated automatically
-using the cell count formula: N = 10 \* aperture^res + 2 (ISEA) or by
-matching the closest H3 resolution.
+using the cell count formula: N = 10 \* aperture^res + 2 (ISEA on the
+icosahedron, 4 \* aperture^res + 2 on the octahedron) or by matching the
+closest H3 resolution.
 
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA
 grids, H3 cells are NOT exactly equal-area: hexagon area varies by about
@@ -109,6 +150,97 @@ by the square of the radius ratio, exactly. One caveat carries: an 'H3'
 cell ID names a position in 'H3”s topology, which 'Uber”s 'H3' reads on
 Earth, so the IDs of a grid on another body are that topology on that
 body and are not interchangeable with Earth 'H3' data.
+
+## Orientation
+
+An ISEA grid is built on a solid, an icosahedron unless `polyhedron`
+names another, and its orientation places that solid on the sphere:
+vertex 0 at longitude `vert0_lon` and latitude `vert0_lat`, and vertex 1
+at azimuth `azimuth` seen from vertex 0, all in degrees, as DGGRID's
+`dggs_vert0_lon`, `dggs_vert0_lat` and `dggs_vert0_azimuth` do.
+
+- "standard" is the ISEA orientation on the icosahedron: vertex 0 at
+  11.25E, 58.28N, azimuth 0, symmetric about the equator, with eleven of
+  the twelve pentagons over the oceans and one in Sichuan (Sahr et al.
+  2003). On the octahedron it puts vertices at both poles and at
+  longitudes 0, 90E, 180 and 90W on the equator.
+
+- "dymaxion" is Fuller's orientation of the icosahedron for his Dymaxion
+  map: vertex 0 at 5.2454W, 2.3009N, azimuth 7.46658 (Sahr et al. 2003),
+  with all twelve pentagons in the ocean. With `projection = "fuller"`
+  the grid lies on Fuller's Dymaxion map.
+
+- "gosper" places the octahedron as Van de Sande's Gosper World places
+  its poles, at midpoints of octahedron edges: vertex 0 at 21.25W, 45N,
+  vertex 1 across the north pole from it, all six vertices at least 619
+  km offshore.
+  [`net_layout`](https://gillescolling.com/hexify/reference/net_layout.md)
+  lays it out as four hexagons. The standard octahedron puts the poles
+  at vertices instead, as Rus's four-hexagon map does.
+
+- "random" draws vertex 0 uniformly on the sphere and the azimuth
+  uniformly in \[0, 360), from R's random number generator, so
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) repeats it. Grids
+  in several random orientations show how much a result depends on where
+  the cell boundaries fall.
+
+- "region" places the grid as DGGRID's `REGION_CENTER` does: the centre
+  of `region` lands on the midpoint of an edge of the solid, the middle
+  of the two faces sharing it, far from the vertices where the vertex
+  cells and the largest distortion sit.
+
+- "face" places the centre of `region` on the centre of a face. On the
+  icosahedron that is about 20.9 degrees from the nearest face edge and
+  37.4 degrees from the nearest vertex, so a region up to about 40
+  degrees across lies on one face, away from the face edges where the
+  projection bends.
+
+Rotating the icosahedron rotates the grid with it, so cell IDs, the cell
+hierarchy and neighbours are the same under every orientation; only
+where each cell sits on the sphere changes. Every function taking the
+grid reads its orientation.
+
+
+    alps <- hex_grid(area_km2 = 100, orientation = "region", region = c(10, 46.5))
+    hex_grid(resolution = 8, orientation = c(0, 90, 0))   # vertex 0 at the pole
+
+## Projection
+
+An ISEA-family grid lays its cells out on the plane triangles of the
+icosahedron's faces, and the projection carries each spherical face onto
+its triangle. With `"isea"`, Snyder's icosahedral equal-area projection,
+every cell of a resolution has the same area. With `"fuller"`, Fuller's
+projection keeps lengths along the face edges and is not equal-area, so
+`area_km2` is the mean cell area and
+[`cell_area()`](https://gillescolling.com/hexify/reference/cell_area.md)
+reports each cell's own; the Equal-Area Earth Reference System of OGC
+Topic 21 asks for cells of equal area, so a Fuller grid falls outside
+it. These are DGGRID's `dggs_proj ISEA` and `FULLER`, giving FULLER3H,
+FULLER4H, FULLER7H and FULLER43H. Cell IDs, the hierarchy and neighbours
+are the same under both projections; where each cell's centre and
+corners sit on the sphere differs.
+
+
+    hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
+
+## Polyhedron
+
+Snyder's equal-area projection is defined on every regular solid with
+triangular faces, and a hexagonal grid lies on the icosahedron and on
+the octahedron alike: each pair of faces sharing an edge forms a diamond
+of cells, and the cell at each vertex has one side per face meeting
+there. The icosahedron has twelve pentagons and the octahedron six
+squares; every other cell is a hexagon, and every cell of a resolution
+has the same area (the vertex cells two thirds or five sixths of it, by
+their sides). The octahedron's cells are more distorted than the
+icosahedron's, so it suits layouts that need its four-fold symmetry
+rather than analysis. Fuller's projection is defined on the icosahedron
+only. The tetrahedron carries the face projection (see
+[`hexify_forward`](https://gillescolling.com/hexify/reference/hexify_forward.md))
+but no grid: its faces do not pair into diamonds.
+
+
+    hex_grid(resolution = 5, aperture = 4, polyhedron = "octahedron")
 
 ## One Grid, Many Datasets
 

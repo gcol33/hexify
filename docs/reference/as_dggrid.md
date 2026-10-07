@@ -22,15 +22,15 @@ A list with 'dggridR'-compatible fields:
 
 - pole_lon_deg:
 
-  Longitude of grid pole (default 11.25)
+  Longitude of icosahedron vertex 0 (standard 11.25)
 
 - pole_lat_deg:
 
-  Latitude of grid pole (default 58.282525588538995)
+  Latitude of icosahedron vertex 0 (standard 58.282525588538995)
 
 - azimuth_deg:
 
-  Grid azimuth rotation (default 0)
+  Azimuth of vertex 1 seen from vertex 0 (standard 0)
 
 - aperture:
 
@@ -46,11 +46,18 @@ A list with 'dggridR'-compatible fields:
 
 - projection:
 
-  Map projection ('ISEA')
+  Face projection ('ISEA' or 'FULLER')
 
 - precision:
 
   Output decimal precision (default 7)
+
+## Details
+
+A dggs carries no body radius, so a grid built on another body cannot be
+expressed as one: 'dggridR' reads every dggs on Earth's radius, and its
+areas, spacings and CLS come back on Earth. Converting such a grid
+warns.
 
 ## See also
 

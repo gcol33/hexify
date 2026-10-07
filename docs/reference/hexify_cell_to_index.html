@@ -22,7 +22,7 @@ The index type is selected from aperture when index_type = "auto".'><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,8 +36,10 @@ The index type is selected from aperture when index_type = "auto".'><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -83,15 +85,15 @@ The index type is selected from <code>aperture</code> when <code>index_type = "a
 
 
 <dl><dt id="arg-face">face<a class="anchor" aria-label="anchor" href="#arg-face"></a></dt>
-<dd><p>Face/quad number (0-19)</p></dd>
+<dd><p>Face/quad numbers (0-19)</p></dd>
 
 
 <dt id="arg-i">i<a class="anchor" aria-label="anchor" href="#arg-i"></a></dt>
-<dd><p>I coordinate</p></dd>
+<dd><p>I coordinates</p></dd>
 
 
 <dt id="arg-j">j<a class="anchor" aria-label="anchor" href="#arg-j"></a></dt>
-<dd><p>J coordinate</p></dd>
+<dd><p>J coordinates</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
@@ -108,7 +110,8 @@ The index type is selected from <code>aperture</code> when <code>index_type = "a
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A character vector of index strings.</p>
+    <p>A character vector of index strings, one per cell. <code>face</code>, <code>i</code> and
+<code>j</code> are read in step and must be the same length.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -117,10 +120,11 @@ The index type is selected from <code>aperture</code> when <code>index_type = "a
 <li><p>Aperture 7: Z7 (one base-7 child digit per resolution)</p></li>
 </ul><p>A Z7 index has the form <code>BBd1...dr</code>, where <code>BB</code> is the two-digit base
 cell (00–11), <code>r</code> is the resolution, and every child digit is in 0–6.
-hexify's Z7 encoding is bijective: decoding and re-encoding a valid index
-returns the same string. It follows DGGRID's Z7 layout for ordinary cells,
-but retains distinct indices in pentagon regions where DGGRID's encoder can
-map different cells to the same string.</p>
+It is IGEO7's Z7 index, the string DGGRID writes for the same cell, and
+decoding and re-encoding a valid index returns the same string. <code>BB</code> is
+the pentagon the cell descends from, which need not be <code>face</code>. Under each
+pentagon one direction is missing: a string whose first nonzero digit is 2
+(base cells 00–05) or 5 (06–11) names no cell.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -154,7 +158,7 @@ map different cells to the same string.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

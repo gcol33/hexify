@@ -26,7 +26,8 @@ hexify_quad_ij_to_icosa_tri(quad, i, j, resolution, aperture = 3L)
 
 - resolution:
 
-  Grid resolution level (0-30)
+  Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21
+  for aperture 7)
 
 - aperture:
 
@@ -60,7 +61,6 @@ for the inverse,
 for conversion from cell ID
 
 Other coordinate conversion:
-[`hexify_cell_id_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_id_to_quad_ij.md),
 [`hexify_cell_to_icosa_tri()`](https://gillescolling.com/hexify/reference/hexify_cell_to_icosa_tri.md),
 [`hexify_cell_to_lonlat()`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md),
 [`hexify_cell_to_plane()`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md),

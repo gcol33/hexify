@@ -24,7 +24,7 @@ object."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,8 +38,10 @@ object."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -86,13 +88,14 @@ object.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with 'dggridR'-compatible fields:</p>
 <dl><dt>pole_lon_deg</dt>
-<dd><p>Longitude of grid pole (default 11.25)</p></dd>
+<dd><p>Longitude of icosahedron vertex 0 (standard 11.25)</p></dd>
 
 <dt>pole_lat_deg</dt>
-<dd><p>Latitude of grid pole (default 58.282525588538995)</p></dd>
+<dd><p>Latitude of icosahedron vertex 0 (standard
+58.282525588538995)</p></dd>
 
 <dt>azimuth_deg</dt>
-<dd><p>Grid azimuth rotation (default 0)</p></dd>
+<dd><p>Azimuth of vertex 1 seen from vertex 0 (standard 0)</p></dd>
 
 <dt>aperture</dt>
 <dd><p>Grid aperture (3, 4, or 7)</p></dd>
@@ -104,12 +107,18 @@ object.</p>
 <dd><p>Grid topology ("HEXAGON")</p></dd>
 
 <dt>projection</dt>
-<dd><p>Map projection ('ISEA')</p></dd>
+<dd><p>Face projection ('ISEA' or 'FULLER')</p></dd>
 
 <dt>precision</dt>
 <dd><p>Output decimal precision (default 7)</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A dggs carries no body radius, so a grid built on another body cannot be
+expressed as one: 'dggridR' reads every dggs on Earth's radius, and its areas,
+spacings and CLS come back on Earth. Converting such a grid warns.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other 'dggridR' compatibility:
@@ -127,7 +136,7 @@ object.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -421,10 +421,6 @@ grid <- hex_grid(area_km2 = 500000)
 pentagon_cells <- lonlat_to_cell(pentagon_coords$lon, pentagon_coords$lat, grid)
 
 pentagon_polys <- cell_to_sf(pentagon_cells, grid)
-#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
-#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
-#> Warning in CPL_wrap_dateline(st_geometry(x), options, quiet): GDAL Error 1:
-#> IllegalArgumentException: Points of LinearRing do not form a closed linestring
 
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
@@ -439,6 +435,46 @@ ggplot() +
 ```
 
 ![](visualization_files/figure-html/pentagon-locations-1.svg)
+
+## Cell Shapes
+
+[`cell_to_sf()`](https://gillescolling.com/hexify/reference/cell_to_sf.md),
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+[`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
+and
+[`st_as_sf()`](https://r-spatial.github.io/sf/reference/st_as_sf.html)
+draw cells as hexagons by default. With `shape = "gosper"`, each cell
+edge is replaced `depth` times by three shorter segments turned the same
+way, which gives Gosper islands (flowsnakes); each island keeps its
+cell’s area, and the islands tile the sphere. With
+`shape = "descendants"`, an aperture-7 cell is drawn as the outline of
+its descendants `depth` resolutions down, which nests across
+resolutions.
+
+``` r
+
+grid <- hex_grid(resolution = 2, aperture = 7)
+cells <- grid_rect(c(-15, 30, 40, 65), grid)$cell_id
+ortho <- "+proj=ortho +lon_0=12 +lat_0=48"
+set.seed(1)
+colour <- factor(sample(8, length(cells), replace = TRUE))
+
+shapes <- do.call(rbind, lapply(c("hexagon", "gosper", "descendants"), function(s) {
+  polys <- cell_to_sf(cells, grid, shape = s, depth = 4)
+  polys$colour <- colour[match(polys$cell_id, cells)]
+  polys$shape <- factor(s, levels = c("hexagon", "gosper", "descendants"))
+  polys
+}))
+
+ggplot(sf::st_transform(shapes, ortho)) +
+  geom_sf(aes(fill = colour), color = "gray25", linewidth = 0.15,
+          show.legend = FALSE) +
+  facet_wrap(~shape) +
+  scale_fill_brewer(palette = "Set3") +
+  theme_void(base_size = FIG_BASE_SIZE)
+```
+
+![](visualization_files/figure-html/cell-shapes-1.svg)
 
 ## Random Sampling Visualization
 

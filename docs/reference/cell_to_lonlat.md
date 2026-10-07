@@ -12,7 +12,8 @@ cell_to_lonlat(cell_id, grid)
 
 - cell_id:
 
-  Numeric vector of cell IDs
+  Cell IDs: integer64 for ISEA grids (whole numbers below 2^53 and digit
+  strings are accepted), character for H3 grids
 
 - grid:
 

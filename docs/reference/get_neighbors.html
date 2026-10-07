@@ -24,7 +24,7 @@ For k &amp;gt; 1, returns all cells within k grid hops."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,8 +38,10 @@ For k &amp;gt; 1, returns all cells within k grid hops."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -71,7 +73,15 @@ For <code>k &gt; 1</code>, returns all cells within <code>k</code> grid hops.</p
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_neighbors</span><span class="op">(</span><span class="va">cell_id</span>, <span class="va">grid</span>, k <span class="op">=</span> <span class="fl">1L</span>, include_self <span class="op">=</span> <span class="cn">FALSE</span>, distances <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_neighbors</span><span class="op">(</span></span>
+<span>  <span class="va">cell_id</span>,</span>
+<span>  <span class="va">grid</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  include_self <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  distances <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  as_sf <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ring <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -79,8 +89,8 @@ For <code>k &gt; 1</code>, returns all cells within <code>k</code> grid hops.</p
 
 
 <dl><dt id="arg-cell-id">cell_id<a class="anchor" aria-label="anchor" href="#arg-cell-id"></a></dt>
-<dd><p>Cell IDs to find neighbors for. Numeric vector for ISEA
-grids, character vector for H3 grids.</p></dd>
+<dd><p>Cell IDs to find neighbors for: integer64 (or whole
+numbers) for ISEA grids, character for H3 grids.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -101,12 +111,25 @@ result (default <code>FALSE</code>).</p></dd>
 <dd><p>Logical. If <code>TRUE</code>, return a data.frame with cell IDs
 and their ring distance from the origin (default <code>FALSE</code>).</p></dd>
 
+
+<dt id="arg-as-sf">as_sf<a class="anchor" aria-label="anchor" href="#arg-as-sf"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, return the links from each cell to its
+neighbours as great-circle lines between cell centres.</p></dd>
+
+
+<dt id="arg-ring">ring<a class="anchor" aria-label="anchor" href="#arg-ring"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, return only the cells exactly <code>k</code> hops
+away, the hollow ring, rather than the whole disk (default <code>FALSE</code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If <code>distances = FALSE</code> (default): a list of cell ID vectors, one
 per input cell. If <code>distances = TRUE</code>: a list of data.frames with columns
-<code>cell_id</code> and <code>ring_distance</code>.</p>
+<code>cell_id</code> and <code>ring_distance</code>. If <code>as_sf = TRUE</code>: an sf object of
+lines (MULTILINESTRINGs when one is split at the antimeridian), one
+row per cell and neighbour, with columns <code>cell_id</code>,
+<code>neighbor_id</code> and <code>ring_distance</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -140,6 +163,14 @@ of the usual 6.</p>
 <span></span>
 <span><span class="co"># With distances</span></span>
 <span><span class="fu">get_neighbors</span><span class="op">(</span><span class="va">cell</span>, <span class="va">g</span>, k <span class="op">=</span> <span class="fl">2</span>, distances <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Only the cells two hops away</span></span>
+<span><span class="fu">get_neighbors</span><span class="op">(</span><span class="va">cell</span>, <span class="va">g</span>, k <span class="op">=</span> <span class="fl">2</span>, ring <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Links to the neighbours, drawn over the cells</span></span>
+<span><span class="va">links</span> <span class="op">&lt;-</span> <span class="fu">get_neighbors</span><span class="op">(</span><span class="va">cell</span>, <span class="va">g</span>, k <span class="op">=</span> <span class="fl">2</span>, as_sf <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="fu"><a href="cell_to_sf.html">cell_to_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">cell</span>, <span class="va">links</span><span class="op">$</span><span class="va">neighbor_id</span><span class="op">)</span>, <span class="va">g</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">links</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co"># }</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -151,7 +182,7 @@ of the usual 6.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -10,7 +10,8 @@ translated to its position in the unfolded layout.
 hexify_icosa_tri_to_plane(
   icosa_triangle_face,
   icosa_triangle_x,
-  icosa_triangle_y
+  icosa_triangle_y,
+  polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 ```
 
@@ -18,7 +19,7 @@ hexify_icosa_tri_to_plane(
 
 - icosa_triangle_face:
 
-  Triangle face number (0-19), integer or vector
+  Triangle face number (0-19 on the icosahedron), integer or vector
 
 - icosa_triangle_x:
 
@@ -28,13 +29,18 @@ hexify_icosa_tri_to_plane(
 
   Y coordinate on triangle face
 
+- polyhedron:
+
+  The solid whose faces are unfolded: "icosahedron" (default),
+  "octahedron" or "tetrahedron"
+
 ## Value
 
 Data frame with columns:
 
 - plane_x:
 
-  X coordinate in PLANE space (range ~0 to 5.5)
+  X coordinate in PLANE space (range ~0 to 5.5 on the icosahedron)
 
 - plane_y:
 
@@ -44,10 +50,13 @@ Data frame with columns:
 
 Equivalent to 'dggridR' dgPROJTRI_to_PLANE().
 
-The PLANE layout arranges all 20 icosahedral faces into a roughly
+The PLANE layout of the icosahedron arranges all 20 faces into a roughly
 rectangular region. Faces 0-4 and 5-9 form the upper row, while faces
 10-14 and 15-19 form the lower row. Adjacent faces share edges in this
-representation.
+representation. The octahedron lays its four diamonds side by side, each
+a northern face over its southern one; the tetrahedron lays face 3 in
+the middle of a triangle of edge 2 with the three faces around vertex 0
+at its corners.
 
 ## See also
 
@@ -57,7 +66,6 @@ for direct cell ID conversion,
 for lon/lat to PLANE
 
 Other coordinate conversion:
-[`hexify_cell_id_to_quad_ij()`](https://gillescolling.com/hexify/reference/hexify_cell_id_to_quad_ij.md),
 [`hexify_cell_to_icosa_tri()`](https://gillescolling.com/hexify/reference/hexify_cell_to_icosa_tri.md),
 [`hexify_cell_to_lonlat()`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md),
 [`hexify_cell_to_plane()`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md),

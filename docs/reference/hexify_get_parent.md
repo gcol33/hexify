@@ -16,7 +16,7 @@ hexify_get_parent(
 
 - index:
 
-  Index string
+  Character vector of index strings
 
 - aperture:
 
@@ -28,7 +28,7 @@ hexify_get_parent(
 
 ## Value
 
-Parent index string
+Character vector of parent index strings
 
 ## See also
 

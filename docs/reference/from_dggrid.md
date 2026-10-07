@@ -6,7 +6,7 @@ using hexify functions with grids created by 'dggridR' dgconstruct().
 ## Usage
 
 ``` r
-from_dggrid(dggs)
+from_dggrid(dggs, radius_km = EARTH_RADIUS_KM)
 ```
 
 ## Arguments
@@ -15,18 +15,34 @@ from_dggrid(dggs)
 
   A 'dggridR' grid object from dgconstruct()
 
+- radius_km:
+
+  Radius the grid is sized on, in km or as a body name. A dggs carries
+  no radius, so the default is Earth's; pass this when the dggs
+  describes a grid on another body.
+
 ## Value
 
 A hexify_grid object
 
 ## Details
 
-Only 'ISEA' projection with HEXAGON topology is fully supported. Other
-configurations will generate warnings.
+The 'ISEA' and 'FULLER' projections with HEXAGON topology are supported.
+Other configurations will generate warnings.
+
+A dggs has no field for the body it is sized on, so the resolution is
+all that carries over and the result is an Earth grid unless `radius_km`
+says otherwise. Cell area follows from the radius, so it is read from
+the radius given rather than from the dggs.
+
+The orientation carries over: `pole_lon_deg`, `pole_lat_deg` and
+`azimuth_deg` place the icosahedron as DGGRID's `dggs_vert0_lon`,
+`dggs_vert0_lat` and `dggs_vert0_azimuth` do, and a field left out takes
+its standard ISEA value.
 
 The function validates that the 'dggridR' grid uses compatible settings:
 
-- Projection must be 'ISEA' (FULLER not supported)
+- Projection must be 'ISEA' or 'FULLER'
 
 - Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 

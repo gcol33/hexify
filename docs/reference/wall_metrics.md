@@ -1,0 +1,77 @@
+# Spacing metrics of neighbouring cells: wall length, centre distance and cell wall midpoint ratio
+
+Measures every wall between a cell and an adjacent cell: how long it is,
+how far apart the two cell centres are, and how far the wall's midpoint
+lies from the line between the centres.
+
+## Usage
+
+``` r
+wall_metrics(cell_id = NULL, grid)
+```
+
+## Arguments
+
+- cell_id:
+
+  Cell IDs. When `NULL`, the cells of a HexData `grid`, or every cell of
+  a HexGridInfo `grid`.
+
+- grid:
+
+  A HexGridInfo or HexData object.
+
+## Value
+
+Data frame with one row per wall: `cell_id`, `neighbor_id`, `wall_km`,
+`center_distance_km` and `midpoint_ratio`. A wall between two of the
+given cells appears once, on the row of the cell given first; a wall to
+a cell not given appears on the given cell's row.
+
+## Details
+
+The centre distance is the great-circle distance between the two cell
+centres. Gregory et al. (2008) measure the spread of a grid's intercell
+distances by their coefficient of variation.
+
+The cell wall midpoint ratio (Gregory et al. 2008, after Heikes and
+Randall 1995) is the distance from the wall's midpoint to the midpoint
+of the great-circle arc joining the two centres, over the wall's length.
+It is 0 where the arc between the centres crosses the wall at its
+middle, as it does between two regular hexagons; a finite-volume scheme
+that evaluates a flux at the wall's midpoint is most accurate there. The
+wall's midpoint is the point halfway along the wall as the grid draws it
+(see
+[`cell_metrics`](https://gillescolling.com/hexify/reference/cell_metrics.md)).
+
+## References
+
+Gregory, M. J., Kimerling, A. J., White, D. and Sahr, K. (2008). A
+comparison of intercell metrics on discrete global grid systems.
+Computers, Environment and Urban Systems 32(3), 188-203.
+[doi:10.1016/j.compenvurbsys.2007.11.003](https://doi.org/10.1016/j.compenvurbsys.2007.11.003)
+
+Heikes, R. and Randall, D. A. (1995). Numerical integration of the
+shallow-water equations on a twisted icosahedral grid. Part II. A
+detailed description of the grid and an analysis of numerical accuracy.
+Monthly Weather Review 123(6), 1881-1887.
+[doi:10.1175/1520-0493(1995)123\<1881:NIOTSW\>2.0.CO;2](https://doi.org/10.1175/1520-0493%281995%29123%3C1881%3ANIOTSW%3E2.0.CO%3B2)
+
+## See also
+
+[`cell_metrics`](https://gillescolling.com/hexify/reference/cell_metrics.md)
+for cell shape,
+[`get_neighbors`](https://gillescolling.com/hexify/reference/get_neighbors.md)
+
+## Examples
+
+``` r
+g <- hex_grid(resolution = 3, aperture = 3)
+w <- wall_metrics(grid = g)
+sd(w$center_distance_km) / mean(w$center_distance_km)
+summary(w$midpoint_ratio)
+
+# The walls around one cell
+cell <- lonlat_to_cell(16.37, 48.21, g)
+wall_metrics(cell, g)
+```

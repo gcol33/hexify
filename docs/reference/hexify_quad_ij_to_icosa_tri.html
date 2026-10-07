@@ -24,7 +24,7 @@ icosahedral projection."><script>
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,8 +38,10 @@ icosahedral projection."><script>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/workflows.html">Workflows</a></li>
     <li><a class="dropdown-item" href="../articles/visualization.html">Visualization</a></li>
+    <li><a class="dropdown-item" href="../articles/globe.html">Interactive Globe</a></li>
     <li><a class="dropdown-item" href="../articles/h3.html">H3 Grids</a></li>
     <li><a class="dropdown-item" href="../articles/theory.html">Mathematical Foundations</a></li>
+    <li><a class="dropdown-item" href="../articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -91,7 +93,7 @@ icosahedral projection.</p>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
-<dd><p>Grid resolution level (0-30)</p></dd>
+<dd><p>Grid resolution level (0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7)</p></dd>
 
 
 <dt id="arg-aperture">aperture<a class="anchor" aria-label="anchor" href="#arg-aperture"></a></dt>
@@ -120,7 +122,6 @@ icosahedral projection.</p>
     <div class="dont-index"><p><code><a href="hexify_icosa_tri_to_quad_ij.html">hexify_icosa_tri_to_quad_ij</a></code> for the inverse,
 <code><a href="hexify_cell_to_icosa_tri.html">hexify_cell_to_icosa_tri</a></code> for conversion from cell ID</p>
 <p>Other coordinate conversion:
-<code><a href="hexify_cell_id_to_quad_ij.html">hexify_cell_id_to_quad_ij()</a></code>,
 <code><a href="hexify_cell_to_icosa_tri.html">hexify_cell_to_icosa_tri()</a></code>,
 <code><a href="hexify_cell_to_lonlat.html">hexify_cell_to_lonlat()</a></code>,
 <code><a href="hexify_cell_to_plane.html">hexify_cell_to_plane()</a></code>,
@@ -157,7 +158,7 @@ icosahedral projection.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

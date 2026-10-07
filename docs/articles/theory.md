@@ -284,30 +284,43 @@ f = \frac{\tan E_l}{2(\cos \text{Az}' + \cot 30° \cdot \sin \text{Az}') \sin(\d
 
 ### The Inverse Projection
 
-The inverse projection cannot be solved analytically because the azimuth
-adjustment contains transcendental functions. A Newton-Raphson iteration
-finds the spherical azimuth Az from the planar azimuth Az’ (Snyder,
-1992, eq. 20-22, p. 13):
+Snyder (1992, p. 13) inverts the projection by iterating on the azimuth
+adjustment, and states that it has no closed form. Recht (2021) restates
+the projection with unit vectors and inverts it in closed form; hexify
+uses that inverse.
+
+Write the point’s sector as the spherical triangle
+$`(\mathbf{v}_0, \mathbf{v}_1, \mathbf{v}_2)`$ (face center, then the
+sector’s two vertices) and its plane image as the triangle with
+barycentric coordinates $`(\beta_0, \beta_1, \beta_2)`$. With
+$`c_{ij} = \mathbf{v}_i \cdot \mathbf{v}_j`$,
+$`s_{12} = \lVert \mathbf{v}_1 \times \mathbf{v}_2 \rVert`$,
+$`|\mathbf{V}| = \det[\mathbf{v}_0, \mathbf{v}_1, \mathbf{v}_2]`$ and
+$`A`$ the spherical area of the sector:
 
 ``` math
-f(\text{Az}) = \text{agh} - \text{Az} - G + (\pi - h) = 0
+h = 1 - \beta_0, \qquad a = \frac{\beta_2}{h} A
 ```
 
-where
-$`h = \arccos(\sin \text{Az} \sin G \cos E_l - \cos \text{Az} \cos G)`$.
+``` math
+f = \sin a \, |\mathbf{V}| + (1 - \cos a)(c_{01} c_{12} - c_{20}), \qquad g = (1 - \cos a) \, s_{12} (1 + c_{01})
+```
 
-![](theory_files/figure-html/newton-raphson-1.svg)
+The point $`\mathbf{p}`$ where the great circle from $`\mathbf{v}_0`$
+through the target meets the edge $`\mathbf{v}_1 \mathbf{v}_2`$ lies at
+arc $`2 \arctan(g / f)`$ from $`\mathbf{v}_1`$ along that edge. The
+target lies on the arc from $`\mathbf{v}_0`$ to $`\mathbf{p}`$, at the
+distance $`z`$ from the face center given by
 
-The iteration exhibits **quadratic convergence**, typically reaching
-machine precision in 3-5 iterations. hexify provides four precision
-modes:
+``` math
+\sin\frac{z}{2} = h \sin\frac{z_p}{2},
+```
 
-| Mode | Tolerance | Typical Iterations | Use Case |
-|----|----|----|----|
-| fast | $`10^{-10}`$ | 3-4 | Interactive visualization |
-| default | $`10^{-12}`$ | 4-5 | General applications (~1 m accuracy) |
-| high | $`10^{-14}`$ | 5-6 | High-precision geodesy |
-| ultra | $`10^{-15}`$ | 6-7 | Research |
+where $`z_p`$ is the arc from $`\mathbf{v}_0`$ to $`\mathbf{p}`$. hexify
+evaluates the arctangent as `atan2(g, f)` and $`1 - \cos a`$ as
+$`2 \sin^2(a/2)`$, which keeps the inverse at full double precision near
+the face center and near the sector edges. A forward projection followed
+by the inverse returns to within a few times $`10^{-15}`$ radians.
 
 ### Distortion
 
@@ -529,7 +542,7 @@ the cell’s position in the subdivision hierarchy.
 #### Z7 Index (Aperture 7)
 
 The Z7 index represents each cell as a hierarchical path through the
-aperture-7 subdivision tree (Sahr, 2025). The format is:
+aperture-7 subdivision tree (Kmoch et al., 2025). The format is:
 
 ``` math
 \texttt{BB}\underbrace{\texttt{D}_1\texttt{D}_2\cdots\texttt{D}_r}_{r \text{ digits}}
@@ -554,25 +567,33 @@ The leading field is always two characters, so the resolution is
 `nchar(index) - 2`. Dropping the final digit gives the parent; appending
 digits 0–6 enumerates the seven positions in the next refinement level.
 
-hexify uses a **bijective Z7 variant**. DGGRID’s base-cell reassignment
-and pentagon digit-skip rules can make its encoder non-injective near
-pentagons: distinct cells may receive the same string. hexify keeps the
-geographic quad fixed in those regions, so every cell has a distinct
-index and both `cell -> index -> cell` and `index -> cell -> index`
-round-trip.
+On the icosahedron this is IGEO7’s Z7 index (Kmoch et al., 2025), and
+hexify writes the same string as DGGRID, its reference implementation,
+for every cell: `paper/bench/bench_dggrid_z7.R` compares all cells at
+resolutions 0–7. Every valid index decodes to its cell and re-encodes to
+itself.
 
-Holding the quad fixed is what the leading field pays for. A quad is a
-rhombus while the aperture-7 parents are hexagons, so the quad boundary
-cuts through the parents of the cells along it: walking such a cell up
-the hierarchy arrives at one of the six neighbours of the quad’s own
-level-0 point rather than at the point itself. The leading field records
-which, as $`\texttt{quad} + 12s`$ with $`s \in \{0, 1, \ldots, 6\}`$,
-and a cell whose whole ancestry stays inside its quad has $`s = 0`$ and
-keeps the plain two-digit quad DGGRID writes. Recover the quad with
-`BB %% 12`, or with
-[`hexify_index_to_cell()`](https://gillescolling.com/hexify/reference/hexify_index_to_cell.md).
-This matters when exchanging raw Z7 strings with DGGRID; geographic
-coordinates and cell geometry remain the safest interoperability layer.
+The twelve resolution-0 cells are pentagons centred on the icosahedron’s
+vertices, and **BB** names the one a cell descends from. hexify computes
+cells on a quad, but a quad is a rhombus while the aperture-7 parents
+are hexagons, so the quad boundary cuts through the parents of the cells
+along it. Walking such a cell up the hierarchy arrives at a neighbour of
+the quad’s vertex rather than at the vertex itself, and **BB** is then
+the vertex at the quad corner that neighbour points to, not the cell’s
+quad. Under the two polar base cells the digits are also turned into the
+pole’s frame. A pentagon lacks one of the six directions, so the
+subsequence whose first nonzero digit is that direction is deleted
+(Sahr, 2005, pp. 83–84): digit 2 under base cells 0–5 and digit 5 under
+6–11. A pentagon therefore has six children, and a string in the deleted
+subsequence names no cell.
+
+At odd resolutions the cells are turned against the quad’s axes (Class
+III). Each is addressed as Sahr (2005, p. 80) addresses Class II cells,
+by the Class I cell one resolution finer centred on it; that cell’s own
+digit is 0 and is not written. Octahedral grids have square vertex
+cells, for which IGEO7 defines no index; there the leading field is
+$`\texttt{quad} + 6s`$, where $`s`$ is the digit of the neighbour of the
+quad’s vertex that the walk arrives at.
 
 ``` r
 
@@ -580,12 +601,12 @@ coordinates and cell geometry remain the safest interoperability layer.
 g7 <- hex_grid(resolution = 4, aperture = 7)
 cell <- lonlat_to_cell(16.37, 48.21, g7)
 idx <- cell_to_index(cell, g7)
-cat(sprintf("Cell %d -> Z7 index: %s\n", cell, idx))
-#> Cell 5194 -> Z7 index: 270453
+cat(sprintf("Cell %s -> Z7 index: %s\n", as.character(cell), idx))
+#> Cell 5194 -> Z7 index: 000324
 cat(sprintf("  Leading field: %s (quad %d), Digits: %s\n",
             substr(idx, 1, 2), as.integer(substr(idx, 1, 2)) %% 12L,
             substr(idx, 3, nchar(idx))))
-#>   Leading field: 27 (quad 3), Digits: 0453
+#>   Leading field: 00 (quad 0), Digits: 0324
 
 # Hierarchical property: parent is obtained by dropping the last digit
 parent_idx <- substr(idx, 1, nchar(idx) - 1)
@@ -593,7 +614,7 @@ parent_info <- hexify_index_to_cell(parent_idx, 7, "z7")
 cat(sprintf("  Parent index: %s (face %d, i=%d, j=%d)\n",
             parent_idx, parent_info$face,
             as.integer(parent_info$i), as.integer(parent_info$j)))
-#>   Parent index: 27045 (face 3, i=9, j=19)
+#>   Parent index: 00032 (face 3, i=9, j=19)
 
 # A valid Z7 index decodes and re-encodes without changing
 decoded <- hexify_index_to_cell(idx, 7, "z7")
@@ -626,7 +647,7 @@ property, ensuring hierarchical locality.
 g3 <- hex_grid(resolution = 8, aperture = 3)
 cell <- lonlat_to_cell(16.37, 48.21, g3)
 idx <- cell_to_index(cell, g3)
-cat(sprintf("Cell %d -> Z3 index: %s\n", cell, idx))
+cat(sprintf("Cell %s -> Z3 index: %s\n", as.character(cell), idx))
 #> Cell 14092 -> Z3 index: 0321202211
 cat(sprintf("  Base cell: %s, Digits: %s (%d digit pairs)\n",
             substr(idx, 1, 2), substr(idx, 3, nchar(idx)),
@@ -656,7 +677,7 @@ encoding depends on the aperture:
 g4 <- hex_grid(resolution = 8, aperture = 4)
 cell <- lonlat_to_cell(16.37, 48.21, g4)
 idx <- cell_to_index(cell, g4)
-cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
+cat(sprintf("Aperture 4: Cell %s -> Z-order index: %s\n", as.character(cell), idx))
 #> Aperture 4: Cell 140534 -> Z-order index: 0311310300
 ```
 
@@ -671,12 +692,10 @@ cat(sprintf("Aperture 4: Cell %d -> Z-order index: %s\n", cell, idx))
 | **Parent operation** | Drop last digit | Drop last pair | Drop last digit(s) |
 | **Index length** (res $`r`$) | $`2 + r`$ | $`2 + 2\lceil r/2\rceil`$ | $`2 + r`$ or $`2 + 2r`$ |
 
-All three hexify encodings are bijective: each valid $`(quad, i, j)`$
-cell maps to exactly one index string, and vice versa. hexify stores
-indices as character strings to support arbitrary precision and avoid
-integer overflow at high resolutions. As noted above, hexify’s bijective
-Z7 strings intentionally differ from DGGRID in the pentagon regions
-where DGGRID’s raw Z7 encoding collides.
+All three hexify encodings are bijective: each cell maps to exactly one
+index string, and each valid string to one cell. hexify stores indices
+as character strings to support arbitrary precision and avoid integer
+overflow at high resolutions.
 
 ### SEQNUM: The Flat Cell ID
 
@@ -849,8 +868,8 @@ for (ap in c(3, 4, 7)) {
   recovered <- cell_to_lonlat(cell_id, grid)
   error_km <- sqrt((recovered$lon - original_lon)^2 +
                    (recovered$lat - original_lat)^2) * 111
-  cat(sprintf("Aperture %d (res %2d): cell %d -> (%.4f, %.4f), ~%.1f km from center\n",
-              ap, res, cell_id,
+  cat(sprintf("Aperture %d (res %2d): cell %s -> (%.4f, %.4f), ~%.1f km from center\n",
+              ap, res, as.character(cell_id),
               recovered$lon, recovered$lat, error_km))
 }
 #> Aperture 3 (res 10): cell 126594 -> (16.4204, 48.2877), ~10.3 km from center
@@ -884,16 +903,24 @@ for (ap in c(3, 4, 7)) {
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*.
   <https://github.com/sahrk/DGGRID>
 
+- Kmoch, A., Sahr, K., Chan, W.T., & Uuemaa, E. (2025). IGEO7: A new
+  hierarchically indexed hexagonal equal-area discrete global grid
+  system. *AGILE: GIScience Series*, 6, 32.
+  <https://doi.org/10.5194/agile-giss-6-32-2025>
+
 - Morton, G.M. (1966). *A Computer Oriented Geodetic Data Base and a New
   Technique in File Sequencing*. IBM Technical Report.
+
+- Recht, B.R.S. (2021). Snyder’s equal-area projection. *The BRSR Blog*.
+  <https://brsr.github.io/2021/08/31/snyder-equal-area.html>
+
+- Sahr, K. (2005). *Location coding on icosahedral aperture 3 hexagon
+  discrete global grids*. PhD thesis, University of Oregon.
+  <https://www.cs.uoregon.edu/Reports/PHD-200508-Sahr.pdf>
 
 - Sahr, K. (2008). Location coding on icosahedral aperture 3 hexagon
   discrete global grids. *Computers, Environment and Urban Systems*,
   32(3), 174-187.
-
-- Sahr, K. (2025). IGEO7: An equal-area hierarchical hexagonal discrete
-  global grid system with Z7 indexing. *Cartography and Geographic
-  Information Science*.
 
 - Sahr, K., White, D., & Kimerling, A.J. (2003). Geodesic Discrete
   Global Grid Systems. *Cartography and Geographic Information Science*,

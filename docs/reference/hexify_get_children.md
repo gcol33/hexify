@@ -16,7 +16,7 @@ hexify_get_children(
 
 - index:
 
-  Index string
+  Character vector of index strings
 
 - aperture:
 
@@ -28,7 +28,7 @@ hexify_get_children(
 
 ## Value
 
-Character vector of child indices
+A list of character vectors, the child indices of each input index
 
 ## See also
 

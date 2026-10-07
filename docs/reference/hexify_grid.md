@@ -42,7 +42,7 @@ hexify_grid(
 
 - projection:
 
-  Projection type (only 'ISEA' supported currently)
+  Face projection, DGGRID's `dggs_proj`: 'ISEA' (default) or 'FULLER'
 
 - radius_km:
 
@@ -72,7 +72,7 @@ A hexify_grid object containing:
 
 - projection:
 
-  Map projection ("ISEA")
+  Face projection ("ISEA" or "FULLER")
 
 - radius_km:
 

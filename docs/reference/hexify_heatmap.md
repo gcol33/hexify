@@ -23,6 +23,8 @@ hexify_heatmap(
   basemap_lwd = 0.5,
   mask_outside = FALSE,
   aperture = 3L,
+  shape = c("hexagon", "gosper", "descendants"),
+  depth = 3L,
   xlim = NULL,
   ylim = NULL,
   title = NULL,
@@ -51,9 +53,10 @@ hexify_heatmap(
 
   Optional basemap. Can be:
 
-  - `NULL`: No basemap (default)
+  - `NULL` or `FALSE`: No basemap (default)
 
-  - `"world"`: Use built-in `hexify_world` map (low resolution)
+  - `"world"` or `TRUE`: Use built-in `hexify_world` map (low
+    resolution)
 
   - `"world_hires"`: Use high-resolution map from rnaturalearth
     (requires package)
@@ -84,9 +87,15 @@ hexify_heatmap(
 
   - A character vector of colors (for manual scale)
 
-  - A single RColorBrewer palette name (e.g., "YlOrRd", "Greens")
+  - A single RColorBrewer palette name (e.g., "YlOrRd", "Greens"),
+    interpolated over its own range when a binned scale asks for more
+    levels than the palette holds
+
+  - A viridis palette name ("viridis", "magma", "turbo", ...)
 
   - NULL to use viridis
+
+  A name in neither family is an error naming the families.
 
 - breaks:
 
@@ -130,6 +139,19 @@ hexify_heatmap(
 - aperture:
 
   Grid aperture (default 3), used if data is from hexify()
+
+- shape:
+
+  `"hexagon"` (default) draws each cell's own boundary. `"gosper"` draws
+  it as a Gosper island and `"descendants"` as the outline of its
+  descendants; both need an ISEA grid, and `"descendants"` one of
+  aperture 7. See Details.
+
+- depth:
+
+  For `shape = "gosper"`, the number of times each edge is replaced,
+  multiplying its segments by 3; for `"descendants"`, the number of
+  resolutions down, multiplying the cells behind one outline by 7.
 
 - xlim:
 

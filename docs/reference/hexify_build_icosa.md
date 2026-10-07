@@ -1,7 +1,12 @@
-# Initialize icosahedron geometry
+# Set the default icosahedron orientation
 
-Sets up the icosahedron state for ISEA projection. Uses standard ISEA3H
-orientation by default (vertex 0 at 11.25E, 58.28N).
+Sets the orientation read by the functions that take no grid: the
+projection functions in this family and the low-level conversions that
+take a resolution and an aperture. The standard ISEA orientation (vertex
+0 at 11.25E, 58.28N, azimuth 0) is the default until this is called. A
+grid carries its own orientation (see the `orientation` argument of
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md)),
+which this does not change.
 
 ## Usage
 
@@ -31,22 +36,13 @@ hexify_build_icosa(
 
 Invisible NULL. Called for side effect.
 
-## Details
-
-The icosahedron is initialized lazily at the C++ level when first
-needed. Manual call is only required for non-standard orientations.
-
 ## See also
 
 Other projection:
 [`hexify_face_centers()`](https://gillescolling.com/hexify/reference/hexify_face_centers.md),
 [`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md),
 [`hexify_forward_to_face()`](https://gillescolling.com/hexify/reference/hexify_forward_to_face.md),
-[`hexify_get_precision()`](https://gillescolling.com/hexify/reference/hexify_get_precision.md),
 [`hexify_inverse()`](https://gillescolling.com/hexify/reference/hexify_inverse.md),
-[`hexify_projection_stats()`](https://gillescolling.com/hexify/reference/hexify_projection_stats.md),
-[`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md),
-[`hexify_set_verbose()`](https://gillescolling.com/hexify/reference/hexify_set_verbose.md),
 [`hexify_which_face()`](https://gillescolling.com/hexify/reference/hexify_which_face.md)
 
 ## Examples

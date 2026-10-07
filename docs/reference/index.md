@@ -28,9 +28,15 @@ Extract and convert HexData
   Cell IDs
 - [`n_cells()`](https://gillescolling.com/hexify/reference/n_cells.md) :
   Get Number of Cells
-- [`as_sf()`](https://gillescolling.com/hexify/reference/as_sf.md) :
-  Convert HexData to sf Object
-- [`as_tibble.HexData()`](https://gillescolling.com/hexify/reference/as_tibble.HexData.md)
+- [`summary(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/hexify-summary.md)
+  [`print(`*`<hexify_grid_summary>`*`)`](https://gillescolling.com/hexify/reference/hexify-summary.md)
+  [`summary(`*`<HexData>`*`)`](https://gillescolling.com/hexify/reference/hexify-summary.md)
+  [`print(`*`<hexify_data_summary>`*`)`](https://gillescolling.com/hexify/reference/hexify-summary.md)
+  : Summary of a grid or of gridded data
+- [`st_as_sf(`*`<HexData>`*`)`](https://gillescolling.com/hexify/reference/st_as_sf.HexData.md)
+  [`st_as_sf(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/st_as_sf.HexData.md)
+  : Convert gridded data or a grid to sf
+- [`as_tibble(`*`<HexData>`*`)`](https://gillescolling.com/hexify/reference/as_tibble.HexData.md)
   : Convert HexData to tibble
 - [`is_hex_grid()`](https://gillescolling.com/hexify/reference/is_hex_grid.md)
   : Check if object is HexGridInfo
@@ -38,6 +44,8 @@ Extract and convert HexData
   : Check if object is HexData
 - [`hex_summarize()`](https://gillescolling.com/hexify/reference/hex_summarize.md)
   : Summarize Data by Hex Cell
+- [`hex_smooth()`](https://gillescolling.com/hexify/reference/hex_smooth.md)
+  : Smooth cell values over neighbouring cells
 - [`hex_zonal()`](https://gillescolling.com/hexify/reference/hex_zonal.md)
   : Zonal Statistics for Hex Cells
 - [`hex_extract()`](https://gillescolling.com/hexify/reference/hex_extract.md)
@@ -63,6 +71,8 @@ Create grids over regions
   : Get parent cell
 - [`get_children()`](https://gillescolling.com/hexify/reference/get_children.md)
   : Get children cells
+- [`get_siblings()`](https://gillescolling.com/hexify/reference/get_siblings.md)
+  : Sibling cells
 
 ## Cell Operations
 
@@ -78,6 +88,8 @@ Relations between cells and cell sets
   : Compact Hex Cells
 - [`hex_uncompact()`](https://gillescolling.com/hexify/reference/hex_uncompact.md)
   : Uncompact Hex Cells
+- [`hex_sample()`](https://gillescolling.com/hexify/reference/hex_sample.md)
+  : Random points inside cells
 
 ## H3 Interoperability
 
@@ -89,6 +101,20 @@ Cross-grid mapping and per-cell area
   : Compute per-cell area in km²
 - [`import_h3()`](https://gillescolling.com/hexify/reference/import_h3.md)
   : Import External H3 Cell IDs into hexify
+- [`dggrs_definition()`](https://gillescolling.com/hexify/reference/dggrs_definition.md)
+  : Definition of a grid as a Discrete Global Grid Reference System
+
+## Cell Metrics
+
+Shape and spacing of a grid’s cells
+
+- [`cell_metrics()`](https://gillescolling.com/hexify/reference/cell_metrics.md)
+  : Shape metrics of cells: area, perimeter and compactness
+- [`wall_metrics()`](https://gillescolling.com/hexify/reference/wall_metrics.md)
+  : Spacing metrics of neighbouring cells: wall length, centre distance
+  and cell wall midpoint ratio
+- [`projection_distortion()`](https://gillescolling.com/hexify/reference/projection_distortion.md)
+  : Distortion of a grid's face projection
 
 ## Visualization
 
@@ -100,8 +126,22 @@ Plotting functions
   : Plot hexagonal grid clipped to a polygon boundary
 - [`plot_world()`](https://gillescolling.com/hexify/reference/plot_world.md)
   : Quick world map plot
-- [`plot_globe()`](https://gillescolling.com/hexify/reference/plot_globe.md)
-  : Plot hexagonized globe
+- [`plot(`*`<HexGridInfo>`*`,`*`<missing>`*`)`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)
+  : Plot a grid on the sphere, on its solid, or on the unfolded net
+- [`net_layout()`](https://gillescolling.com/hexify/reference/net_layout.md)
+  : Lay out the faces of a grid's solid in the plane
+- [`net_project()`](https://gillescolling.com/hexify/reference/net_project.md)
+  : Place points on a net layout
+- [`net_cells()`](https://gillescolling.com/hexify/reference/net_cells.md)
+  : The parts of cells on a net layout
+- [`hex_rays()`](https://gillescolling.com/hexify/reference/hex_rays.md)
+  : Ray glyphs for cell values
+- [`hex_triangles()`](https://gillescolling.com/hexify/reference/hex_triangles.md)
+  : The triangles of cells towards each neighbour
+- [`hex_globe()`](https://gillescolling.com/hexify/reference/hex_globe.md)
+  : Interactive globe of a grid
+- [`hex_globe_png()`](https://gillescolling.com/hexify/reference/hex_globe_png.md)
+  : Save a globe as a PNG image
 - [`hexify_world`](https://gillescolling.com/hexify/reference/hexify_world.md)
   : Simplified World Map
 - [`globe_centers`](https://gillescolling.com/hexify/reference/globe_centers.md)
@@ -137,17 +177,17 @@ Interoperability with dggridR
 Direct access to projection and coordinate transforms
 
 - [`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md)
-  : Forward Snyder projection
+  : Forward face projection
 - [`hexify_forward_to_face()`](https://gillescolling.com/hexify/reference/hexify_forward_to_face.md)
   : Forward projection to specific face
 - [`hexify_inverse()`](https://gillescolling.com/hexify/reference/hexify_inverse.md)
-  : Inverse Snyder projection
+  : Inverse face projection
 - [`hexify_which_face()`](https://gillescolling.com/hexify/reference/hexify_which_face.md)
   : Determine which face contains a point
 - [`hexify_build_icosa()`](https://gillescolling.com/hexify/reference/hexify_build_icosa.md)
-  : Initialize icosahedron geometry
+  : Set the default icosahedron orientation
 - [`hexify_face_centers()`](https://gillescolling.com/hexify/reference/hexify_face_centers.md)
-  : Get icosahedron face centers
+  : Get face centers of a solid
 - [`hexify_grid_rect()`](https://gillescolling.com/hexify/reference/hexify_grid_rect.md)
   : Generate a rectangular grid of hexagon polygons
 - [`hexify_grid_global()`](https://gillescolling.com/hexify/reference/hexify_grid_global.md)
@@ -158,8 +198,6 @@ Direct access to projection and coordinate transforms
   : Convert cell ID to longitude/latitude using a grid object
 - [`hex_corners_to_sf()`](https://gillescolling.com/hexify/reference/hex_corners_to_sf.md)
   : Build an sf POLYGON from six (lon, lat) corner pairs
-- [`hexify_projection_stats()`](https://gillescolling.com/hexify/reference/hexify_projection_stats.md)
-  : Get inverse projection statistics
 - [`dg_closest_res_to_area()`](https://gillescolling.com/hexify/reference/dg_closest_res_to_area.md)
   : Find closest resolution for target cell area
 - [`hexify_area_to_eff_res()`](https://gillescolling.com/hexify/reference/hexify_area_to_eff_res.md)
@@ -182,18 +220,12 @@ Direct access to projection and coordinate transforms
   : Get children indices
 - [`hexify_get_parent()`](https://gillescolling.com/hexify/reference/hexify_get_parent.md)
   : Get parent index
-- [`hexify_get_precision()`](https://gillescolling.com/hexify/reference/hexify_get_precision.md)
-  : Get current precision settings
 - [`hexify_get_resolution()`](https://gillescolling.com/hexify/reference/hexify_get_resolution.md)
   : Get index resolution
-- [`hexify_set_precision()`](https://gillescolling.com/hexify/reference/hexify_set_precision.md)
-  : Set inverse projection precision
 - [`hexify_z7_canonical()`](https://gillescolling.com/hexify/reference/hexify_z7_canonical.md)
   : Get canonical form of Z7 index
 - [`hexify_roundtrip_test()`](https://gillescolling.com/hexify/reference/hexify_roundtrip_test.md)
   : Round-trip accuracy test
-- [`hexify_set_verbose()`](https://gillescolling.com/hexify/reference/hexify_set_verbose.md)
-  : Set verbose mode for inverse projection
 
 ## Internal
 
@@ -208,6 +240,7 @@ Package internals
 - [`hexify-stats`](https://gillescolling.com/hexify/reference/hexify-stats.md)
   : Grid Statistics
 - [`` `$`( ``*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/HexGridInfo-methods.md)
+  [`n_cells(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/HexGridInfo-methods.md)
   [`names(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/HexGridInfo-methods.md)
   [`show(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/HexGridInfo-methods.md)
   [`as.list(`*`<HexGridInfo>`*`)`](https://gillescolling.com/hexify/reference/HexGridInfo-methods.md)

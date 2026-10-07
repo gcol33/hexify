@@ -13,7 +13,8 @@ cell_to_index(cell_id, grid)
 
 - cell_id:
 
-  Numeric vector of cell IDs
+  Cell IDs: integer64 for ISEA grids (whole numbers below 2^53 and digit
+  strings are accepted), character for H3 grids
 
 - grid:
 
@@ -22,3 +23,11 @@ cell_to_index(cell_id, grid)
 ## Value
 
 Character vector of hierarchical index strings
+
+## Details
+
+A cell ID numbers the cells of one resolution from 1, so it names a cell
+only together with its grid. The index string carries its resolution in
+its length and names one cell among all resolutions of the grid's
+family, and so serves as the zonal identifier of OGC Topic 21; an H3
+index carries its resolution in its bits.
