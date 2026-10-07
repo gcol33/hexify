@@ -286,6 +286,36 @@ test_that("hex_globe_png saves the view as a PNG of the asked size", {
   expect_equal(head[2:4], charToRaw("PNG"))
   size <- function(b) sum(as.integer(b) * 256^(3:0))
   expect_equal(c(size(head[17:20]), size(head[21:24])), c(400, 300))
+
+  # The page reads the PNG back: the globe fills the centre, the corner is
+  # off it.
+  png64 <- paste(sprintf("%02x", as.integer(readBin(file, "raw", file.size(file)))),
+                 collapse = "")
+  alpha <- hexify:::globe_in_chrome(hex_globe(g), 50, 50, 1, 60, function(session, read) {
+    read(paste0(
+      "(async () => {",
+      "  const hex = '", png64, "';",
+      "  const bytes = new Uint8Array(hex.length / 2);",
+      "  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(2 * i, 2), 16);",
+      "  const img = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));",
+      "  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;",
+      "  const x = c.getContext('2d'); x.drawImage(img, 0, 0);",
+      "  return [x.getImageData(200, 150, 1, 1).data[3], x.getImageData(2, 2, 1, 1).data[3]];",
+      "})()"))
+  })
+  expect_equal(unlist(alpha), c(255, 0))
+})
+
+test_that("base64 text decodes to its bytes", {
+  for (x in list(0, c(1, 2, 3), c(4294967295, 7, 65536, 1))) {
+    text <- hexify:::cpp_base64_buffer(x, "u32")
+    bytes <- hexify:::cpp_base64_decode(text)
+    expect_equal(readBin(bytes, "integer", n = length(x), size = 4, endian = "little"),
+                 ifelse(x > 2^31 - 1, x - 2^32, x))
+  }
+  expect_equal(hexify:::cpp_base64_decode("TWE="), charToRaw("Ma"))
+  expect_equal(hexify:::cpp_base64_decode("TQ=="), charToRaw("M"))
+  expect_equal(hexify:::cpp_base64_decode(""), raw(0))
 })
 
 # =============================================================================

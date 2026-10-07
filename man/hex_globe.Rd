@@ -132,7 +132,11 @@ The view starts where the camera arguments, those of the grid's
 \code{\link[=plot,HexGridInfo,missing-method]{plot}} method, place it.
 
 The globe needs the 'htmlwidgets' package and a viewer or browser with
-WebGPU; without WebGPU the widget shows a notice instead.
+WebGPU: Chrome and Edge (on Linux with some graphics cards only), Firefox
+on Windows and macOS, Safari 26, and RStudio's viewer. Without WebGPU the
+widget shows a notice instead. The article
+\url{https://gillescolling.com/hexify/articles/globe.html} lists the
+versions.
 }
 \examples{
 if (requireNamespace("htmlwidgets", quietly = TRUE)) {

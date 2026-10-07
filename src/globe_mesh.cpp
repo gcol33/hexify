@@ -936,12 +936,14 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
   return out;
 }
 
+static const char* BASE64_TABLE =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 // Numbers as the base64 text of their little-endian bytes: 32-bit floats for
 // type "f32", unsigned 32-bit integers for "u32".
 // [[Rcpp::export]]
 std::string cpp_base64_buffer(NumericVector x, std::string type) {
-  static const char* table =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const char* table = BASE64_TABLE;
   bool f32 = type == "f32";
   if (!f32 && type != "u32") stop("type must be \"f32\" or \"u32\"");
   R_xlen_t n = x.size();
@@ -975,4 +977,31 @@ std::string cpp_base64_buffer(NumericVector x, std::string type) {
     out += '=';
   }
   return out;
+}
+
+// The bytes of base64 text; padding and characters outside the alphabet end
+// or are skipped.
+// [[Rcpp::export]]
+RawVector cpp_base64_decode(std::string text) {
+  int value[256];
+  std::fill(value, value + 256, -1);
+  for (int k = 0; k < 64; k++) value[static_cast<unsigned char>(BASE64_TABLE[k])] = k;
+  std::vector<unsigned char> out;
+  out.reserve(text.size() / 4 * 3);
+  uint32_t acc = 0;
+  int bits = 0;
+  for (unsigned char c : text) {
+    if (c == '=') break;
+    int v = value[c];
+    if (v < 0) continue;
+    acc = (acc << 6) | static_cast<uint32_t>(v);
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out.push_back(static_cast<unsigned char>((acc >> bits) & 0xFF));
+    }
+  }
+  RawVector r(out.size());
+  std::copy(out.begin(), out.end(), r.begin());
+  return r;
 }

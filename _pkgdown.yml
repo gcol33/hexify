@@ -43,6 +43,8 @@ navbar:
         href: articles/workflows.html
       - text: Visualization
         href: articles/visualization.html
+      - text: Interactive Globe
+        href: articles/globe.html
       - text: H3 Grids
         href: articles/h3.html
       - text: Mathematical Foundations
@@ -58,6 +60,7 @@ articles:
   contents:
   - workflows
   - visualization
+  - globe
   - h3
 - title: Mathematical Foundations
   contents: theory

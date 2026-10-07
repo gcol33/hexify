@@ -21,6 +21,10 @@ cpp_base64_buffer <- function(x, type) {
     .Call(`_hexify_cpp_base64_buffer`, x, type)
 }
 
+cpp_base64_decode <- function(text) {
+    .Call(`_hexify_cpp_base64_decode`, text)
+}
+
 cpp_hex_quantize_ap3 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {
     .Call(`_hexify_cpp_hex_quantize_ap3`, icosa_triangle_x, icosa_triangle_y, resolution)
 }

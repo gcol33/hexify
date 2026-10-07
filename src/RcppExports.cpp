@@ -73,6 +73,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_base64_decode
+RawVector cpp_base64_decode(std::string text);
+RcppExport SEXP _hexify_cpp_base64_decode(SEXP textSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type text(textSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_base64_decode(text));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_hex_quantize_ap3
 NumericVector cpp_hex_quantize_ap3(double icosa_triangle_x, double icosa_triangle_y, int resolution);
 RcppExport SEXP _hexify_cpp_hex_quantize_ap3(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP resolutionSEXP) {
@@ -1398,6 +1409,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_globe_polygons", (DL_FUNC) &_hexify_cpp_globe_polygons, 3},
     {"_hexify_cpp_sphere_paths_on_faces", (DL_FUNC) &_hexify_cpp_sphere_paths_on_faces, 5},
     {"_hexify_cpp_base64_buffer", (DL_FUNC) &_hexify_cpp_base64_buffer, 2},
+    {"_hexify_cpp_base64_decode", (DL_FUNC) &_hexify_cpp_base64_decode, 1},
     {"_hexify_cpp_hex_quantize_ap3", (DL_FUNC) &_hexify_cpp_hex_quantize_ap3, 3},
     {"_hexify_cpp_hex_center_ap3", (DL_FUNC) &_hexify_cpp_hex_center_ap3, 3},
     {"_hexify_cpp_hex_corners_ap3", (DL_FUNC) &_hexify_cpp_hex_corners_ap3, 4},

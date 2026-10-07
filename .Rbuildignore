@@ -36,3 +36,5 @@
 ^\.unrot$
 ^dev_notes$
 ^paper$
+^vignettes/articles$
+^refs$

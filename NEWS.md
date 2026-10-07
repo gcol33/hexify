@@ -144,7 +144,14 @@
   from their outlines. Without WebGPU the widget shows a notice.
 
 * `hex_globe_png()` saves a globe as a PNG, drawn by the widget's own WebGPU
-  renderer in headless Chrome (needs 'chromote').
+  renderer in headless Chrome (needs 'chromote'). The image is read back from
+  the graphics card, so a machine without a display, where headless Chrome
+  composites the page in software, saves the globe rather than a blank page;
+  pixels off the globe are transparent.
+
+* The article "Interactive Globe" on the package website shows `hex_globe()`
+  live and lists the browsers that draw it. The globe keeps its colours in the
+  site's dark mode.
 
 * Land is triangulated on the faces of the icosahedron in C++, so filled land
   folds with the grid; the land area of the mesh matches `sf::st_area()` of

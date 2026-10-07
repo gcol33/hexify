@@ -147,6 +147,9 @@
       el.innerHTML = "";
       delete el.dataset.state;
       el.classList.add("hexify-globe");
+      // The globe draws the colours it is given: pkgdown's dark mode, which
+      // inverts every htmlwidget, is kept off it.
+      el.style.filter = "none";
       el.hexGlobe = this;
       this.canvas = document.createElement("canvas");
       this.canvas.style.cssText = "width:100%;height:100%;display:block;touch-action:none;cursor:grab;";
@@ -553,12 +556,66 @@
     draw() {
       if (!this.device || !this.colorTexture) return;
       this.writeCamera();
-
       const encoder = this.device.createCommandEncoder();
+      this.encodeFrame(encoder, this.context.getCurrentTexture());
+      this.device.queue.submit([encoder.finish()]);
+      if (this.el.dataset.state !== "drawn") {
+        this.device.queue.onSubmittedWorkDone().then(() => { this.el.dataset.state = "drawn"; });
+      }
+    }
+
+    // The current view as a PNG image, base64, read back from the graphics
+    // card rather than from the page: a browser that composites the page in
+    // software, as headless Chrome on a machine without a display does, never
+    // shows a WebGPU canvas to a screenshot. Pixels off the globe are
+    // transparent.
+    async snapshot() {
+      const device = this.device, w = this.canvas.width, h = this.canvas.height;
+      const target = device.createTexture({
+        size: [w, h], format: this.format,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
+      const row = Math.ceil(4 * w / 256) * 256;
+      const read = device.createBuffer({ size: row * h,
+                                         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+      this.writeCamera();
+      const encoder = device.createCommandEncoder();
+      this.encodeFrame(encoder, target);
+      encoder.copyTextureToBuffer({ texture: target }, { buffer: read, bytesPerRow: row }, [w, h]);
+      device.queue.submit([encoder.finish()]);
+      await read.mapAsync(GPUMapMode.READ);
+      const src = new Uint8Array(read.getMappedRange());
+      const image = new ImageData(w, h);
+      const px = image.data;
+      // Colours arrive premultiplied by alpha, and in blue-green-red order
+      // from a bgra8unorm target.
+      const [r, b] = this.format === "bgra8unorm" ? [2, 0] : [0, 2];
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = y * row + 4 * x, o = 4 * (y * w + x), a = src[i + 3];
+          const k = a > 0 ? 255 / a : 0;
+          px[o] = Math.min(255, Math.round(src[i + r] * k));
+          px[o + 1] = Math.min(255, Math.round(src[i + 1] * k));
+          px[o + 2] = Math.min(255, Math.round(src[i + b] * k));
+          px[o + 3] = a;
+        }
+      }
+      read.unmap();
+      read.destroy();
+      target.destroy();
+      const out = document.createElement("canvas");
+      out.width = w;
+      out.height = h;
+      out.getContext("2d").putImageData(image, 0, 0);
+      return out.toDataURL("image/png").split(",")[1];
+    }
+
+    // The globe's layers into `target`, through the multisampled colour
+    // texture.
+    encodeFrame(encoder, target) {
       const pass = encoder.beginRenderPass({
         colorAttachments: [{
           view: this.colorTexture.createView(),
-          resolveTarget: this.context.getCurrentTexture().createView(),
+          resolveTarget: target.createView(),
           clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp: "clear", storeOp: "discard"
         }],
         depthStencilAttachment: {
@@ -582,10 +639,6 @@
         }
       }
       pass.end();
-      this.device.queue.submit([encoder.finish()]);
-      if (this.el.dataset.state !== "drawn") {
-        this.device.queue.onSubmittedWorkDone().then(() => { this.el.dataset.state = "drawn"; });
-      }
     }
 
     // -------------------------------------------------------------------------

@@ -24,7 +24,9 @@ resolution.}
 \description{
 Draws a globe made by \code{\link{hex_globe}} in headless Chrome, with the
 same WebGPU renderer the widget uses, and saves the view it opens with,
-without its controls, as a PNG file.
+without its controls, as a PNG file. The image is read from the graphics
+card, so it is the same on a machine without a display. Pixels off the
+globe are transparent.
 }
 \details{
 Needs the 'chromote' and 'htmlwidgets' packages and a Chromium browser,

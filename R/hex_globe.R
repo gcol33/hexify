@@ -23,7 +23,11 @@
 #' \code{\link[=plot,HexGridInfo,missing-method]{plot}} method, place it.
 #'
 #' The globe needs the 'htmlwidgets' package and a viewer or browser with
-#' WebGPU; without WebGPU the widget shows a notice instead.
+#' WebGPU: Chrome and Edge (on Linux with some graphics cards only), Firefox
+#' on Windows and macOS, Safari 26, and RStudio's viewer. Without WebGPU the
+#' widget shows a notice instead. The article
+#' \url{https://gillescolling.com/hexify/articles/globe.html} lists the
+#' versions.
 #'
 #' @inheritParams plot,HexGridInfo,missing-method
 #' @param values Numeric values, one per cell in \code{cells}, filling the
@@ -168,7 +172,9 @@ hex_globe <- function(x,
 #'
 #' Draws a globe made by \code{\link{hex_globe}} in headless Chrome, with the
 #' same WebGPU renderer the widget uses, and saves the view it opens with,
-#' without its controls, as a PNG file.
+#' without its controls, as a PNG file. The image is read from the graphics
+#' card, so it is the same on a machine without a display. Pixels off the
+#' globe are transparent.
 #'
 #' Needs the 'chromote' and 'htmlwidgets' packages and a Chromium browser,
 #' such as Chrome or Edge, that \code{chromote::find_chrome()} finds. The
@@ -204,11 +210,10 @@ hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
            "Install with: install.packages('", pkg, "')", call. = FALSE)
     }
   }
-  globe_in_chrome(widget, width, height, scale, timeout, function(session, read) {
-    read("document.querySelectorAll('.hexify-globe-controls').forEach(e => e.remove()), ''")
-    session$screenshot(filename = file, selector = ".hexify-globe", scale = scale,
-                       show = FALSE)
+  png <- globe_in_chrome(widget, width, height, scale, timeout, function(session, read) {
+    read("document.querySelector('.hexify-globe').hexGlobe.snapshot()")
   })
+  writeBin(cpp_base64_decode(png), file)
   invisible(file)
 }
 
