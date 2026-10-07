@@ -272,7 +272,7 @@ test_that("hex_globe checks its arguments", {
   expect_error(hex_globe(g, palette = "nope"), "palette")
 })
 
-test_that("hex_globe_png saves the view as a PNG of the asked size", {
+test_that("hex_globe_png in Chrome saves the view as a PNG of the asked size", {
   skip_on_cran()
   skip_if_not_installed("htmlwidgets")
   skip_if_not_installed("chromote")
@@ -281,7 +281,7 @@ test_that("hex_globe_png saves the view as a PNG of the asked size", {
   file <- tempfile(fileext = ".png")
   on.exit(unlink(file))
   expect_equal(hex_globe_png(hex_globe(g), file, width = 200, height = 150,
-                             scale = 2), file)
+                             scale = 2, renderer = "chrome"), file)
   head <- readBin(file, "raw", 24)
   expect_equal(head[2:4], charToRaw("PNG"))
   size <- function(b) sum(as.integer(b) * 256^(3:0))
@@ -306,6 +306,131 @@ test_that("hex_globe_png saves the view as a PNG of the asked size", {
   expect_equal(unlist(alpha), c(255, 0))
 })
 
+# =============================================================================
+# The globe drawn through wgpu (hexglobe)
+# =============================================================================
+
+f32_words <- function(bytes) readBin(bytes, "double", n = length(bytes) / 4,
+                                     size = 4, endian = "little")
+
+test_that("a scene holds the widget's layers in its drawing order", {
+  skip_if_not_installed("htmlwidgets")
+  g <- hex_grid(resolution = 2, aperture = 3)
+  x <- hex_globe(g, values = seq_len(n_cells(g)), na_fill = "grey")$x
+  s <- hexify:::globe_scene(x, 120, 80, 2)
+  expect_equal(c(s$width, s$height), c(240L, 160L))
+  expect_identical(s$shader, x$shader)
+  expect_equal(vapply(s$layers, `[[`, integer(1), "kind"), c(0L, 0L, 2L, 3L, 3L))
+  # The ocean and the grid are drawn on one faces mesh, uploaded once.
+  expect_identical(s$layers[[1]]$pos, s$layers[[3]]$pos)
+  expect_length(s$layers[[3]]$tri, length(s$layers[[3]]$pos) / 3)
+  expect_equal(s$layers[[1]]$count, x$surface$n_index)
+  # Layer uniforms: colour, lift, line width in device pixels, shaded,
+  # coloured by value.
+  u <- f32_words(s$layers[[3]]$uniform)
+  expect_length(u, 12)
+  expect_equal(u[1:8], c(x$style$grid_border, hexify:::GLOBE_LIFT$cells,
+                         2 * x$style$grid_lwd, 1, 1), tolerance = 1e-6)
+  coast <- f32_words(s$layers[[4]]$uniform)
+  expect_equal(coast[5:6], c(hexify:::GLOBE_LIFT$coast, 2 * x$style$land_lwd),
+               tolerance = 1e-6)
+  expect_length(s$layers[[3]]$grid, 3152)
+  grid <- readBin(s$layers[[3]]$grid, "integer", n = 788, size = 4, endian = "little")
+  expect_equal(grid[13:16], c(x$grid$dim, x$grid$index, x$grid$c, x$grid$n_keys))
+  expect_equal(grid[21:24], c(1, 1, 1, 20))
+  expect_equal(f32_words(s$layers[[3]]$grid)[29:32], x$style$na_fill, tolerance = 1e-6)
+})
+
+test_that("the scene's camera is the plot() method's view", {
+  skip_if_not_installed("htmlwidgets")
+  g <- hex_grid(resolution = 1, aperture = 4)
+  x <- hex_globe(g, center = c(lon = 40, lat = -10), rotation = 20, land = FALSE)$x
+  cam <- f32_words(hexify:::globe_camera_uniform(x, 300, 200))
+  expect_length(cam, 28)
+  view <- hexify:::surface_view(c(lon = 40, lat = -10), rotation = 20)
+  expect_equal(cam[c(1:3, 5:7, 9:11)], as.vector(view$cam), tolerance = 1e-6)
+  expect_equal(cam[13:24], c(0, 0, 0, 0, 0, 0, 1.02, 1, 300, 200, 0, 1), tolerance = 1e-6)
+  expect_equal(cam[25:28], c(view$light, 1), tolerance = 1e-6)
+
+  x <- hex_globe(g, projection = "perspective", distance = 2, tilt = 25,
+                 surface = "solid", land = FALSE)$x
+  cam <- f32_words(hexify:::globe_camera_uniform(x, 300, 300))
+  view <- hexify:::surface_view(c(lon = 15, lat = 32), distance = 2, tilt = 25)
+  frame <- hexify:::view_frame(view, NA)
+  reach <- sqrt(sum(view$eye^2))
+  expect_equal(cam[13:24], c(view$eye, 1, frame, view$scale, 300, 300, view$near,
+                             reach + 1.5), tolerance = 1e-6)
+  expect_equal(cam[28], 0)
+})
+
+test_that("unsigned words above 2^31 keep their bits", {
+  b <- hexify:::le32(c(0, 2^31, 2^32 - 1, 7), "u32")
+  expect_equal(as.integer(b), c(0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 255, 7, 0, 0, 0))
+  expect_equal(hexify:::le32(c(-1, -2^31, 5), "i32"),
+               writeBin(c(-1L, NA_integer_, 5L), raw(), size = 4L, endian = "little"))
+})
+
+skip_without_gpu_browser <- function() {
+  skip_on_cran()
+  skip_if_not_installed("htmlwidgets")
+  skip_if_not_installed("chromote")
+  skip_if(is.null(suppressMessages(chromote::find_chrome())), "no Chromium browser")
+}
+
+skip_without_wgpu <- function() {
+  skip_on_cran()
+  skip_if_not_installed("htmlwidgets")
+  skip_if_not_installed("hexglobe")
+  skip_if(inherits(try(hexglobe::gpu_adapter(), silent = TRUE), "try-error"),
+          "no graphics adapter for wgpu")
+}
+
+test_that("hex_globe_png through wgpu saves the view as a PNG of the asked size", {
+  skip_without_wgpu()
+  g <- hex_grid(resolution = 2, aperture = 3)
+  file <- tempfile(fileext = ".png")
+  on.exit(unlink(file))
+  expect_equal(hex_globe_png(hex_globe(g), file, width = 200, height = 150,
+                             scale = 2, renderer = "wgpu"), file)
+  img <- hexglobe::read_png(file)
+  expect_equal(c(img$width, img$height), c(400L, 300L))
+  alpha <- matrix(as.integer(img$rgba[seq(4, length(img$rgba), by = 4)]), 400)
+  expect_equal(alpha[c(201, 3), c(151, 3)][c(1, 4)], c(255, 0))
+})
+
+# The two renderers draw one widget with one shader; what is left between
+# them is the graphics cards' rasterisation and anti-aliasing of edges.
+test_that("wgpu and Chrome draw the same pixels", {
+  skip_without_wgpu()
+  skip_without_gpu_browser()
+  g <- hex_grid(resolution = 3, aperture = 3)
+  cells <- seq_len(n_cells(g))
+  globes <- list(
+    hex_globe(g),
+    hex_globe(g, surface = "solid", center = "pacific"),
+    hex_globe(g, values = cell_to_lonlat(cells, g)$lat_deg, cells = cells,
+              palette = "Blue-Red 3"),
+    hex_globe(g, projection = "perspective", distance = 2.2, tilt = 30,
+              rotation = 15),
+    hex_globe(hex_grid(resolution = 1, type = "h3"),
+              values = seq_along(h3_all_cells(1)), land = FALSE),
+    hex_globe(hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron"),
+              surface = "solid")
+  )
+  files <- replicate(2, tempfile(fileext = ".png"))
+  on.exit(unlink(files))
+  for (w in globes) {
+    hex_globe_png(w, files[1], 240, 200, renderer = "wgpu")
+    hex_globe_png(w, files[2], 240, 200, renderer = "chrome")
+    a <- hexglobe::read_png(files[1])
+    b <- hexglobe::read_png(files[2])
+    expect_equal(c(a$width, a$height), c(b$width, b$height))
+    d <- apply(matrix(abs(as.integer(a$rgba) - as.integer(b$rgba)), 4), 2, max)
+    expect_lt(mean(d > 2), 0.01)
+    expect_lt(mean(d > 16), 0.002)
+  }
+})
+
 test_that("base64 text decodes to its bytes", {
   for (x in list(0, c(1, 2, 3), c(4294967295, 7, 65536, 1))) {
     text <- hexify:::cpp_base64_buffer(x, "u32")
@@ -321,13 +446,6 @@ test_that("base64 text decodes to its bytes", {
 # =============================================================================
 # The shader's cells against lonlat_to_cell()
 # =============================================================================
-
-skip_without_gpu_browser <- function() {
-  skip_on_cran()
-  skip_if_not_installed("htmlwidgets")
-  skip_if_not_installed("chromote")
-  skip_if(is.null(suppressMessages(chromote::find_chrome())), "no Chromium browser")
-}
 
 f32 <- function(x) readBin(writeBin(x, raw(), size = 4), "double", size = 4,
                            n = length(x))

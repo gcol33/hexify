@@ -75,8 +75,11 @@ hex_globe(h3, land = FALSE, width = "100%", height = 560)
 
 ## A still image
 
-`hex_globe_png()` draws a globe in headless Chrome, with the same renderer,
-and saves the view it opens with as a PNG file. `plot()` on a grid draws the
+`hex_globe_png()` draws a globe with the same shader and saves the view it
+opens with as a PNG file. It draws through the companion package
+[hexglobe](https://github.com/gcol33/hexglobe), which runs WebGPU's shaders
+through 'wgpu' in R's own process, or with `renderer = "chrome"` in headless
+Chrome. `plot()` on a grid draws the
 same views as a static plot without a browser.
 
 ```{r png, eval = FALSE}

@@ -129,6 +129,7 @@ hex_globe <- function(x,
       fov = if (!is.na(camera$fov)) camera$fov
     ),
     fold = if (surface == "sphere") 1 else 0,
+    lift = GLOBE_LIFT,
     foldable = !is_h3_grid(g),
     surface = globe_mesh(cpp_globe_faces(icosa, GLOBE_MESH_SPACING),
                          tri = !is.null(grid)),
@@ -170,27 +171,31 @@ hex_globe <- function(x,
 
 #' Save a globe as a PNG image
 #'
-#' Draws a globe made by \code{\link{hex_globe}} in headless Chrome, with the
-#' same WebGPU renderer the widget uses, and saves the view it opens with,
-#' without its controls, as a PNG file. The image is read from the graphics
-#' card, so it is the same on a machine without a display. Pixels off the
-#' globe are transparent.
+#' Draws a globe made by \code{\link{hex_globe}} with the same WebGPU
+#' shader and pipelines the widget uses, and saves the view it opens with,
+#' without its controls, as a PNG file. The image is drawn on the graphics
+#' card and read back from it, so it is the same on a machine without a
+#' display. Pixels off the globe are transparent.
 #'
-#' Needs the 'chromote' and 'htmlwidgets' packages and a Chromium browser,
-#' such as Chrome or Edge, that \code{chromote::find_chrome()} finds. The
-#' browser is started with its GPU, which WebGPU draws on.
+#' \code{renderer = "wgpu"} draws through 'wgpu', the 'Rust' implementation
+#' of WebGPU, in the 'hexglobe' package, with no browser.
+#' \code{renderer = "chrome"} draws in headless Chrome, which needs the
+#' 'chromote' and 'htmlwidgets' packages and a Chromium browser, such as
+#' Chrome or Edge, that \code{chromote::find_chrome()} finds; the browser is
+#' started with its GPU, which WebGPU draws on.
 #'
 #' @param widget A globe from \code{\link{hex_globe}}.
 #' @param file Path of the PNG file to write.
 #' @param width,height Size of the view in CSS pixels.
 #' @param scale Image pixels per CSS pixel; 2 draws the view at twice the
 #'   resolution.
-#' @param timeout Seconds to wait for the globe to be drawn.
+#' @param timeout Seconds to wait for the globe to be drawn in Chrome.
+#' @param renderer \code{"wgpu"} or \code{"chrome"}, as above.
 #'
 #' @return \code{file}, invisibly.
 #'
 #' @seealso \code{\link[=plot,HexGridInfo,missing-method]{plot}} for a static
-#'   plot that needs no browser
+#'   plot that needs no graphics card
 #'
 #' @export
 #' @examples
@@ -200,21 +205,159 @@ hex_globe <- function(x,
 #' hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 #' }
 hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
-                          timeout = 30) {
+                          timeout = 30, renderer = c("wgpu", "chrome")) {
   if (!inherits(widget, "hex_globe")) {
     stop("widget must be a globe from hex_globe()", call. = FALSE)
   }
-  for (pkg in c("chromote", "htmlwidgets")) {
+  renderer <- match.arg(renderer)
+  pkgs <- if (renderer == "wgpu") "hexglobe" else c("chromote", "htmlwidgets")
+  for (pkg in pkgs) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
-      stop("hex_globe_png() needs the '", pkg, "' package. ",
-           "Install with: install.packages('", pkg, "')", call. = FALSE)
+      install <- if (pkg == "hexglobe") {
+        "remotes::install_github('gcol33/hexglobe')"
+      } else {
+        paste0("install.packages('", pkg, "')")
+      }
+      stop("hex_globe_png(renderer = \"", renderer, "\") needs the '", pkg,
+           "' package. Install with: ", install, call. = FALSE)
     }
+  }
+  if (renderer == "wgpu") {
+    image <- hexglobe::render_scene(globe_scene(widget$x, width, height, scale))
+    hexglobe::write_png(image, file)
+    return(invisible(file))
   }
   png <- globe_in_chrome(widget, width, height, scale, timeout, function(session, read) {
     read("document.querySelector('.hexify-globe').hexGlobe.snapshot()")
   })
   writeBin(cpp_base64_decode(png), file)
   invisible(file)
+}
+
+#' A globe as hexglobe::render_scene() draws it
+#'
+#' The widget's layers, in the widget's drawing order (`buildLayers()` in
+#' inst/htmlwidgets/hex_globe.js), each with its uniform and buffers as raw
+#' vectors, and the camera of the view the widget opens with, for an image
+#' of `width` by `height` CSS pixels at `scale` pixels each. A mesh shared by
+#' two layers is one raw vector, which the renderer uploads once.
+#' @noRd
+globe_scene <- function(x, width, height, scale) {
+  w <- as.integer(round(width * scale))
+  h <- as.integer(round(height * scale))
+  s <- x$style
+  b64 <- function(text) if (!is.null(text)) cpp_base64_decode(text)
+  meshes <- list()
+  mesh <- function(name) {
+    if (is.null(meshes[[name]])) {
+      m <- x[[name]]
+      meshes[[name]] <<- list(pos = b64(m$position), item = b64(m$item),
+                              tri = b64(m$tri), index = b64(m$index),
+                              count = m$n_index)
+    }
+    meshes[[name]]
+  }
+  palette <- le32(x$palette, "f32")
+  none <- le32(numeric(4), "f32")
+  clear <- numeric(4)
+
+  uniform <- function(color, lift, width, shaded, ramped, fade = 0) {
+    le32(c(color, lift, width * scale, shaded, ramped, fade * scale, 0, 0, 0), "f32")
+  }
+  mesh_layer <- function(name, lift, color, kind, values = NULL) {
+    if (is.null(x[[name]]) || is.null(color)) return(NULL)
+    c(mesh(name), list(kind = kind,
+                       uniform = uniform(color, lift, 0, TRUE, !is.null(values)),
+                       values = if (is.null(values)) none else values,
+                       ramp = if (is.null(values)) none else palette))
+  }
+  line_layer <- function(lines, lift, color, width, fade = 0) {
+    if (is.null(lines) || is.null(color) || lines$n_segment == 0 || !isTRUE(width > 0)) {
+      return(NULL)
+    }
+    list(kind = 3L, count = lines$n_segment,
+         uniform = uniform(color, lift, width, FALSE, FALSE, fade),
+         points = b64(lines$position), segment = b64(lines$segment))
+  }
+  grid_layer <- function(g) {
+    color <- s$grid_border
+    c(mesh("surface"), list(
+      kind = 2L,
+      uniform = uniform(color %||% clear, x$lift$cells,
+                        if (is.null(color)) 0 else s$grid_lwd, TRUE, !is.null(g$values)),
+      values = if (is.null(g$values)) none else b64(g$values),
+      ramp = palette,
+      grid = globe_grid_uniform(g, x$projection, s$na_fill),
+      keys = if (g$n_keys > 0) b64(g$keys) else none
+    ))
+  }
+
+  layers <- list(
+    mesh_layer("surface", x$lift$ocean, s$ocean_fill, 0L),
+    mesh_layer("land", x$lift$land, s$land_fill, 0L),
+    if (!is.null(x$grid)) grid_layer(x$grid),
+    if (!is.null(x$cells)) {
+      mesh_layer("cells", x$lift$cells, s$na_fill %||% clear, 1L, b64(x$cells$values))
+    },
+    line_layer(x$grid_lines, x$lift$grid, s$grid_border, s$grid_lwd, x$cell_width),
+    line_layer(x$land_lines, x$lift$coast, s$land_border, s$land_lwd),
+    line_layer(x$edge_lines, x$lift$edges, s$edge_col, s$edge_lwd)
+  )
+  list(shader = x$shader, camera = globe_camera_uniform(x, w, h), width = w,
+       height = h, layers = Filter(Negate(is.null), layers))
+}
+
+#' The Camera uniform of globe.wgsl for the view a globe opens with
+#'
+#' The view of surface_view() and its frame from view_frame(), as the
+#' widget's `writeCamera()` lays them out, for an image of `w` by `h` pixels.
+#' @noRd
+globe_camera_uniform <- function(x, w, h) {
+  cam <- x$camera
+  persp <- cam$projection == "perspective"
+  view <- surface_view(c(lon = cam$center[1], lat = cam$center[2]),
+                       distance = if (persp) cam$distance %||% 3 else Inf,
+                       tilt = if (persp) cam$tilt else 0,
+                       rotation = cam$rotation)
+  frame <- view_frame(view, if (persp && !is.null(cam$fov)) cam$fov else NA)
+  eye <- view$eye
+  le32(c(view$cam[, 1], 0, view$cam[, 2], 0, view$cam[, 3], 0,
+         if (is.null(eye)) c(0, 0, 0, 0) else c(eye, 1),
+         frame, view$scale,
+         w, h,
+         if (is.null(eye)) c(0, 1) else c(view$near, sqrt(sum(eye^2)) + 1.5),
+         view$light, x$fold), "f32")
+}
+
+#' The Grid uniform of globe.wgsl, as the widget's `gridUniform()` lays it
+#' out: 788 32-bit words, the face and edge tables padded to the largest
+#' solid's
+#' @noRd
+globe_grid_uniform <- function(g, projection, na_fill) {
+  out <- raw(3152)
+  put <- function(word, bytes) out[4 * word + seq_along(bytes)] <<- bytes
+  put(0, le32(projection$constants[1:12], "f32"))
+  put(12, le32(c(g$dim, g$index, g$c, g$n_keys), "u32"))
+  put(16, le32(g$generator, "i32"))
+  put(20, le32(c(g$all, !is.null(g$values), g$dense, projection$n_faces), "u32"))
+  put(24, le32(g$per_quad, "u32"))
+  put(28, le32(na_fill %||% numeric(4), "f32"))
+  put(32, le32(g$ramp_map %||% numeric(4), "f32"))
+  put(36, le32(projection$faces, "f32"))
+  put(356, le32(projection$edges, "i32"))
+  out
+}
+
+#' Numbers as little-endian 32-bit floats ("f32"), signed ("i32") or unsigned
+#' ("u32") integers; integers are written as their two 16-bit halves, as R's
+#' integers stop short of 2^31
+#' @noRd
+le32 <- function(x, type) {
+  x <- as.numeric(x)
+  if (type == "f32") return(writeBin(x, raw(), size = 4L, endian = "little"))
+  x <- x %% 2^32
+  writeBin(as.integer(rbind(x %% 65536, x %/% 65536)), raw(), size = 2L,
+           endian = "little")
 }
 
 #' Open a globe in headless Chrome, with its GPU, wait until it is drawn and

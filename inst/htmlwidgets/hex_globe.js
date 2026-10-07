@@ -131,11 +131,6 @@
 
   const SAMPLES = 4;
 
-  // Fractions of the radius each layer is lifted off the surface, so that a
-  // later layer lies on top: more than a surface triangle's sag below the
-  // sphere, which is under 3e-4 radii at the mesh spacing R uses.
-  const LIFT = { ocean: 0, land: 6e-4, cells: 1.2e-3, grid: 2e-3, coast: 2.2e-3, edges: 2.4e-3 };
-
   class HexGlobe {
     constructor(el, x) {
       this.el = el;
@@ -303,7 +298,7 @@
       const ramped = Boolean(values);
       const valueBuf = gpuBuffer(device, values || new Float32Array(4), S);
       const rampBuf = gpuBuffer(device, ramp || new Float32Array(4), S);
-      const uniform = this.layerUniform(color, LIFT[name], 0, shaded, ramped);
+      const uniform = this.layerUniform(color, this.x.lift[name], 0, shaded, ramped);
       const group = device.createBindGroup({
         layout: this.pipelines[pipeline].getBindGroupLayout(1),
         entries: [
@@ -348,7 +343,7 @@
       this.valueArray = g.values ? decode(g.values, Float32Array) : null;
       const values = gpuBuffer(device, this.valueArray || new Float32Array(4), S);
       const ramp = gpuBuffer(device, new Float32Array(this.x.palette), S);
-      const uniform = this.layerUniform(color || [0, 0, 0, 0], LIFT.cells, color ? width : 0,
+      const uniform = this.layerUniform(color || [0, 0, 0, 0], this.x.lift.cells, color ? width : 0,
                                         true, Boolean(g.values));
       const group = device.createBindGroup({
         layout: this.pipelines.grid.getBindGroupLayout(1),
@@ -469,7 +464,7 @@
       const device = this.device;
       const points = gpuBuffer(device, decode(lines.position, Float32Array), GPUBufferUsage.STORAGE);
       const segment = gpuBuffer(device, decode(lines.segment, Uint32Array), GPUBufferUsage.VERTEX);
-      const uniform = this.layerUniform(color, LIFT[name], width, false, false, fade);
+      const uniform = this.layerUniform(color, this.x.lift[name], width, false, false, fade);
       const group = device.createBindGroup({
         layout: this.pipelines.line.getBindGroupLayout(1),
         entries: [

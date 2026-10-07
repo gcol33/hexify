@@ -42,6 +42,15 @@ CELL_WALL_TOLERANCE <- 1e-4
 #' @noRd
 GLOBE_MESH_SPACING <- 0.04
 
+#' Fractions of the radius each globe layer is lifted off the surface
+#'
+#' A later layer lies on top: each step is more than a surface triangle's
+#' sag below the sphere at GLOBE_MESH_SPACING. The widget and
+#' hexglobe::render_scene() both read these.
+#' @noRd
+GLOBE_LIFT <- list(ocean = 0, land = 6e-4, cells = 1.2e-3, grid = 2e-3,
+                   coast = 2.2e-3, edges = 2.4e-3)
+
 #' Approximate km per degree of latitude (at equator)
 #' @noRd
 KM_PER_DEGREE <- 111.0

@@ -4,7 +4,15 @@
 \alias{hex_globe_png}
 \title{Save a globe as a PNG image}
 \usage{
-hex_globe_png(widget, file, width = 800, height = 800, scale = 1, timeout = 30)
+hex_globe_png(
+  widget,
+  file,
+  width = 800,
+  height = 800,
+  scale = 1,
+  timeout = 30,
+  renderer = c("wgpu", "chrome")
+)
 }
 \arguments{
 \item{widget}{A globe from \code{\link{hex_globe}}.}
@@ -16,22 +24,27 @@ hex_globe_png(widget, file, width = 800, height = 800, scale = 1, timeout = 30)
 \item{scale}{Image pixels per CSS pixel; 2 draws the view at twice the
 resolution.}
 
-\item{timeout}{Seconds to wait for the globe to be drawn.}
+\item{timeout}{Seconds to wait for the globe to be drawn in Chrome.}
+
+\item{renderer}{\code{"wgpu"} or \code{"chrome"}, as above.}
 }
 \value{
 \code{file}, invisibly.
 }
 \description{
-Draws a globe made by \code{\link{hex_globe}} in headless Chrome, with the
-same WebGPU renderer the widget uses, and saves the view it opens with,
-without its controls, as a PNG file. The image is read from the graphics
-card, so it is the same on a machine without a display. Pixels off the
-globe are transparent.
+Draws a globe made by \code{\link{hex_globe}} with the same WebGPU
+shader and pipelines the widget uses, and saves the view it opens with,
+without its controls, as a PNG file. The image is drawn on the graphics
+card and read back from it, so it is the same on a machine without a
+display. Pixels off the globe are transparent.
 }
 \details{
-Needs the 'chromote' and 'htmlwidgets' packages and a Chromium browser,
-such as Chrome or Edge, that \code{chromote::find_chrome()} finds. The
-browser is started with its GPU, which WebGPU draws on.
+\code{renderer = "wgpu"} draws through 'wgpu', the 'Rust' implementation
+of WebGPU, in the 'hexglobe' package, with no browser.
+\code{renderer = "chrome"} draws in headless Chrome, which needs the
+'chromote' and 'htmlwidgets' packages and a Chromium browser, such as
+Chrome or Edge, that \code{chromote::find_chrome()} finds; the browser is
+started with its GPU, which WebGPU draws on.
 }
 \examples{
 \dontrun{
@@ -42,5 +55,5 @@ hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 }
 \seealso{
 \code{\link[=plot,HexGridInfo,missing-method]{plot}} for a static
-plot that needs no browser
+plot that needs no graphics card
 }
