@@ -1443,13 +1443,18 @@ static void face_piece_sphere(int face, double ax, double ay, const hexify::Unit
     hexify::UnitVec m;
     hexify::face_tri_to_sphere(face, mx, my, m.data());
     if (depth < kMaxMeasureSplits) {
-        // |a x b| is the chord times the cosine of half the arc, the chord to
-        // within a part in 10^4 for any piece of a cell wall.
-        const double nx = a[1] * b[2] - a[2] * b[1];
-        const double ny = a[2] * b[0] - a[0] * b[2];
-        const double nz = a[0] * b[1] - a[1] * b[0];
+        // n = a x (b - a) = a x b, whose length is the chord times the cosine
+        // of half the arc, the chord to within a part in 10^4 for any piece of
+        // a cell wall. m . n = (m - a) . n, as a . n = 0: formed from the short
+        // vectors m - a and b - a, its rounding error scales with the chord,
+        // so the test below stays meaningful however short the piece.
+        const double ux = m[0] - a[0], uy = m[1] - a[1], uz = m[2] - a[2];
+        const double vx = b[0] - a[0], vy = b[1] - a[1], vz = b[2] - a[2];
+        const double nx = a[1] * vz - a[2] * vy;
+        const double ny = a[2] * vx - a[0] * vz;
+        const double nz = a[0] * vy - a[1] * vx;
         const double chord = std::sqrt(nx * nx + ny * ny + nz * nz);
-        const double off = std::fabs(m[0] * nx + m[1] * ny + m[2] * nz);
+        const double off = std::fabs(ux * nx + uy * ny + uz * nz);
         if (off > tolerance * chord * chord) {
             face_piece_sphere(face, ax, ay, a, mx, my, m, tolerance, depth + 1, out);
             face_piece_sphere(face, mx, my, m, bx, by, b, tolerance, depth + 1, out);

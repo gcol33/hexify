@@ -51,7 +51,7 @@ test_that("octahedral cells tile the sphere with equal areas", {
                  tolerance = 1e-12)
     lv <- hexify:::isea_levels(g@aperture, g@resolution)
     sa <- hexify:::cpp_cell_solid_angle(hexify:::icosa_arg(g), ids, lv$resolution,
-                                         lv$aperture, lv$ap_seq, 1e-6)
+                                         lv$aperture, lv$ap_seq, 1e-4)
     hex <- 4 * pi / (length(ids) - 2)
     expect_equal(sa[sides == 6] / hex, rep(1, sum(sides == 6)), tolerance = 1e-5)
     expect_equal(sa[sides == 4] / hex, rep(2 / 3, 6), tolerance = 1e-5)
