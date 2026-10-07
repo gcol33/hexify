@@ -13,9 +13,10 @@
 //
 // References:
 // - Sahr, White, Kimerling (2003) "Geodesic Discrete Global Grid Systems"
-// - Sahr (2025) "IGEO7: An equal-area hierarchical hexagonal discrete global
-//   grid system with Z7 indexing"; DGGRID's DgZ7StringRF is its reference
-//   implementation
+// - Kmoch, Sahr, Chan, Uuemaa (2025) "IGEO7: A new hierarchically indexed
+//   hexagonal equal-area discrete global grid system", AGILE: GIScience
+//   Series 6, doi:10.5194/agile-giss-6-32-2025; DGGRID's DgZ7StringRF is its
+//   reference implementation
 // - H3 coordijk.c (Apache 2.0) for aperture-7 coordinate math
 //
 // Copyright (c) 2024-2025 hexify authors. MIT License.
