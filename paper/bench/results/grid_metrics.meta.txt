@@ -1,9 +1,9 @@
 script: bench_grid_metrics.R
-date: 2026-10-06 18:01:31 CEST
-hexify commit: a3ecd14
-uncommitted changes in R/, src/ or paper/bench/: FALSE
+date: 2026-10-08 01:49:53 CEST
+hexify commit: aaa8781
+uncommitted changes in R/, src/ or paper/bench/: TRUE
 hexify installed version: 0.8.4
-R: R version 4.6.0 (2026-04-24 ucrt)
+R: R version 4.6.1 (2026-06-24 ucrt)
 platform: x86_64-w64-mingw32
 cpu: Intel(R) Core(TM) i9-14900K
 hexify: 0.8.4
