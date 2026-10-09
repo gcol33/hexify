@@ -161,7 +161,10 @@ cells that own those points across the quad's edges (the inverse of
 finds the cell, with no move into the owning quad; `spot_id()` still makes
 that move for the readout's ID. The table is slot by slot when the cells
 fill it, else packed by a perfect hash (key mod M + offset[bucket]) with the
-key stored; `mix32()` must match in C++ and WGSL. Level 0 words are f32
+key stored; `mix32()` must match in C++ and WGSL. A coarser level is gathered
+from the finer block through a fixed stencil when slot by slot, pushed from
+the given cells when hashed; a test asserts the two agree cell by cell, and
+the solid's vertex cells gather from every quad around them. Level 0 words are f32
 values (NA one NaN, absent 0xFFFFFFFF); coarser levels pack ramp position
 and cover in 16 bits each, and the shader fills from the finest level whose
 cells are at least a pixel wide. R builds the Grid uniform once

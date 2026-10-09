@@ -197,7 +197,7 @@ test_that("an octahedral grid plots on every surface and on the globe", {
   skip_if_not_installed("htmlwidgets")
   w <- hex_globe(g, values = seq_len(n_cells(g)), surface = "solid", land = FALSE)
   # The Grid uniform names 8 faces, and its levels hold every cell
-  uniform <- readBin(hexify:::cpp_base64_decode(w$x$grid$uniform), "integer", n = 1300,
+  uniform <- readBin(hexify:::cpp_base64_decode(w$x$grid$uniform), "integer", n = 1296,
                      size = 4, endian = "little")
   expect_equal(uniform[16], 8)
   expect_equal(w$x$grid$given[1], as.numeric(n_cells(g)))

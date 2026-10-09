@@ -178,7 +178,7 @@ test_that("hex_globe builds a widget with every layer", {
   # A level per resolution from the grid's down to 0, each whole
   expect_equal(nrow(x$grid$levels), 3)
   expect_equal(x$grid$given, c(92, 32, 12))
-  expect_length(b64_bytes(x$grid$uniform), 5200)
+  expect_length(b64_bytes(x$grid$uniform), 5184)
   expect_equal(vapply(x$grid$textures, `[[`, integer(1), "binding"), 6:8)
   expect_null(x$cells)
   expect_null(x$grid_lines)
@@ -194,7 +194,7 @@ test_that("an ISEA grid is sent as its frame and its cells' table, not outlines"
   expect_null(x$grid$levels)
   expect_equal(vapply(x$grid$textures, function(t) prod(t$size), numeric(1)), c(1, 1, 1))
   expect_lt(object.size(x), 2e6)
-  uniform <- readBin(b64_bytes(x$grid$uniform), "integer", n = 1300, size = 4,
+  uniform <- readBin(b64_bytes(x$grid$uniform), "integer", n = 1296, size = 4,
                      endian = "little")
   expect_equal(uniform[17:19], c(0, 3^10, 0))
 
@@ -212,6 +212,46 @@ test_that("an ISEA grid is sent as its frame and its cells' table, not outlines"
   expect_true(all(c(float(1), float(3), float(4), 0x7fc00000L) %in% stored))
   expect_error(hex_globe(g, cells = c(1, 590493)), "cell IDs")
   expect_error(hex_globe(g, cells = c(3, 3)), "repeat")
+})
+
+# A coarser level laid out slot by slot gathers each cell's children from the
+# finer block through a stencil; packed by the hash, each given child pushes
+# itself into the coarse cells nearest it. Both give every level the same
+# cells, with the same words to the 16-bit step of their place and cover.
+test_that("the two ways of building coarser levels agree cell by cell", {
+  for (spec in list(list(ap = 3, res = 6), list(ap = 4, res = 5), list(ap = 7, res = 4),
+                    list(ap = "4/7", res = 5), list(ap = c(4, 3, 7, 4), res = 4),
+                    list(ap = 3, res = 5, poly = "octahedron"),
+                    list(ap = 3, res = 6, orient = c(-40, 20, 33)),
+                    list(ap = 3, res = 6, frac = 0.3), list(ap = 7, res = 4, frac = 0.5))) {
+    g <- hex_grid(resolution = spec$res, aperture = spec$ap,
+                  polyhedron = if (is.null(spec$poly)) "icosahedron" else spec$poly,
+                  orientation = if (is.null(spec$orient)) "standard" else spec$orient)
+    icosa <- hexify:::icosa_arg(g)
+    n <- as.numeric(n_cells(g))
+    set.seed(93)
+    ids <- if (is.null(spec$frac)) seq_len(n) else sort(sample(n, round(spec$frac * n)))
+    vals <- sin(ids / 37) + ifelse(ids %% 11 == 0, NA, 0)
+    levels <- lapply(g@resolution:0, function(r) hexify:::isea_levels(g@aperture, r))
+    build <- function(layout) {
+      hexify:::cpp_globe_table(icosa, levels, bit64::as.integer64(ids), vals, FALSE,
+                               c(-1, 0.5, 0), layout, TRUE)
+    }
+    slots <- build("slots")
+    hashed <- build("hash")
+    expect_false(slots$keyed)
+    expect_true(hashed$keyed)
+    expect_equal(slots$given, hashed$given)
+    for (k in seq_along(slots$cells)[-1]) {
+      a <- slots$cells[[k]]
+      b <- hashed$cells[[k]]
+      expect_equal(sort(a$idx), sort(b$idx))
+      wa <- a$word[order(a$idx)]
+      wb <- b$word[order(b$idx)]
+      expect_lte(max(abs(wa %/% 65536 - wb %/% 65536), 0), 1)
+      expect_lte(max(abs(wa %% 65536 - wb %% 65536), 0), 1)
+    }
+  }
 })
 
 # Every slot of a table laid out slot by slot holds the value of the cell
@@ -386,15 +426,15 @@ test_that("a scene holds the widget's layers in its drawing order", {
   coast <- f32_words(s$layers[[4]]$uniform)
   expect_equal(coast[5:6], c(hexify:::GLOBE_LIFT$coast, 2 * x$style$land_lwd),
                tolerance = 1e-6)
-  expect_length(s$layers[[3]]$grid, 5200)
-  grid <- readBin(s$layers[[3]]$grid, "integer", n = 1300, size = 4, endian = "little")
+  expect_length(s$layers[[3]]$grid, 5184)
+  grid <- readBin(s$layers[[3]]$grid, "integer", n = 1296, size = 4, endian = "little")
   # every cell drawn, values given, no smooth fill, 20 faces; a level per
   # resolution, laid out slot by slot
   expect_equal(grid[13:16], c(1, 1, 0, 20))
   expect_equal(grid[17:20], c(0, 9, 3, 0))
-  expect_equal(f32_words(s$layers[[3]]$grid)[29:32], x$style$na_fill, tolerance = 1e-6)
+  expect_equal(f32_words(s$layers[[3]]$grid)[25:28], x$style$na_fill, tolerance = 1e-6)
   # Level 0 is the grid's own frame: a quad side of 3, the aligned lattice
-  expect_equal(grid[789:791], c(3, 1, 0))
+  expect_equal(grid[785:787], c(3, 1, 0))
   expect_equal(vapply(s$layers[[3]]$textures, `[[`, integer(1), "binding"), 6:8)
   expect_type(s$layers[[3]]$textures[[1]]$data, "raw")
 })

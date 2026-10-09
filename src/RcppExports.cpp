@@ -96,8 +96,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_globe_table
-List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id, NumericVector values, bool all_cells, NumericVector ramp);
-RcppExport SEXP _hexify_cpp_globe_table(SEXP icosaSEXP, SEXP levelsSEXP, SEXP cell_idSEXP, SEXP valuesSEXP, SEXP all_cellsSEXP, SEXP rampSEXP) {
+List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id, NumericVector values, bool all_cells, NumericVector ramp, std::string layout, bool listing);
+RcppExport SEXP _hexify_cpp_globe_table(SEXP icosaSEXP, SEXP levelsSEXP, SEXP cell_idSEXP, SEXP valuesSEXP, SEXP all_cellsSEXP, SEXP rampSEXP, SEXP layoutSEXP, SEXP listingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -107,7 +107,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type values(valuesSEXP);
     Rcpp::traits::input_parameter< bool >::type all_cells(all_cellsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type ramp(rampSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_globe_table(icosa, levels, cell_id, values, all_cells, ramp));
+    Rcpp::traits::input_parameter< std::string >::type layout(layoutSEXP);
+    Rcpp::traits::input_parameter< bool >::type listing(listingSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_table(icosa, levels, cell_id, values, all_cells, ramp, layout, listing));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1516,7 +1518,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_base64_buffer", (DL_FUNC) &_hexify_cpp_base64_buffer, 2},
     {"_hexify_cpp_base64_bytes", (DL_FUNC) &_hexify_cpp_base64_bytes, 1},
     {"_hexify_cpp_base64_decode", (DL_FUNC) &_hexify_cpp_base64_decode, 1},
-    {"_hexify_cpp_globe_table", (DL_FUNC) &_hexify_cpp_globe_table, 6},
+    {"_hexify_cpp_globe_table", (DL_FUNC) &_hexify_cpp_globe_table, 8},
     {"_hexify_cpp_hex_quantize_ap3", (DL_FUNC) &_hexify_cpp_hex_quantize_ap3, 3},
     {"_hexify_cpp_hex_center_ap3", (DL_FUNC) &_hexify_cpp_hex_center_ap3, 3},
     {"_hexify_cpp_hex_corners_ap3", (DL_FUNC) &_hexify_cpp_hex_corners_ap3, 4},

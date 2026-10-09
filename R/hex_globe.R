@@ -343,7 +343,7 @@ globe_camera_uniform <- function(x, w, h) {
          view$light, x$fold), "f32")
 }
 
-#' The Grid uniform of globe.wgsl: 1300 32-bit words, the face and edge
+#' The Grid uniform of globe.wgsl: 1296 32-bit words, the face and edge
 #' tables padded to the largest solid's and the levels to 32
 #'
 #' `levels` has a row per level of the table, finest first, with the columns
@@ -352,20 +352,17 @@ globe_camera_uniform <- function(x, w, h) {
 #' @noRd
 globe_grid_uniform <- function(projection, frame, levels, table, all, valued, smooth,
                                per_quad, na_fill, ramp_map) {
-  out <- raw(5200)
+  out <- raw(5184)
   put <- function(word, bytes) out[4 * word + seq_along(bytes)] <<- bytes
   put(0, le32(projection$constants[1:12], "f32"))
   put(12, le32(c(all, valued, smooth, projection$n_faces), "u32"))
   put(16, le32(c(per_quad, if (is.null(table)) 0 else nrow(levels),
                  isTRUE(table$keyed)), "u32"))
-  if (!is.null(table)) {
-    put(20, le32(c(table$m, table$size[1:2], table$seed), "u32"))
-    put(24, le32(c(table$buckets, table$offsets_size[1], 0, 0), "u32"))
-  }
-  put(28, le32(na_fill %||% numeric(4), "f32"))
-  put(32, le32(ramp_map %||% numeric(4), "f32"))
-  put(36, le32(projection$faces, "f32"))
-  put(356, le32(projection$edges, "i32"))
+  if (!is.null(table)) put(20, le32(c(table$m, table$seed, table$buckets, 0), "u32"))
+  put(24, le32(na_fill %||% numeric(4), "f32"))
+  put(28, le32(ramp_map %||% numeric(4), "f32"))
+  put(32, le32(projection$faces, "f32"))
+  put(352, le32(projection$edges, "i32"))
   if (is.null(levels)) {
     levels <- cbind(dim = frame$dim, index = frame$index, c = frame$c,
                     ga = frame$generator[1], gb = frame$generator[2], pr = 0, pc = 0,
@@ -374,7 +371,7 @@ globe_grid_uniform <- function(projection, frame, levels, table, all, valued, sm
   for (k in seq_len(nrow(levels))) {
     L <- levels[k, ]
     base_hi <- floor(L[["base"]] / 2^32)
-    word <- 788 + 16 * (k - 1)
+    word <- 784 + 16 * (k - 1)
     put(word, le32(L[c("dim", "index", "c", "hp")], "u32"))
     put(word + 4, le32(L[c("ga", "gb", "pr", "pc")], "i32"))
     put(word + 8, le32(c(L[["wp"]], base_hi, L[["base"]] - base_hi * 2^32, 0), "u32"))
@@ -629,7 +626,8 @@ check_values <- function(values, n) {
 #' @noRd
 ramp_map <- function(values, limits) {
   if (is.null(limits)) {
-    limits <- if (all(is.na(values))) c(0, 1) else range(values, na.rm = TRUE)
+    limits <- suppressWarnings(c(min(values, na.rm = TRUE), max(values, na.rm = TRUE)))
+    if (identical(limits, c(Inf, -Inf))) limits <- c(0, 1)
   }
   if (!is.numeric(limits) || length(limits) != 2L || anyNA(limits)) {
     stop("limits must be two numbers", call. = FALSE)

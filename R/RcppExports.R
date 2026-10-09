@@ -29,8 +29,8 @@ cpp_base64_decode <- function(text) {
     .Call(`_hexify_cpp_base64_decode`, text)
 }
 
-cpp_globe_table <- function(icosa, levels, cell_id, values, all_cells, ramp) {
-    .Call(`_hexify_cpp_globe_table`, icosa, levels, cell_id, values, all_cells, ramp)
+cpp_globe_table <- function(icosa, levels, cell_id, values, all_cells, ramp, layout = "auto", listing = FALSE) {
+    .Call(`_hexify_cpp_globe_table`, icosa, levels, cell_id, values, all_cells, ramp, layout, listing)
 }
 
 cpp_hex_quantize_ap3 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {

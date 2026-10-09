@@ -140,8 +140,7 @@ struct Grid {
   snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller, 2 IVEA)
   flags: vec4u,      // every cell drawn, values given, smooth fill, faces
   ids: vec4u,        // cells per quad (high, low 32 bits), levels in the table, keys stored
-  table: vec4u,      // slots M, texture width and height, hash seed
-  buckets: vec4u,    // offsets, offset texture width
+  table: vec4u,      // slots M, hash seed, offsets
   na_fill: vec4f,    // fill of a cell whose value is NA
   ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
   faces: array<Face, 20>,
@@ -555,38 +554,49 @@ fn mix32(a: u32) -> u32 {
   return x;
 }
 
-// The word of table slot `key` (high, low 32 bits). Where the table is laid
-// out slot by slot it sits at the key's own place; where it is packed by the
-// perfect hash it sits at (key mod M + offset) mod M, with the offset of the
-// key's bucket, and the key stored beside it tells whether it is there.
+// The word of table slot s: texel (s mod 2^13, s / 2^13 mod 2^13) of layer
+// s / 2^26.
+fn slot_word(s: u32) -> u32 {
+  return textureLoad(cell_words, vec2u(s & 8191u, (s >> 13u) & 8191u), s >> 26u, 0).x;
+}
+
+// The word of slot `key` (high, low 32 bits) of a table packed by the perfect
+// hash: at slot (key mod M + offset) mod M, with the offset of the key's
+// bucket, and the key stored beside it tells whether it is there.
 fn table_word(key: vec2u) -> u32 {
-  let bucket = mix32(key.y ^ mix32(key.x ^ grid.table.w)) % grid.buckets.x;
-  let ow = grid.buckets.y;
-  let offset = textureLoad(cell_offsets, vec2u(bucket % ow, bucket / ow), 0).x;
+  let bucket = mix32(key.y ^ mix32(key.x ^ grid.table.y)) % grid.table.z;
+  let offset = textureLoad(cell_offsets, vec2u(bucket & 8191u, bucket >> 13u), 0).x;
   let m = grid.table.x;
   let slot = (key.y % m + offset) % m;
-  let w = grid.table.y;
-  let h = grid.table.z;
-  let at = vec2u(slot % w, (slot / w) % h);
-  let layer = slot / (w * h);
-  let word = textureLoad(cell_words, at, layer, 0).x;
-  if (grid.ids.w == 1u && any(textureLoad(cell_keys, at, layer, 0).xy != key)) {
+  if (any(textureLoad(cell_keys, vec2u(slot & 8191u, (slot >> 13u) & 8191u), slot >> 26u, 0).xy != key)) {
     return ABSENT;
   }
-  return word;
+  return slot_word(slot);
 }
 
 // The word of the cell centred at substrate point c of diamond quad `quad`
 // at level lv, c in or past the quad's box.
+// A lattice point's place along its row is (v - residue(u)) / index, which is
+// floor(v / index). A table laid out slot by slot has fewer than 2^31 slots.
 fn cell_word(lv: u32, quad: u32, c: vec2i) -> u32 {
   let level = grid.levels[lv];
   let n = i32(level.frame.y);
+  var place = c.y;
+  if (n != 1) {
+    place = c.y / n;
+    if (place * n > c.y) {
+      place -= 1;
+    }
+  }
   let row = c.x + level.shape.z;
-  let col = (c.y - ((i32(level.frame.z) * c.x) % n + n) % n) / n + level.shape.w;
+  let col = place + level.shape.w;
   if (row < 0 || row >= i32(level.frame.w) || col < 0 || col >= i32(level.slots.x)) {
     return ABSENT;
   }
   let at = (quad - 1u) * level.frame.w + u32(row);
+  if (grid.ids.w == 0u) {
+    return slot_word(level.slots.z + at * level.slots.x + u32(col));
+  }
   return table_word(add64(add64(mul_wide(at, level.slots.x), vec2u(0u, u32(col))),
                           level.slots.yz));
 }

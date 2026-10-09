@@ -972,33 +972,66 @@ static const char* BASE64_TABLE =
 
 std::string hexify::base64_encode(const unsigned char* bytes, size_t n) {
   const char* table = BASE64_TABLE;
-  std::string out;
-  out.reserve((n + 2) / 3 * 4);
+  std::string out((n + 2) / 3 * 4, '=');
+  char* o = &out[0];
   size_t i = 0;
-  for (; i + 2 < n; i += 3) {
-    uint32_t v = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
-    out += table[(v >> 18) & 63];
-    out += table[(v >> 12) & 63];
-    out += table[(v >> 6) & 63];
-    out += table[v & 63];
+  for (; i + 2 < n; i += 3, o += 4) {
+    const uint32_t v = (static_cast<uint32_t>(bytes[i]) << 16) |
+                       (static_cast<uint32_t>(bytes[i + 1]) << 8) | bytes[i + 2];
+    o[0] = table[v >> 18];
+    o[1] = table[(v >> 12) & 63];
+    o[2] = table[(v >> 6) & 63];
+    o[3] = table[v & 63];
   }
   if (i < n) {
-    uint32_t v = bytes[i] << 16;
-    if (i + 1 < n) v |= bytes[i + 1] << 8;
-    out += table[(v >> 18) & 63];
-    out += table[(v >> 12) & 63];
-    out += i + 1 < n ? table[(v >> 6) & 63] : '=';
-    out += '=';
+    uint32_t v = static_cast<uint32_t>(bytes[i]) << 16;
+    if (i + 1 < n) v |= static_cast<uint32_t>(bytes[i + 1]) << 8;
+    o[0] = table[v >> 18];
+    o[1] = table[(v >> 12) & 63];
+    if (i + 1 < n) o[2] = table[(v >> 6) & 63];
   }
   return out;
 }
 
 std::string hexify::base64_words(const std::vector<uint32_t>& words) {
-  std::vector<unsigned char> bytes(4 * words.size());
-  for (size_t k = 0; k < words.size(); k++) {
-    for (int b = 0; b < 4; b++) bytes[4 * k + b] = (words[k] >> (8 * b)) & 0xFF;
+  // Three words are twelve little-endian bytes, sixteen characters, each 12
+  // bits two characters of `pairs`; the rest go through base64_encode().
+  static char pairs[4096][2];
+  static bool made = false;
+  if (!made) {
+    for (int v = 0; v < 4096; v++) {
+      pairs[v][0] = BASE64_TABLE[v >> 6];
+      pairs[v][1] = BASE64_TABLE[v & 63];
+    }
+    made = true;
   }
-  return base64_encode(bytes.data(), bytes.size());
+  const size_t n = words.size(), whole = n / 3 * 3;
+  std::string out((4 * n + 2) / 3 * 4, '=');
+  char* o = &out[0];
+  for (size_t k = 0; k < whole; k += 3, o += 16) {
+    const uint64_t a = words[k], b = words[k + 1], c = words[k + 2];
+    // bytes 0-5 and 6-11 as two 48-bit groups, each eight characters
+    const uint64_t g[2] = {a | ((b & 0xFFFF) << 32), (b >> 16) | (c << 16)};
+    for (int h = 0; h < 2; h++) {
+      for (int t = 0; t < 2; t++) {
+        const uint64_t x = g[h] >> (24 * t);
+        const uint32_t v = static_cast<uint32_t>(((x & 0xFF) << 16) | (x & 0xFF00) |
+                                                 ((x >> 16) & 0xFF));
+        char* q = o + 8 * h + 4 * t;
+        std::memcpy(q, pairs[v >> 12], 2);
+        std::memcpy(q + 2, pairs[v & 4095], 2);
+      }
+    }
+  }
+  if (whole < n) {
+    unsigned char rest[8];
+    for (size_t k = whole; k < n; k++) {
+      for (int b = 0; b < 4; b++) rest[4 * (k - whole) + b] = (words[k] >> (8 * b)) & 0xFF;
+    }
+    const std::string tail = base64_encode(rest, 4 * (n - whole));
+    std::copy(tail.begin(), tail.end(), o);
+  }
+  return out;
 }
 
 // Numbers as the base64 text of their little-endian bytes: 32-bit floats for

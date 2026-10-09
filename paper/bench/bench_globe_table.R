@@ -49,9 +49,9 @@ if (length(args) >= 1 && args[1] == "--measure") {
 
   # Time of a frame on the graphics card: 40 frames of the view encoded into
   # one submission, which is timed from submission until the card is done,
-  # ten times, so that the time per frame is the card's and not the round
-  # trip of one submission; the median over the ten, per frame. And the
-  # adapter's description.
+  # so that the time per frame is the card's and not the round trip of one
+  # submission; twenty submissions, turning the globe between them, and the
+  # mean of the middle ten, per frame. And the adapter's description.
   frames <- function(widget, size) {
     hexify:::globe_in_chrome(widget, size, size, 1, 300, function(session, read) {
       ms <- read(paste0(
@@ -70,9 +70,9 @@ if (length(args) >= 1 && args[1] == "--measure") {
         "  };",
         "  for (let k = 0; k < 3; k++) await batch();",
         "  const t = [];",
-        "  for (let k = 0; k < 10; k++) { g.state.lon += 7; t.push(await batch()); }",
+        "  for (let k = 0; k < 20; k++) { g.state.lon += 7; t.push(await batch()); }",
         "  t.sort((a, b) => a - b);",
-        "  return (t[4] + t[5]) / 2;",
+        "  return t.slice(5, 15).reduce((a, b) => a + b) / 10;",
         "})()"))
       adapter <- read(paste0(
         "(async () => { const a = await navigator.gpu.requestAdapter();",
@@ -109,13 +109,16 @@ if (length(args) >= 1 && args[1] == "--measure") {
                                 grid = g10, args = list(values = lat(g10), smooth = TRUE))))
   }
 
+  # Median of five builds
   rows <- lapply(cases, function(cs) {
-    gc()
-    build <- system.time(w <- do.call(hex_globe, c(list(cs$grid, land = FALSE), cs$args)))
+    times <- vapply(1:5, function(k) {
+      gc()
+      system.time(w <<- do.call(hex_globe, c(list(cs$grid, land = FALSE), cs$args)))[["elapsed"]]
+    }, numeric(1))
     f800 <- frames(w, 800)
     f1600 <- frames(w, 1600)
     data.frame(version = label, case = cs$case, cells = as.numeric(n_cells(cs$grid)),
-               build_s = build[["elapsed"]], page_mb = page_mb(w), gpu_mb = gpu_mb(w),
+               build_s = stats::median(times), page_mb = page_mb(w), gpu_mb = gpu_mb(w),
                frame_ms_800 = f800$ms, frame_ms_1600 = f1600$ms, adapter = f800$adapter)
   })
   write.csv(do.call(rbind, rows), args[4], row.names = FALSE)

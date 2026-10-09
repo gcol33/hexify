@@ -287,7 +287,15 @@ inline long long floor_div(long long a, long long b) {
  */
 inline int nearest_eisenstein_points(long long U, long long V, long long D,
                                      long long out[3][2]) {
-    const long long x0 = floor_div(U, D), y0 = floor_div(V, D);
+    // floor(U / D) from the floating-point quotient, corrected by one where
+    // its rounding crossed an integer
+    auto floor_q = [D](long long N) {
+        long long q = static_cast<long long>(std::floor(static_cast<double>(N) / static_cast<double>(D)));
+        if (q * D > N) q--;
+        else if ((q + 1) * D <= N) q++;
+        return q;
+    };
+    const long long x0 = floor_q(U), y0 = floor_q(V);
     long long best = -1;
     int count = 0;
     for (int corner = 0; corner < 4; corner++) {
