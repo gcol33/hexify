@@ -224,8 +224,8 @@ aperture (`step_aperture()`) and the number of parents: 1/3, 1/2, or 11/12
 and 1/12 (derivation in `?hex_aggregate` and the theory vignette). Fuller
 and H3 are not equal-area, so `sphere_shares()` measures each piece
 natively: ISEA-family cells clipped face by face in the face plane
-(`cpp_cell_overlap_solid_angles()`, walls of each piece followed on the
-sphere), H3 cells clipped on the gnomonic plane where their great-circle
+(`cpp_cell_overlap_solid_angles()`, each piece's area by Romberg over the
+polygons through its edge points), H3 cells clipped on the gnomonic plane where their great-circle
 edges are straight (`cpp_h3_overlap_solid_angles()`), both through
 `src/plane_clip.h`; the same function verifies the lattice shares in the
 tests. `levels > 1` repeats the one-level rule.
