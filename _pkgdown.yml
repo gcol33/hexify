@@ -91,6 +91,7 @@ reference:
   - is_hex_data
   - hex_summarize
   - hex_smooth
+  - hex_aggregate
   - hex_zonal
   - hex_extract
 - title: Grid Generation

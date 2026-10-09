@@ -38,7 +38,7 @@ Suggests:
     leaflet
 VignetteBuilder: knitr
 LinkingTo: Rcpp
-Imports: sf, Rcpp, methods, rlang, bit64
+Imports: sf, s2, Rcpp, methods, rlang, bit64
 Remotes: gcol33/hexglobe
 URL: https://gillescolling.com/hexify/
 BugReports: https://github.com/gcol33/hexify/issues
@@ -65,6 +65,7 @@ Collate:
     'gosper.R'
     'grid_helpers.R'
     'h3_compat.R'
+    'hex_aggregate.R'
     'hex_browse.R'
     'hex_compact.R'
     'hex_distance.R'

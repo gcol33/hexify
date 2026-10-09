@@ -1270,7 +1270,8 @@ check_index_resolution <- function(res, resolution, index) {
 #' centre 11/12 in its parent and 1/12 in one neighbour.
 #' \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 #' of OGC Topic 21 does when \code{inheritID} is false; the default is its
-#' \code{inheritID = true} answer.
+#' \code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell
+#' values among them by these shares.
 #'
 #' Every part of a cell that lies in a coarser cell holds a corner of the
 #' cell, so the overlapping cells are the coarser cells holding the cell's
@@ -1350,12 +1351,19 @@ overlapping_parents <- function(cell_id, g, levels) {
   step <- corner + CORNER_STEP * (mid - corner)
   ll <- vec_lonlat(step / sqrt(rowSums(step^2)), icosa)
 
-  own <- get_parent(cell_id, g, levels)
-  hit <- lonlat_to_cell(ll[, 1], ll[, 2], pg)
-  lapply(seq_along(cell_id), function(k) {
-    others <- hit[owner == k]
-    unique(c(own[k], others[others != own[k]]))
-  })
+  # Each cell's own parent, then every other coarser cell its corners reach,
+  # each once: (cell, coarser cell) pairs are deduplicated as integer keys and
+  # stably ordered by cell.
+  o <- c(seq_along(cell_id), owner)
+  h <- c(get_parent(cell_id, g, levels), lonlat_to_cell(ll[, 1], ll[, 2], pg))
+  u <- unique(h)
+  keep <- !duplicated(o * (length(u) + 1) + match(h, u))
+  o <- o[keep]
+  h <- h[keep]
+  idx <- order(o, method = "radix")
+  slot <- factor(o[idx], levels = seq_along(cell_id))
+  if (is_h3_grid(g)) return(unname(split(h[idx], slot)))
+  unname(lapply(split(unclass(h[idx]), slot), `class<-`, "integer64"))
 }
 
 #' Corners of cells, one lon/lat matrix per cell

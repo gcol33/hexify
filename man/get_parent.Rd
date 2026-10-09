@@ -34,7 +34,8 @@ parent edge half in each of two, and an aperture-7 cell off the parent's
 centre 11/12 in its parent and 1/12 in one neighbour.
 \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 of OGC Topic 21 does when \code{inheritID} is false; the default is its
-\code{inheritID = true} answer.
+\code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell
+values among them by these shares.
 
 Every part of a cell that lies in a coarser cell holds a corner of the
 cell, so the overlapping cells are the coarser cells holding the cell's

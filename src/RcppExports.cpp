@@ -830,6 +830,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_cell_sphere_rings
+List cpp_cell_sphere_rings(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double tolerance);
+RcppExport SEXP _hexify_cpp_cell_sphere_rings(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_sphere_rings(icosa, cell_id, resolution, aperture, ap_seq, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_surface_paths
 NumericMatrix cpp_cell_surface_paths(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, double step);
 RcppExport SEXP _hexify_cpp_cell_surface_paths(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP stepSEXP) {
@@ -1609,6 +1625,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 7},
     {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 3},
     {"_hexify_cpp_cell_solid_angle", (DL_FUNC) &_hexify_cpp_cell_solid_angle, 6},
+    {"_hexify_cpp_cell_sphere_rings", (DL_FUNC) &_hexify_cpp_cell_sphere_rings, 6},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 6},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 1},
     {"_hexify_cpp_lonlat_to_face_solid", (DL_FUNC) &_hexify_cpp_lonlat_to_face_solid, 4},

@@ -237,6 +237,10 @@ cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, t
     .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
+cpp_cell_sphere_rings <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
+    .Call(`_hexify_cpp_cell_sphere_rings`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
+}
+
 cpp_cell_surface_paths <- function(icosa, cell_id, resolution, aperture, ap_seq, step) {
     .Call(`_hexify_cpp_cell_surface_paths`, icosa, cell_id, resolution, aperture, ap_seq, step)
 }

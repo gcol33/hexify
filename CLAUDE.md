@@ -212,6 +212,20 @@ first-row/first-column parents (see the file's header). They equal DGGAL's
 for every zone up to ISEA3H level 10 and ISEA7H level 5
 (`paper/bench/bench_dggal_zirs.R`); do not diverge from DGGAL there.
 
+## Parent aggregation
+
+`get_parent()` is centre containment (ties at aperture-3 corners and
+aperture-4 edges broken by a fixed key); `hex_aggregate(rule = "centre")`
+gives each cell wholly to it. `rule = "area"` divides each cell among
+`get_parent(overlapping = TRUE)` by its area share. On every equal-area grid
+(Snyder, IVEA; icosahedron and octahedron; any aperture sequence) the share
+is a lattice constant read from `LATTICE_PARENT_SHARES` by the step's
+aperture (`step_aperture()`) and the number of parents: 1/3, 1/2, or 11/12
+and 1/12 (derivation in `?hex_aggregate` and the theory vignette). Fuller
+and H3 are not equal-area, so `sphere_shares()` measures each piece with s2
+(`cpp_cell_sphere_rings()`); the same function verifies the lattice shares
+in the tests. `levels > 1` repeats the one-level rule.
+
 ## DGGRID corner bug: aperture 7, odd resolutions
 
 Found 2026-10-05; not filed upstream yet. At aperture 7, odd resolutions

@@ -1865,6 +1865,50 @@ NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
                              tolerance);
 }
 
+// The boundary of each cell as a closed lon/lat ring whose consecutive points
+// lie on the cell's walls, followed to 'tolerance' (cell_walls_sphere), so the
+// great-circle arcs between them stay within that fraction of their length of
+// the true wall: the ring a spherical-polygon library reads as the cell.
+// [[Rcpp::export]]
+List cpp_cell_sphere_rings(NumericVector icosa, NumericVector cell_id, int resolution,
+                           int aperture, IntegerVector ap_seq, double tolerance) {
+    activate_grid(icosa);
+    if (!(tolerance > 0.0)) stop("tolerance must be positive");
+    const CellPlanes g = cell_planes(cell_id, grid_frame(resolution, aperture, ap_seq));
+    List out(cell_id.size());
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    std::vector<std::vector<hexify::UnitVec>> walls;
+    // Points closer than this, in radians, are one point: a corner on a face
+    // edge leaves a wall piece of rounding length there.
+    constexpr double kSamePoint = 1e-13;
+    std::vector<hexify::UnitVec> ring;
+    std::vector<double> lon, lat;
+    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, walls);
+        ring.clear();
+        // Each wall ends where the next begins, so its last point is left off.
+        for (const auto& w : walls) {
+            for (size_t i = 0; i + 1 < w.size(); i++) {
+                if (ring.empty() || hexify::arc_angle(ring.back(), w[i]) > kSamePoint) {
+                    ring.push_back(w[i]);
+                }
+            }
+        }
+        while (ring.size() > 1 && hexify::arc_angle(ring.back(), ring.front()) <= kSamePoint) {
+            ring.pop_back();
+        }
+        lon.clear();
+        lat.clear();
+        for (const auto& v : ring) {
+            lon.push_back(std::atan2(v[1], v[0]) * hexify::kRadToDeg);
+            lat.push_back(std::atan2(v[2], std::hypot(v[0], v[1])) * hexify::kRadToDeg);
+        }
+        out[k] = closed_ring(lon, lat);
+    }
+    return out;
+}
+
 // The boundaries of cells on the flat solid and on the sphere, from the same
 // points. Each cell edge is cut where it crosses a face edge, and every piece
 // is split into steps no longer than 'step' in triangle coordinates (a face

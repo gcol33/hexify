@@ -753,6 +753,34 @@ The dashed outline is the parent cell; the darker child shares its centre. For a
 
 The aperture 7 rotation angle follows from the child lattice: the parent's nearest neighbour sits at two steps along one child lattice axis plus one step along the next, a vector of length $\sqrt{7}$ child spacings at angle $\arctan\!\big(\tfrac{\sqrt{3}/2}{2 + 1/2}\big) = \arctan(\sqrt{3}/5) \approx 19.107°$ to the axis (DGGRID Manual, 2023).
 
+### How a Cell Divides Among Its Parents
+
+Since successive resolutions do not nest, a cell can lie partly in two or three coarser cells (Carr et al., 1997). Within a face the cells of one resolution are the Voronoi cells of a hexagonal lattice and those one resolution coarser the Voronoi cells of a sublattice of index 3, 4 or 7, so the share of a cell in each coarser cell follows from the lattices alone.
+
+After an aperture-3 step the children are centred on the parent centres and corners. The three parent edges meeting at a corner run through every second edge midpoint of the child centred there and cut it into thirds. After an aperture-4 step the children are centred on the parent centres and edge midpoints, and a parent edge runs through the centre and two opposite corners of the child on its midpoint, cutting it in half.
+
+After an aperture-7 step every child centre lies inside a parent. Take the finer lattice as the Eisenstein integers $\mathbb{Z}[\omega]$, $\omega = e^{2\pi i/3}$, with unit spacing, so a cell has circumradius $s = 1/\sqrt{3}$ and area $\tfrac{3\sqrt{3}}{2}s^2$. The coarser lattice is $\mu\,\mathbb{Z}[\omega]$ with $\mu = 3 + \omega$: $|\mu|^2 = 7$ and $\arg \mu = \arctan(\sqrt{3}/5)$, the turn in the table above, and the other twist is its mirror image $3 + \bar\omega$. The centre child, of circumradius $s \approx 0.577$, lies inside its parent, of inradius $\sqrt{7}/2 \approx 1.323$. The parent edge facing the neighbour at $\mu$ runs between the parent corners $\mu(1-\omega)/3$ and $\mu(2+\omega)/3$, through its midpoint $\mu/2$, and two of these points belong to the child tiling:
+
+$$\frac{\mu(1-\omega)}{3} = 1 + \frac{1-\omega}{3}, \qquad \frac{\mu}{2} = \frac{1 + (2+\omega)}{2}.$$
+
+The first is a corner $A$ of the ring child centred at $1$; the second is the midpoint of the edge this child shares with the child at $2 + \omega$, the second edge from $A$. The child's other corners lie inside the parent, so the part beyond it is the triangle of $A$, the next corner $B$ and $\mu/2$, whose sides $s$ and $s/2$ meet at $120°$:
+
+$$\frac{\tfrac{1}{2} \cdot s \cdot \tfrac{s}{2} \cdot \sin 120°}{\tfrac{3\sqrt{3}}{2}\, s^2} = \frac{\sqrt{3}\, s^2 / 8}{3\sqrt{3}\, s^2 / 2} = \frac{1}{12}.$$
+
+The half-turn about $\mu/2$ maps both lattices onto themselves and swaps the parents at $0$ and $\mu$, so the other half of the edge cuts $1/12$ off the child at $2 + \omega$ the other way. Every ring child lies $11/12$ in its parent and $1/12$ in one neighbour, and the parent's area checks: $1 + 6 \cdot \tfrac{11}{12} + 6 \cdot \tfrac{1}{12} = 7$ child areas.
+
+The vertices of the solid are cell centres at every resolution, and the turn by the angle deficit about a vertex maps both lattices onto themselves, so the cells around a vertex are cut as in the plane and the cell at a vertex lies wholly in the vertex cell above it. Snyder's projection is equal-area, so these shares hold on the sphere for every cell, across face edges and at the vertices. `get_parent(overlapping = TRUE)` returns the coarser cells a cell reaches into, and `hex_aggregate()` divides each cell's value among them by these shares, one level at a time, each level by the shares of its own aperture:
+
+```{r parent-shares}
+g7 <- hex_grid(resolution = 3, aperture = 7)
+ids <- grid_global(g7)$cell_id
+table(lengths(get_parent(ids, g7, overlapping = TRUE)))
+
+# A uniform density adds up to each parent's area, the twelve pentagons included
+up <- hex_aggregate(ids, cell_area(ids, g7), g7)
+range(up$value / cell_area(up$cell_id, hex_grid(resolution = 2, aperture = 7)))
+```
+
 ### Cell Count Growth
 
 ```{r cell-counts}
@@ -1327,6 +1355,8 @@ for (ap in c(3, 4, 7)) {
 - H3 documentation (2024). *H3: A Hexagonal Hierarchical Geospatial Indexing System*. https://h3geo.org/
 
 - Bradley, A.D. (1946). Equal-area projection on the icosahedron. *Geographical Review*, 36(1), 101-104.
+
+- Carr, D.B., Kahn, R., Sahr, K., & Olsen, A.R. (1997). ISEA discrete global grids. *Statistical Computing & Graphics Newsletter*, 8(2/3), 31-39.
 
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover Publications.
 
