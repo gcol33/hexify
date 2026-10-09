@@ -1,6 +1,6 @@
 script: bench_ellipsoid_area.R
-date: 2026-10-10 00:10:01 CEST
-hexify commit: 41a9135
+date: 2026-10-10 00:47:18 CEST
+hexify commit: aa0ff0a
 uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)

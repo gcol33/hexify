@@ -1,7 +1,7 @@
 script: bench_ogc_conformance.R
-date: 2026-10-08 00:37:01 CEST
-hexify commit: 9c3e3ae
-uncommitted changes in R/, src/ or paper/bench/: TRUE
+date: 2026-10-10 01:04:24 CEST
+hexify commit: aa0ff0a
+uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
 platform: x86_64-w64-mingw32

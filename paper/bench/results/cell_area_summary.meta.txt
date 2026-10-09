@@ -1,11 +1,11 @@
 script: bench_cell_area.R
-date: 2026-10-05 12:36:48 CEST
-hexify commit: 84d3bbc
-uncommitted changes in R/, src/ or paper/bench/: TRUE
+date: 2026-10-10 00:47:26 CEST
+hexify commit: aa0ff0a
+uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
 platform: x86_64-w64-mingw32
-cpu: Intel64 Family 6 Model 183 Stepping 1, GenuineIntel
+cpu: Intel(R) Core(TM) i9-14900K
 hexify: 0.8.4
 dggridR: 3.1.1
 h3o: 0.3.0
