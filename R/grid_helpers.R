@@ -1009,8 +1009,15 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
 #'   2^53 and digit strings are accepted), character for H3 grids
 #' @param grid A HexGridInfo or HexData object
+#' @param form The form of the identifier. `"string"` (the default) is the
+#'   hierarchical index string. Aperture-7 grids on the icosahedron also
+#'   write IGEO7's integer forms of the Z7 index: `"int"`, the packed 64-bit
+#'   index as `bit64::integer64`; `"hex"`, the same 64 bits as 16 lowercase
+#'   hexadecimal digits, as DGGRID writes its INT64 Z7 output; and
+#'   `"monotonic"`, the monotonic ID as integer64.
 #'
-#' @return Character vector of hierarchical index strings
+#' @return Character vector of hierarchical index strings, or the form
+#'   `form` names
 #'
 #' @details
 #' A cell ID numbers the cells of one resolution from 1, so it names a cell
@@ -1019,10 +1026,51 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
 #' its resolution in its bits.
 #'
+#' @section IGEO7 integer forms:
+#' The Z7 string of an aperture-7 cell is two decimal digits naming its base
+#' cell (00-11) and one digit 0-6 per resolution. The packed index holds the
+#' same fields in 64 bits (Kmoch et al. 2025): the base cell in bits 63-60,
+#' then three bits per digit, resolution 1 in bits 59-57 down to resolution 20
+#' in bits 2-0, and the digit 7 (binary 111) at every resolution below the
+#' cell's own. "033000" packs to 0x3600ffffffffffff. The packed index exists
+#' up to resolution 20, IGEO7's finest.
+#'
+#' integer64 is a signed type, so `"int"` keeps the 64 bits and reads them as
+#' a signed number: the indices of base cells 08-11, whose top bit is set,
+#' print as negative numbers and sort before those of base cells 00-07. The
+#' one packed index whose bits are 2^63, the pentagon of base cell 08 at
+#' resolution 20, is the bit pattern bit64 reserves for `NA`, so as integer64
+#' it cannot be told from a missing value. `"hex"` carries every index
+#' exactly.
+#'
+#' The monotonic ID reads the Z7 string as a number: the base cell times
+#' 7^r plus the r digits as a base-7 number, so "033000" is
+#' 3 * 7^4 + 3 * 7^3 = 8232. Within one resolution it sorts as the strings
+#' do, and the deleted subsequence under each pentagon leaves its numbers
+#' unused. It reaches resolution 21, where it still fits in a signed 64-bit
+#' integer.
+#'
+#' @references
+#' Kmoch, A., Sahr, K., Chan, W. T., Uuemaa, E. (2025). IGEO7: A new
+#' hierarchically indexed hexagonal equal-area discrete global grid system.
+#' AGILE: GIScience Series 6, 32. \doi{10.5194/agile-giss-6-32-2025}
+#'
+#' @seealso [index_to_cell()] for the inverse
 #' @keywords internal
 #' @export
-cell_to_index <- function(cell_id, grid) {
+#' @examples
+#' g <- hex_grid(resolution = 4, aperture = 7)
+#' cell <- index_to_cell("033000", g)
+#' cell_to_index(cell, g, form = "hex")
+#' cell_to_index(cell, g, form = "monotonic")
+cell_to_index <- function(cell_id, grid,
+                          form = c("string", "int", "hex", "monotonic")) {
   g <- extract_grid(grid)
+  form <- match.arg(form)
+  if (form != "string") {
+    check_igeo7_grid(g, form)
+    return(cpp_cell_to_z7(icosa_arg(g), as_cell_id(cell_id), g@resolution, form))
+  }
 
   # H3 cell IDs are already hierarchical index strings
   if (is_h3_grid(g)) {
@@ -1044,6 +1092,97 @@ cell_to_index <- function(cell_id, grid) {
   aperture_int <- aperture_to_int(g@aperture)
 
   isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type, icosa_arg(g))
+}
+
+#' Convert hierarchical index to cell ID
+#'
+#' The inverse of [cell_to_index()]: the cells of `grid` that index strings,
+#' or IGEO7 integer forms, name.
+#'
+#' @param index Identifiers in the form `form` names: character for
+#'   `"string"` and `"hex"`, integer64 (or whole numbers below 2^53) for
+#'   `"int"` and `"monotonic"`
+#' @param grid A HexGridInfo or HexData object
+#' @param form The form of `index`, as in [cell_to_index()]
+#'
+#' @return Cell IDs of `grid`: integer64 for ISEA grids, character for H3
+#'   grids. Every index must name a cell of the grid's resolution.
+#'
+#' @details
+#' A packed or hexadecimal IGEO7 index carries its resolution in its
+#' trailing 7 digits; a monotonic ID is read at the grid's resolution. See
+#' [cell_to_index()] for the forms.
+#'
+#' @seealso [cell_to_index()]
+#' @keywords internal
+#' @export
+#' @examples
+#' g <- hex_grid(resolution = 4, aperture = 7)
+#' index_to_cell("033000", g)
+#' index_to_cell("3600ffffffffffff", g, form = "hex")
+#' index_to_cell(bit64::as.integer64("8232"), g, form = "monotonic")
+index_to_cell <- function(index, grid,
+                          form = c("string", "int", "hex", "monotonic")) {
+  g <- extract_grid(grid)
+  form <- match.arg(form)
+  if (form != "string") {
+    check_igeo7_grid(g, form)
+    index <- if (form == "hex") as.character(index) else as_cell_id(index, "index")
+    return(cpp_z7_to_cell(icosa_arg(g), index, g@resolution, form))
+  }
+  index <- as.character(index)
+  ok <- !is.na(index)
+
+  if (is_h3_grid(g)) {
+    check_index_resolution(cpp_h3_getResolution(index[ok]), g@resolution, index[ok])
+    return(index)
+  }
+
+  if (is_mixed_aperture(g@aperture)) {
+    check_index_resolution((nchar(index[ok]) - 2L) %/% mixed_index_digit_width,
+                           g@resolution, index[ok])
+    out <- as_cell_id(rep(NA, length(index)))
+    out[ok] <- cell_id_unlist(lapply(index[ok], mixed_index_to_cell_one,
+                                     resolution = g@resolution,
+                                     aperture = g@aperture,
+                                     polyhedron = grid_polyhedron(g)))
+    return(out)
+  }
+
+  aperture_int <- aperture_to_int(g@aperture)
+  index_type <- index_type_for_aperture(g@aperture)
+  check_index_resolution(cpp_get_index_resolution(index[ok], aperture_int, index_type),
+                         g@resolution, index[ok])
+  isea_index_to_cells(index, aperture_int, index_type, icosa_arg(g))
+}
+
+#' Stop unless a grid carries IGEO7 labels, which the integer forms need
+#' @param g HexGridInfo object
+#' @param form The form asked for
+#' @noRd
+check_igeo7_grid <- function(g, form) {
+  if (is_h3_grid(g) || as.character(g@aperture) != "7" ||
+      grid_polyhedron(g) != "icosahedron") {
+    stop(sprintf(paste0(
+      "form = \"%s\" is one of IGEO7's integer forms of the Z7 index, defined ",
+      "for aperture-7 grids on the icosahedron"), form), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+#' Stop unless every index has the grid's resolution
+#' @param res Resolutions of the indices
+#' @param resolution The grid's resolution
+#' @param index The indices, for the message
+#' @noRd
+check_index_resolution <- function(res, resolution, index) {
+  bad <- which(res != resolution)
+  if (length(bad) > 0L) {
+    stop(sprintf(paste0(
+      "index \"%s\" names a resolution-%d cell; the grid's cells are at ",
+      "resolution %d"), index[bad[1]], res[bad[1]], resolution), call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 #' Get parent cell

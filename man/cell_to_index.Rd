@@ -4,16 +4,24 @@
 \alias{cell_to_index}
 \title{Convert cell ID to hierarchical index string}
 \usage{
-cell_to_index(cell_id, grid)
+cell_to_index(cell_id, grid, form = c("string", "int", "hex", "monotonic"))
 }
 \arguments{
 \item{cell_id}{Cell IDs: integer64 for ISEA grids (whole numbers below
 2^53 and digit strings are accepted), character for H3 grids}
 
 \item{grid}{A HexGridInfo or HexData object}
+
+\item{form}{The form of the identifier. \code{"string"} (the default) is the
+hierarchical index string. Aperture-7 grids on the icosahedron also
+write IGEO7's integer forms of the Z7 index: \code{"int"}, the packed 64-bit
+index as \code{bit64::integer64}; \code{"hex"}, the same 64 bits as 16 lowercase
+hexadecimal digits, as DGGRID writes its INT64 Z7 output; and
+\code{"monotonic"}, the monotonic ID as integer64.}
 }
 \value{
-Character vector of hierarchical index strings
+Character vector of hierarchical index strings, or the form
+\code{form} names
 }
 \description{
 Advanced function for working with hierarchical index strings.
@@ -25,5 +33,45 @@ only together with its grid. The index string carries its resolution in
 its length and names one cell among all resolutions of the grid's family,
 and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
 its resolution in its bits.
+}
+\section{IGEO7 integer forms}{
+
+The Z7 string of an aperture-7 cell is two decimal digits naming its base
+cell (00-11) and one digit 0-6 per resolution. The packed index holds the
+same fields in 64 bits (Kmoch et al. 2025): the base cell in bits 63-60,
+then three bits per digit, resolution 1 in bits 59-57 down to resolution 20
+in bits 2-0, and the digit 7 (binary 111) at every resolution below the
+cell's own. "033000" packs to 0x3600ffffffffffff. The packed index exists
+up to resolution 20, IGEO7's finest.
+
+integer64 is a signed type, so \code{"int"} keeps the 64 bits and reads them as
+a signed number: the indices of base cells 08-11, whose top bit is set,
+print as negative numbers and sort before those of base cells 00-07. The
+one packed index whose bits are 2^63, the pentagon of base cell 08 at
+resolution 20, is the bit pattern bit64 reserves for \code{NA}, so as integer64
+it cannot be told from a missing value. \code{"hex"} carries every index
+exactly.
+
+The monotonic ID reads the Z7 string as a number: the base cell times
+7^r plus the r digits as a base-7 number, so "033000" is
+3 * 7^4 + 3 * 7^3 = 8232. Within one resolution it sorts as the strings
+do, and the deleted subsequence under each pentagon leaves its numbers
+unused. It reaches resolution 21, where it still fits in a signed 64-bit
+integer.
+}
+
+\examples{
+g <- hex_grid(resolution = 4, aperture = 7)
+cell <- index_to_cell("033000", g)
+cell_to_index(cell, g, form = "hex")
+cell_to_index(cell, g, form = "monotonic")
+}
+\references{
+Kmoch, A., Sahr, K., Chan, W. T., Uuemaa, E. (2025). IGEO7: A new
+hierarchically indexed hexagonal equal-area discrete global grid system.
+AGILE: GIScience Series 6, 32. \doi{10.5194/agile-giss-6-32-2025}
+}
+\seealso{
+\code{\link[=index_to_cell]{index_to_cell()}} for the inverse
 }
 \keyword{internal}

@@ -22,12 +22,6 @@ void index_to_cell(const std::string& index, int aperture,
                    IndexType index_type,
                    int& face, long long& i, long long& j, int& resolution);
 
-uint64_t index_to_uint64(const std::string& index, int aperture,
-                         IndexType index_type);
-
-std::string uint64_to_index(uint64_t value, int resolution, int aperture,
-                            IndexType index_type);
-
 std::string get_parent_index(const std::string& index, int aperture,
                              IndexType index_type);
 

@@ -27,6 +27,7 @@
 #include "rcpp_icosa.h"
 #include "cell_walls.h"
 #include "cell_id.h"
+#include "index_z7.h"
 
 using namespace Rcpp;
 
@@ -574,6 +575,169 @@ NumericVector cpp_quad_ij_to_cell(NumericVector icosa, IntegerVector quad, Numer
     }
 
     return result;
+}
+
+// ============================================================================
+// IGEO7 integer forms
+// ============================================================================
+// An aperture-7 cell on the icosahedron as IGEO7 writes it beside the Z7
+// string: the 64-bit packed index, as 16 hexadecimal digits (DGGRID's INT64
+// output), and the monotonic ID. The packed index's 64 bits travel through R
+// in an integer64 slot unchanged. integer64 is signed, so the indices of base
+// cells 8-11, whose top bit is set, read as negative numbers there, and the
+// one index whose bits are 2^63, base cell 8's pentagon at resolution 20, is
+// the bit pattern bit64 reserves for NA.
+
+enum class Z7Form { Packed, Hex, Monotonic };
+
+static Z7Form z7_form(const std::string& form) {
+    if (form == "int") return Z7Form::Packed;
+    if (form == "hex") return Z7Form::Hex;
+    if (form == "monotonic") return Z7Form::Monotonic;
+    Rcpp::stop("form must be \"int\", \"hex\" or \"monotonic\"");
+}
+
+static void require_igeo7_frame(const QuadFrame& f) {
+    if (f.aperture != 7 || !hexify::z7::igeo7_labels()) {
+        Rcpp::stop("IGEO7's integer forms are defined for aperture-7 grids on the "
+                   "icosahedron");
+    }
+}
+
+// The IGEO7 label of the aperture-7 cell at a frame's stored (i, j)
+static inline hexify::z7::Label frame_z7_label(const QuadFrame& f, int quad,
+                                               long long i, long long j) {
+    long long si, sj;
+    hexify::ap7_surrogate_to_substrate_ijk(i, j, f.resolution, si, sj);
+    return hexify::z7::label_of(quad, si, sj, f.resolution);
+}
+
+// The ID of the aperture-7 cell a label names
+static inline int64_t frame_z7_cell(const QuadFrame& f, const hexify::z7::Label& label) {
+    int quad;
+    long long si, sj, i, j;
+    hexify::z7::cell_of(label, quad, si, sj);
+    hexify::ap7_substrate_to_surrogate_ijk(si, sj, f.resolution, i, j);
+    return frame_encode(f, quad, i, j);
+}
+
+static std::string packed_hex(uint64_t z) {
+    static const char digits[] = "0123456789abcdef";
+    std::string out(16, '0');
+    for (int k = 15; k >= 0; k--) {
+        out[k] = digits[z & 15u];
+        z >>= 4;
+    }
+    return out;
+}
+
+// The packed index 1 to 16 hexadecimal digits spell, with or without "0x"
+static bool parse_packed_hex(const std::string& s, uint64_t& z) {
+    size_t start = (s.size() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) ? 2 : 0;
+    if (s.size() == start || s.size() - start > 16) return false;
+    z = 0;
+    for (size_t k = start; k < s.size(); k++) {
+        const char c = s[k];
+        int v;
+        if (c >= '0' && c <= '9') v = c - '0';
+        else if (c >= 'a' && c <= 'f') v = 10 + c - 'a';
+        else if (c >= 'A' && c <= 'F') v = 10 + c - 'A';
+        else return false;
+        z = (z << 4) | static_cast<uint64_t>(v);
+    }
+    return true;
+}
+
+// IGEO7 integer form of each cell: integer64 for "int" and "monotonic",
+// character for "hex"
+// [[Rcpp::export]]
+SEXP cpp_cell_to_z7(NumericVector icosa, NumericVector cell_id, int resolution,
+                    std::string form) {
+    activate_grid(icosa);
+    const QuadFrame f = grid_frame(resolution, 7, IntegerVector(0));
+    require_igeo7_frame(f);
+    const Z7Form fm = z7_form(form);
+    if (fm != Z7Form::Monotonic && resolution > hexify::z7::kMaxPackedRes) {
+        Rcpp::stop("IGEO7's packed index holds resolutions 0 to %d",
+                   hexify::z7::kMaxPackedRes);
+    }
+    hexify::require_cell_ids(cell_id);
+    const R_xlen_t n = cell_id.size();
+    NumericVector ids = hexify::cell_id_na(n);
+    CharacterVector hex(fm == Z7Form::Hex ? n : 0);
+
+    for (R_xlen_t k = 0; k < n; k++) {
+        if (hexify::cell_id_get(cell_id[k]) == hexify::kCellIdNA) {
+            if (fm == Z7Form::Hex) hex[k] = NA_STRING;
+            continue;
+        }
+        int quad;
+        long long i, j;
+        frame_decode(f, cell_id[k], quad, i, j);
+        const hexify::z7::Label label = frame_z7_label(f, quad, i, j);
+        if (fm == Z7Form::Monotonic) {
+            ids[k] = hexify::cell_id_slot(static_cast<int64_t>(hexify::z7::to_monotonic(label)));
+        } else if (fm == Z7Form::Packed) {
+            ids[k] = hexify::cell_id_slot(static_cast<int64_t>(hexify::z7::to_packed(label)));
+        } else {
+            hex[k] = packed_hex(hexify::z7::to_packed(label));
+        }
+    }
+    if (fm == Z7Form::Hex) return hex;
+    return ids;
+}
+
+// The cells of IGEO7 integer forms at a grid's resolution: `index` is
+// integer64 for "int" and "monotonic" and character for "hex". An index of
+// another resolution, or bits that spell no index, stop with its position.
+// [[Rcpp::export]]
+NumericVector cpp_z7_to_cell(NumericVector icosa, SEXP index, int resolution,
+                             std::string form) {
+    activate_grid(icosa);
+    const QuadFrame f = grid_frame(resolution, 7, IntegerVector(0));
+    require_igeo7_frame(f);
+    const Z7Form fm = z7_form(form);
+    const bool text = (fm == Z7Form::Hex);
+    if (text != (TYPEOF(index) == STRSXP)) {
+        Rcpp::stop(text ? "hexadecimal indices must be character"
+                        : "integer indices must be integer64");
+    }
+    const R_xlen_t n = Rf_xlength(index);
+    NumericVector out = hexify::cell_id_na(n);
+    NumericVector values = text ? NumericVector(0) : NumericVector(index);
+    if (!text) hexify::require_cell_ids(values);
+    CharacterVector strings = text ? CharacterVector(index) : CharacterVector(0);
+
+    for (R_xlen_t k = 0; k < n; k++) {
+        uint64_t z;
+        if (text) {
+            if (CharacterVector::is_na(strings[k])) continue;
+            if (!parse_packed_hex(Rcpp::as<std::string>(strings[k]), z)) {
+                Rcpp::stop("index %lld is not 1 to 16 hexadecimal digits",
+                           static_cast<long long>(k + 1));
+            }
+        } else {
+            const int64_t v = hexify::cell_id_get(values[k]);
+            if (v == hexify::kCellIdNA) continue;
+            z = static_cast<uint64_t>(v);
+        }
+        hexify::z7::Label label;
+        const bool ok = (fm == Z7Form::Monotonic)
+            ? hexify::z7::from_monotonic(z, resolution, label)
+            : hexify::z7::from_packed(z, label);
+        if (!ok) {
+            Rcpp::stop("index %lld is not an IGEO7 %s", static_cast<long long>(k + 1),
+                       fm == Z7Form::Monotonic ? "monotonic ID at this resolution"
+                                               : "packed index");
+        }
+        if (label.res != resolution) {
+            Rcpp::stop("index %lld is a resolution-%d cell, not one of this "
+                       "resolution-%d grid", static_cast<long long>(k + 1),
+                       label.res, resolution);
+        }
+        out[k] = hexify::cell_id_slot(frame_z7_cell(f, label));
+    }
+    return out;
 }
 
 // The parent of each cell of a mixed sequence `ap_seq` in the grid one level
@@ -1841,19 +2005,45 @@ static void pole_neighbors(const QuadFrame& f, int pole, const long long offsets
     }
 }
 
+// How a neighbour step that leaves its quad finds the cell it reaches.
+enum class Crossing {
+    Z7Digits,  // aperture 7 on the icosahedron: IGEO7 digit arithmetic
+    LonLat     // the centre sent back through the forward pipeline
+};
+
+// The neighbours of an aperture-7 cell on the icosahedron by IGEO7 digit
+// arithmetic: the cell's label stepped in the six directions of its base
+// cell's frame, a pentagon's deleted direction giving none.
+static void z7_neighbors(const QuadFrame& f, int quad, long long i, long long j,
+                         std::vector<int64_t>& out) {
+    const hexify::z7::Label label = frame_z7_label(f, quad, i, j);
+    hexify::z7::Label nbr;
+    for (int d = 1; d <= 6; d++) {
+        if (hexify::z7::neighbor(label, static_cast<hexify::z7::Digit>(d), nbr)) {
+            out.push_back(frame_z7_cell(f, nbr));
+        }
+    }
+}
+
 // The six cells adjacent to each of `cell_id`, in the frame's own grid.
 //
 // The six neighbours are the generator times the six units of the Eisenstein
-// integers, so one step table serves every lattice. A step leaving the quad is
-// sent back through the forward pipeline, which names the quad that owns it.
+// integers, so one step table serves every lattice. A cell with a step leaving
+// its quad takes all six from IGEO7 digit arithmetic on an aperture-7 grid of
+// the icosahedron, which is exact across quad and face edges; on other grids
+// such a step's centre is sent back through the forward pipeline, which names
+// the quad that owns it.
 static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
-                                      const QuadFrame& f) {
+                                      const QuadFrame& f,
+                                      Crossing crossing = Crossing::Z7Digits) {
     hexify::require_cell_ids(cell_id);
     int n = cell_id.size();
     Rcpp::List out(n);
 
     long long offsets[6][2];
     lattice_unit_steps(f.generator, offsets);
+    const bool z7_crossing = crossing == Crossing::Z7Digits && f.aperture == 7 &&
+                             hexify::z7::igeo7_labels();
 
     for (int k = 0; k < n; k++) {
         uint64_t idx = frame_cell_index(f, cell_id[k]);
@@ -1887,11 +2077,30 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
         }
         frame_decode_index(f, idx, quad, i, j);
 
+        long long step_i[6], step_j[6];
+        bool inside[6];
+        bool all_inside = true;
         for (int d = 0; d < 6; d++) {
-            long long ni = i + offsets[d][0];
-            long long nj = j + offsets[d][1];
+            step_i[d] = i + offsets[d][0];
+            step_j[d] = j + offsets[d][1];
+            inside[d] = frame_in_quad(f, step_i[d], step_j[d]);
+            all_inside = all_inside && inside[d];
+        }
 
-            if (frame_in_quad(f, ni, nj)) {
+        if (!all_inside && z7_crossing) {
+            z7_neighbors(f, quad, i, j, neighbor_ids);
+            std::sort(neighbor_ids.begin(), neighbor_ids.end());
+            neighbor_ids.erase(std::unique(neighbor_ids.begin(), neighbor_ids.end()),
+                               neighbor_ids.end());
+            out[k] = hexify::cell_id_vector(neighbor_ids);
+            continue;
+        }
+
+        for (int d = 0; d < 6; d++) {
+            long long ni = step_i[d];
+            long long nj = step_j[d];
+
+            if (inside[d]) {
                 neighbor_ids.push_back(frame_encode(f, quad, ni, nj));
                 continue;
             }
@@ -1945,6 +2154,17 @@ Rcpp::List cpp_get_neighbors_isea(NumericVector icosa, Rcpp::NumericVector cell_
                                   int resolution, int aperture, IntegerVector ap_seq) {
     activate_grid(icosa);
     return neighbors_in_frame(cell_id, grid_frame(resolution, aperture, ap_seq));
+}
+
+// cpp_get_neighbors_isea() with every quad-leaving step sent through the
+// forward pipeline, for checking the digit arithmetic against it
+// [[Rcpp::export]]
+Rcpp::List cpp_get_neighbors_isea_lonlat(NumericVector icosa, Rcpp::NumericVector cell_id,
+                                         int resolution, int aperture,
+                                         IntegerVector ap_seq) {
+    activate_grid(icosa);
+    return neighbors_in_frame(cell_id, grid_frame(resolution, aperture, ap_seq),
+                              Crossing::LonLat);
 }
 
 // Perimeter of each cell, on the unit sphere, its walls followed to within

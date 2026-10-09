@@ -1017,6 +1017,65 @@ stopifnot(identical(
 ))
 ```
 
+#### Z7 as a 64-bit integer
+
+IGEO7 also writes the Z7 index as one 64-bit integer (Kmoch et al., 2025): the
+base cell in the top four bits, then three bits per digit from resolution 1
+down to resolution 20, with the digit 7 at every level below the cell's own.
+The string and the integer hold the same fields, so `"033000"` packs to
+`0x3600ffffffffffff`, and the packed form stops at resolution 20, IGEO7's
+finest. The monotonic ID reads the string as a number in base 7,
+
+$$m = B \cdot 7^r + \sum_{k=1}^{r} D_k\, 7^{r-k},$$
+
+so `"033000"` is $3 \cdot 7^4 + 3 \cdot 7^3 = 8232$ (Kmoch et al., 2026). Within
+a resolution it sorts as the strings do, and the numbers of the pentagons'
+deleted subsequences go unused. `cell_to_index()` writes the packed index as
+`form = "int"` (an integer64) or `"hex"` (16 hexadecimal digits, DGGRID's INT64
+output) and the monotonic ID as `"monotonic"`; `index_to_cell()` reads all of
+them back. integer64 is a signed type: the packed indices of base cells 08--11
+have the top bit set and appear as negative numbers, and the one index whose
+bits are $2^{63}$, the resolution-20 pentagon of base cell 08, is the bit
+pattern bit64 uses for `NA`. The hexadecimal form carries every index exactly.
+
+```{r z7-integer}
+g7 <- hex_grid(resolution = 4, aperture = 7)
+cell <- index_to_cell("033000", g7)
+cell_to_index(cell, g7, form = "hex")
+cell_to_index(cell, g7, form = "int")
+cell_to_index(cell, g7, form = "monotonic")
+```
+
+#### Neighbours by digit arithmetic
+
+A step in direction $d$ from a cell changes its last digit and may carry a
+direction $c$ into the level above:
+$u(D_r) + u(d) = u(D_r') + \operatorname{down}_r u(c)$, where $u$ is a digit's
+unit vector and $\operatorname{down}_r$ the aperture-7 scaling of level $r$,
+whose rotation alternates between levels. Two $7 \times 7$ tables, one per
+rotation sense, give $D_r'$ and $c$: the addition of generalized balanced
+ternary (Gibson and Lucas, 1982; Sahr, 2019), which hexify builds from the same
+scaling operations its index walk uses. A carry out of resolution 1 leaves the
+base cell for a neighbouring pentagon, and a $12 \times 6$ table names that
+pentagon and the number of 60° turns that bring the digits into its frame, the
+part H3's base-cell neighbour tables play for H3. Inside a base cell, a step
+into the deleted subsequence crosses the pentagon's seam, and the cell there
+is the one a 60° turn away.
+
+On aperture-7 grids of the icosahedron, `get_neighbors()` takes a cell's six
+neighbours from the quad lattice when all six lie in its quad and from this
+arithmetic when one does not. The arithmetic is exact and needs no projection;
+on cells along quad edges it is two and a half to eight times faster than
+sending the step through longitude and latitude (`paper/bench/bench_z7_neighbors.R`).
+
+The Z3 and Z-order digits of apertures 3 and 4 are the base-3 and base-2
+digits of the quad coordinates $(i, j)$, recoded (Z3) or interleaved
+(Z-order), rather than the children of a central-place hierarchy. A neighbour
+step written in those digits is the step in $(i, j)$ carried digit by digit:
+the same result the quad lattice reaches in one integer addition, at $O(r)$
+cost, with the same quad-edge crossing. Digit arithmetic gives those grids
+nothing, so their neighbours stay on the quad lattice.
+
 #### Z3 Index (Aperture 3)
 
 The Z3 index encodes the aperture-3 subdivision hierarchy using **digit pairs** (Sahr, 2008). Because aperture 3 alternates between Class I and Class II orientation at each level, the encoding uses two digits per resolution-level pair:
@@ -1066,9 +1125,9 @@ cat(sprintf("Aperture 4: Cell %s -> Z-order index: %s\n", as.character(cell), id
 | **Index length** (res $r$) | $2 + r$ | $2 + 2\lceil r/2\rceil$ | $2 + r$ or $2 + 2r$ |
 
 All three hexify encodings are bijective: each cell maps to exactly one index
-string, and each valid string to one cell. hexify stores indices as character
-strings to support arbitrary precision and avoid integer overflow at high
-resolutions.
+string, and each valid string to one cell. The strings hold every resolution;
+on aperture-7 grids of the icosahedron the Z7 index is also available as
+IGEO7's 64-bit integer up to resolution 20 (see above).
 
 ### SEQNUM: The Flat Cell ID
 
@@ -1219,6 +1278,10 @@ for (ap in c(3, 4, 7)) {
 
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*. https://github.com/sahrk/DGGRID
 
+- Gibson, L., & Lucas, D. (1982). Vectorization of raster images using hierarchical methods. *Computer Graphics and Image Processing*, 20(1), 82-89. https://doi.org/10.1016/0146-664x(82)90075-2
+
+- Kmoch, A., Renoud, W., Chan, W.T., Jimenez Shaw, J., Chrapkiewicz, K., & Uuemaa, E. (2026). Efficient Neighbourhood Computation and Cloud-Native Storage for the IGEO7 DGGS Using the Z7 GBT Indexing. Talk, FOSS4G Europe 2026, Timisoara, 29 June 2026. https://talks.osgeo.org/foss4g-europe-2026/talk/HSFXR3/
+
 - Kmoch, A., Sahr, K., Chan, W.T., & Uuemaa, E. (2025). IGEO7: A new hierarchically indexed hexagonal equal-area discrete global grid system. *AGILE: GIScience Series*, 6, 32. https://doi.org/10.5194/agile-giss-6-32-2025
 
 - Morton, G.M. (1966). *A Computer Oriented Geodetic Data Base and a New Technique in File Sequencing*. IBM Technical Report.
@@ -1228,6 +1291,8 @@ for (ap in c(3, 4, 7)) {
 - Sahr, K. (2005). *Location coding on icosahedral aperture 3 hexagon discrete global grids*. PhD thesis, University of Oregon. https://www.cs.uoregon.edu/Reports/PHD-200508-Sahr.pdf
 
 - Sahr, K. (2008). Location coding on icosahedral aperture 3 hexagon discrete global grids. *Computers, Environment and Urban Systems*, 32(3), 174-187.
+
+- Sahr, K. (2019). Central Place Indexing: Hierarchical Linear Indexing Systems for Mixed-Aperture Hexagonal Discrete Global Grid Systems. *Cartographica*, 54(1), 16-29. https://doi.org/10.3138/cart.54.1.2018-0022
 
 
 

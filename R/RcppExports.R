@@ -169,6 +169,14 @@ cpp_quad_ij_to_cell <- function(icosa, quad, i, j, resolution, aperture, ap_seq)
     .Call(`_hexify_cpp_quad_ij_to_cell`, icosa, quad, i, j, resolution, aperture, ap_seq)
 }
 
+cpp_cell_to_z7 <- function(icosa, cell_id, resolution, form) {
+    .Call(`_hexify_cpp_cell_to_z7`, icosa, cell_id, resolution, form)
+}
+
+cpp_z7_to_cell <- function(icosa, index, resolution, form) {
+    .Call(`_hexify_cpp_z7_to_cell`, icosa, index, resolution, form)
+}
+
 cpp_mixed_parent <- function(icosa, cell_id, ap_seq, parent_seq) {
     .Call(`_hexify_cpp_mixed_parent`, icosa, cell_id, ap_seq, parent_seq)
 }
@@ -239,6 +247,10 @@ cpp_globe_frame <- function(icosa, resolution, aperture, ap_seq) {
 
 cpp_get_neighbors_isea <- function(icosa, cell_id, resolution, aperture, ap_seq) {
     .Call(`_hexify_cpp_get_neighbors_isea`, icosa, cell_id, resolution, aperture, ap_seq)
+}
+
+cpp_get_neighbors_isea_lonlat <- function(icosa, cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_get_neighbors_isea_lonlat`, icosa, cell_id, resolution, aperture, ap_seq)
 }
 
 cpp_cell_walls <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance, walls) {

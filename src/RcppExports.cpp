@@ -574,6 +574,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_cell_to_z7
+SEXP cpp_cell_to_z7(NumericVector icosa, NumericVector cell_id, int resolution, std::string form);
+RcppExport SEXP _hexify_cpp_cell_to_z7(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP formSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< std::string >::type form(formSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_to_z7(icosa, cell_id, resolution, form));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_z7_to_cell
+NumericVector cpp_z7_to_cell(NumericVector icosa, SEXP index, int resolution, std::string form);
+RcppExport SEXP _hexify_cpp_z7_to_cell(SEXP icosaSEXP, SEXP indexSEXP, SEXP resolutionSEXP, SEXP formSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type index(indexSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< std::string >::type form(formSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_z7_to_cell(icosa, index, resolution, form));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_mixed_parent
 NumericVector cpp_mixed_parent(NumericVector icosa, NumericVector cell_id, IntegerVector ap_seq, IntegerVector parent_seq);
 RcppExport SEXP _hexify_cpp_mixed_parent(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP ap_seqSEXP, SEXP parent_seqSEXP) {
@@ -840,6 +868,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_get_neighbors_isea(icosa, cell_id, resolution, aperture, ap_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_get_neighbors_isea_lonlat
+Rcpp::List cpp_get_neighbors_isea_lonlat(NumericVector icosa, Rcpp::NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_get_neighbors_isea_lonlat(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_get_neighbors_isea_lonlat(icosa, cell_id, resolution, aperture, ap_seq));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1481,6 +1524,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_grid_n_cells", (DL_FUNC) &_hexify_cpp_grid_n_cells, 4},
     {"_hexify_cpp_cell_lattice_generator", (DL_FUNC) &_hexify_cpp_cell_lattice_generator, 3},
     {"_hexify_cpp_quad_ij_to_cell", (DL_FUNC) &_hexify_cpp_quad_ij_to_cell, 7},
+    {"_hexify_cpp_cell_to_z7", (DL_FUNC) &_hexify_cpp_cell_to_z7, 4},
+    {"_hexify_cpp_z7_to_cell", (DL_FUNC) &_hexify_cpp_z7_to_cell, 4},
     {"_hexify_cpp_mixed_parent", (DL_FUNC) &_hexify_cpp_mixed_parent, 4},
     {"_hexify_cpp_lonlat_to_cell", (DL_FUNC) &_hexify_cpp_lonlat_to_cell, 6},
     {"_hexify_cpp_cell_to_lonlat", (DL_FUNC) &_hexify_cpp_cell_to_lonlat, 5},
@@ -1499,6 +1544,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_face_tri_to_solid", (DL_FUNC) &_hexify_cpp_face_tri_to_solid, 4},
     {"_hexify_cpp_globe_frame", (DL_FUNC) &_hexify_cpp_globe_frame, 4},
     {"_hexify_cpp_get_neighbors_isea", (DL_FUNC) &_hexify_cpp_get_neighbors_isea, 5},
+    {"_hexify_cpp_get_neighbors_isea_lonlat", (DL_FUNC) &_hexify_cpp_get_neighbors_isea_lonlat, 5},
     {"_hexify_cpp_cell_walls", (DL_FUNC) &_hexify_cpp_cell_walls, 7},
     {"_hexify_cpp_ring_walls", (DL_FUNC) &_hexify_cpp_ring_walls, 3},
     {"_hexify_cpp_icosa_tri_to_plane", (DL_FUNC) &_hexify_cpp_icosa_tri_to_plane, 4},

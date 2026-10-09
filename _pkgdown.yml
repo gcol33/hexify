@@ -184,6 +184,7 @@ reference:
   - hexify_default_index_type
   - hexify_is_valid_index_type
   - cell_to_index
+  - index_to_cell
   - hexify_get_children
   - hexify_get_parent
   - hexify_get_resolution

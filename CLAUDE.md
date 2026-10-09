@@ -45,6 +45,37 @@ integer64 loses its class silently in `unlist()`, `ifelse()`,
 `factor` and the set functions are imported from bit64, so they are safe inside
 the package.
 
+## Z7 integer forms and neighbours
+
+`src/index_z7.cpp` works on a `z7::Label` (leading field, resolution, digits);
+the string, IGEO7's packed 64-bit index (base cell in bits 63-60, three bits
+per digit, 7 below the cell's resolution, resolutions 0-20) and the monotonic
+ID (base * 7^r + digits in base 7, resolutions 0-21) are forms of it.
+`cell_to_index(form = "int" | "hex" | "monotonic")` and `index_to_cell()`
+expose them on aperture-7 icosahedral grids. The packed index crosses into R as
+integer64 with its 64 bits unchanged: base cells 08-11 read negative, and base
+cell 08's resolution-20 pentagon (bits 2^63) is bit64's NA; `"hex"` is exact
+for every index. The slides' Table 3 and DGGRID's INT64 output
+(`tests/testthat/data/dggrid_z7_int.csv`) are the test vectors.
+
+`z7::neighbor()` is generalized balanced ternary addition on a label: digit
+sum and carry tables built from `downAp7`/`downAp7r` (they equal H3's
+NEW_DIGIT_II/III and NEW_ADJUSTMENT_II/III), a 12 x 6 base-cell table
+(`kBaseNeighbor`, `kBaseTurns`) for a carry out of resolution 1, and the 60-degree
+turn across a pentagon's seam. `neighbors_in_frame()` takes an aperture-7
+icosahedral cell's neighbours from it whenever a lattice step leaves the quad;
+every other grid sends such a step through lon/lat. The two agree on every cell
+at resolutions 0-6 (`tests/testthat/test-z7-neighbors.R`, the lon/lat path
+reached through `cpp_get_neighbors_isea_lonlat()`). Apertures 3 and 4 keep the
+lattice: Z3 and Z-order digits are the base-3/base-2 digits of the quad's
+(i, j), so digit arithmetic there is the integer step done in O(r).
+
+DGGRID built on Windows reads an input SEQNUM above 2^32 modulo 2^32
+(`sscanf("%lu")` into a 32-bit `unsigned long`, `SubOpBasicMulti.cpp`,
+`SubOpGenHelper.cpp`); its SEQNUM output is right. Benches feeding DGGRID
+SEQNUMs stay below 2^32 or go through GEO input. Repro (git-ignored):
+`dev_notes/dggrid_seqnum_input_2pow32.R`.
+
 ## Bodies
 
 A grid is sized on any sphere: `hex_grid(radius_km = )` takes a radius in km or a

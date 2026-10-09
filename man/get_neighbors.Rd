@@ -50,8 +50,10 @@ For \code{k > 1}, returns all cells within \code{k} grid hops.
 }
 \details{
 For \strong{ISEA grids}, neighbors are computed using axial coordinate offsets
-in the quad IJ space. Cells at quad boundaries are handled by reprojection
-through lon/lat coordinates.
+in the quad IJ space. On aperture-7 grids of the icosahedron, a cell at a
+quad boundary takes its neighbors from digit arithmetic on its IGEO7 Z7
+index, which is exact and needs no projection; on other ISEA grids such a
+cell's neighbors are found by reprojection through lon/lat coordinates.
 
 For \strong{H3 grids}, neighbors use the vendored H3 \code{gridDisk} /
 \code{gridDiskDistances} functions.

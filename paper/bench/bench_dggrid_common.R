@@ -60,7 +60,9 @@ orient_lines <- function(orientation = NULL, region = NULL) {
     sprintf("dggs_vert0_azimuth %.15f", orientation[3]))
 }
 
-dggrid_seqnum <- function(cfg, res, lon, lat, icosa = NULL) {
+# DGGRID's SEQNUMs of points: numbers, or with `exact` the digit strings DGGRID
+# writes, which stay exact past 2^53.
+dggrid_seqnum <- function(cfg, res, lon, lat, icosa = NULL, exact = FALSE) {
   inp <- file.path(work, "pts.txt"); outp <- file.path(work, "seq.txt")
   write.table(data.frame(sprintf("%.12f", lon), sprintf("%.12f", lat)), inp,
               row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -68,15 +70,18 @@ dggrid_seqnum <- function(cfg, res, lon, lat, icosa = NULL) {
                paste("input_file_name", inp), "input_address_type GEO",
                "input_delimiter \" \"", paste("output_file_name", outp),
                "output_address_type SEQNUM", "output_delimiter \" \""))
-  as.numeric(readLines(outp))
+  out <- readLines(outp)
+  if (exact) out else as.numeric(out)
 }
 
-# DGGRID's Z7 strings (IGEO7) of cells given as SEQNUMs, or, with `z7`, the
-# SEQNUMs of Z7 strings.
-dggrid_z7 <- function(cfg, res, seqnum = NULL, z7 = NULL, icosa = NULL) {
+# DGGRID's Z7 indices (IGEO7) of cells given as SEQNUMs, or, with `z7`, the
+# SEQNUMs of Z7 indices. `form` is DGGRID's hier_ndx_form: DIGIT_STRING for
+# the Z7 string, INT64 for the packed 64-bit index as 16 hexadecimal digits.
+dggrid_z7 <- function(cfg, res, seqnum = NULL, z7 = NULL, icosa = NULL,
+                      form = "DIGIT_STRING") {
   inp <- file.path(work, "z7_in.txt"); outp <- file.path(work, "z7_out.txt")
   z7_form <- function(dir) c(sprintf("%s_hier_ndx_system Z7", dir),
-                             sprintf("%s_hier_ndx_form DIGIT_STRING", dir))
+                             sprintf("%s_hier_ndx_form %s", dir, form))
   if (is.null(z7)) {
     writeLines(format(seqnum, scientific = FALSE, trim = TRUE), inp)
     io <- c("input_address_type SEQNUM", "output_address_type HIERNDX", z7_form("output"))

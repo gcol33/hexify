@@ -245,3 +245,25 @@ mixed_cell_to_index_one <- function(cell_id, resolution, aperture,
   paste0(sprintf("%02d", as.integer(anc[1])),
          paste(sprintf(paste0("%0", w, "d"), digits), collapse = ""))
 }
+
+#' The mixed cell a hierarchical index string names: the inverse of
+#' mixed_cell_to_index_one(), walking down from the base cell through the
+#' child each two-digit ordinal picks.
+#' @noRd
+mixed_index_to_cell_one <- function(index, resolution, aperture,
+                                    polyhedron = "icosahedron") {
+  w <- mixed_index_digit_width
+  cell <- as_cell_id(as.integer(substr(index, 1L, 2L)))
+  for (k in seq_len(resolution)) {
+    pos <- as.integer(substr(index, 3L + (k - 1L) * w, 2L + k * w))
+    kids <- mixed_get_children_one(cell, k - 1L, k, aperture,
+                                   aperture_n_cells(aperture, k, polyhedron),
+                                   polyhedron)
+    if (is.na(pos) || pos >= length(kids)) {
+      stop(sprintf("index \"%s\" names no cell: level %d has %d children",
+                   index, k, length(kids)), call. = FALSE)
+    }
+    cell <- kids[pos + 1L]
+  }
+  cell
+}
