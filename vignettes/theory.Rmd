@@ -596,6 +596,31 @@ par(oldpar)
 
 Deformation is smallest, about 5°, in the ring around the face center toward the edge midpoints, and largest along the three vertex radii, where the parallels kink as they cross. The 17.27° maximum is reached at the face center approached along a vertex radius. The Jacobian determinant of the projection equals 1 everywhere on the face, which is the equal-area property in differential form.
 
+### The Truncated Icosahedron
+
+Snyder's construction applied to the truncated icosahedron deforms angles by at most 3.75° on its 20 hexagons and 2.65° on its 12 pentagons (Snyder, 1992, Table 1, p. 12). Cutting each corner of the icosahedron at a third of the edge places every hexagon in an icosahedron face plane, centred on the face centre (the cut keeps the face's three-fold symmetry), and every pentagon in a plane normal to a vertex axis, centred on the vertex (five-fold symmetry). A spherical icosahedron face is therefore the spherical hexagon plus a fifth of each of the three pentagons at its corners, and the solid's face centres are the centres of the icosahedral grid's faces and pentagon cells. The question is whether the hexagonal cells, indexed on the icosahedron's plane triangle as now, could be projected through the truncated icosahedron's faces instead. Three properties of that composite settle it.
+
+**Area shares.** Snyder's right triangles have areas 0.0376062647 on the hexagon and 0.0295072264 on the pentagon (unit sphere; Snyder, 1992, eqs. 2 and 24), so the spherical hexagon covers 0.71823 of a face and each pentagon fifth 0.09392. The plane hexagon cut at a third covers 2/3 of the plane triangle and each corner 1/9. An equal-area map cannot send the solid's vertices to the third points of the plane edges with straight sides between them. A slice map (Snyder's construction from a polygon centre) followed by an affine map of its plane triangle is again a slice map, so the only way to carry the construction into the plane triangle with straight pieces, three-fold symmetry and exact area is to slice the 18 spherical right triangles of a face onto 18 plane triangles of proportional area. Their corners are then fixed: the solid's vertices at 0.32044 of the edge from each corner, and the midpoint of each hexagon-pentagon edge at 0.25384 of the edge along the bisector, so the hexagon-pentagon boundary bends at the bisector. The pentagons take the hexagons' area scale here, where Snyder's projection gives them a 1.28 percent larger one (Snyder, 1992, p. 11).
+
+**Seams.** A slice map spaces the points of the edge opposite its apex by area. On the right spherical triangle with legs $h$ (apex to the foot $M$ of its perpendicular to the edge) and $x$ (from $M$ along the edge), the area is $2\arctan(\tan\frac{h}{2}\tan\frac{x}{2})$, so a point at $x$ goes to the share $\arctan(\tan\frac{h}{2}\tan\frac{x}{2}) / \arctan(\tan\frac{h}{2}\tan\frac{X}{2})$ of the half-edge $X$. This share grows strictly with $h$ at every interior $x$. A hexagon-pentagon edge is perpendicular to the arc from the hexagon's centre to the pentagon's, so both apexes have $M$ as their foot, at different distances: the two sides send the same point to two places. The offset reaches $1.74 \times 10^{-5}$ of the half-edge, 21.7 m on the Earth, which is the offset Snyder reports for his own projection ("less than 0.000018 of length BC", Snyder, 1992, p. 16). On Snyder's icosahedron and on the vertex-oriented equal-area projection (`projection = "ivea"`; van Leeuwen and Strebe, 2006) every edge inside the map joins two mirror images, which space it alike. A continuous equal-area composite would have to bend the images of the slicing arcs, and no closed form for it is known.
+
+**A bound at the vertices.** Five plane triangles meet at each vertex of the face frame, with 300° about it. Measure the frame in units in which its area equals the sphere's. A circle of radius $\rho$ about the vertex then has length $\frac{5\pi}{3}\rho$ and encloses the area $A = \frac{5\pi}{6}\rho^2$. Under an equal-area projection its preimage on the unit sphere is a closed curve enclosing the same area, so its length $\ell$ satisfies the spherical isoperimetric inequality $\ell^2 \ge A(4\pi - A)$. Where the projection has scale factors $a \ge b$ with $ab = 1$, the inverse stretches lengths by at most $a = \sqrt{a/b}$. Hence some point of the circle has
+
+$$\frac{a}{b} \ge \frac{\ell^2}{(5\pi\rho/3)^2} \ge \frac{6}{5} - \frac{\rho^2}{4}, \qquad \omega = 2\arcsin\frac{a/b - 1}{a/b + 1} \ \to\ 2\arcsin\frac{1}{11} = 10.43° \quad (\rho \to 0).$$
+
+Every equal-area projection onto the icosahedron's faces has points with $\omega \ge 10.43°$ arbitrarily close to each vertex, whatever solid it passes through on the way. The truncated icosahedron's 2.65° is measured on its own flat pentagon, which has 360° about its centre; in the icosahedron's frame those 360° close to 300°.
+
+Measured over a face (`paper/bench/bench_trunc_icosa.R`; 100,000 points on one face for the composite, 2,000,000 on the sphere for the others, and a cap of 0.5° about a vertex):
+
+| Face projection | Equal-area | Continuous | Mean $\omega$ | 95th percentile | Max $\omega$ | Max $\omega$ within 0.5° of a vertex |
+|---|---|---|---|---|---|---|
+| Truncated icosahedron in the face frame | yes | no (21.7 m) | 8.83° | 11.27° | 11.71° | 11.71° |
+| Snyder (`"isea"`) | yes | yes | 9.55° | 15.33° | 17.26° | 15.70° |
+| Vertex-oriented (`"ivea"`) | yes | yes | 8.11° | 10.52° | 11.12° | 11.12° |
+| Fuller (`"fuller"`) | no | yes | 7.04° | 11.33° | 13.13° | 13.14° |
+
+The vertex-oriented projection is continuous, has a closed-form inverse, and has smaller mean and maximum deformation than the truncated-icosahedron composite. Its maximum, reached at the vertices, lies 0.68° above the bound, which caps what any equal-area projection onto the icosahedron's faces could gain there. hexify therefore offers no truncated-icosahedron projection.
+
 ### The Unfolded Projection
 
 Applying the per-face projection to all 20 faces and unfolding them into a plane maps the whole sphere onto a strip of triangles (compare Snyder, 1992, Figure 12, p. 18). `hexify_lonlat_to_plane()` performs the composite transformation, in the same PLANE layout as dggridR's `dgGEO_to_PLANE()`. Coastlines and graticule continue across every shared edge and are interrupted elsewhere:
@@ -1211,5 +1236,7 @@ for (ap in c(3, 4, 7)) {
 - Snyder, J.P. (1987). *Map Projections: A Working Manual*. U.S. Geological Survey Professional Paper 1395.
 
 - Snyder, J.P. (1992). An equal-area map projection for polyhedral globes. *Cartographica*, 29(1), 10-21.
+
+- van Leeuwen, D., & Strebe, D. (2006). A "slice-and-dice" approach to area equivalence in polyhedral map projections. *Cartography and Geographic Information Science*, 33(4), 269-286.
 
 - White, D., Kimerling, A.J., & Overton, W.S. (1992). Cartographic and geometric components of a global sampling design for environmental monitoring. *Cartography and Geographic Information Systems*, 19(1), 5-22.
