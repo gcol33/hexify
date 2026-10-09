@@ -1281,8 +1281,11 @@ check_index_resolution <- function(res, resolution, index) {
 #' centre 11/12 in its parent and 1/12 in one neighbour. A Hex9 cell's parent
 #' is the coarser cell holding the cell's mode-0 half (Griffin 2026); six of
 #' every nine cells lie inside their parent, and the other three straddle its
-#' boundary, half in each of two cells. Several levels up, the parent is the
-#' parent's parent, as for every other grid.
+#' boundary, half in each of two cells. Several levels up, a Hex9 cell's parent
+#' is again the coarser cell holding its mode-0 half, Griffin's canonical
+#' ancestor ('libhex9''s \code{hex9_cell_ancestor}), and
+#' \code{\link{get_children}} returns the cells it is the ancestor of; on
+#' every other grid it is the parent's parent.
 #' \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 #' of OGC Topic 21 does when \code{inheritID} is false; the default is its
 #' \code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell
@@ -1326,13 +1329,9 @@ get_parent <- function(cell_id, grid, levels = 1L, overlapping = FALSE) {
                             as.integer(levels), grid_polyhedron(g)))
   }
 
-  # Hex9: the canonical parent, one level at a time
+  # Hex9: the canonical ancestor, the coarser cell holding the mode-0 half
   if (is_hex9_grid(g)) {
-    ids <- as_cell_id(cell_id)
-    for (step in seq_len(as.integer(levels))) {
-      ids <- cpp_hex9_parent(ids, g@resolution - step + 1L)
-    }
-    return(ids)
+    return(cpp_hex9_ancestor(as_cell_id(cell_id), g@resolution, as.integer(levels)))
   }
 
   index_type <- index_type_for_aperture(g@aperture)
@@ -1491,19 +1490,7 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
                         grid_polyhedron(g))
   ids <- as_cell_id(cell_id)
 
-  # Hex9: the nine canonical children, one level at a time
-  if (is_hex9_grid(g)) {
-    front <- lapply(seq_along(ids), function(k) ids[k])
-    for (step in seq_len(as.integer(levels))) {
-      flat <- cell_id_unlist(front)
-      kids <- cpp_hex9_children(flat, g@resolution + step - 1L)
-      slot <- rep(seq_along(front), lengths(front))
-      front <- lapply(seq_along(front), function(k) {
-        sort(cell_id_unlist(kids[slot == k]))
-      })
-    }
-    return(front)
-  }
+  if (is_hex9_grid(g)) return(hex9_owned_cells(ids, g, as.integer(levels)))
 
   # Mixed sequences: geometric children (cells whose geometric parent is this cell).
   if (is_mixed_aperture(g@aperture)) {
@@ -1522,6 +1509,43 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
     front <- isea_children_one_level(front, g@resolution + step - 1L, g)
   }
   front
+}
+
+#' The Hex9 cells `levels` resolutions finer whose canonical ancestor is each
+#' cell
+#'
+#' One level down, the nine canonical children. Further down, Griffin's owned
+#' sub-zones ('libhex9''s \code{hex9_owned_cells}): the cells holding their
+#' mode-0 half in the cell, 9^levels of them, which partition every
+#' resolution. A cell straddling the edge of its parent's ancestor can be owned
+#' by that ancestor's neighbour, so the candidates are the descendants, by
+#' children of children, of the cell and its neighbours.
+#' @param ids Cell IDs (integer64)
+#' @param g A Hex9 grid
+#' @param levels Levels down, 1 or more
+#' @return List of sorted cell ID vectors, one per cell
+#' @noRd
+hex9_owned_cells <- function(ids, g, levels) {
+  out <- rep(list(ids[0]), length(ids))
+  have <- which(!is.na(ids))
+  if (!length(have)) return(out)
+  around <- get_neighbors(ids[have], g, include_self = TRUE)
+  front <- cell_id_unlist(around)
+  slot <- rep(seq_along(have), lengths(around))
+  for (step in seq_len(levels)) {
+    kids <- cpp_hex9_children(front, g@resolution + step - 1L)
+    slot <- rep(slot, lengths(kids))
+    front <- cell_id_unlist(kids)
+  }
+  owner <- cpp_hex9_ancestor(front, g@resolution + levels, levels)
+  mine <- owner == ids[have][slot]
+  at <- split(which(mine), factor(slot[mine], levels = seq_along(have)))
+  if (any(lengths(at) != 9^levels)) {
+    stop("hexify internal error: a Hex9 cell owning other than 9^levels cells",
+         call. = FALSE)
+  }
+  out[have] <- lapply(at, function(i) sort(front[i]))
+  out
 }
 
 #' The same grid at another resolution

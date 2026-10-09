@@ -27,7 +27,10 @@
 // one of nine children. The cell ID is that digit string read as a number,
 // digit 0 counting 9^L, plus one, so the IDs of a level are 1 .. 12 * 9^L.
 // The canonical parent of a cell is the cell of the level above holding its
-// mode-0 half; every cell has nine children under that rule.
+// mode-0 half; every cell has nine children under that rule. Its canonical
+// ancestor k levels up is the cell of that level holding its mode-0 half, as
+// libhex9's hex9_cell_ancestor finds it; for k > 1 that is not always the
+// parent's parent, which follows the parent's mode-0 half instead.
 
 #include <cstdint>
 #include <vector>
@@ -88,9 +91,9 @@ struct Tables {
 };
 Tables tables();
 
-// The centre of the canonical parent, one level up, of the cell at
-// `centre`; level >= 1.
-OctPoint parent(const OctPoint& centre, int level);
+// The centre of the canonical ancestor of the cell at `centre`, of level
+// `to_level` < `level`: the canonical parent when to_level = level - 1.
+OctPoint ancestor(const OctPoint& centre, int level, int to_level);
 
 // The centres of the nine canonical children, one level down
 void children(const OctPoint& centre, int level, OctPoint out[9]);

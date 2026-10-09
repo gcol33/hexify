@@ -37,18 +37,23 @@ const char kDigit[] = "0123456789ab";
 
 } // anon
 
-// The canonical parent of each cell, one resolution up
+// The canonical ancestor of each cell, `levels` resolutions up
 // [[Rcpp::export]]
-NumericVector cpp_hex9_parent(NumericVector cell_id, int resolution) {
+NumericVector cpp_hex9_ancestor(NumericVector cell_id, int resolution, int levels) {
   check_level(resolution);
-  if (resolution < 1) stop("Hex9 cells of resolution 0 have no parent");
+  const int to = resolution - levels;
+  if (levels < 1 || to < 0) {
+    stop("a Hex9 ancestor is 1 to %d resolutions up from resolution %d", resolution,
+         resolution);
+  }
   hexify::require_cell_ids(cell_id);
   NumericVector out = hexify::cell_id_na(cell_id.size());
   for (R_xlen_t k = 0; k < cell_id.size(); k++) {
     const int64_t id = hexify::cell_id_get(cell_id[k]);
     if (id == hexify::kCellIdNA) continue;
-    const hexify::hex9::OctPoint p = hexify::hex9::parent(cell_centre(id, resolution), resolution);
-    out[k] = hexify::cell_id_slot(hexify::hex9::encode(p, resolution - 1));
+    const hexify::hex9::OctPoint p =
+        hexify::hex9::ancestor(cell_centre(id, resolution), resolution, to);
+    out[k] = hexify::cell_id_slot(hexify::hex9::encode(p, to));
   }
   return out;
 }

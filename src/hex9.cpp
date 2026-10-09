@@ -580,10 +580,12 @@ bool digit_strings_unique() {
   return true;
 }
 
-OctPoint parent(const OctPoint& centre, int level) {
+OctPoint ancestor(const OctPoint& centre, int level, int to_level) {
   check_level(level);
-  if (level < 1) throw std::invalid_argument("hex9: a level-0 cell has no parent");
-  return chain_centre(cell_chain(centre, level), level - 1);
+  if (to_level < 0 || to_level >= level) {
+    throw std::invalid_argument("hex9: an ancestor is of a coarser level, 0 or finer");
+  }
+  return chain_centre(cell_chain(centre, level), to_level);
 }
 
 void children(const OctPoint& centre, int level, OctPoint out[9]) {

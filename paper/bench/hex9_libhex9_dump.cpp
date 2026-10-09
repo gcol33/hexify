@@ -22,10 +22,14 @@
 //                            cell holding the point and that cell's lattice
 //                            centre (hex9_cell_uv), unprojected
 //   commute L K              lon lat pairs on stdin (spherical degrees): the
-//                            label at level L, and for k = 1..K the label of
-//                            the level-L canonical ancestor (iterated
-//                            hex9_cell_parent) of the point's level-(L + k)
-//                            cell
+//                            label at level L, and for k = 1..K the label at
+//                            level L of the point's level-(L + k) cell's
+//                            lineage ancestor (hex9_cell_parent k times,
+//                            columns kK) and of its canonical ancestor
+//                            (hex9_cell_ancestor, columns oK)
+//   owned L K N SEED         every cell of level L reached by N sphere points:
+//                            label, and the labels of its owned cells at
+//                            level L + K (hex9_owned_cells)
 //   project WARP SPHERE      lon lat pairs on stdin: their place on the
 //                            octahedron (x, y, z) under Kaseorg's projection,
 //                            with the warp (WARP 1) or without (0), from
@@ -152,6 +156,7 @@ int main(int argc, char** argv) {
     const int L = std::atoi(argv[2]), K = std::atoi(argv[3]);
     std::printf("lon,lat,direct");
     for (int k = 1; k <= K; k++) std::printf(",k%d", k);
+    for (int k = 1; k <= K; k++) std::printf(",o%d", k);
     std::printf("\n");
     double lon, lat;
     while (std::scanf("%lf %lf", &lon, &lat) == 2) {
@@ -168,7 +173,33 @@ int main(int argc, char** argv) {
         }
         std::printf(",%s", label(up, L).c_str());
       }
+      for (int k = 1; k <= K; k++) {
+        hex9_bin(full, L + k, bin);
+        hex9_cell_ancestor(bin, L, up);
+        std::printf(",%s", label(up, L).c_str());
+      }
       std::printf("\n");
+    }
+  } else if (mode == "owned") {
+    const int layer = std::atoi(argv[2]), K = std::atoi(argv[3]);
+    const long n = std::atol(argv[4]);
+    std::mt19937_64 rng(std::strtoull(argv[5], nullptr, 10));
+    std::set<std::string> seen;
+    std::vector<uint8_t> out(16 * static_cast<size_t>(std::pow(9.0, K)));
+    std::printf("label,owned\n");
+    for (long k = 0; k < n; k++) {
+      double lon, lat;
+      sphere_point(rng, lon, lat);
+      uint8_t full[16], bin[16];
+      hex9_encode_sphere(lon, lat, full);
+      hex9_bin(full, layer, bin);
+      const std::string lab = label(bin, layer);
+      if (!seen.insert(lab).second) continue;
+      const int64_t m = hex9_owned_cells(bin, layer + K, out.data(), nullptr,
+                                         static_cast<int64_t>(out.size() / 16));
+      std::string own;
+      for (int64_t i = 0; i < m; i++) own += (i ? ";" : "") + label(&out[16 * i], layer + K);
+      std::printf("%s,%s\n", lab.c_str(), own.c_str());
     }
   }
   return 0;

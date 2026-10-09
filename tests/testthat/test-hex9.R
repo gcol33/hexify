@@ -107,6 +107,33 @@ test_that("neighbours, parents and children agree with libhex9", {
   expect_identical(kids, lapply(strsplit(ref$children, ";"), sort))
 })
 
+test_that("ancestors and owned cells two levels apart are libhex9's", {
+  # hex9_owned_cells() of 35 level-1 cells at level 3
+  # (paper/bench/hex9_libhex9_dump.cpp, mode owned 1 2 40 7)
+  ref <- utils::read.csv(test_path("data", "libhex9_owned.csv"),
+                         colClasses = "character")
+  g1 <- hex_grid(resolution = 1, aperture = 9)
+  g3 <- hex_grid(resolution = 3, aperture = 9)
+  ids <- cpp_hex9_parse_label(ref$label)$cell_id
+  owned <- lapply(get_children(ids, g1, levels = 2), function(x) sort(cell_to_index(x, g3)))
+  expect_identical(owned, lapply(strsplit(ref$owned, ";"), sort))
+  flat <- cell_id_unlist(get_children(ids, g1, levels = 2))
+  expect_identical(get_parent(flat, g3, levels = 2), rep(ids, each = 81))
+})
+
+test_that("owned cells partition a level, and differ from children's children", {
+  g1 <- hex_grid(resolution = 1, aperture = 9)
+  g3 <- hex_grid(resolution = 3, aperture = 9)
+  ids <- hex9_ids(n_cells(g1))
+  owned <- cell_id_unlist(get_children(ids, g1, levels = 2))
+  expect_identical(sort(owned), hex9_ids(n_cells(g3)))
+  g2 <- hex_grid(resolution = 2, aperture = 9)
+  fine <- hex9_ids(n_cells(g3))
+  lineage <- get_parent(get_parent(fine, g3), g2)
+  # libhex9 counts the two relations apart on one cell in nine
+  expect_equal(mean(lineage != get_parent(fine, g3, levels = 2)), 1 / 9)
+})
+
 test_that("Hex9 cells are equal-area on the equal-area projections", {
   for (projection in c("isea", "ivea")) {
     g <- hex_grid(resolution = 2, aperture = 9, projection = projection)

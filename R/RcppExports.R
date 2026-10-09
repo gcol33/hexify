@@ -361,8 +361,8 @@ cpp_h3_overlap_solid_angles <- function(cell_ids, parent_ids, pair_cell, pair_pa
     .Call(`_hexify_cpp_h3_overlap_solid_angles`, cell_ids, parent_ids, pair_cell, pair_parent)
 }
 
-cpp_hex9_parent <- function(cell_id, resolution) {
-    .Call(`_hexify_cpp_hex9_parent`, cell_id, resolution)
+cpp_hex9_ancestor <- function(cell_id, resolution, levels) {
+    .Call(`_hexify_cpp_hex9_ancestor`, cell_id, resolution, levels)
 }
 
 cpp_hex9_children <- function(cell_id, resolution) {

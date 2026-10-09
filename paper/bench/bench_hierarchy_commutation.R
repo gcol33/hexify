@@ -10,13 +10,14 @@
 # three parents, so 2/3 * 2/3 = 4/9. Aperture 4: three quarters in cells
 # centred on parent edges, half in each of two parents, 3/4 * 1/2 = 3/8.
 # Aperture 7: six sevenths in cells off the parent's centre, 1/12 of each in a
-# neighbour of the parent, 6/7 * 1/12 = 1/14. Hex9 (aperture 9, Griffin's
-# rule: the parent holds the cell's mode-0 half): three of nine cells
-# straddle their parent, half in a neighbour, 3/9 * 1/2 = 1/6; Griffin
-# predicts (1/6) 3^(1 - k) for k levels, as straddling cells k levels down
-# sit in a band along the ancestor's edge that thins by 3 a level. With
-# LIBHEX9_DUMP pointing at the hex9_libhex9_dump tool, libhex9's own rate
-# (hex9_cell_parent, k times) is measured on the same points. Snyder's projection is
+# neighbour of the parent, 6/7 * 1/12 = 1/14. Hex9 (aperture 9): a cell's
+# parent k levels up is the coarser cell holding its mode-0 half (Griffin's
+# canonical ancestor). Three of nine cells straddle their parent, half in a
+# neighbour, 3/9 * 1/2 = 1/6, and k levels down the straddling cells sit in
+# a band along the ancestor's edge that thins threefold a level, so Griffin
+# predicts (1/6) 3^(1 - k). With LIBHEX9_DUMP pointing at the
+# hex9_libhex9_dump tool, the rate libhex9 gives through its own canonical
+# ancestor (hex9_cell_ancestor) is measured on the same points. Snyder's projection is
 # equal-area, so the rates on the sphere are those of the plane, up to the
 # cells beside the twelve vertices. Fuller's projection and H3 are not
 # equal-area, so their rates follow the lattice only approximately.
@@ -66,7 +67,7 @@ if (nzchar(dump)) {
   ref <- read.csv(text = system2(dump, c("commute", 4, 6), stdin = input, stdout = TRUE),
                   colClasses = "character")
   for (k in 1:6) {
-    rate <- mean(ref[[paste0("k", k)]] != ref$direct)
+    rate <- mean(ref[[paste0("o", k)]] != ref$direct)
     rows[[length(rows) + 1]] <- data.frame(
       grid = "Hex9 (libhex9)", fine_resolution = 4 + k, levels_up = k,
       disagree = rate, se = sqrt(rate * (1 - rate) / N_POINTS),

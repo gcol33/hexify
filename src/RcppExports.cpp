@@ -1235,15 +1235,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex9_parent
-NumericVector cpp_hex9_parent(NumericVector cell_id, int resolution);
-RcppExport SEXP _hexify_cpp_hex9_parent(SEXP cell_idSEXP, SEXP resolutionSEXP) {
+// cpp_hex9_ancestor
+NumericVector cpp_hex9_ancestor(NumericVector cell_id, int resolution, int levels);
+RcppExport SEXP _hexify_cpp_hex9_ancestor(SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP levelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
     Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex9_parent(cell_id, resolution));
+    Rcpp::traits::input_parameter< int >::type levels(levelsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_ancestor(cell_id, resolution, levels));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1782,7 +1783,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_h3_gridDistance", (DL_FUNC) &_hexify_cpp_h3_gridDistance, 2},
     {"_hexify_cpp_h3_cell_walls", (DL_FUNC) &_hexify_cpp_h3_cell_walls, 2},
     {"_hexify_cpp_h3_overlap_solid_angles", (DL_FUNC) &_hexify_cpp_h3_overlap_solid_angles, 4},
-    {"_hexify_cpp_hex9_parent", (DL_FUNC) &_hexify_cpp_hex9_parent, 2},
+    {"_hexify_cpp_hex9_ancestor", (DL_FUNC) &_hexify_cpp_hex9_ancestor, 3},
     {"_hexify_cpp_hex9_children", (DL_FUNC) &_hexify_cpp_hex9_children, 2},
     {"_hexify_cpp_hex9_label", (DL_FUNC) &_hexify_cpp_hex9_label, 2},
     {"_hexify_cpp_hex9_parse_label", (DL_FUNC) &_hexify_cpp_hex9_parse_label, 1},

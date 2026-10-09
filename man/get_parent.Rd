@@ -34,8 +34,11 @@ parent edge half in each of two, and an aperture-7 cell off the parent's
 centre 11/12 in its parent and 1/12 in one neighbour. A Hex9 cell's parent
 is the coarser cell holding the cell's mode-0 half (Griffin 2026); six of
 every nine cells lie inside their parent, and the other three straddle its
-boundary, half in each of two cells. Several levels up, the parent is the
-parent's parent, as for every other grid.
+boundary, half in each of two cells. Several levels up, a Hex9 cell's parent
+is again the coarser cell holding its mode-0 half, Griffin's canonical
+ancestor ('libhex9''s \code{hex9_cell_ancestor}), and
+\code{\link{get_children}} returns the cells it is the ancestor of; on
+every other grid it is the parent's parent.
 \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 of OGC Topic 21 does when \code{inheritID} is false; the default is its
 \code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell
