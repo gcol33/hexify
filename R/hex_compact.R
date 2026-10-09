@@ -1,23 +1,21 @@
 # R/hex_compact.R
 # Multi-resolution compaction and uncompaction
 
-#' The resolution an ISEA index string carries
-#'
-#' A Z-order, Z3 or Z7 index spells its quad in two characters and then one
-#' digit per resolution; a Hex9 label spells one digit per resolution from
-#' resolution 0, then a dot and its key tail.
+#' The resolution an ISEA index string carries, as its index type spells it;
+#' -1 for a string too short to be an index
 #' @param indices Character vector of index strings
 #' @param g The grid the cells belong to
 #' @noRd
 index_resolution <- function(indices, g) {
-  if (is_hex9_grid(g)) return(nchar(sub(".", "", indices, fixed = TRUE)) - 2L)
-  nchar(indices) - 2L
+  res <- cpp_get_index_resolution(as.character(indices), aperture_to_int(g@aperture),
+                                  index_type_for_aperture(g@aperture))
+  res[nchar(indices) < 2L] <- -1L
+  res
 }
 
 #' The cells an ISEA index string names
 #' @noRd
 isea_index_cells <- function(indices, g) {
-  if (is_hex9_grid(g)) return(cpp_hex9_parse_label(as.character(indices))$cell_id)
   isea_index_to_cells(indices, aperture_to_int(g@aperture),
                       index_type_for_aperture(g@aperture), icosa_arg(g))
 }

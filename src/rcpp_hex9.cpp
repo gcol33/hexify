@@ -33,8 +33,6 @@ hexify::hex9::OctPoint cell_centre(int64_t id, int resolution) {
   return c;
 }
 
-const char kDigit[] = "0123456789ab";
-
 } // anon
 
 // The canonical ancestor of each cell, `levels` resolutions up
@@ -78,67 +76,6 @@ List cpp_hex9_children(NumericVector cell_id, int resolution) {
     out[k] = hexify::cell_id_vector(ids);
   }
   return out;
-}
-
-// Each cell's libhex9 label, its digits and key tail, "<digits>.<tail>"
-// [[Rcpp::export]]
-CharacterVector cpp_hex9_label(NumericVector cell_id, int resolution) {
-  check_level(resolution);
-  hexify::require_cell_ids(cell_id);
-  CharacterVector out(cell_id.size());
-  int digits[hexify::hex9::kMaxLevel + 1];
-  for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-    const int64_t id = hexify::cell_id_get(cell_id[k]);
-    if (id == hexify::kCellIdNA) {
-      out[k] = NA_STRING;
-      continue;
-    }
-    const hexify::hex9::OctPoint c = cell_centre(id, resolution);
-    hexify::hex9::id_digits(id, resolution, digits);
-    std::string s;
-    for (int l = 0; l <= resolution; l++) s += kDigit[digits[l]];
-    s += '.';
-    s += static_cast<char>('0' + hexify::hex9::key_tail(c, resolution));
-    out[k] = s;
-  }
-  return out;
-}
-
-// Labels back to cells: the resolution each names, its length less one, and
-// the cell ID. A label may leave out its tail; one that names no cell, or
-// whose tail is not the cell's, comes back NA.
-// [[Rcpp::export]]
-List cpp_hex9_parse_label(CharacterVector label) {
-  const R_xlen_t n = label.size();
-  IntegerVector res(n, NA_INTEGER);
-  NumericVector ids = hexify::cell_id_na(n);
-  for (R_xlen_t k = 0; k < n; k++) {
-    if (CharacterVector::is_na(label[k])) continue;
-    const std::string s = Rcpp::as<std::string>(label[k]);
-    const size_t dot = s.find('.');
-    const std::string body = s.substr(0, dot);
-    const int level = static_cast<int>(body.size()) - 1;
-    if (level < 0 || level > hexify::hex9::kMaxLevel) continue;
-    int64_t id = 0;
-    bool ok = true;
-    for (int l = 0; l <= level && ok; l++) {
-      const char* at = std::find(kDigit, kDigit + 12, body[l]);
-      const int d = static_cast<int>(at - kDigit);
-      if (d >= 12 || (l > 0 && d >= 9)) ok = false;
-      id = id * 9 + d;
-    }
-    if (!ok) continue;
-    id += 1;
-    hexify::hex9::OctPoint c;
-    if (!hexify::hex9::decode(id, level, c)) continue;
-    if (dot != std::string::npos) {
-      const std::string tail = s.substr(dot + 1);
-      if (tail.size() != 1 || tail[0] - '0' != hexify::hex9::key_tail(c, level)) continue;
-    }
-    res[k] = level;
-    ids[k] = hexify::cell_id_slot(id);
-  }
-  return List::create(_["resolution"] = res, _["cell_id"] = ids);
 }
 
 // The cell of each point (x, y, z) of the octahedron |x| + |y| + |z| = 1 in

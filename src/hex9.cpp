@@ -7,6 +7,7 @@
 // and the hierarchy are computed here in exact integers.
 
 #include "hex9.h"
+#include <algorithm>
 #include <cstdlib>
 #include <stdexcept>
 #include <vector>
@@ -578,6 +579,42 @@ bool digit_strings_unique() {
     }
   }
   return true;
+}
+
+namespace {
+const char kLabelDigit[] = "0123456789ab";
+} // anon
+
+std::string label(const OctPoint& centre, int level) {
+  check_level(level);
+  const int64_t id = encode(centre, level);
+  int digits[kMaxLevel + 1];
+  if (id == 0 || !id_digits(id, level, digits)) {
+    throw std::invalid_argument("hex9: a label of a point that is no cell centre");
+  }
+  std::string s;
+  for (int l = 0; l <= level; l++) s += kLabelDigit[digits[l]];
+  s += '.';
+  s += static_cast<char>('0' + key_tail(centre, level));
+  return s;
+}
+
+bool parse_label(const std::string& s, int& level, OctPoint& centre) {
+  const size_t dot = s.find('.');
+  const std::string body = s.substr(0, dot);
+  level = static_cast<int>(body.size()) - 1;
+  if (level < 0 || level > kMaxLevel) return false;
+  int64_t id = 0;
+  for (int l = 0; l <= level; l++) {
+    const char* at = std::find(kLabelDigit, kLabelDigit + 12, body[l]);
+    const int d = static_cast<int>(at - kLabelDigit);
+    if (d >= 12 || (l > 0 && d >= 9)) return false;
+    id = id * 9 + d;
+  }
+  if (!decode(id + 1, level, centre)) return false;
+  if (dot == std::string::npos) return true;
+  const std::string tail = s.substr(dot + 1);
+  return tail.size() == 1 && tail[0] - '0' == key_tail(centre, level);
 }
 
 OctPoint ancestor(const OctPoint& centre, int level, int to_level) {

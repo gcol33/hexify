@@ -39,14 +39,14 @@ test_that("labels name every cell once and read back", {
     lab <- cell_to_index(ids, g)
     expect_false(anyDuplicated(lab) > 0)
     expect_true(all(nchar(lab) == L + 3L))
-    back <- cpp_hex9_parse_label(lab)
-    expect_identical(back$cell_id, ids)
-    expect_true(all(back$resolution == L))
+    expect_identical(index_to_cell(lab, g), ids)
     body <- sub("\\..*$", "", lab)
-    expect_identical(cpp_hex9_parse_label(body)$cell_id, ids)
+    expect_identical(index_to_cell(body, g), ids)
   }
-  expect_true(is.na(cpp_hex9_parse_label("43.5")$cell_id))
-  expect_true(is.na(cpp_hex9_parse_label("c3")$cell_id))
+  g1 <- hex_grid(resolution = 1, aperture = 9)
+  expect_error(index_to_cell("43.5", g1), "no Hex9 label")
+  expect_error(index_to_cell("c3", g1), "no Hex9 label")
+  expect_error(index_to_cell("4.2", g1), "resolution-0 cell")
 })
 
 test_that("every cell has nine children whose parent it is", {
@@ -88,7 +88,8 @@ test_that("the grid's digits agree with libhex9 on the octahedron", {
   for (col in grep("^L", names(pts), value = TRUE)) {
     L <- as.integer(sub("L", "", col))
     ids <- cpp_hex9_octahedron_cell(x, y, z, L)
-    expect_identical(cpp_hex9_label(ids, L), pts[[col]], info = col)
+    expect_identical(cell_to_index(ids, hex_grid(resolution = L, aperture = 9)),
+                     pts[[col]], info = col)
   }
 })
 
@@ -96,7 +97,7 @@ test_that("neighbours, parents and children agree with libhex9", {
   ref <- utils::read.csv(test_path("data", "libhex9_cells_L1.csv"),
                          colClasses = "character")
   g1 <- hex_grid(resolution = 1, aperture = 9)
-  ids <- cpp_hex9_parse_label(ref$label)$cell_id
+  ids <- index_to_cell(ref$label, g1)
   expect_equal(length(ids), 108L)
   nb <- lapply(get_neighbors(ids, g1), function(x) sort(cell_to_index(x, g1)))
   expect_identical(nb, lapply(strsplit(ref$neighbours, ";"), sort))
@@ -114,7 +115,7 @@ test_that("ancestors and owned cells two levels apart are libhex9's", {
                          colClasses = "character")
   g1 <- hex_grid(resolution = 1, aperture = 9)
   g3 <- hex_grid(resolution = 3, aperture = 9)
-  ids <- cpp_hex9_parse_label(ref$label)$cell_id
+  ids <- index_to_cell(ref$label, g1)
   owned <- lapply(get_children(ids, g1, levels = 2), function(x) sort(cell_to_index(x, g3)))
   expect_identical(owned, lapply(strsplit(ref$owned, ";"), sort))
   flat <- cell_id_unlist(get_children(ids, g1, levels = 2))

@@ -32,7 +32,8 @@ static hexify::IndexType parse_index_type(const std::string& type_str) {
   if (type_str == "zorder" || type_str == "ZORDER") return hexify::IndexType::ZORDER;
   if (type_str == "z3" || type_str == "Z3") return hexify::IndexType::Z3;
   if (type_str == "z7" || type_str == "Z7") return hexify::IndexType::Z7;
-  Rcpp::stop("Invalid index_type. Must be 'auto', 'zorder', 'z3', or 'z7'");
+  if (type_str == "hex9" || type_str == "HEX9") return hexify::IndexType::HEX9;
+  Rcpp::stop("Invalid index_type. Must be 'auto', 'zorder', 'z3', 'z7' or 'hex9'");
 }
 
 // Two vector arguments of one call either run in step, or one of them is a

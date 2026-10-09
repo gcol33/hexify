@@ -33,6 +33,7 @@
 // parent's parent, which follows the parent's mode-0 half instead.
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace hexify {
@@ -74,6 +75,16 @@ bool id_digits(int64_t id, int level, int digits[]);
 
 // The key tail libhex9 writes after a cell's digits, (c2 << 1) | r_mo, 0..5
 int key_tail(const OctPoint& centre, int level);
+
+// libhex9's label of the cell at `centre`: its digits, 0-9 and a, b for the
+// twelve cells of level 0 and 0-8 after, a dot and its key tail, as in
+// "435878503.3"
+std::string label(const OctPoint& centre, int level);
+
+// The cell a label names and its level, the label's digit count less one;
+// false when it names no cell, or carries a tail that is not the cell's. The
+// dot and tail may be left out.
+bool parse_label(const std::string& s, int& level, OctPoint& centre);
 
 // Whether no two cells of any one level share a digit string, which makes
 // the cell ID of every level a bijection onto 1 .. 12 * 9^L. Decided on the

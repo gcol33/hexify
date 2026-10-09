@@ -5,6 +5,8 @@
 #include "index_z3.h"
 #include "index_zorder.h"
 #include "index_z7.h"
+#include "hex9.h"
+#include "hex9_solid.h"
 #include "coordinate_transforms.h"
 #include "polyhedron.h"
 #include "constants.h"
@@ -51,6 +53,9 @@ static size_t index_digits_per_level(int aperture, IndexType index_type) {
 }
 
 bool is_valid_index_type(int aperture, IndexType index_type) {
+  if (aperture == 9 || index_type == IndexType::HEX9) {
+    return aperture == 9 && (index_type == IndexType::HEX9 || index_type == IndexType::AUTO);
+  }
   if (index_type == IndexType::AUTO) return true;
   if (index_type == IndexType::ZORDER) return true;
   if (index_type == IndexType::Z3 && aperture == 3) return true;
@@ -59,15 +64,54 @@ bool is_valid_index_type(int aperture, IndexType index_type) {
 }
 
 IndexType get_default_index_type(int aperture) {
+  if (aperture == 9) return IndexType::HEX9;
   if (aperture == 3) return IndexType::Z3;
   if (aperture == 7) return IndexType::Z7;
   if (aperture == 4) return IndexType::ZORDER;
   return IndexType::ZORDER;
 }
 
-std::string cell_to_index(int face, long long i, long long j, 
+namespace {
+
+// Aperture 9 writes libhex9's labels only
+void check_hex9_type(IndexType t) {
+  if (t != IndexType::AUTO && t != IndexType::HEX9) {
+    throw std::runtime_error("hex_index: aperture 9 (Hex9) takes index_type hex9");
+  }
+}
+
+// A Hex9 label's cell, as its quad and stored (i, j), and its level
+void hex9_label_cell(const std::string& index, int& quad, long long& i, long long& j,
+                     int& resolution) {
+  hex9::OctPoint c;
+  if (!hex9::parse_label(index, resolution, c)) {
+    throw std::runtime_error("hex_index: \"" + index + "\" is no Hex9 label");
+  }
+  hex9::cell_quad_ij(c, resolution, quad, i, j);
+}
+
+// The centre of the Hex9 cell a label names, and its level
+hex9::OctPoint hex9_label_centre(const std::string& index, int& resolution) {
+  hex9::OctPoint c;
+  if (!hex9::parse_label(index, resolution, c)) {
+    throw std::runtime_error("hex_index: \"" + index + "\" is no Hex9 label");
+  }
+  return c;
+}
+
+} // anon
+
+std::string cell_to_index(int face, long long i, long long j,
                           int resolution, int aperture,
                           IndexType index_type) {
+  if (aperture == 9) {
+    check_hex9_type(index_type);
+    hex9::OctPoint c;
+    if (!hex9::quad_ij_lattice(face, i, j, resolution, c) || !hex9::is_centre(c)) {
+      throw std::runtime_error("hex_index: a Hex9 quad coordinate that is no cell");
+    }
+    return hex9::label(c, resolution);
+  }
   // Face validation depends on aperture and resolution
   const SolidTopology& t = topo();
   const int max_face = (aperture == 3 && resolution > 0) ? t.n_faces - 1 : t.n_quads() - 1;
@@ -122,6 +166,11 @@ std::string cell_to_index(int face, long long i, long long j,
 void index_to_cell(const std::string& index, int aperture,
                    IndexType index_type,
                    int& face, long long& i, long long& j, int& resolution) {
+  if (aperture == 9) {
+    check_hex9_type(index_type);
+    hex9_label_cell(index, face, i, j, resolution);
+    return;
+  }
   if (index.length() < 2) {
     throw std::runtime_error("hex_index: invalid index string");
   }
@@ -180,6 +229,13 @@ void index_to_cell(const std::string& index, int aperture,
 
 std::string get_parent_index(const std::string& index, int aperture,
                              IndexType index_type) {
+  if (aperture == 9) {
+    check_hex9_type(index_type);
+    int level;
+    const hex9::OctPoint c = hex9_label_centre(index, level);
+    if (level == 0) throw std::runtime_error("hex_index: cannot get parent of resolution 0");
+    return hex9::label(hex9::ancestor(c, level, level - 1), level - 1);
+  }
   if (index.length() <= 2) {
     throw std::runtime_error("hex_index: cannot get parent of resolution 0");
   }
@@ -203,11 +259,22 @@ std::vector<std::string> get_children_indices(const std::string& index,
     index_type = get_default_index_type(aperture);
   }
 
+  std::vector<std::string> children;
+
+  if (aperture == 9) {
+    check_hex9_type(index_type);
+    int level;
+    const hex9::OctPoint c = hex9_label_centre(index, level);
+    if (level >= hex9::kMaxLevel) return children;
+    hex9::OctPoint kids[9];
+    hex9::children(c, level, kids);
+    for (const hex9::OctPoint& k : kids) children.push_back(hex9::label(k, level + 1));
+    return children;
+  }
+
   if (aperture != 3 && aperture != 4 && aperture != 7) {
     throw std::runtime_error("hex_index: invalid aperture");
   }
-
-  std::vector<std::string> children;
 
   int face, parent_res;
   long long parent_i, parent_j;
@@ -261,6 +328,7 @@ int compare_indices(const std::string& idx1, const std::string& idx2) {
 
 int get_index_resolution(const std::string& index, int aperture,
                          IndexType index_type) {
+  if (aperture == 9) return static_cast<int>(index.substr(0, index.find('.')).size()) - 1;
   if (index.length() <= 2) return 0;
 
   if (index_type == IndexType::AUTO) {

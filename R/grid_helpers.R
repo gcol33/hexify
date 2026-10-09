@@ -1116,11 +1116,6 @@ cell_to_index <- function(cell_id, grid,
     return(as.character(cell_id))
   }
 
-  # A Hex9 cell ID is its address; the index is libhex9's label of it
-  if (is_hex9_grid(g)) {
-    return(cpp_hex9_label(as_cell_id(cell_id), g@resolution))
-  }
-
   # Mixed sequences use a geometric hierarchical index (see
   # R/aperture_mixed_hierarchy.R); pure apertures use the Z7/Z3/zorder encoders.
   if (is_mixed_aperture(g@aperture)) {

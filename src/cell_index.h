@@ -11,7 +11,8 @@ enum class IndexType {
   AUTO,
   ZORDER,
   Z3,
-  Z7
+  Z7,
+  HEX9   // libhex9's labels of Hex9 cells (aperture 9, hex9.h)
 };
 
 std::string cell_to_index(int face, long long i, long long j, 

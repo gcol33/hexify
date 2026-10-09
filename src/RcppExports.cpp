@@ -1260,29 +1260,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cpp_hex9_label
-CharacterVector cpp_hex9_label(NumericVector cell_id, int resolution);
-RcppExport SEXP _hexify_cpp_hex9_label(SEXP cell_idSEXP, SEXP resolutionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
-    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex9_label(cell_id, resolution));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cpp_hex9_parse_label
-List cpp_hex9_parse_label(CharacterVector label);
-RcppExport SEXP _hexify_cpp_hex9_parse_label(SEXP labelSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type label(labelSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_hex9_parse_label(label));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cpp_hex9_octahedron_cell
 NumericVector cpp_hex9_octahedron_cell(NumericVector x, NumericVector y, NumericVector z, int resolution);
 RcppExport SEXP _hexify_cpp_hex9_octahedron_cell(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP resolutionSEXP) {
@@ -1785,8 +1762,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_h3_overlap_solid_angles", (DL_FUNC) &_hexify_cpp_h3_overlap_solid_angles, 4},
     {"_hexify_cpp_hex9_ancestor", (DL_FUNC) &_hexify_cpp_hex9_ancestor, 3},
     {"_hexify_cpp_hex9_children", (DL_FUNC) &_hexify_cpp_hex9_children, 2},
-    {"_hexify_cpp_hex9_label", (DL_FUNC) &_hexify_cpp_hex9_label, 2},
-    {"_hexify_cpp_hex9_parse_label", (DL_FUNC) &_hexify_cpp_hex9_parse_label, 1},
     {"_hexify_cpp_hex9_octahedron_cell", (DL_FUNC) &_hexify_cpp_hex9_octahedron_cell, 4},
     {"_hexify_cpp_hex9_warp_load", (DL_FUNC) &_hexify_cpp_hex9_warp_load, 1},
     {"_hexify_cpp_hex9_warp_ready", (DL_FUNC) &_hexify_cpp_hex9_warp_ready, 0},

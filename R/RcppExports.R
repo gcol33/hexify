@@ -369,14 +369,6 @@ cpp_hex9_children <- function(cell_id, resolution) {
     .Call(`_hexify_cpp_hex9_children`, cell_id, resolution)
 }
 
-cpp_hex9_label <- function(cell_id, resolution) {
-    .Call(`_hexify_cpp_hex9_label`, cell_id, resolution)
-}
-
-cpp_hex9_parse_label <- function(label) {
-    .Call(`_hexify_cpp_hex9_parse_label`, label)
-}
-
 cpp_hex9_octahedron_cell <- function(x, y, z, resolution) {
     .Call(`_hexify_cpp_hex9_octahedron_cell`, x, y, z, resolution)
 }
