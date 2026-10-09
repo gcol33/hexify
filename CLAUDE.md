@@ -202,7 +202,7 @@ leave it, so ISEA and IVEA cells are equal-area on the ellipsoid.
 
 ## OGC zone identifiers (textZIRS, uint64ZIRS)
 
-`cell_to_index(zirs = "textZIRS" | "uint64ZIRS")` and `index_to_cell()`
+`cell_to_index(form = "textZIRS" | "uint64ZIRS")` and `index_to_cell()`
 (`R/ogc_zirs.R`) write and read the identifiers DGGAL gives OGC's ISEA3H,
 ISEA7H, IVEA3H and IVEA7H, for any aperture-3/7 icosahedron grid. Root
 rhombus r is hexify quad r/2 + 1 (even r) or (r - 1)/2 + 6 (odd), 10 and 11

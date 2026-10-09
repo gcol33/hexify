@@ -621,6 +621,43 @@ Measured over a face (`paper/bench/bench_trunc_icosa.R`; 100,000 points on one f
 
 The vertex-oriented projection is continuous, has a closed-form inverse, and has smaller mean and maximum deformation than the truncated-icosahedron composite. Its maximum, reached at the vertices, lies 0.68° above the bound, which caps what any equal-area projection onto the icosahedron's faces could gain there. hexify therefore offers no truncated-icosahedron projection.
 
+### The Earth as an Ellipsoid
+
+Snyder's projection is equal-area on the sphere. By default hexify, like DGGRID
+and H3, reads a geodetic latitude $\varphi$ as a latitude on the sphere whose
+area is the WGS84 ellipsoid's. A small region at $\varphi$ then has $MN/R_q^2$
+times its spherical area on the ellipsoid, with $M$ and $N$ the meridional and
+prime-vertical radii of curvature and $R_q$ the radius of that sphere. Measured
+geodesically on WGS84, the cells' areas run from 0.9955 times the reported area
+at the equator to 1.0090 times it at the poles
+(`paper/bench/bench_ellipsoid_area.R`).
+
+The authalic latitude $\beta$ removes the factor. With $e$ the eccentricity,
+
+$$q(\varphi) = (1 - e^2)\left[\frac{\sin\varphi}{1 - e^2\sin^2\varphi} + \frac{\operatorname{artanh}(e \sin\varphi)}{e}\right], \qquad \sin\beta = \frac{q(\varphi)}{q(\pi/2)}, \qquad R_q = a\sqrt{q(\pi/2)/2},$$
+
+the ellipsoid below $\varphi$ holds as much area as the sphere of radius $R_q$
+below $\beta$, so $(\lambda, \varphi) \mapsto (\lambda, \beta)$ keeps every
+area, and cells equal-area on that sphere are equal-area on the ellipsoid.
+`hex_grid(ellipsoid = "WGS84")` converts geodetic latitude to $\beta$ where a
+point enters the projection and back where it leaves, and sizes the grid on
+$R_q$ (6371.0072 km). hexify evaluates both directions by a sine series in
+$2\varphi$ (or $2\beta$) whose coefficients it reads off the closed form above
+when the grid is used; on WGS84 a latitude moves by up to 0.128°. The cells'
+geodesic areas then agree with the reported ones to the measurement's own
+error, about $2 \times 10^{-6}$.
+
+The ISEA3H, ISEA7H, IVEA3H and IVEA7H definitions OGC registers are built this
+way, with the first vertex at 11.20°E and authalic latitude
+$\arctan\phi$ (`orientation = "ogc"`), which is geodetic latitude
+58.397145907431° on WGS84:
+
+```{r ellipsoid-ogc}
+ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+                orientation = "ogc")
+ogc
+```
+
 ### The Unfolded Projection
 
 Applying the per-face projection to all 20 faces and unfolding them into a plane maps the whole sphere onto a strip of triangles (compare Snyder, 1992, Figure 12, p. 18). `hexify_lonlat_to_plane()` performs the composite transformation, in the same PLANE layout as dggridR's `dgGEO_to_PLANE()`. Coastlines and graticule continue across every shared edge and are interrupted elsewhere:
@@ -1044,6 +1081,23 @@ cell <- index_to_cell("033000", g7)
 cell_to_index(cell, g7, form = "hex")
 cell_to_index(cell, g7, form = "int")
 cell_to_index(cell, g7, form = "monotonic")
+```
+
+#### OGC zone identifiers
+
+OGC's ISEA3H, ISEA7H, IVEA3H and IVEA7H name a zone by a root rhombus, two
+faces of the icosahedron (hexify's diamond quads, in DGGAL's order, A and B for
+the poles), a sub-rhombus counted row by row within it, and a letter for the
+zone at that sub-rhombus, for example `"E6-317-A"`; the same fields packed
+into 64 bits are the uint64ZIRS. `cell_to_index()` writes them as
+`form = "textZIRS"` and `"uint64ZIRS"`, and `index_to_cell()` reads them
+back; they equal DGGAL's for every zone up to ISEA3H level 10 and ISEA7H
+level 5 (`paper/bench/bench_dggal_zirs.R`).
+
+```{r ogc-zirs}
+cell <- index_to_cell("E6-317-A", ogc, form = "textZIRS")
+cell_to_lonlat(cell, ogc)
+cell_to_index(cell, ogc, form = "uint64ZIRS")
 ```
 
 #### Neighbours by digit arithmetic

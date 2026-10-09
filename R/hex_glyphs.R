@@ -102,7 +102,7 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
   }
   meta <- do.call(rbind, meta)
   out <- sf::st_sf(cell_id = cell_id[as.integer(meta[, 1])], side = meta[, 2],
-                   part = meta[, 3], geometry = sf::st_sfc(geoms, crs = 4326))
+                   part = meta[, 3], geometry = sf::st_sfc(geoms, crs = grid_crs(g)))
   wrap_cells_at_dateline(out)
 }
 
@@ -166,7 +166,7 @@ hex_triangles <- function(cell_id, grid, value = NULL) {
     out$neighbor_value <- value[match(out$neighbor_id, cell_id)]
     out$change <- out$neighbor_value - out$value
   }
-  out <- sf::st_sf(out, geometry = sf::st_sfc(geoms, crs = 4326))
+  out <- sf::st_sf(out, geometry = sf::st_sfc(geoms, crs = grid_crs(g)))
   wrap_cells_at_dateline(out)
 }
 

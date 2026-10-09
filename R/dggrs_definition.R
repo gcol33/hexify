@@ -28,7 +28,7 @@
 #' \eqn{\arctan(\phi)}: \code{hex_grid(aperture = 3, ellipsoid = "WGS84",
 #' orientation = "ogc")}, its aperture-7 twin and the same with
 #' \code{projection = "ivea"}. For such a grid the definition carries OGC's
-#' zone identifiers (\code{cell_to_index(zirs = "textZIRS")}) and links to the
+#' zone identifiers (\code{cell_to_index(form = "textZIRS")}) and links to the
 #' OGC definition, which it matches in its hierarchy and zone identifiers; it
 #' carries no OGC URI, since hexify lists sub-zones in ascending order of
 #' cell ID rather than in OGC's scanlines. On a grid with an ellipsoid the
@@ -98,11 +98,11 @@ dggrs_definition <- function(grid) {
       "OGC's", ogc, "textZIRS, as DGGAL writes it: a letter for the level,",
       "the root rhombus (0-9, A and B for the poles), the sub-rhombus counted",
       "row by row in hexadecimal, and a letter for the zone at that",
-      "sub-rhombus, e.g. E6-317-A; cell_to_index(zirs = \"textZIRS\")."),
+      "sub-rhombus, e.g. E6-317-A; cell_to_index(form = \"textZIRS\")."),
       type = "levelRootFaceHexRowMajorSubZone"),
       uint64ZIRS = list(description = paste(
         "OGC's", ogc, "uint64ZIRS: the fields of the textZIRS packed into a",
-        "64-bit integer; cell_to_index(zirs = \"uint64ZIRS\").")))
+        "64-bit integer; cell_to_index(form = \"uint64ZIRS\").")))
   } else {
     list(textZIRS = list(description = isea_index_description(g),
                          type = "hierarchicalConcatenation"),

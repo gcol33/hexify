@@ -35,7 +35,7 @@ icosahedron's first vertex at 11.20 degrees E and authalic latitude
 \eqn{\arctan(\phi)}: \code{hex_grid(aperture = 3, ellipsoid = "WGS84",
 orientation = "ogc")}, its aperture-7 twin and the same with
 \code{projection = "ivea"}. For such a grid the definition carries OGC's
-zone identifiers (\code{cell_to_index(zirs = "textZIRS")}) and links to the
+zone identifiers (\code{cell_to_index(form = "textZIRS")}) and links to the
 OGC definition, which it matches in its hierarchy and zone identifiers; it
 carries no OGC URI, since hexify lists sub-zones in ascending order of
 cell ID rather than in OGC's scanlines. On a grid with an ellipsoid the

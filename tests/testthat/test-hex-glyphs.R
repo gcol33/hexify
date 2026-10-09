@@ -77,3 +77,12 @@ test_that("triangles carry the change towards each neighbour", {
   expect_equal(own$change[match(nb[1:3], own$neighbor_id)], c(1, 3, NA))
   expect_true(all(is.na(own$change[!own$neighbor_id %in% cells])))
 })
+
+test_that("glyphs on another body carry the grid's CRS", {
+  g <- hex_grid(resolution = 3, aperture = 3, radius_km = "mars")
+  cells <- lonlat_to_cell(c(10, 40), c(20, -30), g)
+  expect_equal(sf::st_crs(hex_rays(cells, c(0, 1), g)), grid_crs(g))
+  expect_equal(sf::st_crs(hex_triangles(cells, g)), grid_crs(g))
+  e <- hex_grid(resolution = 3, aperture = 7, ellipsoid = "mars")
+  expect_equal(sf::st_crs(hex_triangles(lonlat_to_cell(10, 20, e), e)), sf::st_crs(cell_to_sf(lonlat_to_cell(10, 20, e), e)))
+})
