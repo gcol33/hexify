@@ -16,10 +16,13 @@ hexify supports **all** major hexagonal DGGS through two backends:
 - **Hex9** (Griffin 2026, built-in C++, `src/hex9*.cpp`): `hex_grid(aperture = 9)`, the
   octahedron's shifted-aperture-9 grid, resolutions 0-18 (12 * 9^18 cells fit int64).
   Cell IDs are the libhex9 address read as a number (octant digit counts 9^L, then
-  base-9 digits; `cell_to_index()` writes libhex9's label, `hex9_index` type); parent
+  base-9 digits; `cell_to_index()` writes libhex9's label, index type `"hex9"`); parent
   = the cell holding the child's mode-0 half, nine children. Inside the QuadFrame a
   level-L grid is the aperture-3 res 2L+1 lattice on one coset per quad, no pole
-  cells. Any face projection on the octahedron; its own is `projection = "ak"`
+  cells. `get_parent(levels = k)` is Griffin's canonical ancestor (the cell k levels up
+  holding the mode-0 half, libhex9's `hex9_cell_ancestor`), not the parent's parent, and
+  `get_children(levels = k)` its owned cells (`hex9_owned_cells`, 9^k each); the two
+  relations agree one level apart. Any face projection on the octahedron; its own is `projection = "ak"`
   (Kaseorg) or `"akw"` (Kaseorg + libhex9's trained warp, read from libhex9's
   19 MB `.h9warp` file that hexify does not ship: `hex9_warp_download()`, option
   `hexify.hex9_warp`). On `"akw"` labels and centres equal libhex9's `_sphere`
