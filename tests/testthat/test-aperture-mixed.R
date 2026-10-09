@@ -479,7 +479,7 @@ test_that("mixed aperture rejects an unsupported aperture", {
 
   expect_error(
     cpp_lonlat_to_cell(numeric(0), 0, 0, 2L, 0L, integer(0)),
-    "aperture must be 3, 4, or 7"
+    "aperture must be 3, 4, 7 or 9"
   )
 
   expect_error(

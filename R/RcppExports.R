@@ -361,6 +361,30 @@ cpp_h3_overlap_solid_angles <- function(cell_ids, parent_ids, pair_cell, pair_pa
     .Call(`_hexify_cpp_h3_overlap_solid_angles`, cell_ids, parent_ids, pair_cell, pair_parent)
 }
 
+cpp_hex9_parent <- function(cell_id, resolution) {
+    .Call(`_hexify_cpp_hex9_parent`, cell_id, resolution)
+}
+
+cpp_hex9_children <- function(cell_id, resolution) {
+    .Call(`_hexify_cpp_hex9_children`, cell_id, resolution)
+}
+
+cpp_hex9_label <- function(cell_id, resolution) {
+    .Call(`_hexify_cpp_hex9_label`, cell_id, resolution)
+}
+
+cpp_hex9_parse_label <- function(label) {
+    .Call(`_hexify_cpp_hex9_parse_label`, label)
+}
+
+cpp_hex9_octahedron_cell <- function(x, y, z, resolution) {
+    .Call(`_hexify_cpp_hex9_octahedron_cell`, x, y, z, resolution)
+}
+
+cpp_hex9_digit_strings_unique <- function() {
+    .Call(`_hexify_cpp_hex9_digit_strings_unique`)
+}
+
 cpp_cell_to_index <- function(icosa, face, i, j, resolution, aperture, index_type = "auto") {
     .Call(`_hexify_cpp_cell_to_index`, icosa, face, i, j, resolution, aperture, index_type)
 }

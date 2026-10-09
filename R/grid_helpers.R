@@ -890,8 +890,9 @@ cell_area <- function(cell_id = NULL, grid) {
   } else {
     # The vertex cells together cover as much as the solid's diamond count of
     # hexagons, so a hexagon is the surface over n_cells - 2 and a vertex cell
-    # with k sides is k / 6 of one.
-    hexagon <- surface / (grid_n_cells(g) - 2)
+    # with k sides is k / 6 of one. Hex9 has no vertex cells.
+    vertex_deficit <- if (is_hex9_grid(g)) 0 else 2
+    hexagon <- surface / (grid_n_cells(g) - vertex_deficit)
     isea_cell_sides(ids, g) / 6 * hexagon
   }
 
@@ -926,7 +927,8 @@ grid_quad_ij <- function(cell_id, g) {
 #' Six, except for the cell at each vertex of the solid, which has one side per
 #' face meeting there: five on the icosahedron, four on the octahedron. Every
 #' cell of resolution 0 is a vertex cell, and every other vertex cell is the
-#' (0, 0) cell of its quad.
+#' (0, 0) cell of its quad. Hex9 centres no cell on a vertex, so every Hex9
+#' cell has six.
 #'
 #' @param cell_id Cell IDs: integer64 for ISEA grids (whole numbers below
 #'   2^53 and digit strings are accepted), character for H3 grids
@@ -934,6 +936,7 @@ grid_quad_ij <- function(cell_id, g) {
 #' @return Integer vector of side counts
 #' @noRd
 isea_cell_sides <- function(cell_id, g) {
+  if (is_hex9_grid(g)) return(rep(6L, length(cell_id)))
   valence <- solid_info(grid_polyhedron(g))$valence
   qij <- grid_quad_ij(cell_id, g)
   at_vertex <- g@resolution == 0L | (qij$i == 0 & qij$j == 0)
@@ -1028,7 +1031,10 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' only together with its grid. The index string carries its resolution in
 #' its length and names one cell among all resolutions of the grid's family,
 #' and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
-#' its resolution in its bits.
+#' its resolution in its bits. A Hex9 index is the cell's label in 'libhex9',
+#' Griffin's reference implementation: its digits, one per resolution (0-9 and
+#' a, b for the twelve cells of resolution 0), a dot, and the key tail
+#' (0-5), as in \code{"435878503.3"}.
 #'
 #' @section IGEO7 integer forms:
 #' The Z7 string of an aperture-7 cell is two decimal digits naming its base
@@ -1108,6 +1114,11 @@ cell_to_index <- function(cell_id, grid,
   # H3 cell IDs are already hierarchical index strings
   if (is_h3_grid(g)) {
     return(as.character(cell_id))
+  }
+
+  # A Hex9 cell ID is its address; the index is libhex9's label of it
+  if (is_hex9_grid(g)) {
+    return(cpp_hex9_label(as_cell_id(cell_id), g@resolution))
   }
 
   # Mixed sequences use a geometric hierarchical index (see
@@ -1267,7 +1278,11 @@ check_index_resolution <- function(res, resolution, index) {
 #' neighbours of that parent: an aperture-3 cell centred on a parent corner
 #' lies a third in each of three parents, an aperture-4 cell centred on a
 #' parent edge half in each of two, and an aperture-7 cell off the parent's
-#' centre 11/12 in its parent and 1/12 in one neighbour.
+#' centre 11/12 in its parent and 1/12 in one neighbour. A Hex9 cell's parent
+#' is the coarser cell holding the cell's mode-0 half (Griffin 2026); six of
+#' every nine cells lie inside their parent, and the other three straddle its
+#' boundary, half in each of two cells. Several levels up, the parent is the
+#' parent's parent, as for every other grid.
 #' \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 #' of OGC Topic 21 does when \code{inheritID} is false; the default is its
 #' \code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell
@@ -1309,6 +1324,15 @@ get_parent <- function(cell_id, grid, levels = 1L, overlapping = FALSE) {
   if (is_mixed_aperture(g@aperture)) {
     return(mixed_get_parent(as_cell_id(cell_id), g@resolution, g@aperture,
                             as.integer(levels), grid_polyhedron(g)))
+  }
+
+  # Hex9: the canonical parent, one level at a time
+  if (is_hex9_grid(g)) {
+    ids <- as_cell_id(cell_id)
+    for (step in seq_len(as.integer(levels))) {
+      ids <- cpp_hex9_parent(ids, g@resolution - step + 1L)
+    }
+    return(ids)
   }
 
   index_type <- index_type_for_aperture(g@aperture)
@@ -1466,6 +1490,20 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
   check_isea_resolution(aperture_at_resolution(g@aperture, child_res), child_res,
                         grid_polyhedron(g))
   ids <- as_cell_id(cell_id)
+
+  # Hex9: the nine canonical children, one level at a time
+  if (is_hex9_grid(g)) {
+    front <- lapply(seq_along(ids), function(k) ids[k])
+    for (step in seq_len(as.integer(levels))) {
+      flat <- cell_id_unlist(front)
+      kids <- cpp_hex9_children(flat, g@resolution + step - 1L)
+      slot <- rep(seq_along(front), lengths(front))
+      front <- lapply(seq_along(front), function(k) {
+        sort(cell_id_unlist(kids[slot == k]))
+      })
+    }
+    return(front)
+  }
 
   # Mixed sequences: geometric children (cells whose geometric parent is this cell).
   if (is_mixed_aperture(g@aperture)) {

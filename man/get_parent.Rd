@@ -31,7 +31,11 @@ successive resolutions do not nest, so a cell can also reach into one or two
 neighbours of that parent: an aperture-3 cell centred on a parent corner
 lies a third in each of three parents, an aperture-4 cell centred on a
 parent edge half in each of two, and an aperture-7 cell off the parent's
-centre 11/12 in its parent and 1/12 in one neighbour.
+centre 11/12 in its parent and 1/12 in one neighbour. A Hex9 cell's parent
+is the coarser cell holding the cell's mode-0 half (Griffin 2026); six of
+every nine cells lie inside their parent, and the other three straddle its
+boundary, half in each of two cells. Several levels up, the parent is the
+parent's parent, as for every other grid.
 \code{overlapping = TRUE} returns all of them, as the \code{parent()} query
 of OGC Topic 21 does when \code{inheritID} is false; the default is its
 \code{inheritID = true} answer. \code{\link{hex_aggregate}} divides cell

@@ -93,8 +93,11 @@ void quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,
 
 // Move a quad-plane point lying past a far edge of its quad into the quad that
 // owns it, in that quad's frame. False when the point lies past both far edges,
-// beyond the far vertex.
-bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y);
+// beyond the far vertex. A point below a near edge stays, as the fan of faces
+// around the quad's origin reads it; with `across_near_edges` it is carried
+// across that edge into the quad there instead.
+bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y,
+                          bool across_near_edges = false);
 
 // Inverse: quad XY → icosa triangle coords (returns false on invalid region)
 bool try_quad_xy_to_icosa_tri(int quad, double quad_x, double quad_y,

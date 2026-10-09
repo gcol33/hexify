@@ -25,7 +25,8 @@ with \code{resolution}.}
 
 \item{resolution}{Grid resolution level: for ISEA 0-30 for aperture 3, 0-29 for aperture 4, 0-21 for aperture 7
 on the icosahedron, where the cell count stays within the 2^63 - 1
-cell IDs a 64-bit integer numbers; 0-15 for H3.
+cell IDs a 64-bit integer numbers; 0-18 for aperture 9 (Hex9); 0-15 for
+H3.
 Mutually exclusive with \code{area_km2}. For H3, typical use cases by
 resolution:
 \itemize{
@@ -35,7 +36,8 @@ resolution:
 \item 11-15: building/sub-meter scale
 }}
 
-\item{aperture}{Grid aperture: 3 (default), 4, 7, a mixed family such as
+\item{aperture}{Grid aperture: 3 (default), 4, 7, 9 for Hex9 on the
+octahedron (see the Hex9 section), a mixed family such as
 "4/3", "4/7" or "7/4", or one aperture per resolution level as a vector,
 e.g. \code{c(4, 4, 7, 3)}. A family name refines by the first aperture for
 the first \code{floor(resolution / 2)} levels and by the second for the
@@ -81,7 +83,8 @@ spherical centroid is used.}
 
 \item{polyhedron}{The solid an ISEA-family grid is built on:
 "icosahedron" (default) or "octahedron". See the Polyhedron section. H3
-grids are built on the icosahedron and take only the default.}
+grids are built on the icosahedron and take only the default. Aperture 9
+is defined on the octahedron, which it takes when no solid is named.}
 
 \item{ellipsoid}{The ellipsoid of revolution an ISEA-family grid reads
 geodetic latitude on: \code{NULL} (default) reads latitude on the sphere;
@@ -283,6 +286,44 @@ do not pair into diamonds.
 
 \preformatted{
 hex_grid(resolution = 5, aperture = 4, polyhedron = "octahedron")
+}
+}
+
+\section{Hex9}{
+
+
+\code{aperture = 9} builds Hex9 (Griffin 2026), the hexagonal grid of the
+octahedron that refines by 9 with no central child. Level \eqn{L} divides
+each octahedron edge into \eqn{3^{L+1}} steps of a triangular lattice and
+centres a hexagon on every third lattice point, one class of a three-colouring
+of the lattice that leaves the solid's vertices out; the octahedron's even
+vertex valence keeps that class consistent across its faces, which the
+icosahedron's odd valence does not. There are \eqn{12 \cdot 9^L} cells, all
+hexagons. Two meet at each of the six vertices, a corner each, and share both
+edges there, so those twelve cells have five neighbours. On an equal-area
+projection every cell has the same area.
+
+A line through each cell's centre cuts it into two halves, each inside one
+triangle of the next coarser level, and the cell is named through its half
+in a triangle of Griffin's mode 0: one digit for each level of triangles
+holding that half, digit 0 picking one of the twelve cells of resolution 0
+(0-11) and every further digit one of nine (0-8). The cell ID is that digit
+string read as a number, digit 0 counting \eqn{9^L}, plus one, so the IDs of
+a resolution run from 1 to \eqn{12 \cdot 9^L}; the digit strings are those
+of 'libhex9', Griffin's reference implementation, and
+\code{cell_to_index()} writes a cell's 'libhex9' label, its digits and key
+tail. A cell's parent is the cell of the coarser resolution holding its
+mode-0 half, and every cell has nine children. Three of them straddle the
+cell's boundary, so a cell's children cover it only in part.
+
+Hex9's own projection is Kaseorg's octahedral projection with a trained
+equal-area correction ('libhex9'); a grid built here uses hexify's face
+projections, so its digits name the same cells of the octahedron and their
+positions on the sphere follow \code{projection}.
+
+\preformatted{
+hex_grid(resolution = 4, aperture = 9)                       # Hex9
+hex_grid(resolution = 4, aperture = 9, projection = "ivea")
 }
 }
 

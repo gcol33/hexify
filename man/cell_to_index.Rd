@@ -40,7 +40,10 @@ A cell ID numbers the cells of one resolution from 1, so it names a cell
 only together with its grid. The index string carries its resolution in
 its length and names one cell among all resolutions of the grid's family,
 and so serves as the zonal identifier of OGC Topic 21; an H3 index carries
-its resolution in its bits.
+its resolution in its bits. A Hex9 index is the cell's label in 'libhex9',
+Griffin's reference implementation: its digits, one per resolution (0-9 and
+a, b for the twelve cells of resolution 0), a dot, and the key tail
+(0-5), as in \code{"435878503.3"}.
 }
 \section{IGEO7 integer forms}{
 

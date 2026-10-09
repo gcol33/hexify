@@ -1235,6 +1235,77 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_hex9_parent
+NumericVector cpp_hex9_parent(NumericVector cell_id, int resolution);
+RcppExport SEXP _hexify_cpp_hex9_parent(SEXP cell_idSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_parent(cell_id, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_hex9_children
+List cpp_hex9_children(NumericVector cell_id, int resolution);
+RcppExport SEXP _hexify_cpp_hex9_children(SEXP cell_idSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_children(cell_id, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_hex9_label
+CharacterVector cpp_hex9_label(NumericVector cell_id, int resolution);
+RcppExport SEXP _hexify_cpp_hex9_label(SEXP cell_idSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_label(cell_id, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_hex9_parse_label
+List cpp_hex9_parse_label(CharacterVector label);
+RcppExport SEXP _hexify_cpp_hex9_parse_label(SEXP labelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type label(labelSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_parse_label(label));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_hex9_octahedron_cell
+NumericVector cpp_hex9_octahedron_cell(NumericVector x, NumericVector y, NumericVector z, int resolution);
+RcppExport SEXP _hexify_cpp_hex9_octahedron_cell(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP resolutionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_octahedron_cell(x, y, z, resolution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_hex9_digit_strings_unique
+bool cpp_hex9_digit_strings_unique();
+RcppExport SEXP _hexify_cpp_hex9_digit_strings_unique() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_digit_strings_unique());
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_to_index
 CharacterVector cpp_cell_to_index(NumericVector icosa, IntegerVector face, NumericVector i, NumericVector j, int resolution, int aperture, std::string index_type);
 RcppExport SEXP _hexify_cpp_cell_to_index(SEXP icosaSEXP, SEXP faceSEXP, SEXP iSEXP, SEXP jSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP index_typeSEXP) {
@@ -1691,6 +1762,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_h3_gridDistance", (DL_FUNC) &_hexify_cpp_h3_gridDistance, 2},
     {"_hexify_cpp_h3_cell_walls", (DL_FUNC) &_hexify_cpp_h3_cell_walls, 2},
     {"_hexify_cpp_h3_overlap_solid_angles", (DL_FUNC) &_hexify_cpp_h3_overlap_solid_angles, 4},
+    {"_hexify_cpp_hex9_parent", (DL_FUNC) &_hexify_cpp_hex9_parent, 2},
+    {"_hexify_cpp_hex9_children", (DL_FUNC) &_hexify_cpp_hex9_children, 2},
+    {"_hexify_cpp_hex9_label", (DL_FUNC) &_hexify_cpp_hex9_label, 2},
+    {"_hexify_cpp_hex9_parse_label", (DL_FUNC) &_hexify_cpp_hex9_parse_label, 1},
+    {"_hexify_cpp_hex9_octahedron_cell", (DL_FUNC) &_hexify_cpp_hex9_octahedron_cell, 4},
+    {"_hexify_cpp_hex9_digit_strings_unique", (DL_FUNC) &_hexify_cpp_hex9_digit_strings_unique, 0},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 7},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 4},
     {"_hexify_cpp_get_parent_index", (DL_FUNC) &_hexify_cpp_get_parent_index, 3},

@@ -30,6 +30,8 @@
 #include "index_z7.h"
 #include "globe_table.h"
 #include "plane_clip.h"
+#include "hex9.h"
+#include "hex9_solid.h"
 
 using namespace Rcpp;
 
@@ -246,11 +248,16 @@ static void lattice_unit_steps(const LatticeGenerator& g, long long steps[6][2])
 // coordinates of its centre, which lie on the sublattice of the grid's form.
 // Aperture 7 stores its surrogate, the cell's own Class I coordinate, so its
 // stored coordinates pack and step as the aligned lattice.
+//
+// Aperture 9 is Hex9 on the octahedron (hex9.h). Its level-L cells are stored
+// as the aperture-3 Class II lattice of resolution 2L + 1 stores its cells,
+// on a coset of that lattice off the solid's vertices, so there are no vertex
+// quads of one cell; a cell ID is the cell's Hex9 address.
 // ============================================================================
 
 struct QuadFrame {
     std::vector<int> ap_seq;      // empty for a pure aperture
-    int aperture;                 // 0 for a mixed sequence
+    int aperture;                 // 0 for a mixed sequence, 9 for Hex9
     int resolution;
     hexify::HexGridForm form;
     uint64_t nCells;              // the diamond quads of cells plus the two vertex quads
@@ -284,8 +291,12 @@ static bool grid_cell_count(int resolution, Step step,
     return true;
 }
 
+// Whether a frame is Hex9's
+static inline bool frame_hex9(const QuadFrame& f) { return f.aperture == 9; }
+
 // The finest resolution of a pure aperture whose cell IDs fit in an int64
 static int pure_max_resolution(int aperture) {
+    if (aperture == 9) return hexify::hex9::kMaxLevel;
     int64_t per_quad, n_cells;
     int r = hexify::kMinResolution;
     while (r < hexify::kMaxResolution &&
@@ -303,8 +314,8 @@ static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_se
     if (mixed) {
         resolution = static_cast<int>(ap_seq.size()) - 1;
         aperture = 0;
-    } else if (aperture != 3 && aperture != 4 && aperture != 7) {
-        Rcpp::stop("aperture must be 3, 4, or 7");
+    } else if (aperture != 3 && aperture != 4 && aperture != 7 && aperture != 9) {
+        Rcpp::stop("aperture must be 3, 4, 7 or 9");
     }
     if (resolution < hexify::kMinResolution || resolution > hexify::kMaxResolution) {
         Rcpp::stop("resolution must be between %d and %d",
@@ -312,6 +323,26 @@ static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_se
     }
 
     QuadFrame f;
+    if (aperture == 9) {
+        if (hexify::topo().solid != hexify::Solid::Octahedron) {
+            Rcpp::stop("aperture 9 (Hex9) is defined on the octahedron only");
+        }
+        if (resolution > hexify::hex9::kMaxLevel) {
+            Rcpp::stop("aperture 9 at resolution %d has more cells than 64-bit cell "
+                       "IDs can number (2^63 - 1); its finest resolution is %d",
+                       resolution, hexify::hex9::kMaxLevel);
+        }
+        const int ap3_res = hexify::hex9::frame_resolution(resolution);
+        f.aperture = 9;
+        f.resolution = resolution;
+        f.form = hexify::hex_form_pure(3, ap3_res);
+        f.dim = hexify::quad_edge_dim(3, ap3_res);
+        f.offsetPerQuad = static_cast<uint64_t>(f.dim * f.dim / 3);
+        f.nCells = static_cast<uint64_t>(hexify::hex9::level_cells(resolution));
+        f.lattice = sublattice_of(f.form);
+        f.generator = generator_of(f.form);
+        return f;
+    }
     int64_t per_quad, n_cells;
     if (!grid_cell_count(resolution,
                          [&](int k) { return int64_t(mixed ? ap_seq[k] : aperture); },
@@ -357,9 +388,26 @@ static QuadFrame grid_frame(int resolution, int aperture, const IntegerVector& a
     return quad_frame(resolution, 0, std::vector<int>(ap_seq.begin(), ap_seq.end()));
 }
 
+// The Hex9 lattice point at stored (i, j) of a quad; stops when (i, j) is
+// none, which a stored cell coordinate never is.
+static inline hexify::hex9::OctPoint frame_hex9_point(const QuadFrame& f, int quad,
+                                                      long long i, long long j) {
+    hexify::hex9::OctPoint p;
+    if (!hexify::hex9::quad_ij_lattice(quad, i, j, f.resolution, p)) {
+        Rcpp::stop("hexify internal error: a Hex9 quad coordinate off the lattice");
+    }
+    return p;
+}
+
 // The ID, from 1, of the cell at stored (i, j) of a quad. Quad 0 holds the
 // north pole alone, ID 1; quad q > 0 follows it and the q - 1 quads before.
+// A Hex9 cell's ID is its address.
 static inline int64_t frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
+    if (frame_hex9(f)) {
+        const int64_t id = hexify::hex9::encode(frame_hex9_point(f, quad, i, j), f.resolution);
+        if (id == 0) Rcpp::stop("hexify internal error: a Hex9 coordinate that is no cell");
+        return id;
+    }
     uint64_t offset = (quad == 0) ? 0 : 1 + static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
     uint64_t within_quad = (f.aperture == 7)
         ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
@@ -386,6 +434,14 @@ static inline uint64_t frame_cell_index(const QuadFrame& f, double slot) {
 // A cell's quad and stored (i, j) from its 0-based index
 static inline void frame_decode_index(const QuadFrame& f, uint64_t idx,
                                       int& quad, long long& i, long long& j) {
+    if (frame_hex9(f)) {
+        hexify::hex9::OctPoint c;
+        if (!hexify::hex9::decode(static_cast<int64_t>(idx) + 1, f.resolution, c)) {
+            Rcpp::stop("hexify internal error: a Hex9 ID that names no cell");
+        }
+        hexify::hex9::cell_quad_ij(c, f.resolution, quad, i, j);
+        return;
+    }
     if (idx == 0) {
         quad = 0;
         i = 0;
@@ -418,7 +474,9 @@ static inline bool frame_in_quad(const QuadFrame& f, long long i, long long j) {
 // The quad-plane centre of the cell at stored (i, j)
 static inline void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, long long j,
                                   double& x, double& y) {
-    if (f.ap_seq.empty()) {
+    if (frame_hex9(f)) {
+        hexify::quad_ij_to_xy(quad, i, j, 3, hexify::hex9::frame_resolution(f.resolution), x, y);
+    } else if (f.ap_seq.empty()) {
         hexify::quad_ij_to_xy(quad, i, j, f.aperture, f.resolution, x, y);
     } else {
         hexify::center_form(f.form, i, j, x, y);
@@ -430,6 +488,7 @@ static inline void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, lon
 // a vertex.
 static inline bool frame_canonicalize(const QuadFrame& f, int& quad,
                                       long long& i, long long& j) {
+    if (frame_hex9(f)) return hexify::substrate_ij_canonicalize(quad, i, j, f.dim);
     if (f.ap_seq.empty()) {
         return hexify::quad_ij_canonicalize(quad, i, j, f.aperture, f.resolution);
     }
@@ -479,6 +538,12 @@ static void frame_parent(const QuadFrame& child, const QuadFrame& parent,
 static inline void frame_locate_projected(const QuadFrame& f,
                                           const hexify::ProjectionResult& fwd,
                                           int& quad, long long& i, long long& j) {
+    if (frame_hex9(f)) {
+        const hexify::hex9::OctPoint c = hexify::hex9::face_point_cell(
+            fwd.face, fwd.icosa_triangle_x, fwd.icosa_triangle_y, f.resolution);
+        hexify::hex9::cell_quad_ij(c, f.resolution, quad, i, j);
+        return;
+    }
     if (f.ap_seq.empty()) {
         hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
                                      fwd.icosa_triangle_y, f.aperture,
@@ -514,6 +579,11 @@ NumericVector cpp_grid_n_cells(NumericVector icosa, int resolution, int aperture
     activate_grid(icosa);
     const bool mixed = ap_seq.size() > 0;
     if (mixed) resolution = static_cast<int>(ap_seq.size()) - 1;
+    if (!mixed && aperture == 9) {
+        if (resolution < 0 || resolution > hexify::hex9::kMaxLevel) return hexify::cell_id_na(1);
+        return hexify::cell_id_vector(
+            std::vector<int64_t>{hexify::hex9::level_cells(resolution)});
+    }
     int64_t per_quad, n_cells;
     if (!grid_cell_count(resolution,
                          [&](int k) { return int64_t(mixed ? ap_seq[k] : aperture); },
@@ -919,6 +989,12 @@ NumericVector cpp_quad_xy_to_cell(NumericVector icosa, IntegerVector quad, Numer
         if (aperture == 7) {
             // AP7: exact-integer quantization straight to the surrogate.
             hexify::quad_xy_to_ij(q, qx, qy, 7, resolution, out_quad, i, j);
+        } else if (aperture == 9) {
+            int face;
+            double tx, ty;
+            hexify::quad_xy_to_icosa_tri(q, qx, qy, face, tx, ty);
+            hexify::hex9::cell_quad_ij(hexify::hex9::face_point_cell(face, tx, ty, resolution),
+                                       resolution, out_quad, i, j);
         } else {
             // AP3/AP4: through the face the point lies on, which names its quad
             int icosa_triangle_face;
@@ -1185,6 +1261,9 @@ constexpr double kEdgePieceMin = 1e-9;
 // first carried into the quad that owns it, so it is read on its own face as
 // a point there is. Only a point past the far vertex is read on the face
 // holding the cell centre, extended across its edge.
+static bool quad_point_face(int quad, double qx, double qy,
+                            int& face, double& tx, double& ty);
+
 static void quad_point_lonlat(int quad, double qx, double qy,
                               double qx_center, double qy_center,
                               double& lon, double& lat) {
@@ -1193,10 +1272,7 @@ static void quad_point_lonlat(int quad, double qx, double qy,
 
     int face;
     double tx, ty;
-    int own_quad = quad;
-    double own_x = qx, own_y = qy;
-    if (hexify::quad_xy_canonicalize(own_quad, own_x, own_y) &&
-        hexify::try_quad_xy_to_icosa_tri(own_quad, own_x, own_y, face, tx, ty)) {
+    if (quad_point_face(quad, qx, qy, face, tx, ty)) {
         auto ll = hexify::face_xy_to_ll(tx, ty, face);
         lon = ll.first;
         lat = ll.second;
@@ -1367,11 +1443,23 @@ static void cell_plane_edges(int quad, double qx_center, double qy_center,
 
 // Where a point of the quad plane lies on the solid: its face and
 // triangle coordinates. False for a point past the far vertex of every quad,
-// which lies in no face.
+// which lies in no face. A point below a near edge is read in the fan of
+// faces around the quad's origin, or, on a ray bounding the solid's deficit
+// there (where the corner of a Hex9 cell beside a vertex lies), through the
+// quad across that edge.
 static bool quad_point_face(int quad, double qx, double qy,
                             int& face, double& tx, double& ty) {
-    return hexify::quad_xy_canonicalize(quad, qx, qy) &&
-           hexify::try_quad_xy_to_icosa_tri(quad, qx, qy, face, tx, ty);
+    int q = quad;
+    double x = qx, y = qy;
+    if (hexify::quad_xy_canonicalize(q, x, y) &&
+        hexify::try_quad_xy_to_icosa_tri(q, x, y, face, tx, ty)) {
+        return true;
+    }
+    q = quad;
+    x = qx;
+    y = qy;
+    return hexify::quad_xy_canonicalize(q, x, y, /*across_near_edges=*/true) &&
+           hexify::try_quad_xy_to_icosa_tri(q, x, y, face, tx, ty);
 }
 
 // A straight piece of a cell edge on one face, in its triangle coordinates,
@@ -1516,8 +1604,12 @@ static const char* plane_segment_faces(int quad, double ax, double ay,
 // does, until every piece is a straight lon/lat chord to within the
 // tolerance's fraction of its length and spans no more than the longest arc
 // (piece_needs_split). Inactive limits give the corners alone. A pole falls
-// inside a cell or on a cell edge, never on a corner, so every corner keeps
-// the position the inverse projection gives it.
+// inside a cell, on a cell edge, or -- in a Hex9 grid, whose cells meet at the
+// solid's vertices -- on a corner, which pole_corners() splits.
+
+// A point within this many degrees of latitude of a pole is on it.
+constexpr double kPoleCornerSlack = 1e-9;
+
 static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
                                  double radius, double rotation_deg,
                                  bool at_vertex, const EdgeLimits& lim,
@@ -1546,8 +1638,12 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
             double mlon, mlat;
             project(mx, my, mlon, mlat);
+            // An end on a pole has no longitude of its own; the piece leaves
+            // it along the meridian of its other end.
+            const double alon_m = (std::fabs(std::fabs(alat) - 90.0) < kPoleCornerSlack) ? mlon : alon;
+            const double blon_m = (std::fabs(std::fabs(blat) - 90.0) < kPoleCornerSlack) ? mlon : blon;
             if (R_finite(mlon) &&
-                piece_needs_split(alon, alat, mlon, mlat, blon, blat, lim, depth)) {
+                piece_needs_split(alon_m, alat, mlon, mlat, blon_m, blat, lim, depth)) {
                 add_segment(ax, ay, alon, alat, mx, my, mlon, mlat, depth + 1);
                 add_segment(mx, my, mlon, mlat, bx, by, blon, blat, depth + 1);
                 return;
@@ -1608,6 +1704,37 @@ static void cell_boundary_lonlat(int quad, double qx_center, double qy_center,
             project(e.cx, e.cy, out_lon[start], out_lat[start]);
         }
     }
+}
+
+// A ring point on a pole has no longitude of its own. The ring's edges reach
+// it along two meridians, so it is written as two points on the pole at the
+// longitudes of the points before and after it, and the lon/lat ring runs
+// along both.
+static void pole_corners(std::vector<double>& lon, std::vector<double>& lat) {
+    const size_t n = lon.size();
+    if (n < 3) return;
+    bool any = false;
+    for (size_t k = 0; k < n; k++) {
+        if (std::fabs(std::fabs(lat[k]) - 90.0) < kPoleCornerSlack) any = true;
+    }
+    if (!any) return;
+    std::vector<double> out_lon, out_lat;
+    out_lon.reserve(n + 2);
+    out_lat.reserve(n + 2);
+    for (size_t k = 0; k < n; k++) {
+        if (std::fabs(std::fabs(lat[k]) - 90.0) >= kPoleCornerSlack) {
+            out_lon.push_back(lon[k]);
+            out_lat.push_back(lat[k]);
+            continue;
+        }
+        const double pole = lat[k] > 0.0 ? 90.0 : -90.0;
+        out_lon.push_back(lon[(k + n - 1) % n]);
+        out_lat.push_back(pole);
+        out_lon.push_back(lon[(k + 1) % n]);
+        out_lat.push_back(pole);
+    }
+    lon.swap(out_lon);
+    lat.swap(out_lat);
 }
 
 // A boundary as an (n + 1) x 2 lon/lat matrix, the first point repeated last.
@@ -1671,6 +1798,7 @@ static List cell_rings(const NumericVector& cell_id, const QuadFrame& f,
         const CellPlane& c = g.cells[k];
         cell_boundary_lonlat(c.quad, c.qx, c.qy, g.radius, g.rotation_deg,
                              c.at_vertex, lim, lon, lat);
+        pole_corners(lon, lat);
         result[k] = closed_ring(lon, lat);
     }
     return result;
@@ -2270,7 +2398,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
         // Resolution 0 is one base cell per vertex of the solid, a vertex cell
         // each, and each quad holds a single cell, so adjacency there is the
         // solid's vertex graph rather than a step through a quad frame.
-        if (f.resolution == 0) {
+        if (f.resolution == 0 && !frame_hex9(f)) {
             for (int v : hexify::topo().neighbors[idx]) neighbor_ids.push_back(v + 1);
             out[k] = hexify::cell_id_vector(neighbor_ids);
             continue;
@@ -2279,7 +2407,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
         int quad;
         long long i, j;
 
-        if (idx == 0 || idx == f.nCells - 1) {
+        if (!frame_hex9(f) && (idx == 0 || idx == f.nCells - 1)) {
             // The two vertex quads hold a single cell each -- a vertex of the
             // solid where several quads meet -- so their own frame carries no
             // offsets to step through.

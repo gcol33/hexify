@@ -753,16 +753,35 @@ static int compute_subtriangle(double x, double y) {
 
 // Try to convert quad XY to icosa triangle coords. Returns true on success,
 // false if the point is in an invalid region (e.g., outside the valid quad bounds).
-bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y) {
+bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y,
+                          bool across_near_edges) {
     const SolidTopology& t = topo();
     if (t.is_pole(quad)) return true;
     // The quad box is the unit rhombus of the Class I lattice basis.
     double v = quad_y / kSin60;
     double u = quad_x + v / 2.0;
+    // A point within rounding of a corner of the box is that corner, a vertex
+    // of the solid, which rounding could otherwise put past two box edges at
+    // once. The far corner is the origin of its vertex's quad.
+    constexpr double kCornerSnap = 1e-12;
+    const double cu = std::round(u), cv = std::round(v);
+    if ((cu == 0.0 || cu == 1.0) && (cv == 0.0 || cv == 1.0) &&
+        std::fabs(u - cu) < kCornerSnap && std::fabs(v - cv) < kCornerSnap) {
+        if (cu == 1.0 && cv == 1.0) {
+            quad = t.corner[quad][kCornerFar];
+            quad_x = 0.0;
+            quad_y = 0.0;
+            return true;
+        }
+        u = cu;
+        v = cv;
+        quad_x = u - v / 2.0;
+        quad_y = v * kSin60;
+    }
     // Below a near edge the point is still in the fan of faces around the
     // quad's origin vertex, which try_quad_xy_to_icosa_tri() reads directly,
     // dropped sectors included.
-    if (u < 1.0 && v < 1.0) return true;
+    if (u < 1.0 && v < 1.0 && (!across_near_edges || (u >= 0.0 && v >= 0.0))) return true;
     int q = quad;
     if (!canonicalize_q2d<double>(1.0, q, u, v)) return false;
     quad = q;

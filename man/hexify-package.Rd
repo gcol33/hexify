@@ -26,6 +26,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Uber Technologies, Inc. (H3 C library, src/h3 (Apache-2.0)) [contributor, copyright holder]
+  \item Ben Griffin (Hex9 address tables in src/hex9.cpp, from libhex9 (Apache-2.0)) [contributor, copyright holder]
 }
 
 }

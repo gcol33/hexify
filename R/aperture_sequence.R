@@ -186,6 +186,10 @@ calculate_resolution_for_area <- function(target_area_km2, aperture = 3,
                                           radius_km = EARTH_RADIUS_KM,
                                           polyhedron = "icosahedron") {
   n_cells <- body_surface_km2(radius_km) / target_area_km2
+  # Hex9 has 12 * 9^res cells and no vertex cells
+  if (is_hex9_aperture(aperture)) {
+    return(log(pmax(n_cells / HEX9_BASE_CELLS, 0)) / log(HEX9_APERTURE))
+  }
   d <- polyhedron_diamonds(polyhedron)
 
   # Solving N = d * aperture^res + 2 for res:

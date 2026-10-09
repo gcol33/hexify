@@ -612,6 +612,29 @@ DGGRID_AUTHALIC_RADIUS_M <- 6371007.180918475
 #' @noRd
 VALID_APERTURES <- c(3L, 4L, 7L)
 
+#' Hex9's aperture: Griffin's (2026) shifted aperture 9, on the octahedron
+#' only, and never mixed with the others
+#' @noRd
+HEX9_APERTURE <- 9L
+
+#' Cells of a Hex9 grid at resolution 0, which multiply by 9 per resolution
+#' @noRd
+HEX9_BASE_CELLS <- 12L
+
+#' Whether an aperture spelling names Hex9
+#' @param aperture Character or numeric aperture spelling
+#' @noRd
+is_hex9_aperture <- function(aperture) {
+  length(aperture) == 1L && identical(as.character(aperture), "9")
+}
+
+#' Whether a grid is a Hex9 grid
+#' @param g HexGridInfo object
+#' @noRd
+is_hex9_grid <- function(g) {
+  !is_h3_grid(g) && is_hex9_aperture(g@aperture)
+}
+
 #' Maximum supported resolution
 #' @noRd
 MAX_RESOLUTION <- 30L
@@ -796,12 +819,13 @@ validate_aperture <- function(aperture) {
 }
 
 #' Hierarchical index type for a grid aperture
-#' @param aperture Character aperture ("3", "4", "7", or "4/3")
-#' @return "z3", "z7", or "zorder"
+#' @param aperture Character aperture ("3", "4", "7", "9", or "4/3")
+#' @return "z3", "z7", "hex9", or "zorder"
 #' @noRd
 index_type_for_aperture <- function(aperture) {
   if (aperture == "3") "z3"
   else if (aperture == "7") "z7"
+  else if (is_hex9_aperture(aperture)) "hex9"
   else "zorder"
 }
 

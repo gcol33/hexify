@@ -7,3 +7,14 @@ Copyright: 2016-2024 Uber Technologies, Inc.
 License: Apache-2.0
   The full text of the Apache License 2.0 is included in src/h3/LICENSE.
 Source: https://github.com/uber/h3 (version 4.4.1)
+
+== libhex9, the Hex9 reference implementation ==
+
+Files: src/hex9.cpp (the address tables kChildCode, kChildMode, kChildOffset,
+  kRidCode, kRootC2, kRootDigit, kRegHex and kHexReg, and the band
+  classifier classify())
+Copyright: 2025-2026 Ben Griffin
+License: Apache-2.0
+  The full text of the Apache License 2.0 is included in src/h3/LICENSE.
+Source: https://github.com/MrBenGriffin/libhex9 (version 2.3.1:
+  core/h9_addressing.h, core/h9_math.h, core/h9_uv_lattice.h, core/h9_grid.h)

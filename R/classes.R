@@ -207,13 +207,22 @@ setValidity("HexGridInfo", function(object) {
       errors <- c(errors, "ellipsoid must be empty or c(a_km, f) with a_km > 0 and 0 <= f < 1")
     }
     # ISEA validation
-    ap_ok <- tryCatch({
-      parse_aperture_seq(object@aperture, object@resolution)
-      TRUE
-    }, error = function(e) FALSE)
-    if (!ap_ok) {
-      errors <- c(errors, paste0("aperture must be 3, 4, 7, a family such as \"4/3\", ",
-                                 "or one aperture per resolution level"))
+    if (is_hex9_aperture(object@aperture)) {
+      if (length(poly) == 1L && poly != "octahedron") {
+        errors <- c(errors, "aperture 9 (Hex9) is defined on the octahedron only")
+      }
+      if (object@resolution > 18L) {
+        errors <- c(errors, "Hex9 resolution must be between 0 and 18")
+      }
+    } else {
+      ap_ok <- tryCatch({
+        parse_aperture_seq(object@aperture, object@resolution)
+        TRUE
+      }, error = function(e) FALSE)
+      if (!ap_ok) {
+        errors <- c(errors, paste0("aperture must be 3, 4, 7, 9, a family such as ",
+                                   "\"4/3\", or one aperture per resolution level"))
+      }
     }
     if (object@resolution < 0L || object@resolution > 30L) {
       errors <- c(errors, "resolution must be between 0 and 30")
