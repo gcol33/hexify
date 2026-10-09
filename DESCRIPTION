@@ -89,6 +89,7 @@ Collate:
     'hexify_stats.R'
     'net_cells.R'
     'net_layout.R'
+    'ogc_zirs.R'
     'orientation.R'
     'plot_methods.R'
     'plot_surface.R'

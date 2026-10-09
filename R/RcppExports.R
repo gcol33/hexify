@@ -209,6 +209,10 @@ cpp_quad_xy_to_cell <- function(icosa, quad, quad_x, quad_y, resolution, apertur
     .Call(`_hexify_cpp_quad_xy_to_cell`, icosa, quad, quad_x, quad_y, resolution, aperture)
 }
 
+cpp_quad_xy_to_lonlat <- function(icosa, quad, quad_x, quad_y) {
+    .Call(`_hexify_cpp_quad_xy_to_lonlat`, icosa, quad, quad_x, quad_y)
+}
+
 cpp_cell_to_icosa_tri <- function(icosa, cell_id, resolution, aperture) {
     .Call(`_hexify_cpp_cell_to_icosa_tri`, icosa, cell_id, resolution, aperture)
 }

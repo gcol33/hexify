@@ -4,12 +4,17 @@
 \alias{index_to_cell}
 \title{Convert hierarchical index to cell ID}
 \usage{
-index_to_cell(index, grid, form = c("string", "int", "hex", "monotonic"))
+index_to_cell(
+  index,
+  grid,
+  form = c("string", "int", "hex", "monotonic", "textZIRS", "uint64ZIRS")
+)
 }
 \arguments{
 \item{index}{Identifiers in the form \code{form} names: character for
-\code{"string"} and \code{"hex"}, integer64 (or whole numbers below 2^53) for
-\code{"int"} and \code{"monotonic"}}
+\code{"string"}, \code{"hex"} and \code{"textZIRS"}, integer64 (or whole numbers below
+2^53, or for \code{"uint64ZIRS"} digit strings) for \code{"int"}, \code{"monotonic"}
+and \code{"uint64ZIRS"}}
 
 \item{grid}{A HexGridInfo or HexData object}
 
@@ -17,22 +22,27 @@ index_to_cell(index, grid, form = c("string", "int", "hex", "monotonic"))
 }
 \value{
 Cell IDs of \code{grid}: integer64 for ISEA grids, character for H3
-grids. Every index must name a cell of the grid's resolution.
+grids. Every index must name a cell of the grid's resolution; an OGC
+identifier that names no zone of the grid reads as \code{NA}.
 }
 \description{
 The inverse of \code{\link[=cell_to_index]{cell_to_index()}}: the cells of \code{grid} that index strings,
-or IGEO7 integer forms, name.
+IGEO7 integer forms or OGC zone identifiers name.
 }
 \details{
 A packed or hexadecimal IGEO7 index carries its resolution in its
-trailing 7 digits; a monotonic ID is read at the grid's resolution. See
-\code{\link[=cell_to_index]{cell_to_index()}} for the forms.
+trailing 7 digits, and an OGC identifier in its level; a monotonic ID is
+read at the grid's resolution. See \code{\link[=cell_to_index]{cell_to_index()}} for the forms.
 }
 \examples{
 g <- hex_grid(resolution = 4, aperture = 7)
 index_to_cell("033000", g)
 index_to_cell("3600ffffffffffff", g, form = "hex")
 index_to_cell(bit64::as.integer64("8232"), g, form = "monotonic")
+
+ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+                orientation = "ogc")
+cell_to_lonlat(index_to_cell("E6-317-A", ogc, form = "textZIRS"), ogc)
 }
 \seealso{
 \code{\link[=cell_to_index]{cell_to_index()}}

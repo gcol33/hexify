@@ -721,6 +721,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_quad_xy_to_lonlat
+DataFrame cpp_quad_xy_to_lonlat(NumericVector icosa, IntegerVector quad, NumericVector quad_x, NumericVector quad_y);
+RcppExport SEXP _hexify_cpp_quad_xy_to_lonlat(SEXP icosaSEXP, SEXP quadSEXP, SEXP quad_xSEXP, SEXP quad_ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type quad(quadSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type quad_x(quad_xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type quad_y(quad_ySEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_quad_xy_to_lonlat(icosa, quad, quad_x, quad_y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_cell_to_icosa_tri
 DataFrame cpp_cell_to_icosa_tri(NumericVector icosa, NumericVector cell_id, int resolution, int aperture);
 RcppExport SEXP _hexify_cpp_cell_to_icosa_tri(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP) {
@@ -1588,6 +1602,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_quad_ij", (DL_FUNC) &_hexify_cpp_cell_to_quad_ij, 5},
     {"_hexify_cpp_cell_to_quad_xy", (DL_FUNC) &_hexify_cpp_cell_to_quad_xy, 4},
     {"_hexify_cpp_quad_xy_to_cell", (DL_FUNC) &_hexify_cpp_quad_xy_to_cell, 6},
+    {"_hexify_cpp_quad_xy_to_lonlat", (DL_FUNC) &_hexify_cpp_quad_xy_to_lonlat, 4},
     {"_hexify_cpp_cell_to_icosa_tri", (DL_FUNC) &_hexify_cpp_cell_to_icosa_tri, 4},
     {"_hexify_cpp_quad_ij_to_icosa_tri", (DL_FUNC) &_hexify_cpp_quad_ij_to_icosa_tri, 6},
     {"_hexify_cpp_pieces_need_split", (DL_FUNC) &_hexify_cpp_pieces_need_split, 9},

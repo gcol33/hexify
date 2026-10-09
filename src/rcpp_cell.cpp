@@ -933,6 +933,32 @@ NumericVector cpp_quad_xy_to_cell(NumericVector icosa, IntegerVector quad, Numer
     return result;
 }
 
+// Points of the quad planes in lon/lat, latitude geodetic on the active
+// ellipsoid; NA where a point has no image (past the quad's fold at a
+// vertex).
+// [[Rcpp::export]]
+DataFrame cpp_quad_xy_to_lonlat(NumericVector icosa, IntegerVector quad,
+                                NumericVector quad_x, NumericVector quad_y) {
+    activate_grid(icosa);
+    const R_xlen_t n = quad.size();
+    if (quad_x.size() != n || quad_y.size() != n) {
+        stop("quad, quad_x and quad_y must have the same length");
+    }
+    NumericVector lon(n, NA_REAL), lat(n, NA_REAL);
+    for (R_xlen_t k = 0; k < n; k++) {
+        int face;
+        double tx, ty;
+        if (quad[k] == NA_INTEGER ||
+            !hexify::try_quad_xy_to_icosa_tri(quad[k], quad_x[k], quad_y[k], face, tx, ty)) {
+            continue;
+        }
+        const auto ll = hexify::face_xy_to_ll(tx, ty, face);
+        lon[k] = ll.first;
+        lat[k] = ll.second;
+    }
+    return DataFrame::create(_["lon_deg"] = lon, _["lat_deg"] = lat);
+}
+
 // ============================================================================
 // Cell ID to Icosa Triangle Conversion
 // ============================================================================

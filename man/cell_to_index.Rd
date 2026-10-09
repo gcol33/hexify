@@ -4,7 +4,11 @@
 \alias{cell_to_index}
 \title{Convert cell ID to hierarchical index string}
 \usage{
-cell_to_index(cell_id, grid, form = c("string", "int", "hex", "monotonic"))
+cell_to_index(
+  cell_id,
+  grid,
+  form = c("string", "int", "hex", "monotonic", "textZIRS", "uint64ZIRS")
+)
 }
 \arguments{
 \item{cell_id}{Cell IDs: integer64 for ISEA grids (whole numbers below
@@ -17,7 +21,11 @@ hierarchical index string. Aperture-7 grids on the icosahedron also
 write IGEO7's integer forms of the Z7 index: \code{"int"}, the packed 64-bit
 index as \code{bit64::integer64}; \code{"hex"}, the same 64 bits as 16 lowercase
 hexadecimal digits, as DGGRID writes its INT64 Z7 output; and
-\code{"monotonic"}, the monotonic ID as integer64.}
+\code{"monotonic"}, the monotonic ID as integer64. Aperture-3 and aperture-7
+grids on the icosahedron also write the zone identifiers of OGC's
+ISEA3H, ISEA7H, IVEA3H and IVEA7H DGGRS definitions: \code{"textZIRS"},
+strings such as "E6-317-A", and \code{"uint64ZIRS"}, the same fields packed
+into a 64-bit integer as integer64.}
 }
 \value{
 Character vector of hierarchical index strings, or the form
@@ -60,16 +68,40 @@ unused. It reaches resolution 21, where it still fits in a signed 64-bit
 integer.
 }
 
+\section{OGC zone identifiers}{
+
+\code{"textZIRS"} and \code{"uint64ZIRS"} are the identifiers DGGAL writes for OGC's
+ISEA3H, ISEA7H, IVEA3H and IVEA7H. textZIRS names a zone by its level (a
+letter; for aperture 3 the level of the even resolution at or below), a
+root rhombus 0-9 (two icosahedron faces; A and B for the two polar zones),
+a sub-rhombus counted row by row within it in hexadecimal, and a letter
+for the zone among those at that sub-rhombus. uint64ZIRS packs the same
+fields into one integer. They depend on which cell is which, not on where
+the solid sits, so they are written for any orientation and face
+projection; they name OGC's zones on \code{hex_grid(aperture = 3, ellipsoid = "WGS84", orientation = "ogc")}, its aperture-7 twin, and the same with
+\code{projection = "ivea"}. Aperture-7 zones exist up to level 19.
+}
+
 \examples{
 g <- hex_grid(resolution = 4, aperture = 7)
 cell <- index_to_cell("033000", g)
 cell_to_index(cell, g, form = "hex")
 cell_to_index(cell, g, form = "monotonic")
+
+ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+                orientation = "ogc")
+crimea <- lonlat_to_cell(34.78, 45.43, ogc)
+cell_to_index(crimea, ogc, form = "textZIRS")
+cell_to_index(crimea, ogc, form = "uint64ZIRS")
 }
 \references{
 Kmoch, A., Sahr, K., Chan, W. T., Uuemaa, E. (2025). IGEO7: A new
 hierarchically indexed hexagonal equal-area discrete global grid system.
 AGILE: GIScience Series 6, 32. \doi{10.5194/agile-giss-6-32-2025}
+
+Open Geospatial Consortium. OGC API - Discrete Global Grid Systems, DGGRS
+definition examples ISEA3H, ISEA7H, IVEA3H and IVEA7H.
+\url{https://github.com/opengeospatial/ogcapi-discrete-global-grid-systems}
 }
 \seealso{
 \code{\link[=index_to_cell]{index_to_cell()}} for the inverse

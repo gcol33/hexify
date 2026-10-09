@@ -1014,7 +1014,11 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #'   write IGEO7's integer forms of the Z7 index: `"int"`, the packed 64-bit
 #'   index as `bit64::integer64`; `"hex"`, the same 64 bits as 16 lowercase
 #'   hexadecimal digits, as DGGRID writes its INT64 Z7 output; and
-#'   `"monotonic"`, the monotonic ID as integer64.
+#'   `"monotonic"`, the monotonic ID as integer64. Aperture-3 and aperture-7
+#'   grids on the icosahedron also write the zone identifiers of OGC's
+#'   ISEA3H, ISEA7H, IVEA3H and IVEA7H DGGRS definitions: `"textZIRS"`,
+#'   strings such as "E6-317-A", and `"uint64ZIRS"`, the same fields packed
+#'   into a 64-bit integer as integer64.
 #'
 #' @return Character vector of hierarchical index strings, or the form
 #'   `form` names
@@ -1050,10 +1054,27 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' unused. It reaches resolution 21, where it still fits in a signed 64-bit
 #' integer.
 #'
+#' @section OGC zone identifiers:
+#' `"textZIRS"` and `"uint64ZIRS"` are the identifiers DGGAL writes for OGC's
+#' ISEA3H, ISEA7H, IVEA3H and IVEA7H. textZIRS names a zone by its level (a
+#' letter; for aperture 3 the level of the even resolution at or below), a
+#' root rhombus 0-9 (two icosahedron faces; A and B for the two polar zones),
+#' a sub-rhombus counted row by row within it in hexadecimal, and a letter
+#' for the zone among those at that sub-rhombus. uint64ZIRS packs the same
+#' fields into one integer. They depend on which cell is which, not on where
+#' the solid sits, so they are written for any orientation and face
+#' projection; they name OGC's zones on `hex_grid(aperture = 3, ellipsoid =
+#' "WGS84", orientation = "ogc")`, its aperture-7 twin, and the same with
+#' `projection = "ivea"`. Aperture-7 zones exist up to level 19.
+#'
 #' @references
 #' Kmoch, A., Sahr, K., Chan, W. T., Uuemaa, E. (2025). IGEO7: A new
 #' hierarchically indexed hexagonal equal-area discrete global grid system.
 #' AGILE: GIScience Series 6, 32. \doi{10.5194/agile-giss-6-32-2025}
+#'
+#' Open Geospatial Consortium. OGC API - Discrete Global Grid Systems, DGGRS
+#' definition examples ISEA3H, ISEA7H, IVEA3H and IVEA7H.
+#' \url{https://github.com/opengeospatial/ogcapi-discrete-global-grid-systems}
 #'
 #' @seealso [index_to_cell()] for the inverse
 #' @keywords internal
@@ -1063,13 +1084,25 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
 #' cell <- index_to_cell("033000", g)
 #' cell_to_index(cell, g, form = "hex")
 #' cell_to_index(cell, g, form = "monotonic")
+#'
+#' ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+#'                 orientation = "ogc")
+#' crimea <- lonlat_to_cell(34.78, 45.43, ogc)
+#' cell_to_index(crimea, ogc, form = "textZIRS")
+#' cell_to_index(crimea, ogc, form = "uint64ZIRS")
 cell_to_index <- function(cell_id, grid,
-                          form = c("string", "int", "hex", "monotonic")) {
+                          form = c("string", "int", "hex", "monotonic",
+                                   "textZIRS", "uint64ZIRS")) {
   g <- extract_grid(grid)
   form <- match.arg(form)
-  if (form != "string") {
+  if (form %in% IGEO7_FORMS) {
     check_igeo7_grid(g, form)
     return(cpp_cell_to_z7(icosa_arg(g), as_cell_id(cell_id), g@resolution, form))
+  }
+  if (form %in% ZIRS_FORMS) {
+    check_zirs_grid(g)
+    f <- zirs_fields(as_cell_id(cell_id), g)
+    return(if (form == "textZIRS") zirs_text(f, g@aperture) else zirs_uint64(f, g@aperture))
   }
 
   # H3 cell IDs are already hierarchical index strings
@@ -1097,21 +1130,23 @@ cell_to_index <- function(cell_id, grid,
 #' Convert hierarchical index to cell ID
 #'
 #' The inverse of [cell_to_index()]: the cells of `grid` that index strings,
-#' or IGEO7 integer forms, name.
+#' IGEO7 integer forms or OGC zone identifiers name.
 #'
 #' @param index Identifiers in the form `form` names: character for
-#'   `"string"` and `"hex"`, integer64 (or whole numbers below 2^53) for
-#'   `"int"` and `"monotonic"`
+#'   `"string"`, `"hex"` and `"textZIRS"`, integer64 (or whole numbers below
+#'   2^53, or for `"uint64ZIRS"` digit strings) for `"int"`, `"monotonic"`
+#'   and `"uint64ZIRS"`
 #' @param grid A HexGridInfo or HexData object
 #' @param form The form of `index`, as in [cell_to_index()]
 #'
 #' @return Cell IDs of `grid`: integer64 for ISEA grids, character for H3
-#'   grids. Every index must name a cell of the grid's resolution.
+#'   grids. Every index must name a cell of the grid's resolution; an OGC
+#'   identifier that names no zone of the grid reads as `NA`.
 #'
 #' @details
 #' A packed or hexadecimal IGEO7 index carries its resolution in its
-#' trailing 7 digits; a monotonic ID is read at the grid's resolution. See
-#' [cell_to_index()] for the forms.
+#' trailing 7 digits, and an OGC identifier in its level; a monotonic ID is
+#' read at the grid's resolution. See [cell_to_index()] for the forms.
 #'
 #' @seealso [cell_to_index()]
 #' @keywords internal
@@ -1121,14 +1156,31 @@ cell_to_index <- function(cell_id, grid,
 #' index_to_cell("033000", g)
 #' index_to_cell("3600ffffffffffff", g, form = "hex")
 #' index_to_cell(bit64::as.integer64("8232"), g, form = "monotonic")
+#'
+#' ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+#'                 orientation = "ogc")
+#' cell_to_lonlat(index_to_cell("E6-317-A", ogc, form = "textZIRS"), ogc)
 index_to_cell <- function(index, grid,
-                          form = c("string", "int", "hex", "monotonic")) {
+                          form = c("string", "int", "hex", "monotonic",
+                                   "textZIRS", "uint64ZIRS")) {
   g <- extract_grid(grid)
   form <- match.arg(form)
-  if (form != "string") {
+  if (form %in% IGEO7_FORMS) {
     check_igeo7_grid(g, form)
     index <- if (form == "hex") as.character(index) else as_cell_id(index, "index")
     return(cpp_z7_to_cell(icosa_arg(g), index, g@resolution, form))
+  }
+  if (form %in% ZIRS_FORMS) {
+    check_zirs_grid(g)
+    f <- if (form == "textZIRS") {
+      parse_zirs_text(as.character(index), g@aperture)
+    } else {
+      parse_zirs_uint64(if (is.character(index)) bit64::as.integer64(index) else index,
+                        g@aperture)
+    }
+    known <- !is.na(f$level)
+    check_index_resolution(f$level[known], g@resolution, as.character(index)[known])
+    return(zirs_cells(f, g))
   }
   index <- as.character(index)
   ok <- !is.na(index)
@@ -1155,6 +1207,15 @@ index_to_cell <- function(index, grid,
                          g@resolution, index[ok])
   isea_index_to_cells(index, aperture_int, index_type, icosa_arg(g))
 }
+
+#' The forms of cell_to_index() and index_to_cell() beside hexify's strings:
+#' IGEO7's integer forms of the Z7 index, and OGC's zone identifiers
+#' @noRd
+IGEO7_FORMS <- c("int", "hex", "monotonic")
+
+#' @rdname IGEO7_FORMS
+#' @noRd
+ZIRS_FORMS <- c("textZIRS", "uint64ZIRS")
 
 #' Stop unless a grid carries IGEO7 labels, which the integer forms need
 #' @param g HexGridInfo object
