@@ -2,13 +2,17 @@
 # of one refinement step the shares are 1/3 (aperture 3, a cell centred on a
 # parent corner), 1/2 (aperture 4, on a parent edge) and 11/12 and 1/12
 # (aperture 7); hex_aggregate() uses them on every equal-area grid. This
-# script measures every share of every cell on the sphere: the cell and each
-# coarser cell get_parent(overlapping = TRUE) returns, intersected as
-# spherical polygons with s2, the walls of an ISEA-family cell followed to
-# hexify's SHARE_WALL_TOLERANCE. On the equal-area grids the measured shares
-# should equal the lattice's to within the measuring error; on Fuller's
-# projection and on H3 they depart from it, and hex_aggregate() uses the
-# measured ones.
+# script measures every share of every cell on the sphere the way
+# hex_aggregate() does on Fuller's projection and H3: the cell and each coarser
+# cell get_parent(overlapping = TRUE) returns are clipped against each other
+# where both are straight (an ISEA-family cell on each face plane, an H3 cell
+# on the gnomonic plane) and the pieces measured on the sphere. On the
+# equal-area grids the measured shares should equal the lattice's to within
+# the measuring error; on Fuller's projection and on H3 they depart from it.
+#
+# As an independent check, the shares are measured again with s2: the cells
+# as spherical polygons from cell_to_sf() (ISEA-family walls densified to
+# S2_DENSIFY, H3 cells from their corners, exact), intersected by s2.
 #
 # For each grid it also aggregates a uniform density (each cell's own area)
 # one level up under both rules and reports how far each parent's total falls
@@ -39,6 +43,23 @@ GRIDS <- list(
 
 all_cells <- function(g) hexify:::grid_cells(g)
 
+S2_DENSIFY <- 1e-5
+
+s2_shares <- function(ids, ov, g, pg) {
+  flat <- if (g@grid_type == "h3") unlist(ov, use.names = FALSE) else hexify:::cell_id_unlist(ov)
+  parents <- unique(flat)
+  child <- rep(seq_along(ids), lengths(ov))
+  geog <- function(x, grid) {
+    s2::as_s2_geography(sf::st_geometry(cell_to_sf(
+      x, grid, wrap_dateline = FALSE,
+      densify = if (grid@grid_type == "h3") NULL else S2_DENSIFY)))
+  }
+  piece <- s2::s2_area(s2::s2_intersection(geog(ids, g)[child],
+                                           geog(parents, pg)[match(flat, parents)]),
+                       radius = 1)
+  piece / as.numeric(rowsum(piece, child, reorder = TRUE))[child]
+}
+
 rows <- list()
 for (spec in GRIDS) {
   g <- spec$make(spec$res)
@@ -48,11 +69,12 @@ for (spec in GRIDS) {
   ov <- get_parent(ids, g, overlapping = TRUE)
   n_par <- lengths(ov)
   measured <- hexify:::sphere_shares(ids, ov, g)
+  secs <- as.numeric(Sys.time() - t0, units = "secs")
   lattice <- if (g@grid_type == "h3") rep(NA_real_, length(measured)) else
     hexify:::lattice_shares(n_par, hexify:::step_aperture(g))
   split_share <- rep(n_par, n_par) > 1
   dev <- abs(measured - lattice)[split_share]
-  secs <- as.numeric(Sys.time() - t0, units = "secs")
+  s2_dev <- abs(measured - s2_shares(ids, ov, g, pg))
 
   density <- unname(cell_area(ids, g))
   rel <- function(rule) {
@@ -68,6 +90,7 @@ for (spec in GRIDS) {
     max_share_dev = if (all(is.na(dev))) NA else max(dev),
     median_share_dev = if (all(is.na(dev))) NA else median(dev),
     min_split_share = min(measured[split_share]),
+    max_s2_dev = max(s2_dev),
     uniform_area_rule_max_rel = rel("area"),
     uniform_centre_rule_max_rel = rel("centre"),
     measure_seconds = secs)
@@ -75,4 +98,5 @@ for (spec in GRIDS) {
 }
 
 write_result(do.call(rbind, rows), "parent_shares",
-             extra = sprintf("share wall tolerance: %g", hexify:::SHARE_WALL_TOLERANCE))
+             extra = c(sprintf("share wall tolerance: %g", hexify:::SHARE_WALL_TOLERANCE),
+                       sprintf("s2 check: cell_to_sf densify %g", S2_DENSIFY)))

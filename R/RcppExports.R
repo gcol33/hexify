@@ -237,8 +237,8 @@ cpp_cell_solid_angle <- function(icosa, cell_id, resolution, aperture, ap_seq, t
     .Call(`_hexify_cpp_cell_solid_angle`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
 }
 
-cpp_cell_sphere_rings <- function(icosa, cell_id, resolution, aperture, ap_seq, tolerance) {
-    .Call(`_hexify_cpp_cell_sphere_rings`, icosa, cell_id, resolution, aperture, ap_seq, tolerance)
+cpp_cell_overlap_solid_angles <- function(icosa, cell_id, resolution, aperture, ap_seq, parent_id, parent_resolution, parent_aperture, parent_ap_seq, pair_cell, pair_parent, tolerance) {
+    .Call(`_hexify_cpp_cell_overlap_solid_angles`, icosa, cell_id, resolution, aperture, ap_seq, parent_id, parent_resolution, parent_aperture, parent_ap_seq, pair_cell, pair_parent, tolerance)
 }
 
 cpp_cell_surface_paths <- function(icosa, cell_id, resolution, aperture, ap_seq, step) {
@@ -355,6 +355,10 @@ cpp_h3_gridDistance <- function(origin, destination) {
 
 cpp_h3_cell_walls <- function(cell_ids, walls) {
     .Call(`_hexify_cpp_h3_cell_walls`, cell_ids, walls)
+}
+
+cpp_h3_overlap_solid_angles <- function(cell_ids, parent_ids, pair_cell, pair_parent) {
+    .Call(`_hexify_cpp_h3_overlap_solid_angles`, cell_ids, parent_ids, pair_cell, pair_parent)
 }
 
 cpp_cell_to_index <- function(icosa, face, i, j, resolution, aperture, index_type = "auto") {

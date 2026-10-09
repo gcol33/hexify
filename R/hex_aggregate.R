@@ -96,14 +96,16 @@
 #' coarse cell.
 #'
 #' \strong{Fuller's projection and H3.} Neither is equal-area, so the plane
-#' shares do not carry over to the sphere. There each share is measured: the
-#' cell and every coarser cell it overlaps are intersected as spherical
-#' polygons (H3 cells are exactly that, their edges being great-circle arcs;
-#' an ISEA-family cell's walls are followed to within \code{1e-5} of their
-#' length, which puts a share within about \code{5e-5} of its exact value),
-#' and the share is the area of each piece over the area of all of them.
-#' Measured this way on Snyder's projection, the shares come out as the
-#' lattice's and converge to them as the walls are followed more closely.
+#' shares do not carry over to the sphere, and each share is measured. Both
+#' cells are clipped against each other where they are straight, which makes
+#' the pieces exact: an ISEA-family cell on each face plane it covers, an H3
+#' cell on the gnomonic plane at the finer cell's centre, where its
+#' great-circle edges are straight. An H3 piece is a spherical polygon whose
+#' area is a sum of spherical triangles, exact to rounding; the walls of a
+#' face-plane piece are followed on the sphere to \code{1e-5} of their
+#' length, which puts a share within \code{1e-7} of its exact value. The share
+#' is a piece's area over that of all the cell's pieces. Measured this way on
+#' Snyder's projection, the shares come out as the lattice's.
 #'
 #' @references Carr, D. B., Kahn, R., Sahr, K., Olsen, A. R. (1997). ISEA
 #'   discrete global grids. Statistical Computing & Graphics Newsletter
@@ -220,8 +222,9 @@ LATTICE_PARENT_SHARES <- list(
   `7` = list(1, c(11 / 12, 1 / 12))
 )
 
-#' How closely an ISEA-family cell's walls are followed when its shares are
-#' measured on the sphere, as a fraction of each piece's length
+#' How closely the walls of a face-plane piece are followed on the sphere
+#' when a share is measured, as a fraction of each wall piece's length: shares
+#' come out within 1e-7 of their exact values (1e-14 at 1e-7)
 #' @noRd
 SHARE_WALL_TOLERANCE <- 1e-5
 
@@ -286,49 +289,44 @@ step_aperture <- function(g) {
   which(d == 1L)
 }
 
-#' Shares measured on the sphere: each cell intersected with every coarser
-#' cell it overlaps, as spherical polygons
+#' Shares measured on the sphere: each cell clipped against every coarser
+#' cell it overlaps where both are straight, and the pieces' areas measured
+#'
+#' ISEA-family cells are straight on each face (cpp_cell_overlap_solid_angles()),
+#' H3 cells on the gnomonic plane, whose straight lines are great circles
+#' (cpp_h3_overlap_solid_angles()).
 #'
 #' @param cell_id Cell IDs on `g`
 #' @param ov List of the coarser cells each overlaps (get_parent(overlapping))
 #' @param g HexGridInfo object
-#' @param tolerance How closely ISEA-family walls are followed (sphere_polygons())
+#' @param tolerance How closely the walls of an ISEA-family piece are followed
+#'   on the sphere, as a fraction of each wall piece's length
 #' @return Numeric vector of shares, concatenated over cells as `ov` is
 #' @noRd
 sphere_shares <- function(cell_id, ov, g, tolerance = SHARE_WALL_TOLERANCE) {
   pg <- grid_at_resolution(g, g@resolution - 1L)
   flat <- if (is_h3_grid(g)) unlist(ov, use.names = FALSE) else cell_id_unlist(ov)
   parents <- unique(flat)
-  child <- rep(seq_along(cell_id), lengths(ov))
-  cells <- sphere_polygons(cell_id, g, tolerance)
-  piece <- s2::s2_area(s2::s2_intersection(cells[child],
-                                           sphere_polygons(parents, pg, tolerance)[match(flat, parents)]),
-                       radius = 1)
-  total <- as.numeric(rowsum(piece, child, reorder = TRUE))
-  cover <- total / s2::s2_area(cells, radius = 1)
+  pair_cell <- rep(seq_along(cell_id), lengths(ov))
+  pair_parent <- match(flat, parents)
+  omega <- if (is_h3_grid(g)) {
+    cpp_h3_overlap_solid_angles(as.character(cell_id), as.character(parents),
+                                pair_cell, pair_parent)
+  } else {
+    lv <- isea_levels(g@aperture, g@resolution)
+    pl <- isea_levels(pg@aperture, pg@resolution)
+    cpp_cell_overlap_solid_angles(icosa_arg(g), as_cell_id(cell_id), lv$resolution,
+                                  lv$aperture, lv$ap_seq, parents, pl$resolution,
+                                  pl$aperture, pl$ap_seq, pair_cell, pair_parent,
+                                  tolerance)
+  }
+  total <- as.numeric(rowsum(omega$piece, pair_cell, reorder = TRUE))
+  cover <- total / omega$whole
   if (any(abs(cover - 1) > SHARE_COVER_SLACK)) {
     k <- which.max(abs(cover - 1))
     stop(sprintf(paste0("hexify internal error: the coarser cells found for cell %s ",
-                        "cover %.8f of it"), as.character(cell_id[k]), cover[k]),
+                        "cover %.12f of it"), as.character(cell_id[k]), cover[k]),
          call. = FALSE)
   }
-  piece / total[child]
-}
-
-#' Cells as s2 polygons: H3 cells from their corners, whose edges are
-#' great-circle arcs, ISEA-family cells from their walls followed to
-#' `tolerance`
-#' @noRd
-sphere_polygons <- function(cell_id, g, tolerance = SHARE_WALL_TOLERANCE) {
-  rings <- if (is_h3_grid(g)) {
-    cpp_h3_cellToBoundary(as.character(cell_id))
-  } else {
-    lv <- isea_levels(g@aperture, g@resolution)
-    cpp_cell_sphere_rings(icosa_arg(g), as_cell_id(cell_id), lv$resolution,
-                          lv$aperture, lv$ap_seq, tolerance)
-  }
-  n <- vapply(rings, nrow, integer(1)) - 1L
-  xy <- do.call(rbind, lapply(rings, function(r) r[-nrow(r), , drop = FALSE]))
-  s2::s2_make_polygon(xy[, 1], xy[, 2], feature_id = rep(seq_along(rings), n),
-                      oriented = FALSE)
+  omega$piece / total[pair_cell]
 }

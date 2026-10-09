@@ -116,14 +116,16 @@ one-level rule repeated rather than the share of a fine cell's area in a
 coarse cell.
 
 \strong{Fuller's projection and H3.} Neither is equal-area, so the plane
-shares do not carry over to the sphere. There each share is measured: the
-cell and every coarser cell it overlaps are intersected as spherical
-polygons (H3 cells are exactly that, their edges being great-circle arcs;
-an ISEA-family cell's walls are followed to within \code{1e-5} of their
-length, which puts a share within about \code{5e-5} of its exact value),
-and the share is the area of each piece over the area of all of them.
-Measured this way on Snyder's projection, the shares come out as the
-lattice's and converge to them as the walls are followed more closely.
+shares do not carry over to the sphere, and each share is measured. Both
+cells are clipped against each other where they are straight, which makes
+the pieces exact: an ISEA-family cell on each face plane it covers, an H3
+cell on the gnomonic plane at the finer cell's centre, where its
+great-circle edges are straight. An H3 piece is a spherical polygon whose
+area is a sum of spherical triangles, exact to rounding; the walls of a
+face-plane piece are followed on the sphere to \code{1e-5} of their
+length, which puts a share within \code{1e-7} of its exact value. The share
+is a piece's area over that of all the cell's pieces. Measured this way on
+Snyder's projection, the shares come out as the lattice's.
 }
 \examples{
 g <- hex_grid(resolution = 4, aperture = 3)

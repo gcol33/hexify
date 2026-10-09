@@ -70,9 +70,9 @@ test_that("the centre rule gives each cell wholly to get_parent()", {
 
 test_that("the lattice shares are the shares measured on the sphere", {
   skip_on_cran()
-  # Each cell intersected with the coarser cells it overlaps as spherical
-  # polygons, its walls followed to 1e-5: the shares 1/3, 1/2, 11/12 and 1/12
-  # to within the measuring error
+  # Each cell clipped against the coarser cells it overlaps face by face and
+  # the pieces measured on the sphere, their walls followed to 1e-5: the
+  # shares 1/3, 1/2, 11/12 and 1/12 to within the measuring error
   set.seed(5)
   for (case in list(list(3, 5), list(4, 4), list(7, 3),
                     list(c(4, 7, 3, 7), 4), list(7, 2, "octahedron"))) {
@@ -83,14 +83,12 @@ test_that("the lattice shares are the shares measured on the sphere", {
     ov <- get_parent(ids, g, overlapping = TRUE)
     lattice <- hexify:::lattice_shares(lengths(ov), hexify:::step_aperture(g))
     measured <- hexify:::sphere_shares(ids, ov, g)
-    expect_lt(max(abs(measured - lattice)), 5e-5)
+    expect_lt(max(abs(measured - lattice)), 1e-6)
   }
 })
 
 test_that("every cell around a vertex divides as on the plane", {
-  # The cells around the twelve vertices, where the angle deficit is, their
-  # walls followed to 1e-6
-  skip_on_cran()
+  # The cells around the twelve vertices, where the angle deficit is
   for (case in list(c(3, 6), c(4, 5), c(7, 4))) {
     g <- hex_grid(resolution = case[2], aperture = case[1])
     pent <- all_cells(g)[is_pentagon(all_cells(g), g)]
@@ -98,8 +96,8 @@ test_that("every cell around a vertex divides as on the plane", {
                                                           include_self = TRUE)))
     ov <- get_parent(near, g, overlapping = TRUE)
     lattice <- hexify:::lattice_shares(lengths(ov), case[1])
-    measured <- hexify:::sphere_shares(near, ov, g, tolerance = 1e-6)
-    expect_lt(max(abs(measured - lattice)), 1e-7)
+    measured <- hexify:::sphere_shares(near, ov, g)
+    expect_lt(max(abs(measured - lattice)), 1e-9)
   }
 })
 
@@ -126,7 +124,7 @@ test_that("Fuller and H3 shares are measured on the sphere", {
     ids <- all_cells(g)
     area <- unname(cell_area(ids, g))
     up <- hex_aggregate(ids, area, g)
-    expect_equal(up$value, unname(cell_area(up$cell_id, coarser(g))), tolerance = 1e-6)
+    expect_equal(up$value, unname(cell_area(up$cell_id, coarser(g))), tolerance = 1e-8)
     expect_equal(sum(up$value), sum(area), tolerance = 1e-12)
   }
   # Fuller's shares depart from the plane's: it is not equal-area

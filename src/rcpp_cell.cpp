@@ -29,6 +29,7 @@
 #include "cell_id.h"
 #include "index_z7.h"
 #include "globe_table.h"
+#include "plane_clip.h"
 
 using namespace Rcpp;
 
@@ -1383,6 +1384,12 @@ struct FacePiece {
     double s0, s1;
 };
 
+// The face triangle, the same in every face's triangle coordinates (unit
+// edge, first corner at the top): its corners, then its edge midpoints.
+static const double kFaceTrianglePoints[6][2] = {
+    {0.5, 0.86602540378443864676}, {0.0, 0.0}, {1.0, 0.0},
+    {0.25, 0.43301270189221932338}, {0.5, 0.0}, {0.75, 0.43301270189221932338}};
+
 // The most creases a piece inside one face can cross: the lines from the
 // face centre point in six directions 60 degrees apart, and a line misses
 // the centre, so it sees them over less than 180 degrees.
@@ -1402,9 +1409,7 @@ static int radius_crossings(double ax, double ay, double bx, double by,
     constexpr double kCx = 0.5;
     constexpr double kCy = 0.28867513459481288225;   // 1 / (2 sqrt(3))
     // The far end of each crease: the corners, then the edge midpoints
-    static const double ends[6][2] = {
-        {0.5, 0.86602540378443864676}, {0.0, 0.0}, {1.0, 0.0},
-        {0.25, 0.43301270189221932338}, {0.5, 0.0}, {0.75, 0.43301270189221932338}};
+    const double (*ends)[2] = kFaceTrianglePoints;
     int n_lines = 0;
     switch (hexify::active_projection()) {
         case hexify::FaceProjection::ISEA: n_lines = 3; break;
@@ -1803,14 +1808,11 @@ static void face_piece_sphere(int face, double ax, double ay, const hexify::Unit
     out.push_back(m);
 }
 
-// The walls of one cell on the unit sphere in the form cell_walls.h
-// describes, each from one corner to the next, counter-clockwise, densified to
-// 'tolerance' (face_piece_sphere).
-static void cell_walls_sphere(const CellPlanes& g, const CellPlane& c, double tolerance,
-                              std::vector<PlaneEdge>& edges,
-                              std::vector<FacePiece>& pieces,
-                              std::vector<std::vector<hexify::UnitVec>>& walls) {
-    cell_face_pieces(g, c, edges, pieces);
+// Face pieces in boundary order, grouped into walls by their 'wall', on the
+// unit sphere in the form cell_walls.h describes, densified to 'tolerance'
+// (face_piece_sphere).
+static void pieces_to_walls(const std::vector<FacePiece>& pieces, double tolerance,
+                            std::vector<std::vector<hexify::UnitVec>>& walls) {
     int n_wall = 0;
     for (const FacePiece& p : pieces) n_wall = std::max(n_wall, p.wall + 1);
     walls.assign(n_wall, {});
@@ -1825,6 +1827,17 @@ static void cell_walls_sphere(const CellPlanes& g, const CellPlane& c, double to
             walls[p.wall].push_back(b);
         }
     }
+}
+
+// The walls of one cell on the unit sphere in the form cell_walls.h
+// describes, each from one corner to the next, counter-clockwise, densified to
+// 'tolerance' (face_piece_sphere).
+static void cell_walls_sphere(const CellPlanes& g, const CellPlane& c, double tolerance,
+                              std::vector<PlaneEdge>& edges,
+                              std::vector<FacePiece>& pieces,
+                              std::vector<std::vector<hexify::UnitVec>>& walls) {
+    cell_face_pieces(g, c, edges, pieces);
+    pieces_to_walls(pieces, tolerance, walls);
 }
 
 // A cell's centre on the unit sphere.
@@ -1865,48 +1878,131 @@ NumericVector cpp_cell_solid_angle(NumericVector icosa, NumericVector cell_id,
                              tolerance);
 }
 
-// The boundary of each cell as a closed lon/lat ring whose consecutive points
-// lie on the cell's walls, followed to 'tolerance' (cell_walls_sphere), so the
-// great-circle arcs between them stay within that fraction of their length of
-// the true wall: the ring a spherical-polygon library reads as the cell.
-// [[Rcpp::export]]
-List cpp_cell_sphere_rings(NumericVector icosa, NumericVector cell_id, int resolution,
-                           int aperture, IntegerVector ap_seq, double tolerance) {
-    activate_grid(icosa);
-    if (!(tolerance > 0.0)) stop("tolerance must be positive");
-    const CellPlanes g = cell_planes(cell_id, grid_frame(resolution, aperture, ap_seq));
-    List out(cell_id.size());
-    std::vector<PlaneEdge> edges;
-    std::vector<FacePiece> pieces;
-    std::vector<std::vector<hexify::UnitVec>> walls;
-    // Points closer than this, in radians, are one point: a corner on a face
-    // edge leaves a wall piece of rounding length there.
-    constexpr double kSamePoint = 1e-13;
-    std::vector<hexify::UnitVec> ring;
-    std::vector<double> lon, lat;
-    for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, walls);
-        ring.clear();
-        // Each wall ends where the next begins, so its last point is left off.
-        for (const auto& w : walls) {
-            for (size_t i = 0; i + 1 < w.size(); i++) {
-                if (ring.empty() || hexify::arc_angle(ring.back(), w[i]) > kSamePoint) {
-                    ring.push_back(w[i]);
+// A cell's part on one face of the solid, a convex polygon in that face's
+// triangle coordinates.
+struct FacePolygon {
+    int face;
+    hexify::PlanePolygon poly;
+};
+
+// How close, in radians, a face corner lies to a vertex cell's centre when it
+// is the vertex the cell is centred on.
+constexpr double kVertexCornerSlack = 1e-9;
+
+// The parts of a cell on the faces it covers. The cell is convex on the
+// unfolded solid and each face a triangle of it, so each part is convex: the
+// hull of the cell's boundary pieces on that face, with the face's corner at
+// the vertex for a cell centred on a vertex of the solid.
+static void cell_face_polygons(const CellPlanes& g, const CellPlane& c,
+                               std::vector<PlaneEdge>& edges,
+                               std::vector<FacePiece>& pieces,
+                               std::vector<FacePolygon>& out) {
+    cell_face_pieces(g, c, edges, pieces);
+    out.clear();
+    for (const FacePiece& p : pieces) {
+        auto it = std::find_if(out.begin(), out.end(),
+                               [&](const FacePolygon& fp) { return fp.face == p.face; });
+        if (it == out.end()) {
+            out.push_back({p.face, {}});
+            it = out.end() - 1;
+        }
+        it->poly.push_back({p.ax, p.ay});
+        it->poly.push_back({p.bx, p.by});
+    }
+    if (c.at_vertex) {
+        const hexify::UnitVec centre = cell_centre_sphere(c);
+        hexify::UnitVec v;
+        for (FacePolygon& fp : out) {
+            for (int k = 0; k < 3; k++) {
+                hexify::face_tri_to_sphere(fp.face, kFaceTrianglePoints[k][0],
+                                           kFaceTrianglePoints[k][1], v.data());
+                if (hexify::arc_angle(v, centre) < kVertexCornerSlack) {
+                    fp.poly.push_back({kFaceTrianglePoints[k][0], kFaceTrianglePoints[k][1]});
                 }
             }
         }
-        while (ring.size() > 1 && hexify::arc_angle(ring.back(), ring.front()) <= kSamePoint) {
-            ring.pop_back();
-        }
-        lon.clear();
-        lat.clear();
-        for (const auto& v : ring) {
-            lon.push_back(std::atan2(v[1], v[0]) * hexify::kRadToDeg);
-            lat.push_back(std::atan2(v[2], std::hypot(v[0], v[1])) * hexify::kRadToDeg);
-        }
-        out[k] = closed_ring(lon, lat);
     }
-    return out;
+    for (FacePolygon& fp : out) fp.poly = hexify::convex_hull(fp.poly);
+    out.erase(std::remove_if(out.begin(), out.end(),
+                             [](const FacePolygon& fp) { return fp.poly.size() < 3; }),
+              out.end());
+}
+
+// Solid angle of a convex polygon of one face: its edges are cut at the
+// projection's creases and followed on the sphere to 'tolerance'
+// (pieces_to_walls), and the area they enclose summed (enclosed_solid_angle).
+static double face_polygon_solid_angle(int face, const hexify::PlanePolygon& poly,
+                                       double tolerance, std::vector<FacePiece>& pieces,
+                                       std::vector<std::vector<hexify::UnitVec>>& walls) {
+    pieces.clear();
+    for (size_t i = 0; i < poly.size(); i++) {
+        const hexify::PlanePoint& a = poly[i];
+        const hexify::PlanePoint& b = poly[(i + 1) % poly.size()];
+        pieces.push_back({face, a.x, a.y, b.x, b.y, static_cast<int>(i), 0.0, 1.0});
+    }
+    split_at_creases(pieces);
+    pieces_to_walls(pieces, tolerance, walls);
+    return hexify::enclosed_solid_angle(walls);
+}
+
+// Solid angles of cells and of their parts inside coarser cells. Both grids'
+// cells are straight on each face, so a cell and a coarser cell are clipped
+// against each other face by face (cell_face_polygons, clip_convex) and each
+// piece measured on the sphere (face_polygon_solid_angle). 'pair_cell' and
+// 'pair_parent' (from 1, grouped by cell) name the pairs; returns 'piece', one
+// solid angle per pair, and 'whole', one per cell that appears in a pair.
+// [[Rcpp::export]]
+List cpp_cell_overlap_solid_angles(NumericVector icosa, NumericVector cell_id,
+                                   int resolution, int aperture, IntegerVector ap_seq,
+                                   NumericVector parent_id, int parent_resolution,
+                                   int parent_aperture, IntegerVector parent_ap_seq,
+                                   IntegerVector pair_cell, IntegerVector pair_parent,
+                                   double tolerance) {
+    activate_grid(icosa);
+    if (!(tolerance > 0.0)) stop("tolerance must be positive");
+    if (pair_cell.size() != pair_parent.size()) stop("pair_cell and pair_parent differ in length");
+    const CellPlanes gc = cell_planes(cell_id, grid_frame(resolution, aperture, ap_seq));
+    const CellPlanes gp = cell_planes(parent_id, grid_frame(parent_resolution, parent_aperture,
+                                                            parent_ap_seq));
+    std::vector<PlaneEdge> edges;
+    std::vector<FacePiece> pieces;
+    std::vector<std::vector<hexify::UnitVec>> walls;
+
+    std::vector<std::vector<FacePolygon>> parents(parent_id.size());
+    for (R_xlen_t k = 0; k < parent_id.size(); k++) {
+        cell_face_polygons(gp, gp.cells[k], edges, pieces, parents[k]);
+    }
+
+    NumericVector piece(pair_cell.size()), whole(cell_id.size());
+    std::vector<FacePolygon> cell;
+    R_xlen_t current = -1;
+    for (R_xlen_t m = 0; m < pair_cell.size(); m++) {
+        const R_xlen_t k = pair_cell[m] - 1, p = pair_parent[m] - 1;
+        if (k < 0 || k >= cell_id.size() || p < 0 || p >= parent_id.size()) {
+            stop("pair_cell or pair_parent out of range");
+        }
+        if (k != current) {
+            current = k;
+            cell_face_polygons(gc, gc.cells[k], edges, pieces, cell);
+            double w = 0.0;
+            for (const FacePolygon& fp : cell) {
+                w += face_polygon_solid_angle(fp.face, fp.poly, tolerance, pieces, walls);
+            }
+            whole[k] = w;
+        }
+        double s = 0.0;
+        for (const FacePolygon& cf : cell) {
+            for (const FacePolygon& pf : parents[p]) {
+                if (cf.face != pf.face) continue;
+                const hexify::PlanePolygon cut = hexify::clip_convex(cf.poly, pf.poly);
+                if (!cut.empty()) {
+                    s += face_polygon_solid_angle(cf.face, cut, tolerance, pieces, walls);
+                }
+            }
+        }
+        piece[m] = s;
+    }
+    return List::create(_["piece"] = piece, _["whole"] = whole);
 }
 
 // The boundaries of cells on the flat solid and on the sphere, from the same

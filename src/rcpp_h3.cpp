@@ -1,8 +1,10 @@
 #include <Rcpp.h>
 #include <cmath>
 #include <cstring>
+#include <utility>
 #include <vector>
 #include "cell_walls.h"
+#include "plane_clip.h"
 
 extern "C" {
 #include "h3/h3api.h"
@@ -662,4 +664,134 @@ Rcpp::List cpp_h3_cell_walls(Rcpp::CharacterVector cell_ids, bool walls) {
                                   Rcpp::CharacterVector(row_nbr.begin(), row_nbr.end()));
     }
     return out;
+}
+
+// A tangent plane of the unit sphere and the gnomonic projection onto it,
+// from the centre of the sphere: it takes great circles to straight lines.
+struct GnomonicFrame {
+    hexify::UnitVec e1, e2, e3;
+};
+
+static inline double dot3(const hexify::UnitVec& a, const hexify::UnitVec& b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+static GnomonicFrame gnomonic_frame(const hexify::UnitVec& c) {
+    // The axis least aligned with c gives a well-conditioned tangent basis
+    hexify::UnitVec axis = {0.0, 0.0, 0.0};
+    int k = 0;
+    for (int d = 1; d < 3; d++) {
+        if (std::fabs(c[d]) < std::fabs(c[k])) k = d;
+    }
+    axis[k] = 1.0;
+    const hexify::UnitVec e1 = hexify::normalized({axis[1] * c[2] - axis[2] * c[1],
+                                                   axis[2] * c[0] - axis[0] * c[2],
+                                                   axis[0] * c[1] - axis[1] * c[0]});
+    const hexify::UnitVec e2 = {c[1] * e1[2] - c[2] * e1[1], c[2] * e1[0] - c[0] * e1[2],
+                                c[0] * e1[1] - c[1] * e1[0]};
+    return {e1, e2, c};
+}
+
+static hexify::PlanePoint gnomonic(const GnomonicFrame& f, const hexify::UnitVec& v) {
+    const double z = dot3(v, f.e3);
+    if (!(z > 0.0)) Rcpp::stop("an H3 cell reaches a quarter turn from the cell it is compared with");
+    return {dot3(v, f.e1) / z, dot3(v, f.e2) / z};
+}
+
+static hexify::UnitVec gnomonic_inverse(const GnomonicFrame& f, const hexify::PlanePoint& p) {
+    return hexify::normalized({p.x * f.e1[0] + p.y * f.e2[0] + f.e3[0],
+                               p.x * f.e1[1] + p.y * f.e2[1] + f.e3[1],
+                               p.x * f.e1[2] + p.y * f.e2[2] + f.e3[2]});
+}
+
+// Solid angle of a convex polygon of the gnomonic plane, whose edges are
+// great-circle arcs on the sphere: a fan of spherical triangles.
+static double gnomonic_solid_angle(const GnomonicFrame& f, const hexify::PlanePolygon& poly) {
+    const hexify::UnitVec o = gnomonic_inverse(f, poly[0]);
+    double omega = 0.0;
+    hexify::UnitVec a = gnomonic_inverse(f, poly[1]), b;
+    for (size_t i = 2; i < poly.size(); i++) {
+        b = gnomonic_inverse(f, poly[i]);
+        omega += hexify::triangle_solid_angle(o, a, b);
+        a = b;
+    }
+    return std::fabs(omega);
+}
+
+// An H3 cell on the gnomonic plane as the triangles fanned from its centre
+// to each edge, counter-clockwise. Every triangle is convex, so a cell whose
+// distortion vertices leave it not quite convex is still clipped exactly.
+static void h3_cell_fan(H3Index h, const GnomonicFrame& f,
+                        std::vector<hexify::PlanePolygon>& out) {
+    LatLng c;
+    CellBoundary cb;
+    if (hexify_h3_cellToLatLng(h, &c) != E_SUCCESS ||
+        hexify_h3_cellToBoundary(h, &cb) != E_SUCCESS) {
+        Rcpp::stop("H3 could not read a cell");
+    }
+    auto unit = [](const LatLng& ll) {
+        return hexify::unit_from_lonlat(ll.lng * RAD_TO_DEG, ll.lat * RAD_TO_DEG);
+    };
+    const hexify::PlanePoint o = gnomonic(f, unit(c));
+    out.clear();
+    for (int v = 0; v < cb.numVerts; v++) {
+        hexify::PlanePolygon t = {o, gnomonic(f, unit(cb.verts[v])),
+                                  gnomonic(f, unit(cb.verts[(v + 1) % cb.numVerts]))};
+        const double area2 = hexify::turn(t[0], t[1], t[2]);
+        if (area2 == 0.0) continue;
+        if (area2 < 0.0) std::swap(t[1], t[2]);
+        out.push_back(t);
+    }
+}
+
+static H3Index h3_cell_or_stop(const Rcpp::CharacterVector& ids, R_xlen_t k) {
+    SEXP s = STRING_ELT(ids, k);
+    H3Index h = s == NA_STRING ? H3_NULL : string_to_h3(CHAR(s));
+    if (h == H3_NULL || !hexify_h3_isValidCell(h)) {
+        Rcpp::stop("not a valid H3 cell: %s", s == NA_STRING ? "NA" : CHAR(s));
+    }
+    return h;
+}
+
+// Solid angles of H3 cells and of their parts inside coarser cells. H3 cell
+// edges are great-circle arcs, so on the gnomonic plane at the cell's centre
+// both cells are straight and the clip is exact (h3_cell_fan, clip_convex), as
+// is each piece's area (gnomonic_solid_angle). 'pair_cell' and 'pair_parent'
+// (from 1) name the pairs; returns 'piece', one solid angle per pair, and
+// 'whole', one per cell, both as H3 measures cells (triangles fanned from the
+// centre to the boundary).
+// [[Rcpp::export]]
+Rcpp::List cpp_h3_overlap_solid_angles(Rcpp::CharacterVector cell_ids,
+                                       Rcpp::CharacterVector parent_ids,
+                                       Rcpp::IntegerVector pair_cell,
+                                       Rcpp::IntegerVector pair_parent) {
+    if (pair_cell.size() != pair_parent.size()) {
+        Rcpp::stop("pair_cell and pair_parent differ in length");
+    }
+    Rcpp::NumericVector piece(pair_cell.size()), whole(cell_ids.size());
+    std::vector<hexify::PlanePolygon> cell, parent;
+    for (R_xlen_t m = 0; m < pair_cell.size(); m++) {
+        const R_xlen_t k = pair_cell[m] - 1, p = pair_parent[m] - 1;
+        if (k < 0 || k >= cell_ids.size() || p < 0 || p >= parent_ids.size()) {
+            Rcpp::stop("pair_cell or pair_parent out of range");
+        }
+        const H3Index h = h3_cell_or_stop(cell_ids, k);
+        LatLng c;
+        hexify_h3_cellToLatLng(h, &c);
+        const GnomonicFrame f = gnomonic_frame(
+            hexify::unit_from_lonlat(c.lng * RAD_TO_DEG, c.lat * RAD_TO_DEG));
+        h3_cell_fan(h, f, cell);
+        h3_cell_fan(h3_cell_or_stop(parent_ids, p), f, parent);
+        double w = 0.0, s = 0.0;
+        for (const hexify::PlanePolygon& t : cell) {
+            w += gnomonic_solid_angle(f, t);
+            for (const hexify::PlanePolygon& u : parent) {
+                const hexify::PlanePolygon cut = hexify::clip_convex(t, u);
+                if (!cut.empty()) s += gnomonic_solid_angle(f, cut);
+            }
+        }
+        whole[k] = w;
+        piece[m] = s;
+    }
+    return Rcpp::List::create(Rcpp::Named("piece") = piece, Rcpp::Named("whole") = whole);
 }
