@@ -51,3 +51,25 @@ test_that("sub-zones come in ascending order of cell ID, as the definition state
     }
   }
 })
+
+test_that("a grid on an ellipsoid states its earth model, and OGC's grids OGC's identifiers", {
+  g <- hex_grid(resolution = 4, aperture = 3, ellipsoid = "WGS84", orientation = "ogc")
+  d <- dggrs_definition(g)
+  expect_identical(d$dggh$parameters$ellipsoid, "[EPSG:7030]")
+  # OGC's ISEA3H states the vertex's geodetic latitude as 58.397145907431
+  expect_equal(d$dggh$parameters$orientation$latitude, 58.397145907431, tolerance = 1e-12)
+  expect_equal(d$dggh$parameters$orientation$longitude, 11.20)
+  expect_identical(d$zirs$textZIRS$type, "levelRootFaceHexRowMajorSubZone")
+  expect_identical(d$links[[1]]$href, "https://www.opengis.net/def/dggrs/OGC/1.0/ISEA3H")
+  expect_null(d$uri)
+  expect_match(d$description, "WGS84 ellipsoid")
+  expect_identical(dggrs_definition(hex_grid(resolution = 3, aperture = 7, projection = "ivea",
+                                             ellipsoid = "WGS84", orientation = "ogc"))$links[[1]]$href,
+                   "https://www.opengis.net/def/dggrs/OGC/1.0/IVEA7H")
+  # the standard orientation, or no ellipsoid, is not OGC's grid
+  expect_null(dggrs_definition(hex_grid(resolution = 4, aperture = 3, ellipsoid = "WGS84"))$links)
+  expect_null(dggrs_definition(hex_grid(resolution = 4, aperture = 3, orientation = "ogc"))$links)
+  dm <- dggrs_definition(hex_grid(resolution = 3, aperture = 7, ellipsoid = "mars"))
+  expect_equal(dm$dggh$parameters$ellipsoid$semiMajorAxis_km, 3396.19)
+  expect_identical(dm$zirs$textZIRS$type, "hierarchicalConcatenation")
+})

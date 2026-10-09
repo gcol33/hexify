@@ -118,7 +118,8 @@ active projection (`active_projection()`). Every Rcpp entry point that reaches
 either takes `icosa` as its FIRST argument and calls `activate_icosa(icosa)`,
 or `activate_grid(icosa)` where it needs cells (it stops on a solid without a
 grid) (`src/rcpp_icosa.h`). R passes `icosa_arg(g)` =
-`c(orientation, projection code, solid code)`, `numeric(0)` for the
+`c(orientation, projection code, solid code)` (plus the flattening for a
+grid on an ellipsoid, see Earth model), `numeric(0)` for the
 icosahedron's default orientation that `hexify_build_icosa()` sets on ISEA,
 `projection_icosa(projection, polyhedron)` = `c(projection, solid)` for a
 solid's default orientation, or `standard_icosa(polyhedron)`. Test-only entry
@@ -169,6 +170,47 @@ values (NA one NaN, absent 0xFFFFFFFF); coarser levels pack ramp position
 and cover in 16 bits each, and the shader fills from the finest level whose
 cells are at least a pixel wide. R builds the Grid uniform once
 (`globe_grid_uniform()`), the widget and hexglobe only upload it.
+
+## Earth model: sphere or ellipsoid
+
+By default latitude is read on the sphere (as DGGRID and H3 do); on WGS84
+the cells' areas then run 0.9955 to 1.0090 of the reported area
+(`paper/bench/bench_ellipsoid_area.R`). `hex_grid(ellipsoid = )` ("WGS84",
+"GRS80", "earth", the IAU spheroids "mars", "jupiter", "saturn", "uranus",
+"neptune", or `c(a_km, f)`) stores `c(a_km, f)` in the `ellipsoid` slot,
+sizes the grid on the authalic radius (`radius_km`), and converts geodetic
+to authalic latitude where lon/lat enter the projection and back where they
+leave it, so ISEA and IVEA cells are equal-area on the ellipsoid.
+
+- C++: `src/authalic.cpp`, one implementation. `use_ellipsoid(f)` is set by
+  `activate_icosa()` from a sixth icosa element (the flattening;
+  `icosa_arg()` appends it only when f > 0, so `ellipsoid = NULL` keeps the
+  five-element argument and is bit-identical to a sphere-only build).
+  `snyder_forward()`, `snyder_forward_to_face()`, `which_face()` and
+  `face_xy_to_ll()` take and give geodetic latitude; code that stays on the
+  sphere uses `snyder_forward_sphere()` and `face_xy_to_sphere_ll()`. The
+  conversion is a sine series fitted at activation to the closed form in
+  q(phi) (`authalic_lat_exact()`, Newton inverse `geodetic_lat_exact()`,
+  kept as the checker, `cpp_sphere_latitude(exact = TRUE)`).
+- R: code doing sphere geometry on lon/lat (sampling, drawing, nets, globe)
+  converts through `unit_vec(lon, lat, icosa)`, `vec_lonlat(P, icosa)`,
+  `sphere_lat()` and `geodetic_lat()`. The orientation is on the sphere
+  (`vert0_lat` authalic); a `region` is given geodetic.
+- `orientation = "ogc"` is OGC's and DGGAL's (11.20E, authalic arctan(phi)).
+  OGC's ISEA3H/ISEA7H/IVEA3H/IVEA7H = `hex_grid(aperture = 3 or 7,
+  projection = "isea" or "ivea", ellipsoid = "WGS84", orientation = "ogc")`.
+
+## OGC zone identifiers (textZIRS, uint64ZIRS)
+
+`cell_to_index(zirs = "textZIRS" | "uint64ZIRS")` and `index_to_cell()`
+(`R/ogc_zirs.R`) write and read the identifiers DGGAL gives OGC's ISEA3H,
+ISEA7H, IVEA3H and IVEA7H, for any aperture-3/7 icosahedron grid. Root
+rhombus r is hexify quad r/2 + 1 (even r) or (r - 1)/2 + 6 (odd), 10 and 11
+the vertex quads 0 and 11; sub-rhombi come from the quad-plane centre. Odd
+aperture-7 letters follow DGGAL's own naming of pentagon, polar and
+first-row/first-column parents (see the file's header). They equal DGGAL's
+for every zone up to ISEA3H level 10 and ISEA7H level 5
+(`paper/bench/bench_dggal_zirs.R`); do not diverge from DGGAL there.
 
 ## DGGRID corner bug: aperture 7, odd resolutions
 

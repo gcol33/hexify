@@ -28,13 +28,18 @@ their resolution and are unique across all resolutions, and the cell IDs,
 which number the cells of one resolution from 1 and are unique only
 together with it.
 
-The ISEA3H and ISEA7H definitions registered with OGC
-(\url{https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H}) are other grids:
-they convert WGS84 geodetic latitude to authalic latitude before
-projecting, and place the icosahedron's first vertex at 11.20 degrees E
-and authalic latitude \eqn{\arctan(\phi)}, where hexify, like DGGRID, reads
-latitude on the sphere and places it at 11.25 degrees E. A hexify grid is
-therefore described without an OGC URI.
+The ISEA3H, ISEA7H, IVEA3H and IVEA7H definitions registered with OGC
+(\url{https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H}) convert WGS84
+geodetic latitude to authalic latitude before projecting, and place the
+icosahedron's first vertex at 11.20 degrees E and authalic latitude
+\eqn{\arctan(\phi)}: \code{hex_grid(aperture = 3, ellipsoid = "WGS84",
+orientation = "ogc")}, its aperture-7 twin and the same with
+\code{projection = "ivea"}. For such a grid the definition carries OGC's
+zone identifiers (\code{cell_to_index(zirs = "textZIRS")}) and links to the
+OGC definition, which it matches in its hierarchy and zone identifiers; it
+carries no OGC URI, since hexify lists sub-zones in ascending order of
+cell ID rather than in OGC's scanlines. On a grid with an ellipsoid the
+orientation's latitude is geodetic, as OGC states it.
 }
 \examples{
 def <- dggrs_definition(hex_grid(resolution = 5, aperture = 7))

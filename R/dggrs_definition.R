@@ -21,13 +21,18 @@
 #' which number the cells of one resolution from 1 and are unique only
 #' together with it.
 #'
-#' The ISEA3H and ISEA7H definitions registered with OGC
-#' (\url{https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H}) are other grids:
-#' they convert WGS84 geodetic latitude to authalic latitude before
-#' projecting, and place the icosahedron's first vertex at 11.20 degrees E
-#' and authalic latitude \eqn{\arctan(\phi)}, where hexify, like DGGRID, reads
-#' latitude on the sphere and places it at 11.25 degrees E. A hexify grid is
-#' therefore described without an OGC URI.
+#' The ISEA3H, ISEA7H, IVEA3H and IVEA7H definitions registered with OGC
+#' (\url{https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H}) convert WGS84
+#' geodetic latitude to authalic latitude before projecting, and place the
+#' icosahedron's first vertex at 11.20 degrees E and authalic latitude
+#' \eqn{\arctan(\phi)}: \code{hex_grid(aperture = 3, ellipsoid = "WGS84",
+#' orientation = "ogc")}, its aperture-7 twin and the same with
+#' \code{projection = "ivea"}. For such a grid the definition carries OGC's
+#' zone identifiers (\code{cell_to_index(zirs = "textZIRS")}) and links to the
+#' OGC definition, which it matches in its hierarchy and zone identifiers; it
+#' carries no OGC URI, since hexify lists sub-zones in ascending order of
+#' cell ID rather than in OGC's scanlines. On a grid with an ellipsoid the
+#' orientation's latitude is geodetic, as OGC states it.
 #'
 #' @references
 #' Open Geospatial Consortium. OGC API - Discrete Global Grid Systems - Part
@@ -58,16 +63,63 @@ dggrs_definition <- function(grid) {
                 c(`3` = "nodeCentredChildCell", `4` = "edgeCentredChildCell",
                   `7` = "nodeSharingChildCell")[as.character(apertures)])
   vertex_cell <- if (polyhedron == "icosahedron") "pentagon" else "square"
+  e <- grid_ellipsoid(g)
+  ogc <- ogc_dggrs_name(g)
+  earth_model <- if (length(e) == 2L) {
+    sprintf(paste("on the %s ellipsoid, geodetic latitude converted to authalic",
+                  "latitude on the sphere of the ellipsoid's area, radius %s km."),
+            ellipsoid_label(e), format(grid_radius_km(g), digits = 10))
+  } else {
+    sprintf("on a sphere of radius %s km taking latitude as spherical latitude.",
+            format(grid_radius_km(g), digits = 10))
+  }
+  parameters <- list(sphere = list(radius_km = grid_radius_km(g)))
+  if (length(e) == 2L) {
+    parameters <- c(list(ellipsoid = if (identical(unname(e), unname(ELLIPSOIDS$wgs84))) {
+      "[EPSG:7030]"
+    } else {
+      list(semiMajorAxis_km = e[["a_km"]], flattening = e[["f"]])
+    }), parameters)
+  }
+  parameters$orientation <- list(
+    latitude = geodetic_lat(unname(o[["vert0_lat"]]), icosa_arg(g)),
+    longitude = unname(o[["vert0_lon"]]),
+    azimuth = unname(o[["azimuth"]]),
+    description = if (length(e) == 2L) {
+      sprintf(paste("Geodetic latitude and longitude of the solid's first vertex,",
+                    "at authalic latitude %s, and azimuth of its second vertex seen",
+                    "from the first."), format(unname(o[["vert0_lat"]]), digits = 15))
+    } else {
+      "Spherical latitude and longitude of the solid's first vertex, and azimuth of its second vertex seen from the first."
+    })
 
-  list(
+  zirs <- if (!is.null(ogc)) {
+    list(textZIRS = list(description = paste(
+      "OGC's", ogc, "textZIRS, as DGGAL writes it: a letter for the level,",
+      "the root rhombus (0-9, A and B for the poles), the sub-rhombus counted",
+      "row by row in hexadecimal, and a letter for the zone at that",
+      "sub-rhombus, e.g. E6-317-A; cell_to_index(zirs = \"textZIRS\")."),
+      type = "levelRootFaceHexRowMajorSubZone"),
+      uint64ZIRS = list(description = paste(
+        "OGC's", ogc, "uint64ZIRS: the fields of the textZIRS packed into a",
+        "64-bit integer; cell_to_index(zirs = \"uint64ZIRS\").")))
+  } else {
+    list(textZIRS = list(description = isea_index_description(g),
+                         type = "hierarchicalConcatenation"),
+         uint64ZIRS = list(description = paste(
+           "The cell ID: 1 to N in the order DGGRID numbers the cells of one",
+           "resolution (SEQNUM), unique together with the resolution.")))
+  }
+
+  out <- list(
     title = dggrs_title(g),
-    description = sprintf(paste(
+    description = paste(c(sprintf(paste(
       "hexify %s grid at resolution %d: %s cells on the %s, refined by",
-      "aperture %s, on a sphere of radius %s km taking latitude as spherical",
-      "latitude."),
+      "aperture %s,"),
       dggrs_title(g), g@resolution, toupper(projection), polyhedron,
-      paste(steps, collapse = ", "),
-      format(grid_radius_km(g), digits = 10)),
+      paste(steps, collapse = ", ")), earth_model,
+      if (!is.null(ogc)) paste0("Its hierarchy and zone identifiers are those of OGC's ", ogc, ".")),
+      collapse = " "),
     dggh = list(
       definition = list(
         spatialDimensions = 2L,
@@ -76,31 +128,40 @@ dggrs_definition <- function(grid) {
         basePolyhedron = polyhedron,
         refinementRatio = as.integer(steps),
         refinementStrategy = unname(strategy),
-        constraints = list(cellEqualSized = projection != "fuller"),
+        constraints = list(cellEqualSized = is_equal_area_projection(projection)),
         zoneTypes = c("hexagon", vertex_cell)
       ),
-      parameters = list(
-        sphere = list(radius_km = grid_radius_km(g)),
-        orientation = list(
-          latitude = unname(o[["vert0_lat"]]),
-          longitude = unname(o[["vert0_lon"]]),
-          azimuth = unname(o[["azimuth"]]),
-          description = "Spherical latitude and longitude of the solid's first vertex, and azimuth of its second vertex seen from the first."
-        )
-      )
+      parameters = parameters
     ),
-    zirs = list(
-      textZIRS = list(description = isea_index_description(g),
-                      type = "hierarchicalConcatenation"),
-      uint64ZIRS = list(description = paste(
-        "The cell ID: 1 to N in the order DGGRID numbers the cells of one",
-        "resolution (SEQNUM), unique together with the resolution."))
-    ),
+    zirs = zirs,
     subZoneOrder = list(
       description = "Sub-zones at any depth below a zone are listed in ascending order of cell ID.",
       type = "cellIdAscending"
     )
   )
+  if (!is.null(ogc)) {
+    out <- append(out, list(links = list(list(
+      rel = "related", href = paste0("https://www.opengis.net/def/dggrs/OGC/1.0/", ogc)))),
+      after = 2L)
+  }
+  out
+}
+
+#' The name of the OGC DGGRS definition a grid is, or NULL
+#'
+#' OGC's ISEA3H, ISEA7H, IVEA3H and IVEA7H: aperture 3 or 7 on the
+#' icosahedron, Snyder's or the vertex-oriented projection, WGS84 read through
+#' authalic latitude, and the OGC orientation.
+#' @noRd
+ogc_dggrs_name <- function(g) {
+  if (is_h3_grid(g) || grid_polyhedron(g) != "icosahedron" ||
+      !g@aperture %in% c("3", "7") || !grid_projection(g) %in% c("isea", "ivea") ||
+      !identical(unname(grid_ellipsoid(g)), unname(ELLIPSOIDS$wgs84)) ||
+      !isTRUE(all.equal(unname(grid_orientation(g)), unname(OGC_ORIENTATION),
+                        tolerance = 0))) {
+    return(NULL)
+  }
+  paste0(toupper(grid_projection(g)), g@aperture, "H")
 }
 
 #' Name of an ISEA-family grid in DGGRID's style
