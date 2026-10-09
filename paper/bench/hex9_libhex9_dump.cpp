@@ -17,10 +17,11 @@
 //                            labels at the given levels
 //   cells L N SEED           every cell of level L reached by N sphere points:
 //                            label, neighbours, parent and children labels
-//   bench LEVELS...          lon lat pairs on stdin (spherical degrees, the
-//                            _sphere functions): per level, the label of the
-//                            cell holding the point and that cell's lattice
-//                            centre (hex9_cell_uv), unprojected
+//   bench SPHERE LEVELS...   lon lat pairs on stdin: per level, the label of
+//                            the cell holding the point and that cell's
+//                            lattice centre (hex9_cell_uv), unprojected; with
+//                            SPHERE 1 the degrees are spherical (the _sphere
+//                            functions), with 0 geodetic on WGS84
 //   commute L K              lon lat pairs on stdin (spherical degrees): the
 //                            label at level L, and for k = 1..K the label at
 //                            level L of the point's level-(L + k) cell's
@@ -128,8 +129,9 @@ int main(int argc, char** argv) {
       std::printf("%.17g,%.17g,%.17g,%.17g,%.17g\n", lon, lat, w[0], w[1], w[2]);
     }
   } else if (mode == "bench") {
+    const int sphere = std::atoi(argv[2]);
     std::vector<int> levels;
-    for (int a = 2; a < argc; a++) levels.push_back(std::atoi(argv[a]));
+    for (int a = 3; a < argc; a++) levels.push_back(std::atoi(argv[a]));
     double u1, v3;
     hex9_uv_units(&u1, &v3);
     std::printf("lon,lat");
@@ -138,7 +140,8 @@ int main(int argc, char** argv) {
     double lon, lat;
     while (std::scanf("%lf %lf", &lon, &lat) == 2) {
       uint8_t full[16], bin[16];
-      hex9_encode_sphere(lon, lat, full);
+      if (sphere) hex9_encode_sphere(lon, lat, full);
+      else hex9_encode(lon, lat, full);
       std::printf("%.17g,%.17g", lon, lat);
       for (int l : levels) {
         hex9_bin(full, l, bin);
@@ -147,7 +150,8 @@ int main(int argc, char** argv) {
         hex9_cell_uv(bin, l, &ca, &cb, &coid, va, vb, voi, &ext);
         const double div = std::pow(3.0, l);
         double clon, clat;
-        hex9_unproject_sphere(ca * u1 / div, cb * v3 / div, coid, &clon, &clat);
+        if (sphere) hex9_unproject_sphere(ca * u1 / div, cb * v3 / div, coid, &clon, &clat);
+        else hex9_unproject(ca * u1 / div, cb * v3 / div, coid, &clon, &clat);
         std::printf(",%s,%.17g,%.17g", label(full, l).c_str(), clon, clat);
       }
       std::printf("\n");

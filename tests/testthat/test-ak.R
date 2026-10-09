@@ -108,3 +108,21 @@ test_that("the warped projection inverts and nearly equalises cell areas", {
   expect_identical(lonlat_to_cell(cell_to_lonlat(ids, g)$lon_deg,
                                   cell_to_lonlat(ids, g)$lat_deg, g), ids)
 })
+
+test_that("on WGS84 a Hex9 grid names points as libhex9's geodetic functions do", {
+  skip_without_hex9_warp()
+  # The same 300 points read as geodetic degrees: hex9_encode(), and the
+  # level-12 centre through hex9_unproject() (dump mode bench, SPHERE 0)
+  d <- utils::read.csv(test_path("data", "libhex9_akw_wgs84.csv"),
+                       colClasses = "character")
+  lon <- as.numeric(d$lon)
+  lat <- as.numeric(d$lat)
+  for (L in c(0, 5, 12, 18)) {
+    g <- hex_grid(resolution = L, aperture = 9, projection = "akw", ellipsoid = "WGS84")
+    expect_identical(cell_to_index(lonlat_to_cell(lon, lat, g), g), d[[paste0("L", L)]])
+  }
+  g <- hex_grid(resolution = 12, aperture = 9, projection = "akw", ellipsoid = "WGS84")
+  cc <- cell_to_lonlat(lonlat_to_cell(lon, lat, g), g)
+  expect_equal(cc$lon_deg, as.numeric(d$lon12), tolerance = 1e-9)
+  expect_equal(cc$lat_deg, as.numeric(d$lat12), tolerance = 1e-9)
+})
