@@ -26,11 +26,12 @@ versions and the processor.
 | `bench_ogc_conformance.R` | Distance between cell centre and spherical area centroid (OGC Topic 21 Req 27), and each cell's area on WGS84 relative to the sphere of equal area (Req 28) | `centroid_offset.csv`, `wgs84_area_scale.csv` |
 | `bench_trunc_icosa.R` | The truncated icosahedron carried into the icosahedron's face frame by slicing Snyder's eighteen spherical right triangles of a face onto plane triangles of proportional area: area shares, where its vertices land on the frame, the offset along the hexagon-pentagon edges, and the angular deformation over a face (100,000 points) and within 0.5 degrees of a vertex, beside ISEA, IVEA and FULLER (2,000,000 points on the sphere) and the bound 2 asin(1/11) for equal-area projections near a vertex | `trunc_icosa.csv` |
 | `bench_globe_table.R` | The globe widget's cells' table against the per-cell upload of a base commit (default `7996043`, installed beside the working tree): R build time (median of five), page size, bytes of the cells on the graphics card, and the graphics card's time per frame (40 frames per submission, mean of the middle ten of twenty) at 800 and 1600 pixels in headless Chrome, for values on every cell, on a sample of cells of a fine grid, and none | `globe_table.csv` |
+| `bench_ellipsoid_area.R` | Geodesic area on WGS84 (GeographicLib through geosphere) of every cell of ISEA3H, ISEA4H and ISEA7H grids, over the area `cell_area()` reports, for the default grid and for `ellipsoid = "WGS84"`, overall and by 10-degree latitude band | `ellipsoid_area.csv`, `ellipsoid_area_by_latitude.csv` |
 
 ## Requirements
 
 - hexify installed from this repository (`R CMD INSTALL --preclean .`).
-- dggridR, h3r, h3o, maps and sf from CRAN.
+- dggridR, h3r, h3o, maps and sf from CRAN; geosphere for `bench_ellipsoid_area.R`.
 - For the DGGAL scripts, a Python (3.6 to 3.13) with `pip install dggal`;
   point `DGGAL_PYTHON` at it.
 - DGGRID built from source (<https://github.com/sahrk/DGGRID>), because
