@@ -12,9 +12,14 @@
 #' same projection and cell numbering as \code{\link{lonlat_to_cell}}, so the
 #' page holds the grid's description and the values rather than the cells'
 #' outlines, and a grid of any resolution draws as fast as a coarse one.
-#' Borders keep their width at every zoom and fade out where the cells get
-#' too small to see. The pointer shows the ID and value of the cell under it.
-#' H3 cells are drawn from their outlines.
+#' The values sit on the graphics card as a texture laid out like the grid's
+#' quads, one block per quad and resolution, which the shader reads at the
+#' place it finds a cell. Where the cells shrink below a pixel the fill is
+#' read from the grid one resolution coarser, and so on, whose cells take the
+#' mean of the values in them, so a fine grid seen whole shows its pattern
+#' rather than noise. Borders keep their width at every zoom and fade out
+#' where the cells get too small to see. The pointer shows the ID and value
+#' of the cell under it. H3 cells are drawn from their outlines.
 #'
 #' Drag to turn the globe. Drag with Shift held to turn the view about the
 #' line of sight and, in the perspective view, to tilt the camera. The mouse
@@ -43,6 +48,9 @@
 #'   range of \code{values}. Values outside are drawn in the end colours.
 #' @param na_fill Fill colour of cells whose value is \code{NA}; \code{NA}
 #'   leaves them unfilled.
+#' @param smooth Whether the fill of an ISEA grid blends between the values
+#'   of neighbouring cells, linearly across the triangles of cell centres,
+#'   rather than filling each cell with its own value.
 #' @param width,height Size of the widget, as CSS units or pixels.
 #' @param elementId Id of the widget's HTML element.
 #'
@@ -85,6 +93,7 @@ hex_globe <- function(x,
                       palette = "viridis",
                       limits = NULL,
                       na_fill = NA,
+                      smooth = FALSE,
                       step = 0.01,
                       width = NULL,
                       height = NULL,
@@ -106,7 +115,11 @@ hex_globe <- function(x,
   grid <- NULL
   fill <- NULL
   grid_lines <- NULL
+  if (!isTRUE(smooth) && !isFALSE(smooth)) {
+    stop("smooth must be TRUE or FALSE", call. = FALSE)
+  }
   if (is_h3_grid(g)) {
+    if (smooth) stop("smooth blends the cells of ISEA grids only", call. = FALSE)
     cells <- grid_cells(g, cells)
     if (!is.null(values)) {
       fill <- c(globe_mesh(h3_surface_mesh(cells, GLOBE_MESH_SPACING)),
@@ -114,7 +127,7 @@ hex_globe <- function(x,
     }
     grid_lines <- globe_lines(grid_surface_paths(g, cells, step))
   } else {
-    grid <- globe_grid(g, cells, values, limits)
+    grid <- globe_grid(g, cells, values, limits, smooth, globe_rgba(na_fill))
   }
 
   x <- list(
@@ -137,7 +150,6 @@ hex_globe <- function(x,
       globe_mesh(cpp_globe_polygons(icosa, sfc_polygons(land), GLOBE_MESH_SPACING))
     },
     grid = grid,
-    projection = if (!is.null(grid)) cpp_globe_projection(icosa),
     cells = fill,
     palette = as.vector(grDevices::col2rgb(ramp_colours(palette), alpha = TRUE)) / 255,
     grid_lines = grid_lines,
@@ -284,11 +296,13 @@ globe_scene <- function(x, width, height, scale) {
     c(mesh("surface"), list(
       kind = 2L,
       uniform = uniform(color %||% clear, x$lift$cells,
-                        if (is.null(color)) 0 else s$grid_lwd, TRUE, !is.null(g$values)),
-      values = if (is.null(g$values)) none else b64(g$values),
+                        if (is.null(color)) 0 else s$grid_lwd, TRUE, g$valued),
       ramp = palette,
-      grid = globe_grid_uniform(g, x$projection, s$na_fill),
-      keys = if (g$n_keys > 0) b64(g$keys) else none
+      grid = b64(g$uniform),
+      textures = lapply(g$textures, function(t) {
+        list(binding = t$binding, format = t$format, dimension = t$dimension,
+             size = t$size, data = b64(t$data))
+      })
     ))
   }
 
@@ -329,23 +343,65 @@ globe_camera_uniform <- function(x, w, h) {
          view$light, x$fold), "f32")
 }
 
-#' The Grid uniform of globe.wgsl, as the widget's `gridUniform()` lays it
-#' out: 788 32-bit words, the face and edge tables padded to the largest
-#' solid's
+#' The Grid uniform of globe.wgsl: 1300 32-bit words, the face and edge
+#' tables padded to the largest solid's and the levels to 32
+#'
+#' `levels` has a row per level of the table, finest first, with the columns
+#' of cpp_globe_table()'s `levels`; `table` is that table, NULL for none,
+#' when level 0 is the frame alone.
 #' @noRd
-globe_grid_uniform <- function(g, projection, na_fill) {
-  out <- raw(3152)
+globe_grid_uniform <- function(projection, frame, levels, table, all, valued, smooth,
+                               per_quad, na_fill, ramp_map) {
+  out <- raw(5200)
   put <- function(word, bytes) out[4 * word + seq_along(bytes)] <<- bytes
   put(0, le32(projection$constants[1:12], "f32"))
-  put(12, le32(c(g$dim, g$index, g$c, g$n_keys), "u32"))
-  put(16, le32(g$generator, "i32"))
-  put(20, le32(c(g$all, !is.null(g$values), g$dense, projection$n_faces), "u32"))
-  put(24, le32(g$per_quad, "u32"))
+  put(12, le32(c(all, valued, smooth, projection$n_faces), "u32"))
+  put(16, le32(c(per_quad, if (is.null(table)) 0 else nrow(levels),
+                 isTRUE(table$keyed)), "u32"))
+  if (!is.null(table)) {
+    put(20, le32(c(table$m, table$size[1:2], table$seed), "u32"))
+    put(24, le32(c(table$buckets, table$offsets_size[1], 0, 0), "u32"))
+  }
   put(28, le32(na_fill %||% numeric(4), "f32"))
-  put(32, le32(g$ramp_map %||% numeric(4), "f32"))
+  put(32, le32(ramp_map %||% numeric(4), "f32"))
   put(36, le32(projection$faces, "f32"))
   put(356, le32(projection$edges, "i32"))
+  if (is.null(levels)) {
+    levels <- cbind(dim = frame$dim, index = frame$index, c = frame$c,
+                    ga = frame$generator[1], gb = frame$generator[2], pr = 0, pc = 0,
+                    hp = 0, wp = 0, base = 0, n_cells = as.numeric(frame$n_cells))
+  }
+  for (k in seq_len(nrow(levels))) {
+    L <- levels[k, ]
+    base_hi <- floor(L[["base"]] / 2^32)
+    word <- 788 + 16 * (k - 1)
+    put(word, le32(L[c("dim", "index", "c", "hp")], "u32"))
+    put(word + 4, le32(L[c("ga", "gb", "pr", "pc")], "i32"))
+    put(word + 8, le32(c(L[["wp"]], base_hi, L[["base"]] - base_hi * 2^32, 0), "u32"))
+    put(word + 12, le32(c(sqrt(4 * pi / L[["n_cells"]]), 0, 0, 0), "f32"))
+  }
   out
+}
+
+#' The textures of globe.wgsl's cell table, as the widget and hexglobe make
+#' them: the table's words, the perfect hash's keys and its offsets, one
+#' word each where there is no table or no hash
+#' @noRd
+globe_textures <- function(table) {
+  one <- function(words) cpp_base64_buffer(words, "u32")
+  texture <- function(binding, format, dimension, size, data) {
+    list(binding = binding, format = format, dimension = dimension,
+         size = as.integer(size), data = data)
+  }
+  keyed <- isTRUE(table$keyed)
+  list(
+    texture(6L, "r32uint", "2d-array", table$size %||% c(1, 1, 1),
+            table$values %||% one(2^32 - 1)),
+    texture(7L, "rg32uint", "2d-array", if (keyed) table$size else c(1, 1, 1),
+            if (keyed) table$keys else one(c(2^32 - 1, 2^32 - 1))),
+    texture(8L, "r32uint", "2d", c(table$offsets_size %||% c(1, 1), 1),
+            table$offsets %||% one(0))
+  )
 }
 
 #' Numbers as little-endian 32-bit floats ("f32"), signed ("i32") or unsigned
@@ -438,12 +494,15 @@ globe_page <- function(browser, url, width, height, scale, timeout) {
   list(session = session, read = read, state = state, message = message)
 }
 
-#' Cell IDs of points found by the globe's shader, for testing it against
-#' lonlat_to_cell(). The points go to the GPU as 32-bit floats; `xyz` are
-#' their unit vectors as the GPU reads them.
+#' Cells of points found by the globe's shader, for testing it against
+#' lonlat_to_cell(): a data frame of each point's cell `id`, the `word` the
+#' cells' table holds for it (2^32 - 1 for none) and the `flags` of
+#' spot_record() in globe.wgsl. The points go to the GPU as 32-bit floats;
+#' `xyz` are their unit vectors as the GPU reads them. `...` goes to
+#' hex_globe(), such as the values and cells the table holds.
 #' @noRd
-globe_shader_cells <- function(grid, xyz, timeout = 120) {
-  widget <- hex_globe(grid, land = FALSE, face_edges = FALSE)
+globe_shader_cells <- function(grid, xyz, ..., timeout = 120) {
+  widget <- hex_globe(grid, land = FALSE, face_edges = FALSE, ...)
   chunks <- split(seq_len(nrow(xyz)), ceiling(seq_len(nrow(xyz)) / 2e5))
   out <- globe_in_chrome(widget, 64, 64, 1, timeout, function(session, read) {
     lapply(chunks, function(k) {
@@ -452,19 +511,22 @@ globe_shader_cells <- function(grid, xyz, timeout = 120) {
                   "').then(ids => Array.from(ids).join(','))"))
     })
   })
-  as.numeric(unlist(strsplit(unlist(out), ",", fixed = TRUE)))
+  m <- matrix(as.numeric(unlist(strsplit(unlist(out), ",", fixed = TRUE))), nrow = 3)
+  data.frame(id = m[1, ], word = m[2, ], flags = m[3, ])
 }
 
 #' An ISEA grid as the widget reads it to find each pixel's cell
 #'
-#' The grid's frame (see cpp_globe_frame()) and the cells drawn, as their
-#' sorted IDs split into high and low 32-bit words, each with its place on
-#' the colour ramp when values are given. With no cells given every cell is
-#' drawn, and IDs are sent only to carry values.
+#' The Grid uniform (see globe_grid_uniform()) and the textures of the
+#' cells' table (cpp_globe_table()), base64. Values fill a table at the
+#' grid's resolution and every coarser one; cells given without values fill
+#' it at the grid's resolution, to mark them drawn. With no cells given every
+#' cell is drawn, and with no values either there is no table.
 #' @noRd
-globe_grid <- function(g, cells, values, limits) {
+globe_grid <- function(g, cells, values, limits, smooth = FALSE, na_fill = NULL) {
   lv <- isea_levels(g@aperture, g@resolution)
-  frame <- cpp_globe_frame(icosa_arg(g), lv$resolution, lv$aperture, lv$ap_seq)
+  icosa <- icosa_arg(g)
+  frame <- cpp_globe_frame(icosa, lv$resolution, lv$aperture, lv$ap_seq)
   # The shader reads a point to 32-bit float precision, a few millionths of
   # a radian; past this quad side its cells are finer than that.
   if (frame$dim >= 2^24) {
@@ -474,39 +536,41 @@ globe_grid <- function(g, cells, values, limits) {
          call. = FALSE)
   }
   all <- is.null(cells)
-  # Values for the whole grid are read by cell ID; any other cells are found
-  # among their sorted IDs.
-  n_cells <- as.numeric(frame$n_cells)
-  dense <- all && !is.null(values) && n_cells <= 2^32
-  if (all && !is.null(values) && !dense) cells <- seq_len(n_cells)
-  keys <- NULL
-  if (dense) {
-    check_values(values, n_cells)
-  } else if (!is.null(cells)) {
+  valued <- !is.null(values)
+  levels <- if (valued) {
+    lapply(g@resolution:0, function(r) isea_levels(g@aperture, r))
+  } else {
+    list(lv)
+  }
+  table <- NULL
+  map <- if (valued) ramp_map(values, limits)
+  if (all && valued) {
+    check_values(values, as.numeric(frame$n_cells))
+    table <- cpp_globe_table(icosa, levels, bit64::integer64(0), as.numeric(values), TRUE,
+                             map)
+  } else if (!all) {
     cells <- as_cell_id(cells, "cells")
     if (anyNA(cells) || any(cells < 1L | cells > frame$n_cells)) {
       stop("cells must be cell IDs of the grid, from 1 to ",
            as.character(frame$n_cells), call. = FALSE)
     }
-    o <- order(cells)
-    if (!is.null(values)) {
-      check_values(values, length(cells))
-      values <- values[o]
-    }
-    keys <- split_u64(cells[o])
+    if (anyDuplicated(cells)) stop("cells must not repeat", call. = FALSE)
+    if (valued) check_values(values, length(cells))
+    table <- cpp_globe_table(icosa, levels, cells,
+                             if (valued) as.numeric(values) else numeric(0), FALSE,
+                             map %||% numeric(0))
   }
   list(
-    dim = frame$dim,
-    index = frame$index,
-    c = frame$c,
-    generator = frame$generator,
-    per_quad = split_u64(frame$per_quad),
+    uniform = cpp_base64_bytes(
+      globe_grid_uniform(cpp_globe_projection(icosa), frame, table$levels, table, all,
+                         valued, smooth, split_u64(frame$per_quad), na_fill, map)),
+    textures = globe_textures(table),
     all = all,
-    dense = dense,
-    n_keys = length(keys) / 2,
-    keys = if (!is.null(keys)) cpp_base64_buffer(keys, "u32"),
-    values = if (!is.null(values)) cpp_base64_buffer(as.numeric(values), "f32"),
-    ramp_map = if (!is.null(values)) ramp_map(values, limits)
+    valued = valued,
+    levels = table$levels,
+    given = table$given,
+    keyed = isTRUE(table$keyed),
+    ramp_map = map
   )
 }
 

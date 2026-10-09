@@ -6,6 +6,7 @@
 #pragma once
 #include <Rcpp.h>
 #include <cstdint>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -69,5 +70,11 @@ private:
 // The corners of a face in its triangle coordinates, in the order of the
 // face's vertices.
 void face_tri_corners(int face, double tx[3], double ty[3]);
+
+// Bytes as base64 text.
+std::string base64_encode(const unsigned char* bytes, size_t n);
+
+// 32-bit words as the base64 text of their little-endian bytes.
+std::string base64_words(const std::vector<uint32_t>& words);
 
 } // namespace hexify

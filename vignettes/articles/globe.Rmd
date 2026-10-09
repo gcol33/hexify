@@ -32,6 +32,24 @@ hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3",
           width = "100%", height = 560)
 ```
 
+The values go to the graphics card as a texture laid out like the grid's
+quads, one block per quad, padded with the cells across each quad's edges,
+at the grid's resolution and at every coarser one (Jubair et al. 2016 store
+icosahedral data in such blocks). Where the cells on screen shrink below a
+pixel, the fill is read from the coarser grid whose cells are about a pixel
+wide; its cells hold the mean of the values in them, and are as opaque as
+the share of them the given cells cover. A fine grid seen whole shows the
+pattern of its values rather than noise, and a few scattered cells fade
+rather than flicker.
+
+`smooth = TRUE` blends the values of neighbouring cells linearly across the
+triangles of cell centres, as a field sampled at the centres.
+
+```{r smooth}
+hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3", smooth = TRUE,
+          width = "100%", height = 560)
+```
+
 ## The solid
 
 `surface = "solid"` opens on the flat faces of the icosahedron. Moving the
@@ -102,3 +120,9 @@ kept by the W3C GPU for the Web group:
 RStudio's viewer draws the globe: RStudio 2026.08 is built on Electron 42
 (Chromium 148). Where WebGPU is missing, open the widget in one of the
 browsers above, for example with `htmlwidgets::saveWidget()` and a browser.
+
+## Reference
+
+Jubair, M. I., Alim, U., Röber, N., Clyne, J., and Mahdavi-Amiri, A. (2016).
+Icosahedral maps for a multiresolution representation of Earth data. In
+*Vision, Modeling, and Visualization (VMV 2016)*.

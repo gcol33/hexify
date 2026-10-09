@@ -28,6 +28,7 @@
 #include "cell_walls.h"
 #include "cell_id.h"
 #include "index_z7.h"
+#include "globe_table.h"
 
 using namespace Rcpp;
 
@@ -434,12 +435,6 @@ static inline bool frame_canonicalize(const QuadFrame& f, int& quad,
     return hexify::substrate_ij_canonicalize(quad, i, j, f.dim);
 }
 
-// Floor of a / b for b > 0
-static inline long long floor_div(long long a, long long b) {
-    long long q = a / b;
-    return (a % b != 0 && a < 0) ? q - 1 : q;
-}
-
 // The parent, one level up, of the cell at stored (i, j) of a quad of a mixed
 // sequence: the parent-lattice point nearest the cell's centre, in that quad's
 // plane, re-expressed in the quad that owns it.
@@ -449,10 +444,8 @@ static inline long long floor_div(long long a, long long b) {
 // (1, 2, 3 or 7) times finer, so the centre reads c / k in the parent's
 // substrate. Parent cells are the multiples of the parent generator g, so in
 // parent-cell units the centre is u = c * conj(g) / (k * N(g)), a point of
-// the Eisenstein lattice divided by D = k * N(g). The nearest lattice point
-// is a corner of the rhombus [x0, x0 + 1] x [y0, y0 + 1] containing u (its
-// two halves are equilateral triangles), and the squared distances
-// N(D * corner - D * u) are integers, so the comparison is exact.
+// the Eisenstein lattice divided by D = k * N(g), and its nearest lattice
+// points are found exactly (nearest_eisenstein_points()).
 //
 // An aperture-3 step puts child centres on parent corners (three nearest
 // points) and an aperture-4 step on parent edge midpoints (two); an
@@ -470,22 +463,9 @@ static void frame_parent(const QuadFrame& child, const QuadFrame& parent,
     const long long c = a - b, d = -b;
     const long long U = i * c - j * d;
     const long long V = i * d + j * c - j * d;
-    const long long x0 = floor_div(U, D), y0 = floor_div(V, D);
-
-    long long best_x = 0, best_y = 0, best_dist = -1, best_key = 0;
-    for (int corner = 0; corner < 4; corner++) {
-        const long long x = x0 + (corner & 1), y = y0 + (corner >> 1);
-        const long long dx = D * x - U, dy = D * y - V;
-        const long long dist = hexify::eisenstein_norm(dx - dy, dy);
-        const long long key = 2 * x + y;
-        if (best_dist < 0 || dist < best_dist ||
-            (dist == best_dist && key > best_key)) {
-            best_x = x;
-            best_y = y;
-            best_dist = dist;
-            best_key = key;
-        }
-    }
+    long long nearest[3][2];
+    hexify::nearest_eisenstein_points(U, V, D, nearest);
+    const long long best_x = nearest[0][0], best_y = nearest[0][1];
 
     i = best_x * a - best_y * b;
     j = best_x * b + best_y * a - best_y * b;
@@ -1952,30 +1932,32 @@ NumericMatrix cpp_face_tri_to_solid(NumericVector icosa,
 // Neighbor Finding (v0.7.0)
 // ============================================================================
 
-// What a renderer needs to find the cell of a quad-plane point by itself.
-// Scaled by 'dim', the quad's side in substrate steps, a point's nearest cell
-// centre is its nearest multiple of the generator a + b*omega (omega =
-// exp(2*pi*i/3)) in the substrate's (i, j); the edge table moves that centre
-// into the quad that owns it, and the cell ID counts 'per_quad' cells per
-// quad, numbered within a quad as cell_index_2d() numbers them on the
-// sublattice j = c * i (mod index). Aperture 7 stores surrogates but numbers
-// its cells by their substrate centres, which is the same count.
+hexify::GlobeFrame hexify::globe_frame(int resolution, int aperture,
+                                       const std::vector<int>& ap_seq) {
+    const QuadFrame f = quad_frame(resolution, aperture, ap_seq);
+    const SubstrateLattice lattice = sublattice_of(f.form);
+    const LatticeGenerator generator = generator_of(f.form);
+    return {f.dim, lattice.index, lattice.c, generator.a, generator.b,
+            f.offsetPerQuad, f.nCells};
+}
+
+// What a renderer needs to find the cell of a quad-plane point by itself:
+// the grid's GlobeFrame.
 // [[Rcpp::export]]
 List cpp_globe_frame(NumericVector icosa, int resolution, int aperture, IntegerVector ap_seq) {
     activate_grid(icosa);
-    QuadFrame f = grid_frame(resolution, aperture, ap_seq);
-    SubstrateLattice lattice = sublattice_of(f.form);
-    LatticeGenerator generator = generator_of(f.form);
+    const QuadFrame q = grid_frame(resolution, aperture, ap_seq);
+    const hexify::GlobeFrame f = hexify::globe_frame(q.resolution, q.aperture, q.ap_seq);
     return List::create(
         _["dim"] = static_cast<double>(f.dim),
-        _["index"] = static_cast<double>(lattice.index),
-        _["c"] = static_cast<double>(lattice.c),
-        _["generator"] = NumericVector::create(static_cast<double>(generator.a),
-                                               static_cast<double>(generator.b)),
+        _["index"] = static_cast<double>(f.index),
+        _["c"] = static_cast<double>(f.c),
+        _["generator"] = NumericVector::create(static_cast<double>(f.ga),
+                                               static_cast<double>(f.gb)),
         _["per_quad"] = hexify::cell_id_vector(
-            std::vector<int64_t>{static_cast<int64_t>(f.offsetPerQuad)}),
+            std::vector<int64_t>{static_cast<int64_t>(f.per_quad)}),
         _["n_cells"] = hexify::cell_id_vector(
-            std::vector<int64_t>{static_cast<int64_t>(f.nCells)}));
+            std::vector<int64_t>{static_cast<int64_t>(f.n_cells)}));
 }
 
 // The cells adjacent to a vertex quad's cell. The vertex is a corner of every

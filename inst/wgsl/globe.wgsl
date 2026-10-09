@@ -105,10 +105,19 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 // The faces mesh carries each vertex's face and triangle coordinates. A
 // fragment's triangle coordinates are the interpolated ones on the flat
 // solid, where they are linear, and the face projection (Snyder's, Fuller's
-// or IVEA) of its direction on the sphere, blended by the fold. The point goes into its
-// face's quad, is scaled to the substrate, and its cell is the nearest
-// multiple of the grid's generator; the solid's edge maps move that centre
-// into the quad that owns it, and the cell ID follows hexify's numbering.
+// or IVEA) of its direction on the sphere, blended by the fold. The point
+// goes into its face's quad, is scaled to the substrate, and its cell is the
+// nearest multiple of the grid's generator there.
+//
+// The cells' values sit in a table laid out like the quads (see
+// src/globe_table.cpp): per resolution, a block per diamond quad whose row u
+// holds substrate column u, padded past the quad's box with the cells that
+// own those points across its edges. The value of the cell nearest a point,
+// and of the corners of the lattice triangle around it, is read where the
+// shader finds them in the quad of the point's face, with no move into the
+// quad that owns them. Only a cell's ID, for the readout under the pointer,
+// takes that move: the solid's edge maps carry the centre into its own quad,
+// and the ID follows hexify's numbering.
 
 struct Face {
   centre: vec4f,     // xyz: face centre on the unit sphere
@@ -117,23 +126,34 @@ struct Face {
   quad: vec4f,       // quad, 60-degree turns into it, offset x, offset y
 };
 
+// One resolution of the grid and its part of the table
+struct Level {
+  frame: vec4u,      // quad side in substrate steps, sublattice index, c, rows of a block
+  shape: vec4i,      // generator a + b omega, padding rows and columns of a block
+  slots: vec4u,      // slots per block row, first slot of the part (high, low 32 bits)
+  size: vec4f,       // x: mean cell width in radians
+};
+
 struct Grid {
   snyder0: vec4f,    // tan, cos of the edge angle, cot 30 degrees, sin G
   snyder1: vec4f,    // cos G, G, R', R'^2
   snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller, 2 IVEA)
-  frame: vec4u,      // quad side in substrate steps, sublattice index, c, number of keys
-  generator: vec4i,  // generator a + b omega
-  flags: vec4u,      // every cell drawn, values given, values indexed by cell ID - 1, faces
-  per_quad: vec4u,   // cells per quad: high and low 32 bits
+  flags: vec4u,      // every cell drawn, values given, smooth fill, faces
+  ids: vec4u,        // cells per quad (high, low 32 bits), levels in the table, keys stored
+  table: vec4u,      // slots M, texture width and height, hash seed
+  buckets: vec4u,    // offsets, offset texture width
   na_fill: vec4f,    // fill of a cell whose value is NA
   ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
   faces: array<Face, 20>,
   edges: array<vec4i, 108>,  // per quad nine rows: its far corner's quad and whether
                              // it is a vertex quad, then each edge's map in two rows
+  levels: array<Level, 32>,  // the grid's resolution, then each coarser one
 };
 
 @group(1) @binding(4) var<uniform> grid: Grid;
-@group(1) @binding(5) var<storage, read> keys: array<vec2u>;
+@group(1) @binding(6) var cell_words: texture_2d_array<u32>;
+@group(1) @binding(7) var cell_keys: texture_2d_array<u32>;
+@group(1) @binding(8) var cell_offsets: texture_2d<u32>;
 
 const PI = 3.14159265358979;
 const SIN60 = 0.866025403784439;
@@ -434,14 +454,25 @@ fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
                m1.y * top + m1.z * along + m1.w * d);
 }
 
-struct Cell {
-  id: vec2u,         // cell ID, high and low 32 bits
+// A point's place among the cells of one level, in the quad of its face
+struct Spot {
+  quad: u32,
+  centre: vec2i,     // its cell's centre in the quad's substrate, possibly past the box
+  lattice: vec2f,    // the point as za + zb omega, in units of the generator
   spot: vec2f,       // the point in the plane of the cell lattice, centres 1 apart
   offset: vec2f,     // the point from its cell's centre, in the same plane
 };
 
-// The cell at triangle coordinates t of face f.
-fn cell_at(f: u32, t: vec2f) -> Cell {
+// The substrate point qa + qb omega times the level's generator
+fn lattice_point(level: Level, qa: i32, qb: i32) -> vec2i {
+  let ga = level.shape.x;
+  let gb = level.shape.y;
+  return vec2i(ga * qa - gb * qb, ga * qb + gb * qa - gb * qb);
+}
+
+// The point at triangle coordinates t of face f among the cells of level lv.
+fn locate(lv: u32, f: u32, t: vec2f) -> Spot {
+  let level = grid.levels[lv];
   let place = grid.faces[f].quad;
   let turn = u32(place.y) % 6u;
   let cs = array<vec2f, 6>(vec2f(1.0, 0.0), vec2f(0.5, SIN60), vec2f(-0.5, SIN60),
@@ -450,15 +481,12 @@ fn cell_at(f: u32, t: vec2f) -> Cell {
 
   // The substrate point as a + b omega, divided by the generator g: times
   // conj(g) = (ga - gb) - gb omega, over the norm N, with omega^2 = -1 - omega.
-  let dim = grid.frame.x;
-  let n = grid.frame.y;
-  let p = q * f32(dim);
+  let n = level.frame.y;
+  let p = q * f32(level.frame.x);
   let b = p.y / SIN60;
   let a = p.x + 0.5 * b;
-  let ga = grid.generator.x;
-  let gb = grid.generator.y;
-  let ca = f32(ga - gb);
-  let cb = f32(-gb);
+  let ca = f32(level.shape.x - level.shape.y);
+  let cb = f32(-level.shape.y);
   let za = (a * ca - b * cb) / f32(n);
   let zb = (a * cb + b * ca - b * cb) / f32(n);
 
@@ -482,59 +510,180 @@ fn cell_at(f: u32, t: vec2f) -> Cell {
   let qa = i32(rx + ry);
   let qb = i32(ry);
 
-  var cell: Cell;
-  cell.spot = vec2f(za - 0.5 * zb, SIN60 * zb);
+  var s: Spot;
+  s.quad = u32(place.x);
+  s.centre = lattice_point(level, qa, qb);
+  s.lattice = vec2f(za, zb);
+  s.spot = vec2f(za - 0.5 * zb, SIN60 * zb);
   let la = za - f32(qa);
   let lb = zb - f32(qb);
-  cell.offset = vec2f(la - 0.5 * lb, SIN60 * lb);
+  s.offset = vec2f(la - 0.5 * lb, SIN60 * lb);
+  return s;
+}
 
-  // The centre g * q in the substrate, in the quad that owns it.
-  let ci = ga * qa - gb * qb;
-  let cj = ga * qb + gb * qa - gb * qb;
-  let own = canonicalize(i32(dim), u32(place.x), ci, cj);
+// The ID of a spot's cell at the grid's resolution, high and low 32 bits:
+// its centre moved into the quad that owns it, numbered as hexify numbers
+// the cells.
+fn spot_id(s: Spot) -> vec2u {
+  let level = grid.levels[0];
+  let dim = level.frame.x;
+  let n = level.frame.y;
+  let own = canonicalize(i32(dim), s.quad, s.centre.x, s.centre.y);
   if (own.x == 0) {
-    cell.id = vec2u(0u, 1u);
-    return cell;
+    return vec2u(0u, 1u);
   }
   let u = u32(own.y);
   let v = u32(own.z);
-  let residue = (grid.frame.z * u) % n;
+  let residue = (level.frame.z * u) % n;
   let within = add64(mul_wide(u, dim / n), vec2u(0u, (v - residue) / n));
   let k = u32(own.x) - 1u;
-  let before = vec2u(grid.per_quad.x * k + mul_wide(grid.per_quad.y, k).x,
-                     mul_wide(grid.per_quad.y, k).y);
-  cell.id = add64(add64(before, within), vec2u(0u, 2u));
-  return cell;
+  let before = vec2u(grid.ids.x * k + mul_wide(grid.ids.y, k).x,
+                     mul_wide(grid.ids.y, k).y);
+  return add64(add64(before, within), vec2u(0u, 2u));
 }
 
-// Index of the cell's value: its ID - 1 when every cell has one, else its
-// place among the keys (sorted cell IDs); -1 for a cell not given.
-fn value_index(id: vec2u) -> i32 {
+// The word of a slot no cell is given at
+const ABSENT = 0xffffffffu;
+
+fn mix32(a: u32) -> u32 {
+  var x = a;
+  x ^= x >> 16u;
+  x *= 0x7feb352du;
+  x ^= x >> 15u;
+  x *= 0x846ca68bu;
+  x ^= x >> 16u;
+  return x;
+}
+
+// The word of table slot `key` (high, low 32 bits). Where the table is laid
+// out slot by slot it sits at the key's own place; where it is packed by the
+// perfect hash it sits at (key mod M + offset) mod M, with the offset of the
+// key's bucket, and the key stored beside it tells whether it is there.
+fn table_word(key: vec2u) -> u32 {
+  let bucket = mix32(key.y ^ mix32(key.x ^ grid.table.w)) % grid.buckets.x;
+  let ow = grid.buckets.y;
+  let offset = textureLoad(cell_offsets, vec2u(bucket % ow, bucket / ow), 0).x;
+  let m = grid.table.x;
+  let slot = (key.y % m + offset) % m;
+  let w = grid.table.y;
+  let h = grid.table.z;
+  let at = vec2u(slot % w, (slot / w) % h);
+  let layer = slot / (w * h);
+  let word = textureLoad(cell_words, at, layer, 0).x;
+  if (grid.ids.w == 1u && any(textureLoad(cell_keys, at, layer, 0).xy != key)) {
+    return ABSENT;
+  }
+  return word;
+}
+
+// The word of the cell centred at substrate point c of diamond quad `quad`
+// at level lv, c in or past the quad's box.
+fn cell_word(lv: u32, quad: u32, c: vec2i) -> u32 {
+  let level = grid.levels[lv];
+  let n = i32(level.frame.y);
+  let row = c.x + level.shape.z;
+  let col = (c.y - ((i32(level.frame.z) * c.x) % n + n) % n) / n + level.shape.w;
+  if (row < 0 || row >= i32(level.frame.w) || col < 0 || col >= i32(level.slots.x)) {
+    return ABSENT;
+  }
+  let at = (quad - 1u) * level.frame.w + u32(row);
+  return table_word(add64(add64(mul_wide(at, level.slots.x), vec2u(0u, u32(col))),
+                          level.slots.yz));
+}
+
+fn is_na(word: u32) -> bool {
+  return (word & 0x7fffffffu) > 0x7f800000u;
+}
+
+// A cell's place on the colour ramp, negative for NA, and the share of it
+// the cells given cover. The grid's own resolution holds each cell's value,
+// a coarser one both in 16 bits each (src/globe_table.cpp).
+fn cell_sample(lv: u32, word: u32) -> vec2f {
+  if (lv == 0u) {
+    if (is_na(word)) {
+      return vec2f(-1.0, 1.0);
+    }
+    let v = bitcast<f32>(word);
+    return vec2f(clamp((v - grid.ramp_map.x) * grid.ramp_map.y + grid.ramp_map.z, 0.0, 1.0), 1.0);
+  }
+  let pos = word >> 16u;
+  let cover = f32(word & 0xffffu) / 65534.0;
+  return vec2f(select(f32(pos) / 65534.0, -1.0, pos == 0xffffu), cover);
+}
+
+// The colour at place `pos` along the ramp; with the smooth fill, blended
+// between its two nearest colours.
+fn ramp_colour(pos: f32) -> vec4f {
+  let n = arrayLength(&ramp);
   if (grid.flags.z == 1u) {
-    return select(-1, i32(id.y) - 1, id.x == 0u);
+    let x = pos * f32(n - 1u);
+    let k = min(u32(floor(x)), n - 2u);
+    return mix(ramp[k], ramp[k + 1u], x - f32(k));
   }
-  if (grid.frame.w == 0u) {
-    return -1;
-  }
-  return key_index(id);
+  return ramp[min(u32(round(pos * f32(n - 1u))), n - 1u)];
 }
 
-fn key_index(id: vec2u) -> i32 {
-  var lo = 0u;
-  var hi = grid.frame.w;
-  while (lo < hi) {
-    let mid = (lo + hi) / 2u;
-    let k = keys[mid];
-    if (k.x < id.x || (k.x == id.x && k.y < id.y)) {
-      lo = mid + 1u;
-    } else {
-      hi = mid;
+// The fill at a spot of level lv whose cell holds `word`: the cell's place
+// on the ramp, or with the smooth fill, the places of the three cell centres
+// around the spot blended linearly (barycentric) on the lattice triangle
+// they make, over those that have a value; its opacity is the share of the
+// cell covered. The lattice points 0, 1 and 1 + omega make one equilateral
+// triangle, 0, omega and 1 + omega the other.
+fn spot_fill(lv: u32, s: Spot, word: u32) -> vec4f {
+  let own = cell_sample(lv, word);
+  var pos = own.x;
+  if (own.x >= 0.0 && grid.flags.z == 1u) {
+    let x0 = floor(s.lattice.x);
+    let y0 = floor(s.lattice.y);
+    let fa = s.lattice.x - x0;
+    let fb = s.lattice.y - y0;
+    let upper = fb > fa;
+    let corners = array<vec2i, 3>(vec2i(i32(x0), i32(y0)),
+                                  select(vec2i(i32(x0) + 1, i32(y0)), vec2i(i32(x0), i32(y0) + 1), upper),
+                                  vec2i(i32(x0) + 1, i32(y0) + 1));
+    let weights = select(vec3f(1.0 - fa, fa - fb, fb), vec3f(1.0 - fb, fb - fa, fa), upper);
+    var sum = 0.0;
+    var weight = 0.0;
+    for (var k = 0; k < 3; k++) {
+      let c = lattice_point(grid.levels[lv], corners[k].x, corners[k].y);
+      let w = cell_word(lv, s.quad, c);
+      if (w != ABSENT) {
+        let corner = cell_sample(lv, w);
+        if (corner.x >= 0.0) {
+          sum += weights[k] * corner.x;
+          weight += weights[k];
+        }
+      }
+    }
+    if (weight > 0.0) {
+      pos = sum / weight;
     }
   }
-  if (lo < grid.frame.w && all(keys[lo] == id)) {
-    return i32(lo);
+  let colour = select(ramp_colour(pos), grid.na_fill, own.x < 0.0);
+  return vec4f(colour.rgb, colour.a * own.y);
+}
+
+// The level of the table to fill from where a pixel spans `reach` radians:
+// the finest whose cells are at least a pixel wide.
+fn table_level(reach: f32) -> u32 {
+  var lv = 0u;
+  while (lv + 1u < grid.ids.z && grid.levels[lv].size.x < reach) {
+    lv++;
   }
-  return -1;
+  return lv;
+}
+
+// A spot's cell at the grid's resolution, for the readout under the pointer
+// and for testing: its ID, its word, and flags 1 (a surface is here), 2 (the
+// cell is drawn) and 4 (it has a value).
+fn spot_record(s: Spot) -> vec4u {
+  var word = ABSENT;
+  if (grid.ids.z > 0u) {
+    word = cell_word(0u, s.quad, s.centre);
+  }
+  let drawn = grid.flags.x == 1u || word != ABSENT;
+  let valued = grid.flags.y == 1u && word != ABSENT;
+  return vec4u(spot_id(s), word, 1u | select(0u, 2u, drawn) | select(0u, 4u, valued));
 }
 
 struct GridOut {
@@ -562,28 +711,24 @@ fn vs_grid(@location(0) solid: vec3f, @location(1) sphere: vec3f,
 fn fs_grid(in: GridOut) -> @location(0) vec4f {
   let fold = camera.light.w;
   let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), fold);
-  let cell = cell_at(in.face, t);
-  let gx = dpdx(cell.spot);
-  let gy = dpdy(cell.spot);
+  let reach = max(length(dpdx(in.sphere)), length(dpdy(in.sphere)));
+  let lv = table_level(reach);
+  let s = locate(lv, in.face, t);
+  let gx = dpdx(s.spot);
+  let gy = dpdy(s.spot);
   var normal = normalize(cross(dpdx(in.world), dpdy(in.world)));
 
-  // A cell is drawn when the grid is drawn whole or the cell is given. NaN
-  // stands for NA.
-  var fill = vec4f(0.0);
-  let k = value_index(cell.id);
-  let drawn = grid.flags.x == 1u || k >= 0;
-  if (k >= 0 && grid.flags.y == 1u) {
-    let v = values[k];
-    if ((bitcast<u32>(v) & 0x7fffffffu) > 0x7f800000u) {
-      fill = grid.na_fill;
-    } else {
-      let pos = clamp((v - grid.ramp_map.x) * grid.ramp_map.y + grid.ramp_map.z, 0.0, 1.0);
-      let n_ramp = arrayLength(&ramp);
-      fill = ramp[min(u32(round(pos * f32(n_ramp - 1u))), n_ramp - 1u)];
-    }
+  // A cell is drawn when the grid is drawn whole or the cell is given.
+  var word = ABSENT;
+  if (grid.ids.z > 0u) {
+    word = cell_word(lv, s.quad, s.centre);
   }
-  if (!drawn) {
+  if (grid.flags.x == 0u && word == ABSENT) {
     discard;
+  }
+  var fill = vec4f(0.0);
+  if (grid.flags.y == 1u && word != ABSENT) {
+    fill = spot_fill(lv, s, word);
   }
 
   if (layer.params.z > 0.5) {
@@ -595,36 +740,39 @@ fn fs_grid(in: GridOut) -> @location(0) vec4f {
   }
 
   // Distance to the cell's edge in pixels: the edges lie halfway to the six
-  // neighbours, along three directions of the lattice plane.
-  let dirs = array<vec2f, 3>(vec2f(1.0, 0.0), vec2f(-0.5, SIN60), vec2f(-0.5, -SIN60));
-  var edge_px = 1e9;
-  for (var e = 0; e < 3; e++) {
-    let d = dirs[e];
-    let per_px = length(vec2f(dot(gx, d), dot(gy, d)));
-    edge_px = min(edge_px, (0.5 - abs(dot(cell.offset, d))) / max(per_px, 1e-12));
+  // neighbours, along three directions of the lattice plane. Borders are
+  // drawn at the grid's own resolution only; a coarser level is read where
+  // its cells are below a pixel, and there they have faded out.
+  var line = 0.0;
+  if (lv == 0u) {
+    let dirs = array<vec2f, 3>(vec2f(1.0, 0.0), vec2f(-0.5, SIN60), vec2f(-0.5, -SIN60));
+    var edge_px = 1e9;
+    for (var e = 0; e < 3; e++) {
+      let d = dirs[e];
+      let per_px = length(vec2f(dot(gx, d), dot(gy, d)));
+      edge_px = min(edge_px, (0.5 - abs(dot(s.offset, d))) / max(per_px, 1e-12));
+    }
+    let cell_px = 1.0 / max(max(length(gx), length(gy)), 1e-12);
+    let width = layer.params.y;
+    line = layer.color.a * clamp(0.5 * width + 0.5 - edge_px, 0.0, 1.0) *
+           smoothstep(3.0, 10.0, cell_px);
   }
-  let cell_px = 1.0 / max(max(length(gx), length(gy)), 1e-12);
-  let width = layer.params.y;
-  let line = layer.color.a * clamp(0.5 * width + 0.5 - edge_px, 0.0, 1.0) *
-             smoothstep(3.0, 10.0, cell_px);
 
   let a = line + fill.a * (1.0 - line);
   return vec4f(layer.color.rgb * line + fill.rgb * fill.a * (1.0 - line), a);
 }
 
-// The cell under one pixel, for the readout under the pointer: its ID, the
-// index of its value plus one (0 for none), and whether a surface is there.
+// The cell under one pixel, for the readout under the pointer (spot_record()).
 @fragment
 fn fs_pick(in: GridOut) -> @location(0) vec4u {
   let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), camera.light.w);
-  let cell = cell_at(in.face, t);
-  return vec4u(cell.id, u32(value_index(cell.id) + 1), 1u);
+  return spot_record(locate(0u, in.face, t));
 }
 
 // The cell of every probe point (a direction in xyz), for testing the lookup
 // against the C++ one.
 @group(2) @binding(0) var<storage, read> probe: array<vec4f>;
-@group(2) @binding(1) var<storage, read_write> probed: array<vec2u>;
+@group(2) @binding(1) var<storage, read_write> probed: array<vec4u>;
 
 @compute @workgroup_size(64)
 fn cs_locate(@builtin(global_invocation_id) gid: vec3u) {
@@ -633,7 +781,7 @@ fn cs_locate(@builtin(global_invocation_id) gid: vec3u) {
   }
   let p = normalize(probe[gid.x].xyz);
   let f = nearest_face(p);
-  probed[gid.x] = cell_at(f, face_xy(p, f)).id;
+  probed[gid.x] = spot_record(locate(0u, f, face_xy(p, f)));
 }
 
 // ---------------------------------------------------------------------------

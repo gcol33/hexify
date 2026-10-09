@@ -143,6 +143,30 @@ its edge midpoints, so face pieces (`radius_crossings()`) and the globe mesh
 The cell-ID hierarchy is orientation-free, so the mixed-aperture hierarchy
 (`R/aperture_mixed_hierarchy.R`) runs in the standard orientation.
 
+## Globe widget: cells found per pixel, values in a table
+
+`hex_globe()` (and `hex_globe_png()` through the companion package hexglobe,
+`C:/Users/GillesC/Documents/dev/hexglobe`, local git) draw ISEA cells in
+`inst/wgsl/globe.wgsl`: the fragment shader projects the pixel to its face,
+places it in the face's quad and takes the nearest multiple of the
+generator (`locate()`). hexglobe draws with the shader the widget carries,
+so the two stay in step through `globe_scene()`; a change to the bindings
+changes `src/rust/lib.rs` and `src/init.c` there too.
+
+Values are not read by cell ID. `cpp_globe_table()` (`src/globe_table.cpp`)
+lays every resolution from the grid's down to 0 out as one block per
+diamond quad: row u holds substrate column u, padded past the box with the
+cells that own those points across the quad's edges (the inverse of
+`canonicalize_q2d()`'s edge maps). The shader reads a cell's word where it
+finds the cell, with no move into the owning quad; `spot_id()` still makes
+that move for the readout's ID. The table is slot by slot when the cells
+fill it, else packed by a perfect hash (key mod M + offset[bucket]) with the
+key stored; `mix32()` must match in C++ and WGSL. Level 0 words are f32
+values (NA one NaN, absent 0xFFFFFFFF); coarser levels pack ramp position
+and cover in 16 bits each, and the shader fills from the finest level whose
+cells are at least a pixel wide. R builds the Grid uniform once
+(`globe_grid_uniform()`), the widget and hexglobe only upload it.
+
 ## DGGRID corner bug: aperture 7, odd resolutions
 
 Found 2026-10-05; not filed upstream yet. At aperture 7, odd resolutions

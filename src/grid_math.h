@@ -267,6 +267,50 @@ inline long long eisenstein_norm(long long m, long long n) {
     return m * m + m * n + n * n;
 }
 
+/** Floor of a / b for b > 0. */
+inline long long floor_div(long long a, long long b) {
+    long long q = a / b;
+    return (a % b != 0 && a < 0) ? q - 1 : q;
+}
+
+/**
+ * The points x + y*omega (omega = exp(2*pi*i/3)) of the Eisenstein lattice
+ * nearest u = (U + V*omega) / D, D > 0, written to `out` in decreasing order
+ * of 2x + y; returns how many there are (1, 2 or 3).
+ *
+ * They are corners of the rhombus [x0, x0 + 1] x [y0, y0 + 1] containing u,
+ * whose two halves are equilateral triangles, and the squared distances
+ * N(D * corner - D * u) are integers, so ties are found exactly: a point at
+ * a triangle's centre is nearest to its three corners, a point at an edge's
+ * midpoint to the edge's two ends. 2x + y differs between any two candidates
+ * a unit apart, so the order is strict.
+ */
+inline int nearest_eisenstein_points(long long U, long long V, long long D,
+                                     long long out[3][2]) {
+    const long long x0 = floor_div(U, D), y0 = floor_div(V, D);
+    long long best = -1;
+    int count = 0;
+    for (int corner = 0; corner < 4; corner++) {
+        const long long x = x0 + (corner & 1), y = y0 + (corner >> 1);
+        const long long dx = D * x - U, dy = D * y - V;
+        const long long dist = eisenstein_norm(dx - dy, dy);
+        if (best >= 0 && dist > best) continue;
+        if (dist < best || best < 0) {
+            best = dist;
+            count = 0;
+        }
+        int at = count++;
+        while (at > 0 && 2 * out[at - 1][0] + out[at - 1][1] < 2 * x + y) {
+            out[at][0] = out[at - 1][0];
+            out[at][1] = out[at - 1][1];
+            at--;
+        }
+        out[at][0] = x;
+        out[at][1] = y;
+    }
+    return count;
+}
+
 /** Multiply m + n*w by (c + d*w), using w^2 = w - 1. */
 inline void eisenstein_multiply(long long& m, long long& n, long long c, long long d) {
     long long new_m = m * c - n * d;

@@ -25,6 +25,7 @@ versions and the processor.
 | `bench_hierarchy_commutation.R` | How often a point's cell taken k levels up differs from the cell of the point at that resolution (Griffin 2026, Sec. 12), 10,000 uniform points, k = 1 to 6, against the lattice's one-level rates 4/9, 3/8 and 1/14 | `hierarchy_commutation.csv` |
 | `bench_ogc_conformance.R` | Distance between cell centre and spherical area centroid (OGC Topic 21 Req 27), and each cell's area on WGS84 relative to the sphere of equal area (Req 28) | `centroid_offset.csv`, `wgs84_area_scale.csv` |
 | `bench_trunc_icosa.R` | The truncated icosahedron carried into the icosahedron's face frame by slicing Snyder's eighteen spherical right triangles of a face onto plane triangles of proportional area: area shares, where its vertices land on the frame, the offset along the hexagon-pentagon edges, and the angular deformation over a face (100,000 points) and within 0.5 degrees of a vertex, beside ISEA, IVEA and FULLER (2,000,000 points on the sphere) and the bound 2 asin(1/11) for equal-area projections near a vertex | `trunc_icosa.csv` |
+| `bench_globe_table.R` | The globe widget's cells' table against the per-cell upload of a base commit (default `7996043`, installed beside the working tree): R build time, page size, bytes of the cells on the graphics card, and the graphics card's time per frame (40 frames per submission, median of ten) at 800 and 1600 pixels in headless Chrome, for values on every cell, on a sample of cells of a fine grid, and none | `globe_table.csv` |
 
 ## Requirements
 

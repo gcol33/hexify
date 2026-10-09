@@ -171,43 +171,93 @@ test_that("hex_globe builds a widget with every layer", {
   for (layer in c("land_lines", "edge_lines")) {
     expect_true(x[[layer]]$n_segment > 0, info = layer)
   }
-  expect_equal(x$grid$n_keys, 0)
-  expect_true(x$grid$dense)
   expect_true(x$grid$all)
+  expect_true(x$grid$valued)
+  expect_false(x$grid$keyed)
   expect_equal(x$grid$ramp_map, c(1, 1 / (length(ids) - 1), 0))
-  expect_length(x$projection$faces, 20 * 16)
-  expect_length(x$projection$edges, 12 * 36)
-  expect_equal(x$projection$n_faces, 20)
+  # A level per resolution from the grid's down to 0, each whole
+  expect_equal(nrow(x$grid$levels), 3)
+  expect_equal(x$grid$given, c(92, 32, 12))
+  expect_length(b64_bytes(x$grid$uniform), 5200)
+  expect_equal(vapply(x$grid$textures, `[[`, integer(1), "binding"), 6:8)
   expect_null(x$cells)
   expect_null(x$grid_lines)
   expect_equal(x$camera$distance, 2)
   expect_length(x$palette, 4 * 256)
 })
 
-test_that("an ISEA grid is sent as its frame and its cells' IDs, not outlines", {
+test_that("an ISEA grid is sent as its frame and its cells' table, not outlines", {
   skip_if_not_installed("htmlwidgets")
   g <- hex_grid(resolution = 10, aperture = 3)
   x <- hex_globe(g, land = FALSE)$x
-  expect_equal(x$grid$n_keys, 0)
-  expect_null(x$grid$keys)
   expect_true(x$grid$all)
-  expect_equal(x$grid$per_quad, c(0, 3^10))
+  expect_null(x$grid$levels)
+  expect_equal(vapply(x$grid$textures, function(t) prod(t$size), numeric(1)), c(1, 1, 1))
   expect_lt(object.size(x), 2e6)
+  uniform <- readBin(b64_bytes(x$grid$uniform), "integer", n = 1300, size = 4,
+                     endian = "little")
+  expect_equal(uniform[17:19], c(0, 3^10, 0))
 
+  # Four cells of 590,492 go into a perfect hash: their own slots, and the
+  # padding of the quads their slots border.
   cells <- c(5e5, 17, 3, 590492)
   x <- hex_globe(g, values = c(1, NA, 3, 4), cells = cells, land = FALSE)$x
   expect_false(x$grid$all)
-  expect_equal(x$grid$n_keys, 4)
-  expect_false(x$grid$dense)
-  # Sorted IDs as high and low words, values in the same order.
-  words <- readBin(b64_bytes(x$grid$keys), "integer", n = 8, size = 4,
+  expect_true(x$grid$keyed)
+  expect_equal(x$grid$given[1], 4)
+  words <- readBin(b64_bytes(x$grid$textures[[1]]$data), "integer", n = 1e5, size = 4,
                    endian = "little")
-  expect_equal(words, c(0, 3, 0, 17, 0, 5e5, 0, 590492))
-  raw <- readBin(b64_bytes(x$grid$values), "numeric", n = 4, size = 4,
-                 endian = "little")
-  expect_equal(raw[-2], c(3, 1, 4))
-  expect_true(is.nan(raw[2]))
+  stored <- words[words != -1L]
+  float <- function(v) readBin(writeBin(v, raw(), size = 4), "integer", size = 4)
+  expect_true(all(c(float(1), float(3), float(4), 0x7fc00000L) %in% stored))
   expect_error(hex_globe(g, cells = c(1, 590493)), "cell IDs")
+  expect_error(hex_globe(g, cells = c(3, 3)), "repeat")
+})
+
+# Every slot of a table laid out slot by slot holds the value of the cell
+# owning its point, as cpp_quad_ij_to_cell() moves a point into its quad (for
+# apertures that store substrate coordinates, all but 7), and absent where
+# no quad owns it; every coarser level covers each of its cells whole.
+test_that("the cells' table holds every cell where the shader reads it", {
+  for (spec in list(list(ap = 3, res = 5), list(ap = 4, res = 4), list(ap = 3, res = 0),
+                    list(ap = "4/3", res = 5), list(ap = c(4, 3, 4), res = 3),
+                    list(ap = 4, res = 3, poly = "octahedron"),
+                    list(ap = 3, res = 4, orient = c(-40, 20, 33)))) {
+    g <- hex_grid(resolution = spec$res, aperture = spec$ap,
+                  polyhedron = if (is.null(spec$poly)) "icosahedron" else spec$poly,
+                  orientation = if (is.null(spec$orient)) "standard" else spec$orient)
+    icosa <- hexify:::icosa_arg(g)
+    lv <- hexify:::isea_levels(g@aperture, g@resolution)
+    n <- as.numeric(n_cells(g))
+    value <- function(id) id %% 1000003 + 0.5
+    levels <- lapply(g@resolution:0, function(r) hexify:::isea_levels(g@aperture, r))
+    tb <- hexify:::cpp_globe_table(icosa, levels, bit64::integer64(0), value(seq_len(n)),
+                                   TRUE, c(0, 1, 0))
+    expect_false(tb$keyed)
+    expect_equal(tb$given, vapply(levels, function(l) {
+      as.numeric(hexify:::cpp_globe_frame(icosa, l$resolution, l$aperture, l$ap_seq)$n_cells)
+    }, numeric(1)))
+    words <- readBin(b64_bytes(tb$values), "integer", n = 1e7, size = 4, endian = "little")
+    L <- tb$levels[1, ]
+    quads <- nrow(hexify:::icosa_solid(icosa)$vertices) - 2
+    slot <- seq_len(L[["hp"]] * L[["wp"]] * quads) - 1
+    q <- slot %/% (L[["hp"]] * L[["wp"]]) + 1
+    row <- (slot %% (L[["hp"]] * L[["wp"]])) %/% L[["wp"]]
+    col <- slot %% L[["wp"]]
+    u <- row - L[["pr"]]
+    v <- L[["index"]] * (col - L[["pc"]]) + (L[["c"]] * u) %% L[["index"]]
+    owner <- as.numeric(hexify:::cpp_quad_ij_to_cell(icosa, as.integer(q), u, v,
+                                                     lv$resolution, lv$aperture, lv$ap_seq))
+    expected <- ifelse(is.na(owner), -1L,
+                       readBin(writeBin(value(owner), raw(), size = 4), "integer",
+                               n = length(owner), size = 4))
+    expect_equal(words[slot + 1], expected)
+    # Coarser levels: the low 16 bits are the cover, whole everywhere
+    total <- sum(tb$levels[, "hp"] * tb$levels[, "wp"] * quads)
+    coarse <- if (total > length(slot)) words[(length(slot) + 1):total]
+    coarse <- coarse[coarse != -1L]
+    if (length(coarse)) expect_true(all(bitwAnd(coarse, 65535L) == 65534L))
+  }
 })
 
 test_that("a grid finer than 32-bit floats resolve is refused", {
@@ -270,6 +320,8 @@ test_that("hex_globe checks its arguments", {
   expect_error(hex_globe(g, values = 1:3), "one per cell")
   expect_error(hex_globe(g, tilt = 10), "perspective")
   expect_error(hex_globe(g, palette = "nope"), "palette")
+  expect_error(hex_globe(g, smooth = NA), "smooth")
+  expect_error(hex_globe(hex_grid(resolution = 0, type = "h3"), smooth = TRUE), "ISEA")
 })
 
 test_that("hex_globe_png in Chrome saves the view as a PNG of the asked size", {
@@ -334,11 +386,17 @@ test_that("a scene holds the widget's layers in its drawing order", {
   coast <- f32_words(s$layers[[4]]$uniform)
   expect_equal(coast[5:6], c(hexify:::GLOBE_LIFT$coast, 2 * x$style$land_lwd),
                tolerance = 1e-6)
-  expect_length(s$layers[[3]]$grid, 3152)
-  grid <- readBin(s$layers[[3]]$grid, "integer", n = 788, size = 4, endian = "little")
-  expect_equal(grid[13:16], c(x$grid$dim, x$grid$index, x$grid$c, x$grid$n_keys))
-  expect_equal(grid[21:24], c(1, 1, 1, 20))
+  expect_length(s$layers[[3]]$grid, 5200)
+  grid <- readBin(s$layers[[3]]$grid, "integer", n = 1300, size = 4, endian = "little")
+  # every cell drawn, values given, no smooth fill, 20 faces; a level per
+  # resolution, laid out slot by slot
+  expect_equal(grid[13:16], c(1, 1, 0, 20))
+  expect_equal(grid[17:20], c(0, 9, 3, 0))
   expect_equal(f32_words(s$layers[[3]]$grid)[29:32], x$style$na_fill, tolerance = 1e-6)
+  # Level 0 is the grid's own frame: a quad side of 3, the aligned lattice
+  expect_equal(grid[789:791], c(3, 1, 0))
+  expect_equal(vapply(s$layers[[3]]$textures, `[[`, integer(1), "binding"), 6:8)
+  expect_type(s$layers[[3]]$textures[[1]]$data, "raw")
 })
 
 test_that("the scene's camera is the plot() method's view", {
@@ -525,7 +583,21 @@ GLOBE_AGREEMENT_CASES <- c(
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5
 
-test_that("the shader finds the cell lonlat_to_cell() finds", {
+# A value every cell can hold exactly as a 32-bit float, and that float's bits
+cell_value <- function(id) id %% 1000003 + 0.5
+float_word <- function(x) {
+  w <- readBin(writeBin(x, raw(), size = 4), "integer", n = length(x), size = 4)
+  ifelse(w < 0, w + 2^32, w)
+}
+
+# The table the shader reads holds each cell's value where the shader finds
+# the cell. Grids up to a few million cells carry a value on every cell, laid
+# out slot by slot; finer ones carry values on a sample of the cells the
+# probes hit, packed by the perfect hash, and a cell outside the sample reads
+# as absent. Either way the word read for a point is the one of the cell the
+# shader numbers there, though the read takes no step into the quad that owns
+# the cell.
+test_that("the shader finds the cell lonlat_to_cell() finds, and reads its value", {
   skip_without_gpu_browser()
   set.seed(79)
   for (spec in GLOBE_AGREEMENT_CASES) {
@@ -535,15 +607,32 @@ test_that("the shader finds the cell lonlat_to_cell() finds", {
     p <- shader_probe(GLOBE_AGREEMENT_N, grid)
     ll <- xyz_lonlat(p)
     ref <- lonlat_to_cell(ll[, 1], ll[, 2], grid)
-    gpu <- hexify:::globe_shader_cells(grid, p)
-    bad <- which(gpu != ref)
-    unexplained <- bad[!within_reach(p[bad, , drop = FALSE], gpu[bad], grid,
+    n <- as.numeric(n_cells(grid))
+    if (n <= 4e6) {
+      cells <- NULL
+      gpu <- hexify:::globe_shader_cells(grid, p, values = cell_value(seq_len(n)))
+    } else {
+      cells <- unique(ref[seq(1, length(ref), by = 2)])
+      gpu <- hexify:::globe_shader_cells(grid, p, cells = cells,
+                                         values = cell_value(as.numeric(cells)))
+    }
+    bad <- which(gpu$id != ref)
+    unexplained <- bad[!within_reach(p[bad, , drop = FALSE], gpu$id[bad], grid,
                                      GLOBE_AGREEMENT_EPS)]
     expect_length(unexplained, 0)
     if (length(unexplained)) {
       print(cbind(lon = ll[unexplained, 1], lat = ll[unexplained, 2],
-                  ref = ref[unexplained], gpu = gpu[unexplained]))
+                  ref = ref[unexplained], gpu = gpu$id[unexplained]))
     }
+    given <- is.null(cells) | gpu$id %in% as.numeric(cells)
+    expected <- ifelse(given, float_word(cell_value(gpu$id)), 2^32 - 1)
+    wrong <- which(gpu$word != expected)
+    expect_length(wrong, 0)
+    if (length(wrong)) {
+      print(cbind(lon = ll[wrong, 1], lat = ll[wrong, 2], id = gpu$id[wrong],
+                  word = gpu$word[wrong], expected = expected[wrong]))
+    }
+    expect_equal(gpu$flags, ifelse(given, 7, 1))
   }
 })
 
@@ -556,8 +645,8 @@ test_that("the cell under the centre of the view is the one looked at", {
     read("document.querySelector('.hexify-globe').hexGlobe.pick(100, 100)")
   })
   id <- lonlat_to_cell(15.3, 32.1, grid)
-  expect_equal(got$id, id)
-  expect_equal(got$value, id / 2)
+  expect_equal(got$id, as.numeric(id))
+  expect_equal(got$value, as.numeric(id) / 2)
 })
 
 test_that("hex_globe_png takes only a globe", {

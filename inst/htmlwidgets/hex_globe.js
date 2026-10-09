@@ -4,11 +4,11 @@
 // The scene arrives from R as binary buffers (base64): triangle meshes for
 // the faces and land, and polylines for coastlines and face edges. Every
 // point carries its place on the solid and on the sphere, and the
-// shader folds one into the other. An ISEA grid comes as its frame and the
-// IDs and values of its cells, and the shader finds each pixel's cell on the
-// faces mesh; an H3 grid comes as cell meshes and boundary polylines. The
-// camera follows hexify's plot() method: surface_view(), view_frame() and
-// project() are ported below.
+// shader folds one into the other. An ISEA grid comes as its Grid uniform
+// and the textures of its cells' table, and the shader finds each pixel's
+// cell on the faces mesh; an H3 grid comes as cell meshes and boundary
+// polylines. The camera follows hexify's plot() method: surface_view(),
+// view_frame() and project() are ported below.
 
 (function () {
   "use strict";
@@ -115,6 +115,21 @@
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return new Type(bytes.buffer);
+  }
+
+  // A cell as spot_record() in globe.wgsl writes it, at words[k..k + 3]:
+  // { id, value } (value NaN for NA, absent without one), or null where no
+  // cell is drawn.
+  const wordView = new DataView(new ArrayBuffer(4));
+  function cellRecord(words, k) {
+    const flags = words[k + 3];
+    if (!(flags & 2)) return null;
+    const out = { id: words[k] * 4294967296 + words[k + 1] };
+    if (flags & 4) {
+      wordView.setUint32(0, words[k + 2], true);
+      out.value = wordView.getFloat32(0, true);
+    }
+    return out;
   }
 
   function gpuBuffer(device, data, usage) {
@@ -311,49 +326,40 @@
                          count: mesh.n_index, group: group });
     }
 
-    // The Grid uniform of globe.wgsl: the projection, the grid's frame, and
-    // the fill of NA cells.
-    gridUniform(g, naFill) {
-      const buf = new ArrayBuffer(3152);
-      const f = new Float32Array(buf), u = new Uint32Array(buf), i = new Int32Array(buf);
-      const c = this.x.projection.constants;
-      f.set(c.slice(0, 12), 0);
-      u.set([g.dim, g.index, g.c, g.n_keys], 12);
-      i.set(g.generator, 16);
-      u.set([g.all ? 1 : 0, g.values ? 1 : 0, g.dense ? 1 : 0,
-             this.x.projection.n_faces], 20);
-      u.set(g.per_quad, 24);
-      f.set(naFill || [0, 0, 0, 0], 28);
-      f.set(g.ramp_map || [0, 0, 0, 0], 32);
-      f.set(this.x.projection.faces, 36);
-      i.set(this.x.projection.edges, 356);
-      const out = this.device.createBuffer({
-        size: buf.byteLength, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-      this.device.queue.writeBuffer(out, 0, buf);
-      return out;
+    // A texture of the cells' table, as R describes it: its binding, format,
+    // dimension, size (width, height, layers) and words.
+    tableTexture(t) {
+      const device = this.device;
+      const data = decode(t.data, Uint32Array);
+      const [w, h, layers] = t.size;
+      const texture = device.createTexture({
+        size: [w, h, layers], format: t.format, dimension: "2d",
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST });
+      const perTexel = t.format === "rg32uint" ? 8 : 4;
+      device.queue.writeTexture({ texture: texture }, data,
+                                { bytesPerRow: w * perTexel, rowsPerImage: h }, [w, h, layers]);
+      return { binding: t.binding, resource: texture.createView({ dimension: t.dimension }) };
     }
 
     // ISEA cells found per pixel on the faces mesh: fill and borders at once.
-    gridLayer(g, mesh, color, width, naFill) {
+    gridLayer(g, mesh, color, width) {
       const device = this.device;
-      const S = GPUBufferUsage.STORAGE;
       const { pos, item, index, tri } = this.meshBuffers(mesh);
-      this.gridBuffer = this.gridUniform(g, naFill);
-      const keys = gpuBuffer(device, g.n_keys > 0 ? decode(g.keys, Uint32Array) : new Uint32Array(4), S);
-      this.valueArray = g.values ? decode(g.values, Float32Array) : null;
-      const values = gpuBuffer(device, this.valueArray || new Float32Array(4), S);
-      const ramp = gpuBuffer(device, new Float32Array(this.x.palette), S);
+      const uniformBytes = decode(g.uniform, Uint8Array);
+      this.gridBuffer = device.createBuffer({
+        size: uniformBytes.byteLength, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+      device.queue.writeBuffer(this.gridBuffer, 0, uniformBytes);
+      this.tableEntries = g.textures.map((t) => this.tableTexture(t));
+      const ramp = gpuBuffer(device, new Float32Array(this.x.palette), GPUBufferUsage.STORAGE);
       const uniform = this.layerUniform(color || [0, 0, 0, 0], this.x.lift.cells, color ? width : 0,
-                                        true, Boolean(g.values));
+                                        true, g.valued);
       const group = device.createBindGroup({
         layout: this.pipelines.grid.getBindGroupLayout(1),
         entries: [
           { binding: 0, resource: { buffer: uniform } },
-          { binding: 1, resource: { buffer: values } },
           { binding: 2, resource: { buffer: ramp } },
-          { binding: 4, resource: { buffer: this.gridBuffer } },
-          { binding: 5, resource: { buffer: keys } }
-        ]
+          { binding: 4, resource: { buffer: this.gridBuffer } }
+        ].concat(this.tableEntries)
       });
       const layer = { kind: "mesh", pipeline: "grid", pos: pos, item: item, tri: tri,
                       index: index, count: mesh.n_index, group: group };
@@ -364,9 +370,8 @@
           layout: this.pipelines.pick.getBindGroupLayout(1),
           entries: [
             { binding: 0, resource: { buffer: uniform } },
-            { binding: 4, resource: { buffer: this.gridBuffer } },
-            { binding: 5, resource: { buffer: keys } }
-          ]
+            { binding: 4, resource: { buffer: this.gridBuffer } }
+          ].concat(this.tableEntries)
         })
       });
     }
@@ -415,14 +420,12 @@
       await t.read.mapAsync(GPUMapMode.READ);
       const r = new Uint32Array(t.read.getMappedRange().slice(0, 16));
       t.read.unmap();
-      if (r[3] === 0 || (!this.x.grid.all && r[2] === 0)) return null;
-      const out = { id: r[0] * 4294967296 + r[1] };
-      if (this.valueArray && r[2] > 0) out.value = this.valueArray[r[2] - 1];
-      return out;
+      return cellRecord(r, 0);
     }
 
-    // The cell IDs of directions given as base64 xyz float triples, found by
-    // the shader's own lookup.
+    // The cells of directions given as base64 xyz float triples, found by
+    // the shader's own lookup: for each, its cell ID, the word the table
+    // holds for it, and the flags of spot_record() in globe.wgsl.
     async locate(b64) {
       const device = this.device;
       const xyz = decode(b64, Float32Array);
@@ -432,17 +435,18 @@
       for (let k = 0; k < n; k++) probe.set(xyz.subarray(3 * k, 3 * k + 3), 4 * k);
       const pipeline = device.createComputePipeline({
         layout: "auto", compute: { module: this.module, entryPoint: "cs_locate" } });
-      const size = Math.max(16, 8 * n);
+      const size = Math.max(16, 16 * n);
       const out = device.createBuffer({ size: size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
       const read = device.createBuffer({ size: size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
       const groups = [
         device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [] }),
-        device.createBindGroup({ layout: pipeline.getBindGroupLayout(1),
-                                 entries: [{ binding: 4, resource: { buffer: this.gridBuffer } }] }),
+        null,
         device.createBindGroup({ layout: pipeline.getBindGroupLayout(2), entries: [
           { binding: 0, resource: { buffer: gpuBuffer(device, probe, GPUBufferUsage.STORAGE) } },
           { binding: 1, resource: { buffer: out } }] })
       ];
+      groups[1] = device.createBindGroup({ layout: pipeline.getBindGroupLayout(1),
+        entries: [{ binding: 4, resource: { buffer: this.gridBuffer } }].concat(this.tableEntries) });
       const encoder = device.createCommandEncoder();
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
@@ -452,11 +456,15 @@
       encoder.copyBufferToBuffer(out, 0, read, 0, size);
       device.queue.submit([encoder.finish()]);
       await read.mapAsync(GPUMapMode.READ);
-      const words = new Uint32Array(read.getMappedRange().slice(0, 8 * n));
+      const words = new Uint32Array(read.getMappedRange().slice(0, 16 * n));
       read.unmap();
-      const ids = new Float64Array(n);
-      for (let k = 0; k < n; k++) ids[k] = words[2 * k] * 4294967296 + words[2 * k + 1];
-      return ids;
+      const cells = new Float64Array(3 * n);
+      for (let k = 0; k < n; k++) {
+        cells[3 * k] = words[4 * k] * 4294967296 + words[4 * k + 1];
+        cells[3 * k + 1] = words[4 * k + 2];
+        cells[3 * k + 2] = words[4 * k + 3];
+      }
+      return cells;
     }
 
     lineLayer(name, lines, color, width, fade) {
@@ -481,7 +489,7 @@
       this.meshLayer("ocean", x.surface, s.ocean_fill, true, "surface");
       this.meshLayer("land", x.land, s.land_fill, true, "surface");
       if (x.grid) {
-        this.gridLayer(x.grid, x.surface, s.grid_border, s.grid_lwd, s.na_fill);
+        this.gridLayer(x.grid, x.surface, s.grid_border, s.grid_lwd);
       }
       if (x.cells) {
         const ramp = new Float32Array(x.palette);

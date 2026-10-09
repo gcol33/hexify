@@ -28,6 +28,7 @@ hex_globe(
   palette = "viridis",
   limits = NULL,
   na_fill = NA,
+  smooth = FALSE,
   step = 0.01,
   width = NULL,
   height = NULL,
@@ -100,6 +101,10 @@ range of \code{values}. Values outside are drawn in the end colours.}
 \item{na_fill}{Fill colour of cells whose value is \code{NA}; \code{NA}
 leaves them unfilled.}
 
+\item{smooth}{Whether the fill of an ISEA grid blends between the values
+of neighbouring cells, linearly across the triangles of cell centres,
+rather than filling each cell with its own value.}
+
 \item{step}{Spacing of the points along a cell boundary, as a fraction of
 a face edge.}
 
@@ -121,9 +126,14 @@ The cells of an ISEA grid are found per pixel on the graphics card, by the
 same projection and cell numbering as \code{\link{lonlat_to_cell}}, so the
 page holds the grid's description and the values rather than the cells'
 outlines, and a grid of any resolution draws as fast as a coarse one.
-Borders keep their width at every zoom and fade out where the cells get
-too small to see. The pointer shows the ID and value of the cell under it.
-H3 cells are drawn from their outlines.
+The values sit on the graphics card as a texture laid out like the grid's
+quads, one block per quad and resolution, which the shader reads at the
+place it finds a cell. Where the cells shrink below a pixel the fill is
+read from the grid one resolution coarser, and so on, whose cells take the
+mean of the values in them, so a fine grid seen whole shows its pattern
+rather than noise. Borders keep their width at every zoom and fade out
+where the cells get too small to see. The pointer shows the ID and value
+of the cell under it. H3 cells are drawn from their outlines.
 
 Drag to turn the globe. Drag with Shift held to turn the view about the
 line of sight and, in the perspective view, to tilt the camera. The mouse
