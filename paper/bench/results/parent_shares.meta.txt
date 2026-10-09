@@ -1,6 +1,6 @@
 script: bench_parent_shares.R
-date: 2026-10-09 23:39:52 CEST
-hexify commit: 31af81d
+date: 2026-10-10 01:56:34 CEST
+hexify commit: 9488b77
 uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
@@ -12,4 +12,4 @@ h3o: 0.3.0
 h3r: 0.1.2
 sf: 1.1.3
 s2: 1.1.12
-share wall tolerance: 1e-05
+s2 check: cell_to_sf densify 1e-05
