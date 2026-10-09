@@ -47,7 +47,7 @@ URL: https://gillescolling.com/hexify/
 BugReports: https://github.com/gcol33/hexify/issues
 Config/testthat/edition: 3
 Depends: 
-    R (>= 3.5)
+    R (>= 4.0)
 LazyData: true
 Config/roxygen2/version: 8.1.0
 Collate: 
@@ -70,6 +70,7 @@ Collate:
     'grid_helpers.R'
     'h3_compat.R'
     'hex_aggregate.R'
+    'hex9_warp.R'
     'hex_browse.R'
     'hex_compact.R'
     'hex_distance.R'

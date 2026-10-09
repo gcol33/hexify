@@ -191,7 +191,7 @@ setValidity("HexGridInfo", function(object) {
     }
     if (length(object@projection) != 1L ||
         !object@projection %in% names(FACE_PROJECTIONS)) {
-      errors <- c(errors, "projection must be \"isea\", \"fuller\" or \"ivea\"")
+      errors <- c(errors, "projection must be \"isea\", \"fuller\", \"ivea\", \"ak\" or \"akw\"")
     }
     poly <- grid_polyhedron(object)
     if (length(poly) != 1L || !poly %in% GRID_POLYHEDRA) {
@@ -200,6 +200,10 @@ setValidity("HexGridInfo", function(object) {
                object@projection %in% ICOSAHEDRON_PROJECTIONS &&
                poly != "icosahedron") {
       errors <- c(errors, "Fuller's projection is defined on the icosahedron only")
+    } else if (length(object@projection) == 1L &&
+               object@projection %in% OCTAHEDRON_PROJECTIONS &&
+               poly != "octahedron") {
+      errors <- c(errors, "Kaseorg's projection is defined on the octahedron only")
     }
     e <- if (.hasSlot(object, "ellipsoid")) object@ellipsoid else numeric(0)
     if (length(e) != 0L &&

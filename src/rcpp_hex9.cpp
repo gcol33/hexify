@@ -11,6 +11,7 @@
 #include <cmath>
 #include "cell_id.h"
 #include "hex9.h"
+#include "hex9_warp.h"
 
 using namespace Rcpp;
 
@@ -159,6 +160,21 @@ NumericVector cpp_hex9_octahedron_cell(NumericVector x, NumericVector y,
     out[k] = hexify::cell_id_slot(hexify::hex9::encode(c, resolution));
   }
   return out;
+}
+
+// Load Hex9's warp field from the bytes of libhex9's .h9warp file
+// [[Rcpp::export]]
+void cpp_hex9_warp_load(RawVector bytes) {
+  std::string err;
+  if (!hexify::hex9::warp_load(RAW(bytes), static_cast<std::size_t>(bytes.size()), err)) {
+    stop(err);
+  }
+}
+
+// Whether Hex9's warp field is loaded
+// [[Rcpp::export]]
+bool cpp_hex9_warp_ready() {
+  return hexify::hex9::warp_ready();
 }
 
 // Whether the Hex9 digit tables give every cell of a level its own digit

@@ -3,6 +3,7 @@
 #include "projection_fuller.h"
 #include "projection_ivea.h"
 #include "authalic.h"
+#include "projection_ak.h"
 #include "polyhedron.h"
 #include "snyder_triangle.h"
 #include "constants.h"
@@ -142,6 +143,10 @@ static std::pair<double,double> face_xy_to_sphere_rad(double x, double y, int fa
       break;
     case FaceProjection::ISEA:
       polar = newton ? snyder_face_polar_newton(sp, x, y) : snyder_face_polar(sp, x, y);
+      break;
+    case FaceProjection::AK:
+    case FaceProjection::AKW:
+      polar = ak_face_polar(x, y, active_projection() == FaceProjection::AKW);
       break;
   }
   const auto [z, face_az] = polar;

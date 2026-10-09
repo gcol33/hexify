@@ -12,8 +12,8 @@
 //     c(vert0_lon, vert0_lat, azimuth, projection, solid, flattening): a
 //     grid's own orientation in degrees, its projection, its solid and the
 //     flattening of its ellipsoid.
-// The projection is 0 for ISEA, 1 for Fuller and 2 for IVEA
-// (hexify::FaceProjection), and
+// The projection is 0 for ISEA, 1 for Fuller, 2 for IVEA, 3 for AK and 4
+// for AKW (hexify::FaceProjection), and
 // the solid 0 for the icosahedron, 1 for the octahedron and 2 for the
 // tetrahedron (hexify::Solid); a missing solid is the icosahedron. A missing
 // flattening, or 0, is the sphere: latitudes are read on it as they are given.
@@ -25,12 +25,15 @@
 #include "polyhedron.h"
 #include "projection_forward.h"
 #include "authalic.h"
+#include "hex9_warp.h"
 
 inline hexify::FaceProjection icosa_projection(double code) {
   if (code == 0.0) return hexify::FaceProjection::ISEA;
   if (code == 1.0) return hexify::FaceProjection::Fuller;
   if (code == 2.0) return hexify::FaceProjection::IVEA;
-  Rcpp::stop("icosa projection must be 0 (ISEA), 1 (Fuller) or 2 (IVEA)");
+  if (code == 3.0) return hexify::FaceProjection::AK;
+  if (code == 4.0) return hexify::FaceProjection::AKW;
+  Rcpp::stop("icosa projection must be 0 (ISEA), 1 (Fuller), 2 (IVEA), 3 (AK) or 4 (AKW)");
 }
 
 inline hexify::Solid icosa_solid(double code) {
@@ -68,6 +71,14 @@ inline void activate_icosa(const Rcpp::NumericVector& icosa) {
   }
   if (projection == hexify::FaceProjection::Fuller && solid != hexify::Solid::Icosahedron) {
     Rcpp::stop("Fuller's projection is defined on the icosahedron only");
+  }
+  const bool kaseorg = projection == hexify::FaceProjection::AK ||
+                       projection == hexify::FaceProjection::AKW;
+  if (kaseorg && solid != hexify::Solid::Octahedron) {
+    Rcpp::stop("Kaseorg's projection is defined on the octahedron only");
+  }
+  if (projection == hexify::FaceProjection::AKW && !hexify::hex9::warp_ready()) {
+    Rcpp::stop("the Hex9 warp field is not loaded (hex9_warp_download())");
   }
   if (oriented) {
     hexify::Orientation o;

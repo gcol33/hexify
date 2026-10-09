@@ -13,6 +13,19 @@ hexify supports **all** major hexagonal DGGS through two backends:
   take the first aperture), and `aperture = c(4, 4, 7, 3)` names one aperture per level,
   stored as `"4,4,7,3"`: "," marks a per-level spelling and "/" a family, so `"4,7"` and
   `"4/7"` stay apart (same grid at resolution 2, different parents at resolution 1).
+- **Hex9** (Griffin 2026, built-in C++, `src/hex9*.cpp`): `hex_grid(aperture = 9)`, the
+  octahedron's shifted-aperture-9 grid, resolutions 0-18 (12 * 9^18 cells fit int64).
+  Cell IDs are the libhex9 address read as a number (octant digit counts 9^L, then
+  base-9 digits; `cell_to_index()` writes libhex9's label, `hex9_index` type); parent
+  = the cell holding the child's mode-0 half, nine children. Inside the QuadFrame a
+  level-L grid is the aperture-3 res 2L+1 lattice on one coset per quad, no pole
+  cells. Any face projection on the octahedron; its own is `projection = "ak"`
+  (Kaseorg) or `"akw"` (Kaseorg + libhex9's trained warp, read from libhex9's
+  19 MB `.h9warp` file that hexify does not ship: `hex9_warp_download()`, option
+  `hexify.hex9_warp`). On `"akw"` labels and centres equal libhex9's `_sphere`
+  functions (`paper/bench/bench_libhex9_agreement.R`); hexify reads latitude
+  spherically, libhex9's WGS84 functions authalically. The globe draws Hex9 by
+  per-quad keys (`cpp_globe_keys()`), not on `"akw"`.
 - **H3** (vendored H3 v4.4.1 C source in `src/h3`): fixed aperture 7 — resolutions 0-15
 
 This covers every hexagonal grid system that matters:
@@ -21,6 +34,7 @@ This covers every hexagonal grid system that matters:
 - IVEA3H, IVEA7H (DGGAL, van Leeuwen & Strebe 2006) = the same with `projection = "ivea"`;
   DGGAL's grids sit at `orientation = c(11.20, 58.282525588538995, 0)` on the authalic sphere
 - H3 = H3 backend
+- Hex9 (libhex9) = `hex_grid(aperture = 9, projection = "akw")`
 - IGEO7/Z7 (Kmoch, Sahr, Chan, Uuemaa 2025) = equal-area aperture-7 hex grid with Z7 indexing = already covered by `hex_grid(aperture = 7)` (ISEA7H with Z7 index). hexify uses the same Z7 hierarchical indexing (7-digit encoding, 0-6 per level) in `src/index_z7.cpp`. On the icosahedron its strings equal DGGRID's for every cell (`paper/bench/bench_dggrid_z7.R`, fixture `tests/testthat/data/dggrid_z7.csv`); DGGRID's encoder is bijective, so do not diverge from it. Octahedral grids, for which IGEO7 defines nothing, write quad + 6 * seed.
 - OpenEAGGR ISEA3H = already covered by `hex_grid(aperture = 3)`
 - rHEALPix = diamond-based, not hexagonal — out of scope
@@ -98,7 +112,9 @@ An ISEA grid carries its solid in the `polyhedron` slot (`"icosahedron"` or
 `"octahedron"`), the solid's orientation in the `orientation` slot,
 `c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`), and its face
 projection in the `projection` slot, `"isea"` (Snyder), `"ivea"` (van Leeuwen
-and Strebe's vertex-oriented equal-area) or `"fuller"`. `FACE_PROJECTIONS`,
+and Strebe's vertex-oriented equal-area), `"fuller"`, or on the octahedron
+only `"ak"` / `"akw"` (Kaseorg, plain or with Hex9's warp,
+`src/projection_ak.cpp`, `src/hex9_warp.cpp`). `FACE_PROJECTIONS`,
 `EQUAL_AREA_PROJECTIONS` and `ICOSAHEDRON_PROJECTIONS` (`R/orientation.R`)
 say which is which; R code asks `is_equal_area_projection()`, never a name.
 

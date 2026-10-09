@@ -43,6 +43,10 @@ as_dggrid <- function(grid) {
     if (grid@grid_type == "h3") {
       stop("as_dggrid() has no dggridR-compatible representation for H3 grids")
     }
+    if (is_hex9_grid(grid)) {
+      stop("as_dggrid() has no dggridR-compatible representation for Hex9 ",
+           "grids: DGGRID has no aperture 9", call. = FALSE)
+    }
     grid <- HexGridInfo_to_hexify_grid(grid)
   }
 

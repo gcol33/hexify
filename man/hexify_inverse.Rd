@@ -8,7 +8,7 @@ hexify_inverse(
   x,
   y,
   face,
-  projection = c("isea", "fuller", "ivea"),
+  projection = c("isea", "fuller", "ivea", "ak", "akw"),
   polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 }
@@ -21,8 +21,10 @@ hexify_inverse(
 
 \item{projection}{Face projection: \code{"isea"} (Snyder's equal-area
 projection), \code{"ivea"} (van Leeuwen and Strebe's vertex-oriented
-equal-area projection) or \code{"fuller"} (Fuller's projection, defined
-on the icosahedron only)}
+equal-area projection), \code{"fuller"} (Fuller's projection, defined
+on the icosahedron only), \code{"ak"} (Kaseorg's octahedral
+projection) or \code{"akw"} (Kaseorg's with Hex9's trained warp), both
+defined on the octahedron only}
 
 \item{polyhedron}{The solid: "icosahedron" (default), "octahedron" or
 "tetrahedron", in its default orientation. Snyder (1992) gives his

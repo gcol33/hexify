@@ -13,7 +13,7 @@ hex_grid(
   crs = NULL,
   radius_km = EARTH_RADIUS_KM,
   orientation = "standard",
-  projection = c("isea", "fuller", "ivea"),
+  projection = c("isea", "fuller", "ivea", "ak", "akw"),
   region = NULL,
   polyhedron = c("icosahedron", "octahedron", "tetrahedron"),
   ellipsoid = NULL
@@ -73,7 +73,9 @@ section. H3 fixes its own orientation, so H3 grids take only "standard".}
 \item{projection}{How an ISEA-family grid projects each icosahedron face
 onto its plane triangle: "isea" (default), Snyder's equal-area
 projection, "ivea", van Leeuwen and Strebe's vertex-oriented equal-area
-projection, or "fuller", Fuller's projection. See the Projection section.
+projection, "fuller", Fuller's projection, or, on the octahedron, "ak",
+Kaseorg's projection, or "akw", Kaseorg's with Hex9's trained warp
+(see \code{\link{hex9_warp_download}}). See the Projection section.
 H3 fixes its own projection, so H3 grids take only "isea".}
 
 \item{region}{For \code{orientation = "region"} or \code{"face"}, the area
@@ -316,14 +318,21 @@ tail. A cell's parent is the cell of the coarser resolution holding its
 mode-0 half, and every cell has nine children. Three of them straddle the
 cell's boundary, so a cell's children cover it only in part.
 
-Hex9's own projection is Kaseorg's octahedral projection with a trained
-equal-area correction ('libhex9'); a grid built here uses hexify's face
-projections, so its digits name the same cells of the octahedron and their
-positions on the sphere follow \code{projection}.
+Hex9's own projection is Kaseorg's octahedral projection, \code{"ak"}
+(Griffin 2026, Sec. 11a): it maps each octant's weights on its three
+vertices through tangents of the weights, coupled by a fitted constant, and
+is not equal-area, its cells varying by about 20 percent in area across a
+face. 'libhex9' corrects that with a warp of each face trained by optimal
+transport (Sec. 11b): \code{"akw"} reads it (\code{\link{hex9_warp_download}}
+fetches it), and a grid on it names every point by the cell 'libhex9''s
+functions on the sphere name it. Any of the face projections serves the
+same cells of the octahedron, with the same IDs; where each cell lies on
+the sphere follows \code{projection}.
 
 \preformatted{
 hex_grid(resolution = 4, aperture = 9)                       # Hex9
 hex_grid(resolution = 4, aperture = 9, projection = "ivea")
+hex_grid(resolution = 4, aperture = 9, projection = "ak")
 }
 }
 

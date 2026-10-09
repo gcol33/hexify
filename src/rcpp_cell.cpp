@@ -265,6 +265,9 @@ struct QuadFrame {
     long long dim;                // substrate steps along a quad edge
     SubstrateLattice lattice;     // which stored (i, j) are cells
     LatticeGenerator generator;   // that lattice's generator, in stored (i, j)
+    // Hex9: per quad, the coset of `lattice` its cells lie on, as the r of
+    // j = c * i + r (mod index); 0 for every other grid
+    int coset[hexify::kMaxVerts] = {0};
 };
 
 // The sublattice generator m + n*w (w = exp(pi*i/3)) of a form, written in
@@ -341,6 +344,15 @@ static QuadFrame quad_frame(int resolution, int aperture, std::vector<int> ap_se
         f.nCells = static_cast<uint64_t>(hexify::hex9::level_cells(resolution));
         f.lattice = sublattice_of(f.form);
         f.generator = generator_of(f.form);
+        // Two neighbours along a quad's i axis lie on the two cosets off the
+        // vertex at its origin; the one that is a cell centre names the coset.
+        for (int q = 1; q <= hexify::topo().n_diamonds(); q++) {
+            hexify::hex9::OctPoint p;
+            const long long i = (hexify::hex9::quad_ij_lattice(q, 1, 0, resolution, p) &&
+                                 hexify::hex9::is_centre(p)) ? 1 : 2;
+            f.coset[q] = static_cast<int>(((-(f.lattice.c * i)) % f.lattice.index +
+                                           f.lattice.index) % f.lattice.index);
+        }
         return f;
     }
     int64_t per_quad, n_cells;
@@ -1487,7 +1499,7 @@ constexpr int kMaxCreaseCrossings = 3;
 // derivative jumps there, so the image of a straight piece bends where it
 // crosses one. Snyder's has one to each corner; the vertex-oriented
 // projection (IVEA) one to each corner and one to each edge midpoint;
-// Fuller's is smooth inside a face and has none. The face triangle is the
+// Fuller's and Kaseorg's are smooth inside a face and have none. The face triangle is the
 // same in every face's triangle coordinates, with unit edge and its first
 // corner at the top. Returns how many creases the piece a -> b crosses
 // strictly between its ends, with the crossings' places along it, ascending,
@@ -1503,6 +1515,8 @@ static int radius_crossings(double ax, double ay, double bx, double by,
         case hexify::FaceProjection::ISEA: n_lines = 3; break;
         case hexify::FaceProjection::IVEA: n_lines = 6; break;
         case hexify::FaceProjection::Fuller: n_lines = 0; break;
+        case hexify::FaceProjection::AK: n_lines = 0; break;
+        case hexify::FaceProjection::AKW: n_lines = 0; break;
     }
     // A crossing this close to an end is that end.
     constexpr double kEndSlack = 1e-12;
@@ -2534,7 +2548,7 @@ List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
     std::vector<std::vector<hexify::UnitVec>> lines;
     std::vector<hexify::WallShape> shapes;
     std::vector<hexify::UnitVec> nbr_centres;
-    std::vector<int> wall_of;
+    std::vector<std::pair<int, int>> pairs;
 
     for (R_xlen_t k = 0; k < n; k++) {
         cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, lines);
@@ -2551,15 +2565,15 @@ List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
         const CellPlanes ng = cell_planes(nb, f);
         nbr_centres.clear();
         for (const CellPlane& c : ng.cells) nbr_centres.push_back(cell_centre_sphere(c));
-        if (!hexify::walls_of_neighbours(shapes, nbr_centres, wall_of)) {
-            stop("cell %lld: its %d walls do not pair one to one with its %d neighbours",
+        if (!hexify::wall_pairs(shapes, nbr_centres, pairs)) {
+            stop("cell %lld: its %d walls do not pair with its %d neighbours",
                  static_cast<long long>(hexify::cell_id_get(cell_id[k])),
                  static_cast<int>(shapes.size()), static_cast<int>(nb.size()));
         }
         const hexify::UnitVec centre = cell_centre_sphere(g.cells[k]);
-        for (R_xlen_t j = 0; j < nb.size(); j++) {
-            rows.add(k, hexify::measure_wall(shapes[wall_of[j]], centre, nbr_centres[j]));
-            row_nbr.push_back(hexify::cell_id_get(nb[j]));
+        for (const auto& p : pairs) {
+            rows.add(k, hexify::measure_wall(shapes[p.second], centre, nbr_centres[p.first]));
+            row_nbr.push_back(hexify::cell_id_get(nb[p.first]));
         }
     }
 

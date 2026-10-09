@@ -8,9 +8,9 @@ H3_OBJECTS = h3/algos.o h3/area.o h3/baseCells.o h3/bbox.o \
     h3/vertex.o h3/vertexGraph.o
 
 CPP_OBJECTS = RcppExports.o aperture.o aperture_sequence.o cell_index.o coordinate_transforms.o \
-    globe_mesh.o globe_table.o hex9.o hex9_solid.o ijk_coordinates.o authalic.o \
+    globe_mesh.o globe_table.o hex9.o hex9_solid.o hex9_warp.o ijk_coordinates.o authalic.o \
     index_z3.o index_z7.o index_zorder.o polyhedron.o \
-    projection_forward.o projection_fuller.o projection_inverse.o projection_ivea.o \
+    projection_ak.o projection_forward.o projection_fuller.o projection_inverse.o projection_ivea.o \
     rcpp_aperture.o rcpp_cell.o rcpp_hex9.o rcpp_index.o rcpp_projection.o \
     rcpp_h3.o snyder_triangle.o
 

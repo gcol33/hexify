@@ -12,6 +12,7 @@
 #include <Rcpp.h>
 #include <array>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 namespace hexify {
@@ -171,6 +172,47 @@ inline bool walls_of_neighbours(const std::vector<WallShape>& walls,
         }
         if (taken[wall_of[n]]) return false;
         taken[wall_of[n]] = true;
+    }
+    return true;
+}
+
+// Each wall of a cell with the neighbour across it, as (neighbour, wall)
+// pairs in neighbour order. With one wall per neighbour that is
+// walls_of_neighbours(); a cell with more walls than neighbours -- a Hex9
+// cell beside a vertex of the solid, which meets its partner there across
+// two walls -- gives each wall the neighbour whose centre is nearest its
+// midpoint. False unless every wall and every neighbour is paired.
+inline bool wall_pairs(const std::vector<WallShape>& walls,
+                       const std::vector<UnitVec>& neighbours,
+                       std::vector<std::pair<int, int>>& pairs) {
+    pairs.clear();
+    if (walls.size() == neighbours.size()) {
+        std::vector<int> wall_of;
+        if (!walls_of_neighbours(walls, neighbours, wall_of)) return false;
+        for (size_t n = 0; n < neighbours.size(); n++) {
+            pairs.push_back({static_cast<int>(n), wall_of[n]});
+        }
+        return true;
+    }
+    if (walls.size() < neighbours.size()) return false;
+    std::vector<int> nearest(walls.size(), -1);
+    std::vector<int> count(neighbours.size(), 0);
+    for (size_t w = 0; w < walls.size(); w++) {
+        double best = 1e300;
+        for (size_t n = 0; n < neighbours.size(); n++) {
+            const double d = arc_angle(walls[w].midpoint, neighbours[n]);
+            if (d < best) {
+                best = d;
+                nearest[w] = static_cast<int>(n);
+            }
+        }
+        count[nearest[w]]++;
+    }
+    for (size_t n = 0; n < neighbours.size(); n++) {
+        if (count[n] == 0) return false;
+        for (size_t w = 0; w < walls.size(); w++) {
+            if (nearest[w] == static_cast<int>(n)) pairs.push_back({static_cast<int>(n), static_cast<int>(w)});
+        }
     }
     return true;
 }

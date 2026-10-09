@@ -381,6 +381,14 @@ cpp_hex9_octahedron_cell <- function(x, y, z, resolution) {
     .Call(`_hexify_cpp_hex9_octahedron_cell`, x, y, z, resolution)
 }
 
+cpp_hex9_warp_load <- function(bytes) {
+    invisible(.Call(`_hexify_cpp_hex9_warp_load`, bytes))
+}
+
+cpp_hex9_warp_ready <- function() {
+    .Call(`_hexify_cpp_hex9_warp_ready`)
+}
+
 cpp_hex9_digit_strings_unique <- function() {
     .Call(`_hexify_cpp_hex9_digit_strings_unique`)
 }

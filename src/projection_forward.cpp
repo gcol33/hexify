@@ -2,6 +2,7 @@
 #include "projection_fuller.h"
 #include "projection_ivea.h"
 #include "authalic.h"
+#include "projection_ak.h"
 #include "constants.h"
 #include "dual.h"
 #include <cmath>
@@ -100,6 +101,12 @@ static bool face_xy_from_polar(const SolidTopology& t, T z, T az, bool validate,
 
   if (proj == FaceProjection::Fuller) {
     const auto xy = fuller_face_xy(z, az);
+    x = xy.first;
+    y = xy.second;
+    return true;
+  }
+  if (proj == FaceProjection::AK || proj == FaceProjection::AKW) {
+    const auto xy = ak_face_xy(z, az, proj == FaceProjection::AKW);
     x = xy.first;
     y = xy.second;
     return true;

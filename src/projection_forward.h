@@ -5,10 +5,11 @@
 namespace hexify {
 
 // The projection between each spherical face and its plane triangle: Snyder's
-// equal-area ISEA projection, Fuller's, or van Leeuwen and Strebe's
-// vertex-oriented equal-area one (IVEA). Every forward and inverse face
-// projection reads the active one.
-enum class FaceProjection { ISEA = 0, Fuller = 1, IVEA = 2 };
+// equal-area ISEA projection, Fuller's, van Leeuwen and Strebe's
+// vertex-oriented equal-area one (IVEA), Kaseorg's octahedral one (AK), or
+// AK with Hex9's trained area-correcting warp (AKW, hex9_warp.h). Every
+// forward and inverse face projection reads the active one.
+enum class FaceProjection { ISEA = 0, Fuller = 1, IVEA = 2, AK = 3, AKW = 4 };
 void use_projection(FaceProjection p);
 FaceProjection active_projection();
 

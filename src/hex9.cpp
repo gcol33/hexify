@@ -498,6 +498,32 @@ bool decode(int64_t id, int level, OctPoint& centre) {
   return false;
 }
 
+Tables tables() {
+  Tables t;
+  for (int m = 0; m < 2; m++) {
+    for (int j = 0; j < 9; j++) {
+      t.child_code.push_back(kChildCode[m][j]);
+      t.child_mode.push_back(kChildMode[m][j]);
+      t.child_offset.push_back(kChildOffset[m][j][0]);
+      t.child_offset.push_back(kChildOffset[m][j][1]);
+      t.root_c2.push_back(kRootC2[m][j]);
+    }
+  }
+  for (int r = 0; r < 12; r++) t.rid_code.push_back(kRidCode[r]);
+  for (int o = 0; o < 8; o++) {
+    for (int c = 0; c < 3; c++) t.root_digit.push_back(kRootDigit[o][c]);
+  }
+  for (int g = 0; g < 2; g++) {
+    for (int p = 0; p < 12; p++) {
+      for (int c = 0; c < 12; c++) {
+        t.reg_hex.push_back(kRegHex[g][p][c][0]);
+        t.reg_hex.push_back(kRegHex[g][p][c][1]);
+      }
+    }
+  }
+  return t;
+}
+
 bool digit_strings_unique() {
   // A chain is in state (m, r) after naming t_cell r, whose parent has mode
   // m; the next t_cell r' of a valid child emits the digit of the cell whose

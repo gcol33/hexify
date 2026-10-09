@@ -146,3 +146,38 @@ test_that("cell IDs follow the solid under any orientation", {
 test_that("digit strings name one cell at every level", {
   expect_true(cpp_hex9_digit_strings_unique())
 })
+
+test_that("Hex9 cells compact into their parents and back", {
+  g <- hex_grid(resolution = 2, aperture = 9)
+  g3 <- hex_grid(resolution = 3, aperture = 9)
+  kids <- get_children(bit64::as.integer64(c(17, 500)), g)
+  lab <- cell_to_index(cell_id_unlist(kids), g3)
+  stray <- cell_to_index(bit64::as.integer64(8000), g3)
+  out <- hex_compact(c(lab, stray), g)
+  expect_setequal(out, c(cell_to_index(bit64::as.integer64(c(17, 500)), g), stray))
+  expect_setequal(hex_uncompact(out, g, 3L), c(lab, stray))
+})
+
+test_that("a vertex cell meets its partner across two walls", {
+  g <- hex_grid(resolution = 1, aperture = 9)
+  ids <- hex9_ids(n_cells(g))
+  w <- wall_metrics(ids, g)
+  nb <- get_neighbors(ids, g)
+  five <- ids[lengths(nb) == 5L]
+  expect_length(five, 12L)
+  # Each wall once: six per cell, two cells per wall
+  expect_equal(nrow(w), 6L * length(ids) / 2L)
+  pair <- paste(pmin(w$cell_id, w$neighbor_id), pmax(w$cell_id, w$neighbor_id))
+  twice <- names(which(table(pair) == 2L))
+  expect_length(twice, 6L)
+  m <- cell_metrics(ids, g)
+  expect_equal(nrow(m), length(ids))
+})
+
+test_that("a Hex9 grid has its own DGGRS definition and no DGGRID one", {
+  def <- dggrs_definition(hex_grid(resolution = 3, aperture = 9))
+  expect_equal(def$title, "Hex9")
+  expect_equal(def$dggh$definition$zoneTypes, "hexagon")
+  expect_equal(def$dggh$definition$refinementRatio, 9L)
+  expect_error(as_dggrid(hex_grid(resolution = 3, aperture = 9)), "no aperture 9")
+})

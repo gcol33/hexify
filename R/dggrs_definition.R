@@ -48,6 +48,7 @@
 dggrs_definition <- function(grid) {
   g <- extract_grid(grid)
   if (is_h3_grid(g)) return(h3_dggrs_definition(g))
+  if (is_hex9_grid(g)) return(hex9_dggrs_definition(g))
 
   steps <- if (is_mixed_aperture(g@aperture)) {
     isea_levels(g@aperture, g@resolution)$ap_seq[-1]
@@ -212,6 +213,63 @@ isea_index_description <- function(g) {
       "Z-order: two digits naming the quad (", n_quad, "), then the base-2 ",
       "interleaved digits of the zone's (i, j) lattice coordinates, one per ",
       "resolution; dropping the last digit gives the parent's identifier."))
+}
+
+#' DGGRS definition of a Hex9 grid
+#'
+#' Topic 21's refinement strategies all describe where a child sits on its
+#' parent; Hex9's nine children sit off its centre, three across its
+#' boundary, so the definition names none and says so in its description.
+#' @noRd
+hex9_dggrs_definition <- function(g) {
+  projection <- grid_projection(g)
+  o <- grid_orientation(g)
+  list(
+    title = "Hex9",
+    description = sprintf(paste(
+      "hexify Hex9 grid (Griffin 2026) at resolution %d: hexagons on the",
+      "octahedron, %s projection, refined by 9 with no centred child (the",
+      "shifted aperture 9), on a sphere of radius %s km taking latitude as",
+      "spherical latitude."),
+      g@resolution, toupper(projection), format(grid_radius_km(g), digits = 10)),
+    dggh = list(
+      definition = list(
+        spatialDimensions = 2L,
+        temporalDimensions = 0L,
+        crs = dggrs_crs(g),
+        basePolyhedron = "octahedron",
+        refinementRatio = HEX9_APERTURE,
+        constraints = list(cellEqualSized = is_equal_area_projection(projection)),
+        zoneTypes = "hexagon"
+      ),
+      parameters = list(
+        sphere = list(radius_km = grid_radius_km(g)),
+        orientation = list(
+          latitude = unname(o[["vert0_lat"]]),
+          longitude = unname(o[["vert0_lon"]]),
+          azimuth = unname(o[["azimuth"]]),
+          description = "Spherical latitude and longitude of the solid's first vertex, and azimuth of its second vertex seen from the first."
+        )
+      )
+    ),
+    zirs = list(
+      textZIRS = list(description = paste(
+        "The libhex9 label: one digit per resolution (0-9, a, b for the twelve",
+        "zones of resolution 0, 0-8 after), a dot and the key tail (0-5).",
+        "The digits follow the zone's mode-0 half; dropping the last one gives",
+        "the parent's digits except for the three children that straddle",
+        "their parent."),
+        type = "hierarchicalConcatenation"),
+      uint64ZIRS = list(description = paste(
+        "The cell ID: the label's digits read as a number, the first counting",
+        "9^resolution, plus one; 1 to 12 * 9^resolution, unique together with",
+        "the resolution."))
+    ),
+    subZoneOrder = list(
+      description = "Sub-zones at any depth below a zone are listed in ascending order of cell ID.",
+      type = "cellIdAscending"
+    )
+  )
 }
 
 #' DGGRS definition of an H3 grid

@@ -111,11 +111,12 @@ grid_orientation <- function(x) {
 
 #' Face projections an ISEA-family grid can be built on
 #'
-#' Snyder's equal-area ISEA projection, Fuller's projection and van Leeuwen
-#' and Strebe's vertex-oriented equal-area projection (IVEA), with the codes
-#' the C++ layer reads (\code{hexify::FaceProjection}).
+#' Snyder's equal-area ISEA projection, Fuller's projection, van Leeuwen
+#' and Strebe's vertex-oriented equal-area projection (IVEA) and Kaseorg's
+#' octahedral projection (AK), with the codes the C++ layer reads
+#' (\code{hexify::FaceProjection}).
 #' @noRd
-FACE_PROJECTIONS <- c(isea = 0, fuller = 1, ivea = 2)
+FACE_PROJECTIONS <- c(isea = 0, fuller = 1, ivea = 2, ak = 3, akw = 4)
 
 #' Face projections that keep every cell of a resolution the same area
 #' @noRd
@@ -125,6 +126,11 @@ EQUAL_AREA_PROJECTIONS <- c("isea", "ivea")
 #' solid with triangular faces
 #' @noRd
 ICOSAHEDRON_PROJECTIONS <- "fuller"
+
+#' Face projections defined on the octahedron only: Kaseorg's, plain or with
+#' Hex9's warp, needs the vertices of a face to be orthogonal
+#' @noRd
+OCTAHEDRON_PROJECTIONS <- c("ak", "akw")
 
 #' DGGRID's names for the face projections it has (\code{dggs_proj}); DGGRID
 #' has no IVEA
@@ -156,6 +162,11 @@ check_projection_solid <- function(projection, polyhedron) {
   if (projection %in% ICOSAHEDRON_PROJECTIONS && polyhedron != "icosahedron") {
     stop("Fuller's projection is defined on the icosahedron only", call. = FALSE)
   }
+  if (projection %in% OCTAHEDRON_PROJECTIONS && polyhedron != "octahedron") {
+    stop("Kaseorg's projection (\"", projection, "\") is defined on the ",
+         "octahedron only: it needs the vertices of a face to be orthogonal",
+         call. = FALSE)
+  }
   invisible(TRUE)
 }
 
@@ -164,8 +175,8 @@ check_projection_solid <- function(projection, polyhedron) {
 #' A grid saved before grids carried a projection, and a legacy
 #' \code{hexify_grid} list, uses ISEA. H3 grids have none.
 #' @param x HexGridInfo object or legacy hexify_grid list
-#' @return \code{"isea"}, \code{"fuller"} or \code{"ivea"}, or \code{NA}
-#'   for an H3 grid
+#' @return \code{"isea"}, \code{"fuller"}, \code{"ivea"} or \code{"ak"}, or
+#'   \code{NA} for an H3 grid
 #' @noRd
 grid_projection <- function(x) {
   if (isS4(x)) {
@@ -187,6 +198,7 @@ projection_icosa <- function(projection, polyhedron = "icosahedron") {
   projection <- match.arg(projection, names(FACE_PROJECTIONS))
   polyhedron <- match.arg(polyhedron, names(POLYHEDRA))
   check_projection_solid(projection, polyhedron)
+  if (projection == "akw") ensure_hex9_warp()
   c(unname(FACE_PROJECTIONS[projection]), unname(POLYHEDRA[polyhedron]))
 }
 
@@ -217,6 +229,7 @@ icosa_arg <- function(g) {
   o <- grid_orientation(g)
   if (length(o) == 0L) return(numeric(0))
   f <- grid_flattening(g)
+  if (identical(grid_projection(g), "akw")) ensure_hex9_warp()
   c(unname(o), unname(FACE_PROJECTIONS[grid_projection(g)]),
     unname(POLYHEDRA[grid_polyhedron(g)]), if (f > 0) f)
 }

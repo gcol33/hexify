@@ -17,9 +17,19 @@
 //                            labels at the given levels
 //   cells L N SEED           every cell of level L reached by N sphere points:
 //                            label, neighbours, parent and children labels
-//   lonlat LEVELS...         lon lat pairs on stdin (WGS84 degrees): the
-//                            labels libhex9 gives them, and the decoded
-//                            centre of the deepest level
+//   bench LEVELS...          lon lat pairs on stdin (spherical degrees, the
+//                            _sphere functions): per level, the label of the
+//                            cell holding the point and that cell's lattice
+//                            centre (hex9_cell_uv), unprojected
+//   commute L K              lon lat pairs on stdin (spherical degrees): the
+//                            label at level L, and for k = 1..K the label of
+//                            the level-L canonical ancestor (iterated
+//                            hex9_cell_parent) of the point's level-(L + k)
+//                            cell
+//   project WARP SPHERE      lon lat pairs on stdin: their place on the
+//                            octahedron (x, y, z) under Kaseorg's projection,
+//                            with the warp (WARP 1) or without (0), from
+//                            spherical (SPHERE 1) or WGS84 latitude (0)
 #include "hex9_c.h"
 #include <cmath>
 #include <cstdio>
@@ -100,22 +110,65 @@ int main(int argc, char** argv) {
       }
       std::printf("%s,%s,%s,%s\n", lab.c_str(), nbs.c_str(), par.c_str(), chs.c_str());
     }
-  } else if (mode == "lonlat") {
+  } else if (mode == "project") {
+    hex9_set_use_warp(std::atoi(argv[2]));
+    const int sphere = std::atoi(argv[3]);
+    std::printf("lon,lat,x,y,z\n");
+    double lon, lat;
+    while (std::scanf("%lf %lf", &lon, &lat) == 2) {
+      double cx, cy, w[3];
+      int oid;
+      if (sphere) hex9_project_sphere(lon, lat, &cx, &cy, &oid);
+      else hex9_project(lon, lat, &cx, &cy, &oid);
+      hex9_boct_to_woct(cx, cy, oid, w);
+      std::printf("%.17g,%.17g,%.17g,%.17g,%.17g\n", lon, lat, w[0], w[1], w[2]);
+    }
+  } else if (mode == "bench") {
     std::vector<int> levels;
     for (int a = 2; a < argc; a++) levels.push_back(std::atoi(argv[a]));
+    double u1, v3;
+    hex9_uv_units(&u1, &v3);
     std::printf("lon,lat");
-    for (int l : levels) std::printf(",L%d", l);
-    std::printf(",centre_lon,centre_lat\n");
+    for (int l : levels) std::printf(",L%d,lon%d,lat%d", l, l, l);
+    std::printf("\n");
     double lon, lat;
     while (std::scanf("%lf %lf", &lon, &lat) == 2) {
       uint8_t full[16], bin[16];
-      hex9_encode(lon, lat, full);
+      hex9_encode_sphere(lon, lat, full);
       std::printf("%.17g,%.17g", lon, lat);
-      for (int l : levels) std::printf(",%s", label(full, l).c_str());
-      double clon, clat;
-      hex9_bin(full, levels.back(), bin);
-      hex9_decode(bin, &clon, &clat);
-      std::printf(",%.17g,%.17g\n", clon, clat);
+      for (int l : levels) {
+        hex9_bin(full, l, bin);
+        int64_t ca, cb, va[6], vb[6];
+        int coid, voi[6], ext;
+        hex9_cell_uv(bin, l, &ca, &cb, &coid, va, vb, voi, &ext);
+        const double div = std::pow(3.0, l);
+        double clon, clat;
+        hex9_unproject_sphere(ca * u1 / div, cb * v3 / div, coid, &clon, &clat);
+        std::printf(",%s,%.17g,%.17g", label(full, l).c_str(), clon, clat);
+      }
+      std::printf("\n");
+    }
+  } else if (mode == "commute") {
+    const int L = std::atoi(argv[2]), K = std::atoi(argv[3]);
+    std::printf("lon,lat,direct");
+    for (int k = 1; k <= K; k++) std::printf(",k%d", k);
+    std::printf("\n");
+    double lon, lat;
+    while (std::scanf("%lf %lf", &lon, &lat) == 2) {
+      uint8_t full[16], bin[16], up[16];
+      hex9_encode_sphere(lon, lat, full);
+      std::printf("%.17g,%.17g,%s", lon, lat, label(full, L).c_str());
+      for (int k = 1; k <= K; k++) {
+        hex9_bin(full, L + k, bin);
+        std::memcpy(up, bin, 16);
+        for (int s = 0; s < k; s++) {
+          uint8_t p[16];
+          hex9_cell_parent(up, p);
+          std::memcpy(up, p, 16);
+        }
+        std::printf(",%s", label(up, L).c_str());
+      }
+      std::printf("\n");
     }
   }
   return 0;

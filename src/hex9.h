@@ -30,6 +30,7 @@
 // mode-0 half; every cell has nine children under that rule.
 
 #include <cstdint>
+#include <vector>
 
 namespace hexify {
 namespace hex9 {
@@ -76,6 +77,16 @@ int key_tail(const OctPoint& centre, int level);
 // digit tables by a search over pairs of t_cell chains reading the same
 // digits: true when no two chains naming different cells can end together.
 bool digit_strings_unique();
+
+// The address tables, flattened in C order, for a reader of addresses
+// outside C++ (the globe widget): child codes [2][9], child modes [2][9],
+// child offsets [2][9][2], region codes [12], root c2 [2][9], root digits
+// [8][3] and region digits [2][12][12][2] (255 for no child).
+struct Tables {
+  std::vector<int> child_code, child_mode, child_offset, rid_code, root_c2,
+      root_digit, reg_hex;
+};
+Tables tables();
 
 // The centre of the canonical parent, one level up, of the cell at
 // `centre`; level >= 1.

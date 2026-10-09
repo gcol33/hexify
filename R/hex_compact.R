@@ -1,9 +1,23 @@
 # R/hex_compact.R
 # Multi-resolution compaction and uncompaction
 
+#' The resolution an ISEA index string carries
+#'
+#' A Z-order, Z3 or Z7 index spells its quad in two characters and then one
+#' digit per resolution; a Hex9 label spells one digit per resolution from
+#' resolution 0, then a dot and its key tail.
+#' @param indices Character vector of index strings
+#' @param g The grid the cells belong to
+#' @noRd
+index_resolution <- function(indices, g) {
+  if (is_hex9_grid(g)) return(nchar(sub(".", "", indices, fixed = TRUE)) - 2L)
+  nchar(indices) - 2L
+}
+
 #' The cells an ISEA index string names
 #' @noRd
 isea_index_cells <- function(indices, g) {
+  if (is_hex9_grid(g)) return(cpp_hex9_parse_label(as.character(indices))$cell_id)
   isea_index_to_cells(indices, aperture_to_int(g@aperture),
                       index_type_for_aperture(g@aperture), icosa_arg(g))
 }
@@ -21,7 +35,7 @@ isea_index_cells <- function(indices, g) {
 #' @return The cells the indices name
 #' @noRd
 check_isea_indices <- function(indices, g, what) {
-  resolutions <- nchar(indices) - 2L
+  resolutions <- index_resolution(indices, g)
   if (any(resolutions < 0L)) {
     stop(what, "(): ", "index strings carry a two-character quad and one digit ",
          "per resolution; these are shorter than that: ",
@@ -76,7 +90,7 @@ isea_child_indices <- function(indices, resolution, g) {
 #'
 #' @param cell_ids Cell IDs to compact. For H3 grids, a character vector.
 #'   For ISEA grids, a character vector of hierarchical index strings, as
-#'   \code{\link{cell_to_index}} returns for apertures 3, 4 and 7.
+#'   \code{\link{cell_to_index}} returns for apertures 3, 4, 7 and 9.
 #' @param grid A HexGridInfo object specifying the grid.
 #'
 #' @return A character vector of compacted cell IDs. Cells that could be
@@ -136,10 +150,10 @@ hex_compact <- function(cell_ids, grid) {
 
   # Levels are taken from the finest up: each level's full sibling sets become
   # parents at the next one, which the following pass reads.
-  levels <- rev(seq_len(max(nchar(ids) - 2L)))
+  levels <- rev(seq_len(max(index_resolution(ids, g))))
 
   for (level in levels) {
-    at_level <- nchar(ids) - 2L == level
+    at_level <- index_resolution(ids, g) == level
     if (!any(at_level)) next
 
     parent_grid <- grid_at_resolution(g, level - 1L)
@@ -172,14 +186,33 @@ hex_compact <- function(cell_ids, grid) {
   # own (not-fully-compactable) descendants both present in the result --
   # the ancestor's area already covers the descendant's, so the descendant
   # is redundant even though it's not a literal duplicate ID.
-  if (length(ids) > 1L) {
-    is_redundant <- vapply(seq_along(ids), function(k) {
-      any(nchar(ids) < nchar(ids[k]) & substr(ids[k], 1, nchar(ids)) == ids)
-    }, logical(1))
-    ids <- ids[!is_redundant]
-  }
+  if (length(ids) > 1L) ids <- ids[!has_listed_ancestor(ids, g)]
 
   ids
+}
+
+#' Whether each index string has an ancestor among the others
+#'
+#' The ancestors are the iterated parents of get_parent(), read up to the
+#' coarsest resolution present.
+#' @param ids Character vector of index strings
+#' @param g The grid the cells belong to
+#' @return Logical vector
+#' @noRd
+has_listed_ancestor <- function(ids, g) {
+  res <- index_resolution(ids, g)
+  cells <- isea_index_cells(ids, g)
+  listed <- paste(res, as.character(cells))
+  out <- logical(length(ids))
+  if (max(res) == min(res)) return(out)
+  up <- cells
+  for (r in seq.int(max(res), min(res) + 1L)) {
+    moving <- res >= r
+    up[moving] <- get_parent(up[moving], grid_at_resolution(g, r))
+    hit <- moving & paste(r - 1L, as.character(up)) %in% listed
+    out <- out | hit
+  }
+  out
 }
 
 #' Uncompact Hex Cells
@@ -231,7 +264,7 @@ hex_uncompact <- function(cell_ids, grid, target_resolution) {
   ids <- as.character(cell_ids)
   check_isea_indices(ids, g, "hex_uncompact")
 
-  initial_res <- nchar(ids) - 2L  # the first 2 chars are the quad
+  initial_res <- index_resolution(ids, g)
   if (any(initial_res > target_resolution)) {
     stop(sprintf(
       "target_resolution (%d) is coarser than some input cells (max resolution %d); hex_uncompact() cannot expand to a coarser resolution",
@@ -240,7 +273,7 @@ hex_uncompact <- function(cell_ids, grid, target_resolution) {
   }
 
   repeat {
-    current_res <- nchar(ids) - 2L
+    current_res <- index_resolution(ids, g)
     needs_expansion <- current_res < target_resolution
 
     if (!any(needs_expansion)) break

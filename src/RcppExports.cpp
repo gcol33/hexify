@@ -1296,6 +1296,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_hex9_warp_load
+void cpp_hex9_warp_load(RawVector bytes);
+RcppExport SEXP _hexify_cpp_hex9_warp_load(SEXP bytesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RawVector >::type bytes(bytesSEXP);
+    cpp_hex9_warp_load(bytes);
+    return R_NilValue;
+END_RCPP
+}
+// cpp_hex9_warp_ready
+bool cpp_hex9_warp_ready();
+RcppExport SEXP _hexify_cpp_hex9_warp_ready() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_warp_ready());
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_hex9_digit_strings_unique
 bool cpp_hex9_digit_strings_unique();
 RcppExport SEXP _hexify_cpp_hex9_digit_strings_unique() {
@@ -1767,6 +1787,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_hex9_label", (DL_FUNC) &_hexify_cpp_hex9_label, 2},
     {"_hexify_cpp_hex9_parse_label", (DL_FUNC) &_hexify_cpp_hex9_parse_label, 1},
     {"_hexify_cpp_hex9_octahedron_cell", (DL_FUNC) &_hexify_cpp_hex9_octahedron_cell, 4},
+    {"_hexify_cpp_hex9_warp_load", (DL_FUNC) &_hexify_cpp_hex9_warp_load, 1},
+    {"_hexify_cpp_hex9_warp_ready", (DL_FUNC) &_hexify_cpp_hex9_warp_ready, 0},
     {"_hexify_cpp_hex9_digit_strings_unique", (DL_FUNC) &_hexify_cpp_hex9_digit_strings_unique, 0},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 7},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 4},

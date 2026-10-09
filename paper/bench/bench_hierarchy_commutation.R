@@ -10,7 +10,13 @@
 # three parents, so 2/3 * 2/3 = 4/9. Aperture 4: three quarters in cells
 # centred on parent edges, half in each of two parents, 3/4 * 1/2 = 3/8.
 # Aperture 7: six sevenths in cells off the parent's centre, 1/12 of each in a
-# neighbour of the parent, 6/7 * 1/12 = 1/14. Snyder's projection is
+# neighbour of the parent, 6/7 * 1/12 = 1/14. Hex9 (aperture 9, Griffin's
+# rule: the parent holds the cell's mode-0 half): three of nine cells
+# straddle their parent, half in a neighbour, 3/9 * 1/2 = 1/6; Griffin
+# predicts (1/6) 3^(1 - k) for k levels, as straddling cells k levels down
+# sit in a band along the ancestor's edge that thins by 3 a level. With
+# LIBHEX9_DUMP pointing at the hex9_libhex9_dump tool, libhex9's own rate
+# (hex9_cell_parent, k times) is measured on the same points. Snyder's projection is
 # equal-area, so the rates on the sphere are those of the plane, up to the
 # cells beside the twelve vertices. Fuller's projection and H3 are not
 # equal-area, so their rates follow the lattice only approximately.
@@ -33,7 +39,8 @@ GRIDS <- list(
   # of aperture 4
   list(name = "ISEA43H", fine = 12, make = function(r) hex_grid(resolution = r, aperture = "4/3"), one = 3 / 8),
   list(name = "ISEA[4,7]H", fine = 8, make = function(r) hex_grid(resolution = r, aperture = c(4, 7)), one = 1 / 14),
-  list(name = "H3", fine = 8, make = function(r) hex_grid(resolution = r, type = "h3"), one = 1 / 14)
+  list(name = "H3", fine = 8, make = function(r) hex_grid(resolution = r, type = "h3"), one = 1 / 14),
+  list(name = "Hex9", fine = 10, make = function(r) hex_grid(resolution = r, aperture = 9), one = 1 / 6)
 )
 
 rows <- list()
@@ -48,6 +55,22 @@ for (spec in GRIDS) {
       grid = spec$name, fine_resolution = spec$fine, levels_up = k,
       disagree = rate, se = sqrt(rate * (1 - rate) / N_POINTS),
       lattice_one_level = if (k == 1) spec$one else NA)
+    print(rows[[length(rows)]], digits = 4)
+  }
+}
+
+dump <- Sys.getenv("LIBHEX9_DUMP")
+if (nzchar(dump)) {
+  input <- tempfile(fileext = ".txt")
+  writeLines(sprintf("%.17g %.17g", pts$lon, pts$lat), input)
+  ref <- read.csv(text = system2(dump, c("commute", 4, 6), stdin = input, stdout = TRUE),
+                  colClasses = "character")
+  for (k in 1:6) {
+    rate <- mean(ref[[paste0("k", k)]] != ref$direct)
+    rows[[length(rows) + 1]] <- data.frame(
+      grid = "Hex9 (libhex9)", fine_resolution = 4 + k, levels_up = k,
+      disagree = rate, se = sqrt(rate * (1 - rate) / N_POINTS),
+      lattice_one_level = if (k == 1) 1 / 6 else NA)
     print(rows[[length(rows)]], digits = 4)
   }
 }

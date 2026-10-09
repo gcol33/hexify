@@ -9,7 +9,7 @@ hex_compact(cell_ids, grid)
 \arguments{
 \item{cell_ids}{Cell IDs to compact. For H3 grids, a character vector.
 For ISEA grids, a character vector of hierarchical index strings, as
-\code{\link{cell_to_index}} returns for apertures 3, 4 and 7.}
+\code{\link{cell_to_index}} returns for apertures 3, 4, 7 and 9.}
 
 \item{grid}{A HexGridInfo object specifying the grid.}
 }
