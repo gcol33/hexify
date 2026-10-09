@@ -250,7 +250,8 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
            call. = FALSE)
     }
     camera <- resolve_camera(projection, distance, tilt, rotation, fov)
-    view <- surface_view(resolve_center(center), camera$distance, tilt, rotation)
+    view <- surface_view(resolve_center(center, icosa_arg(g)), camera$distance,
+                         tilt, rotation)
     paths <- grid_surface_paths(g, cells, step)
     hierarchy <- parent_levels(parents, g, cells, step, parent_col, parent_lwd)
     land <- surface_land(land)
@@ -310,8 +311,19 @@ setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
 # =============================================================================
 
 #' Resolve center preset or coordinates
+#'
+#' The centre is given in geodetic latitude; with a grid's icosa argument it
+#' is returned on the grid's sphere, where the surface is drawn.
 #' @noRd
-resolve_center <- function(center) {
+resolve_center <- function(center, icosa = numeric(0)) {
+  out <- center_lonlat(center)
+  out[["lat"]] <- sphere_lat(out[["lat"]], icosa)
+  out
+}
+
+#' A center preset or coordinates as c(lon, lat)
+#' @noRd
+center_lonlat <- function(center) {
   if (is.character(center)) {
     if (!center %in% names(globe_centers)) {
       valid <- paste(names(globe_centers), collapse = ", ")
@@ -744,11 +756,12 @@ sfc_polygons <- function(x) {
   }), recursive = FALSE)
 }
 
-#' Country outlines as one set of 3D polylines on the unit sphere
+#' Country outlines as one set of 3D polylines on the unit sphere of the solid
+#' `icosa`
 #' @noRd
-land_outline_points <- function(land) {
+land_outline_points <- function(land, icosa) {
   rings <- unlist(sfc_polygons(land), recursive = FALSE)
-  P <- do.call(rbind, lapply(rings, function(r) unit_vec(r[, 1], r[, 2])))
+  P <- do.call(rbind, lapply(rings, function(r) unit_vec(r[, 1], r[, 2], icosa)))
   brk <- unlist(lapply(rings, function(r) c(TRUE, rep(FALSE, nrow(r) - 1L))))
   list(P = P, brk = brk)
 }
@@ -784,16 +797,16 @@ draw_sphere <- function(paths, land, view, style, icosa, grat = NULL) {
     style$land_fill <- NA
   }
   d <- view$dir
-  center_ll <- vec_lonlat(d)
+  center_ll <- vec_lonlat(d, icosa)
   cap_deg <- acos(view$horizon) * 180 / pi - 0.5
 
   if (!is.null(land)) {
     polys <- lapply(land_in_cap(land, center_ll[1], center_ll[2], cap_deg), function(p) {
-      lapply(p, function(r) unit_vec(r[, 1], r[, 2]))
+      lapply(p, function(r) unit_vec(r[, 1], r[, 2], icosa))
     })
     fill_polygons(polys, view, style$land_fill)
     if (!is.na(style$land_border)) {
-      o <- land_outline_points(land)
+      o <- land_outline_points(land, icosa)
       near <- faces_camera(o$P, view)
       draw_segments(o$P, view, o$brk, near & c(near[-1], FALSE),
                     style$land_border, style$land_lwd)
@@ -892,7 +905,7 @@ draw_solid <- function(paths, land, view, style, icosa, grat = NULL) {
 #' @noRd
 face_land <- function(face, tri, land, icosa, regions = list(NULL)) {
   c3 <- colMeans(tri)
-  c_ll <- vec_lonlat(c3 / sqrt(sum(c3^2)))
+  c_ll <- vec_lonlat(c3 / sqrt(sum(c3^2)), icosa)
   polys <- land_in_cap(land, c_ll[1], c_ll[2], 40)
   if (length(polys) == 0L) {
     return(rep(list(list(fill = NULL, lines = NULL)), length(regions)))
@@ -901,7 +914,7 @@ face_land <- function(face, tri, land, icosa, regions = list(NULL)) {
   to_tri <- function(r) {
     cpp_lonlat_to_face_solid(icosa, face, r[, 1], r[, 2])[, c("tx", "ty"), drop = FALSE]
   }
-  tri_t <- to_tri(vec_lonlat(tri))
+  tri_t <- to_tri(vec_lonlat(tri, icosa))
 
   old <- suppressMessages(sf::sf_use_s2(FALSE))
   on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)

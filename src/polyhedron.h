@@ -232,7 +232,8 @@ const std::array<Geo, kMaxFaces>& face_centers();
 // Per-face azimuth offset (radians)
 double get_face_azimuth_offset(int face);
 
-// The face a point (lon_deg, lat_deg) lies on
+// The face a point (lon_deg, lat_deg) lies on, latitude geodetic on the
+// active ellipsoid
 int which_face(double lon_deg, double lat_deg);
 
 // The point (tx, ty) of a face on the flat solid, as xyz

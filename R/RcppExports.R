@@ -409,6 +409,14 @@ cpp_face_centers <- function(icosa) {
     .Call(`_hexify_cpp_face_centers`, icosa)
 }
 
+cpp_sphere_latitude <- function(icosa, lat, inverse = FALSE, exact = FALSE) {
+    .Call(`_hexify_cpp_sphere_latitude`, icosa, lat, inverse, exact)
+}
+
+cpp_authalic_radius_ratio <- function(flattening) {
+    .Call(`_hexify_cpp_authalic_radius_ratio`, flattening)
+}
+
 cpp_icosa_forward <- function(icosa, lon_deg, lat_deg) {
     .Call(`_hexify_cpp_icosa_forward`, icosa, lon_deg, lat_deg)
 }

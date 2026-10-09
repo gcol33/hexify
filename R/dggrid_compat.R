@@ -53,6 +53,12 @@ as_dggrid <- function(grid) {
          "as_dggrid() takes ISEA and FULLER grids", call. = FALSE)
   }
 
+  if (length(grid_ellipsoid(grid)) == 2L && grid_ellipsoid(grid)[["f"]] > 0) {
+    stop("DGGRID reads latitude on the sphere; this grid converts geodetic ",
+         "latitude to authalic latitude on its ellipsoid, which a dggs cannot ",
+         "carry, so its cells would differ", call. = FALSE)
+  }
+
   if (!is_earth_grid(grid)) {
     warning("A dggs carries no body radius: this grid is sized on a radius of ",
             format(grid_radius_km(grid)), " km, and 'dggridR' will read it on ",

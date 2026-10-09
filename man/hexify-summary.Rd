@@ -30,7 +30,9 @@ carrying \code{grid_type}, \code{aperture}, \code{resolution},
 \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
 empty for H3), \code{projection} (\code{"isea"}, \code{"ivea"} or \code{"fuller"},
 \code{NA} for H3), \code{polyhedron} (\code{"icosahedron"} or
-\code{"octahedron"}, \code{NA} for H3) and \code{n_cells}. For a HexData, a list of class
+\code{"octahedron"}, \code{NA} for H3), \code{ellipsoid}
+(\code{c(a_km, f)}, empty for a grid on the sphere) and \code{n_cells}.
+For a HexData, a list of class
 \code{hexify_data_summary} carrying \code{rows}, \code{columns},
 \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
 and a \code{preview} of the first rows. The print methods return their

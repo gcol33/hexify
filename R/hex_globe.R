@@ -107,10 +107,10 @@ hex_globe <- function(x,
   g <- extract_grid(x)
   face_edges <- resolve_surface(surface, face_edges, g)
   camera <- resolve_camera(projection, distance, tilt, rotation, fov)
-  center <- resolve_center(center)
+  icosa <- icosa_arg(g)
+  center <- resolve_center(center, icosa)
   land <- surface_land(land)
   arc <- step * atan(2)
-  icosa <- icosa_arg(g)
 
   grid <- NULL
   fill <- NULL
@@ -607,7 +607,7 @@ edge_surface_paths <- function(max_angle, icosa) {
   solid <- icosa_solid(icosa)
   V <- solid$vertices
   ends <- as.vector(t(solid$edges[, c("v1", "v2")]))
-  ll <- vec_lonlat(V[ends, ])
+  ll <- vec_lonlat(V[ends, ], icosa)
   cpp_sphere_paths_on_faces(icosa, ll[, 1], ll[, 2],
                             rep(seq_len(nrow(solid$edges)), each = 2L), max_angle)
 }

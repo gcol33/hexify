@@ -1382,6 +1382,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_sphere_latitude
+NumericVector cpp_sphere_latitude(NumericVector icosa, NumericVector lat, bool inverse, bool exact);
+RcppExport SEXP _hexify_cpp_sphere_latitude(SEXP icosaSEXP, SEXP latSEXP, SEXP inverseSEXP, SEXP exactSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lat(latSEXP);
+    Rcpp::traits::input_parameter< bool >::type inverse(inverseSEXP);
+    Rcpp::traits::input_parameter< bool >::type exact(exactSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_sphere_latitude(icosa, lat, inverse, exact));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_authalic_radius_ratio
+double cpp_authalic_radius_ratio(double flattening);
+RcppExport SEXP _hexify_cpp_authalic_radius_ratio(SEXP flatteningSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type flattening(flatteningSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_authalic_radius_ratio(flattening));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_icosa_forward
 NumericVector cpp_icosa_forward(NumericVector icosa, double lon_deg, double lat_deg);
 RcppExport SEXP _hexify_cpp_icosa_forward(SEXP icosaSEXP, SEXP lon_degSEXP, SEXP lat_degSEXP) {
@@ -1613,6 +1638,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_solid_info", (DL_FUNC) &_hexify_cpp_solid_info, 1},
     {"_hexify_cpp_which_face", (DL_FUNC) &_hexify_cpp_which_face, 3},
     {"_hexify_cpp_face_centers", (DL_FUNC) &_hexify_cpp_face_centers, 1},
+    {"_hexify_cpp_sphere_latitude", (DL_FUNC) &_hexify_cpp_sphere_latitude, 4},
+    {"_hexify_cpp_authalic_radius_ratio", (DL_FUNC) &_hexify_cpp_authalic_radius_ratio, 1},
     {"_hexify_cpp_icosa_forward", (DL_FUNC) &_hexify_cpp_icosa_forward, 3},
     {"_hexify_cpp_project_to_icosa_triangle", (DL_FUNC) &_hexify_cpp_project_to_icosa_triangle, 4},
     {"_hexify_cpp_face_xy_to_ll", (DL_FUNC) &_hexify_cpp_face_xy_to_ll, 5},

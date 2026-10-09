@@ -2,6 +2,7 @@
 #include "projection_forward.h"
 #include "projection_fuller.h"
 #include "projection_ivea.h"
+#include "authalic.h"
 #include "polyhedron.h"
 #include "snyder_triangle.h"
 #include "constants.h"
@@ -108,7 +109,9 @@ std::pair<double,double> snyder_face_polar_newton(const SnyderParams& sp, double
 
 namespace hexify {
 
-std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolver solver)
+// Face-plane (x, y) -> (lon, lat) on the sphere in radians
+static std::pair<double,double> face_xy_to_sphere_rad(double x, double y, int face,
+                                                      InverseSolver solver)
 {
   const PolyData& P = poly();
   if (face < 0 || face >= P.n_faces()) throw std::runtime_error("face out of range for the solid");
@@ -124,7 +127,7 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolv
   // Exact face center shortcut
   if (std::abs(x * sp.edge - sp.origin_x_off) < kEpsBranch &&
       std::abs(y * sp.edge - sp.origin_y_off) < kEpsBranch) {
-    return { rad2deg(wrap_lon_rad(center_lon)), rad2deg(center_lat) };
+    return { wrap_lon_rad(center_lon), center_lat };
   }
 
   const bool newton = solver == InverseSolver::Newton;
@@ -163,7 +166,19 @@ std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolv
   // A pole has no longitude; it keeps the centre's.
   const double lon = rho < 1e-12 ? wrap_lon_rad(center_lon) : std::atan2(py, px);
 
-  return { rad2deg(lon), rad2deg(lat) };
+  return { lon, lat };
+}
+
+std::pair<double,double> face_xy_to_sphere_ll(double x, double y, int face, InverseSolver solver)
+{
+  const auto ll = face_xy_to_sphere_rad(x, y, face, solver);
+  return { rad2deg(ll.first), rad2deg(ll.second) };
+}
+
+std::pair<double,double> face_xy_to_ll(double x, double y, int face, InverseSolver solver)
+{
+  const auto ll = face_xy_to_sphere_rad(x, y, face, solver);
+  return { rad2deg(ll.first), rad2deg(to_geodetic_lat(ll.second)) };
 }
 
 } // namespace hexify

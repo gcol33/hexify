@@ -7,18 +7,24 @@
 //     with the ISEA projection;
 //   - c(projection) or c(projection, solid): that solid in its default
 //     orientation, with that projection;
-//   - c(vert0_lon, vert0_lat, azimuth, projection) or
-//     c(vert0_lon, vert0_lat, azimuth, projection, solid): a grid's own
-//     orientation in degrees, its projection and its solid.
+//   - c(vert0_lon, vert0_lat, azimuth, projection),
+//     c(vert0_lon, vert0_lat, azimuth, projection, solid) or
+//     c(vert0_lon, vert0_lat, azimuth, projection, solid, flattening): a
+//     grid's own orientation in degrees, its projection, its solid and the
+//     flattening of its ellipsoid.
 // The projection is 0 for ISEA, 1 for Fuller and 2 for IVEA
 // (hexify::FaceProjection), and
 // the solid 0 for the icosahedron, 1 for the octahedron and 2 for the
-// tetrahedron (hexify::Solid); a missing solid is the icosahedron. Setting all
-// of them on entry means no call reads a state a previous call left active.
+// tetrahedron (hexify::Solid); a missing solid is the icosahedron. A missing
+// flattening, or 0, is the sphere: latitudes are read on it as they are given.
+// Otherwise lon/lat are geodetic on that ellipsoid (hexify::use_ellipsoid()).
+// Setting all of them on entry means no call reads a state a previous call
+// left active.
 
 #include <Rcpp.h>
 #include "polyhedron.h"
 #include "projection_forward.h"
+#include "authalic.h"
 
 inline hexify::FaceProjection icosa_projection(double code) {
   if (code == 0.0) return hexify::FaceProjection::ISEA;
@@ -37,6 +43,7 @@ inline hexify::Solid icosa_solid(double code) {
 inline void activate_default_icosa() {
   hexify::use_default_orientation();
   hexify::use_projection(hexify::FaceProjection::ISEA);
+  hexify::use_ellipsoid(0.0);
 }
 
 inline void activate_icosa(const Rcpp::NumericVector& icosa) {
@@ -45,15 +52,20 @@ inline void activate_icosa(const Rcpp::NumericVector& icosa) {
     activate_default_icosa();
     return;
   }
-  if (n != 1 && n != 2 && n != 4 && n != 5) {
+  if (n != 1 && n != 2 && n != 4 && n != 5 && n != 6) {
     Rcpp::stop("icosa must be empty, c(projection), c(projection, solid), "
-               "c(vert0_lon, vert0_lat, azimuth, projection) or "
-               "c(vert0_lon, vert0_lat, azimuth, projection, solid)");
+               "c(vert0_lon, vert0_lat, azimuth, projection), "
+               "c(vert0_lon, vert0_lat, azimuth, projection, solid) or "
+               "c(vert0_lon, vert0_lat, azimuth, projection, solid, flattening)");
   }
   const bool oriented = (n >= 4);
   const hexify::FaceProjection projection = icosa_projection(icosa[oriented ? 3 : 0]);
-  const hexify::Solid solid = (n == 2 || n == 5) ? icosa_solid(icosa[n - 1])
-                                                 : hexify::Solid::Icosahedron;
+  const hexify::Solid solid = (n == 2 || n == 5 || n == 6) ? icosa_solid(icosa[oriented ? 4 : 1])
+                                                           : hexify::Solid::Icosahedron;
+  const double flattening = n == 6 ? icosa[5] : 0.0;
+  if (!(flattening >= 0.0 && flattening < 1.0)) {
+    Rcpp::stop("icosa flattening must lie in [0, 1)");
+  }
   if (projection == hexify::FaceProjection::Fuller && solid != hexify::Solid::Icosahedron) {
     Rcpp::stop("Fuller's projection is defined on the icosahedron only");
   }
@@ -67,6 +79,7 @@ inline void activate_icosa(const Rcpp::NumericVector& icosa) {
     hexify::use_default_solid(solid);
   }
   hexify::use_projection(projection);
+  hexify::use_ellipsoid(flattening);
 }
 
 // Activates the solid an entry point that reads cells or quads is given, which

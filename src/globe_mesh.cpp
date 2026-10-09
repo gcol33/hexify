@@ -8,6 +8,7 @@
 // Copyright (c) 2024-2025 hexify authors. MIT License.
 
 #include "globe_mesh.h"
+#include "authalic.h"
 #include "constants.h"
 #include "coordinate_transforms.h"
 #include "polyhedron.h"
@@ -210,6 +211,12 @@ inline V3 lonlat_vec(double lon_deg, double lat_deg) {
   double lon = lon_deg * kDegToRad, lat = lat_deg * kDegToRad;
   return {std::cos(lat) * std::cos(lon), std::cos(lat) * std::sin(lon),
           std::sin(lat)};
+}
+
+// A point given in lon/lat, latitude geodetic on the active ellipsoid, on the
+// sphere
+inline V3 geodetic_vec(double lon_deg, double lat_deg) {
+  return lonlat_vec(lon_deg, to_sphere_lat_deg(lat_deg));
 }
 
 inline Geo vec_geo(V3 v) {
@@ -813,7 +820,7 @@ List cpp_globe_polygons(NumericVector icosa, List polygons, double max_len) {
         continue;
       }
       ring_start.push_back(static_cast<int>(pts.size()));
-      for (int i = 0; i < n; i++) pts.push_back(lonlat_vec(ring(i, 0), ring(i, 1)));
+      for (int i = 0; i < n; i++) pts.push_back(geodetic_vec(ring(i, 0), ring(i, 1)));
     }
     if (ring_start.empty()) continue;
 
@@ -903,13 +910,13 @@ NumericMatrix cpp_sphere_paths_on_faces(NumericVector icosa,
   };
 
   for (R_xlen_t k = 0; k < n; k++) {
-    V3 a = lonlat_vec(lon[k], lat[k]);
+    V3 a = geodetic_vec(lon[k], lat[k]);
     bool last = k + 1 == n || path[k + 1] != path[k];
     if (last) {
       emit(path[k], sphere_face(a), a);
       continue;
     }
-    V3 b = lonlat_vec(lon[k + 1], lat[k + 1]);
+    V3 b = geodetic_vec(lon[k + 1], lat[k + 1]);
     double s = 0.0;
     int face = sphere_face(a);
     // A segment shorter than a half circle crosses few faces.

@@ -474,11 +474,10 @@ static void frame_parent(const QuadFrame& child, const QuadFrame& parent,
     }
 }
 
-// The cell a lon/lat point falls in: its quad and stored (i, j)
-static inline void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
-                                int& quad, long long& i, long long& j) {
-    hexify::ProjectionResult fwd = hexify::snyder_forward(lon_deg, lat_deg);
-
+// The cell a projected point falls in: its quad and stored (i, j)
+static inline void frame_locate_projected(const QuadFrame& f,
+                                          const hexify::ProjectionResult& fwd,
+                                          int& quad, long long& i, long long& j) {
     if (f.ap_seq.empty()) {
         hexify::icosa_tri_to_quad_ij(fwd.face, fwd.icosa_triangle_x,
                                      fwd.icosa_triangle_y, f.aperture,
@@ -492,6 +491,12 @@ static inline void frame_locate(const QuadFrame& f, double lon_deg, double lat_d
                                  fwd.icosa_triangle_y, quad_pre, quad_x, quad_y);
     hexify::quad_xy_to_ij_mixed(quad_pre, quad_x, quad_y, f.form, f.dim,
                                 quad, i, j);
+}
+
+// The cell a lon/lat point falls in, latitude geodetic on the active ellipsoid
+static inline void frame_locate(const QuadFrame& f, double lon_deg, double lat_deg,
+                                int& quad, long long& i, long long& j) {
+    frame_locate_projected(f, hexify::snyder_forward(lon_deg, lat_deg), quad, i, j);
 }
 
 // Substrate steps along a quad edge of a grid
@@ -2107,10 +2112,11 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
                 continue;
             }
 
-            auto ll = hexify::face_xy_to_ll(tri_x, tri_y, tri_face);
+            auto ll = hexify::face_xy_to_sphere_ll(tri_x, tri_y, tri_face);
             int final_quad;
             long long final_i, final_j;
-            frame_locate(f, ll.first, ll.second, final_quad, final_i, final_j);
+            frame_locate_projected(f, hexify::snyder_forward_sphere(ll.first, ll.second),
+                                   final_quad, final_i, final_j);
 
             neighbor_ids.push_back(frame_encode(f, final_quad, final_i, final_j));
         }

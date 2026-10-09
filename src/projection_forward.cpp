@@ -1,6 +1,7 @@
 #include "projection_forward.h"
 #include "projection_fuller.h"
 #include "projection_ivea.h"
+#include "authalic.h"
 #include "constants.h"
 #include "dual.h"
 #include <cmath>
@@ -198,12 +199,9 @@ static double face_distance(const Geo& point, const PolyData& ico_data, int face
   return std::acos(tmp);
 }
 
-ProjectionResult snyder_forward(double lon_deg, double lat_deg) {
-  if (!std::isfinite(lon_deg) || !std::isfinite(lat_deg)) {
-    throw std::invalid_argument("snyder_forward: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
-  }
+// The forward projection of a point on the sphere, in radians
+static ProjectionResult forward_on_sphere(const Geo& g) {
   const PolyData& ico_data = poly();
-  const Geo g(deg2rad(lon_deg), deg2rad(lat_deg));
   const int n_faces = ico_data.n_faces();
 
   // Compute distances to all face centers and sort
@@ -229,9 +227,25 @@ ProjectionResult snyder_forward(double lon_deg, double lat_deg) {
   return { face, xy.first, xy.second };
 }
 
+static void require_finite(double lon_deg, double lat_deg) {
+  if (!std::isfinite(lon_deg) || !std::isfinite(lat_deg)) {
+    throw std::invalid_argument("snyder_forward: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
+  }
+}
+
+ProjectionResult snyder_forward(double lon_deg, double lat_deg) {
+  require_finite(lon_deg, lat_deg);
+  return forward_on_sphere(Geo(deg2rad(lon_deg), to_sphere_lat(deg2rad(lat_deg))));
+}
+
+ProjectionResult snyder_forward_sphere(double lon_deg, double lat_deg) {
+  require_finite(lon_deg, lat_deg);
+  return forward_on_sphere(Geo(deg2rad(lon_deg), deg2rad(lat_deg)));
+}
+
 std::pair<double,double> snyder_forward_to_face(int face, double lon_deg, double lat_deg) {
   const PolyData& ico_data = poly();
-  const Geo g(deg2rad(lon_deg), deg2rad(lat_deg));
+  const Geo g(deg2rad(lon_deg), to_sphere_lat(deg2rad(lat_deg)));
   return project_to_face(g, ico_data, face);
 }
 

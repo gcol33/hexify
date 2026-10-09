@@ -20,7 +20,8 @@ A data frame with columns \code{cell_id}, \code{lon} and
 }
 \description{
 Draws points uniformly over the area of each cell on the sphere, as
-DGGRID's \code{randpts} output does. Each point is assigned back to its
+DGGRID's \code{randpts} output does; on a grid with an \code{ellipsoid},
+uniformly over its area on the ellipsoid. Each point is assigned back to its
 cell by \code{\link{lonlat_to_cell}}, so the points of a cell are exactly
 the points the grid places in it. Use \code{set.seed()} for a reproducible
 draw.

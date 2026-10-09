@@ -1,6 +1,7 @@
 #include "polyhedron.h"
 #include "projection_forward.h"
 #include "projection_inverse.h"
+#include "authalic.h"
 #include "constants.h"
 #include <algorithm>
 #include <array>
@@ -608,7 +609,7 @@ void face_tri_to_solid(int face, double tx, double ty, double out[3]) {
 }
 
 void face_tri_to_sphere(int face, double tx, double ty, double out[3]) {
-  const auto ll = face_xy_to_ll(tx, ty, face);
+  const auto ll = face_xy_to_sphere_ll(tx, ty, face);
   const Vec3 v = ll2xyz(Geo(deg2rad(ll.first), deg2rad(ll.second)));
   out[0] = v.x;
   out[1] = v.y;
@@ -633,7 +634,7 @@ int which_face(double lon_deg, double lat_deg) {
     throw std::invalid_argument("which_face: lon_deg/lat_deg must be finite (not NA/NaN/Inf)");
   }
   const PolyData& P = poly();
-  const Geo point(deg2rad(lon_deg), deg2rad(lat_deg));
+  const Geo point(deg2rad(lon_deg), to_sphere_lat(deg2rad(lat_deg)));
   int best = 0;
   double bestd = std::acos(clampd(std::sin(P.centers[0].lat)*std::sin(point.lat)
                        + std::cos(P.centers[0].lat)*std::cos(point.lat)*std::cos(P.centers[0].lon - point.lon),

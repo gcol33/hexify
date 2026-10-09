@@ -111,21 +111,26 @@ snap_points <- function(xyz, eps) {
   label
 }
 
-#' Unit vectors of lon/lat points
+#' Unit vectors of lon/lat points; with a grid's icosa argument, latitudes are
+#' geodetic on its ellipsoid and the vectors lie on its sphere
 #' @noRd
-lonlat_to_xyz <- function(lon, lat) {
+lonlat_to_xyz <- function(lon, lat, icosa = NULL) {
+  if (!is.null(icosa)) lat <- sphere_lat(lat, icosa)
   rad <- pi / 180
   cbind(cos(lat * rad) * cos(lon * rad),
         cos(lat * rad) * sin(lon * rad),
         sin(lat * rad))
 }
 
-#' Lon/lat of vectors
+#' Lon/lat of vectors; with a grid's icosa argument, the latitude returned is
+#' geodetic on its ellipsoid
 #' @noRd
-xyz_to_lonlat <- function(xyz) {
+xyz_to_lonlat <- function(xyz, icosa = NULL) {
   r <- sqrt(rowSums(xyz^2))
-  cbind(lon = atan2(xyz[, 2], xyz[, 1]) * 180 / pi,
-        lat = asin(pmax(-1, pmin(1, xyz[, 3] / r))) * 180 / pi)
+  ll <- cbind(lon = atan2(xyz[, 2], xyz[, 1]) * 180 / pi,
+              lat = asin(pmax(-1, pmin(1, xyz[, 3] / r))) * 180 / pi)
+  if (!is.null(icosa)) ll[, 2] <- geodetic_lat(ll[, 2], icosa)
+  ll
 }
 
 #' The edges of a set of cells, with corners shared between cells identified
@@ -224,8 +229,8 @@ gosper_cell_rings <- function(cell_id, g, depth,
 gosper_edge_paths <- function(a_ll, b_ll, depth, frames, icosa, tolerance,
                               max_arc = 0) {
   n_edge <- nrow(a_ll)
-  mid <- xyz_to_lonlat(lonlat_to_xyz(a_ll[, 1], a_ll[, 2]) +
-                       lonlat_to_xyz(b_ll[, 1], b_ll[, 2]))
+  mid <- xyz_to_lonlat(lonlat_to_xyz(a_ll[, 1], a_ll[, 2], icosa) +
+                       lonlat_to_xyz(b_ll[, 1], b_ll[, 2], icosa), icosa)
 
   # Every edge is drawn on the face holding its midpoint, its ends carried
   # onto that face's plane across the face edge they may lie beyond
@@ -358,7 +363,7 @@ densify_plane_paths <- function(pts, frames, icosa, tolerance, max_arc = 0) {
 #' @noRd
 icosa_face_frames <- function(icosa) {
   solid <- cpp_icosa_solid(icosa)
-  vertex <- xyz_to_lonlat(solid$vertices)
+  vertex <- xyz_to_lonlat(solid$vertices, icosa)
   fv <- solid$faces
 
   n_face <- nrow(fv)
@@ -435,7 +440,7 @@ project_to_face <- function(icosa, face, ll) {
 #' @noRd
 locate_face <- function(frames, icosa, ll, prefer = NULL) {
   n <- nrow(ll)
-  xyz <- lonlat_to_xyz(ll[, 1], ll[, 2])
+  xyz <- lonlat_to_xyz(ll[, 1], ll[, 2], icosa)
   slack <- 1e-9
   n_face <- nrow(frames$corner)
   holds <- matrix(FALSE, n, n_face)

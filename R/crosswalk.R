@@ -97,7 +97,7 @@ h3_crosswalk <- function(cell_id = NULL,
     if (is_h3_grid(isea_g)) {
       stop("isea_grid must be an ISEA grid, not H3")
     }
-    if (grid_radius_km(isea_g) != grid_radius_km(g)) {
+    if (!same_body_grids(isea_g, g)) {
       stop(sprintf(
         "Both grids must cover the same body: 'grid' has radius %s km, 'isea_grid' %s km",
         format(grid_radius_km(g)), format(grid_radius_km(isea_g))

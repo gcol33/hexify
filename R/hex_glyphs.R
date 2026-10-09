@@ -71,6 +71,7 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
     glyph_limits(if (is.null(limits2)) limits else limits2, c(value2, lower2, upper2))
 
   ctr <- cell_to_lonlat(cell_id, g)
+  icosa <- icosa_arg(g)
   reach <- length * cell_inradius(cell_id, g)
   sides <- list(list(side = "right", sign = 1, value = value, lower = lower,
                      upper = upper, limits = limits))
@@ -85,13 +86,15 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
     for (i in seq_len(n)) {
       if (is.na(s$value[i])) next
       a <- glyph_angle(s$value[i], s$limits, s$sign)
-      ray <- tangent_points(ctr$lon_deg[i], ctr$lat_deg[i], c(0, reach[i]), c(a, a))
+      ray <- tangent_points(ctr$lon_deg[i], ctr$lat_deg[i], c(0, reach[i]), c(a, a),
+                            icosa)
       geoms[[base::length(geoms) + 1L]] <- sf::st_linestring(ray)
       meta[[base::length(meta) + 1L]] <- c(i, s$side, "ray")
       if (!is.null(s$lower) && !is.na(s$lower[i]) && !is.na(s$upper[i])) {
         span <- glyph_angle(c(s$lower[i], s$upper[i]), s$limits, s$sign)
         ang <- seq(span[1], span[2], length.out = 25L)
-        arc <- tangent_points(ctr$lon_deg[i], ctr$lat_deg[i], rep(reach[i], 25L), ang)
+        arc <- tangent_points(ctr$lon_deg[i], ctr$lat_deg[i], rep(reach[i], 25L), ang,
+                              icosa)
         geoms[[base::length(geoms) + 1L]] <- sf::st_linestring(arc)
         meta[[base::length(meta) + 1L]] <- c(i, s$side, "arc")
       }
@@ -206,15 +209,16 @@ glyph_angle <- function(v, limits, sign) {
 }
 
 #' Points at distances `d` (radians) from (lon, lat) in directions `angle`
-#' (degrees anticlockwise from east), along great circles; longitudes kept
-#' continuous with the centre's
+#' (degrees anticlockwise from east), along great circles of the grid's
+#' sphere (latitudes geodetic on its ellipsoid, if `icosa` carries one);
+#' longitudes kept continuous with the centre's
 #' @noRd
-tangent_points <- function(lon, lat, d, angle) {
+tangent_points <- function(lon, lat, d, angle, icosa = numeric(0)) {
   bearing <- (90 - angle) * pi / 180
-  la <- lat * pi / 180
+  la <- sphere_lat(lat, icosa) * pi / 180
   lat2 <- asin(sin(la) * cos(d) + cos(la) * sin(d) * cos(bearing))
   dlon <- atan2(sin(bearing) * sin(d) * cos(la), cos(d) - sin(la) * sin(lat2))
-  cbind(lon + dlon * 180 / pi, lat2 * 180 / pi)
+  cbind(lon + dlon * 180 / pi, geodetic_lat(lat2 * 180 / pi, icosa))
 }
 
 #' Angular distance (radians) from each cell's centre to the middle of a
@@ -248,12 +252,13 @@ cell_rings_lonlat <- function(cell_id, g) {
 ring_walls <- function(ring, centre, g) {
   ring <- ring[c(TRUE, rowSums(abs(diff(ring[, 1:2, drop = FALSE]))) > 0), , drop = FALSE]
   n <- nrow(ring) - 1L
-  P <- unit_vec(ring[seq_len(n + 1L), 1], ring[seq_len(n + 1L), 2])
-  C <- drop(unit_vec(centre[1], centre[2]))
+  icosa <- icosa_arg(g)
+  P <- unit_vec(ring[seq_len(n + 1L), 1], ring[seq_len(n + 1L), 2], icosa)
+  C <- drop(unit_vec(centre[1], centre[2], icosa))
   M <- P[seq_len(n), , drop = FALSE] + P[seq_len(n) + 1L, , drop = FALSE]
   M <- M / sqrt(rowSums(M^2))
   probe <- M + 0.02 * sweep(M, 2, C)
-  probe <- vec_lonlat(probe / sqrt(rowSums(probe^2)))
+  probe <- vec_lonlat(probe / sqrt(rowSums(probe^2)), icosa)
   nb <- lonlat_to_cell(probe[, 1], probe[, 2], g)
   # Start at a change of neighbour so no wall wraps around the ring's start
   start <- which(nb != nb[c(n, seq_len(n - 1L))])[1]

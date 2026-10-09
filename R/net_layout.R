@@ -179,7 +179,7 @@ net_project <- function(layout, lon, lat) {
     stop("layout must be a hexify_net object from net_layout()", call. = FALSE)
   }
   if (length(lon) != length(lat)) stop("lon and lat must have the same length", call. = FALSE)
-  P <- unit_vec(lon, lat)
+  P <- unit_vec(lon, lat, layout$icosa)
   face <- point_faces(P, layout$icosa)
   out <- lapply(seq_along(layout$pieces), function(k) {
     p <- layout$pieces[[k]]
@@ -245,7 +245,7 @@ net_faces <- function(icosa) {
   Fv <- solid$faces
   faces <- lapply(seq_len(nrow(Fv)), function(f) {
     v <- Fv[f, ]
-    ll <- vec_lonlat(solid$vertices[v, ])
+    ll <- vec_lonlat(solid$vertices[v, ], icosa)
     t <- cpp_lonlat_to_face_solid(icosa, f - 1L, ll[, 1], ll[, 2])
     list(face = f - 1L, verts = v, tri = unname(t[, c("tx", "ty"), drop = FALSE]))
   })
@@ -406,15 +406,16 @@ layout_tree <- function(faces, parent) {
 }
 
 #' The share of each great-circle arc from `from[i, ]` to `to[i, ]` (unit
-#' vectors) that runs over land, from points every quarter degree along it
+#' vectors of the sphere of the solid `icosa`) that runs over land, from
+#' points every quarter degree along it
 #' @noRd
-arc_land_share <- function(from, to, land) {
+arc_land_share <- function(from, to, land, icosa = NULL) {
   land <- surface_land(land)
   if (is.null(land)) stop("land must be TRUE or an sf/sfc object", call. = FALSE)
   probe <- lapply(seq_len(nrow(from)), function(j) {
     slerp(from[j, ], to[j, ], 0.25 * pi / 180)
   })
-  ll <- vec_lonlat(do.call(rbind, probe))
+  ll <- vec_lonlat(do.call(rbind, probe), icosa)
   old <- suppressMessages(sf::sf_use_s2(TRUE))
   on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
   pts <- sf::st_as_sf(data.frame(lon = ll[, 1], lat = ll[, 2]),
@@ -430,7 +431,7 @@ edge_land_share <- function(icosa, land) {
   solid <- icosa_solid(icosa)
   V <- solid$vertices
   arc_land_share(V[solid$edges[, "v1"], , drop = FALSE],
-                 V[solid$edges[, "v2"], , drop = FALSE], land)
+                 V[solid$edges[, "v2"], , drop = FALSE], land, icosa)
 }
 
 #' The maximum spanning tree of a graph on nodes 1..n (Kruskal, ties to the
@@ -571,7 +572,7 @@ layout_gosper <- function(faces, icosa, centre, mirror, arrange, land = TRUE) {
   middle <- colour != mirror
 
   # The tile holding the centre: its face, or the hexagon its third belongs to.
-  P <- unit_vec(centre[1], centre[2])
+  P <- unit_vec(centre[1], centre[2], icosa)
   f0 <- point_faces(P, icosa) + 1L
   if (!middle[f0]) {
     fc <- faces[[f0]]
@@ -633,7 +634,7 @@ layout_gosper <- function(faces, icosa, centre, mirror, arrange, land = TRUE) {
     sides <- sides[sides[, "f"] < sides[, "o"], , drop = FALSE]
     solid <- icosa_solid(icosa)
     weight <- arc_land_share(solid$vertices[sides[, "w"], , drop = FALSE],
-                             solid$normals[sides[, "n"], , drop = FALSE], land)
+                             solid$normals[sides[, "n"], , drop = FALSE], land, icosa)
     walk <- max_spanning_tree(length(faces), sides[, "f"], sides[, "o"], weight, f0)
     iso <- list()
     iso[[f0]] <- home

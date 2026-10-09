@@ -92,9 +92,132 @@ BODY_RADII_KM <- c(
   pluto     = 1188.3
 )
 
+#' Reference ellipsoids of revolution: semi-major axis a in km and flattening f
+#'
+#' 'WGS84' and 'GRS80' as 'PROJ' lists them (\code{sf::sf_proj_info("ellps")}:
+#' a = 6378137 m, 1/f = 298.257223563 and 298.257222101). "earth" is 'WGS84'.
+#' The planets are the 'IAU' size and shape parameters of Archinal et al.
+#' (2018), Table 4, equatorial and polar radius: Mars with the average polar
+#' radius, which the report recommends for a best-fitting ellipsoid; Jupiter,
+#' Saturn, Uranus and Neptune at their one-bar surface. The report's
+#' recommended shapes for Mercury, Venus and the Moon are spheres, and its
+#' satellites with a measured shape are triaxial.
+#' @noRd
+ELLIPSOIDS <- list(
+  wgs84   = c(a_km = 6378.137, f = 1 / 298.257223563),
+  grs80   = c(a_km = 6378.137, f = 1 / 298.257222101),
+  mars    = c(a_km = 3396.19, f = 1 - 3376.20 / 3396.19),
+  jupiter = c(a_km = 71492, f = 1 - 66854 / 71492),
+  saturn  = c(a_km = 60268, f = 1 - 54364 / 60268),
+  uranus  = c(a_km = 25559, f = 1 - 24973 / 25559),
+  neptune = c(a_km = 24764, f = 1 - 24341 / 24764)
+)
+ELLIPSOIDS$earth <- ELLIPSOIDS$wgs84
+
+#' Names an ellipsoid prints with
+#' @noRd
+ELLIPSOID_LABELS <- c(wgs84 = "WGS84", grs80 = "GRS80", mars = "Mars",
+                      jupiter = "Jupiter", saturn = "Saturn",
+                      uranus = "Uranus", neptune = "Neptune")
+
 # =============================================================================
 # Body Geometry Helpers
 # =============================================================================
+
+#' Resolve hex_grid()'s ellipsoid argument
+#'
+#' @param ellipsoid NULL, a name in ELLIPSOIDS, or c(a, f): the semi-major
+#'   axis in km and the flattening
+#' @return Named numeric c(a_km, f), or numeric(0) for NULL
+#' @noRd
+resolve_ellipsoid <- function(ellipsoid) {
+  if (is.null(ellipsoid)) return(numeric(0))
+  if (is.character(ellipsoid)) {
+    if (length(ellipsoid) != 1L || is.na(ellipsoid)) {
+      stop("ellipsoid must be a single name or c(a, f)", call. = FALSE)
+    }
+    key <- tolower(trimws(ellipsoid))
+    if (!key %in% names(ELLIPSOIDS)) {
+      stop(sprintf(paste0(
+        "Unknown ellipsoid \"%s\". Named ellipsoids are: %s. Any other ",
+        "ellipsoid takes c(a, f): its semi-major axis in km and its flattening."),
+        ellipsoid, paste(names(ELLIPSOIDS), collapse = ", ")), call. = FALSE)
+    }
+    return(ELLIPSOIDS[[key]])
+  }
+  if (!is.numeric(ellipsoid) || length(ellipsoid) != 2L || anyNA(ellipsoid) ||
+      !all(is.finite(ellipsoid)) || ellipsoid[1] <= 0 ||
+      ellipsoid[2] < 0 || ellipsoid[2] >= 1) {
+    stop("ellipsoid must be a name, or c(a, f) with a > 0 km and 0 <= f < 1",
+         call. = FALSE)
+  }
+  c(a_km = unname(ellipsoid[1]), f = unname(ellipsoid[2]))
+}
+
+#' Ellipsoid of a grid
+#'
+#' A grid saved before grids carried an ellipsoid, an H3 grid and a grid built
+#' without one read latitude on the sphere.
+#' @param x HexGridInfo object or legacy hexify_grid list
+#' @return Named numeric c(a_km, f), or numeric(0)
+#' @noRd
+grid_ellipsoid <- function(x) {
+  e <- if (isS4(x)) {
+    if (.hasSlot(x, "ellipsoid")) x@ellipsoid else NULL
+  } else {
+    x$ellipsoid
+  }
+  if (length(e) != 2L) return(numeric(0))
+  stats::setNames(as.numeric(e), c("a_km", "f"))
+}
+
+#' Flattening of a grid's ellipsoid, 0 for the sphere
+#' @noRd
+grid_flattening <- function(x) {
+  e <- grid_ellipsoid(x)
+  if (length(e) == 2L) e[["f"]] else 0
+}
+
+#' Radius of the sphere of an ellipsoid's area, in km
+#' @param e Named numeric c(a_km, f)
+#' @noRd
+authalic_radius_km <- function(e) {
+  e[["a_km"]] * cpp_authalic_radius_ratio(e[["f"]])
+}
+
+#' Name of a grid's ellipsoid, or its axes
+#' @noRd
+ellipsoid_label <- function(e) {
+  for (key in names(ELLIPSOID_LABELS)) {
+    if (identical(unname(e), unname(ELLIPSOIDS[[key]]))) return(ELLIPSOID_LABELS[[key]])
+  }
+  sprintf("a = %s km, f = %s", format(e[["a_km"]], digits = 10),
+          format(e[["f"]], digits = 10))
+}
+
+#' Is this one of Earth's reference ellipsoids?
+#' @noRd
+is_earth_ellipsoid <- function(e) {
+  length(e) == 2L && any(vapply(ELLIPSOIDS[c("wgs84", "grs80")], function(x)
+    identical(unname(e), unname(x)), logical(1)))
+}
+
+#' Longlat CRS on an ellipsoid, as a 'PROJ' string
+#'
+#' 'WGS84' is EPSG:4326; any other ellipsoid has no EPSG code to name it, so
+#' it carries a longlat CRS on its own axes.
+#' @param e Named numeric c(a_km, f)
+#' @noRd
+ellipsoid_crs <- function(e) {
+  if (identical(unname(e), unname(ELLIPSOIDS$wgs84))) return(4326L)
+  if (identical(unname(e), unname(ELLIPSOIDS$grs80))) {
+    return("+proj=longlat +ellps=GRS80 +no_defs")
+  }
+  metres <- function(x) sub("[.]?0+$", "", sprintf("%.4f", x * 1000))
+  if (e[["f"]] == 0) return(body_crs_string(e[["a_km"]]))
+  sprintf("+proj=longlat +a=%s +b=%s +no_defs", metres(e[["a_km"]]),
+          metres(e[["a_km"]] * (1 - e[["f"]])))
+}
 
 #' Radius of a body in km, from a number or a name
 #'
@@ -205,7 +328,16 @@ grid_radius_km <- function(x) {
 #' @param x HexGridInfo object or legacy hexify_grid list
 #' @noRd
 is_earth_grid <- function(x) {
-  grid_radius_km(x) == EARTH_RADIUS_KM
+  grid_radius_km(x) == EARTH_RADIUS_KM || is_earth_ellipsoid(grid_ellipsoid(x))
+}
+
+#' Do two grids cover the same body?
+#'
+#' Earth grids do, whether sized on the sphere or on an Earth ellipsoid; any
+#' other two when they share a radius.
+#' @noRd
+same_body_grids <- function(a, b) {
+  (is_earth_grid(a) && is_earth_grid(b)) || grid_radius_km(a) == grid_radius_km(b)
 }
 
 # =============================================================================
@@ -232,13 +364,16 @@ parse_crs <- function(crs) {
 
 #' The CRS a new grid stores
 #'
-#' NULL takes 'WGS84' on Earth and the body's own sphere elsewhere. An 'EPSG'
-#' code stores as an integer, any other CRS as the string sf reads it from.
+#' NULL takes 'WGS84' on Earth, a longlat CRS on the grid's ellipsoid where it
+#' has one, and the body's own sphere elsewhere. An 'EPSG' code stores as an
+#' integer, any other CRS as the string sf reads it from.
 #' @param crs NULL, an 'EPSG' code, or a 'PROJ' or 'WKT' string
 #' @param radius_km Radius the grid is sized against, in kilometers
+#' @param ellipsoid The grid's ellipsoid, c(a_km, f), or numeric(0)
 #' @noRd
-resolve_crs <- function(crs, radius_km) {
+resolve_crs <- function(crs, radius_km, ellipsoid = numeric(0)) {
   if (is.null(crs)) {
+    if (length(ellipsoid) == 2L) return(ellipsoid_crs(ellipsoid))
     if (radius_km == EARTH_RADIUS_KM) return(4326L)
     return(body_crs_string(radius_km))
   }
@@ -276,7 +411,7 @@ grid_crs <- function(x) {
     x$crs
   }
   if (is.null(crs) || length(crs) != 1L || is.na(crs)) {
-    crs <- resolve_crs(NULL, grid_radius_km(x))
+    crs <- resolve_crs(NULL, grid_radius_km(x), grid_ellipsoid(x))
   }
   parse_crs(crs)
 }

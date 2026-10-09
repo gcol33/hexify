@@ -45,6 +45,14 @@ DYMAXION_ORIENTATION <- c(vert0_lon = -5.2454, vert0_lat = 2.3009,
 #' @noRd
 GOSPER_ORIENTATION <- c(vert0_lon = -21.25, vert0_lat = 45, azimuth = 0)
 
+#' The orientation of the ISEA3H and ISEA7H DGGRS definitions registered with
+#' OGC, and of DGGAL's grids: vertex 0 at 11.20E and at latitude
+#' arctan(golden ratio) on the authalic sphere, azimuth 0. On WGS84 that
+#' vertex lies at geodetic latitude 58.397145907431 degrees.
+#' @noRd
+OGC_ORIENTATION <- c(vert0_lon = 11.20, vert0_lat = ISEA_VERT0_LAT_DEG,
+                     azimuth = 0)
+
 #' Solid of a grid
 #'
 #' A grid saved before grids carried a solid, and a legacy \code{hexify_grid}
@@ -185,7 +193,8 @@ standard_icosa <- function(polyhedron = "icosahedron") {
 #' The icosa argument the C++ layer takes
 #'
 #' A grid's own orientation, face projection and solid,
-#' \code{c(vert0_lon, vert0_lat, azimuth, projection, solid)};
+#' \code{c(vert0_lon, vert0_lat, azimuth, projection, solid)}, followed by
+#' the flattening of its ellipsoid when it reads geodetic latitude on one;
 #' \code{numeric(0)} for no grid or an H3 grid, which the C++ layer reads as
 #' the icosahedron in the default orientation set by
 #' \code{hexify_build_icosa()} with the ISEA projection.
@@ -195,8 +204,38 @@ icosa_arg <- function(g) {
   if (is.null(g)) return(numeric(0))
   o <- grid_orientation(g)
   if (length(o) == 0L) return(numeric(0))
+  f <- grid_flattening(g)
   c(unname(o), unname(FACE_PROJECTIONS[grid_projection(g)]),
-    unname(POLYHEDRA[grid_polyhedron(g)]))
+    unname(POLYHEDRA[grid_polyhedron(g)]), if (f > 0) f)
+}
+
+#' An icosa argument that carries an ellipsoid of flattening f and nothing
+#' else a latitude conversion reads; numeric(0) for the sphere
+#' @noRd
+ellipsoid_icosa <- function(flattening) {
+  if (flattening > 0) c(standard_icosa("icosahedron"), flattening) else numeric(0)
+}
+
+#' Latitudes taken between geodetic and the sphere
+#'
+#' A grid on an ellipsoid reads geodetic latitude, and its cells live on the
+#' ellipsoid's authalic sphere, where the latitude is the authalic one.
+#' `sphere_lat()` gives the sphere's latitude of a geodetic one,
+#' `geodetic_lat()` the reverse; on a grid without an ellipsoid both return
+#' their input.
+#' @param lat Latitudes in degrees
+#' @param icosa The grid's icosa argument (icosa_arg())
+#' @noRd
+sphere_lat <- function(lat, icosa) {
+  if (length(icosa) < 6L) return(lat)
+  cpp_sphere_latitude(icosa, as.numeric(lat), inverse = FALSE)
+}
+
+#' @rdname sphere_lat
+#' @noRd
+geodetic_lat <- function(lat, icosa) {
+  if (length(icosa) < 6L) return(lat)
+  cpp_sphere_latitude(icosa, as.numeric(lat), inverse = TRUE)
 }
 
 #' Is this the standard orientation of the solid?
@@ -209,15 +248,17 @@ is_standard_orientation <- function(o, polyhedron = "icosahedron") {
 
 #' Resolve hex_grid()'s orientation argument
 #'
-#' @param orientation "standard", "dymaxion", "gosper", "random", "region",
-#'   "face", or a numeric \code{c(vert0_lon, vert0_lat, azimuth)}
+#' @param orientation "standard", "ogc", "dymaxion", "gosper", "random",
+#'   "region", "face", or a numeric \code{c(vert0_lon, vert0_lat, azimuth)}
 #' @param region The area "region" and "face" centre the grid on
 #' @param polyhedron The solid the orientation places
+#' @param flattening Flattening of the grid's ellipsoid, 0 for the sphere: a
+#'   region's centre is read in geodetic latitude and placed on the sphere
 #' @return Named numeric \code{c(vert0_lon, vert0_lat, azimuth)}, longitude in
 #'   [-180, 180) and azimuth in [0, 360)
 #' @noRd
 resolve_orientation <- function(orientation, region = NULL,
-                                polyhedron = "icosahedron") {
+                                polyhedron = "icosahedron", flattening = 0) {
   placed <- c("region", "face")
   region_misuse <- "region applies to orientation = \"region\" or \"face\""
   if (is.numeric(orientation)) {
@@ -225,10 +266,13 @@ resolve_orientation <- function(orientation, region = NULL,
     return(check_orientation(orientation))
   }
   if (!is.character(orientation) || length(orientation) != 1L ||
-      !orientation %in% c("standard", "dymaxion", "gosper", "random", placed)) {
-    stop("orientation must be \"standard\", \"dymaxion\", \"gosper\", ",
+      !orientation %in% c("standard", "ogc", "dymaxion", "gosper", "random", placed)) {
+    stop("orientation must be \"standard\", \"ogc\", \"dymaxion\", \"gosper\", ",
          "\"random\", \"region\", \"face\", or c(vert0_lon, vert0_lat, azimuth) ",
          "in degrees", call. = FALSE)
+  }
+  if (orientation == "ogc" && polyhedron != "icosahedron") {
+    stop("orientation = \"ogc\" places an icosahedron", call. = FALSE)
   }
   if (!orientation %in% placed && !is.null(region)) {
     stop(region_misuse, call. = FALSE)
@@ -245,9 +289,11 @@ resolve_orientation <- function(orientation, region = NULL,
            "or an sf object", call. = FALSE)
     }
     centre <- region_centre(region)
+    centre[2] <- sphere_lat(centre[2], ellipsoid_icosa(flattening))
   }
   switch(orientation,
     standard = POLYHEDRON_ORIENTATION[[polyhedron]],
+    ogc = OGC_ORIENTATION,
     dymaxion = DYMAXION_ORIENTATION,
     gosper = GOSPER_ORIENTATION,
     random = check_orientation(c(

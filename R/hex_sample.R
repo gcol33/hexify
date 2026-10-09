@@ -4,7 +4,8 @@
 #' Random points inside cells
 #'
 #' Draws points uniformly over the area of each cell on the sphere, as
-#' DGGRID's \code{randpts} output does. Each point is assigned back to its
+#' DGGRID's \code{randpts} output does; on a grid with an \code{ellipsoid},
+#' uniformly over its area on the ellipsoid. Each point is assigned back to its
 #' cell by \code{\link{lonlat_to_cell}}, so the points of a cell are exactly
 #' the points the grid places in it. Use \code{set.seed()} for a reproducible
 #' draw.
@@ -40,8 +41,9 @@ hex_sample <- function(cell_id, grid, n = 1L) {
   if (anyNA(cell_id)) stop("cell_id must not contain NA")
   n <- rep_len(as.integer(n), length(cell_id))
 
+  icosa <- icosa_arg(g)
   ctr <- cell_to_lonlat(cell_id, g)
-  C <- unit_vec(ctr$lon_deg, ctr$lat_deg)
+  C <- unit_vec(ctr$lon_deg, ctr$lat_deg, icosa)
   cos_cap <- cos(cell_cap_radius(cell_id, g, C))
 
   got <- list()
@@ -52,7 +54,7 @@ hex_sample <- function(cell_id, grid, n = 1L) {
     # usually finishes in one round.
     draw <- rep(k, ceiling(need[k] * 1.3) + 2L)
     P <- sample_cap(C[draw, , drop = FALSE], cos_cap[draw])
-    ll <- vec_lonlat(P)
+    ll <- vec_lonlat(P, icosa)
     lon <- ll[, 1]
     lat <- ll[, 2]
     hit <- which(lonlat_to_cell(lon, lat, g) == cell_id[draw])
@@ -82,7 +84,7 @@ cell_cap_radius <- function(cell_id, g, C) {
     isea_cell_rings(cell_id, g@resolution, g@aperture, icosa_arg(g))
   }
   vapply(seq_along(rings), function(i) {
-    R <- unit_vec(rings[[i]][, 1], rings[[i]][, 2])
+    R <- unit_vec(rings[[i]][, 1], rings[[i]][, 2], icosa_arg(g))
     1.01 * acos(max(-1, min(1, min(R %*% C[i, ]))))
   }, numeric(1))
 }

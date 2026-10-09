@@ -3,10 +3,14 @@
 
 #' Unit vectors of lon/lat points
 #'
+#' With a grid's icosa argument, latitudes are geodetic on the grid's
+#' ellipsoid and the vectors lie on its sphere (sphere_lat()).
 #' @param lon,lat Longitudes and latitudes in degrees
+#' @param icosa The grid's icosa argument, or NULL for latitudes on the sphere
 #' @return Matrix with one row (x, y, z) per point
 #' @noRd
-unit_vec <- function(lon, lat) {
+unit_vec <- function(lon, lat, icosa = NULL) {
+  if (!is.null(icosa)) lat <- sphere_lat(lat, icosa)
   lon <- lon * pi / 180
   lat <- lat * pi / 180
   cbind(cos(lat) * cos(lon), cos(lat) * sin(lon), sin(lat))
@@ -15,13 +19,17 @@ unit_vec <- function(lon, lat) {
 #' Longitude and latitude of unit vectors
 #'
 #' The z coordinate is clamped to `[-1, 1]` so rounding just past a pole still
-#' gives its latitude.
+#' gives its latitude. With a grid's icosa argument, the latitude returned is
+#' geodetic on the grid's ellipsoid (geodetic_lat()).
 #' @param P Matrix with one row (x, y, z) per point, or one vector of length 3
+#' @param icosa The grid's icosa argument, or NULL for latitudes on the sphere
 #' @return Matrix with columns lon and lat in degrees, one row per point
 #' @noRd
-vec_lonlat <- function(P) {
+vec_lonlat <- function(P, icosa = NULL) {
   P <- matrix(P, ncol = 3L)
-  cbind(atan2(P[, 2], P[, 1]), asin(pmax(-1, pmin(1, P[, 3])))) * 180 / pi
+  ll <- cbind(atan2(P[, 2], P[, 1]), asin(pmax(-1, pmin(1, P[, 3])))) * 180 / pi
+  if (!is.null(icosa)) ll[, 2] <- geodetic_lat(ll[, 2], icosa)
+  ll
 }
 
 #' Cross products of matching rows

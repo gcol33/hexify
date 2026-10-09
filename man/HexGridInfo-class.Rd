@@ -57,6 +57,11 @@ projection) or "fuller" (Fuller's projection). Empty for H3 grids.}
 
 \item{\code{polyhedron}}{Character. The solid an ISEA-family grid is built on:
 "icosahedron" or "octahedron". Empty for H3 grids.}
+
+\item{\code{ellipsoid}}{Numeric. The ellipsoid of revolution an ISEA-family grid
+reads geodetic latitude on, \code{c(a_km, f)}: semi-major axis in km and
+flattening. Empty for a grid that reads latitude on the sphere, and for
+H3 grids.}
 }}
 
 \seealso{

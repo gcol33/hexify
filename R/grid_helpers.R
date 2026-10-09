@@ -1281,11 +1281,13 @@ overlapping_parents <- function(cell_id, g, levels) {
   n_corner <- vapply(rings, nrow, integer(1))
   owner <- rep(seq_along(cell_id), n_corner)
 
+  icosa <- icosa_arg(g)
   corner <- unit_vec(unlist(lapply(rings, function(r) r[, 1]), use.names = FALSE),
-                     unlist(lapply(rings, function(r) r[, 2]), use.names = FALSE))
-  mid <- unit_vec(centre$lon_deg, centre$lat_deg)[owner, , drop = FALSE]
+                     unlist(lapply(rings, function(r) r[, 2]), use.names = FALSE),
+                     icosa)
+  mid <- unit_vec(centre$lon_deg, centre$lat_deg, icosa)[owner, , drop = FALSE]
   step <- corner + CORNER_STEP * (mid - corner)
-  ll <- vec_lonlat(step / sqrt(rowSums(step^2)))
+  ll <- vec_lonlat(step / sqrt(rowSums(step^2)), icosa)
 
   own <- get_parent(cell_id, g, levels)
   hit <- lonlat_to_cell(ll[, 1], ll[, 2], pg)
@@ -1417,8 +1419,8 @@ get_children <- function(cell_id, grid, levels = 1L, as_sf = FALSE) {
 
 #' The same grid at another resolution
 #'
-#' Keeps the grid's type, aperture, radius, CRS, orientation, face projection
-#' and solid. A per-level aperture spelling is read at the new resolution
+#' Keeps the grid's type, aperture, radius, CRS, orientation, face projection,
+#' solid and ellipsoid. A per-level aperture spelling is read at the new resolution
 #' through aperture_at_resolution(), which takes its leading levels.
 #' @param g HexGridInfo object
 #' @param resolution Resolution of the returned grid
@@ -1434,7 +1436,8 @@ grid_at_resolution <- function(g, resolution) {
            crs = g@crs, radius_km = grid_radius_km(g),
            orientation = grid_orientation(g),
            projection = grid_projection(g),
-           polyhedron = grid_polyhedron(g))
+           polyhedron = grid_polyhedron(g),
+           ellipsoid = if (length(grid_ellipsoid(g))) unname(grid_ellipsoid(g)))
 }
 
 #' Children of ISEA cells, one resolution down

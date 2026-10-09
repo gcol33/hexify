@@ -50,8 +50,8 @@
 #'   "ceres", "jupiter", "io", "europa", "ganymede", "callisto", "saturn",
 #'   "enceladus", "titan", "uranus", "neptune", "pluto".
 #' @param orientation Where the icosahedron of an ISEA grid sits on the
-#'   sphere: "standard" (default), "dymaxion", "gosper", "random", "region",
-#'   "face", or
+#'   sphere: "standard" (default), "ogc", "dymaxion", "gosper", "random",
+#'   "region", "face", or
 #'   \code{c(vert0_lon, vert0_lat, azimuth)} in degrees. See the Orientation
 #'   section. H3 fixes its own orientation, so H3 grids take only "standard".
 #' @param projection How an ISEA-family grid projects each icosahedron face
@@ -66,6 +66,14 @@
 #' @param polyhedron The solid an ISEA-family grid is built on:
 #'   "icosahedron" (default) or "octahedron". See the Polyhedron section. H3
 #'   grids are built on the icosahedron and take only the default.
+#' @param ellipsoid The ellipsoid of revolution an ISEA-family grid reads
+#'   geodetic latitude on: \code{NULL} (default) reads latitude on the sphere;
+#'   "WGS84", "GRS80", "earth" (WGS84), "mars", "jupiter", "saturn",
+#'   "uranus" or "neptune"; or \code{c(a, f)}, the semi-major axis in km and
+#'   the flattening. Cells are then exactly equal-area on the ellipsoid, and
+#'   the grid is sized on the radius of the sphere of the ellipsoid's area,
+#'   which \code{radius_km} need not give. See the Earth Model section. H3
+#'   reads latitude on the sphere and takes only \code{NULL}.
 #'
 #' @return A HexGridInfo object containing the grid specification.
 #'
@@ -105,6 +113,41 @@
 #' the IDs of a grid on another body are that topology on that body and are not
 #' interchangeable with Earth 'H3' data.
 #'
+#' @section Earth Model:
+#'
+#' By default a grid reads geodetic latitude as latitude on its sphere, as
+#' DGGRID and H3 do, and an Earth grid shares the 'WGS84' ellipsoid's area
+#' among its cells. Measured geodesically on 'WGS84', the cells' areas then
+#' run from 0.9955 times the reported area at the equator to 1.0090 times it
+#' at the poles (\code{paper/bench/bench_ellipsoid_area.R}): within the 1
+#' percent error budget OGC Topic 21 allows a spherical earth model for an
+#' equal-area grid (Requirement 28), and systematic in latitude.
+#'
+#' With \code{ellipsoid}, geodetic latitude is converted to authalic
+#' latitude, the latitude on the sphere of the ellipsoid's area below which
+#' that sphere holds the same area as the ellipsoid below the geodetic one,
+#' before projecting, and back after. This carries the ellipsoid onto that
+#' sphere keeping every area, so cells of Snyder's and of the vertex-oriented
+#' projection are equal-area on the ellipsoid itself; on 'WGS84' the measured
+#' areas agree with the reported ones to the measurement's own error, about
+#' 2e-6. Fuller's projection stays not equal-area, but its cell areas are
+#' then the cells' areas on the ellipsoid. The conversion moves a point by up
+#' to 0.13 degrees of latitude on 'WGS84', so a grid with an ellipsoid places
+#' points in other cells than the same grid without one, and than DGGRID.
+#' Cell IDs, the hierarchy and neighbours are the same; kilometre figures of
+#' lengths are measured on the sphere of the ellipsoid's area.
+#'
+#' The ISEA3H and ISEA7H DGGRS definitions OGC registers are
+#' \code{hex_grid(aperture = 3, ellipsoid = "WGS84", orientation = "ogc")}
+#' and its aperture-7 twin, and DGGAL's IVEA3H and IVEA7H the same with
+#' \code{projection = "ivea"}.
+#'
+#' \preformatted{
+#' g <- hex_grid(resolution = 9, aperture = 3, ellipsoid = "WGS84")
+#' hex_grid(resolution = 6, aperture = 7, ellipsoid = "mars")
+#' hex_grid(resolution = 6, ellipsoid = c(6378.137, 1 / 298.257222101)) # GRS80
+#' }
+#'
 #' @section Orientation:
 #'
 #' An ISEA grid is built on a solid, an icosahedron unless \code{polyhedron}
@@ -120,6 +163,11 @@
 #'     of the twelve pentagons over the oceans and one in Sichuan (Sahr et al.
 #'     2003). On the octahedron it puts vertices at both poles and at
 #'     longitudes 0, 90E, 180 and 90W on the equator.
+#'   \item "ogc" is the orientation of the ISEA3H and ISEA7H DGGRS
+#'     definitions registered with OGC and of DGGAL's grids: vertex 0 at
+#'     11.20E and latitude arctan of the golden ratio (58.28N) on the sphere,
+#'     azimuth 0. With \code{ellipsoid = "WGS84"} that vertex lies at
+#'     geodetic latitude 58.397145907431N.
 #'   \item "dymaxion" is Fuller's orientation of the icosahedron for his
 #'     Dymaxion map: vertex 0 at 5.2454W, 2.3009N, azimuth 7.46658 (Sahr et
 #'     al. 2003), with all twelve pentagons in the ocean. With
@@ -148,7 +196,9 @@
 #' Rotating the icosahedron rotates the grid with it, so cell IDs, the cell
 #' hierarchy and neighbours are the same under every orientation; only where
 #' each cell sits on the sphere changes. Every function taking the grid reads
-#' its orientation.
+#' its orientation. On a grid with an \code{ellipsoid} the orientation places
+#' the solid on the sphere of the ellipsoid's area, so \code{vert0_lat} is an
+#' authalic latitude; a \code{region} is given in geodetic latitude.
 #'
 #' \preformatted{
 #' alps <- hex_grid(area_km2 = 100, orientation = "region", region = c(10, 46.5))
@@ -275,14 +325,26 @@ hex_grid <- function(area_km2 = NULL,
                      orientation = "standard",
                      projection = c("isea", "fuller", "ivea"),
                      region = NULL,
-                     polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
+                     polyhedron = c("icosahedron", "octahedron", "tetrahedron"),
+                     ellipsoid = NULL) {
 
   type <- match.arg(type)
   projection <- match.arg(projection)
   polyhedron <- match.arg(polyhedron)
 
+  radius_given <- !missing(radius_km)
+  ellipsoid <- resolve_ellipsoid(ellipsoid)
   radius_km <- resolve_radius_km(radius_km)
-  crs <- resolve_crs(crs, radius_km)
+  if (length(ellipsoid) == 2L) {
+    authalic <- authalic_radius_km(ellipsoid)
+    if (radius_given && !isTRUE(all.equal(radius_km, authalic, tolerance = 1e-12))) {
+      stop("ellipsoid sets the radius, the radius of the sphere of its area (",
+           format(authalic, digits = 12), " km); leave radius_km out",
+           call. = FALSE)
+    }
+    radius_km <- authalic
+  }
+  crs <- resolve_crs(crs, radius_km, ellipsoid)
 
   # =========================================================================
   # H3 grid path
@@ -301,6 +363,10 @@ hex_grid <- function(area_km2 = NULL,
     }
     if (polyhedron != "icosahedron") {
       stop("H3 is built on the icosahedron; polyhedron applies to ISEA grids",
+           call. = FALSE)
+    }
+    if (length(ellipsoid) != 0L) {
+      stop("H3 reads latitude on the sphere; ellipsoid applies to ISEA grids",
            call. = FALSE)
     }
 
@@ -443,9 +509,11 @@ hex_grid <- function(area_km2 = NULL,
               crs = crs,
               grid_type = "isea",
               radius_km = radius_km,
-              orientation = resolve_orientation(orientation, region, polyhedron),
+              orientation = resolve_orientation(orientation, region, polyhedron,
+                                                if (length(ellipsoid)) ellipsoid[["f"]] else 0),
               projection = projection,
-              polyhedron = polyhedron)
+              polyhedron = polyhedron,
+              ellipsoid = ellipsoid)
 
   # Validation happens automatically via setValidity
   grid

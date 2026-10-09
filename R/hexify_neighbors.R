@@ -212,12 +212,13 @@ neighbor_links <- function(cell_id, g, k, include_self) {
 
   ids <- unique(c(from, to))
   ctr <- cell_to_lonlat(ids, g)
-  V <- unit_vec(ctr$lon_deg, ctr$lat_deg)
+  icosa <- icosa_arg(g)
+  V <- unit_vec(ctr$lon_deg, ctr$lat_deg, icosa)
   a <- V[match(from, ids), , drop = FALSE]
   b <- V[match(to, ids), , drop = FALSE]
   lines <- lapply(seq_along(from), function(i) {
     P <- rbind(slerp(a[i, ], b[i, ], pi / 180), b[i, ])
-    ll <- vec_lonlat(P)
+    ll <- vec_lonlat(P, icosa)
     ll[, 1] <- ll[1, 1] + cumsum(c(0, (diff(ll[, 1]) + 180) %% 360 - 180))
     sf::st_linestring(ll)
   })
