@@ -69,10 +69,8 @@ test_that("the centre rule gives each cell wholly to get_parent()", {
 })
 
 test_that("the lattice shares are the shares measured on the sphere", {
-  skip_on_cran()
   # Each cell clipped against the coarser cells it overlaps face by face and
-  # the pieces measured on the sphere, their walls followed to 1e-5: the
-  # shares 1/3, 1/2, 11/12 and 1/12 to within the measuring error
+  # the pieces measured on the sphere: the shares 1/3, 1/2, 11/12 and 1/12
   set.seed(5)
   for (case in list(list(3, 5), list(4, 4), list(7, 3),
                     list(c(4, 7, 3, 7), 4), list(7, 2, "octahedron"))) {
@@ -83,7 +81,7 @@ test_that("the lattice shares are the shares measured on the sphere", {
     ov <- get_parent(ids, g, overlapping = TRUE)
     lattice <- hexify:::lattice_shares(lengths(ov), hexify:::step_aperture(g))
     measured <- hexify:::sphere_shares(ids, ov, g)
-    expect_lt(max(abs(measured - lattice)), 1e-6)
+    expect_lt(max(abs(measured - lattice)), 1e-10)
   }
 })
 
@@ -97,7 +95,7 @@ test_that("every cell around a vertex divides as on the plane", {
     ov <- get_parent(near, g, overlapping = TRUE)
     lattice <- hexify:::lattice_shares(lengths(ov), case[1])
     measured <- hexify:::sphere_shares(near, ov, g)
-    expect_lt(max(abs(measured - lattice)), 1e-9)
+    expect_lt(max(abs(measured - lattice)), 1e-11)
   }
 })
 

@@ -98,5 +98,4 @@ for (spec in GRIDS) {
 }
 
 write_result(do.call(rbind, rows), "parent_shares",
-             extra = c(sprintf("share wall tolerance: %g", hexify:::SHARE_WALL_TOLERANCE),
-                       sprintf("s2 check: cell_to_sf densify %g", S2_DENSIFY)))
+             extra = sprintf("s2 check: cell_to_sf densify %g", S2_DENSIFY))

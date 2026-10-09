@@ -101,11 +101,12 @@
 #' the pieces exact: an ISEA-family cell on each face plane it covers, an H3
 #' cell on the gnomonic plane at the finer cell's centre, where its
 #' great-circle edges are straight. An H3 piece is a spherical polygon whose
-#' area is a sum of spherical triangles, exact to rounding; the walls of a
-#' face-plane piece are followed on the sphere to \code{1e-5} of their
-#' length, which puts a share within \code{1e-7} of its exact value. The share
-#' is a piece's area over that of all the cell's pieces. Measured this way on
-#' Snyder's projection, the shares come out as the lattice's.
+#' area is a sum of spherical triangles, exact to rounding. A face-plane piece
+#' has curved edges on the sphere; its area is that of the polygon through
+#' equally spaced points of its edges, extrapolated to infinitely many points
+#' (Romberg), which leaves an error near rounding. The share is a piece's area
+#' over that of all the cell's pieces. Measured this way on Snyder's
+#' projection, the shares come out as the lattice's.
 #'
 #' @references Carr, D. B., Kahn, R., Sahr, K., Olsen, A. R. (1997). ISEA
 #'   discrete global grids. Statistical Computing & Graphics Newsletter
@@ -222,12 +223,6 @@ LATTICE_PARENT_SHARES <- list(
   `7` = list(1, c(11 / 12, 1 / 12))
 )
 
-#' How closely the walls of a face-plane piece are followed on the sphere
-#' when a share is measured, as a fraction of each wall piece's length: shares
-#' come out within 1e-7 of their exact values (1e-14 at 1e-7)
-#' @noRd
-SHARE_WALL_TOLERANCE <- 1e-5
-
 #' How far the pieces of a cell may fall short of or pass its measured area
 #' before the coarser cells found for it count as incomplete
 #' @noRd
@@ -299,11 +294,9 @@ step_aperture <- function(g) {
 #' @param cell_id Cell IDs on `g`
 #' @param ov List of the coarser cells each overlaps (get_parent(overlapping))
 #' @param g HexGridInfo object
-#' @param tolerance How closely the walls of an ISEA-family piece are followed
-#'   on the sphere, as a fraction of each wall piece's length
 #' @return Numeric vector of shares, concatenated over cells as `ov` is
 #' @noRd
-sphere_shares <- function(cell_id, ov, g, tolerance = SHARE_WALL_TOLERANCE) {
+sphere_shares <- function(cell_id, ov, g) {
   pg <- grid_at_resolution(g, g@resolution - 1L)
   flat <- if (is_h3_grid(g)) unlist(ov, use.names = FALSE) else cell_id_unlist(ov)
   parents <- unique(flat)
@@ -317,8 +310,7 @@ sphere_shares <- function(cell_id, ov, g, tolerance = SHARE_WALL_TOLERANCE) {
     pl <- isea_levels(pg@aperture, pg@resolution)
     cpp_cell_overlap_solid_angles(icosa_arg(g), as_cell_id(cell_id), lv$resolution,
                                   lv$aperture, lv$ap_seq, parents, pl$resolution,
-                                  pl$aperture, pl$ap_seq, pair_cell, pair_parent,
-                                  tolerance)
+                                  pl$aperture, pl$ap_seq, pair_cell, pair_parent)
   }
   total <- as.numeric(rowsum(omega$piece, pair_cell, reorder = TRUE))
   cover <- total / omega$whole

@@ -831,8 +831,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_cell_overlap_solid_angles
-List cpp_cell_overlap_solid_angles(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, NumericVector parent_id, int parent_resolution, int parent_aperture, IntegerVector parent_ap_seq, IntegerVector pair_cell, IntegerVector pair_parent, double tolerance);
-RcppExport SEXP _hexify_cpp_cell_overlap_solid_angles(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP parent_idSEXP, SEXP parent_resolutionSEXP, SEXP parent_apertureSEXP, SEXP parent_ap_seqSEXP, SEXP pair_cellSEXP, SEXP pair_parentSEXP, SEXP toleranceSEXP) {
+List cpp_cell_overlap_solid_angles(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq, NumericVector parent_id, int parent_resolution, int parent_aperture, IntegerVector parent_ap_seq, IntegerVector pair_cell, IntegerVector pair_parent);
+RcppExport SEXP _hexify_cpp_cell_overlap_solid_angles(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP, SEXP parent_idSEXP, SEXP parent_resolutionSEXP, SEXP parent_apertureSEXP, SEXP parent_ap_seqSEXP, SEXP pair_cellSEXP, SEXP pair_parentSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -847,8 +847,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< IntegerVector >::type parent_ap_seq(parent_ap_seqSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pair_cell(pair_cellSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pair_parent(pair_parentSEXP);
-    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(cpp_cell_overlap_solid_angles(icosa, cell_id, resolution, aperture, ap_seq, parent_id, parent_resolution, parent_aperture, parent_ap_seq, pair_cell, pair_parent, tolerance));
+    rcpp_result_gen = Rcpp::wrap(cpp_cell_overlap_solid_angles(icosa, cell_id, resolution, aperture, ap_seq, parent_id, parent_resolution, parent_aperture, parent_ap_seq, pair_cell, pair_parent));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1645,7 +1644,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_cell_to_corners", (DL_FUNC) &_hexify_cpp_cell_to_corners, 7},
     {"_hexify_cpp_densify_great_circle", (DL_FUNC) &_hexify_cpp_densify_great_circle, 3},
     {"_hexify_cpp_cell_solid_angle", (DL_FUNC) &_hexify_cpp_cell_solid_angle, 6},
-    {"_hexify_cpp_cell_overlap_solid_angles", (DL_FUNC) &_hexify_cpp_cell_overlap_solid_angles, 12},
+    {"_hexify_cpp_cell_overlap_solid_angles", (DL_FUNC) &_hexify_cpp_cell_overlap_solid_angles, 11},
     {"_hexify_cpp_cell_surface_paths", (DL_FUNC) &_hexify_cpp_cell_surface_paths, 6},
     {"_hexify_cpp_icosa_solid", (DL_FUNC) &_hexify_cpp_icosa_solid, 1},
     {"_hexify_cpp_lonlat_to_face_solid", (DL_FUNC) &_hexify_cpp_lonlat_to_face_solid, 4},

@@ -121,11 +121,12 @@ cells are clipped against each other where they are straight, which makes
 the pieces exact: an ISEA-family cell on each face plane it covers, an H3
 cell on the gnomonic plane at the finer cell's centre, where its
 great-circle edges are straight. An H3 piece is a spherical polygon whose
-area is a sum of spherical triangles, exact to rounding; the walls of a
-face-plane piece are followed on the sphere to \code{1e-5} of their
-length, which puts a share within \code{1e-7} of its exact value. The share
-is a piece's area over that of all the cell's pieces. Measured this way on
-Snyder's projection, the shares come out as the lattice's.
+area is a sum of spherical triangles, exact to rounding. A face-plane piece
+has curved edges on the sphere; its area is that of the polygon through
+equally spaced points of its edges, extrapolated to infinitely many points
+(Romberg), which leaves an error near rounding. The share is a piece's area
+over that of all the cell's pieces. Measured this way on Snyder's
+projection, the shares come out as the lattice's.
 }
 \examples{
 g <- hex_grid(resolution = 4, aperture = 3)
