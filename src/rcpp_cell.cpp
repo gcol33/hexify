@@ -1114,15 +1114,47 @@ static inline double lonlat_arc(double alon, double alat,
     return 2.0 * std::asin(std::sqrt(std::min(1.0, h)));
 }
 
+// Whether an edge a -> b, whose true midpoint is m, must be split before the
+// great-circle arc a -> b may stand for it: m lies further off the arc's
+// great circle than 'tolerance' times the arc. A lon/lat polygon is read with
+// great-circle edges on the sphere (s2, sf's default for longlat data), and
+// such an arc departs from a straight lon/lat chord most where the edge runs
+// east-west, so a piece can pass chord_needs_split() and not this.
+static inline bool arc_needs_split(double alon, double alat,
+                                   double mlon, double mlat,
+                                   double blon, double blat,
+                                   double tolerance) {
+    auto unit = [](double lon, double lat, double v[3]) {
+        const double la = lat * hexify::kDegToRad, lo = lon * hexify::kDegToRad;
+        v[0] = std::cos(la) * std::cos(lo);
+        v[1] = std::cos(la) * std::sin(lo);
+        v[2] = std::sin(la);
+    };
+    double a[3], m[3], b[3];
+    unit(alon, alat, a);
+    unit(mlon, mlat, m);
+    unit(blon, blat, b);
+    const double n[3] = {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+                         a[0] * b[1] - a[1] * b[0]};
+    const double sin_arc = std::sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+    if (sin_arc == 0.0) return false;
+    const double arc = std::atan2(sin_arc, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+    // sin of m's angular distance from the great circle through a and b
+    const double off = std::fabs(m[0] * n[0] + m[1] * n[1] + m[2] * n[2]) / sin_arc;
+    return off > std::sin(tolerance * arc);
+}
+
 // Whether a piece a -> b, whose true midpoint is m, at halving 'depth', must
-// be halved again: its chord strays from the edge (chord_needs_split), or it
-// spans more than the longest arc allowed.
+// be halved again: it strays from the edge read as a lon/lat chord
+// (chord_needs_split) or as a great-circle arc (arc_needs_split), or it spans
+// more than the longest arc allowed.
 static inline bool piece_needs_split(double alon, double alat,
                                      double mlon, double mlat,
                                      double blon, double blat,
                                      const EdgeLimits& lim, int depth) {
     if (lim.tolerance > 0.0 && depth < kMaxEdgeSplits &&
-        chord_needs_split(alon, alat, mlon, mlat, blon, blat, lim.tolerance)) {
+        (chord_needs_split(alon, alat, mlon, mlat, blon, blat, lim.tolerance) ||
+         arc_needs_split(alon, alat, mlon, mlat, blon, blat, lim.tolerance))) {
         return true;
     }
     return lim.max_arc > 0.0 && depth < kMaxArcSplits &&

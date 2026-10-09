@@ -18,9 +18,10 @@ EARTH_RADIUS_KM <- 6371.0088
 #' How far an ISEA cell edge drawn in lon/lat may stray from the true edge
 #'
 #' A cell edge is straight in the projection plane and curved in lon/lat.
-#' Polygon builders split each edge until every piece is a straight lon/lat
-#' chord to within this fraction of its length, which keeps a cell's drawn area
-#' within about 0.1% of the cell that `lonlat_to_cell()` assigns.
+#' Polygon builders split each edge until every piece follows the edge to
+#' within this fraction of its length both as a straight lon/lat chord and as
+#' a great-circle arc, the edge s2 reads, which keeps a cell's drawn area
+#' within about 5e-4 of the cell that `lonlat_to_cell()` assigns, read either way.
 #' @noRd
 CELL_EDGE_TOLERANCE <- 1e-3
 

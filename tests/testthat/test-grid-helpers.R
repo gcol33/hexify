@@ -270,10 +270,10 @@ piece_km <- function(ring, radius_km) {
 
 test_that("cell_to_sf(max_km) bounds every drawn piece in km", {
   g <- hex_grid(resolution = 3, aperture = 3)
-  # Cell 82 has an 880 km edge the relative tolerance leaves as one piece
+  # Cell 82 has a 440 km piece the relative tolerance leaves whole
   default <- ring_of(cell_to_sf(82, g, wrap_dateline = FALSE))
   capped <- ring_of(cell_to_sf(82, g, wrap_dateline = FALSE, max_km = 50))
-  expect_gt(max(piece_km(default, grid_radius_km(g))), 800)
+  expect_gt(max(piece_km(default, grid_radius_km(g))), 400)
   expect_lte(max(piece_km(capped, grid_radius_km(g))), 50)
   # The cap only halves pieces further, so every default point stays
   key <- function(r) paste(signif(r[, 1], 12), signif(r[, 2], 12))
