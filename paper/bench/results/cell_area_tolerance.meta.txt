@@ -1,5 +1,5 @@
 script: bench_cell_area.R
-date: 2026-10-10 09:00:08 CEST
+date: 2026-10-10 09:01:10 CEST
 hexify commit: 1113a60
 uncommitted changes in R/, src/ or paper/bench/: TRUE
 hexify installed version: 0.8.4

@@ -92,9 +92,10 @@ reached through `cpp_get_neighbors_isea_lonlat()`). Apertures 3 and 4 keep the
 lattice: Z3 and Z-order digits are the base-3/base-2 digits of the quad's
 (i, j), so digit arithmetic there is the integer step done in O(r).
 
-DGGRID built on Windows reads an input SEQNUM above 2^32 modulo 2^32
-(`sscanf("%lu")` into a 32-bit `unsigned long`, `SubOpBasicMulti.cpp`,
-`SubOpGenHelper.cpp`); its SEQNUM output is right. Benches feeding DGGRID
+DGGRID built on Windows reads every input SEQNUM of 2^32 - 1 or more as
+2^32 - 1 (`sscanf("%lu")` into a 32-bit `unsigned long` saturates), so all of
+them decode to one cell (`SubOpBasicMulti.cpp`, `SubOpGenHelper.cpp`); its
+SEQNUM output is right. Filed as sahrk/DGGRID#107 (2026-10-10). Benches feeding DGGRID
 SEQNUMs stay below 2^32 or go through GEO input. Repro (git-ignored):
 `dev_notes/dggrid_seqnum_input_2pow32.R`.
 

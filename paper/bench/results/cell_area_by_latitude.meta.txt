@@ -1,7 +1,7 @@
 script: bench_cell_area.R
-date: 2026-10-10 00:47:25 CEST
-hexify commit: aa0ff0a
-uncommitted changes in R/, src/ or paper/bench/: FALSE
+date: 2026-10-10 09:00:06 CEST
+hexify commit: 1113a60
+uncommitted changes in R/, src/ or paper/bench/: TRUE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
 platform: x86_64-w64-mingw32

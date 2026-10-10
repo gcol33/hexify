@@ -7,6 +7,10 @@
 # Longitude-latitude cell areas use the exact spherical formula
 # R^2 * dlon * (sin(lat2) - sin(lat1)). Pentagon cells are excluded.
 #
+# The ISEA cells are measured again with their edges split to tighter
+# tolerances (cell_to_sf(densify = )): s2 reads each piece as a great-circle
+# arc, so the spread of the measured areas falls with the tolerance.
+#
 # Usage: Rscript paper/bench/bench_cell_area.R
 
 source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))),
@@ -18,18 +22,19 @@ set.seed(20261005)
 lats <- seq(-89.5, 89.5, by = 0.5)
 pts <- data.frame(lat = rep(lats, each = 20), lon = runif(length(lats) * 20, -180, 180))
 
-hex_areas <- function(g, label) {
+hex_areas <- function(g, label, densify = NULL) {
   id <- suppressMessages(lonlat_to_cell(pts$lon, pts$lat, g))
   keep <- !duplicated(id) & !is_pentagon(id, g)
   cells <- id[keep]
-  poly <- cell_to_sf(cells, g)
+  poly <- cell_to_sf(cells, g, densify = densify)
   poly <- poly[match(cells, poly$cell_id), ]
   ctr <- cell_to_lonlat(cells, g)
   data.frame(grid = label, cell = as.character(cells), lat = ctr[[2]],
              area_km2 = as.numeric(sf::st_area(poly)) / 1e6)
 }
 
-isea <- hex_areas(hex_grid(resolution = 6, aperture = 4), "ISEA aperture 4, res 6")
+isea_grid <- hex_grid(resolution = 6, aperture = 4)
+isea <- hex_areas(isea_grid, "ISEA aperture 4, res 6")
 h3 <- hex_areas(hex_grid(resolution = 3, type = "h3"), "H3 res 3")
 
 band <- seq(-90, 89)
@@ -45,3 +50,11 @@ summ <- do.call(rbind, lapply(split(out, out$grid), function(d)
 print(summ)
 write_result(out, "cell_area_by_latitude")
 write_result(summ, "cell_area_summary")
+
+tol <- do.call(rbind, lapply(c(1e-3, 1e-4, 1e-5), function(d) {
+  a <- hex_areas(isea_grid, "ISEA aperture 4, res 6", densify = d)$area_km2
+  data.frame(densify = d, n = length(a), max_over_min = max(a) / min(a),
+             cv_pct = 100 * sd(a) / mean(a))
+}))
+print(tol, digits = 8)
+write_result(tol, "cell_area_tolerance")
