@@ -218,7 +218,10 @@ widget's `writeCamera()`, R's `globe_camera_uniform()` and hexglobe's
 camera-size check must agree), Snyder's point is R' / cos(g) times the
 inscribed solid's point, and the frame widens to 1 / cos(g)
 (`globe_frame()`). Line segments between two faces are dropped
-(`globe_lines()`), since the construction parts the faces' planes.
+(`globe_lines()`), since the construction parts the faces' planes. Hex9 on
+Snyder's projection follows it like any octahedral grid; `"ak"`/`"akw"` are
+refused (`check_lambert_grid()`): Kaseorg's projection is a closed formula
+on the face weights, with no construction through Lambert's.
 
 ## Earth model: sphere or ellipsoid
 
@@ -277,7 +280,11 @@ natively: ISEA-family cells clipped face by face in the face plane
 polygons through its edge points), H3 cells clipped on the gnomonic plane where their great-circle
 edges are straight (`cpp_h3_overlap_solid_angles()`), both through
 `src/plane_clip.h`; the same function verifies the lattice shares in the
-tests. `levels > 1` repeats the one-level rule.
+tests. `levels > 1` repeats the one-level rule. Hex9 (aperture 9): 1, or
+1/2 and 1/2 for the three of nine children centred on the parent's edges,
+which lattice lines cut into their half-hexagons; the face polygons of the
+overlap measure add a face corner the cell's boundary passes through (Hex9's
+two cells at a vertex).
 
 ## DGGRID corner bug: aperture 7, odd resolutions
 

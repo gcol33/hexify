@@ -534,6 +534,13 @@ test_that("lambert opens the globe along Lambert's construction", {
   expect_error(hex_globe(hex_grid(resolution = 2, aperture = 3, projection = "fuller"),
                          lambert = 1), "isea")
   expect_error(hex_globe(hex_grid(resolution = 0, type = "h3"), lambert = 1), "H3")
+
+  # Hex9 on Snyder's projection follows the construction like any octahedral
+  # grid; Kaseorg's projection is no construction of Lambert's
+  h9 <- hex_grid(resolution = 2, aperture = 9)
+  expect_equal(hex_globe(h9, lambert = 2, land = FALSE)$x$stage$t, 2)
+  expect_error(hex_globe(hex_grid(resolution = 2, aperture = 9, projection = "ak"),
+                         lambert = 1), "isea")
 })
 
 test_that("unsigned words above 2^31 keep their bits", {
