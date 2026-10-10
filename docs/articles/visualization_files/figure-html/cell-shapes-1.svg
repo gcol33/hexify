@@ -3,24 +3,15 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    /* theme-aware-processed */
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
       fill: none;
-      stroke: #3E3F3A;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-miterlimit: 10.00;
-    }
-    .svglite > g > rect {
-      fill: none;
-      stroke: #3E3F3A;
+      stroke: #000000;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
-      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -28,7 +19,7 @@
     }
   ]]></style>
 </defs>
-<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwxODcuMjA='>
     <rect x='0.00' y='0.00' width='504.00' height='187.20' />
@@ -42,7 +33,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MTQuNjd8MTcyLjUz)'>
-<rect x='0.00' y='14.67' width='504.00' height='157.87' style='stroke-width: 0.00; stroke: none;' /> fill: #F5F6F8;' />
+<rect x='0.00' y='14.67' width='504.00' height='157.87' style='stroke-width: 0.00; stroke: none;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwxODcuMjA=)'>
 </g>
@@ -163,7 +154,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHwxNjIuMDJ8MTQuNjd8MjcuOTk=)'>
-<text x='81.01' y='26.48' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>hexagon</text>
+<text x='81.01' y='26.48' text-anchor='middle' style='font-size: 14.40px; font-family: "Arial";' textLength='55.20px' lengthAdjust='spacingAndGlyphs'>hexagon</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwxODcuMjA=)'>
 </g>
@@ -173,7 +164,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMTcwLjk5fDMzMy4wMXwxNC42N3wyNy45OQ==)'>
-<text x='252.00' y='26.48' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>gosper</text>
+<text x='252.00' y='26.48' text-anchor='middle' style='font-size: 14.40px; font-family: "Arial";' textLength='44.00px' lengthAdjust='spacingAndGlyphs'>gosper</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwxODcuMjA=)'>
 </g>
@@ -183,7 +174,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMzQxLjk4fDUwNC4wMHwxNC42N3wyNy45OQ==)'>
-<text x='422.99' y='26.48' text-anchor='middle' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>descendants</text>
+<text x='422.99' y='26.48' text-anchor='middle' style='font-size: 14.40px; font-family: "Arial";' textLength='81.61px' lengthAdjust='spacingAndGlyphs'>descendants</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwxODcuMjA=)'>
 </g>

@@ -3,24 +3,15 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    /* theme-aware-processed */
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
       fill: none;
-      stroke: #3E3F3A;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-miterlimit: 10.00;
-    }
-    .svglite > g > rect {
-      fill: none;
-      stroke: #3E3F3A;
+      stroke: #000000;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
-      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -28,7 +19,7 @@
     }
   ]]></style>
 </defs>
-<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA='>
     <rect x='0.00' y='0.00' width='504.00' height='360.00' />
@@ -42,7 +33,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MTcuNTZ8MzQyLjQ0)'>
-<rect rx='4' x='0.00' y='17.56' width='504.00' height='324.88' style='stroke-width: 1.75; stroke: none; fill: #F5F6F8;' />
+<rect x='0.00' y='17.56' width='504.00' height='324.88' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
 </g>
@@ -679,31 +670,31 @@
 <path d='M 298.76 112.69 L 298.51 112.77 L 298.26 112.85 L 298.02 112.93 L 297.77 113.00 L 297.65 113.58 L 298.07 113.71 L 298.49 113.85 L 298.97 113.69 L 299.46 113.54 L 299.53 113.25 L 299.60 112.96 L 299.18 112.82 L 298.76 112.69 Z' style='fill-rule: evenodd; fill: #E69F00; fill-opacity: 0.70; stroke-width: 0.64; stroke: #5D4E37; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
-<text x='9.77' y='244.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
-<text x='25.77' y='244.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='31.52' y='244.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>S</text>
-<text x='23.36' y='182.96' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 0</text>
-<text x='35.36' y='182.96' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='8.97' y='120.94' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
-<text x='24.97' y='120.94' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='30.72' y='120.94' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>N</text>
-<text x='101.82' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>120</text>
-<text x='125.82' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='131.58' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
-<text x='178.13' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 60</text>
-<text x='198.13' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='203.88' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>W</text>
-<text x='261.23' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>  0</text>
-<text x='277.23' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='328.74' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'> 60</text>
-<text x='348.74' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='354.50' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
-<text x='401.05' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>120</text>
-<text x='425.05' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>°</text>
-<text x='430.80' y='307.98' style='font-size: 1.44em;fill: #4D4D4D; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>E</text>
-<text x='49.19' y='61.35' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Assigned to ISEA hexagonal grid cells</text>
-<text x='49.19' y='36.55' style='font-size: 1.4em; font-weight: bold; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Major European Cities</text>
-<text x='495.03' y='330.45' text-anchor='end' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Data: Sample cities</text>
+<text x='9.77' y='244.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>50</text>
+<text x='25.77' y='244.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='31.52' y='244.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='9.59px' lengthAdjust='spacingAndGlyphs'>S</text>
+<text x='23.36' y='182.96' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='12.00px' lengthAdjust='spacingAndGlyphs'> 0</text>
+<text x='35.36' y='182.96' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='8.97' y='120.94' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>50</text>
+<text x='24.97' y='120.94' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='30.72' y='120.94' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='10.39px' lengthAdjust='spacingAndGlyphs'>N</text>
+<text x='101.82' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='24.00px' lengthAdjust='spacingAndGlyphs'>120</text>
+<text x='125.82' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='131.58' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='13.58px' lengthAdjust='spacingAndGlyphs'>W</text>
+<text x='178.13' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='20.00px' lengthAdjust='spacingAndGlyphs'> 60</text>
+<text x='198.13' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='203.88' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='13.58px' lengthAdjust='spacingAndGlyphs'>W</text>
+<text x='261.23' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>  0</text>
+<text x='277.23' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='328.74' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='20.00px' lengthAdjust='spacingAndGlyphs'> 60</text>
+<text x='348.74' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='354.50' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='9.59px' lengthAdjust='spacingAndGlyphs'>E</text>
+<text x='401.05' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='24.00px' lengthAdjust='spacingAndGlyphs'>120</text>
+<text x='425.05' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='5.75px' lengthAdjust='spacingAndGlyphs'>°</text>
+<text x='430.80' y='307.98' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='9.59px' lengthAdjust='spacingAndGlyphs'>E</text>
+<text x='49.19' y='61.35' style='font-size: 18.00px; font-family: "Arial";' textLength='303.23px' lengthAdjust='spacingAndGlyphs'>Assigned to ISEA hexagonal grid cells</text>
+<text x='49.19' y='36.55' style='font-size: 14.00px; font-weight: bold; font-family: "Arial";' textLength='147.77px' lengthAdjust='spacingAndGlyphs'>Major European Cities</text>
+<text x='495.03' y='330.45' text-anchor='end' style='font-size: 14.40px; font-family: "Arial";' textLength='123.98px' lengthAdjust='spacingAndGlyphs'>Data: Sample cities</text>
 </g>
 </g>
 </svg>

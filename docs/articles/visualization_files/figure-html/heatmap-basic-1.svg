@@ -3,24 +3,15 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    /* theme-aware-processed */
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
       fill: none;
-      stroke: #3E3F3A;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-miterlimit: 10.00;
-    }
-    .svglite > g > rect {
-      fill: none;
-      stroke: #3E3F3A;
+      stroke: #000000;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
-      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -28,7 +19,7 @@
     }
   ]]></style>
 </defs>
-<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA='>
     <rect x='0.00' y='0.00' width='504.00' height='378.00' />
@@ -42,7 +33,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMjMuOTB8NDgwLjEwfDAuMDB8Mzc4LjAw)'>
-<rect rx='4' x='23.90' y='0.00' width='456.19' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #F5F6F8;' />
+<rect x='23.90' y='0.00' width='456.19' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
 </g>
@@ -144,7 +135,7 @@
 <path d='M 249.18 70.90 L 251.46 73.24 L 253.72 75.59 L 258.33 75.53 L 262.94 75.49 L 265.36 73.11 L 267.80 70.75 L 265.56 68.37 L 263.31 65.99 L 258.61 66.00 L 253.91 66.04 L 251.53 68.47 L 249.18 70.90 Z' style='fill-rule: evenodd; fill: #414787; fill-opacity: 0.70; stroke-width: 0.64; stroke: #5D4E37; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
-<text x='414.16' y='147.85' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>count</text>
+<text x='414.16' y='147.85' style='font-size: 18.00px; font-family: "Arial";' textLength='44.05px' lengthAdjust='spacingAndGlyphs'>count</text>
 <image width='23.04' height='115.20' x='414.16' y='158.71' preserveAspectRatio='none' xlink:href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAEsCAYAAAACUNnVAAAA2ElEQVQ4jZWRyRVDIQhFL/SS/stKFUIWOSoomp8NR3gDg7T3y9UQ1FxQQ0mpPEz5G+21FsgkbZa11WUxIALtahCtiAZzllYCoO7SA/JHeqVYqeAnZRxs+tkJtUDpe1iwJ6f5P5ZPmWca2jbSeStxUBxUXPqLWQOlABZFheLSDQqgVgy0BEAFqYGoSBQ/NT/2gP61cdWuEF+CR8p2ukTG/UJZGn3JBWU7ne9oseCc4M4jr3W8c+UXBxoAnmt7iN0yumoLShm4dHvkMijWa76glhUztaydBrahH9ZJlv7ajQdXAAAAAElFTkSuQmCC'/>
 <polyline points='432.59,273.72 437.20,273.72 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='432.59,243.51 437.20,243.51 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
@@ -154,11 +145,11 @@
 <polyline points='418.77,243.51 414.16,243.51 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='418.77,213.29 414.16,213.29 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='418.77,183.08 414.16,183.08 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
-<text x='446.16' y='278.87' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>30</text>
-<text x='446.16' y='248.66' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>40</text>
-<text x='446.16' y='218.44' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>50</text>
-<text x='446.16' y='188.23' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>60</text>
-<text x='32.87' y='24.42' style='font-size: 2.16em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Observation Counts</text>
+<text x='446.16' y='278.87' style='font-size: 14.40px; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>30</text>
+<text x='446.16' y='248.66' style='font-size: 14.40px; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>40</text>
+<text x='446.16' y='218.44' style='font-size: 14.40px; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>50</text>
+<text x='446.16' y='188.23' style='font-size: 14.40px; font-family: "Arial";' textLength='16.00px' lengthAdjust='spacingAndGlyphs'>60</text>
+<text x='32.87' y='24.42' style='font-size: 21.60px; font-family: "Arial";' textLength='190.89px' lengthAdjust='spacingAndGlyphs'>Observation Counts</text>
 </g>
 </g>
 </svg>
