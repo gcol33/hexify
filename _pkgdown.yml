@@ -49,6 +49,8 @@ navbar:
         href: articles/h3.html
       - text: Mathematical Foundations
         href: articles/theory.html
+      - text: Lambert's Construction of Snyder's Projection
+        href: articles/lambert.html
       - text: OGC Topic 21 Conformance
         href: articles/ogc-conformance.html
     github:
@@ -67,6 +69,7 @@ articles:
 - title: Mathematical Foundations
   contents:
   - theory
+  - articles/lambert
   - articles/ogc-conformance
 reference:
 - title: Core
@@ -128,6 +131,7 @@ reference:
   - cell_metrics
   - wall_metrics
   - projection_distortion
+  - projection_stages
 - title: Visualization
   desc: Plotting functions
   contents:
