@@ -329,8 +329,14 @@ inline T edge_map_coord(const int k[3], T topEdge, T along, T d) {
 // coordinate lies beyond both far edges or below both near edges, which a
 // cell centre never does: an integer centre beyond both far edges is the far
 // vertex, and is moved there. A vertex quad has no box to leave.
+//
+// On a lattice with no cell at the solid's vertices (Hex9, `vertex_cells`
+// false) neither vertex rule applies: a point past both far edges lies off
+// the solid, and a point past an edge on the line through the vertex where
+// that edge starts lies on the solid's edge between the two faces beyond,
+// which the edge map carries it to.
 template <typename T>
-bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
+bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j, bool vertex_cells = true) {
     const T maxI = topEdge - 1, maxJ = topEdge - 1;
     const bool integral = std::is_integral<T>::value;
 
@@ -344,7 +350,7 @@ bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
     if (t.is_pole(quadNum)) return false;
 
     if (overI && overJ) {
-        if (!integral) return false;
+        if (!integral || !vertex_cells) return false;
         quadNum = t.corner[quadNum][kCornerFar];
         i = 0; j = 0;
         return true;
@@ -356,7 +362,7 @@ bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j) {
     const T along = (e == kEdgeLeft || e == kEdgeRight) ? j : i;
     const T d = (e == kEdgeLeft) ? i : (e == kEdgeDown) ? j
               : (e == kEdgeRight) ? i - topEdge : j - topEdge;
-    if (m.pole >= 0 && along == 0) {
+    if (vertex_cells && m.pole >= 0 && along == 0) {
         quadNum = m.pole;
         i = 0; j = 0;
         return true;
@@ -489,12 +495,12 @@ void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
 }
 
 bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
-                               long long top_edge) {
+                               long long top_edge, bool vertex_cells) {
     int q = quad;
     long long ci = i, cj = j;
+    auto inside = [&]() { return ci >= 0 && ci < top_edge && cj >= 0 && cj < top_edge; };
 
-    dggrid_canonicalize_q2di(top_edge, q, ci, cj);
-    if (ci < 0 || ci >= top_edge || cj < 0 || cj >= top_edge) {
+    if (!canonicalize_q2d<long long>(top_edge, q, ci, cj, vertex_cells) || !inside()) {
         return false;
     }
 

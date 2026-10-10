@@ -12,6 +12,9 @@
 #' same projection and cell numbering as \code{\link{lonlat_to_cell}}, so the
 #' page holds the grid's description and the values rather than the cells'
 #' outlines, and a grid of any resolution draws as fast as a coarse one.
+#' Hex9 grids are found the same way; on Hex9's own projection
+#' (\code{projection = "akw"}) the page also carries the warp field
+#' (\code{\link{hex9_warp_download}}), 9.6 MB as a texture.
 #' The values sit on the graphics card as a texture laid out like the grid's
 #' quads, one block per quad and resolution, which the shader reads at the
 #' place it finds a cell. Where the cells shrink below a pixel the fill is
@@ -436,7 +439,8 @@ globe_grid_uniform <- function(projection, frame, levels, table, all, valued, sm
   put(12, le32(c(all, valued, smooth, projection$n_faces), "u32"))
   put(16, le32(c(per_quad, if (is.null(table)) 0 else nrow(levels),
                  isTRUE(table$keyed)), "u32"))
-  if (!is.null(table)) put(20, le32(c(table$m, table$seed, table$buckets, 0), "u32"))
+  if (!is.null(table)) put(20, le32(c(table$m, table$seed, table$buckets), "u32"))
+  put(23, le32(as.numeric(frame$vertex_cells), "u32"))
   put(24, le32(na_fill %||% numeric(4), "f32"))
   put(28, le32(ramp_map %||% numeric(4), "f32"))
   put(32, le32(projection$faces, "f32"))
@@ -444,7 +448,8 @@ globe_grid_uniform <- function(projection, frame, levels, table, all, valued, sm
   if (is.null(levels)) {
     levels <- cbind(dim = frame$dim, index = frame$index, c = frame$c,
                     ga = frame$generator[1], gb = frame$generator[2], pr = 0, pc = 0,
-                    hp = 0, wp = 0, base = 0, n_cells = as.numeric(frame$n_cells))
+                    hp = 0, wp = 0, base = 0, n_cells = as.numeric(frame$n_cells),
+                    coset = frame$coset)
   }
   for (k in seq_len(nrow(levels))) {
     L <- levels[k, ]
@@ -452,7 +457,8 @@ globe_grid_uniform <- function(projection, frame, levels, table, all, valued, sm
     word <- 784 + 16 * (k - 1)
     put(word, le32(L[c("dim", "index", "c", "hp")], "u32"))
     put(word + 4, le32(L[c("ga", "gb", "pr", "pc")], "i32"))
-    put(word + 8, le32(c(L[["wp"]], base_hi, L[["base"]] - base_hi * 2^32, 0), "u32"))
+    put(word + 8, le32(c(L[["wp"]], base_hi, L[["base"]] - base_hi * 2^32, L[["coset"]]),
+                       "u32"))
     put(word + 12, le32(c(sqrt(4 * pi / L[["n_cells"]]), 0, 0, 0), "f32"))
   }
   out
@@ -460,9 +466,11 @@ globe_grid_uniform <- function(projection, frame, levels, table, all, valued, sm
 
 #' The textures of globe.wgsl's cell table, as the widget and hexglobe make
 #' them: the table's words, the perfect hash's keys and its offsets, one
-#' word each where there is no table or no hash
+#' word each where there is no table or no hash; and Hex9's warp field
+#' (cpp_hex9_warp_texture()) for a grid on projection "akw", one word
+#' otherwise
 #' @noRd
-globe_textures <- function(table) {
+globe_textures <- function(table, warp = NULL) {
   one <- function(words) cpp_base64_buffer(words, "u32")
   texture <- function(binding, format, dimension, size, data) {
     list(binding = binding, format = format, dimension = dimension,
@@ -475,7 +483,8 @@ globe_textures <- function(table) {
     texture(7L, "rg32uint", "2d-array", if (keyed) table$size else c(1, 1, 1),
             if (keyed) table$keys else one(c(2^32 - 1, 2^32 - 1))),
     texture(8L, "r32uint", "2d", c(table$offsets_size %||% c(1, 1), 1),
-            table$offsets %||% one(0))
+            table$offsets %||% one(0)),
+    texture(9L, "r32uint", "2d", c(warp$size %||% c(1, 1), 1), warp$data %||% one(0))
   )
 }
 
@@ -587,7 +596,14 @@ globe_shader_cells <- function(grid, xyz, ..., timeout = 120) {
     })
   })
   m <- matrix(as.numeric(unlist(strsplit(unlist(out), ",", fixed = TRUE))), nrow = 3)
-  data.frame(id = m[1, ], word = m[2, ], flags = m[3, ])
+  id <- m[1, ]
+  # The shader names a Hex9 cell by its key, its place in the quads
+  if (is_hex9_grid(grid)) {
+    lv <- isea_levels(grid@aperture, grid@resolution)
+    id <- as.numeric(cpp_globe_key_cells(icosa_arg(grid), as_cell_id(id), lv$resolution,
+                                         lv$aperture, lv$ap_seq))
+  }
+  data.frame(id = id, word = m[2, ], flags = m[3, ])
 }
 
 #' An ISEA grid as the widget reads it to find each pixel's cell
@@ -606,9 +622,9 @@ globe_grid <- function(g, cells, values, limits, smooth = FALSE, na_fill = NULL)
   # a radian; past this quad side its cells are finer than that.
   if (frame$dim >= 2^24) {
     stop("hex_globe() draws ISEA grids up to aperture 3 resolution 30, ",
-         "aperture 4 resolution 23 and aperture 7 resolution 16; this grid's ",
-         "cells are finer than the graphics card's 32-bit floats resolve",
-         call. = FALSE)
+         "aperture 4 resolution 23, aperture 7 resolution 16 and aperture 9 ",
+         "resolution 14; this grid's cells are finer than the graphics card's ",
+         "32-bit floats resolve", call. = FALSE)
   }
   all <- is.null(cells)
   valued <- !is.null(values)
@@ -639,7 +655,12 @@ globe_grid <- function(g, cells, values, limits, smooth = FALSE, na_fill = NULL)
     uniform = cpp_base64_bytes(
       globe_grid_uniform(cpp_globe_projection(icosa), frame, table$levels, table, all,
                          valued, smooth, split_u64(frame$per_quad), na_fill, map)),
-    textures = globe_textures(table),
+    textures = globe_textures(table,
+                              if (identical(grid_projection(g), "akw")) cpp_hex9_warp_texture()),
+    hex9 = if (!is.null(frame$hex9)) {
+      c(frame$hex9, list(per_quad = split_u64(frame$per_quad), dim = frame$dim,
+                         index = frame$index, c = frame$c, coset = frame$coset))
+    },
     all = all,
     valued = valued,
     levels = table$levels,

@@ -95,7 +95,7 @@ void cell_quad_ij(const OctPoint& centre, int level, int& quad, long long& i, lo
   const double u = qx + 0.5 * v;
   i = std::llround(u * static_cast<double>(dim));
   j = std::llround(v * static_cast<double>(dim));
-  if (!substrate_ij_canonicalize(quad, i, j, dim)) {
+  if (!substrate_ij_canonicalize(quad, i, j, dim, false)) {
     throw std::logic_error("hex9: a cell centre owned by no quad");
   }
 }

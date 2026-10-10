@@ -40,6 +40,8 @@
 #include "globe_mesh.h"
 #include "globe_table.h"
 #include "grid_math.h"
+#include "hex9.h"
+#include "hex9_solid.h"
 #include "polyhedron.h"
 #include "rcpp_icosa.h"
 
@@ -78,9 +80,10 @@ struct Cell {
   long long u, v;
 };
 
-inline long long residue(const GlobeFrame& f, long long u) {
+// The v mod index of the cells of quad q at row u
+inline long long residue(const GlobeFrame& f, int q, long long u) {
   if (f.index == 1) return 0;
-  return ((f.c * u) % f.index + f.index) % f.index;
+  return ((f.c * u + f.coset[q]) % f.index + f.index) % f.index;
 }
 
 // x / d and x % d for x < 2^53, through the reciprocal of d, corrected by
@@ -132,14 +135,33 @@ uint64_t level_size(const Level& L) {
   return static_cast<uint64_t>(hexify::topo().n_diamonds()) * L.hp * L.wp;
 }
 
-// The 0-based index of a cell, its ID - 1, in the shader's numbering
+// The 0-based index of a cell in the shader's numbering: its ID - 1, but on
+// Hex9, whose IDs are addresses, its place in the quads
 uint64_t cell_index(const GlobeFrame& f, const Cell& x) {
   const hexify::SolidTopology& t = hexify::topo();
-  if (x.quad == 0) return 0;
-  if (x.quad == t.south_pole()) return f.n_cells - 1;
-  return 1 + static_cast<uint64_t>(x.quad - 1) * f.per_quad +
+  const uint64_t first = f.vertex_cells() ? 1 : 0;
+  if (f.vertex_cells() && x.quad == 0) return 0;
+  if (f.vertex_cells() && x.quad == t.south_pole()) return f.n_cells - 1;
+  return first + static_cast<uint64_t>(x.quad - 1) * f.per_quad +
          static_cast<uint64_t>(x.u) * (f.dim / f.index) +
          static_cast<uint64_t>(row_place(f, x.v));
+}
+
+// The cell of a Hex9 ID: its centre, placed in the quad that owns it
+Cell hex9_cell(const GlobeFrame& f, int64_t id) {
+  hexify::hex9::OctPoint c;
+  if (!hexify::hex9::decode(id, f.hex9_level, c)) {
+    Rcpp::stop("cell IDs must name cells of the grid");
+  }
+  Cell x;
+  hexify::hex9::cell_quad_ij(c, f.hex9_level, x.quad, x.u, x.v);
+  return x;
+}
+
+// The shader's index of the cell with ID `id`
+uint64_t index_of_id(const GlobeFrame& f, int64_t id) {
+  if (f.vertex_cells()) return static_cast<uint64_t>(id - 1);
+  return cell_index(f, hex9_cell(f, id));
 }
 
 // The cells of a frame by index, each read once: an index one past the last
@@ -148,11 +170,14 @@ uint64_t cell_index(const GlobeFrame& f, const Cell& x) {
 class Walk {
  public:
   explicit Walk(const GlobeFrame& f)
-      : f_(f), per_row_(f.dim / f.index), south_(hexify::topo().south_pole()),
+      : f_(f), per_row_(f.dim / f.index),
+        south_(f.vertex_cells() ? hexify::topo().south_pole() : -1),
+        first_(f.vertex_cells() ? 1 : 0),
         quad_div_(f.per_quad), row_div_(static_cast<uint64_t>(f.dim / f.index)) {}
 
   const Cell& at(uint64_t i) {
-    if (i == idx_ + 1 && x_.quad != 0 && x_.quad != south_ && i != f_.n_cells - 1) {
+    if (idx_ != kNone && i == idx_ + 1 && (x_.quad != 0 || first_ == 0) && x_.quad != south_ &&
+        i != f_.n_cells - 1) {
       col_++;
       x_.v += f_.index;
       if (col_ == per_row_) {
@@ -161,7 +186,7 @@ class Walk {
           x_.u = 0;
           x_.quad++;
         }
-        x_.v = residue(f_, x_.u);
+        x_.v = residue(f_, x_.quad, x_.u);
       }
     } else {
       decode(i);
@@ -175,26 +200,28 @@ class Walk {
  private:
   void decode(uint64_t i) {
     col_ = 0;
-    if (i == 0) {
+    if (first_ == 1 && i == 0) {
       x_ = {0, 0, 0};
       return;
     }
-    if (i == f_.n_cells - 1) {
+    if (first_ == 1 && i == f_.n_cells - 1) {
       x_ = {south_, 0, 0};
       return;
     }
     uint64_t within, col;
-    x_.quad = static_cast<int>(quad_div_.div(i - 1, within)) + 1;
+    x_.quad = static_cast<int>(quad_div_.div(i - first_, within)) + 1;
     x_.u = static_cast<long long>(row_div_.div(within, col));
     col_ = static_cast<long long>(col);
-    x_.v = col_ * f_.index + residue(f_, x_.u);
+    x_.v = col_ * f_.index + residue(f_, x_.quad, x_.u);
   }
 
   const GlobeFrame& f_;
   long long per_row_;
   int south_;
+  uint64_t first_;
   Divider quad_div_, row_div_;
-  uint64_t idx_ = ~uint64_t(0);
+  static constexpr uint64_t kNone = ~uint64_t(0);   // no cell read yet
+  uint64_t idx_ = kNone;
   Cell x_ = {0, 0, 0};
   long long col_ = 0;
 };
@@ -204,7 +231,7 @@ class Walk {
 inline bool slot_of(const Level& L, int q, long long u, long long v, uint64_t& key) {
   const long long row = u + L.pr;
   if (row < 0 || row >= L.hp) return false;
-  if (L.f.index != 1 && ((v - residue(L.f, u)) % L.f.index) != 0) return false;
+  if (L.f.index != 1 && ((v - residue(L.f, q, u)) % L.f.index) != 0) return false;
   const long long col = row_place(L.f, v) + L.pc;
   if (col < 0 || col >= L.wp) return false;
   key = L.base + (static_cast<uint64_t>(q - 1) * L.hp + row) * L.wp + col;
@@ -269,7 +296,7 @@ void padding_slots(const Level& L, const Cell& x, Emit emit) {
       const long long di = x.u - m.k[0][0] * top, dj = x.v - m.k[1][0] * top;
       const long long along = (m.k[1][2] * di - m.k[0][2] * dj) / det;
       const long long d = (m.k[0][1] * dj - m.k[1][1] * di) / det;
-      if (along < 0 || along >= top || (m.pole >= 0 && along == 0)) continue;
+      if (along < 0 || along >= top || (L.f.vertex_cells() && m.pole >= 0 && along == 0)) continue;
       if (far ? d < 0 : d >= 0) continue;
       long long u, v;
       across(e, top, along, d, u, v);
@@ -387,8 +414,8 @@ struct Stencil {
   long long reach = 0;
 };
 
-// The coarse cells nearest the fine point (u, v) of a quad, in the coarse
-// substrate of that quad, with the share of each
+// The points of the coarse sublattice through the origin nearest the fine
+// point (u, v) of a quad, in coarse substrate steps, with the share of each
 inline int coarse_nearest(const GlobeFrame& fine, const GlobeFrame& coarse,
                           long long u, long long v, long long out[3][2]) {
   const long long k = fine.dim / coarse.dim;
@@ -404,14 +431,30 @@ inline int coarse_nearest(const GlobeFrame& fine, const GlobeFrame& coarse,
   return n;
 }
 
-Stencil child_stencil(const GlobeFrame& fine, const GlobeFrame& coarse) {
+// The coarse cells of quad q nearest its fine point (u, v), in the coarse
+// substrate of that quad: the coarse coset's shift taken off and put back
+inline int coarse_cells_nearest(const GlobeFrame& fine, const GlobeFrame& coarse, int q,
+                                long long u, long long v, long long out[3][2]) {
+  const long long shift = coarse.coset[q];
+  const int n = coarse_nearest(fine, coarse, u, v - (fine.dim / coarse.dim) * shift, out);
+  for (int m = 0; m < n; m++) out[m][1] += shift;
+  return n;
+}
+
+// The stencil of the fine cells around a coarse centre whose offsets
+// (du, dv) have dv = c * du + rho (mod index): rho is 0 where the coarse
+// centres are fine lattice points, and on Hex9, whose levels three steps of
+// the substrate apart put every coarse centre on the multiples of three,
+// the fine coset of the quad.
+Stencil child_stencil(const GlobeFrame& fine, const GlobeFrame& coarse, long long rho) {
   Stencil s;
   const long long k = fine.dim / coarse.dim;
   const long long R = static_cast<long long>(
       std::ceil(2.0 * k * std::sqrt(static_cast<double>(coarse.index)) / 3.0)) + 1;
   for (long long du = -R; du <= R; du++) {
     for (long long dv = -R; dv <= R; dv++) {
-      if (residue(fine, du) != ((dv % fine.index) + fine.index) % fine.index) continue;
+      const long long want = ((fine.c * du + rho) % fine.index + fine.index) % fine.index;
+      if (fine.index != 1 && want != ((dv % fine.index) + fine.index) % fine.index) continue;
       long long near[3][2];
       const int n = coarse_nearest(fine, coarse, du, dv, near);
       for (int m = 0; m < n; m++) {
@@ -426,6 +469,26 @@ Stencil child_stencil(const GlobeFrame& fine, const GlobeFrame& coarse) {
   return s;
 }
 
+// A coarse level's stencils, one per fine coset of a quad (one on every grid
+// but Hex9), and their reach
+struct Stencils {
+  std::vector<Stencil> by_rho;
+  long long reach = 0;
+  const Stencil& of(const GlobeFrame& fine, int q) const {
+    return by_rho[by_rho.size() == 1 ? 0 : fine.coset[q]];
+  }
+};
+
+Stencils child_stencils(const GlobeFrame& fine, const GlobeFrame& coarse) {
+  Stencils s;
+  const long long n_rho = fine.vertex_cells() ? 1 : fine.index;
+  for (long long rho = 0; rho < n_rho; rho++) {
+    s.by_rho.push_back(child_stencil(fine, coarse, rho));
+    s.reach = std::max(s.reach, s.by_rho.back().reach);
+  }
+  return s;
+}
+
 // Every cell of `coarse` from the words of `fine` laid out slot by slot:
 // each cell sums its stencil's slots around its centre, in its own quad. A
 // cell at a vertex of the solid (a diamond quad's origin, or a vertex quad's
@@ -434,7 +497,7 @@ Stencil child_stencil(const GlobeFrame& fine, const GlobeFrame& coarse) {
 // hold each child once, and the cell at its vertex, which a vertex quad
 // holds outside every box. Needs the fine padding to reach the stencil.
 template <typename Keep>
-void gather_level(const Level& fine, const Level& coarse, const Stencil& st,
+void gather_level(const Level& fine, const Level& coarse, const Stencils& stencils,
                   const std::vector<uint32_t>& words, const Ramp& ramp, bool fine_finest,
                   Keep keep) {
   const hexify::SolidTopology& t = hexify::topo();
@@ -442,28 +505,31 @@ void gather_level(const Level& fine, const Level& coarse, const Stencil& st,
   const long long top = fine.f.dim;
   const long long nf = fine.f.index;
   const double step = step_of(fine.f, coarse.f);
-  const size_t n = st.du.size();
   auto read = [&](uint64_t key, double share, Acc& acc) {
     const uint32_t w = words[key];
     if (w != kAbsent) acc.add(ramp.read(w, fine_finest), share);
   };
-  // A stencil point's slot from the slot of the centre, for each residue
-  // r = pv mod index of the centre's v: rows du apart, and places along the
-  // row floor((r + dv) / index) apart
-  std::vector<long long> delta(static_cast<size_t>(nf) * n);
-  for (long long r = 0; r < nf; r++) {
-    for (size_t m = 0; m < n; m++) {
-      delta[r * n + m] = st.du[m] * fine.wp + hexify::floor_div(r + st.dv[m], nf);
-    }
-  }
   const long long per_row = coarse.f.dim / coarse.f.index;
   for (int q = 1; q <= t.n_diamonds(); q++) {
+    const Stencil& st = stencils.of(fine.f, q);
+    const size_t n = st.du.size();
+    // A stencil point's slot from the slot of the centre, for each residue
+    // r = pv mod index of the centre's v: rows du apart, and places along the
+    // row floor((r + dv) / index) apart
+    std::vector<long long> delta(static_cast<size_t>(nf) * n);
+    for (long long r = 0; r < nf; r++) {
+      for (size_t m = 0; m < n; m++) {
+        delta[r * n + m] = st.du[m] * fine.wp + hexify::floor_div(r + st.dv[m], nf);
+      }
+    }
     const uint64_t block = fine.base + static_cast<uint64_t>(q - 1) * fine.hp * fine.wp;
     for (long long u = 0; u < coarse.f.dim; u++) {
-      const long long r = residue(coarse.f, u);
+      const long long r = residue(coarse.f, q, u);
       const long long pu = k * u;
       const uint64_t row = block + static_cast<uint64_t>(pu + fine.pr) * fine.wp + fine.pc;
-      for (long long col = (u == 0 ? 1 : 0); col < per_row; col++) {
+      // The cell at a quad's origin is the vertex quad's, gathered below
+      const long long first = (u == 0 && coarse.f.vertex_cells()) ? 1 : 0;
+      for (long long col = first; col < per_row; col++) {
         const Cell y = {q, u, col * coarse.f.index + r};
         const long long pv = k * y.v;
         const uint64_t centre = row + static_cast<uint64_t>(pv / nf);
@@ -474,6 +540,9 @@ void gather_level(const Level& fine, const Level& coarse, const Stencil& st,
       }
     }
   }
+  if (!coarse.f.vertex_cells()) return;
+  const Stencil& st = stencils.of(fine.f, 0);
+  const size_t n = st.du.size();
   for (int vertex = 0; vertex < t.n_quads(); vertex++) {
     Acc acc;
     for (int a = 1; a <= t.n_diamonds(); a++) {
@@ -534,11 +603,14 @@ void push_level(const GlobeFrame& fine, const GlobeFrame& coarse,
       continue;
     }
     long long near[3][2];
-    const int n = coarse_nearest(fine, coarse, x.u, x.v, near);
+    const int n = coarse_cells_nearest(fine, coarse, x.quad, x.u, x.v, near);
     for (int m = 0; m < n; m++) {
       Cell y = {x.quad, near[m][0], near[m][1]};
       const bool inside = y.u >= 0 && y.v >= 0 && y.u < coarse.dim && y.v < coarse.dim;
-      if (!inside && !hexify::substrate_ij_canonicalize(y.quad, y.u, y.v, coarse.dim)) continue;
+      if (!inside && !hexify::substrate_ij_canonicalize(y.quad, y.u, y.v, coarse.dim,
+                                                        coarse.vertex_cells())) {
+        continue;
+      }
       shares.push_back({cell_index(coarse, y), child, static_cast<uint32_t>(n)});
     }
   }
@@ -739,8 +811,8 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
   }
 
   // Each level's stencil into the one finer, and the padding it needs
-  std::vector<Stencil> stencils(n_levels);
-  for (int k = 1; k < n_levels; k++) stencils[k] = child_stencil(frames[k - 1], frames[k]);
+  std::vector<Stencils> stencils(n_levels);
+  for (int k = 1; k < n_levels; k++) stencils[k] = child_stencils(frames[k - 1], frames[k]);
   std::vector<Level> lv;
   uint64_t total = 0;
   for (int k = 0; k < n_levels; k++) {
@@ -806,7 +878,7 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
       };
       for (int q = 1; q <= t.n_diamonds(); q++) {
         for (long long u = 0; u < top; u++) {
-          const long long r = residue(L.f, u);
+          const long long r = residue(L.f, q, u);
           if (u <= strip || u >= top - 1 - strip) {
             each(q, u, r, 0, per_row);
             continue;
@@ -829,13 +901,13 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
     // The grid's resolution: each given cell at its own slot
     Walk walk(finest);
     for (uint64_t k = 0; k < n0; k++) {
-      uint64_t idx = k;
+      uint64_t idx = all_cells ? index_of_id(finest, static_cast<int64_t>(k) + 1) : 0;
       if (!all_cells) {
         const int64_t id = hexify::cell_id_get(cell_id[k]);
         if (id == hexify::kCellIdNA || id < 1 || static_cast<uint64_t>(id) > finest.n_cells) {
           stop("cell IDs must name cells of the grid");
         }
-        idx = static_cast<uint64_t>(id - 1);
+        idx = index_of_id(finest, id);
       }
       const Cell& x = walk.at(idx);
       const uint32_t word = valued ? value_word(values[k]) : 0U;
@@ -878,13 +950,13 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
     cells.reserve(n0);
     Walk walk(finest);
     for (uint64_t k = 0; k < n0; k++) {
-      uint64_t idx = k;
+      uint64_t idx = all_cells ? index_of_id(finest, static_cast<int64_t>(k) + 1) : 0;
       if (!all_cells) {
         const int64_t id = hexify::cell_id_get(cell_id[k]);
         if (id == hexify::kCellIdNA || id < 1 || static_cast<uint64_t>(id) > finest.n_cells) {
           stop("cell IDs must name cells of the grid");
         }
-        idx = static_cast<uint64_t>(id - 1);
+        idx = index_of_id(finest, id);
       }
       const Cell& x = walk.at(idx);
       const uint32_t word = valued ? value_word(values[k]) : 0U;
@@ -932,19 +1004,21 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
     offsets.resize(static_cast<size_t>(ow) * oh, 0);
   }
 
-  NumericMatrix out_levels(n_levels, 11);
+  NumericMatrix out_levels(n_levels, 12);
   for (int k = 0; k < n_levels; k++) {
     const Level& L = lv[k];
-    const double row[11] = {static_cast<double>(L.f.dim), static_cast<double>(L.f.index),
+    double coset = 0.0;
+    for (int q = 0; q < t.n_quads(); q++) coset += L.f.coset[q] * std::pow(4.0, q);
+    const double row[12] = {static_cast<double>(L.f.dim), static_cast<double>(L.f.index),
                             static_cast<double>(L.f.c), static_cast<double>(L.f.ga),
                             static_cast<double>(L.f.gb), static_cast<double>(L.pr),
                             static_cast<double>(L.pc), static_cast<double>(L.hp),
                             static_cast<double>(L.wp), static_cast<double>(L.base),
-                            static_cast<double>(L.f.n_cells)};
-    for (int c = 0; c < 11; c++) out_levels(k, c) = row[c];
+                            static_cast<double>(L.f.n_cells), coset};
+    for (int c = 0; c < 12; c++) out_levels(k, c) = row[c];
   }
   colnames(out_levels) = CharacterVector::create("dim", "index", "c", "ga", "gb", "pr", "pc",
-                                                 "hp", "wp", "base", "n_cells");
+                                                 "hp", "wp", "base", "n_cells", "coset");
 
   List out = List::create(
       _["levels"] = out_levels,
@@ -966,6 +1040,52 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
                               _["word"] = word);
     }
     out["cells"] = cells;
+  }
+  return out;
+}
+
+// The shader's key of each cell, its index in the shader's numbering plus
+// one: the cell ID, but on Hex9 the cell's place in the quads
+// [[Rcpp::export]]
+NumericVector cpp_globe_keys(NumericVector icosa, NumericVector cell_id, int resolution,
+                             int aperture, IntegerVector ap_seq) {
+  activate_grid(icosa);
+  hexify::require_cell_ids(cell_id);
+  const GlobeFrame f = hexify::globe_frame(resolution, aperture,
+                                           std::vector<int>(ap_seq.begin(), ap_seq.end()));
+  NumericVector out = hexify::cell_id_na(cell_id.size());
+  for (R_xlen_t k = 0; k < cell_id.size(); k++) {
+    const int64_t id = hexify::cell_id_get(cell_id[k]);
+    if (id == hexify::kCellIdNA) continue;
+    if (id < 1 || static_cast<uint64_t>(id) > f.n_cells) stop("cell IDs must name cells of the grid");
+    out[k] = hexify::cell_id_slot(static_cast<int64_t>(index_of_id(f, id) + 1));
+  }
+  return out;
+}
+
+// The cells the shader's keys name, the inverse of cpp_globe_keys(); NA for a
+// key past the grid's cells
+// [[Rcpp::export]]
+NumericVector cpp_globe_key_cells(NumericVector icosa, NumericVector key, int resolution,
+                                  int aperture, IntegerVector ap_seq) {
+  activate_grid(icosa);
+  hexify::require_cell_ids(key);
+  const GlobeFrame f = hexify::globe_frame(resolution, aperture,
+                                           std::vector<int>(ap_seq.begin(), ap_seq.end()));
+  Walk walk(f);
+  NumericVector out = hexify::cell_id_na(key.size());
+  for (R_xlen_t k = 0; k < key.size(); k++) {
+    const int64_t K = hexify::cell_id_get(key[k]);
+    if (K == hexify::kCellIdNA || K < 1 || static_cast<uint64_t>(K) > f.n_cells) continue;
+    if (f.vertex_cells()) {
+      out[k] = hexify::cell_id_slot(K);
+      continue;
+    }
+    const Cell& x = walk.at(static_cast<uint64_t>(K - 1));
+    hexify::hex9::OctPoint c;
+    if (!hexify::hex9::quad_ij_lattice(x.quad, x.u, x.v, f.hex9_level, c)) continue;
+    const int64_t id = hexify::hex9::encode(c, f.hex9_level);
+    if (id > 0) out[k] = hexify::cell_id_slot(id);
   }
   return out;
 }

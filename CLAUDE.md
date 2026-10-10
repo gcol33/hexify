@@ -26,9 +26,14 @@ hexify supports **all** major hexagonal DGGS through two backends:
   (Kaseorg) or `"akw"` (Kaseorg + libhex9's trained warp, read from libhex9's
   19 MB `.h9warp` file that hexify does not ship: `hex9_warp_download()`, option
   `hexify.hex9_warp`). On `"akw"` labels and centres equal libhex9's `_sphere`
-  functions (`paper/bench/bench_libhex9_agreement.R`); hexify reads latitude
-  spherically, libhex9's WGS84 functions authalically. The globe draws Hex9 by
-  per-quad keys (`cpp_globe_keys()`), not on `"akw"`.
+  functions, and with `ellipsoid = "WGS84"` its geodetic ones, which go through the
+  same authalic latitude (`paper/bench/bench_libhex9_agreement.R`). On the globe
+  Hex9 goes through the cells' texture table like every ISEA grid
+  (`src/globe_table.cpp`): `GlobeFrame::hex9_level` and per-quad `coset`, no
+  vertex-quad cells, the shader's key a cell's place in the quads
+  (`cpp_globe_keys()`, `cpp_globe_key_cells()`, `hex9Id()` in the widget). On
+  `"akw"` the warp field rides along as texture binding 9 and `globe.wgsl`'s
+  `warp_solve()` evaluates the same Clough-Tocher field in f32.
 - **H3** (vendored H3 v4.4.1 C source in `src/h3`): fixed aperture 7 — resolutions 0-15
 
 This covers every hexagonal grid system that matters:

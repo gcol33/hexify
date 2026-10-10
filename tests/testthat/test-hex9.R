@@ -175,6 +175,42 @@ test_that("digit strings name one cell at every level", {
   expect_true(cpp_hex9_digit_strings_unique())
 })
 
+test_that("the globe keys every Hex9 cell once and reads its ID back", {
+  for (L in 0:3) {
+    g <- hex_grid(resolution = L, aperture = 9)
+    ids <- hex9_ids(n_cells(g))
+    keys <- cpp_globe_keys(icosa_arg(g), ids, L, 9L, integer(0))
+    expect_identical(sort(bit64::as.integer64(keys)), ids)
+    expect_identical(bit64::as.integer64(cpp_globe_key_cells(icosa_arg(g), keys, L, 9L,
+                                                             integer(0))), ids)
+  }
+  node <- Sys.which("node")
+  skip_if(!nzchar(node), "node is not installed")
+  skip_if_not_installed("jsonlite")
+  g <- hex_grid(resolution = 3, aperture = 9)
+  ids <- hex9_ids(n_cells(g))
+  keys <- cpp_globe_keys(icosa_arg(g), ids, 3L, 9L, integer(0))
+  frame <- globe_grid(g, NULL, NULL, NULL)
+  dir <- tempfile("hex9_globe_")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+  jsonlite::write_json(list(H = frame$hex9, keys = as.character(keys), ids = as.character(ids)),
+                       file.path(dir, "cells.json"), auto_unbox = TRUE, digits = NA)
+  writeLines(c(
+    "const fs = require('fs');",
+    "const src = fs.readFileSync(process.argv[2], 'utf8');",
+    "eval(src.slice(src.indexOf('const HEX9_AROUND'), src.indexOf('function gpuBuffer')) +",
+    "     '; global.hex9Id = hex9Id;');",
+    "const d = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));",
+    "let bad = 0;",
+    "d.keys.forEach((k, i) => { if (hex9Id(Number(k), d.H) !== Number(d.ids[i])) bad++; });",
+    "console.log(bad);"), file.path(dir, "run.js"))
+  out <- system2(node, c(shQuote(file.path(dir, "run.js")),
+                         shQuote(system.file("htmlwidgets", "hex_globe.js", package = "hexify")),
+                         shQuote(file.path(dir, "cells.json"))), stdout = TRUE)
+  expect_identical(out, "0")
+})
+
 test_that("Hex9 cells compact into their parents and back", {
   g <- hex_grid(resolution = 2, aperture = 9)
   g3 <- hex_grid(resolution = 3, aperture = 9)

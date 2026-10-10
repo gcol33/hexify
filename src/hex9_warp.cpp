@@ -391,6 +391,21 @@ bool warp_load(const unsigned char* data, std::size_t len, std::string& err) {
 
 bool warp_ready() { return g_field.ready; }
 
+std::vector<uint32_t> warp_texture_words() {
+  std::vector<uint32_t> out;
+  if (!g_field.ready) return out;
+  out.reserve(2 + g_field.col_start.size() + g_field.rows.size());
+  out.push_back(static_cast<uint32_t>(g_field.n));
+  for (int64_t s : g_field.col_start) out.push_back(static_cast<uint32_t>(s));
+  for (double v : g_field.rows) {
+    const float f = static_cast<float>(v);
+    uint32_t w;
+    std::memcpy(&w, &f, 4);
+    out.push_back(w);
+  }
+  return out;
+}
+
 void warp_delta(double x, double y, double& dx, double& dy) {
   double cx, cy, cdx, cdy;
   face_to_chart(x, y, cx, cy);

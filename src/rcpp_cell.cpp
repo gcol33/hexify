@@ -500,7 +500,7 @@ static inline void frame_ij_to_xy(const QuadFrame& f, int quad, long long i, lon
 // a vertex.
 static inline bool frame_canonicalize(const QuadFrame& f, int& quad,
                                       long long& i, long long& j) {
-    if (frame_hex9(f)) return hexify::substrate_ij_canonicalize(quad, i, j, f.dim);
+    if (frame_hex9(f)) return hexify::substrate_ij_canonicalize(quad, i, j, f.dim, false);
     if (f.ap_seq.empty()) {
         return hexify::quad_ij_canonicalize(quad, i, j, f.aperture, f.resolution);
     }
@@ -638,6 +638,15 @@ NumericVector cpp_quad_ij_to_cell(NumericVector icosa, IntegerVector quad, Numer
             // Outside every adjacent quad, which is where the solid
             // folds at a vertex. No cell owns the coordinate.
             continue;
+        }
+        // On Hex9 a vertex of the solid is a lattice point and no cell
+        if (frame_hex9(f)) {
+            hexify::hex9::OctPoint p;
+            if (hexify::topo().is_pole(q) ||
+                !hexify::hex9::quad_ij_lattice(q, ii, jj, f.resolution, p) ||
+                !hexify::hex9::is_centre(p)) {
+                continue;
+            }
         }
         result[k] = hexify::cell_id_slot(frame_encode(f, q, ii, jj));
     }
@@ -2313,18 +2322,68 @@ hexify::GlobeFrame hexify::globe_frame(int resolution, int aperture,
     const QuadFrame f = quad_frame(resolution, aperture, ap_seq);
     const SubstrateLattice lattice = sublattice_of(f.form);
     const LatticeGenerator generator = generator_of(f.form);
-    return {f.dim, lattice.index, lattice.c, generator.a, generator.b,
-            f.offsetPerQuad, f.nCells};
+    hexify::GlobeFrame g = {f.dim, lattice.index, lattice.c, generator.a, generator.b,
+                            f.offsetPerQuad, f.nCells};
+    if (frame_hex9(f)) {
+        g.hex9_level = f.resolution;
+        for (int q = 0; q < hexify::kMaxVerts; q++) g.coset[q] = f.coset[q];
+    }
+    return g;
+}
+
+// The lattice maps and address tables a reader of the globe needs to turn a
+// Hex9 cell's place in the quads (its key) into its ID: per diamond quad and
+// face -- j <= i the face at 0-60 degrees, j >= i the one at 60-120 -- the
+// integer map (i, j) -> (x, y, z), six coefficients for i and j, then the
+// three constants; and the tables of hex9::tables().
+static List hex9_globe_tables(const QuadFrame& f) {
+    const long long d = f.dim;
+    const long long pts[2][3][2] = {{{0, 0}, {d, 0}, {d, d}}, {{0, 0}, {d, d}, {0, d}}};
+    std::vector<double> maps;
+    for (int q = 1; q <= hexify::topo().n_diamonds(); q++) {
+        for (int h = 0; h < 2; h++) {
+            hexify::hex9::OctPoint p[3];
+            for (int k = 0; k < 3; k++) {
+                if (!hexify::hex9::quad_ij_lattice(q, pts[h][k][0], pts[h][k][1],
+                                                   f.resolution, p[k])) {
+                    stop("hexify internal error: a quad corner off the Hex9 lattice");
+                }
+            }
+            // (i, j) = (0, 0) + a * e_i + b * e_j through the two other corners
+            for (int axis = 0; axis < 3; axis++) {
+                const double c0 = static_cast<double>(p[0].c[axis]);
+                const double c1 = static_cast<double>(p[1].c[axis]) - c0;
+                const double c2 = static_cast<double>(p[2].c[axis]) - c0;
+                maps.push_back((h == 0) ? c1 / d : (c1 - c2) / d);
+                maps.push_back((h == 0) ? (c2 - c1) / d : c2 / d);
+            }
+            for (int axis = 0; axis < 3; axis++) maps.push_back(static_cast<double>(p[0].c[axis]));
+        }
+    }
+    const hexify::hex9::Tables t = hexify::hex9::tables();
+    return List::create(_["level"] = f.resolution, _["maps"] = maps,
+                        _["child_code"] = t.child_code, _["child_mode"] = t.child_mode,
+                        _["child_offset"] = t.child_offset, _["rid_code"] = t.rid_code,
+                        _["root_c2"] = t.root_c2, _["root_digit"] = t.root_digit,
+                        _["reg_hex"] = t.reg_hex);
 }
 
 // What a renderer needs to find the cell of a quad-plane point by itself:
-// the grid's GlobeFrame.
+// the grid's GlobeFrame, its cosets two bits per quad, whether its vertex
+// quads hold a cell each, and on Hex9 hex9_globe_tables().
 // [[Rcpp::export]]
 List cpp_globe_frame(NumericVector icosa, int resolution, int aperture, IntegerVector ap_seq) {
     activate_grid(icosa);
     const QuadFrame q = grid_frame(resolution, aperture, ap_seq);
     const hexify::GlobeFrame f = hexify::globe_frame(q.resolution, q.aperture, q.ap_seq);
+    double coset = 0.0;
+    for (int k = 0; k < hexify::topo().n_quads(); k++) coset += f.coset[k] * std::pow(4.0, k);
+    RObject hex9;
+    if (frame_hex9(q)) hex9 = hex9_globe_tables(q);
     return List::create(
+        _["hex9"] = hex9,
+        _["coset"] = coset,
+        _["vertex_cells"] = f.vertex_cells(),
         _["dim"] = static_cast<double>(f.dim),
         _["index"] = static_cast<double>(f.index),
         _["c"] = static_cast<double>(f.c),

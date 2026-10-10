@@ -33,6 +33,14 @@ cpp_globe_table <- function(icosa, levels, cell_id, values, all_cells, ramp, lay
     .Call(`_hexify_cpp_globe_table`, icosa, levels, cell_id, values, all_cells, ramp, layout, listing)
 }
 
+cpp_globe_keys <- function(icosa, cell_id, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_globe_keys`, icosa, cell_id, resolution, aperture, ap_seq)
+}
+
+cpp_globe_key_cells <- function(icosa, key, resolution, aperture, ap_seq) {
+    .Call(`_hexify_cpp_globe_key_cells`, icosa, key, resolution, aperture, ap_seq)
+}
+
 cpp_hex_quantize_ap3 <- function(icosa_triangle_x, icosa_triangle_y, resolution) {
     .Call(`_hexify_cpp_hex_quantize_ap3`, icosa_triangle_x, icosa_triangle_y, resolution)
 }
@@ -379,6 +387,10 @@ cpp_hex9_warp_load <- function(bytes) {
 
 cpp_hex9_warp_ready <- function() {
     .Call(`_hexify_cpp_hex9_warp_ready`)
+}
+
+cpp_hex9_warp_texture <- function() {
+    .Call(`_hexify_cpp_hex9_warp_texture`)
 }
 
 cpp_hex9_digit_strings_unique <- function() {

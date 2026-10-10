@@ -14,7 +14,9 @@
 // hexify.
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
+#include <vector>
 
 namespace hexify {
 namespace hex9 {
@@ -37,6 +39,11 @@ void warp_apply(double x, double y, double& px, double& py);
 
 // The lattice point L with L + d(L) = (px, py), by Newton's method
 void warp_solve(double px, double py, double& x, double& y);
+
+// The field as the globe shader reads it (globe.wgsl's warp_word()): n, the
+// first point of each wedge column, then each point's six numbers as 32-bit
+// floats; empty when no field is loaded
+std::vector<uint32_t> warp_texture_words();
 
 } // namespace hex9
 } // namespace hexify

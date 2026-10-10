@@ -149,6 +149,10 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 // goes into its face's quad, is scaled to the substrate, and its cell is the
 // nearest multiple of the grid's generator there.
 //
+// A Hex9 grid's cells are a coset of their sublattice, shifted along j in
+// each quad by the coset its Level carries, and no cell sits at a vertex of
+// the solid; its keys count the cells from the first diamond quad's.
+//
 // The cells' values sit in a table laid out like the quads (see
 // src/globe_table.cpp): per resolution, a block per diamond quad whose row u
 // holds substrate column u, padded past the quad's box with the cells that
@@ -170,17 +174,20 @@ struct Face {
 struct Level {
   frame: vec4u,      // quad side in substrate steps, sublattice index, c, rows of a block
   shape: vec4i,      // generator a + b omega, padding rows and columns of a block
-  slots: vec4u,      // slots per block row, first slot of the part (high, low 32 bits)
+  slots: vec4u,      // slots per block row, first slot of the part (high, low 32 bits),
+                     // each quad's coset in two bits
   size: vec4f,       // x: mean cell width in radians
 };
 
 struct Grid {
   snyder0: vec4f,    // tan, cos of the edge angle, cot 30 degrees, sin G
   snyder1: vec4f,    // cos G, G, R', R'^2
-  snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller, 2 IVEA)
+  snyder2: vec4f,    // face-plane origin x, y, face edge, projection (0 ISEA, 1 Fuller,
+                     // 2 IVEA, 3 AK, 4 AK with Hex9's warp)
   flags: vec4u,      // every cell drawn, values given, smooth fill, faces
   ids: vec4u,        // cells per quad (high, low 32 bits), levels in the table, keys stored
-  table: vec4u,      // slots M, hash seed, offsets
+  table: vec4u,      // slots M, hash seed, offsets, cells before the first diamond
+                     // quad (1, the vertex quad's, or 0 for Hex9)
   na_fill: vec4f,    // fill of a cell whose value is NA
   ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
   faces: array<Face, 20>,
@@ -447,9 +454,320 @@ fn ivea_face(p: vec3f, f: u32) -> vec2f {
   return vec2f(q.x * sc_k.y + q.y * sc_k.x + 0.5, q.y * sc_k.y - q.x * sc_k.x + rin);
 }
 
+// Hex9's warp (projection "akw"; src/hex9_warp.cpp), in 32-bit floats.
+// The field texture holds libhex9's level-6 field as hex9_warp.cpp reads it:
+// word 0 is n, the lattice steps along a face edge; words 1 .. n + 1 the
+// first point of each wedge column i, the column's points running j = i,
+// i + 2, ...; then six floats per wedge point, (dx, dy) and the gradients
+// d dx/dx, d dx/dy, d dy/dx, d dy/dy. All of it lives in libhex9's chart of
+// a face, a triangle of edge sqrt(2) pointing down, its lower corner C at
+// (0, -2H/3), H = sqrt(6) / 2. The displacement elsewhere on the face follows
+// from the face's six symmetries and the reflection across its right edge;
+// between lattice points it is the Clough-Tocher cubic.
+
+@group(1) @binding(9) var warp_field: texture_2d<u32>;
+
+const WARP_W = 1.41421356237310;     // the chart's edge
+const WARP_H = 1.22474487139159;     // its height
+const WARP_VF = -0.816496580927726;  // its lower corner C, (0, -2H/3)
+const WARP_INR = 0.288675134594813;  // the unit triangle's inradius
+const WARP_TOL = 1e-7;
+
+fn warp_word(k: u32) -> u32 {
+  return textureLoad(warp_field, vec2u(k & 8191u, k >> 13u), 0).x;
+}
+
+// The face's symmetries in hex9_warp.cpp's fold order: the identity, the two
+// turns, then each after the mirror x -> -x
+fn warp_sym(k: u32) -> mat2x2f {
+  switch k {
+    case 1u: { return mat2x2f(vec2f(-0.5, SIN60), vec2f(-SIN60, -0.5)); }
+    case 2u: { return mat2x2f(vec2f(-0.5, -SIN60), vec2f(SIN60, -0.5)); }
+    case 3u: { return mat2x2f(vec2f(-1.0, 0.0), vec2f(0.0, 1.0)); }
+    case 4u: { return mat2x2f(vec2f(0.5, SIN60), vec2f(SIN60, -0.5)); }
+    case 5u: { return mat2x2f(vec2f(0.5, -SIN60), vec2f(-SIN60, -0.5)); }
+    default: { return mat2x2f(vec2f(1.0, 0.0), vec2f(0.0, 1.0)); }
+  }
+}
+
+// The wedge's side of the median, and the face's side of the right edge
+const WARP_N2 = vec2f(-0.5, -0.866025403784439);
+const WARP_N3 = vec2f(-0.866025403784439, 0.5);
+
+// The symmetry carrying p into the wedge's cone
+fn warp_fold(p: vec2f) -> u32 {
+  for (var k = 0u; k < 6u; k++) {
+    let c = warp_sym(k) * p;
+    if (c.x >= -WARP_TOL && dot(c, WARP_N2) >= -WARP_TOL) {
+      return k;
+    }
+  }
+  return 0u;
+}
+
+// A field value and its gradients at a lattice point: d = (dx, dy), and J
+// with J * v the change of d along v
+struct WarpDatum {
+  d: vec2f,
+  J: mat2x2f,
+};
+
+// The datum of the wedge point nearest q, zero off the wedge
+fn wedge_datum(q: vec2f, n: i32) -> WarpDatum {
+  var out: WarpDatum;
+  out.d = vec2f(0.0);
+  out.J = mat2x2f(vec2f(0.0), vec2f(0.0));
+  let ux = WARP_W / (2.0 * f32(n));
+  let uy = WARP_H / f32(n);
+  let i = i32(round(q.x / ux));
+  let j = i32(round((q.y - WARP_VF) / uy));
+  if (i < 0 || i > n || j < i || ((i + j) & 1) != 0 || i + 3 * j > 2 * n) {
+    return out;
+  }
+  let start = warp_word(1u + u32(i));
+  let at = 2u + u32(n) + 6u * (start + u32((j - i) / 2));
+  var r: array<f32, 6>;
+  for (var k = 0u; k < 6u; k++) {
+    r[k] = bitcast<f32>(warp_word(at + k));
+  }
+  out.d = vec2f(r[0], r[1]);
+  out.J = mat2x2f(vec2f(r[2], r[4]), vec2f(r[3], r[5]));
+  return out;
+}
+
+// The datum at a lattice point of the face or its edge band: carried into
+// the wedge by the face's symmetries and, past the right edge, the
+// reflection there; with p = M q, d(p) = M d(q) and J(p) = M J(q) M^T.
+fn lattice_datum(p_in: vec2f, n: i32) -> WarpDatum {
+  let corner = vec2f(0.0, WARP_VF);
+  let s3 = mat2x2f(vec2f(-0.5, SIN60), vec2f(SIN60, 0.5));
+  var M = mat2x2f(vec2f(1.0, 0.0), vec2f(0.0, 1.0));
+  var p = p_in;
+  for (var turn = 0; turn < 3; turn++) {
+    let T = warp_sym(warp_fold(p));
+    let q = T * p;
+    M = M * transpose(T);
+    if (dot(q - corner, WARP_N3) >= -WARP_TOL) {
+      let w = wedge_datum(q, n);
+      var out: WarpDatum;
+      out.d = M * w.d;
+      out.J = M * w.J * transpose(M);
+      return out;
+    }
+    p = corner + s3 * (q - corner);
+    M = M * s3;
+  }
+  var zero: WarpDatum;
+  zero.d = vec2f(0.0);
+  zero.J = mat2x2f(vec2f(0.0), vec2f(0.0));
+  return zero;
+}
+
+// One component's Clough-Tocher cubic over the lattice triangle P, from its
+// values v and gradients gr at the corners, at barycentric b (Alfeld's
+// split at the centroid, the cross-boundary weights G)
+fn clough_tocher(P: array<vec2f, 3>, v: vec3f, gr: array<vec2f, 3>, G: vec3f, b: vec3f) -> f32 {
+  let e01 = P[1] - P[0];
+  let e02 = P[2] - P[0];
+  let e12 = P[2] - P[1];
+  let d01 = dot(gr[0], e01);
+  let d02 = dot(gr[0], e02);
+  let d10 = -dot(gr[1], e01);
+  let d12 = dot(gr[1], e12);
+  let d20 = -dot(gr[2], e02);
+  let d21 = -dot(gr[2], e12);
+  let c3000 = v.x;
+  let c0300 = v.y;
+  let c0030 = v.z;
+  let c2100 = (d01 + 3.0 * c3000) / 3.0;
+  let c1200 = (d10 + 3.0 * c0300) / 3.0;
+  let c2010 = (d02 + 3.0 * c3000) / 3.0;
+  let c0210 = (d12 + 3.0 * c0300) / 3.0;
+  let c1020 = (d20 + 3.0 * c0030) / 3.0;
+  let c0120 = (d21 + 3.0 * c0030) / 3.0;
+  let c2001 = (c2100 + c2010 + c3000) / 3.0;
+  let c0201 = (c1200 + c0300 + c0210) / 3.0;
+  let c0021 = (c1020 + c0120 + c0030) / 3.0;
+  let c0111 = (G.x * (-c0300 + 3.0 * c0210 - 3.0 * c0120 + c0030) +
+               (-c0300 + 2.0 * c0210 - c0120 + c0021 + c0201)) / 2.0;
+  let c1011 = (G.y * (-c0030 + 3.0 * c1020 - 3.0 * c2010 + c3000) +
+               (-c0030 + 2.0 * c1020 - c2010 + c2001 + c0021)) / 2.0;
+  let c1101 = (G.z * (-c3000 + 3.0 * c2100 - 3.0 * c1200 + c0300) +
+               (-c3000 + 2.0 * c2100 - c1200 + c2001 + c0201)) / 2.0;
+  let c1002 = (c1101 + c1011 + c2001) / 3.0;
+  let c0102 = (c1101 + c0111 + c0201) / 3.0;
+  let c0012 = (c1011 + c0111 + c0021) / 3.0;
+  let c0003 = (c1002 + c0102 + c0012) / 3.0;
+  let mn = min(b.x, min(b.y, b.z));
+  let s1 = b.x - mn;
+  let s2 = b.y - mn;
+  let s3 = b.z - mn;
+  let s4 = 3.0 * mn;
+  return s1 * s1 * s1 * c3000 + 3.0 * s1 * s1 * s2 * c2100 + 3.0 * s1 * s1 * s3 * c2010 +
+         3.0 * s1 * s1 * s4 * c2001 + 3.0 * s1 * s2 * s2 * c1200 +
+         6.0 * s1 * s2 * s4 * c1101 + 3.0 * s1 * s3 * s3 * c1020 + 6.0 * s1 * s3 * s4 * c1011 +
+         3.0 * s1 * s4 * s4 * c1002 + s2 * s2 * s2 * c0300 + 3.0 * s2 * s2 * s3 * c0210 +
+         3.0 * s2 * s2 * s4 * c0201 + 3.0 * s2 * s3 * s3 * c0120 + 6.0 * s2 * s3 * s4 * c0111 +
+         3.0 * s2 * s4 * s4 * c0102 + s3 * s3 * s3 * c0030 + 3.0 * s3 * s3 * s4 * c0021 +
+         3.0 * s3 * s4 * s4 * c0012 + s4 * s4 * s4 * c0003;
+}
+
+// The displacement at a chart point of the wedge's cone, from the lattice
+// triangle holding it, and the corners' gradients blended by its
+// barycentric weights, which the solve below steps with
+fn wedge_delta(x: vec2f) -> WarpDatum {
+  let n = i32(warp_word(0u));
+  let ux = WARP_W / (2.0 * f32(n));
+  let uy = WARP_H / f32(n);
+  // Lattice coordinates along the 60- and 120-degree steps; the unit rhombus
+  // at (U, V) splits into the triangles on its lower and upper sides
+  let s = x.x / ux;
+  let t = (x.y - WARP_VF) / uy;
+  let u = 0.5 * (s + t);
+  let v = 0.5 * (t - s);
+  let U = floor(u);
+  let V = floor(v);
+  let lower = (u - U) + (v - V) < 1.0;
+  let cu = select(vec3f(U + 1.0, U, U + 1.0), vec3f(U, U + 1.0, U), lower);
+  let cv = select(vec3f(V, V + 1.0, V + 1.0), vec3f(V, V, V + 1.0), lower);
+  var P: array<vec2f, 3>;
+  var D: array<WarpDatum, 3>;
+  for (var k = 0; k < 3; k++) {
+    P[k] = vec2f((cu[k] - cv[k]) * ux, WARP_VF + (cu[k] + cv[k]) * uy);
+    D[k] = lattice_datum(P[k], n);
+  }
+  let T = mat2x2f(P[0] - P[2], P[1] - P[2]);
+  let det = T[0].x * T[1].y - T[1].x * T[0].y;
+  let e = x - P[2];
+  let b0 = (T[1].y * e.x - T[1].x * e.y) / det;
+  let b1 = (-T[0].y * e.x + T[0].x * e.y) / det;
+  let b = vec3f(b0, b1, 1.0 - b0 - b1);
+  // Cross-boundary weights from the centroid of the triangle across each
+  // edge, the reflection of this one's third corner through the edge
+  let V4 = (P[0] + P[1] + P[2]) / 3.0;
+  var G: vec3f;
+  for (var k = 0; k < 3; k++) {
+    let A = P[(k + 1) % 3];
+    let B = P[(k + 2) % 3];
+    let nb = (2.0 * A + 2.0 * B - P[k]) / 3.0;
+    let dd = nb - V4;
+    let a = V4 - A;
+    let ab = B - A;
+    G[k] = (dd.y * a.x - dd.x * a.y) / (dd.x * ab.y - dd.y * ab.x);
+  }
+  var out: WarpDatum;
+  for (var r = 0; r < 2; r++) {
+    let vals = vec3f(D[0].d[r], D[1].d[r], D[2].d[r]);
+    let grs = array<vec2f, 3>(vec2f(D[0].J[0][r], D[0].J[1][r]),
+                              vec2f(D[1].J[0][r], D[1].J[1][r]),
+                              vec2f(D[2].J[0][r], D[2].J[1][r]));
+    out.d[r] = clough_tocher(P, vals, grs, G, b);
+  }
+  out.J = b.x * D[0].J + b.y * D[1].J + b.z * D[2].J;
+  return out;
+}
+
+// The displacement at chart point p: folded into the wedge's cone, read
+// there and unfolded, d(p) = T^T d(T p), J(p) = T^T J(T p) T
+fn chart_delta(p: vec2f) -> WarpDatum {
+  let T = warp_sym(warp_fold(p));
+  let w = wedge_delta(T * p);
+  var out: WarpDatum;
+  out.d = transpose(T) * w.d;
+  out.J = transpose(T) * w.J * T;
+  return out;
+}
+
+// The lattice point L of face triangle coordinates whose L + d(L) is the
+// face point t, which AK^-1 gives: by Newton's method in the chart from t,
+// stepping with the blended gradients
+fn warp_solve(t: vec2f) -> vec2f {
+  let goal = vec2f(WARP_W * (t.x - 0.5), -WARP_W * (t.y - WARP_INR));
+  var c = goal;
+  for (var it = 0; it < 5; it++) {
+    let w = chart_delta(c);
+    let e = c + w.d - goal;
+    let A = mat2x2f(vec2f(1.0, 0.0), vec2f(0.0, 1.0)) + w.J;
+    let det = A[0].x * A[1].y - A[1].x * A[0].y;
+    c -= vec2f(A[1].y * e.x - A[1].x * e.y, A[0].x * e.y - A[0].y * e.x) / det;
+  }
+  return vec2f(c.x / WARP_W + 0.5, -c.y / WARP_W + WARP_INR);
+}
+
+// Kaseorg's octahedral projection (AK; src/projection_ak.cpp) of the unit
+// vector p onto face f, as triangle coordinates: the weights b on the face's
+// vertices whose direction sum_k t_k (t_i^2 + t_j^2 + alpha t_i^2 t_j^2)^(1/4)
+// V_k, t_k = tan(pi b_k / 2), is p's, by Gauss-Newton on b_0 and b_2 from
+// the gnomonic start.
+const AK_ALPHA = 3.22780623714388;
+
+fn ak_face(p: vec3f, f: u32) -> vec2f {
+  let face = grid.faces[f];
+  let cos_el = grid.snyder0.y;
+  let sin_el = grid.snyder0.x * cos_el;
+  let ctr = face.centre.xyz;
+  let v0 = cos_el * ctr + sin_el * face.az_a.xyz;
+  let v1 = cos_el * ctr + sin_el * (-0.5 * face.az_a.xyz - SIN60 * face.az_b.xyz);
+  let v2 = cos_el * ctr + sin_el * (-0.5 * face.az_a.xyz + SIN60 * face.az_b.xyz);
+  let c = vec3f(dot(p, v0), dot(p, v1), dot(p, v2));
+  var b = c / (c.x + c.y + c.z);
+  for (var it = 0; it < 8; it++) {
+    var t: vec3f;
+    var dt: vec3f;
+    for (var k = 0; k < 3; k++) {
+      let sc = sincos(0.5 * PI * b[k]);
+      t[k] = sc.x / sc.y;
+      dt[k] = 0.5 * PI * (1.0 + t[k] * t[k]);
+    }
+    // X_k and its derivatives along b_0 and b_2 (b_1 = 1 - b_0 - b_2)
+    var x: vec3f;
+    var du: vec3f;
+    var dw: vec3f;
+    for (var k = 0; k < 3; k++) {
+      let i = (k + 1) % 3;
+      let j = (k + 2) % 3;
+      let ti = t[i] * t[i];
+      let tj = t[j] * t[j];
+      let s = ti + tj + AK_ALPHA * ti * tj;
+      let q = sqrt(sqrt(s));
+      x[k] = t[k] * q;
+      var g: vec3f;
+      g[k] = dt[k] * q;
+      g[i] = t[k] * 0.25 * q / s * 2.0 * t[i] * dt[i] * (1.0 + AK_ALPHA * tj);
+      g[j] = t[k] * 0.25 * q / s * 2.0 * t[j] * dt[j] * (1.0 + AK_ALPHA * ti);
+      du[k] = g[0] - g[1];
+      dw[k] = g[2] - g[1];
+    }
+    // The direction of X is c's where X x c vanishes.
+    let r = cross(x, c);
+    let ju = cross(du, c);
+    let jw = cross(dw, c);
+    let a = dot(ju, ju);
+    let bb = dot(ju, jw);
+    let d = dot(jw, jw);
+    let det = a * d - bb * bb;
+    if (det == 0.0) {
+      break;
+    }
+    let gu = dot(ju, r);
+    let gw = dot(jw, r);
+    let su = (d * gu - bb * gw) / det;
+    let sw = (a * gw - bb * gu) / det;
+    b = vec3f(b.x - su, b.y + su + sw, b.z - sw);
+  }
+  return vec2f(0.5 * b.x + b.z, SIN60 * b.x);
+}
+
 // The grid's face projection of the unit vector p onto face f: snyder2.w is
-// 0 for ISEA, 1 for Fuller and 2 for IVEA.
+// 0 for ISEA, 1 for Fuller, 2 for IVEA, 3 for AK and 4 for AK with Hex9's
+// warp.
 fn face_xy(p: vec3f, f: u32) -> vec2f {
+  if (grid.snyder2.w > 3.5) {
+    return warp_solve(ak_face(p, f));
+  }
+  if (grid.snyder2.w > 2.5) {
+    return ak_face(p, f);
+  }
   if (grid.snyder2.w > 1.5) {
     return ivea_face(p, f);
   }
@@ -551,15 +869,42 @@ struct Spot {
   offset: vec2f,     // the point from its cell's centre, in the same plane
 };
 
-// The substrate point qa + qb omega times the level's generator
-fn lattice_point(level: Level, qa: i32, qb: i32) -> vec2i {
+// The coset of a level's cells in a quad: 0 but on Hex9
+fn level_coset(level: Level, quad: u32) -> i32 {
+  return i32((level.slots.w >> (2u * quad)) & 3u);
+}
+
+// The cell centre qa + qb omega times the level's generator, shifted by the
+// quad's coset
+fn lattice_point(level: Level, quad: u32, qa: i32, qb: i32) -> vec2i {
   let ga = level.shape.x;
   let gb = level.shape.y;
-  return vec2i(ga * qa - gb * qb, ga * qb + gb * qa - gb * qb);
+  return vec2i(ga * qa - gb * qb, ga * qb + gb * qa - gb * qb + level_coset(level, quad));
+}
+
+// Hex9 has no cell at a vertex of the solid. Inside a face the plane's
+// nearest centre is always one of the solid's, but a point that rounding puts
+// past a vertex can be nearest the centre that would lie in the plane beyond
+// it, off the solid, and a point at the vertex is as near that one as the
+// two real ones. So on Hex9 the point is held inside its face, as
+// lonlat_to_cell() holds it, and 4e-6 face edges (about 6e-6 radians) from
+// its edges: some thirty float steps, which the rounding cannot undo, and
+// within the shader's error.
+fn held_in_face(t: vec2f) -> vec2f {
+  if (grid.table.w != 0u) {
+    return t;
+  }
+  let least = 4e-6;
+  let top = max(t.y / SIN60, least);
+  let right = max(t.x - 0.5 * t.y / SIN60, least);
+  let left = max(1.0 - t.y / SIN60 - (t.x - 0.5 * t.y / SIN60), least);
+  let sum = top + right + left;
+  return vec2f((0.5 * top + right) / sum, SIN60 * top / sum);
 }
 
 // The point at triangle coordinates t of face f among the cells of level lv.
-fn locate(lv: u32, f: u32, t: vec2f) -> Spot {
+fn locate(lv: u32, f: u32, t_in: vec2f) -> Spot {
+  let t = held_in_face(t_in);
   let level = grid.levels[lv];
   let place = grid.faces[f].quad;
   let turn = u32(place.y) % 6u;
@@ -571,8 +916,8 @@ fn locate(lv: u32, f: u32, t: vec2f) -> Spot {
   // conj(g) = (ga - gb) - gb omega, over the norm N, with omega^2 = -1 - omega.
   let n = level.frame.y;
   let p = q * f32(level.frame.x);
-  let b = p.y / SIN60;
-  let a = p.x + 0.5 * b;
+  let b = p.y / SIN60 - f32(level_coset(level, u32(place.x)));
+  let a = p.x + 0.5 * p.y / SIN60;
   let ca = f32(level.shape.x - level.shape.y);
   let cb = f32(-level.shape.y);
   let za = (a * ca - b * cb) / f32(n);
@@ -600,7 +945,7 @@ fn locate(lv: u32, f: u32, t: vec2f) -> Spot {
 
   var s: Spot;
   s.quad = u32(place.x);
-  s.centre = lattice_point(level, qa, qb);
+  s.centre = lattice_point(level, s.quad, qa, qb);
   s.lattice = vec2f(za, zb);
   s.spot = vec2f(za - 0.5 * zb, SIN60 * zb);
   let la = za - f32(qa);
@@ -622,12 +967,12 @@ fn spot_id(s: Spot) -> vec2u {
   }
   let u = u32(own.y);
   let v = u32(own.z);
-  let residue = (level.frame.z * u) % n;
+  let residue = (level.frame.z * u + u32(level_coset(level, u32(own.x)))) % n;
   let within = add64(mul_wide(u, dim / n), vec2u(0u, (v - residue) / n));
   let k = u32(own.x) - 1u;
   let before = vec2u(grid.ids.x * k + mul_wide(grid.ids.y, k).x,
                      mul_wide(grid.ids.y, k).y);
-  return add64(add64(before, within), vec2u(0u, 2u));
+  return add64(add64(before, within), vec2u(0u, 1u + grid.table.w));
 }
 
 // The word of a slot no cell is given at
@@ -744,7 +1089,7 @@ fn spot_fill(lv: u32, s: Spot, word: u32) -> vec4f {
     var sum = 0.0;
     var weight = 0.0;
     for (var k = 0; k < 3; k++) {
-      let c = lattice_point(grid.levels[lv], corners[k].x, corners[k].y);
+      let c = lattice_point(grid.levels[lv], s.quad, corners[k].x, corners[k].y);
       let w = cell_word(lv, s.quad, c);
       if (w != ABSENT) {
         let corner = cell_sample(lv, w);

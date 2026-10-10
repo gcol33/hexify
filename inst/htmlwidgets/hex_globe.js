@@ -134,6 +134,91 @@
     return out;
   }
 
+  // ---------------------------------------------------------------------------
+  // Hex9 cell IDs (src/hex9.cpp)
+  // ---------------------------------------------------------------------------
+  //
+  // The shader names a Hex9 cell by its place in the quads (its key); its ID
+  // is its address, read here from the cell's centre as hex9::encode() reads
+  // it, with the tables globe_grid() sends: the centre's triangle around it
+  // in the cell's mode-0 half, then the t_cells holding that triangle, one
+  // digit per level. Numbers stay below 2^53.
+
+  const HEX9_AROUND = [[2, -1, -1], [1, 1, -2], [-1, 2, -1], [-2, 1, 1], [-1, -1, 2], [1, -2, 1]];
+
+  function hex9Classify(u, v, scale, pmo) {
+    const s1 = scale, s2 = 2 * scale, ymx = v - u, ypx = v + u;
+    let h, p, n;
+    if (pmo === 0) {
+      h = v > s2 ? 0 : v >= s1 ? 1 : v >= 0 ? 2 : v > -s1 ? 3 : v > -s2 ? 4 : 5;
+      p = ymx >= s2 ? 0 : ymx >= 0 ? 1 : ymx >= -s2 ? 2 : 3;
+      n = ypx < -s2 ? 0 : ypx <= 0 ? 1 : ypx < s2 ? 2 : 3;
+    } else {
+      h = v > s2 ? 0 : v > s1 ? 1 : v >= 0 ? 2 : v > -s1 ? 3 : v > -s2 ? 4 : 5;
+      p = ymx > s2 ? 0 : ymx > 0 ? 1 : ymx > -s2 ? 2 : 3;
+      n = ypx <= -s2 ? 0 : ypx <= 0 ? 1 : ypx <= s2 ? 2 : 3;
+    }
+    return (h << 4) | (p << 2) | n;
+  }
+
+  function hex9Encode(c, level, T) {
+    const pow3 = (k) => Math.pow(3, k);
+    const zero = c.findIndex((x) => x === 0);
+    const signs = [c.map((x) => (x < 0 ? -1 : 1))];
+    if (zero >= 0) signs.push(signs[0].map((s, k) => (k === zero ? -1 : s)));
+    let q = null, oid = 0, mode = 0;
+    for (const s of signs) {
+      oid = (s[0] < 0 ? 1 : 0) | (s[1] < 0 ? 2 : 0) | (s[2] < 0 ? 4 : 0);
+      mode = (oid ^ (oid >> 1) ^ (oid >> 2)) & 1;
+      for (const d of HEX9_AROUND) {
+        const w = c.map((x, k) => 3 * Math.abs(x) + d[k]);
+        if (w.some((x) => x <= 0)) continue;
+        const f = Math.floor(w[0] / 9) + Math.floor(w[1] / 9) + Math.floor(w[2] / 9);
+        if ((mode ^ (f === pow3(level) - 2 ? 1 : 0)) === 0) { q = w; break; }
+      }
+      if (q) break;
+    }
+    if (!q) return NaN;
+    const M = level + 1;
+    const u = q[0] - q[1], v = mode === 0 ? pow3(M) - q[2] : q[2] - pow3(M);
+    const rid = [mode];
+    let scale = pow3(M), pmo = mode, ou = 0, ov = 0;
+    for (let k = 0; k < M; k++) {
+      const code = hex9Classify(u - ou, v - ov, scale, pmo);
+      const j = T.child_code.indexOf(code, 9 * pmo) - 9 * pmo;
+      if (j < 0 || j > 8) return NaN;
+      const child = scale / 3;
+      ou += T.child_offset[(9 * pmo + j) * 2] * child;
+      ov += T.child_offset[(9 * pmo + j) * 2 + 1] * child;
+      rid.push(T.rid_code.indexOf(code));
+      pmo = T.child_mode[9 * pmo + j];
+      scale = child;
+    }
+    const j0 = T.child_code.indexOf(T.rid_code[rid[1]], 9 * mode) - 9 * mode;
+    let id = T.root_digit[3 * oid + T.root_c2[9 * mode + j0]];
+    for (let k = 1; k <= level; k++) {
+      id = id * 9 + T.reg_hex[(((rid[k - 1] & 1) * 12 + rid[k]) * 12 + rid[k + 1]) * 2];
+    }
+    return id + 1;
+  }
+
+  // The ID of the Hex9 cell of key `key`, its place in the quads from 1
+  // (cell_index() in src/globe_table.cpp)
+  function hex9Id(key, H) {
+    const perQuad = H.per_quad[0] * 4294967296 + H.per_quad[1];
+    const quad = Math.floor((key - 1) / perQuad) + 1;
+    const within = key - 1 - (quad - 1) * perQuad;
+    const rows = H.dim / H.index;
+    const i = Math.floor(within / rows);
+    const coset = Math.floor(H.coset / Math.pow(4, quad)) % 4;
+    const residue = (((H.c * i + coset) % H.index) + H.index) % H.index;
+    const j = (within - i * rows) * H.index + residue;
+    const m = H.maps.slice(((quad - 1) * 2 + (j <= i ? 0 : 1)) * 9);
+    const p = [m[0] * i + m[1] * j + m[6], m[2] * i + m[3] * j + m[7],
+               m[4] * i + m[5] * j + m[8]];
+    return hex9Encode(p, H.level, H);
+  }
+
   function gpuBuffer(device, data, usage) {
     const size = Math.max(16, Math.ceil(data.byteLength / 4) * 4);
     const buf = device.createBuffer({ size: size, usage: usage, mappedAtCreation: true });
@@ -424,7 +509,9 @@
       await t.read.mapAsync(GPUMapMode.READ);
       const r = new Uint32Array(t.read.getMappedRange().slice(0, 16));
       t.read.unmap();
-      return cellRecord(r, 0);
+      const cell = cellRecord(r, 0);
+      if (cell && this.x.grid.hex9) cell.id = hex9Id(cell.id, this.x.grid.hex9);
+      return cell;
     }
 
     // The cells of directions given as base64 xyz float triples, found by

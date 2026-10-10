@@ -113,6 +113,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_globe_keys
+NumericVector cpp_globe_keys(NumericVector icosa, NumericVector cell_id, int resolution, int aperture, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_globe_keys(SEXP icosaSEXP, SEXP cell_idSEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cell_id(cell_idSEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_keys(icosa, cell_id, resolution, aperture, ap_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_globe_key_cells
+NumericVector cpp_globe_key_cells(NumericVector icosa, NumericVector key, int resolution, int aperture, IntegerVector ap_seq);
+RcppExport SEXP _hexify_cpp_globe_key_cells(SEXP icosaSEXP, SEXP keySEXP, SEXP resolutionSEXP, SEXP apertureSEXP, SEXP ap_seqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type icosa(icosaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type key(keySEXP);
+    Rcpp::traits::input_parameter< int >::type resolution(resolutionSEXP);
+    Rcpp::traits::input_parameter< int >::type aperture(apertureSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ap_seq(ap_seqSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_globe_key_cells(icosa, key, resolution, aperture, ap_seq));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_hex_quantize_ap3
 NumericVector cpp_hex_quantize_ap3(double icosa_triangle_x, double icosa_triangle_y, int resolution);
 RcppExport SEXP _hexify_cpp_hex_quantize_ap3(SEXP icosa_triangle_xSEXP, SEXP icosa_triangle_ySEXP, SEXP resolutionSEXP) {
@@ -1294,6 +1324,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_hex9_warp_texture
+List cpp_hex9_warp_texture();
+RcppExport SEXP _hexify_cpp_hex9_warp_texture() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(cpp_hex9_warp_texture());
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_hex9_digit_strings_unique
 bool cpp_hex9_digit_strings_unique();
 RcppExport SEXP _hexify_cpp_hex9_digit_strings_unique() {
@@ -1678,6 +1718,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_base64_bytes", (DL_FUNC) &_hexify_cpp_base64_bytes, 1},
     {"_hexify_cpp_base64_decode", (DL_FUNC) &_hexify_cpp_base64_decode, 1},
     {"_hexify_cpp_globe_table", (DL_FUNC) &_hexify_cpp_globe_table, 8},
+    {"_hexify_cpp_globe_keys", (DL_FUNC) &_hexify_cpp_globe_keys, 5},
+    {"_hexify_cpp_globe_key_cells", (DL_FUNC) &_hexify_cpp_globe_key_cells, 5},
     {"_hexify_cpp_hex_quantize_ap3", (DL_FUNC) &_hexify_cpp_hex_quantize_ap3, 3},
     {"_hexify_cpp_hex_center_ap3", (DL_FUNC) &_hexify_cpp_hex_center_ap3, 3},
     {"_hexify_cpp_hex_corners_ap3", (DL_FUNC) &_hexify_cpp_hex_corners_ap3, 4},
@@ -1765,6 +1807,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hexify_cpp_hex9_octahedron_cell", (DL_FUNC) &_hexify_cpp_hex9_octahedron_cell, 4},
     {"_hexify_cpp_hex9_warp_load", (DL_FUNC) &_hexify_cpp_hex9_warp_load, 1},
     {"_hexify_cpp_hex9_warp_ready", (DL_FUNC) &_hexify_cpp_hex9_warp_ready, 0},
+    {"_hexify_cpp_hex9_warp_texture", (DL_FUNC) &_hexify_cpp_hex9_warp_texture, 0},
     {"_hexify_cpp_hex9_digit_strings_unique", (DL_FUNC) &_hexify_cpp_hex9_digit_strings_unique, 0},
     {"_hexify_cpp_cell_to_index", (DL_FUNC) &_hexify_cpp_cell_to_index, 7},
     {"_hexify_cpp_index_to_cell", (DL_FUNC) &_hexify_cpp_index_to_cell, 4},

@@ -12,6 +12,7 @@
 #include "cell_id.h"
 #include "hex9.h"
 #include "hex9_warp.h"
+#include "globe_mesh.h"
 
 using namespace Rcpp;
 
@@ -117,6 +118,21 @@ void cpp_hex9_warp_load(RawVector bytes) {
 // [[Rcpp::export]]
 bool cpp_hex9_warp_ready() {
   return hexify::hex9::warp_ready();
+}
+
+// The loaded warp field as the globe's texture: rows of 8192 32-bit words
+// (hex9::warp_texture_words()), its width and height, and the words in
+// base64
+// [[Rcpp::export]]
+List cpp_hex9_warp_texture() {
+  std::vector<uint32_t> words = hexify::hex9::warp_texture_words();
+  if (words.empty()) stop("Hex9's warp field is not loaded");
+  const std::size_t side = 8192;
+  const std::size_t rows = (words.size() + side - 1) / side;
+  words.resize(rows * side, 0u);
+  return List::create(_["size"] = NumericVector::create(static_cast<double>(side),
+                                                        static_cast<double>(rows)),
+                      _["data"] = hexify::base64_words(words));
 }
 
 // Whether the Hex9 digit tables give every cell of a level its own digit

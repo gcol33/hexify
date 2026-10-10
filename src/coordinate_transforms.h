@@ -155,9 +155,11 @@ bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
 
 // The same walk on a bare substrate coordinate, given the coordinate of the
 // quad's far corner. A mixed aperture sequence stores its cells on the
-// substrate, so its quad edge is all the edge table needs.
+// substrate, so its quad edge is all the edge table needs. With
+// `vertex_cells` false, for a lattice with no cell at the solid's vertices
+// (Hex9), no point is moved to a vertex.
 bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
-                               long long top_edge);
+                               long long top_edge, bool vertex_cells = true);
 
 // Aperture 7: Inverse - surrogate IJ back to quad XY coordinates.
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,

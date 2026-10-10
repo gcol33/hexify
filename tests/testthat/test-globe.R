@@ -179,7 +179,7 @@ test_that("hex_globe builds a widget with every layer", {
   expect_equal(nrow(x$grid$levels), 3)
   expect_equal(x$grid$given, c(92, 32, 12))
   expect_length(b64_bytes(x$grid$uniform), 5184)
-  expect_equal(vapply(x$grid$textures, `[[`, integer(1), "binding"), 6:8)
+  expect_equal(vapply(x$grid$textures, `[[`, integer(1), "binding"), 6:9)
   expect_null(x$cells)
   expect_null(x$grid_lines)
   expect_equal(x$camera$distance, 2)
@@ -192,11 +192,22 @@ test_that("an ISEA grid is sent as its frame and its cells' table, not outlines"
   x <- hex_globe(g, land = FALSE)$x
   expect_true(x$grid$all)
   expect_null(x$grid$levels)
-  expect_equal(vapply(x$grid$textures, function(t) prod(t$size), numeric(1)), c(1, 1, 1))
+  expect_equal(vapply(x$grid$textures, function(t) prod(t$size), numeric(1)), c(1, 1, 1, 1))
   expect_lt(object.size(x), 2e6)
   uniform <- readBin(b64_bytes(x$grid$uniform), "integer", n = 1296, size = 4,
                      endian = "little")
   expect_equal(uniform[17:19], c(0, 3^10, 0))
+  # One cell in each vertex quad before the diamonds' cells, and no cosets
+  expect_equal(uniform[24], 1)
+  expect_equal(uniform[784 + 12], 0)
+  # Hex9: no vertex cells, and each quad's coset in two bits
+  h <- hex_grid(resolution = 3, aperture = 9)
+  xh <- hex_globe(h, land = FALSE)$x
+  uh <- readBin(b64_bytes(xh$grid$uniform), "integer", n = 1296, size = 4, endian = "little")
+  frame <- hexify:::cpp_globe_frame(hexify:::icosa_arg(h), 3L, 9L, integer(0))
+  expect_equal(uh[24], 0)
+  expect_equal(uh[784 + 12], frame$coset)
+  expect_gt(frame$coset, 0)
 
   # Four cells of 590,492 go into a perfect hash: their own slots, and the
   # padding of the quads their slots border.
@@ -223,7 +234,10 @@ test_that("the two ways of building coarser levels agree cell by cell", {
                     list(ap = "4/7", res = 5), list(ap = c(4, 3, 7, 4), res = 4),
                     list(ap = 3, res = 5, poly = "octahedron"),
                     list(ap = 3, res = 6, orient = c(-40, 20, 33)),
-                    list(ap = 3, res = 6, frac = 0.3), list(ap = 7, res = 4, frac = 0.5))) {
+                    list(ap = 3, res = 6, frac = 0.3), list(ap = 7, res = 4, frac = 0.5),
+                    list(ap = 9, res = 4, poly = "octahedron"),
+                    list(ap = 9, res = 4, poly = "octahedron", frac = 0.3),
+                    list(ap = 9, res = 3, poly = "octahedron", orient = c(-40, 20, 33)))) {
     g <- hex_grid(resolution = spec$res, aperture = spec$ap,
                   polyhedron = if (is.null(spec$poly)) "icosahedron" else spec$poly,
                   orientation = if (is.null(spec$orient)) "standard" else spec$orient)
@@ -262,7 +276,10 @@ test_that("the cells' table holds every cell where the shader reads it", {
   for (spec in list(list(ap = 3, res = 5), list(ap = 4, res = 4), list(ap = 3, res = 0),
                     list(ap = "4/3", res = 5), list(ap = c(4, 3, 4), res = 3),
                     list(ap = 4, res = 3, poly = "octahedron"),
-                    list(ap = 3, res = 4, orient = c(-40, 20, 33)))) {
+                    list(ap = 3, res = 4, orient = c(-40, 20, 33)),
+                    list(ap = 9, res = 0, poly = "octahedron"),
+                    list(ap = 9, res = 3, poly = "octahedron"),
+                    list(ap = 9, res = 2, poly = "octahedron", orient = c(-40, 20, 33)))) {
     g <- hex_grid(resolution = spec$res, aperture = spec$ap,
                   polyhedron = if (is.null(spec$poly)) "icosahedron" else spec$poly,
                   orientation = if (is.null(spec$orient)) "standard" else spec$orient)
@@ -285,7 +302,8 @@ test_that("the cells' table holds every cell where the shader reads it", {
     row <- (slot %% (L[["hp"]] * L[["wp"]])) %/% L[["wp"]]
     col <- slot %% L[["wp"]]
     u <- row - L[["pr"]]
-    v <- L[["index"]] * (col - L[["pc"]]) + (L[["c"]] * u) %% L[["index"]]
+    coset <- (L[["coset"]] %/% 4^q) %% 4
+    v <- L[["index"]] * (col - L[["pc"]]) + (L[["c"]] * u + coset) %% L[["index"]]
     owner <- as.numeric(hexify:::cpp_quad_ij_to_cell(icosa, as.integer(q), u, v,
                                                      lv$resolution, lv$aperture, lv$ap_seq))
     expected <- ifelse(is.na(owner), -1L,
@@ -436,7 +454,7 @@ test_that("a scene holds the widget's layers in its drawing order", {
   expect_equal(f32_words(s$layers[[3]]$grid)[25:28], x$style$na_fill, tolerance = 1e-6)
   # Level 0 is the grid's own frame: a quad side of 3, the aligned lattice
   expect_equal(grid[785:787], c(3, 1, 0))
-  expect_equal(vapply(s$layers[[3]]$textures, `[[`, integer(1), "binding"), 6:8)
+  expect_equal(vapply(s$layers[[3]]$textures, `[[`, integer(1), "binding"), 6:9)
   expect_type(s$layers[[3]]$textures[[1]]$data, "raw")
 })
 
@@ -572,6 +590,13 @@ test_that("wgpu and Chrome draw the same pixels", {
     hex_globe(hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron"),
               surface = "solid")
   )
+  h9 <- hex_grid(resolution = 3, aperture = 9)
+  globes <- c(globes, list(hex_globe(h9, values = cell_to_lonlat(seq_len(n_cells(h9)), h9)$lat_deg,
+                                     land = FALSE)))
+  if (hexify:::cpp_hex9_warp_ready() || file.exists(hexify:::hex9_warp_path())) {
+    globes <- c(globes, list(hex_globe(hex_grid(resolution = 2, aperture = 9, projection = "akw"),
+                                       surface = "solid", center = "pacific")))
+  }
   files <- replicate(2, tempfile(fileext = ".png"))
   on.exit(unlink(files))
   for (w in globes) {
@@ -624,7 +649,7 @@ shader_probe <- function(n, grid) {
   k <- sample(nrow(E), m, TRUE)
   t <- runif(m)
   near <- rbind(V[E[k, 1], ] * (1 - t) + V[E[k, 2], ] * t,
-                V[sample(12, n - 2 * m, TRUE), ])
+                V[sample(nrow(V), n - 2 * m, TRUE), ])
   near <- unitize(near) + matrix(rnorm(3 * nrow(near)), ncol = 3) * spread
   p <- unitize(rbind(cbind(sqrt(1 - z^2) * cos(phi), sqrt(1 - z^2) * sin(phi), z),
                      near))
@@ -657,7 +682,9 @@ within_reach <- function(p, cell, grid, eps) {
 # edges, about a pixel at the closest zoom). Past these grids the cells are
 # within a few times that error, and near a vertex the shader can land on a
 # centre the numbering gives to the neighbouring quad (4/7 at resolution 14,
-# cells 1e-5 radians wide, does).
+# cells 1e-5 radians wide, does). Hex9 at resolution 8 has a quad side of 3^9
+# steps, aperture 3's at resolution 18. Its own projection ("akw") needs
+# Hex9's warp field.
 GLOBE_AGREEMENT_CASES <- c(
   lapply(c(0, 1, 2, 5, 10, 15, 18), function(r) list(ap = 3, res = r)),
   lapply(c(0, 1, 3, 8, 14), function(r) list(ap = 4, res = r)),
@@ -675,7 +702,13 @@ GLOBE_AGREEMENT_CASES <- c(
   list(list(ap = 3, res = 10, proj = "ivea"),
        list(ap = 4, res = 8, proj = "ivea"),
        list(ap = 7, res = 5, proj = "ivea"),
-       list(ap = "4/3", res = 12, proj = "ivea", orient = c(-40, 20, 33)))
+       list(ap = "4/3", res = 12, proj = "ivea", orient = c(-40, 20, 33))),
+  lapply(c(0, 1, 3, 6, 8), function(r) list(ap = 9, res = r)),
+  list(list(ap = 9, res = 5, proj = "ivea", orient = c(-40, 20, 33)),
+       list(ap = 9, res = 4, proj = "ak"),
+       list(ap = 9, res = 8, proj = "ak", orient = c(150, -60, 200)),
+       list(ap = 9, res = 3, proj = "akw"),
+       list(ap = 9, res = 8, proj = "akw"))
 )
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5
@@ -698,6 +731,10 @@ test_that("the shader finds the cell lonlat_to_cell() finds, and reads its value
   skip_without_gpu_browser()
   set.seed(79)
   for (spec in GLOBE_AGREEMENT_CASES) {
+    if (identical(spec$proj, "akw") &&
+        !(hexify:::cpp_hex9_warp_ready() || file.exists(hexify:::hex9_warp_path()))) {
+      next
+    }
     grid <- hex_grid(resolution = spec$res, aperture = spec$ap,
                      orientation = if (is.null(spec$orient)) "standard" else spec$orient,
                      projection = if (is.null(spec$proj)) "isea" else spec$proj)

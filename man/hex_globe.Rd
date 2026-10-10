@@ -138,6 +138,9 @@ The cells of an ISEA grid are found per pixel on the graphics card, by the
 same projection and cell numbering as \code{\link{lonlat_to_cell}}, so the
 page holds the grid's description and the values rather than the cells'
 outlines, and a grid of any resolution draws as fast as a coarse one.
+Hex9 grids are found the same way; on Hex9's own projection
+(\code{projection = "akw"}) the page also carries the warp field
+(\code{\link{hex9_warp_download}}), 9.6 MB as a texture.
 The values sit on the graphics card as a texture laid out like the grid's
 quads, one block per quad and resolution, which the shader reads at the
 place it finds a cell. Where the cells shrink below a pixel the fill is
