@@ -175,8 +175,10 @@ List FaceMesh::to_list() const {
     tri[2 * k + 1] = ty_[k];
   }
   IntegerVector index(tri_.begin(), tri_.end());
+  IntegerVector face(face_.begin(), face_.end());
   return List::create(_["solid"] = solid, _["sphere"] = sphere,
-                      _["index"] = index, _["item"] = item, _["tri"] = tri);
+                      _["index"] = index, _["item"] = item, _["tri"] = tri,
+                      _["face"] = face);
 }
 
 void face_tri_corners(int face, double tx[3], double ty[3]) {

@@ -21,6 +21,18 @@
 #' where the cells get too small to see. The pointer shows the ID and value
 #' of the cell under it. H3 cells are drawn from their outlines.
 #'
+#' With \code{lambert}, the slider instead follows Lambert's construction of
+#' Snyder's projection (see \code{\link{projection_stages}}), on a grid with
+#' that projection: from the sphere (0), every point swings about its face's
+#' centre down onto the plane touching the sphere there, keeping its distance
+#' from the centre (1, Lambert's azimuthal equal-area projection); within
+#' that plane it moves to Snyder's azimuth and radius (2); and the plane
+#' scales about the sphere's centre onto the face (3), the face of the solid
+#' whose faces have the area of theirs on the sphere. The neighbouring faces'
+#' planes come apart along the way and meet again on the solid. A menu
+#' beside the slider switches between these three steps and one path per
+#' point that changes the angle, azimuth and radius together.
+#'
 #' Drag to turn the globe. Drag with Shift held to turn the view about the
 #' line of sight and, in the perspective view, to tilt the camera. The mouse
 #' wheel moves the perspective camera closer or zooms the orthographic view.
@@ -42,6 +54,14 @@
 #'   the flat faces of the grid's polyhedron; the slider folds one into the
 #'   other. An H3 grid
 #'   is drawn on the sphere only.
+#' @param lambert \code{NULL}, or a number from 0 to 3: the slider follows
+#'   Lambert's construction of Snyder's projection, and the globe opens at
+#'   that step (0 the sphere, 1 the Lambert points, 2 the nudged points, 3
+#'   the faces), in place of \code{surface}. Needs a grid with
+#'   \code{projection = "isea"}.
+#' @param lambert_path How the points move along the construction:
+#'   \code{"steps"}, its three steps one after the other, or \code{"single"},
+#'   one path each.
 #' @param palette Colours of the ramp from low to high values, or the name of
 #'   a palette of \code{\link[grDevices]{hcl.colors}}.
 #' @param limits Values at the two ends of the ramp; \code{NULL} uses the
@@ -69,11 +89,17 @@
 #'   cells <- seq_len(n_cells(grid))
 #'   centres <- cell_to_lonlat(cells, grid)
 #'   hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3")
+#'
+#'   # Lambert's construction of Snyder's projection, opened at the Lambert
+#'   # points
+#'   hex_globe(grid, lambert = 1, land = FALSE)
 #' }
 hex_globe <- function(x,
                       values = NULL,
                       cells = NULL,
                       surface = c("sphere", "solid"),
+                      lambert = NULL,
+                      lambert_path = c("steps", "single"),
                       center = c(lon = 15, lat = 32),
                       projection = c("orthographic", "perspective"),
                       distance = NULL,
@@ -104,8 +130,10 @@ hex_globe <- function(x,
   }
   surface <- match.arg(surface)
   projection <- match.arg(projection)
+  lambert_path <- match.arg(lambert_path)
   g <- extract_grid(x)
   face_edges <- resolve_surface(surface, face_edges, g)
+  stage <- globe_stage(lambert, lambert_path, g)
   camera <- resolve_camera(projection, distance, tilt, rotation, fov)
   icosa <- icosa_arg(g)
   center <- resolve_center(center, icosa)
@@ -142,6 +170,7 @@ hex_globe <- function(x,
       fov = if (!is.na(camera$fov)) camera$fov
     ),
     fold = if (surface == "sphere") 1 else 0,
+    stage = stage,
     lift = GLOBE_LIFT,
     foldable = !is_h3_grid(g),
     surface = globe_mesh(cpp_globe_faces(icosa, GLOBE_MESH_SPACING),
@@ -246,6 +275,50 @@ hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
   invisible(file)
 }
 
+#' The globe's place along Lambert's construction, as the widget reads it:
+#' the step `t` it opens at, its `path` (0 three steps, 1 one path), R',
+#' the `scale` R' / cos(g) from the inscribed solid to the one whose faces
+#' have the area of theirs on the sphere, the `extent` 1 / cos(g), the
+#' farthest the points reach from the centre (a vertex of the nudged face),
+#' and the face centres, four numbers each, padded to 20 faces; NULL without
+#' `lambert`
+#' @noRd
+globe_stage <- function(lambert, path, g) {
+  if (is.null(lambert)) return(NULL)
+  if (!is.numeric(lambert) || length(lambert) != 1L || !is.finite(lambert) ||
+      lambert < 0 || lambert > 3) {
+    stop("lambert must be NULL or a number from 0 to 3", call. = FALSE)
+  }
+  if (is_h3_grid(g)) {
+    stop("lambert follows the construction of an ISEA grid's projection; ",
+         "an H3 grid is built on a projection of its own", call. = FALSE)
+  }
+  check_lambert_grid(g)
+  p <- cpp_globe_projection(icosa_arg(g))
+  r1 <- p$constants[[7]]
+  cos_g <- p$constants[[2]]
+  centres <- numeric(80)
+  for (f in seq_len(p$n_faces)) centres[4 * (f - 1) + 1:3] <- p$faces[16 * (f - 1) + 1:3]
+  list(t = lambert, path = if (path == "single") 1L else 0L, r1 = r1,
+       scale = r1 / cos_g, extent = 1 / cos_g, centres = centres)
+}
+
+#' The frame of a globe's view (view_frame()), holding the points out to
+#' `extent` sphere radii from the centre along Lambert's construction: the
+#' rim of the sphere of that radius seen from a perspective camera outside
+#' it, else the sphere's frame widened by `extent`; a given field of view
+#' keeps its frame. The widget's `currentView()` frames the same way.
+#' @noRd
+globe_frame <- function(view, fov, extent = NULL) {
+  if (is.null(extent) || !is.na(fov)) return(view_frame(view, fov))
+  if (!is.null(view$eye) && extent * view$horizon < 0.95) {
+    return(view_frame(view, fov, horizon_ring(view, 721L, extent)))
+  }
+  frame <- view_frame(view, fov)
+  frame[3] <- frame[3] * extent
+  frame
+}
+
 #' A globe as hexglobe::render_scene() draws it
 #'
 #' The widget's layers, in the widget's drawing order (`buildLayers()` in
@@ -323,8 +396,10 @@ globe_scene <- function(x, width, height, scale) {
 
 #' The Camera uniform of globe.wgsl for the view a globe opens with
 #'
-#' The view of surface_view() and its frame from view_frame(), as the
-#' widget's `writeCamera()` lays them out, for an image of `w` by `h` pixels.
+#' The view of surface_view() and its frame from view_frame(), widened along
+#' Lambert's construction to the points' extent, and the construction's
+#' step, as the widget's `writeCamera()` lays them out, for an image of `w`
+#' by `h` pixels: 112 32-bit floats.
 #' @noRd
 globe_camera_uniform <- function(x, w, h) {
   cam <- x$camera
@@ -333,14 +408,17 @@ globe_camera_uniform <- function(x, w, h) {
                        distance = if (persp) cam$distance %||% 3 else Inf,
                        tilt = if (persp) cam$tilt else 0,
                        rotation = cam$rotation)
-  frame <- view_frame(view, if (persp && !is.null(cam$fov)) cam$fov else NA)
+  st <- x$stage
+  frame <- globe_frame(view, if (persp && !is.null(cam$fov)) cam$fov else NA, st$extent)
   eye <- view$eye
   le32(c(view$cam[, 1], 0, view$cam[, 2], 0, view$cam[, 3], 0,
          if (is.null(eye)) c(0, 0, 0, 0) else c(eye, 1),
          frame, view$scale,
          w, h,
          if (is.null(eye)) c(0, 1) else c(view$near, sqrt(sum(eye^2)) + 1.5),
-         view$light, x$fold), "f32")
+         view$light, x$fold,
+         if (is.null(st)) numeric(84) else c(st$t, st$path + 1, st$r1, st$scale, st$centres)),
+       "f32")
 }
 
 #' The Grid uniform of globe.wgsl: 1296 32-bit words, the face and edge
@@ -668,12 +746,12 @@ globe_rgba <- function(col) {
 }
 
 #' A mesh as the widget reads it: per vertex its solid and sphere
-#' positions (six 32-bit floats) and item (from 0), with `tri` also its
-#' triangle coordinates on its face, and the triangles' vertex indices, each
-#' as base64 text
+#' positions and its face (seven 32-bit floats) and item (from 0), with `tri`
+#' also its triangle coordinates on its face, and the triangles' vertex
+#' indices, each as base64 text
 #' @noRd
 globe_mesh <- function(m, tri = FALSE) {
-  pos <- rbind(matrix(m$solid, nrow = 3L), matrix(m$sphere, nrow = 3L))
+  pos <- rbind(matrix(m$solid, nrow = 3L), matrix(m$sphere, nrow = 3L), m$face)
   list(
     position = cpp_base64_buffer(as.vector(pos), "f32"),
     item = cpp_base64_buffer(m$item - 1L, "u32"),
@@ -684,9 +762,11 @@ globe_mesh <- function(m, tri = FALSE) {
 }
 
 #' Paths as the widget reads them: per point its solid and sphere
-#' positions, and the first point (from 0) of every segment between two
-#' points of one path. A path with sphere positions only, as an H3 cell's,
-#' takes them for both surfaces.
+#' positions and its face (seven 32-bit floats), and the first point (from 0)
+#' of every segment between two points of one path on one face; a path
+#' crossing an edge has a point on each face there, which the faces' planes
+#' part along Lambert's construction. A path with sphere positions only, as
+#' an H3 cell's, takes them for both surfaces and face 0.
 #' @noRd
 globe_lines <- function(paths) {
   n <- nrow(paths)
@@ -694,9 +774,12 @@ globe_lines <- function(paths) {
   sphere <- paths[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE]
   solid <- paths[, c("solid_x", "solid_y", "solid_z"), drop = FALSE]
   if (anyNA(solid)) solid <- sphere
-  segment <- which(paths[-1L, "cell"] == paths[-n, "cell"]) - 1L
+  face <- paths[, "face"]
+  face[is.na(face)] <- 0
+  segment <- which(paths[-1L, "cell"] == paths[-n, "cell"] &
+                     face[-1L] == face[-n]) - 1L
   list(
-    position = cpp_base64_buffer(as.vector(t(cbind(solid, sphere))), "f32"),
+    position = cpp_base64_buffer(as.vector(t(cbind(solid, sphere, face))), "f32"),
     segment = cpp_base64_buffer(segment, "u32"),
     n_segment = length(segment)
   )

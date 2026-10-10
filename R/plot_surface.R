@@ -584,10 +584,11 @@ faces_camera <- function(P, view) {
 
 #' The rim of the sphere as the camera sees it
 #' @noRd
-horizon_ring <- function(view, n = 361L) {
+horizon_ring <- function(view, n = 361L, radius = 1) {
   a <- seq(0, 2 * pi, length.out = n)
-  outer(rep(view$horizon, n), view$dir) +
-    sqrt(1 - view$horizon^2) * (outer(cos(a), view$u) + outer(sin(a), view$v))
+  h <- radius * view$horizon
+  outer(rep(radius * h, n), view$dir) +
+    radius * sqrt(1 - h^2) * (outer(cos(a), view$u) + outer(sin(a), view$v))
 }
 
 #' Draw the visible pieces of polylines given in 3D

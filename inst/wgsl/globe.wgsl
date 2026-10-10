@@ -2,10 +2,13 @@
 // A grid on the icosahedron and the sphere, folded between the two.
 //
 // Every vertex carries its place on the flat face of the icosahedron and on
-// the unit sphere; `fold` blends them, 0 showing the icosahedron and 1 the
-// sphere. The camera is the one of hexify's plot() method: an orthographic
-// view, or a pinhole at `eye`, looking along -back, with the view framed by
-// a square of screen of centre `frame.xy` and half width `frame.z`.
+// the unit sphere, and its face; `fold` blends the two places, 0 showing the
+// icosahedron and 1 the sphere. Instead of the fold, `stage` can move every
+// point through Lambert's construction of Snyder's projection
+// (construction_point()). The camera is the one of hexify's plot() method:
+// an orthographic view, or a pinhole at `eye`, looking along -back, with the
+// view framed by a square of screen of centre `frame.xy` and half width
+// `frame.z`.
 
 struct Camera {
   right: vec4f,      // camera axes in the scene
@@ -15,6 +18,11 @@ struct Camera {
   frame: vec4f,      // centre x, y and half width of the framed square; scale
   viewport: vec4f,   // width, height in device pixels; near, far
   light: vec4f,      // xyz: direction light comes from; w: fold
+  stage: vec4f,      // x: step of Lambert's construction, 0 to 3; y: 0 the fold
+                     // instead, 1 the construction step by step, 2 as one path;
+                     // z: R'; w: R' over the cosine of the arc from a face
+                     // centre to its vertices
+  centres: array<vec4f, 20>,  // xyz: each face's centre on the unit sphere
 };
 
 struct Layer {
@@ -26,10 +34,41 @@ struct Layer {
 @group(0) @binding(0) var<uniform> camera: Camera;
 @group(1) @binding(0) var<uniform> layer: Layer;
 
-// The point between the icosahedron and the sphere, lifted off the surface
-// by a fraction of its radius so that layers drawn later lie on top.
-fn fold_point(solid: vec3f, sphere: vec3f) -> vec3f {
-  return mix(solid, sphere, camera.light.w) * (1.0 + layer.params.x);
+// The point of a vertex on face f between the icosahedron and the sphere,
+// by the fold or along Lambert's construction, lifted off the surface by a
+// fraction of its radius so that layers drawn later lie on top.
+fn fold_point(solid: vec3f, sphere: vec3f, f: u32) -> vec3f {
+  var p = mix(solid, sphere, camera.light.w);
+  if (camera.stage.y > 0.5) {
+    p = construction_point(solid, sphere, f);
+  }
+  return p * (1.0 + layer.params.x);
+}
+
+// How round the surface is: 1 on the sphere, 0 on flat faces. It fades the
+// shading of the faces.
+fn roundness() -> f32 {
+  if (camera.stage.y < 0.5) {
+    return camera.light.w;
+  }
+  if (camera.stage.y > 1.5) {
+    return 1.0 - clamp(camera.stage.x / 3.0, 0.0, 1.0);
+  }
+  return 1.0 - clamp(camera.stage.x, 0.0, 1.0);
+}
+
+// How far a fragment's cell is read from its direction on the sphere rather
+// than from its triangle coordinates on the face, which are linear on the
+// flat face and, along Lambert's construction, on the planes from the nudged
+// point on.
+fn sphere_weight() -> f32 {
+  if (camera.stage.y < 0.5) {
+    return camera.light.w;
+  }
+  if (camera.stage.y > 1.5) {
+    return 1.0 - clamp(camera.stage.x - 2.0, 0.0, 1.0);
+  }
+  return 1.0 - clamp(camera.stage.x - 1.0, 0.0, 1.0);
 }
 
 // Clip-space position of a scene point.
@@ -66,9 +105,9 @@ struct MeshOut {
 
 @vertex
 fn vs_mesh(@location(0) solid: vec3f, @location(1) sphere: vec3f,
-           @location(2) item: u32) -> MeshOut {
+           @location(2) item: u32, @location(4) face: f32) -> MeshOut {
   var out: MeshOut;
-  let p = fold_point(solid, sphere);
+  let p = fold_point(solid, sphere, u32(face));
   out.position = to_clip(p);
   out.world = p;
   out.item = item;
@@ -93,7 +132,7 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
       n = -n;
     }
     let shade = 0.80 + 0.20 * max(0.0, dot(n, camera.light.xyz));
-    color = vec4f(color.rgb * mix(shade, 1.0, camera.light.w), color.a);
+    color = vec4f(color.rgb * mix(shade, 1.0, roundness()), color.a);
   }
   return vec4f(color.rgb * color.a, color.a);
 }
@@ -105,7 +144,8 @@ fn fs_mesh(in: MeshOut) -> @location(0) vec4f {
 // The faces mesh carries each vertex's face and triangle coordinates. A
 // fragment's triangle coordinates are the interpolated ones on the flat
 // solid, where they are linear, and the face projection (Snyder's, Fuller's
-// or IVEA) of its direction on the sphere, blended by the fold. The point
+// or IVEA) of its direction on the sphere, blended by sphere_weight(). The
+// point
 // goes into its face's quad, is scaled to the substrate, and its cell is the
 // nearest multiple of the grid's generator there.
 //
@@ -231,6 +271,55 @@ fn atan_hx(t: f32) -> f32 {
 
 fn acos_hx(c: f32) -> f32 {
   return atan2_hx(sqrt(max((1.0 - c) * (1.0 + c), 0.0)), c);
+}
+
+// Lambert's construction of Snyder's projection (hexify's
+// projection_stages()) for the point s of the unit sphere on face f, whose
+// place on the inscribed solid is `solid`, at step t = stage.x. With T the
+// face centre, z the arc TS and d the direction of s on the tangent plane at
+// T, s = T + |TS| (cos(z / 2) d - sin(z / 2) T), |TS| = 2 sin(z / 2). From
+// t = 0 to 1 the point swings about T down onto the tangent plane, on the
+// circle of radius |TS|, to the Lambert point T + |TS| d. From 1 to 2 it
+// turns from the azimuth of d to Snyder's azimuth and moves out to the
+// nudged point N = P / R', P being Snyder's point, R' / cos(g) times the
+// inscribed solid's point. From 2 to 3 the tangent plane scales about the
+// sphere's centre by R' onto the face plane, taking N to P. As one path
+// (stage.y = 2) the angle below the plane, the azimuth, the radius and the
+// plane's height move together, from s at t = 0 to P at t = 3.
+fn construction_point(solid: vec3f, s: vec3f, f: u32) -> vec3f {
+  let t = camera.stage.x;
+  let r1 = camera.stage.z;
+  let c = camera.centres[f].xyz;
+  let n = camera.stage.w / r1 * solid;
+  let r = length(s - c);
+  let off = s - dot(s, c) * c;
+  let len = length(off);
+  var d = vec3f(0.0);
+  if (len > 0.0) {
+    d = off / len;
+  }
+  let half_z = atan2_hx(0.5 * r, sqrt(max(1.0 - 0.25 * r * r, 0.0)));
+  let b = n - c;
+  let turn = atan2_hx(dot(cross(d, b), c), dot(d, b));
+  let across = cross(c, d);
+  if (camera.stage.y > 1.5) {
+    let u = clamp(t / 3.0, 0.0, 1.0);
+    let sc_turn = sincos(u * turn);
+    let sc_down = sincos((1.0 - u) * half_z);
+    let dir = sc_turn.y * d + sc_turn.x * across;
+    let rho = mix(r, r1 * length(b), u);
+    return mix(1.0, r1, u) * c + rho * (sc_down.y * dir - sc_down.x * c);
+  }
+  if (t <= 1.0) {
+    let sc = sincos((1.0 - max(t, 0.0)) * half_z);
+    return c + r * (sc.y * d - sc.x * c);
+  }
+  if (t <= 2.0) {
+    let u = t - 1.0;
+    let sc_turn = sincos(u * turn);
+    return c + mix(r, length(b), u) * (sc_turn.y * d + sc_turn.x * across);
+  }
+  return mix(1.0, r1, min(t - 2.0, 1.0)) * n;
 }
 
 // Snyder's forward projection of the unit vector p onto face f, as triangle
@@ -706,21 +795,20 @@ struct GridOut {
 
 @vertex
 fn vs_grid(@location(0) solid: vec3f, @location(1) sphere: vec3f,
-           @location(2) face: u32, @location(3) tri: vec2f) -> GridOut {
+           @location(3) tri: vec2f, @location(4) face: f32) -> GridOut {
   var out: GridOut;
-  let p = fold_point(solid, sphere);
+  let p = fold_point(solid, sphere, u32(face));
   out.position = to_clip(p);
   out.world = p;
   out.sphere = sphere;
   out.tri = tri;
-  out.face = face;
+  out.face = u32(face);
   return out;
 }
 
 @fragment
 fn fs_grid(in: GridOut) -> @location(0) vec4f {
-  let fold = camera.light.w;
-  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), fold);
+  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), sphere_weight());
   let reach = max(length(dpdx(in.sphere)), length(dpdy(in.sphere)));
   let lv = table_level(reach);
   let s = locate(lv, in.face, t);
@@ -746,7 +834,7 @@ fn fs_grid(in: GridOut) -> @location(0) vec4f {
       normal = -normal;
     }
     let shade = 0.80 + 0.20 * max(0.0, dot(normal, camera.light.xyz));
-    fill = vec4f(fill.rgb * mix(shade, 1.0, fold), fill.a);
+    fill = vec4f(fill.rgb * mix(shade, 1.0, roundness()), fill.a);
   }
 
   // Distance to the cell's edge in pixels: the edges lie halfway to the six
@@ -775,7 +863,7 @@ fn fs_grid(in: GridOut) -> @location(0) vec4f {
 // The cell under one pixel, for the readout under the pointer (spot_record()).
 @fragment
 fn fs_pick(in: GridOut) -> @location(0) vec4u {
-  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), camera.light.w);
+  let t = mix(in.tri, face_xy(normalize(in.sphere), in.face), sphere_weight());
   return spot_record(locate(0u, in.face, t));
 }
 
@@ -813,10 +901,13 @@ struct LineOut {
   @location(1) alpha: f32,
 };
 
+// Point k of a layer's lines: its solid and sphere positions and its face,
+// seven numbers.
 fn line_point(k: u32) -> vec3f {
-  let o = 6u * k;
+  let o = 7u * k;
   return fold_point(vec3f(points[o], points[o + 1u], points[o + 2u]),
-                    vec3f(points[o + 3u], points[o + 4u], points[o + 5u]));
+                    vec3f(points[o + 3u], points[o + 4u], points[o + 5u]),
+                    u32(points[o + 6u]));
 }
 
 @vertex

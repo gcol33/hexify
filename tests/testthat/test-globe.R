@@ -415,7 +415,8 @@ test_that("a scene holds the widget's layers in its drawing order", {
   expect_equal(vapply(s$layers, `[[`, integer(1), "kind"), c(0L, 0L, 2L, 3L, 3L))
   # The ocean and the grid are drawn on one faces mesh, uploaded once.
   expect_identical(s$layers[[1]]$pos, s$layers[[3]]$pos)
-  expect_length(s$layers[[3]]$tri, length(s$layers[[3]]$pos) / 3)
+  # Seven floats per vertex (solid, sphere, face), two of triangle coordinates
+  expect_length(s$layers[[3]]$tri, length(s$layers[[3]]$pos) * 2 / 7)
   expect_equal(s$layers[[1]]$count, x$surface$n_index)
   # Layer uniforms: colour, lift, line width in device pixels, shaded,
   # coloured by value.
@@ -444,7 +445,8 @@ test_that("the scene's camera is the plot() method's view", {
   g <- hex_grid(resolution = 1, aperture = 4)
   x <- hex_globe(g, center = c(lon = 40, lat = -10), rotation = 20, land = FALSE)$x
   cam <- f32_words(hexify:::globe_camera_uniform(x, 300, 200))
-  expect_length(cam, 28)
+  expect_length(cam, 112)
+  expect_equal(cam[29:112], numeric(84))
   view <- hexify:::surface_view(c(lon = 40, lat = -10), rotation = 20)
   expect_equal(cam[c(1:3, 5:7, 9:11)], as.vector(view$cam), tolerance = 1e-6)
   expect_equal(cam[13:24], c(0, 0, 0, 0, 0, 0, 1.02, 1, 300, 200, 0, 1), tolerance = 1e-6)
@@ -459,6 +461,61 @@ test_that("the scene's camera is the plot() method's view", {
   expect_equal(cam[13:24], c(view$eye, 1, frame, view$scale, 300, 300, view$near,
                              reach + 1.5), tolerance = 1e-6)
   expect_equal(cam[28], 0)
+})
+
+test_that("every mesh vertex and line point carries its face", {
+  skip_if_not_installed("htmlwidgets")
+  g <- hex_grid(resolution = 2, aperture = 3)
+  x <- hex_globe(g)$x
+  pos <- matrix(f32_words(hexify:::cpp_base64_decode(x$surface$position)), nrow = 7)
+  m <- hexify:::cpp_globe_faces(hexify:::icosa_arg(g), hexify:::GLOBE_MESH_SPACING)
+  expect_equal(pos[7, ], m$face)
+  expect_equal(m$face, m$item - 1L)
+  land <- matrix(f32_words(hexify:::cpp_base64_decode(x$land$position)), nrow = 7)
+  expect_true(all(land[7, ] %in% 0:19))
+  # No line segment joins two faces: where a path crosses an edge, it has a
+  # point on each face, and Lambert's construction parts the faces' planes.
+  paths <- hexify:::edge_surface_paths(0.05, hexify:::icosa_arg(g))
+  lines <- hexify:::globe_lines(paths)
+  pts <- matrix(f32_words(hexify:::cpp_base64_decode(lines$position)), nrow = 7)
+  first <- readBin(hexify:::cpp_base64_decode(lines$segment), "integer",
+                   n = lines$n_segment, size = 4, endian = "little") + 1L
+  expect_equal(pts[7, ], paths[, "face"])
+  expect_equal(pts[7, first], pts[7, first + 1L])
+  expect_equal(paths[first, "cell"], paths[first + 1L, "cell"])
+})
+
+test_that("lambert opens the globe along Lambert's construction", {
+  skip_if_not_installed("htmlwidgets")
+  g <- hex_grid(resolution = 2, aperture = 3)
+  x <- hex_globe(g, lambert = 1.5, lambert_path = "single", land = FALSE)$x
+  st <- x$stage
+  info <- hexify:::solid_info("icosahedron")
+  r1 <- attr(projection_stages(g, 0, 0), "r1")
+  expect_equal(st$t, 1.5)
+  expect_equal(st$path, 1L)
+  expect_equal(st$r1, r1)
+  expect_equal(st$scale, r1 / cos(info$g_deg * pi / 180))
+  expect_equal(st$extent, 1 / cos(info$g_deg * pi / 180))
+  centres <- matrix(st$centres, nrow = 4)
+  expect_equal(t(centres[1:3, ]), unname(hexify:::icosa_solid(hexify:::icosa_arg(g))$normals),
+               tolerance = 1e-12)
+  cam <- f32_words(hexify:::globe_camera_uniform(x, 300, 200))
+  expect_equal(cam[19], 1.02 * st$extent, tolerance = 1e-6)
+  expect_equal(cam[29:32], c(1.5, 2, st$r1, st$scale), tolerance = 1e-6)
+  expect_equal(cam[33:112], st$centres, tolerance = 1e-6)
+  expect_null(hex_globe(g, land = FALSE)$x$stage)
+
+  octa <- hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron")
+  st <- hex_globe(octa, lambert = 0, land = FALSE)$x$stage
+  expect_equal(st$path, 0L)
+  expect_equal(st$centres[33:80], numeric(48))
+
+  expect_error(hex_globe(g, lambert = 4), "0 to 3")
+  expect_error(hex_globe(g, lambert = c(1, 2)), "0 to 3")
+  expect_error(hex_globe(hex_grid(resolution = 2, aperture = 3, projection = "fuller"),
+                         lambert = 1), "isea")
+  expect_error(hex_globe(hex_grid(resolution = 0, type = "h3"), lambert = 1), "H3")
 })
 
 test_that("unsigned words above 2^31 keep their bits", {

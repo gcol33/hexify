@@ -9,6 +9,8 @@ hex_globe(
   values = NULL,
   cells = NULL,
   surface = c("sphere", "solid"),
+  lambert = NULL,
+  lambert_path = c("steps", "single"),
   center = c(lon = 15, lat = 32),
   projection = c("orthographic", "perspective"),
   distance = NULL,
@@ -47,6 +49,16 @@ cells. \code{NULL} draws no fill.}
 the flat faces of the grid's polyhedron; the slider folds one into the
 other. An H3 grid
 is drawn on the sphere only.}
+
+\item{lambert}{\code{NULL}, or a number from 0 to 3: the slider follows
+Lambert's construction of Snyder's projection, and the globe opens at
+that step (0 the sphere, 1 the Lambert points, 2 the nudged points, 3
+the faces), in place of \code{surface}. Needs a grid with
+\code{projection = "isea"}.}
+
+\item{lambert_path}{How the points move along the construction:
+\code{"steps"}, its three steps one after the other, or \code{"single"},
+one path each.}
 
 \item{center}{Point the view looks down on: a preset name from
 \code{\link{globe_centers}} or \code{c(lon, lat)}.}
@@ -135,6 +147,18 @@ rather than noise. Borders keep their width at every zoom and fade out
 where the cells get too small to see. The pointer shows the ID and value
 of the cell under it. H3 cells are drawn from their outlines.
 
+With \code{lambert}, the slider instead follows Lambert's construction of
+Snyder's projection (see \code{\link{projection_stages}}), on a grid with
+that projection: from the sphere (0), every point swings about its face's
+centre down onto the plane touching the sphere there, keeping its distance
+from the centre (1, Lambert's azimuthal equal-area projection); within
+that plane it moves to Snyder's azimuth and radius (2); and the plane
+scales about the sphere's centre onto the face (3), the face of the solid
+whose faces have the area of theirs on the sphere. The neighbouring faces'
+planes come apart along the way and meet again on the solid. A menu
+beside the slider switches between these three steps and one path per
+point that changes the angle, azimuth and radius together.
+
 Drag to turn the globe. Drag with Shift held to turn the view about the
 line of sight and, in the perspective view, to tilt the camera. The mouse
 wheel moves the perspective camera closer or zooms the orthographic view.
@@ -157,6 +181,10 @@ if (requireNamespace("htmlwidgets", quietly = TRUE)) {
   cells <- seq_len(n_cells(grid))
   centres <- cell_to_lonlat(cells, grid)
   hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3")
+
+  # Lambert's construction of Snyder's projection, opened at the Lambert
+  # points
+  hex_globe(grid, lambert = 1, land = FALSE)
 }
 }
 \seealso{

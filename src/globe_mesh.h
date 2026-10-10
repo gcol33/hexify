@@ -41,8 +41,9 @@ public:
   void refine(double max_len);
 
   // The mesh for R: solid and sphere positions (x, y, z per vertex), the
-  // vertex indices of each triangle (from 0), the item of each vertex and its
-  // triangle coordinates (tx, ty per vertex) on its face.
+  // vertex indices of each triangle (from 0), the item of each vertex, its
+  // triangle coordinates (tx, ty per vertex) on its face and its face (from
+  // 0).
   Rcpp::List to_list() const;
 
   size_t n_vertices() const { return item_.size(); }

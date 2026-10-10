@@ -171,6 +171,31 @@ and cover in 16 bits each, and the shader fills from the finest level whose
 cells are at least a pixel wide. R builds the Grid uniform once
 (`globe_grid_uniform()`), the widget and hexglobe only upload it.
 
+## Lambert's construction of Snyder's projection
+
+`projection_stages()` (`R/construction.R`) returns a point at each step of
+Lambert's construction of Snyder's projection on a face: the sphere point,
+the Lambert point on the tangent plane at the face centre (|TL| = |TS| =
+2 sin(z / 2)), the nudged point (Snyder's Az' and radius 2 f sin(z / 2) on
+that plane) and Snyder's point (the nudged one scaled by R' about the
+centre). One implementation: `src/projection_forward.cpp` splits Snyder's
+forward into `sector_azimuth()`, `snyder_adjust()` and `snyder_plane()`,
+which `face_xy_from_polar()` (the forward), `stage_uv()` (Tissot per step,
+`face_scale(stage)`, `projection_distortion(stage = )`) and
+`construction_point()` (`cpp_lonlat_construction()`) all call, so the last
+step equals the forward bit for bit (tested). Points start from the
+authalic sphere (`to_sphere_lat()`), as the forward does.
+
+`hex_globe(lambert = t)` moves every vertex through the construction in the
+vertex shader (`construction_point()` in `globe.wgsl`): each mesh vertex and
+line point carries its face (seventh float after solid and sphere), the
+Camera uniform carries the step and the face centres (112 floats; the
+widget's `writeCamera()`, R's `globe_camera_uniform()` and hexglobe's
+camera-size check must agree), Snyder's point is R' / cos(g) times the
+inscribed solid's point, and the frame widens to 1 / cos(g)
+(`globe_frame()`). Line segments between two faces are dropped
+(`globe_lines()`), since the construction parts the faces' planes.
+
 ## Earth model: sphere or ellipsoid
 
 By default latitude is read on the sphere (as DGGRID and H3 do); on WGS84

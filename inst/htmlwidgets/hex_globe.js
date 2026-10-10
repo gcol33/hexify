@@ -3,8 +3,9 @@
 //
 // The scene arrives from R as binary buffers (base64): triangle meshes for
 // the faces and land, and polylines for coastlines and face edges. Every
-// point carries its place on the solid and on the sphere, and the
-// shader folds one into the other. An ISEA grid comes as its Grid uniform
+// point carries its place on the solid and on the sphere and its face, and
+// the shader folds one into the other, or moves the points through Lambert's
+// construction of Snyder's projection. An ISEA grid comes as its Grid uniform
 // and the textures of its cells' table, and the shader finds each pixel's
 // cell on the faces mesh; an H3 grid comes as cell meshes and boundary
 // polylines. The camera follows hexify's plot() method: surface_view(),
@@ -76,12 +77,13 @@
     return [view.scale * dot(rel, c.right) / z, view.scale * dot(rel, c.up) / z];
   }
 
-  function horizonRing(view, n) {
-    const h = view.horizon, s = Math.sqrt(1 - h * h);
+  // The rim of the sphere of `radius` seen from the camera.
+  function horizonRing(view, n, radius) {
+    const rad = radius || 1, h = rad * view.horizon, s = rad * Math.sqrt(1 - h * h);
     const out = [];
     for (let k = 0; k < n; k++) {
       const a = 2 * Math.PI * k / (n - 1);
-      out.push(add(mul(view.dir, h),
+      out.push(add(mul(view.dir, rad * h),
                    add(mul(view.u, s * Math.cos(a)), mul(view.v, s * Math.sin(a)))));
     }
     return out;
@@ -89,13 +91,13 @@
 
   // view_frame(): centre and half width of the square of screen shown. The
   // whole sphere is framed, which holds the solid inscribed in it at
-  // every stage of the fold.
-  function viewFrame(view, fov) {
+  // every stage of the fold, or with `radius` the sphere of that radius.
+  function viewFrame(view, fov, radius) {
     if (!view.eye) return [0, 0, 1.02];
     if (fov != null) return [0, 0, 1.02 * view.scale * Math.tan(fov / 2 * D2R)];
     const widest = view.scale * Math.tan(60 * D2R);
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    for (const p of horizonRing(view, 721)) {
+    for (const p of horizonRing(view, 721, radius)) {
       const s = project(p, view);
       if (!s) continue;
       const x = Math.min(Math.max(s[0], -widest), widest);
@@ -168,12 +170,13 @@
     }
 
     initialState() {
-      const c = this.x.camera;
+      const c = this.x.camera, st = this.x.stage;
       return {
         lon: c.center[0], lat: c.center[1],
         projection: c.projection, distance: c.distance == null ? 3 : c.distance,
         tilt: c.tilt, rotation: c.rotation, fov: c.fov, zoom: 1,
-        fold: this.x.fold
+        fold: this.x.fold,
+        stage: st ? st.t : 0, path: st ? st.path : 0
       };
     }
 
@@ -233,9 +236,10 @@
         alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add" }
       };
       const meshBuffers = [
-        { arrayStride: 24, attributes: [
+        { arrayStride: 28, attributes: [
           { shaderLocation: 0, offset: 0, format: "float32x3" },
-          { shaderLocation: 1, offset: 12, format: "float32x3" }] },
+          { shaderLocation: 1, offset: 12, format: "float32x3" },
+          { shaderLocation: 4, offset: 24, format: "float32" }] },
         { arrayStride: 4, attributes: [{ shaderLocation: 2, offset: 0, format: "uint32" }] }
       ];
       const make = (vs, fs, buffers, blended, depthWrite) => device.createRenderPipeline({
@@ -269,7 +273,7 @@
                    true, false)
       };
       this.cameraBuffer = device.createBuffer({
-        size: 112, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        size: 448, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
       this.cameraGroups = {};
       for (const name in this.pipelines) {
         this.cameraGroups[name] = device.createBindGroup({
@@ -523,12 +527,24 @@
       this.requestFrame();
     }
 
+    // The view and its frame. Along Lambert's construction the points reach
+    // out to `extent` sphere radii from the centre, and the frame holds them
+    // as R's globe_frame() does: the rim of the sphere of that radius from a
+    // perspective camera outside it, else the sphere's frame widened.
     currentView() {
       const s = this.state;
       const distance = s.projection === "perspective" ? s.distance : Infinity;
       const tilt = s.projection === "perspective" ? s.tilt : 0;
       const view = surfaceView(s.lon, s.lat, distance, tilt, s.rotation);
-      const frame = viewFrame(view, s.projection === "perspective" ? s.fov : null);
+      const fov = s.projection === "perspective" ? s.fov : null;
+      const extent = this.x.stage ? this.x.stage.extent : null;
+      let frame;
+      if (extent && fov == null && view.eye && extent * view.horizon < 0.95) {
+        frame = viewFrame(view, fov, extent);
+      } else {
+        frame = viewFrame(view, fov);
+        if (extent && fov == null) frame[2] *= extent;
+      }
       if (s.projection !== "perspective") frame[2] /= s.zoom;
       return { view: view, frame: frame };
     }
@@ -542,10 +558,13 @@
       });
     }
 
+    // The Camera uniform of globe.wgsl, laid out as R's
+    // globe_camera_uniform() lays it out.
     writeCamera() {
       const { view, frame } = this.currentView();
-      const c = view.cam, e = view.eye || [0, 0, 0];
-      this.device.queue.writeBuffer(this.cameraBuffer, 0, new Float32Array([
+      const c = view.cam, e = view.eye || [0, 0, 0], st = this.x.stage;
+      const words = new Float32Array(112);
+      words.set([
         c.right[0], c.right[1], c.right[2], 0,
         c.up[0], c.up[1], c.up[2], 0,
         c.back[0], c.back[1], c.back[2], 0,
@@ -553,7 +572,12 @@
         frame[0], frame[1], frame[2], view.scale,
         this.canvas.width, this.canvas.height, view.eye ? view.near : 0, view.eye ? view.far : 1,
         view.light[0], view.light[1], view.light[2], this.state.fold
-      ]));
+      ]);
+      if (st) {
+        words.set([this.state.stage, this.state.path === 1 ? 2 : 1, st.r1, st.scale], 28);
+        words.set(st.centres, 32);
+      }
+      this.device.queue.writeBuffer(this.cameraBuffer, 0, words);
     }
 
     draw() {
@@ -654,7 +678,9 @@
       panel.style.cssText = "position:absolute;left:8px;top:8px;display:flex;gap:10px;" +
         "align-items:center;font:12px sans-serif;color:#333;background:rgba(255,255,255,0.85);" +
         "padding:4px 8px;border-radius:4px;user-select:none;";
-      if (this.x.foldable) {
+      if (this.x.stage) {
+        this.addStageControls(panel);
+      } else if (this.x.foldable) {
         const label = document.createElement("label");
         label.textContent = "Icosahedron ";
         const slider = document.createElement("input");
@@ -692,6 +718,8 @@
         this.state = this.initialState();
         select.value = this.state.projection;
         if (this.foldSlider) this.foldSlider.value = String(this.state.fold);
+        if (this.stageSlider) this.stageSlider.value = String(this.state.stage);
+        if (this.pathSelect) this.pathSelect.value = String(this.state.path);
         this.requestFrame();
       });
       panel.appendChild(reset);
@@ -704,6 +732,43 @@
         "padding:3px 6px;border-radius:3px;white-space:pre;";
       this.el.appendChild(this.readout);
       this.canvas.addEventListener("pointerleave", () => { this.readout.style.display = "none"; });
+    }
+
+    // The slider along Lambert's construction, from the sphere (0) through
+    // the Lambert point (1) and the nudged point (2) to Snyder's point on the
+    // faces (3), and whether the points take its three steps or one path.
+    addStageControls(panel) {
+      const label = document.createElement("label");
+      label.textContent = "Sphere ";
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = "0";
+      slider.max = "3";
+      slider.step = "0.001";
+      slider.value = String(this.state.stage);
+      slider.style.width = "150px";
+      slider.addEventListener("input", () => {
+        this.state.stage = Number(slider.value);
+        this.requestFrame();
+      });
+      label.appendChild(slider);
+      label.appendChild(document.createTextNode(" Faces"));
+      panel.appendChild(label);
+      const path = document.createElement("select");
+      [["0", "three steps"], ["1", "one path"]].forEach(([value, text]) => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = text;
+        path.appendChild(opt);
+      });
+      path.value = String(this.state.path);
+      path.addEventListener("change", () => {
+        this.state.path = Number(path.value);
+        this.requestFrame();
+      });
+      panel.appendChild(path);
+      this.stageSlider = slider;
+      this.pathSelect = path;
     }
 
     // Drag turns the globe under the pointer; shift-drag tilts (up and down)
