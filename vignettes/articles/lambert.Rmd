@@ -58,6 +58,17 @@ grid <- hex_grid(resolution = 3, aperture = 3)
 g_deg <- hexify:::solid_info("icosahedron")$g_deg
 ```
 
+## Installation
+
+```{r, eval = FALSE}
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## One point
 
 Lambert's projection is built on the plane that touches the sphere at T.

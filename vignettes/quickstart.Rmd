@@ -14,6 +14,17 @@ source("_common.R")
 library(hexify)
 ```
 
+## Installation
+
+```r
+install.packages("hexify")
+
+# Development version
+# pak::pak("gcol33/hexify")
+
+library(hexify)
+```
+
 ```{r cover-image, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=3.5, fig.align='center'}
 # Generate cover image: multi-resolution grids over different regions
 library(sf)
@@ -52,17 +63,6 @@ You want to do spatial statistics, and it involves binning points into grid cell
 **The problem with rectangular grids**: A rectangular lat-lon grid introduces severe distortions. At the equator, a 1° cell covers ~12,300 km². Near the poles, the same 1° cell covers a tiny fraction of that area. This breaks any analysis that assumes equal sampling effort or comparable cell sizes.
 
 **The solution**: Discrete global grids partition Earth's surface into cells of **equal area**, regardless of latitude. hexify implements the ISEA (Icosahedral Snyder Equal Area) projection, providing hexagonal cells that are all the same size from the equator to the Arctic.
-
-## Installation
-
-```r
-install.packages("hexify")
-
-# Development version
-# pak::pak("gcol33/hexify")
-
-library(hexify)
-```
 
 ## Basic Usage
 

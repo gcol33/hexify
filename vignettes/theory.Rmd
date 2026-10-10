@@ -12,6 +12,17 @@ source("_common.R")
 library(hexify)
 ```
 
+## Installation
+
+```{r, eval = FALSE}
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Overview
 
 hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete global grid system. This vignette explains the mathematical foundations: the projection geometry, coordinate systems, aperture subdivision, and cell indexing.

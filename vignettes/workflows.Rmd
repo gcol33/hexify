@@ -16,6 +16,17 @@ library(ggplot2)
 
 Shared grids across datasets, polygon generation, resolution selection, and GIS export.
 
+## Installation
+
+```{r, eval = FALSE}
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## One Grid, Many Datasets
 
 Define a grid once, reuse it everywhere. Same grid object = guaranteed spatial alignment across datasets.

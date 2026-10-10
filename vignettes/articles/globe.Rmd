@@ -19,6 +19,17 @@ The globes on this page need a browser with WebGPU (see
 [Where the globe draws](#where-the-globe-draws)); without it each one shows a
 notice in its place.
 
+## Installation
+
+```{r, eval = FALSE}
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Values per cell
 
 `values` holds one number per cell of `cells`, or one per cell of the grid

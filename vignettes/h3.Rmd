@@ -22,6 +22,17 @@ ISEA. Every core function (`hexify()`, `grid_rect()`, `grid_clip()`,
 `get_parent()`, `get_children()`) works with both grid systems through the
 same interface.
 
+## Installation
+
+```{r, eval = FALSE}
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## What is H3?
 
 H3 is a hierarchical hexagonal grid system developed by Uber. It partitions
