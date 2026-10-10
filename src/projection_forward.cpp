@@ -24,6 +24,67 @@ struct ProjectionWithStatus {
   bool valid;
 };
 
+// A point's azimuth within its 120-degree sector of a face: the sector, the
+// azimuth from the sector's first vertex with its cosine and sine, and
+// Snyder's dz, the arc from the face centre to the face edge along it.
+template <class T>
+struct SectorAzimuth {
+  int sector;
+  T azimuth, cos_az, sin_az, dz;
+};
+
+// The sector of azimuth az, from the face's first vertex in [0, 2 pi)
+template <class T>
+static inline SectorAzimuth<T> sector_azimuth(const SnyderParams& sp, T az) {
+  using std::atan2;
+  using std::cos;
+  using std::sin;
+  SectorAzimuth<T> s;
+  s.sector = azimuth_sector(value_of(az));
+  s.azimuth = az - s.sector * k2PiOver3;
+  s.cos_az = cos(s.azimuth);
+  s.sin_az = sin(s.azimuth);
+  s.dz = atan2(sp.tan_el, s.cos_az + sp.cot_30 * s.sin_az);
+  return s;
+}
+
+// Snyder's (1992) adjustment of Lambert's azimuthal equal-area projection
+// about the face centre (eqs. 6-11): the point at azimuth Az within its
+// sector goes to the plane azimuth Az' within the sector, which cuts off the
+// same area on the plane triangle as Az on the spherical one, and its radius
+// 2 sin(z / 2) is multiplied by f, which puts the face edge on the plane
+// triangle's edge. f does not depend on z.
+template <class T>
+static inline void snyder_adjust(const SnyderParams& sp, const SectorAzimuth<T>& s,
+                                 T& az_prime, T& f) {
+  using std::acos;
+  using std::atan2;
+  using std::cos;
+  using std::sin;
+  // Snyder's spherical angle H at the point where the ray at Az meets the edge
+  const T h_arg = clamp_to(s.sin_az * sp.sin_g * sp.cos_el - s.cos_az * sp.cos_g, -1.0, 1.0);
+  const T h_angle = acos(h_arg);
+  // The spherical excess A_G of the triangle cut off by the ray
+  const T AG_angle = s.azimuth + sp.g_angle + h_angle - kPi;
+  az_prime = atan2(2.0 * AG_angle, sp.r1_squared * sp.tan_el * sp.tan_el - 2.0 * AG_angle * sp.cot_30);
+  const T denom = 2.0 * (cos(az_prime) + sp.cot_30 * sin(az_prime)) * sin(s.dz / 2.0);
+  f = (std::fabs(value_of(denom)) < 1e-15) ? T(0.0) : sp.tan_el / denom;
+}
+
+// Snyder's point on the face plane, (u, v) from the face centre in units of
+// the unit sphere along the plane triangle's x and y axes: radius
+// rho = 2 R' f sin(z / 2) at the plane azimuth az_prime within `sector`.
+template <class T>
+static inline void snyder_plane(const SnyderParams& sp, T z, int sector, T az_prime, T f,
+                                T& u, T& v) {
+  using std::cos;
+  using std::sin;
+  const T rho = 2.0 * sp.r1 * f * sin(z / 2.0);
+  const T a = az_prime + sector * k2PiOver3;
+  u = rho * sin(a);
+  v = rho * cos(a);
+}
+
 // The face projection `proj` of the point at arc z from a face centre and
 // azimuth az from the face's first vertex, both in radians, az in [0, 2 pi),
 // to face-plane (x, y). With `validate`, a point past the sector boundary
@@ -32,61 +93,61 @@ template <class T>
 static bool face_xy_from_polar(const SolidTopology& t, T z, T az, bool validate,
                                FaceProjection proj, T& x, T& y) {
   const SnyderParams& sp = t.snyder;
-  using std::acos;
-  using std::atan2;
-  using std::cos;
-  using std::sin;
-  const T face_az = az;
-
-  // Reduce the azimuth to its 120° sector
-  const int sector = azimuth_sector(value_of(az));
-  T azimuth = az - sector * k2PiOver3;
-
-  const T cos_azimuth = cos(azimuth);
-  const T sin_azimuth = sin(azimuth);
-
-  // Snyder's auxiliary angle for the sector (Snyder notation: δ_z)
-  const T dz_angle = atan2(sp.tan_el, cos_azimuth + sp.cot_30 * sin_azimuth);
+  const SectorAzimuth<T> s = sector_azimuth(sp, az);
 
   // The point must lie inside the sector boundary
-  if (validate && value_of(z) > value_of(dz_angle) + 1e-7) return false;
+  if (validate && value_of(z) > value_of(s.dz) + 1e-7) return false;
 
   if (proj == FaceProjection::Fuller) {
-    const auto xy = fuller_face_xy(z, face_az);
+    const auto xy = fuller_face_xy(z, az);
     x = xy.first;
     y = xy.second;
     return true;
   }
   if (proj == FaceProjection::IVEA) {
-    const auto xy = ivea_face_xy(t.vgc, z, face_az);
+    const auto xy = ivea_face_xy(t.vgc, z, az);
     x = xy.first;
     y = xy.second;
     return true;
   }
 
-  // Snyder's angle 'h' - auxiliary spherical angle (Snyder notation: h)
-  const T h_arg = clamp_to(sin_azimuth * sp.sin_g * sp.cos_el - cos_azimuth * sp.cos_g, -1.0, 1.0);
-  const T h_angle = acos(h_arg);
-
-  // Snyder's accumulated angle from azimuth (Snyder notation: A_G)
-  const T AG_angle = azimuth + sp.g_angle + h_angle - kPi;
-
-  // Transformed azimuth in the face plane (Snyder notation: Az')
-  T azimuth_transformed = atan2(2.0 * AG_angle, sp.r1_squared * sp.tan_el * sp.tan_el - 2.0 * AG_angle * sp.cot_30);
-
-  // Snyder's 'f' scale factor (Snyder notation: f)
-  const T denom = 2.0 * (cos(azimuth_transformed) + sp.cot_30 * sin(azimuth_transformed)) * sin(dz_angle / 2.0);
-  const T f_scale = (std::fabs(value_of(denom)) < 1e-15) ? T(0.0) : sp.tan_el / denom;
-
-  // Radial distance in face plane (Snyder notation: ρ)
-  const T rho = 2.0 * sp.r1 * f_scale * sin(z / 2.0);
-
-  // Restore the sector
-  azimuth_transformed = azimuth_transformed + sector * k2PiOver3;
-
-  x = (rho * sin(azimuth_transformed) + sp.origin_x_off) / sp.edge;
-  y = (rho * cos(azimuth_transformed) + sp.origin_y_off) / sp.edge;
+  T az_prime, f, u, v;
+  snyder_adjust(sp, s, az_prime, f);
+  snyder_plane(sp, z, s.sector, az_prime, f, u, v);
+  x = (u + sp.origin_x_off) / sp.edge;
+  y = (v + sp.origin_y_off) / sp.edge;
   return true;
+}
+
+// The point at arc z and azimuth az from a face centre at step `stage` of
+// Lambert's construction, as (u, v) on the plane of that step in units of the
+// unit sphere, along the plane triangle's x and y axes from the face centre.
+// ConstructionStage::Face is the face projection `proj`.
+template <class T>
+static void stage_uv(const SolidTopology& t, T z, T az, ConstructionStage stage,
+                     FaceProjection proj, T& u, T& v) {
+  using std::cos;
+  using std::sin;
+  const SnyderParams& sp = t.snyder;
+  if (stage == ConstructionStage::Lambert) {
+    const T rho = 2.0 * sin(z / 2.0);
+    u = rho * sin(az);
+    v = rho * cos(az);
+    return;
+  }
+  if (stage == ConstructionStage::Nudge) {
+    const SectorAzimuth<T> s = sector_azimuth(sp, az);
+    T az_prime, f;
+    snyder_adjust(sp, s, az_prime, f);
+    snyder_plane(sp, z, s.sector, az_prime, f, u, v);
+    u = u / sp.r1;
+    v = v / sp.r1;
+    return;
+  }
+  T x, y;
+  face_xy_from_polar(t, z, az, /*validate=*/false, proj, x, y);
+  u = x * sp.edge - sp.origin_x_off;
+  v = y * sp.edge - sp.origin_y_off;
 }
 
 // Arc z from a face centre and azimuth from the face's first vertex, in
@@ -146,12 +207,19 @@ static ProjectionWithStatus project_core(const Geo& geo, const PolyData& ico_dat
   return {x, y, true};
 }
 
-FaceScale face_scale(const Geo& geo, int face) {
+static void require_construction(ConstructionStage stage) {
+  if (stage == ConstructionStage::Nudge && active_projection() != FaceProjection::ISEA) {
+    throw std::invalid_argument("Lambert's construction with Snyder's adjustment is "
+                                "the ISEA projection's");
+  }
+}
+
+FaceScale face_scale(const Geo& geo, int face, ConstructionStage stage) {
   const PolyData& ico_data = poly();
   if (face < 0 || face >= ico_data.n_faces()) {
     throw std::invalid_argument("face_scale: face out of range for the solid");
   }
-  const SnyderParams& sp = ico_data.topo->snyder;
+  require_construction(stage);
   double z, azimuth;
   face_polar(geo, ico_data, face, z, azimuth);
   // At the face centre the azimuth is undefined and the projection has a
@@ -159,17 +227,43 @@ FaceScale face_scale(const Geo& geo, int face) {
   constexpr double kNearCentre = 1e-9;
   if (z < kNearCentre) z = kNearCentre;
 
-  Dual2 x, y;
-  face_xy_from_polar(*ico_data.topo, Dual2(z, 1.0, 0.0), Dual2(azimuth, 0.0, 1.0),
-                     /*validate=*/false, active_projection(), x, y);
-  // Plane lengths in units of the unit sphere: a face edge of the plane
-  // triangle is sp.edge, so the plane triangle has the face's area.
+  Dual2 u, v;
+  stage_uv(*ico_data.topo, Dual2(z, 1.0, 0.0), Dual2(azimuth, 0.0, 1.0), stage,
+           active_projection(), u, v);
+  // Plane lengths in units of the unit sphere: on the face plane the plane
+  // triangle then has the face's area.
   const double across = 1.0 / std::sin(z);
   FaceScale out;
-  out.j[0][0] = sp.edge * x.d[0];
-  out.j[1][0] = sp.edge * y.d[0];
-  out.j[0][1] = sp.edge * x.d[1] * across;
-  out.j[1][1] = sp.edge * y.d[1] * across;
+  out.j[0][0] = u.d[0];
+  out.j[1][0] = v.d[0];
+  out.j[0][1] = u.d[1] * across;
+  out.j[1][1] = v.d[1] * across;
+  return out;
+}
+
+ConstructionPoint construction_point(const Geo& geo, int face) {
+  const PolyData& ico_data = poly();
+  if (face < 0 || face >= ico_data.n_faces()) {
+    throw std::invalid_argument("construction_point: face out of range for the solid");
+  }
+  if (active_projection() != FaceProjection::ISEA) {
+    throw std::invalid_argument("Lambert's construction is the ISEA projection's");
+  }
+  const SolidTopology& t = *ico_data.topo;
+  const SnyderParams& sp = t.snyder;
+  ConstructionPoint out;
+  face_polar(geo, ico_data, face, out.z, out.az);
+  stage_uv(t, out.z, out.az, ConstructionStage::Lambert, FaceProjection::ISEA,
+           out.lambert_u, out.lambert_v);
+  const SectorAzimuth<double> s = sector_azimuth(sp, out.az);
+  double az_prime;
+  snyder_adjust(sp, s, az_prime, out.f);
+  snyder_plane(sp, out.z, s.sector, az_prime, out.f, out.plane_u, out.plane_v);
+  out.az_prime = az_prime + s.sector * k2PiOver3;
+  if (out.az_prime < 0.0) out.az_prime += kTwoPi;
+  if (out.az_prime >= kTwoPi) out.az_prime -= kTwoPi;
+  out.tx = (out.plane_u + sp.origin_x_off) / sp.edge;
+  out.ty = (out.plane_v + sp.origin_y_off) / sp.edge;
   return out;
 }
 

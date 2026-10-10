@@ -131,11 +131,23 @@ ICOSAHEDRON_PROJECTIONS <- "fuller"
 #' @noRd
 DGGS_PROJECTIONS <- c("ISEA", "FULLER")
 
+#' Face projections built on Lambert's azimuthal equal-area projection about
+#' each face centre (Snyder's), whose steps projection_stages() returns
+#' @noRd
+LAMBERT_PROJECTIONS <- "isea"
+
 #' Whether a face projection keeps cells equal-area
 #' @param projection A name in \code{FACE_PROJECTIONS}
 #' @noRd
 is_equal_area_projection <- function(projection) {
   projection %in% EQUAL_AREA_PROJECTIONS
+}
+
+#' Whether a face projection is Lambert's construction, adjusted
+#' @param projection A name in \code{FACE_PROJECTIONS}
+#' @noRd
+is_lambert_projection <- function(projection) {
+  projection %in% LAMBERT_PROJECTIONS
 }
 
 #' Stops when a face projection is not defined on a solid

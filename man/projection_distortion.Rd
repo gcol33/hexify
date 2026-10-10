@@ -4,7 +4,7 @@
 \alias{projection_distortion}
 \title{Distortion of a grid's face projection}
 \usage{
-projection_distortion(x, lon, lat)
+projection_distortion(x, lon, lat, stage = c("face", "lambert", "nudge"))
 }
 \arguments{
 \item{x}{A HexGridInfo object from \code{\link{hex_grid}} with an ISEA
@@ -12,6 +12,10 @@ grid. H3 is built on a gnomonic projection of its own and is not
 covered.}
 
 \item{lon, lat}{Longitudes and latitudes in degrees.}
+
+\item{stage}{\code{"face"}, the grid's face projection, or a step of
+Lambert's construction, \code{"lambert"} or \code{"nudge"}, on a grid
+with Snyder's projection (\code{projection = "isea"}).}
 }
 \value{
 A data frame with one row per point: \code{lon}, \code{lat},
@@ -44,10 +48,22 @@ face centre, approached along those arcs: 17.27 degrees, with scale
 factors 1.163 and 0.860 (Snyder 1992, Table 1). At a face centre the
 projection has a different derivative along each direction, and the
 result is the limit along the azimuth the point's coordinates give.
+
+\code{stage} reads the indicatrix at an earlier step of Lambert's
+construction of Snyder's projection (see \code{\link{projection_stages}}):
+\code{"lambert"}, Lambert's azimuthal equal-area projection about the face
+centre onto the tangent plane, with scale factors
+\eqn{1 / \cos(z / 2)} across the radius and \eqn{\cos(z / 2)} along it at
+arc \eqn{z} from the centre; \code{"nudge"}, Snyder's point on the tangent
+plane before the scaling onto the face plane, whose scale factors are those
+of \code{"face"} over \eqn{R'}, so its areal scale is \eqn{1 / R'^2}
+everywhere. Both read lengths on the tangent plane in units of the
+sphere's radius.
 }
 \examples{
 g <- hex_grid(resolution = 3, aperture = 3)
 projection_distortion(g, c(0, 16.37), c(0, 48.21))
+projection_distortion(g, c(0, 16.37), c(0, 48.21), stage = "lambert")
 
 gf <- hex_grid(resolution = 3, aperture = 3, projection = "fuller")
 d <- projection_distortion(gf, runif(1000, -180, 180),
@@ -65,5 +81,7 @@ Geographic Information Science} 33(4), 269-286.
 }
 \seealso{
 \code{\link[=plot,HexGridInfo,missing-method]{plot}} with
-\code{distortion} and \code{tissot} to map it
+\code{distortion} and \code{tissot} to map it;
+\code{\link{projection_stages}} for the points at each step of Lambert's
+construction
 }

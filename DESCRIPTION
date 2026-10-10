@@ -55,6 +55,7 @@ Collate:
     'cell_metrics.R'
     'constants.R'
     'classes.R'
+    'construction.R'
     'constructors.R'
     'crosswalk.R'
     'data.R'

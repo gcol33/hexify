@@ -248,14 +248,21 @@ static void compose_authalic_scale(const hexify::Geo& geo, int face,
   s = out;
 }
 
-// Tissot's indicatrix of the face projection at a point of a face: the
-// derivative j (face_scale) is a turn by beta, a stretch by (a, b) and a
-// turn, so a small circle on the sphere maps to an ellipse with semi-axes a
-// >= b along the face-plane directions beta and beta + 90 degrees. On an
-// ellipsoid the circle is drawn on the ellipsoid.
-static void tissot_row(const hexify::Geo& geo, int face, double& a, double& b,
-                       double& beta) {
-  hexify::FaceScale s = hexify::face_scale(geo, face);
+// The step of Lambert's construction an R call names: 0 the Lambert point,
+// 1 the nudged point, 2 the face projection (hexify::ConstructionStage).
+static hexify::ConstructionStage construction_stage(int code) {
+  if (code < 0 || code > 2) stop("stage must be 0 (Lambert), 1 (nudge) or 2 (face)");
+  return static_cast<hexify::ConstructionStage>(code);
+}
+
+// Tissot's indicatrix of the map onto the plane of `stage` at a point of a
+// face: the derivative j (face_scale) is a turn by beta, a stretch by (a, b)
+// and a turn, so a small circle on the sphere maps to an ellipse with
+// semi-axes a >= b along the plane directions beta and beta + 90 degrees. On
+// an ellipsoid the circle is drawn on the ellipsoid.
+static void tissot_row(const hexify::Geo& geo, int face, hexify::ConstructionStage stage,
+                       double& a, double& b, double& beta) {
+  hexify::FaceScale s = hexify::face_scale(geo, face, stage);
   compose_authalic_scale(geo, face, s);
   const double e = 0.5 * (s.j[0][0] + s.j[1][1]);
   const double f = 0.5 * (s.j[0][0] - s.j[1][1]);
@@ -276,11 +283,13 @@ static DataFrame tissot_frame(const IntegerVector& face, const NumericVector& a,
 
 // Tissot's indicatrix at points given in lon/lat, each read on the face it
 // lies on (or on 'face' where that is not NA): the scale factors a >= b and
-// the face-plane direction of a, in radians from the face's x axis.
+// the plane direction of a, in radians from the face's x axis, of the map
+// onto the plane of construction step 'stage' (construction_stage()).
 // [[Rcpp::export]]
 DataFrame cpp_lonlat_tissot(NumericVector icosa, NumericVector lon,
-                            NumericVector lat, IntegerVector face) {
+                            NumericVector lat, IntegerVector face, int stage = 2) {
   activate_icosa(icosa);
+  const hexify::ConstructionStage st = construction_stage(stage);
   const R_xlen_t n = lon.size();
   IntegerVector f(n);
   NumericVector a(n), b(n), beta(n);
@@ -288,7 +297,7 @@ DataFrame cpp_lonlat_tissot(NumericVector icosa, NumericVector lon,
     f[k] = face[k] == NA_INTEGER ? hexify::which_face(lon[k], lat[k]) : face[k];
     if (f[k] < 0 || f[k] >= hexify::poly().n_faces()) stop("face out of range for the solid");
     const hexify::Geo g(hexify::deg2rad(lon[k]), hexify::to_sphere_lat(hexify::deg2rad(lat[k])));
-    tissot_row(g, f[k], a[k], b[k], beta[k]);
+    tissot_row(g, f[k], st, a[k], b[k], beta[k]);
   }
   return tissot_frame(f, a, b, beta);
 }
@@ -296,8 +305,9 @@ DataFrame cpp_lonlat_tissot(NumericVector icosa, NumericVector lon,
 // The same at points of one face given in its triangle coordinates.
 // [[Rcpp::export]]
 DataFrame cpp_face_tri_tissot(NumericVector icosa, int face, NumericVector tx,
-                              NumericVector ty) {
+                              NumericVector ty, int stage = 2) {
   activate_icosa(icosa);
+  const hexify::ConstructionStage st = construction_stage(stage);
   if (face < 0 || face >= hexify::poly().n_faces()) stop("face out of range for the solid");
   const R_xlen_t n = tx.size();
   IntegerVector f(n, face);
@@ -305,7 +315,46 @@ DataFrame cpp_face_tri_tissot(NumericVector icosa, int face, NumericVector tx,
   for (R_xlen_t k = 0; k < n; ++k) {
     const auto ll = hexify::face_xy_to_sphere_ll(tx[k], ty[k], face);
     const hexify::Geo g(hexify::deg2rad(ll.first), hexify::deg2rad(ll.second));
-    tissot_row(g, face, a[k], b[k], beta[k]);
+    tissot_row(g, face, st, a[k], b[k], beta[k]);
   }
   return tissot_frame(f, a, b, beta);
+}
+
+// ============================================================================
+// Lambert's construction of Snyder's projection
+// ============================================================================
+
+// Points given in lon/lat through Lambert's construction of Snyder's
+// projection (hexify::construction_point()), each onto the face the forward
+// projection puts it on, or onto 'face' where that is not NA. Angles in
+// radians, lengths in units of the unit sphere.
+// [[Rcpp::export]]
+List cpp_lonlat_construction(NumericVector icosa, NumericVector lon,
+                                  NumericVector lat, IntegerVector face) {
+  activate_icosa(icosa);
+  const R_xlen_t n = lon.size();
+  IntegerVector f(n);
+  NumericVector z(n), az(n), lu(n), lv(n), azp(n), fs(n), pu(n), pv(n), tx(n), ty(n);
+  for (R_xlen_t k = 0; k < n; ++k) {
+    f[k] = face[k] == NA_INTEGER ? hexify::snyder_forward(lon[k], lat[k]).face : face[k];
+    if (f[k] < 0 || f[k] >= hexify::poly().n_faces()) stop("face out of range for the solid");
+    const hexify::Geo g(hexify::deg2rad(lon[k]), hexify::to_sphere_lat(hexify::deg2rad(lat[k])));
+    const hexify::ConstructionPoint c = hexify::construction_point(g, f[k]);
+    z[k] = c.z;
+    az[k] = c.az;
+    lu[k] = c.lambert_u;
+    lv[k] = c.lambert_v;
+    azp[k] = c.az_prime;
+    fs[k] = c.f;
+    pu[k] = c.plane_u;
+    pv[k] = c.plane_v;
+    tx[k] = c.tx;
+    ty[k] = c.ty;
+  }
+  return List::create(_["face"] = f, _["z"] = z, _["az"] = az,
+                      _["lambert_u"] = lu, _["lambert_v"] = lv,
+                      _["az_prime"] = azp, _["f"] = fs,
+                      _["plane_u"] = pu, _["plane_v"] = pv,
+                      _["tx"] = tx, _["ty"] = ty,
+                      _["r1"] = hexify::topo().snyder.r1);
 }

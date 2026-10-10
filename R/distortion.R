@@ -26,10 +26,24 @@
 #' projection has a different derivative along each direction, and the
 #' result is the limit along the azimuth the point's coordinates give.
 #'
+#' \code{stage} reads the indicatrix at an earlier step of Lambert's
+#' construction of Snyder's projection (see \code{\link{projection_stages}}):
+#' \code{"lambert"}, Lambert's azimuthal equal-area projection about the face
+#' centre onto the tangent plane, with scale factors
+#' \eqn{1 / \cos(z / 2)} across the radius and \eqn{\cos(z / 2)} along it at
+#' arc \eqn{z} from the centre; \code{"nudge"}, Snyder's point on the tangent
+#' plane before the scaling onto the face plane, whose scale factors are those
+#' of \code{"face"} over \eqn{R'}, so its areal scale is \eqn{1 / R'^2}
+#' everywhere. Both read lengths on the tangent plane in units of the
+#' sphere's radius.
+#'
 #' @param x A HexGridInfo object from \code{\link{hex_grid}} with an ISEA
 #'   grid. H3 is built on a gnomonic projection of its own and is not
 #'   covered.
 #' @param lon,lat Longitudes and latitudes in degrees.
+#' @param stage \code{"face"}, the grid's face projection, or a step of
+#'   Lambert's construction, \code{"lambert"} or \code{"nudge"}, on a grid
+#'   with Snyder's projection (\code{projection = "isea"}).
 #'
 #' @return A data frame with one row per point: \code{lon}, \code{lat},
 #'   \code{face} (from 0), the scale factors \code{a} (largest) and \code{b}
@@ -48,32 +62,68 @@
 #' \doi{10.1559/152304006779500687}
 #'
 #' @seealso \code{\link[=plot,HexGridInfo,missing-method]{plot}} with
-#'   \code{distortion} and \code{tissot} to map it
+#'   \code{distortion} and \code{tissot} to map it;
+#'   \code{\link{projection_stages}} for the points at each step of Lambert's
+#'   construction
 #'
 #' @export
 #' @examples
 #' g <- hex_grid(resolution = 3, aperture = 3)
 #' projection_distortion(g, c(0, 16.37), c(0, 48.21))
+#' projection_distortion(g, c(0, 16.37), c(0, 48.21), stage = "lambert")
 #'
 #' gf <- hex_grid(resolution = 3, aperture = 3, projection = "fuller")
 #' d <- projection_distortion(gf, runif(1000, -180, 180),
 #'                            asin(runif(1000, -1, 1)) * 180 / pi)
 #' range(d$areal)
-projection_distortion <- function(x, lon, lat) {
+projection_distortion <- function(x, lon, lat, stage = c("face", "lambert", "nudge")) {
+  stage <- match.arg(stage)
+  g <- face_projection_grid(x, "projection_distortion()")
+  check_lonlat_vectors(lon, lat)
+  if (stage != "face") check_lambert_grid(g)
+  s <- cpp_lonlat_tissot(icosa_arg(g), as.numeric(lon), as.numeric(lat),
+                         rep(NA_integer_, length(lon)), CONSTRUCTION_STAGES[[stage]])
+  tissot_table(data.frame(lon = as.numeric(lon), lat = as.numeric(lat)), s)
+}
+
+#' The steps of Lambert's construction the C++ layer reads
+#' (\code{hexify::ConstructionStage}): the Lambert point, the nudged point,
+#' the face projection
+#' @noRd
+CONSTRUCTION_STAGES <- c(lambert = 0L, nudge = 1L, face = 2L)
+
+#' The grid of an object whose ISEA face projection a function reads; H3 is
+#' refused
+#' @noRd
+face_projection_grid <- function(x, what) {
   g <- extract_grid(x)
   if (is_h3_grid(g)) {
     stop("an H3 grid is built on a gnomonic projection of its own; ",
-         "projection_distortion() reads the ISEA face projections", call. = FALSE)
+         what, " reads the ISEA face projections", call. = FALSE)
   }
+  g
+}
+
+#' Stops unless the grid's face projection is Lambert's construction
+#' @noRd
+check_lambert_grid <- function(g) {
+  if (!is_lambert_projection(grid_projection(g))) {
+    stop("Lambert's construction is the one behind Snyder's projection; ",
+         "the grid needs projection = \"isea\"", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+#' Stops unless lon and lat are finite numbers, as many of each
+#' @noRd
+check_lonlat_vectors <- function(lon, lat) {
   if (!is.numeric(lon) || !is.numeric(lat) || length(lon) != length(lat)) {
     stop("lon and lat must be numeric vectors of the same length", call. = FALSE)
   }
   if (any(!is.finite(lon) | !is.finite(lat))) {
     stop("lon and lat must be finite", call. = FALSE)
   }
-  s <- cpp_lonlat_tissot(icosa_arg(g), as.numeric(lon), as.numeric(lat),
-                         rep(NA_integer_, length(lon)))
-  tissot_table(data.frame(lon = as.numeric(lon), lat = as.numeric(lat)), s)
+  invisible(TRUE)
 }
 
 #' Points with their indicatrix: the scale factors from cpp_*_tissot() and
