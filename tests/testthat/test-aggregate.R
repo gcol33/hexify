@@ -166,3 +166,42 @@ test_that("means, missing values and several value columns", {
   expect_error(hex_aggregate(ids, v$a, g, levels = 4), "levels")
   expect_error(hex_aggregate(ids, as.character(v$a), g), "numeric")
 })
+
+test_that("a Hex9 cell on its parents' edge splits in halves", {
+  # Six of nine children inside their parent, three centred on its edges and
+  # cut there into their two half-hexagons; the parent holding the mode-0
+  # half comes first. Snyder's and IVEA's shares are the lattice's for every
+  # cell, the twelve beside the vertices among them; Kaseorg's projection
+  # ("ak") is measured, and so is Hex9's own ("akw").
+  for (projection in c("isea", "ivea")) {
+    g <- hex_grid(resolution = 3, aperture = 9, projection = projection)
+    ids <- all_cells(g)
+    ov <- get_parent(ids, g, overlapping = TRUE)
+    expect_equal(as.vector(table(lengths(ov))), length(ids) * c(2, 1) / 3)
+    expect_identical(hexify:::cell_id_unlist(lapply(ov, function(x) x[1])), get_parent(ids, g))
+    lattice <- hexify:::lattice_shares(lengths(ov), 9L)
+    expect_lt(max(abs(hexify:::sphere_shares(ids, ov, g) - lattice)), 1e-10)
+    density <- unname(cell_area(ids, g))
+    for (lv in 1:2) {
+      up <- hex_aggregate(ids, density, g, levels = lv)
+      expect_equal(up$value, unname(cell_area(up$cell_id, coarser(g, lv))), tolerance = 1e-12)
+      v <- seq_along(ids) %% 5
+      for (rule in c("area", "centre")) {
+        expect_equal(sum(hex_aggregate(ids, v, g, levels = lv, rule = rule)$value), sum(v),
+                     tolerance = 1e-12)
+      }
+    }
+  }
+  projections <- "ak"
+  if (hexify:::cpp_hex9_warp_ready() || file.exists(hexify:::hex9_warp_path())) {
+    projections <- c(projections, "akw")
+  }
+  for (projection in projections) {
+    g <- hex_grid(resolution = 2, aperture = 9, projection = projection)
+    ids <- all_cells(g)
+    area <- unname(cell_area(ids, g))
+    up <- hex_aggregate(ids, area, g)
+    expect_equal(up$value, unname(cell_area(up$cell_id, coarser(g))), tolerance = 1e-6)
+    expect_equal(sum(up$value), sum(area), tolerance = 1e-12)
+  }
+})

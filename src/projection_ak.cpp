@@ -36,11 +36,19 @@ inline void plane_weights(T x, T y, T b[3]) {
   b[1] = 1.0 - b[0] - b[2];
 }
 
-// The unnormalised direction of the point with weights b, along the vertices
+// The unnormalised direction of the point with weights b, along the vertices.
+// At a vertex (b_k = 1) the formula's product of an infinite and a zero
+// factor has the vertex's direction as its limit.
 template <class T>
 inline void kaseorg(const T b[3], T X[3]) {
   using std::tan;
   using std::sqrt;
+  for (int k = 0; k < 3; k++) {
+    if (value_of(b[k]) >= 1.0) {
+      for (int m = 0; m < 3; m++) X[m] = T(m == k ? 1.0 : 0.0);
+      return;
+    }
+  }
   T t[3], t2[3];
   for (int k = 0; k < 3; k++) {
     t[k] = tan((0.5 * kPi) * b[k]);

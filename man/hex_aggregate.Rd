@@ -94,10 +94,21 @@ one twelfth off the child at \eqn{2 + \omega} the other way. Each of the
 six ring children lies 11/12 in its parent and 1/12 in one neighbour, and
 the parent's area checks: \eqn{1 + 6 \cdot 11/12 + 6 \cdot 1/12 = 7}.
 
+A Hex9 step (aperture 9 on the octahedron, Griffin 2026) divides each
+triangle of the solid's lattice into nine. A cell is the six lattice
+triangles around its centre, so a parent's edges are lines of the coarser
+lattice and therefore of the finer one. Six of a parent's nine children
+lie inside it; the other three are centred on its edges, and the edge
+through such a child's centre cuts it into its two half-hexagons, three
+triangles each: half in each of two parents. The parent's area checks:
+\eqn{6 + 6 \cdot 1/2 = 9} children's worth.
+
 The vertices of the solid are cell centres at every resolution, and the
 turn by the angle deficit about a vertex maps both lattices onto
 themselves, so the cells around a vertex are cut as in the plane; the cell
-at a vertex lies wholly inside the vertex cell above it. Snyder's projection
+at a vertex lies wholly inside the vertex cell above it. On Hex9 the
+vertices are lattice points no cell is centred on, and the cells there are
+cut along lattice lines as everywhere. Snyder's projection
 and the vertex-oriented one (\code{"ivea"}) are equal-area, so these plane
 shares are the shares on the sphere, for every cell, across quad and face
 edges and at the vertices. \code{\link{get_parent}} with
@@ -105,7 +116,8 @@ edges and at the vertices. \code{\link{get_parent}} with
 parent first, and the share follows from their number and the aperture of
 the step: one parent, 1; three after an aperture-3 step, 1/3 each; two
 after aperture 4, 1/2 each; two after aperture 7, 11/12 to the parent and
-1/12 to the neighbour.
+1/12 to the neighbour; two after a Hex9 step, 1/2 each, the parent holding
+the child's mode-0 half first.
 
 \strong{Several levels.} \code{levels > 1} applies the one-level rule level
 by level, each step with the shares of its own aperture: a grid built with

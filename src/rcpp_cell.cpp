@@ -2035,7 +2035,10 @@ constexpr double kVertexCornerSlack = 1e-9;
 // The parts of a cell on the faces it covers. The cell is convex on the
 // unfolded solid and each face a triangle of it, so each part is convex: the
 // hull of the cell's boundary pieces on that face, with the face's corner at
-// the vertex for a cell centred on a vertex of the solid.
+// the vertex for a cell centred on a vertex of the solid, and for a cell with
+// a corner at a vertex (Hex9's two cells there), whose boundary reaches the
+// vertex on the faces beside its own, the corner of each face the cell
+// covers there.
 static void cell_face_polygons(const CellPlanes& g, const CellPlane& c,
                                std::vector<PlaneEdge>& edges,
                                std::vector<FacePiece>& pieces,
@@ -2061,6 +2064,25 @@ static void cell_face_polygons(const CellPlanes& g, const CellPlane& c,
                                            kFaceTrianglePoints[k][1], v.data());
                 if (hexify::arc_angle(v, centre) < kVertexCornerSlack) {
                     fp.poly.push_back({kFaceTrianglePoints[k][0], kFaceTrianglePoints[k][1]});
+                }
+            }
+        }
+    } else {
+        std::vector<hexify::UnitVec> ends;
+        hexify::UnitVec v;
+        for (const FacePiece& p : pieces) {
+            hexify::face_tri_to_sphere(p.face, p.ax, p.ay, v.data());
+            ends.push_back(v);
+        }
+        for (FacePolygon& fp : out) {
+            for (int k = 0; k < 3; k++) {
+                hexify::face_tri_to_sphere(fp.face, kFaceTrianglePoints[k][0],
+                                           kFaceTrianglePoints[k][1], v.data());
+                for (const hexify::UnitVec& e : ends) {
+                    if (hexify::arc_angle(v, e) < kVertexCornerSlack) {
+                        fp.poly.push_back({kFaceTrianglePoints[k][0], kFaceTrianglePoints[k][1]});
+                        break;
+                    }
                 }
             }
         }
