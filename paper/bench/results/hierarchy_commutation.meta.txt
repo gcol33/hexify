@@ -1,6 +1,6 @@
 script: bench_hierarchy_commutation.R
-date: 2026-10-10 02:45:06 CEST
-hexify commit: e44615a
+date: 2026-10-10 04:16:45 CEST
+hexify commit: fb38284
 uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.8.4
 R: R version 4.6.0 (2026-04-24 ucrt)
