@@ -38,6 +38,7 @@ Suggests:
     tibble,
     gridExtra,
     htmlwidgets,
+    jsonlite,
     leaflet
 VignetteBuilder: knitr
 LinkingTo: Rcpp
