@@ -26,6 +26,7 @@ test_that("every wall of a grid is measured once", {
                  hex_grid(resolution = 3, aperture = 4, projection = "fuller"),
                  hex_grid(resolution = 3, aperture = "4/3"),
                  hex_grid(resolution = 3, aperture = 3, polyhedron = "octahedron"),
+                 hex_grid(resolution = 3, aperture = 4, polyhedron = "tetrahedron"),
                  hex_grid(resolution = 0, aperture = 3),
                  hex_grid(resolution = 1, type = "h3"))) {
     w <- wall_metrics(grid = g)

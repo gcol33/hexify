@@ -11,7 +11,11 @@ test_that("the parts of a cell add up to it on an equal-area net", {
     list(grid = hex_grid(resolution = 2, aperture = 3), layout = "plane"),
     list(grid = hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron",
                          orientation = "gosper"), layout = "gosper"),
-    list(grid = hex_grid(resolution = 2, aperture = 7), layout = "land")
+    list(grid = hex_grid(resolution = 2, aperture = 7), layout = "land"),
+    list(grid = hex_grid(resolution = 2, aperture = 4, polyhedron = "tetrahedron"),
+         layout = "plane"),
+    list(grid = hex_grid(resolution = 2, aperture = 3, polyhedron = "tetrahedron"),
+         layout = "land")
   )
   for (cs in cases) {
     net <- net_layout(cs$grid, cs$layout)

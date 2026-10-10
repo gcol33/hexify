@@ -15,6 +15,7 @@ construction_grids <- function() {
     hex_grid(resolution = 3, aperture = 3),
     hex_grid(resolution = 3, aperture = 4, orientation = c(-40, 20, 33)),
     hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron"),
+    hex_grid(resolution = 2, aperture = 3, polyhedron = "tetrahedron"),
     hex_grid(resolution = 3, aperture = 7, ellipsoid = "WGS84", orientation = "ogc")
   )
 }
@@ -107,7 +108,7 @@ test_that("each step's plane coordinates are the points the globe draws", {
 })
 
 test_that("the Lambert step is equal-area and Snyder's steps keep area in proportion", {
-  for (poly in c("icosahedron", "octahedron")) {
+  for (poly in c("icosahedron", "octahedron", "tetrahedron")) {
     g <- hex_grid(resolution = 2, aperture = 4, polyhedron = poly)
     ic <- hexify:::icosa_arg(g)
     solid <- hexify:::icosa_solid(ic)

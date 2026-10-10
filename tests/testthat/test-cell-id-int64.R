@@ -136,6 +136,11 @@ test_that("grids whose cell IDs pass 2^63 - 1 are refused", {
                            polyhedron = "octahedron"), "HexGridInfo")
   expect_error(hex_grid(resolution = 22, aperture = 7, polyhedron = "octahedron"),
                "finest resolution is 21")
+  # 2 * 7^22 + 2 cells fit, 2 * 7^23 + 2 do not
+  expect_s4_class(hex_grid(resolution = 22, aperture = 7,
+                           polyhedron = "tetrahedron"), "HexGridInfo")
+  expect_error(hex_grid(resolution = 23, aperture = 7, polyhedron = "tetrahedron"),
+               "finest resolution is 22")
   expect_error(hex_grid(resolution = 25, aperture = "4/7"),
                "finest resolution is 24")
   expect_error(hex_grid(resolution = 22, aperture = rep(7, 22)),

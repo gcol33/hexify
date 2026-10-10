@@ -37,6 +37,9 @@ test_that("a uniform density gives every area-weighted parent its own area", {
                 hex_grid(resolution = 5, aperture = "4/3"),
                 hex_grid(resolution = 4, aperture = c(3, 7, 4, 3)),
                 hex_grid(resolution = 4, aperture = 3, polyhedron = "octahedron"),
+                hex_grid(resolution = 4, aperture = 3, polyhedron = "tetrahedron"),
+                hex_grid(resolution = 3, aperture = 4, polyhedron = "tetrahedron"),
+                hex_grid(resolution = 3, aperture = 7, polyhedron = "tetrahedron"),
                 hex_grid(resolution = 3, aperture = 7, projection = "ivea"))
   for (g in grids) {
     ids <- all_cells(g)
@@ -54,6 +57,10 @@ test_that("a uniform density gives every area-weighted parent its own area", {
     if (any(pent)) {
       expect_equal(up$value[pent] / max(up$value), rep(5 / 6, sum(pent)),
                    tolerance = 1e-12)
+    }
+    tri <- hexify:::isea_cell_sides(up$cell_id, coarser(g, 2L)) == 3
+    if (any(tri)) {
+      expect_equal(up$value[tri] / max(up$value), rep(1 / 2, sum(tri)), tolerance = 1e-12)
     }
   }
 })
@@ -73,7 +80,9 @@ test_that("the lattice shares are the shares measured on the sphere", {
   # the pieces measured on the sphere: the shares 1/3, 1/2, 11/12 and 1/12
   set.seed(5)
   for (case in list(list(3, 5), list(4, 4), list(7, 3),
-                    list(c(4, 7, 3, 7), 4), list(7, 2, "octahedron"))) {
+                    list(c(4, 7, 3, 7), 4), list(7, 2, "octahedron"),
+                    list(3, 4, "tetrahedron"), list(4, 3, "tetrahedron"),
+                    list(7, 3, "tetrahedron"))) {
     g <- hex_grid(resolution = case[[2]], aperture = case[[1]],
                   polyhedron = if (length(case) > 2) case[[3]] else "icosahedron")
     ids <- all_cells(g)
@@ -91,6 +100,23 @@ test_that("every cell around a vertex divides as on the plane", {
     g <- hex_grid(resolution = case[2], aperture = case[1])
     pent <- all_cells(g)[is_pentagon(all_cells(g), g)]
     near <- unique(hexify:::cell_id_unlist(get_neighbors(pent, g, k = 1,
+                                                          include_self = TRUE)))
+    ov <- get_parent(near, g, overlapping = TRUE)
+    lattice <- hexify:::lattice_shares(lengths(ov), case[1])
+    measured <- hexify:::sphere_shares(near, ov, g)
+    expect_lt(max(abs(measured - lattice)), 1e-11)
+  }
+})
+
+test_that("every cell around a vertex of the tetrahedron divides as on the plane", {
+  # The solid turns half a turn about each vertex, a symmetry of the finer and
+  # of the coarser lattice alike, so the shares there are the plane's
+  for (case in list(c(3, 5), c(4, 4), c(7, 3))) {
+    g <- hex_grid(resolution = case[2], aperture = case[1], polyhedron = "tetrahedron")
+    ids <- all_cells(g)
+    vertex <- ids[hexify:::isea_cell_sides(ids, g) == 3]
+    expect_length(vertex, 4)
+    near <- unique(hexify:::cell_id_unlist(get_neighbors(vertex, g, k = 1,
                                                           include_self = TRUE)))
     ov <- get_parent(near, g, overlapping = TRUE)
     lattice <- hexify:::lattice_shares(lengths(ov), case[1])

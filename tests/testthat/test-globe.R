@@ -233,6 +233,8 @@ test_that("the two ways of building coarser levels agree cell by cell", {
   for (spec in list(list(ap = 3, res = 6), list(ap = 4, res = 5), list(ap = 7, res = 4),
                     list(ap = "4/7", res = 5), list(ap = c(4, 3, 7, 4), res = 4),
                     list(ap = 3, res = 5, poly = "octahedron"),
+                    list(ap = 3, res = 5, poly = "tetrahedron"),
+                    list(ap = 7, res = 4, poly = "tetrahedron"),
                     list(ap = 3, res = 6, orient = c(-40, 20, 33)),
                     list(ap = 3, res = 6, frac = 0.3), list(ap = 7, res = 4, frac = 0.5),
                     list(ap = 9, res = 4, poly = "octahedron"),
@@ -276,6 +278,9 @@ test_that("the cells' table holds every cell where the shader reads it", {
   for (spec in list(list(ap = 3, res = 5), list(ap = 4, res = 4), list(ap = 3, res = 0),
                     list(ap = "4/3", res = 5), list(ap = c(4, 3, 4), res = 3),
                     list(ap = 4, res = 3, poly = "octahedron"),
+                    list(ap = 4, res = 3, poly = "tetrahedron"),
+                    list(ap = 3, res = 4, poly = "tetrahedron"),
+                    list(ap = "4/3", res = 3, poly = "tetrahedron"),
                     list(ap = 3, res = 4, orient = c(-40, 20, 33)),
                     list(ap = 9, res = 0, poly = "octahedron"),
                     list(ap = 9, res = 3, poly = "octahedron"),
@@ -715,7 +720,12 @@ GLOBE_AGREEMENT_CASES <- c(
        list(ap = 9, res = 4, proj = "ak"),
        list(ap = 9, res = 8, proj = "ak", orient = c(150, -60, 200)),
        list(ap = 9, res = 3, proj = "akw"),
-       list(ap = 9, res = 8, proj = "akw"))
+       list(ap = 9, res = 8, proj = "akw")),
+  lapply(c(0, 1, 5, 10), function(r) list(ap = 3, res = r, poly = "tetrahedron")),
+  lapply(c(0, 1, 3, 8), function(r) list(ap = 4, res = r, poly = "tetrahedron")),
+  lapply(c(0, 1, 3, 6), function(r) list(ap = 7, res = r, poly = "tetrahedron")),
+  list(list(ap = "4/3", res = 7, poly = "tetrahedron"),
+       list(ap = 4, res = 6, proj = "ivea", poly = "tetrahedron", orient = c(-40, 20, 33)))
 )
 GLOBE_AGREEMENT_N <- 1e6
 GLOBE_AGREEMENT_EPS <- 1e-5
@@ -744,7 +754,10 @@ test_that("the shader finds the cell lonlat_to_cell() finds, and reads its value
     }
     grid <- hex_grid(resolution = spec$res, aperture = spec$ap,
                      orientation = if (is.null(spec$orient)) "standard" else spec$orient,
-                     projection = if (is.null(spec$proj)) "isea" else spec$proj)
+                     projection = if (is.null(spec$proj)) "isea" else spec$proj,
+                     polyhedron = if (is.null(spec$poly)) {
+                       if (identical(spec$ap, 9)) "octahedron" else "icosahedron"
+                     } else spec$poly)
     p <- shader_probe(GLOBE_AGREEMENT_N, grid)
     ll <- xyz_lonlat(p)
     ref <- lonlat_to_cell(ll[, 1], ll[, 2], grid)

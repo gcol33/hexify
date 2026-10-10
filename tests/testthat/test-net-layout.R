@@ -26,6 +26,7 @@ test_that("the plane layout puts every face where DGGRID's PLANE layout does", {
   grids <- list(hex_grid(resolution = 2, aperture = 3),
                 hex_grid(resolution = 2, aperture = 3, orientation = c(30, 20, 40)),
                 hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron"),
+                hex_grid(resolution = 2, aperture = 3, polyhedron = "tetrahedron"),
                 hex_grid(resolution = 2, aperture = 3, orientation = "dymaxion",
                          projection = "fuller"))
   for (g in grids) {

@@ -33,7 +33,7 @@ test_that("Snyder's projection and IVEA keep areas on every solid", {
   set.seed(88)
   lon <- runif(500, -180, 180)
   lat <- asin(runif(500, -1, 1)) * 180 / pi
-  for (proj in c("isea", "ivea")) for (poly in c("icosahedron", "octahedron")) {
+  for (proj in c("isea", "ivea")) for (poly in c("icosahedron", "octahedron", "tetrahedron")) {
     g <- hex_grid(resolution = 1, aperture = 4, polyhedron = poly, projection = proj)
     d <- projection_distortion(g, lon, lat)
     expect_lt(max(abs(d$areal - 1)), 1e-12)

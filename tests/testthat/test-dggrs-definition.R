@@ -3,6 +3,7 @@ test_that("a DGGRS definition carries the schema's required fields", {
                  hex_grid(resolution = 4, aperture = 3, projection = "fuller"),
                  hex_grid(resolution = 5, aperture = "4/3"),
                  hex_grid(resolution = 3, aperture = 7, polyhedron = "octahedron"),
+                 hex_grid(resolution = 3, aperture = 3, polyhedron = "tetrahedron"),
                  hex_grid(resolution = 3, type = "h3"))) {
     d <- dggrs_definition(g)
     expect_true(all(c("dggh", "zirs", "subZoneOrder") %in% names(d)))

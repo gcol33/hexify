@@ -65,8 +65,8 @@ test_that("a face's vertices, edge midpoints and centre keep their places", {
   }
 })
 
-test_that("IVEA cells are equal-area on the icosahedron and the octahedron", {
-  for (solid in c("icosahedron", "octahedron")) for (ap in list(3, 4, 7, "4/3")) {
+test_that("IVEA cells are equal-area on the icosahedron, octahedron and tetrahedron", {
+  for (solid in c("icosahedron", "octahedron", "tetrahedron")) for (ap in list(3, 4, 7, "4/3")) {
     res <- if (identical(ap, 7)) 2 else 3
     g <- hex_grid(resolution = res, aperture = ap, projection = "ivea", polyhedron = solid)
     ids <- as_cell_id(seq_len(n_cells(g)))
