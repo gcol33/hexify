@@ -10,15 +10,13 @@
 
 #' Solids a grid or face projection can be built on
 #'
-#' The codes the C++ layer reads (\code{hexify::Solid}). The tetrahedron
-#' carries the face projection only: its faces do not pair into the diamond
-#' quads cell IDs are numbered in.
+#' The codes the C++ layer reads (\code{hexify::Solid}).
 #' @noRd
 POLYHEDRA <- c(icosahedron = 0, octahedron = 1, tetrahedron = 2)
 
 #' Solids that carry a hexagonal grid
 #' @noRd
-GRID_POLYHEDRA <- c("icosahedron", "octahedron")
+GRID_POLYHEDRA <- c("icosahedron", "octahedron", "tetrahedron")
 
 #' The standard orientation of each solid: the ISEA orientation for the
 #' icosahedron; vertex 0 at the north pole and vertex 1 on the prime meridian

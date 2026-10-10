@@ -191,8 +191,9 @@ struct Grid {
   na_fill: vec4f,    // fill of a cell whose value is NA
   ramp_map: vec4f,   // a value v sits at clamp((v - x) * y + z, 0, 1) along the ramp
   faces: array<Face, 20>,
-  edges: array<vec4i, 108>,  // per quad nine rows: its far corner's quad and whether
-                             // it is a vertex quad, then each edge's map in two rows
+  edges: array<vec4i, 108>,  // per quad nine rows: its far corner's quad, whether
+                             // it is a vertex quad, its fold axis and whether
+                             // any quad folds, then each edge's map in two rows
   levels: array<Level, 32>,  // the grid's resolution, then each coarser one
 };
 
@@ -810,24 +811,64 @@ fn add64(a: vec2u, b: vec2u) -> vec2u {
   return vec2u(a.x + b.x + select(0u, 1u, lo < a.y), lo);
 }
 
-// The point (i, j) of a quad that has stepped outside it, in the quad that
-// owns it: DgQ2DDtoIConverter's reassignment, through the solid's edge maps.
-// Across an edge, with d the point's distance past it along the crossed axis
-// and 'along' the other coordinate, each new coordinate is
-// k0 * top + k_along * along + k_d * d. A point beyond the far corner goes to
-// that corner's vertex, a far edge's starting corner to its vertex quad when
-// that corner is one, and a vertex quad has no box to leave.
-fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
-  let quad = i32(quad_in);
-  let i = i_in;
-  let j = j_in;
-  let under_i = i < 0;
-  let under_j = j < 0;
-  let over_i = i >= top;
-  let over_j = j >= top;
+// Whether quad `quad` holds the point (i, j) of its frame: a vertex quad its
+// origin; a diamond quad its half-open box, or along its fold axis
+// (src/polyhedron.h, quad_holds()) the far edge's interior in place of the
+// near edge's.
+fn quad_holds(top: i32, quad: i32, i: i32, j: i32) -> bool {
+  let head = grid.edges[9 * quad];
+  if (head.y == 1) {
+    return i == 0 && j == 0;
+  }
+  if (head.z < 0) {
+    return i >= 0 && j >= 0 && i < top && j < top;
+  }
+  let x = select(j, i, head.z == 0);
+  let y = select(i, j, head.z == 0);
+  if (y < 0 || y >= top) {
+    return false;
+  }
+  if (y == 0) {
+    return x >= 0 && x < top;
+  }
+  return x > 0 && x <= top;
+}
+
+// One crossing of canonicalize(): DgQ2DDtoIConverter's reassignment, through
+// the solid's edge maps. Across an edge, with d the point's distance past it
+// along the crossed axis and 'along' the other coordinate, each new
+// coordinate is k0 * top + k_along * along + k_d * d. A point beyond the far
+// corner goes to that corner's vertex, a far edge's starting corner to its
+// vertex quad when that corner is one, and a vertex quad has no box to
+// leave. Along a quad's fold axis the near edge's interior lies across it,
+// d = 0, and a point on the line of the other far edge past the held far
+// edge crosses the held one.
+fn canonicalize_step(top: i32, quad: i32, i: i32, j: i32) -> vec3i {
+  let head = grid.edges[9 * quad];   // far-corner quad, vertex quad, fold axis, folds
+  if (head.y == 1 || quad_holds(top, quad, i, j)) {
+    return vec3i(quad, i, j);
+  }
+  var under_i = i < 0;
+  var under_j = j < 0;
+  var over_i = i >= top;
+  var over_j = j >= top;
+  if (head.z >= 0) {
+    let x = select(j, i, head.z == 0);
+    let y = select(i, j, head.z == 0);
+    if (x == 0 && y > 0 && y < top) {
+      under_i = under_i || head.z == 0;
+      under_j = under_j || head.z == 1;
+    }
+    if (over_i && over_j) {
+      if (i == top && j > top) {
+        over_i = false;
+      } else if (j == top && i > top) {
+        over_j = false;
+      }
+    }
+  }
   let n_over = u32(under_i) + u32(under_j) + u32(over_i) + u32(over_j);
-  let head = grid.edges[9 * quad];   // far-corner quad, vertex quad
-  if (n_over == 0u || head.y == 1) {
+  if (n_over == 0u) {
     return vec3i(quad, i, j);
   }
   if (over_i && over_j) {
@@ -858,6 +899,19 @@ fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
   }
   return vec3i(m0.x, m0.z * top + m0.w * along + m1.x * d,
                m1.y * top + m1.z * along + m1.w * d);
+}
+
+// The point (i, j) of a quad that has stepped outside it, in the quad that
+// owns it (src/coordinate_transforms.cpp, canonicalize_q2d()): one crossing,
+// or on a solid whose quads fold up to three, until a quad holds it.
+fn canonicalize(top: i32, quad_in: u32, i_in: i32, j_in: i32) -> vec3i {
+  var p = canonicalize_step(top, i32(quad_in), i_in, j_in);
+  if (grid.edges[0].w == 1) {
+    for (var k = 0; k < 2 && !quad_holds(top, p.x, p.y, p.z); k++) {
+      p = canonicalize_step(top, p.x, p.y, p.z);
+    }
+  }
+  return p;
 }
 
 // A point's place among the cells of one level, in the quad of its face
@@ -965,8 +1019,17 @@ fn spot_id(s: Spot) -> vec2u {
   if (own.x == 0) {
     return vec2u(0u, 1u);
   }
-  let u = u32(own.y);
-  let v = u32(own.z);
+  // A cell on the far edge of a fold axis is numbered at the near edge's place
+  var place = vec2i(own.y, own.z);
+  let axis = grid.edges[9 * own.x].z;
+  if (axis == 0 && place.x == i32(dim) && place.y > 0) {
+    place.x = 0;
+  }
+  if (axis == 1 && place.y == i32(dim) && place.x > 0) {
+    place.y = 0;
+  }
+  let u = u32(place.x);
+  let v = u32(place.y);
   let residue = (level.frame.z * u + u32(level_coset(level, u32(own.x)))) % n;
   let within = add64(mul_wide(u, dim / n), vec2u(0u, (v - residue) / n));
   let k = u32(own.x) - 1u;

@@ -413,17 +413,25 @@ static inline hexify::hex9::OctPoint frame_hex9_point(const QuadFrame& f, int qu
 
 // The ID, from 1, of the cell at stored (i, j) of a quad. Quad 0 holds the
 // north pole alone, ID 1; quad q > 0 follows it and the q - 1 quads before.
-// A Hex9 cell's ID is its address.
+// A Hex9 cell's ID is its address. Any other cell is numbered at its place in
+// the quad's box (hexify::quad_slot()).
 static inline int64_t frame_encode(const QuadFrame& f, int quad, long long i, long long j) {
     if (frame_hex9(f)) {
         const int64_t id = hexify::hex9::encode(frame_hex9_point(f, quad, i, j), f.resolution);
         if (id == 0) Rcpp::stop("hexify internal error: a Hex9 coordinate that is no cell");
         return id;
     }
-    uint64_t offset = (quad == 0) ? 0 : 1 + static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
-    uint64_t within_quad = (f.aperture == 7)
-        ? hexify::ap7_surrogate_to_quad_index(i, j, f.resolution)
-        : cell_index_2d(i, j, f.dim, f.lattice);
+    if (quad == 0) return 1;
+    const hexify::SolidTopology& t = hexify::topo();
+    if (quad == t.south_pole()) return static_cast<int64_t>(f.nCells);
+    uint64_t offset = 1 + static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
+    uint64_t within_quad;
+    if (f.aperture == 7) {
+        within_quad = hexify::ap7_surrogate_to_quad_index(quad, i, j, f.resolution);
+    } else {
+        hexify::quad_slot(t, quad, i, j, f.dim);
+        within_quad = cell_index_2d(i, j, f.dim, f.lattice);
+    }
     return static_cast<int64_t>(offset + within_quad + 1);
 }
 
@@ -464,9 +472,10 @@ static inline void frame_decode_index(const QuadFrame& f, uint64_t idx,
     quad = static_cast<int>(idx / f.offsetPerQuad) + 1;
     uint64_t within_quad = idx - static_cast<uint64_t>(quad - 1) * f.offsetPerQuad;
     if (f.aperture == 7) {
-        hexify::ap7_quad_index_to_surrogate(within_quad, f.resolution, i, j);
+        hexify::ap7_quad_index_to_surrogate(quad, within_quad, f.resolution, i, j);
     } else {
         ij_from_cell_index(within_quad, f.dim, f.lattice, i, j);
+        hexify::quad_unslot(hexify::topo(), quad, i, j, f.dim);
     }
 }
 
@@ -476,11 +485,12 @@ static inline void frame_decode(const QuadFrame& f, double cell_id_raw,
     frame_decode_index(f, frame_cell_index(f, cell_id_raw), quad, i, j);
 }
 
-static inline bool frame_in_quad(const QuadFrame& f, long long i, long long j) {
+// Whether diamond quad `quad` holds the cell at stored (i, j)
+static inline bool frame_in_quad(const QuadFrame& f, int quad, long long i, long long j) {
     if (f.aperture == 7) {
-        return hexify::ap7_surrogate_in_quad(i, j, f.resolution);
+        return hexify::ap7_surrogate_in_quad(quad, i, j, f.resolution);
     }
-    return i >= 0 && j >= 0 && i < f.dim && j < f.dim;
+    return hexify::quad_holds(hexify::topo(), quad, i, j, f.dim);
 }
 
 // The quad-plane centre of the cell at stored (i, j)
@@ -541,7 +551,7 @@ static void frame_parent(const QuadFrame& child, const QuadFrame& parent,
 
     i = best_x * a - best_y * b;
     j = best_x * b + best_y * a - best_y * b;
-    if (!frame_in_quad(parent, i, j) && !frame_canonicalize(parent, quad, i, j)) {
+    if (!frame_in_quad(parent, quad, i, j) && !frame_canonicalize(parent, quad, i, j)) {
         Rcpp::stop("hexify internal error: a parent cell centre has no owning quad");
     }
 }
@@ -2439,7 +2449,7 @@ static void pole_neighbors(const QuadFrame& f, int pole, const long long offsets
         for (int d = 0; d < 6; d++) {
             long long ni = i + offsets[d][0];
             long long nj = j + offsets[d][1];
-            if (frame_in_quad(f, ni, nj)) out.push_back(frame_encode(f, q, ni, nj));
+            if (frame_in_quad(f, q, ni, nj)) out.push_back(frame_encode(f, q, ni, nj));
         }
     }
 }
@@ -2481,6 +2491,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
 
     long long offsets[6][2];
     lattice_unit_steps(f.generator, offsets);
+    const bool folding = hexify::topo().has_folds;
     const bool z7_crossing = crossing == Crossing::Z7Digits && f.aperture == 7 &&
                              hexify::z7::igeo7_labels();
 
@@ -2522,7 +2533,7 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
         for (int d = 0; d < 6; d++) {
             step_i[d] = i + offsets[d][0];
             step_j[d] = j + offsets[d][1];
-            inside[d] = frame_in_quad(f, step_i[d], step_j[d]);
+            inside[d] = frame_in_quad(f, quad, step_i[d], step_j[d]);
             all_inside = all_inside && inside[d];
         }
 
@@ -2541,6 +2552,21 @@ static Rcpp::List neighbors_in_frame(const Rcpp::NumericVector& cell_id,
 
             if (inside[d]) {
                 neighbor_ids.push_back(frame_encode(f, quad, ni, nj));
+                continue;
+            }
+
+            // On a solid whose quads fold the edge maps carry every step to
+            // the quad that holds it (canonicalize_q2d() crosses as often as
+            // a fold needs). The pipeline below reads a point past a quad's
+            // far edge on the face around its origin extended, which past the
+            // far edge a folding quad holds lies a whole row of cells beyond
+            // that face, and names the wrong cell there.
+            if (folding) {
+                int own_quad = quad;
+                long long own_i = ni, own_j = nj;
+                if (frame_canonicalize(f, own_quad, own_i, own_j)) {
+                    neighbor_ids.push_back(frame_encode(f, own_quad, own_i, own_j));
+                }
                 continue;
             }
 

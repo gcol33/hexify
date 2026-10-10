@@ -89,7 +89,8 @@ globe_centers <- list(
 #' @param y Ignored
 #' @param surface \code{"sphere"}, \code{"solid"} or \code{"net"}.
 #'   \code{"solid"} draws the flat faces of the grid's polyhedron (the
-#'   icosahedron, or the octahedron of a grid built on it). The solid and the
+#'   icosahedron, or the octahedron or tetrahedron of a grid built on it). The
+#'   solid and the
 #'   net need an ISEA grid; an H3 grid is drawn on the
 #'   sphere.
 #' @param center Point the view looks down on: a preset name from

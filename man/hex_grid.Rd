@@ -84,9 +84,10 @@ on: \code{c(lon, lat)} in degrees, or an sf, sfc or bbox object, whose
 spherical centroid is used.}
 
 \item{polyhedron}{The solid an ISEA-family grid is built on:
-"icosahedron" (default) or "octahedron". See the Polyhedron section. H3
-grids are built on the icosahedron and take only the default. Aperture 9
-is defined on the octahedron, which it takes when no solid is named.}
+"icosahedron" (default), "octahedron" or "tetrahedron". See the
+Polyhedron section. H3 grids are built on the icosahedron and take only
+the default. Aperture 9 is defined on the octahedron, which it takes when
+no solid is named.}
 
 \item{ellipsoid}{The ellipsoid of revolution an ISEA-family grid reads
 geodetic latitude on: \code{NULL} (default) reads latitude on the sphere;
@@ -110,7 +111,8 @@ Exactly one of \code{area_km2} or \code{resolution} must be provided.
 
 When \code{area_km2} is provided, the resolution is calculated automatically
 using the cell count formula: N = 10 * aperture^res + 2 (ISEA on the
-icosahedron, 4 * aperture^res + 2 on the octahedron) or by matching the
+icosahedron, 4 * aperture^res + 2 on the octahedron, 2 * aperture^res + 2
+on the tetrahedron) or by matching the
 closest H3 resolution.
 
 H3 grids use the Uber H3 hierarchical hexagonal system. Unlike ISEA grids,
@@ -275,19 +277,25 @@ hex_grid(resolution = 5, aperture = 4, projection = "fuller")   # FULLER4H
 
 Snyder's equal-area projection and the vertex-oriented one are defined on
 every regular solid with triangular faces, and a hexagonal grid lies on
-the icosahedron and on the octahedron alike: each pair of faces sharing an
-edge forms a diamond of cells, and the cell at each vertex has one side per face meeting there.
-The icosahedron has twelve pentagons and the octahedron six squares; every
-other cell is a hexagon, and every cell of a resolution has the same area
-(the vertex cells two thirds or five sixths of it, by their sides). The
-octahedron's cells are more distorted than the icosahedron's, so it suits
-layouts that need its four-fold symmetry rather than analysis. Fuller's
-projection is defined on the icosahedron only. The tetrahedron carries the
-face projection (see \code{\link{hexify_forward}}) but no grid: its faces
-do not pair into diamonds.
+the icosahedron, the octahedron and the tetrahedron alike: each pair of
+faces sharing an edge forms a diamond of cells, and the cell at each vertex
+has one side per face meeting there. The icosahedron has twelve pentagons,
+the octahedron six squares and the tetrahedron four triangles; every other
+cell is a hexagon, and every cell of a resolution has the same area except
+the vertex cells, which have five sixths, two thirds or one half of it, by
+their sides. The octahedron's cells are more distorted than the
+icosahedron's and the tetrahedron's more again, so they suit layouts that
+need their four- or three-fold symmetry rather than analysis. Fuller's
+projection is defined on the icosahedron only.
+
+The tetrahedron unfolds into a strip of its two diamonds. Each long side
+of the strip folds onto itself at its midpoint, so the second diamond
+holds the far edge of its box in place of the near edge it shares with the
+first; its cells still number one box's worth.
 
 \preformatted{
 hex_grid(resolution = 5, aperture = 4, polyhedron = "octahedron")
+hex_grid(resolution = 5, aperture = 4, polyhedron = "tetrahedron")
 }
 }
 

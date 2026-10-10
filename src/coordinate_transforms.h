@@ -136,14 +136,28 @@ void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
 //
 // The result spans [0, 7^resolution) with no gaps, so cell IDs run 1 ..
 // (number of diamonds) * 7^resolution + 2 exactly as they do for apertures 3
-// and 4.
-uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution);
-void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
+// and 4. A quad with a fold axis numbers the centres it holds at their places
+// in the box (quad_slot()).
+uint64_t ap7_surrogate_to_quad_index(int quad, long long sur_i, long long sur_j,
+                                     int resolution);
+void ap7_quad_index_to_surrogate(int quad, uint64_t index, int resolution,
                                  long long& sur_i, long long& sur_j);
 
-// Aperture 7: does this surrogate's centre lie in the given quad, i.e. inside
-// the substrate box [0, S)^2?
-bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution);
+// Aperture 7: is this surrogate's centre held by the given diamond quad, i.e.
+// inside the substrate box [0, S)^2 as quad_holds() reads it?
+bool ap7_surrogate_in_quad(int quad, long long sur_i, long long sur_j, int resolution);
+
+// A diamond quad with a fold axis holds the interior of the far edge across
+// that axis (quad_holds()). Index strings write such a cell one quad edge
+// back along the axis, on the near edge the quad gives up, and mark it. This
+// moves a stored (i, j), in the aperture's own cell coordinate, back so when it
+// lies on that far edge, and says whether it did.
+bool quad_ij_from_far_edge(int quad, long long& i, long long& j,
+                           int aperture, int resolution);
+
+// The inverse: (i, j) moved one quad edge forward along the quad's fold axis.
+void quad_ij_to_far_edge(int quad, long long& i, long long& j,
+                         int aperture, int resolution);
 
 // Re-express an (i, j) that has stepped outside its quad in the quad that owns
 // it, via DGGRID's edge table. Coordinates are the aperture's own cell

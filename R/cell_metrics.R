@@ -30,7 +30,8 @@
 #' The normalized area is the cell's area over the mean area of the grid's
 #' cells, the body's surface over the cell count; an equal-area grid of
 #' \eqn{N} cells gives \eqn{N / (N - 2)} for its hexagons, 5/6 of that for
-#' the pentagons of the icosahedron and 4/6 for the squares of the octahedron. The isoperimetric quotient
+#' the pentagons of the icosahedron, 4/6 for the squares of the octahedron and
+#' 3/6 for the triangles of the tetrahedron. The isoperimetric quotient
 #' \code{ipq} is \eqn{4\pi a / p^2}, for a circle 1, a small regular hexagon
 #' 0.907, square 0.785 and triangle 0.605. Kmoch et al. (2022) compare
 #' grids by these two measures, reading area and perimeter in an equal-area

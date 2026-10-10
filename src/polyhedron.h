@@ -6,10 +6,18 @@
 // and owns the cells whose centres fall in its half-open box. Quad q is the
 // solid's vertex q: a diamond quad's origin corner is that vertex, and the two
 // vertices no diamond starts at are single-cell quads of their own, quad 0
-// and quad n_verts - 1 (the "poles"). The icosahedron has 10 diamonds and the
-// octahedron 4. The tetrahedron has no such tiling (an origin vertex is the
-// source of exactly two faces, so every vertex of valence 3 must be a pole,
-// and the tetrahedron has four), so it carries the face projection only.
+// and quad n_verts - 1 (the "poles"). The icosahedron has 10 diamonds, the
+// octahedron 4 and the tetrahedron 2.
+//
+// On the icosahedron and the octahedron every quad edge meets a quad edge of
+// the other kind, a near edge (through the origin) a far one, so the half-open
+// boxes tile the solid. The tetrahedron unfolds into a strip of its two
+// diamonds; the strip's ends meet by a translation, but each of its long sides
+// folds onto itself at its midpoint, a half turn that takes a near edge to a
+// near edge and a far edge to a far edge. One near edge is then held by both
+// boxes and one far edge by neither, so the second quad gives the interior of
+// that near edge to the first and holds the interior of its far edge instead
+// (SolidTopology::fold_axis). It still holds as many cells as its box.
 //
 // Everything that follows from the solid alone -- its faces, Snyder's
 // projection constants, the quad tables -- is a SolidTopology, built once per
@@ -163,12 +171,55 @@ struct SolidTopology {
   std::array<std::array<int, 4>, kMaxVerts> corner;           // QuadCorner order
   std::array<std::array<QuadRegion, 6>, kMaxVerts> region;
   std::array<std::array<QuadEdgeMap, 4>, kMaxVerts> edge;     // QuadEdge order
+  // Per quad, the axis (0 for i, 1 for j) whose near edge folds onto a near
+  // edge of a lower quad: the quad gives up the interior of that near edge and
+  // holds the interior of the far edge across its box instead. -1 for a quad
+  // that holds its half-open box.
+  std::array<int, kMaxVerts> fold_axis;
+  bool has_folds;       // some quad has a fold axis
 
   int n_quads() const { return n_verts; }
   int n_diamonds() const { return has_quads ? n_verts - 2 : 0; }
   int south_pole() const { return n_verts - 1; }
   bool is_pole(int quad) const { return quad == 0 || quad == n_verts - 1; }
 };
+
+// Whether diamond quad q holds the lattice point (i, j) of its frame, `top`
+// the quad's edge in lattice steps. A quad holds its half-open box [0, top)^2,
+// except along a fold axis: there the points strictly inside the far edge
+// (the far coordinate top, the other strictly between 0 and top) are held
+// and those strictly inside the near edge are not.
+template <typename T>
+inline bool quad_holds(const SolidTopology& t, int q, T i, T j, T top) {
+  const int a = t.fold_axis[q];
+  if (a < 0) return i >= 0 && j >= 0 && i < top && j < top;
+  const T x = (a == 0) ? i : j;      // the folded coordinate
+  const T y = (a == 0) ? j : i;      // the coordinate along the folded edges
+  if (y < 0 || y >= top) return false;
+  return (y == 0) ? (x >= 0 && x < top) : (x > 0 && x <= top);
+}
+
+// The point of [0, top)^2 a held point of quad q is numbered at: a point on
+// the far edge of a fold axis takes the place of the point on the near edge
+// it gives up, the folded coordinate less top. Every other point is its own
+// place. quad_unslot() is the inverse.
+template <typename T>
+inline void quad_slot(const SolidTopology& t, int q, T& i, T& j, T top) {
+  const int a = t.fold_axis[q];
+  if (a < 0) return;
+  T& x = (a == 0) ? i : j;
+  const T y = (a == 0) ? j : i;
+  if (y > 0 && x == top) x = 0;
+}
+
+template <typename T>
+inline void quad_unslot(const SolidTopology& t, int q, T& i, T& j, T top) {
+  const int a = t.fold_axis[q];
+  if (a < 0) return;
+  T& x = (a == 0) ? i : j;
+  const T y = (a == 0) ? j : i;
+  if (y > 0 && x == 0) x = top;
+}
 
 // The topology of a solid, built on first use
 const SolidTopology& solid_topology(Solid s);

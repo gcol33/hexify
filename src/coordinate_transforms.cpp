@@ -335,18 +335,37 @@ inline T edge_map_coord(const int k[3], T topEdge, T along, T d) {
 // the solid, and a point past an edge on the line through the vertex where
 // that edge starts lies on the solid's edge between the two faces beyond,
 // which the edge map carries it to.
+//
+// A lattice point is held by the quad whose box holds it (quad_holds()), so
+// along a fold axis a point strictly inside the far edge stays and one
+// strictly inside the near edge crosses it, d = 0. A continuous point on an
+// edge reads the same place of the solid from either quad, and is left to its
+// box.
 template <typename T>
-bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j, bool vertex_cells = true) {
+bool canonicalize_q2d_step(T topEdge, int& quadNum, T& i, T& j, bool vertex_cells) {
     const T maxI = topEdge - 1, maxJ = topEdge - 1;
     const bool integral = std::is_integral<T>::value;
+    const SolidTopology& t = topo();
 
     bool underI = i < 0, underJ = j < 0;
     bool overI = integral ? i > maxI : i >= topEdge;
     bool overJ = integral ? j > maxJ : j >= topEdge;
+    if (integral && t.fold_axis[quadNum] >= 0) {
+        if (quad_holds(t, quadNum, i, j, topEdge)) return true;
+        const bool along_i = t.fold_axis[quadNum] == 0;
+        const T x = along_i ? i : j, y = along_i ? j : i;
+        if (x == 0 && y > 0 && y < topEdge) (along_i ? underI : underJ) = true;
+    }
+    // A quad that holds the far edge of its fold axis reaches up to it: a
+    // lattice point on the line of its other far edge, past the held one,
+    // lies on the edge of the face across the held one and crosses there.
+    if (integral && overI && overJ && t.fold_axis[quadNum] >= 0) {
+        if (i == topEdge && j > topEdge) overI = false;
+        else if (j == topEdge && i > topEdge) overJ = false;
+    }
     int numOver = (int)underI + (int)underJ + (int)overI + (int)overJ;
     if (!numOver) return true;
 
-    const SolidTopology& t = topo();
     if (t.is_pole(quadNum)) return false;
 
     if (overI && overJ) {
@@ -373,6 +392,32 @@ bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j, bool vertex_cells = t
     i = ni;
     j = nj;
     return true;
+}
+
+// The most edges a lattice point crosses before a quad holds it
+constexpr int kMaxCrossings = 3;
+
+// canonicalize_q2d_step() on a lattice point until a quad holds it, on a
+// solid whose quads fold. Elsewhere a crossing lands in the quad across. At a
+// vertex of valence 3 the faces fill half the turn, and the half turn of a
+// fold takes a point just under one near edge of a quad to the far side of
+// the quad across, past another of its edges, or a point past one far edge
+// onto the far edge the quad across gives up: the point crosses again. A
+// continuous point crosses once. Returns whether a quad holds the point.
+template <typename T>
+bool canonicalize_q2d(T topEdge, int& quadNum, T& i, T& j, bool vertex_cells = true) {
+    if (!std::is_integral<T>::value) {
+        return canonicalize_q2d_step(topEdge, quadNum, i, j, vertex_cells);
+    }
+    const SolidTopology& t = topo();
+    const int crossings = t.has_folds ? kMaxCrossings : 1;
+    for (int k = 0; k < crossings; ++k) {
+        if (!canonicalize_q2d_step(topEdge, quadNum, i, j, vertex_cells)) return false;
+        const bool held = t.is_pole(quadNum) ? (i == 0 && j == 0)
+                                             : quad_holds(t, quadNum, i, j, topEdge);
+        if (held) return true;
+    }
+    return false;
 }
 
 void dggrid_canonicalize_q2di(long long topEdge, int& quadNum,
@@ -466,10 +511,12 @@ void ap7_nearest_centre(double px, double py, long long sub_i, long long sub_j,
     }
 }
 
-uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resolution) {
+uint64_t ap7_surrogate_to_quad_index(int quad, long long sur_i, long long sur_j,
+                                     int resolution) {
     const long long S = quad_edge_dim(7, resolution);
     long long u, v;
     ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
+    quad_slot(topo(), quad, u, v, S);
     if (resolution % 2 == 0) {
         return static_cast<uint64_t>(u * S + v);
     }
@@ -478,7 +525,7 @@ uint64_t ap7_surrogate_to_quad_index(long long sur_i, long long sur_j, int resol
     return static_cast<uint64_t>(u * (S / 7) + v / 7);
 }
 
-void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
+void ap7_quad_index_to_surrogate(int quad, uint64_t index, int resolution,
                                  long long& sur_i, long long& sur_j) {
     const long long S = quad_edge_dim(7, resolution);
     const long long idx = static_cast<long long>(index);
@@ -491,6 +538,7 @@ void ap7_quad_index_to_surrogate(uint64_t index, int resolution,
         u = idx / rows;
         v = 7 * (idx % rows) + (((-2 * u) % 7) + 7) % 7;
     }
+    quad_unslot(topo(), quad, u, v, S);
     ap7_substrate_to_surrogate_ijk(u, v, resolution, sur_i, sur_j);
 }
 
@@ -498,9 +546,8 @@ bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
                                long long top_edge, bool vertex_cells) {
     int q = quad;
     long long ci = i, cj = j;
-    auto inside = [&]() { return ci >= 0 && ci < top_edge && cj >= 0 && cj < top_edge; };
 
-    if (!canonicalize_q2d<long long>(top_edge, q, ci, cj, vertex_cells) || !inside()) {
+    if (!canonicalize_q2d<long long>(top_edge, q, ci, cj, vertex_cells)) {
         return false;
     }
 
@@ -508,6 +555,45 @@ bool substrate_ij_canonicalize(int& quad, long long& i, long long& j,
     i = ci;
     j = cj;
     return true;
+}
+
+// Shifts the substrate point of stored (i, j) by `by` quad edges along the
+// quad's fold axis, in the aperture's own cell coordinate.
+static void shift_along_fold(int quad, long long& i, long long& j, int aperture,
+                             int resolution, long long by) {
+    const int a = topo().fold_axis[quad];
+    const long long S = quad_edge_dim(aperture, resolution);
+    long long u = i, v = j;
+    if (aperture == 7) ap7_surrogate_to_substrate_ijk(i, j, resolution, u, v);
+    (a == 0 ? u : v) += by * S;
+    if (aperture == 7) {
+        ap7_substrate_to_surrogate_ijk(u, v, resolution, i, j);
+    } else {
+        i = u;
+        j = v;
+    }
+}
+
+bool quad_ij_from_far_edge(int quad, long long& i, long long& j,
+                           int aperture, int resolution) {
+    const SolidTopology& t = topo();
+    if (quad < 0 || quad >= t.n_quads() || t.fold_axis[quad] < 0) return false;
+    const long long S = quad_edge_dim(aperture, resolution);
+    long long u = i, v = j;
+    if (aperture == 7) ap7_surrogate_to_substrate_ijk(i, j, resolution, u, v);
+    const bool along_i = t.fold_axis[quad] == 0;
+    const long long x = along_i ? u : v, y = along_i ? v : u;
+    if (x != S || y <= 0 || y >= S) return false;
+    shift_along_fold(quad, i, j, aperture, resolution, -1);
+    return true;
+}
+
+void quad_ij_to_far_edge(int quad, long long& i, long long& j,
+                         int aperture, int resolution) {
+    if (topo().fold_axis[quad] < 0) {
+        throw std::runtime_error("quad_ij_to_far_edge: the quad has no fold axis");
+    }
+    shift_along_fold(quad, i, j, aperture, resolution, 1);
 }
 
 bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
@@ -527,11 +613,11 @@ bool quad_ij_canonicalize(int& quad, long long& i, long long& j,
     return true;
 }
 
-bool ap7_surrogate_in_quad(long long sur_i, long long sur_j, int resolution) {
+bool ap7_surrogate_in_quad(int quad, long long sur_i, long long sur_j, int resolution) {
     const long long S = quad_edge_dim(7, resolution);
     long long u, v;
     ap7_surrogate_to_substrate_ijk(sur_i, sur_j, resolution, u, v);
-    return u >= 0 && u < S && v >= 0 && v < S;
+    return quad_holds(topo(), quad, u, v, S);
 }
 
 void surrogate_ij_to_quad_xy_ap7(long long sur_i, long long sur_j, int resolution,
@@ -785,9 +871,18 @@ bool quad_xy_canonicalize(int& quad, double& quad_x, double& quad_y,
         quad_y = v * kSin60;
     }
     // Below a near edge the point is still in the fan of faces around the
-    // quad's origin vertex, which try_quad_xy_to_icosa_tri() reads directly,
-    // dropped sectors included.
-    if (u < 1.0 && v < 1.0 && (!across_near_edges || (u >= 0.0 && v >= 0.0))) return true;
+    // quad's origin vertex, which try_quad_xy_to_icosa_tri() reads directly.
+    // A sector the fan leaves empty past a single near edge (at a vertex of
+    // valence 3 one of the two sectors there is) is read across that edge
+    // instead; past both near edges it stays a dropped sector. With
+    // `across_near_edges` every point below a near edge is carried across.
+    if (u < 1.0 && v < 1.0) {
+        if (u >= 0.0 && v >= 0.0) return true;
+        if (!across_near_edges && ((u < 0.0) == (v < 0.0) ||
+                                   t.region[quad][compute_subtriangle(quad_x, quad_y)].keep)) {
+            return true;
+        }
+    }
     int q = quad;
     if (!canonicalize_q2d<double>(1.0, q, u, v)) return false;
     quad = q;

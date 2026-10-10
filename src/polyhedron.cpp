@@ -232,14 +232,18 @@ SolidSpec octahedron_spec() {
 }
 
 // The tetrahedron: vertex 0 at the frame's north pole and three vertices at
-// latitude -asin(1/3). It has no diamond tiling.
+// latitude -asin(1/3). Its two diamonds start at vertices 1 and 2 and have
+// the opposite edges 1-0 and 2-3 as diagonals; vertices 0 and 3 are the
+// poles, each the far corner of one diamond and the side corner of the other.
 SolidSpec tetrahedron_spec() {
   SolidSpec s;
   s.solid = Solid::Tetrahedron;
   s.name = "tetrahedron";
   s.n_verts = 4;
   s.faces = {{0,1,2},{0,2,3},{0,3,1},{1,3,2}};
-  s.pole_first_face = {-1, -1};
+  s.diamonds = {{2,0},{1,3}};
+  s.n_ccw = {3, 3,3, 3};
+  s.pole_first_face = {0, 3};
   const double lat = -std::asin(1.0 / 3.0) * kRadToDeg;
   s.std_verts.assign(4, StdVertex{0.0, 90.0, false});
   for (int i = 1; i <= 3; ++i) s.std_verts[i] = StdVertex{120.0 * (i - 1), lat, true};
@@ -335,22 +339,27 @@ SolidTopology derive_topology(SolidSpec s) {
     t.valence[v] = static_cast<int>(nb.size());
   }
 
+  for (int q = 0; q < V; ++q) t.fold_axis[q] = -1;
+  t.has_folds = false;
   if (t.has_quads) {
-    // A diamond's primary face has its quad's vertex second and the far
-    // corner third; the secondary face has the far corner second and the
-    // quad's vertex third. Rotating each face's vertex list to that role fixes
-    // the vertex its azimuth is read from.
+    // Counter-clockwise from the quad's vertex, a diamond's primary face
+    // runs to the far corner and then to the j corner, its secondary face to
+    // the i corner and then to the far corner. A face's vertex list keeps the
+    // order the spec gives it, which fixes the vertex its azimuth is read
+    // from; the regions below place it in the quad whichever vertex comes
+    // first.
     std::vector<int> face_quad(F, -1), face_sub(F, -1);
     for (int q = 1; q <= V - 2; ++q) {
       const int p = s.diamonds[q - 1][0], c = s.diamonds[q - 1][1];
-      for (int r = 0; r < 3 && s.faces[p][1] != q; ++r) s.faces[p] = {s.faces[p][1], s.faces[p][2], s.faces[p][0]};
-      for (int r = 0; r < 3 && s.faces[c][2] != q; ++r) s.faces[c] = {s.faces[c][1], s.faces[c][2], s.faces[c][0]};
-      if (s.faces[p][1] != q || s.faces[c][2] != q) fail(s, "a diamond face misses its quad's vertex");
-      if (s.faces[p][2] != s.faces[c][1]) fail(s, "a diamond's faces do not share its diagonal");
+      const int kp = local_index(s.faces[p], q), kc = local_index(s.faces[c], q);
+      if (kp < 0 || kc < 0) fail(s, "a diamond face misses its quad's vertex");
+      const int far = s.faces[p][(kp + 1) % 3], j_corner = s.faces[p][(kp + 2) % 3];
+      const int i_corner = s.faces[c][(kc + 1) % 3];
+      if (s.faces[c][(kc + 2) % 3] != far) fail(s, "a diamond's faces do not share its diagonal");
       if (face_quad[p] >= 0 || face_quad[c] >= 0) fail(s, "a face lies in two diamonds");
       face_quad[p] = q; face_sub[p] = 0;
       face_quad[c] = q; face_sub[c] = 1;
-      t.corner[q] = {q, s.faces[c][0], s.faces[p][2], s.faces[p][0]};
+      t.corner[q] = {q, i_corner, far, j_corner};
     }
     for (int f = 0; f < F; ++f) if (face_quad[f] < 0) fail(s, "a face lies in no diamond");
     for (int q : {0, V - 1}) t.corner[q] = {q, q, q, q};
@@ -393,6 +402,7 @@ SolidTopology derive_topology(SolidSpec s) {
                               {kCornerOrigin, kCornerI, false, false},
                               {kCornerI, kCornerFar, true, true},
                               {kCornerJ, kCornerFar, false, true}};
+    std::vector<int> fold_edges(V, 0);
     for (int q = 1; q <= V - 2; ++q) {
       for (int e = 0; e < 4; ++e) {
         const int A = t.corner[q][edges[e].a], B = t.corner[q][edges[e].b];
@@ -423,6 +433,23 @@ SolidTopology derive_topology(SolidSpec s) {
         if (edges[e].far && t.is_pole(t.corner[q][edges[e].a])) m.pole = t.corner[q][edges[e].a];
         m.k[0][0] = k0.i; m.k[0][1] = ka.i; m.k[0][2] = kd.i;
         m.k[1][0] = k0.j; m.k[1][1] = ka.j; m.k[1][2] = kd.j;
+
+        // An edge that meets an edge of its own kind: of a near pair the
+        // higher quad gives up the interior, of a far pair it takes it.
+        const bool nb_near = (ia == kCornerOrigin || ib == kCornerOrigin);
+        if (nb_near == !edges[e].far && nq == q) fail(s, "a quad edge folds onto its own quad");
+        if (nb_near == !edges[e].far && nq < q) {
+          const int axis = edges[e].cross_i ? 0 : 1;
+          if (t.fold_axis[q] >= 0 && t.fold_axis[q] != axis) fail(s, "a quad folds along both axes");
+          t.fold_axis[q] = axis;
+          t.has_folds = true;
+          fold_edges[q] += edges[e].far ? 1 : 2;
+        }
+      }
+    }
+    for (int q = 1; q <= V - 2; ++q) {
+      if (fold_edges[q] != 0 && fold_edges[q] != 3) {
+        fail(s, "a quad gives up a near edge without taking the far edge across its box");
       }
     }
   }

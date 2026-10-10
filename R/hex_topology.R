@@ -5,8 +5,8 @@
 #'
 #' Identifies which cells are pentagons. A hexagonal grid on the icosahedron
 #' has exactly 12 pentagons, one at each icosahedron vertex, with 5 neighbors
-#' instead of 6. A grid on the octahedron has none: its six vertex cells are
-#' squares.
+#' instead of 6. Grids on the octahedron and the tetrahedron have none: their
+#' vertex cells are six squares and four triangles.
 #'
 #' @param cell_id Cell IDs to check. integer64 for ISEA, character for H3.
 #' @param grid A HexGridInfo or HexData object specifying the grid.

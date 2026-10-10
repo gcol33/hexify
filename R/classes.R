@@ -195,7 +195,8 @@ setValidity("HexGridInfo", function(object) {
     }
     poly <- grid_polyhedron(object)
     if (length(poly) != 1L || !poly %in% GRID_POLYHEDRA) {
-      errors <- c(errors, "polyhedron must be \"icosahedron\" or \"octahedron\"")
+      errors <- c(errors, paste0("polyhedron must be \"icosahedron\", \"octahedron\" ",
+                                 "or \"tetrahedron\""))
     } else if (length(object@projection) == 1L &&
                object@projection %in% ICOSAHEDRON_PROJECTIONS &&
                poly != "icosahedron") {

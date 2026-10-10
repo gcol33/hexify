@@ -135,7 +135,14 @@ std::string cell_to_index(int face, long long i, long long j,
     throw std::runtime_error("hex_index: invalid index_type for aperture");
   }
   
-  std::string result = format_quad(face);
+  // A cell a quad holds on the far edge of its fold axis is written from the
+  // near edge, under the quad's number plus the number of quads.
+  int lead = face;
+  if (index_type != IndexType::Z7 && resolution > 0 &&
+      quad_ij_from_far_edge(face, i, j, aperture, resolution)) {
+    lead = face + t.n_quads();
+  }
+  std::string result = format_quad(lead);
   
   if (resolution == 0) {
     return result;
@@ -213,7 +220,15 @@ void index_to_cell(const std::string& index, int aperture,
   } else if (index_type == IndexType::Z3) {
     resolution = index_str.length();
     z3::decode(index_str, resolution, i, j);
-  } else if (index_type == IndexType::Z7) {
+  }
+  if (index_type != IndexType::Z7) {
+    const SolidTopology& t = topo();
+    const int marked = face - t.n_quads();
+    if (marked >= 0 && marked < t.n_quads() && t.fold_axis[marked] >= 0) {
+      face = marked;
+      quad_ij_to_far_edge(face, i, j, aperture, resolution);
+    }
+  } else {
     // Z7 decode expects the full index (including base cell)
     // Calculate resolution from index length first
     resolution = index.length() - 2;

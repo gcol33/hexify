@@ -7,8 +7,8 @@ hexify supports **all** major hexagonal DGGS through two backends:
 - **ISEA** (built-in C++): apertures 3, 4, 7, and any mixed sequence of them — resolutions 0-30
   where the cell count fits a signed 64-bit integer (icosahedron: ap3 30, ap4 29, ap7 21),
   on Snyder's equal-area projection or Fuller's (`hex_grid(projection = "fuller")`),
-  on the icosahedron or, with Snyder's projection, the octahedron
-  (`hex_grid(polyhedron = "octahedron")`).
+  on the icosahedron or, with Snyder's projection, the octahedron or the tetrahedron
+  (`hex_grid(polyhedron = "octahedron")`, `"tetrahedron"`).
   `hex_grid(aperture = "4/3")` / `"4/7"` / `"7/4"` name a family (first `floor(res/2)` levels
   take the first aperture), and `aperture = c(4, 4, 7, 3)` names one aperture per level,
   stored as `"4,4,7,3"`: "," marks a per-level spelling and "/" a family, so `"4,7"` and
@@ -116,8 +116,8 @@ Earth-read topology; a grid on another body is that topology on that body, and
 
 ## Orientation and face projection
 
-An ISEA grid carries its solid in the `polyhedron` slot (`"icosahedron"` or
-`"octahedron"`), the solid's orientation in the `orientation` slot,
+An ISEA grid carries its solid in the `polyhedron` slot (`"icosahedron"`,
+`"octahedron"` or `"tetrahedron"`), the solid's orientation in the `orientation` slot,
 `c(vert0_lon, vert0_lat, azimuth)` (DGGRID's `dggs_vert0_*`), and its face
 projection in the `projection` slot, `"isea"` (Snyder), `"ivea"` (van Leeuwen
 and Strebe's vertex-oriented equal-area), `"fuller"`, or on the octahedron
@@ -132,9 +132,22 @@ quad scheme from them (`SolidTopology`, read through `topo()`): quad q is
 vertex q, quads 1..V-2 are diamonds of two faces, quads 0 and V-1 are
 single-cell vertex quads, and every face pairing, region table and edge map
 is derived, not hand-written. Code below the projection reads counts and
-tables from `topo()`, never 20/12/10. The tetrahedron has no quad scheme
-(`has_quads` false: its four valence-3 vertices would all have to be vertex
-quads), so it carries the projection only.
+tables from `topo()`, never 20/12/10. The tetrahedron has two diamonds and
+two poles (vertices 0 and 3). Its strip of two diamonds folds each long side
+onto itself, so quad 2 meets quad 1 near edge to near edge (Down) and far edge
+to far edge (Up): `SolidTopology::fold_axis` (derived) makes quad 2 hold its
+Up edge's interior instead of its Down edge's. Ownership is `quad_holds()`,
+dense numbering `quad_slot()`/`quad_unslot()` (src/polyhedron.h): never test
+`[0, dim)^2` by hand. Z3/Z-order write those far-edge cells under lead
+quad + n_quads (06) at their near-edge place (`quad_ij_from_far_edge()`); Z7
+walks need nothing. On a folding solid (`has_folds`) a lattice point may
+cross up to three edges before a quad holds it (`canonicalize_q2d()`
+repeats; other solids cross once, unchanged), neighbour steps go through the
+edge maps instead of the projection pipeline, and a vertex of valence 3
+leaves one of the two sectors past a near edge empty, read across that edge
+(`quad_xy_canonicalize()`). The globe table's `padding_slots()` keeps the
+candidate points `canonicalize_q2d()` carries into a cell, and `globe.wgsl`
+reads the fold axis and `has_folds` from the `edges` rows.
 
 The C++ layer keeps one face table per (solid, orientation) and reads the
 active one through `poly()`; `project_core()` and `face_xy_to_ll()` read the

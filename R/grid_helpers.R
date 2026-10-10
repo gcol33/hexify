@@ -824,8 +824,9 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #'
 #' Returns the area of each cell in square kilometers. On the ISEA and IVEA
 #' projections every hexagon of a resolution has the same area, the 12
-#' pentagons of the icosahedron 5/6 of it and the 6 squares of the
-#' octahedron 4/6 of it. On the Fuller projection and for H3 grids, the area varies from cell to cell.
+#' pentagons of the icosahedron 5/6 of it, the 6 squares of the
+#' octahedron 4/6 of it and the 4 triangles of the tetrahedron half of it. On
+#' the Fuller projection and for H3 grids, the area varies from cell to cell.
 #'
 #' @param cell_id Cell IDs to compute area for. For ISEA grids, these are
 #'   numeric; for H3 grids, character strings. When \code{grid} is a HexData
@@ -841,7 +842,8 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 #' solid where \eqn{k} faces meet, covers \eqn{k} of a hexagon's six sixths,
 #' so a grid of \eqn{N} cells on a body of area \eqn{S} has hexagons of area
 #' \eqn{S / (N - 2)}, pentagons of \eqn{(5/6) S / (N - 2)} on the
-#' icosahedron and squares of \eqn{(4/6) S / (N - 2)} on the octahedron. The
+#' icosahedron, squares of \eqn{(4/6) S / (N - 2)} on the octahedron and
+#' triangles of \eqn{(3/6) S / (N - 2)} on the tetrahedron. The
 #' grid's \code{area_km2} is the mean, \eqn{S / N}.
 #'
 #' On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are
@@ -925,7 +927,8 @@ grid_quad_ij <- function(cell_id, g) {
 #' Number of sides of cells on any ISEA grid
 #'
 #' Six, except for the cell at each vertex of the solid, which has one side per
-#' face meeting there: five on the icosahedron, four on the octahedron. Every
+#' face meeting there: five on the icosahedron, four on the octahedron, three
+#' on the tetrahedron. Every
 #' cell of resolution 0 is a vertex cell, and every other vertex cell is the
 #' (0, 0) cell of its quad. Hex9 centres no cell on a vertex, so every Hex9
 #' cell has six.

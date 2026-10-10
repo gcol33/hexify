@@ -63,7 +63,8 @@ dggrs_definition <- function(grid) {
   strategy <- c("centredChildCell",
                 c(`3` = "nodeCentredChildCell", `4` = "edgeCentredChildCell",
                   `7` = "nodeSharingChildCell")[as.character(apertures)])
-  vertex_cell <- if (polyhedron == "icosahedron") "pentagon" else "square"
+  vertex_cell <- c(icosahedron = "pentagon", octahedron = "square",
+                   tetrahedron = "triangle")[[polyhedron]]
   e <- grid_ellipsoid(g)
   ogc <- ogc_dggrs_name(g)
   earth_model <- if (length(e) == 2L) {
@@ -194,6 +195,10 @@ isea_index_description <- function(g) {
       "gives the parent's identifier."))
   }
   n_quad <- sprintf("00-%02d", polyhedron_diamonds(grid_polyhedron(g)) + 1L)
+  if (grid_polyhedron(g) == "tetrahedron") {
+    n_quad <- paste0(n_quad, ", or 06 for a zone quad 02 holds on its far edge, ",
+                     "written at its place on the near edge")
+  }
   switch(index_type_for_aperture(g@aperture),
     z7 = if (grid_polyhedron(g) == "icosahedron") paste(
       "Z7 (IGEO7): two digits naming the resolution-0 cell (00-11) the zone",
@@ -201,7 +206,8 @@ isea_index_description <- function(g) {
       "the parent: 0 the centred child, 1-6 the six around it; the string",
       "DGGRID writes. Dropping the last digit gives the parent's identifier.")
     else paste(
-      "Z7: a leading field quad + 6 * s, s the digit of the neighbour of the",
+      sprintf("Z7: a leading field quad + %d * s,", polyhedron_diamonds(grid_polyhedron(g)) + 2L),
+      "s the digit of the neighbour of the",
       "quad's vertex the zone descends from, then one digit 0-6 per resolution",
       "naming the child of the parent: 0 the centred child, 1-6 the six around",
       "it. Dropping the last digit gives the parent's identifier."),

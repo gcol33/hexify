@@ -20,8 +20,9 @@ Named numeric vector of areas in km², one per \code{cell_id}.
 \description{
 Returns the area of each cell in square kilometers. On the ISEA and IVEA
 projections every hexagon of a resolution has the same area, the 12
-pentagons of the icosahedron 5/6 of it and the 6 squares of the
-octahedron 4/6 of it. On the Fuller projection and for H3 grids, the area varies from cell to cell.
+pentagons of the icosahedron 5/6 of it, the 6 squares of the
+octahedron 4/6 of it and the 4 triangles of the tetrahedron half of it. On
+the Fuller projection and for H3 grids, the area varies from cell to cell.
 }
 \details{
 On the ISEA and IVEA projections, both equal-area, every hexagon of a
@@ -29,7 +30,8 @@ resolution has the same area. A vertex cell, centred on a vertex of the
 solid where \eqn{k} faces meet, covers \eqn{k} of a hexagon's six sixths,
 so a grid of \eqn{N} cells on a body of area \eqn{S} has hexagons of area
 \eqn{S / (N - 2)}, pentagons of \eqn{(5/6) S / (N - 2)} on the
-icosahedron and squares of \eqn{(4/6) S / (N - 2)} on the octahedron. The
+icosahedron, squares of \eqn{(4/6) S / (N - 2)} on the octahedron and
+triangles of \eqn{(3/6) S / (N - 2)} on the tetrahedron. The
 grid's \code{area_km2} is the mean, \eqn{S / N}.
 
 On the Fuller projection (\code{hex_grid(projection = "fuller")}) cells are

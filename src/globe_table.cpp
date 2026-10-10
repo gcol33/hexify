@@ -136,15 +136,18 @@ uint64_t level_size(const Level& L) {
 }
 
 // The 0-based index of a cell in the shader's numbering: its ID - 1, but on
-// Hex9, whose IDs are addresses, its place in the quads
+// Hex9, whose IDs are addresses, its place in the quads. A cell of a diamond
+// quad is numbered at its place in the box (hexify::quad_slot()).
 uint64_t cell_index(const GlobeFrame& f, const Cell& x) {
   const hexify::SolidTopology& t = hexify::topo();
   const uint64_t first = f.vertex_cells() ? 1 : 0;
   if (f.vertex_cells() && x.quad == 0) return 0;
   if (f.vertex_cells() && x.quad == t.south_pole()) return f.n_cells - 1;
+  long long u = x.u, v = x.v;
+  hexify::quad_slot(t, x.quad, u, v, f.dim);
   return first + static_cast<uint64_t>(x.quad - 1) * f.per_quad +
-         static_cast<uint64_t>(x.u) * (f.dim / f.index) +
-         static_cast<uint64_t>(row_place(f, x.v));
+         static_cast<uint64_t>(u) * (f.dim / f.index) +
+         static_cast<uint64_t>(row_place(f, v));
 }
 
 // The cell of a Hex9 ID: its centre, placed in the quad that owns it
@@ -165,33 +168,40 @@ uint64_t index_of_id(const GlobeFrame& f, int64_t id) {
 }
 
 // The cells of a frame by index, each read once: an index one past the last
-// is a step along its row, wrapping into the next row and quad; any other
-// index is decoded.
+// is a step along its row of the box, wrapping into the next row and quad;
+// any other index is decoded. The cell is the one the quad holds at that
+// place of its box (hexify::quad_unslot()).
 class Walk {
  public:
   explicit Walk(const GlobeFrame& f)
-      : f_(f), per_row_(f.dim / f.index),
-        south_(f.vertex_cells() ? hexify::topo().south_pole() : -1),
+      : f_(f), t_(hexify::topo()), per_row_(f.dim / f.index),
+        south_(f.vertex_cells() ? t_.south_pole() : -1),
         first_(f.vertex_cells() ? 1 : 0),
         quad_div_(f.per_quad), row_div_(static_cast<uint64_t>(f.dim / f.index)) {}
 
   const Cell& at(uint64_t i) {
-    if (idx_ != kNone && i == idx_ + 1 && (x_.quad != 0 || first_ == 0) && x_.quad != south_ &&
+    if (idx_ != kNone && i == idx_ + 1 && (s_.quad != 0 || first_ == 0) && s_.quad != south_ &&
         i != f_.n_cells - 1) {
-      col_++;
-      x_.v += f_.index;
-      if (col_ == per_row_) {
-        col_ = 0;
-        if (++x_.u == f_.dim) {
-          x_.u = 0;
-          x_.quad++;
+      place_++;
+      s_.v += f_.index;
+      if (place_ == per_row_) {
+        place_ = 0;
+        if (++s_.u == f_.dim) {
+          s_.u = 0;
+          s_.quad++;
         }
-        x_.v = residue(f_, x_.quad, x_.u);
+        s_.v = residue(f_, s_.quad, s_.u);
       }
     } else {
       decode(i);
     }
     idx_ = i;
+    x_ = s_;
+    col_ = place_;
+    if (s_.quad != 0 && s_.quad != south_ && t_.fold_axis[x_.quad] >= 0) {
+      hexify::quad_unslot(t_, x_.quad, x_.u, x_.v, f_.dim);
+      if (x_.v != s_.v) col_ = row_place(f_, x_.v);
+    }
     return x_;
   }
   // The place of the last cell along its row of the quad
@@ -199,30 +209,33 @@ class Walk {
 
  private:
   void decode(uint64_t i) {
-    col_ = 0;
+    place_ = 0;
     if (first_ == 1 && i == 0) {
-      x_ = {0, 0, 0};
+      s_ = {0, 0, 0};
       return;
     }
     if (first_ == 1 && i == f_.n_cells - 1) {
-      x_ = {south_, 0, 0};
+      s_ = {south_, 0, 0};
       return;
     }
     uint64_t within, col;
-    x_.quad = static_cast<int>(quad_div_.div(i - first_, within)) + 1;
-    x_.u = static_cast<long long>(row_div_.div(within, col));
-    col_ = static_cast<long long>(col);
-    x_.v = col_ * f_.index + residue(f_, x_.quad, x_.u);
+    s_.quad = static_cast<int>(quad_div_.div(i - first_, within)) + 1;
+    s_.u = static_cast<long long>(row_div_.div(within, col));
+    place_ = static_cast<long long>(col);
+    s_.v = place_ * f_.index + residue(f_, s_.quad, s_.u);
   }
 
   const GlobeFrame& f_;
+  const hexify::SolidTopology& t_;
   long long per_row_;
   int south_;
   uint64_t first_;
   Divider quad_div_, row_div_;
   static constexpr uint64_t kNone = ~uint64_t(0);   // no cell read yet
   uint64_t idx_ = kNone;
-  Cell x_ = {0, 0, 0};
+  Cell s_ = {0, 0, 0};       // the place in the box
+  long long place_ = 0;
+  Cell x_ = {0, 0, 0};       // the cell held there
   long long col_ = 0;
 };
 
@@ -255,54 +268,91 @@ inline long long strip_of(const Level& L) {
   return std::max(L.pr, L.pc * L.f.index + L.f.index);
 }
 
-// Every padding slot of level L that holds cell x: each padding point the
-// quad edge maps (canonicalize_q2d(), as the shader's canonicalize() reads
-// them) carry into it. A point past one edge maps across it, or to the
-// vertex quad where a far edge starts when along = 0; a point past both far
-// edges is the far corner's cell; past any other two edges no cell owns it.
-// The edge maps are lattice isometries, so each preimage is solved for
-// exactly. Only a cell within strip_of() of an edge of its box has any.
+// A padding point of a quad and the cell that holds it
+struct PadPoint {
+  int quad;
+  long long u, v;
+};
+
+// The point of quad a that edge map m (of a's edge e) carries to (tu, tv) of
+// the quad across. The edge maps are lattice isometries, so it is solved for
+// exactly.
+inline void edge_preimage(const hexify::QuadEdgeMap& m, int e, long long top,
+                          long long tu, long long tv, long long& u, long long& v) {
+  const long long det = static_cast<long long>(m.k[0][1]) * m.k[1][2] -
+                        static_cast<long long>(m.k[0][2]) * m.k[1][1];
+  if (det != 1 && det != -1) Rcpp::stop("hexify internal error: a quad edge map is not unimodular");
+  const long long di = tu - m.k[0][0] * top, dj = tv - m.k[1][0] * top;
+  const long long along = (m.k[1][2] * di - m.k[0][2] * dj) / det;
+  const long long d = (m.k[0][1] * dj - m.k[1][1] * di) / det;
+  across(e, top, along, d, u, v);
+}
+
+// Every padding slot of level L that holds cell x: each padding point that
+// canonicalize_q2d() (as the shader's canonicalize() reads it) carries into
+// x. The candidates are the points one edge map carries onto x, the points
+// past a far corner when x is the vertex there, and the points along a far
+// edge from a vertex quad's corner when x is that vertex quad's cell; on a
+// solid whose quads fold, where a point may cross two edges, also the points
+// one edge map carries onto a candidate. Each candidate is kept when it lies
+// in the padding and canonicalizes to x. Only a cell within strip_of() of an
+// edge of its box has any.
 template <typename Emit>
 void padding_slots(const Level& L, const Cell& x, Emit emit) {
   const hexify::SolidTopology& t = hexify::topo();
   const long long top = L.f.dim;
   const bool vertex_quad = t.is_pole(x.quad);
   const long long strip = strip_of(L);
-  uint64_t key;
+  static std::vector<PadPoint> cand;
+  static std::vector<uint64_t> keys;
+  cand.clear();
+  keys.clear();
+  auto preimages_of = [&](int q, long long tu, long long tv) {
+    for (int a = 1; a <= t.n_diamonds(); a++) {
+      for (int e = 0; e < 4; e++) {
+        const hexify::QuadEdgeMap& m = t.edge[a][e];
+        if (m.quad != q) continue;
+        PadPoint p{a, 0, 0};
+        edge_preimage(m, e, top, tu, tv, p.u, p.v);
+        cand.push_back(p);
+      }
+    }
+  };
   for (int a = 1; a <= t.n_diamonds(); a++) {
     if (t.corner[a][hexify::kCornerFar] == x.quad && x.u == 0 && x.v == 0) {
       for (long long u = top; u < top + L.pr; u++) {
-        for (long long v = top; v < top + strip; v++) {
-          if (slot_of(L, a, u, v, key)) emit(key);
-        }
+        for (long long v = top; v < top + strip; v++) cand.push_back({a, u, v});
       }
     }
+    if (!vertex_quad) continue;
     for (int e = 0; e < 4; e++) {
-      const hexify::QuadEdgeMap& m = t.edge[a][e];
+      if (t.edge[a][e].pole != x.quad) continue;
       const bool far = e == hexify::kEdgeRight || e == hexify::kEdgeUp;
-      if (vertex_quad) {
-        if (m.pole != x.quad) continue;
-        for (long long d = far ? 0 : -strip; d < (far ? strip : 0); d++) {
-          long long u, v;
-          across(e, top, 0, d, u, v);
-          if (slot_of(L, a, u, v, key)) emit(key);
-        }
-        continue;
+      for (long long d = far ? 0 : -strip; d < (far ? strip : 0); d++) {
+        PadPoint p{a, 0, 0};
+        across(e, top, 0, d, p.u, p.v);
+        cand.push_back(p);
       }
-      if (m.quad != x.quad) continue;
-      const long long det = static_cast<long long>(m.k[0][1]) * m.k[1][2] -
-                            static_cast<long long>(m.k[0][2]) * m.k[1][1];
-      if (det != 1 && det != -1) Rcpp::stop("hexify internal error: a quad edge map is not unimodular");
-      const long long di = x.u - m.k[0][0] * top, dj = x.v - m.k[1][0] * top;
-      const long long along = (m.k[1][2] * di - m.k[0][2] * dj) / det;
-      const long long d = (m.k[0][1] * dj - m.k[1][1] * di) / det;
-      if (along < 0 || along >= top || (L.f.vertex_cells() && m.pole >= 0 && along == 0)) continue;
-      if (far ? d < 0 : d >= 0) continue;
-      long long u, v;
-      across(e, top, along, d, u, v);
-      if (slot_of(L, a, u, v, key)) emit(key);
     }
   }
+  if (!vertex_quad) preimages_of(x.quad, x.u, x.v);
+  if (t.has_folds) {
+    const size_t n1 = cand.size();
+    for (size_t k = 0; k < n1; k++) preimages_of(cand[k].quad, cand[k].u, cand[k].v);
+  }
+  uint64_t key;
+  for (const PadPoint& p : cand) {
+    if (hexify::quad_holds(t, p.quad, p.u, p.v, top) || !slot_of(L, p.quad, p.u, p.v, key)) {
+      continue;
+    }
+    int q = p.quad;
+    long long u = p.u, v = p.v;
+    if (!hexify::substrate_ij_canonicalize(q, u, v, top, L.f.vertex_cells())) continue;
+    if (q == x.quad && u == x.u && v == x.v) keys.push_back(key);
+  }
+  std::sort(keys.begin(), keys.end());
+  keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
+  for (uint64_t k : keys) emit(k);
 }
 
 inline bool near_edge(const Level& L, const Cell& x) {
@@ -523,20 +573,25 @@ void gather_level(const Level& fine, const Level& coarse, const Stencils& stenci
       }
     }
     const uint64_t block = fine.base + static_cast<uint64_t>(q - 1) * fine.hp * fine.wp;
+    const bool folds = t.fold_axis[q] >= 0;
     for (long long u = 0; u < coarse.f.dim; u++) {
       const long long r = residue(coarse.f, q, u);
-      const long long pu = k * u;
-      const uint64_t row = block + static_cast<uint64_t>(pu + fine.pr) * fine.wp + fine.pc;
       // The cell at a quad's origin is the vertex quad's, gathered below
       const long long first = (u == 0 && coarse.f.vertex_cells()) ? 1 : 0;
       for (long long col = first; col < per_row; col++) {
-        const Cell y = {q, u, col * coarse.f.index + r};
-        const long long pv = k * y.v;
-        const uint64_t centre = row + static_cast<uint64_t>(pv / nf);
+        Cell y = {q, u, col * coarse.f.index + r};
+        long long y_col = col;
+        if (folds) {
+          hexify::quad_unslot(t, q, y.u, y.v, coarse.f.dim);
+          if (y.v != col * coarse.f.index + r) y_col = row_place(coarse.f, y.v);
+        }
+        const long long pu = k * y.u, pv = k * y.v;
+        const uint64_t centre = block + static_cast<uint64_t>(pu + fine.pr) * fine.wp +
+                                fine.pc + static_cast<uint64_t>(pv / nf);
         const long long* d = &delta[(pv % nf) * n];
         Acc acc;
         for (size_t m = 0; m < n; m++) read(centre + d[m], st.share[m], acc);
-        keep(y, col, acc, whole(t, step, y));
+        keep(y, y_col, acc, whole(t, step, y));
       }
     }
   }
@@ -553,7 +608,7 @@ void gather_level(const Level& fine, const Level& coarse, const Stencils& stenci
         for (size_t m = 0; m < n; m++) {
           const long long u = pu + st.du[m], v = pv + st.dv[m];
           uint64_t key;
-          if (u >= 0 && v >= 0 && u < top && v < top && slot_of(fine, a, u, v, key)) {
+          if (hexify::quad_holds(t, a, u, v, top) && slot_of(fine, a, u, v, key)) {
             read(key, st.share[m], acc);
           }
         }
@@ -606,7 +661,7 @@ void push_level(const GlobeFrame& fine, const GlobeFrame& coarse,
     const int n = coarse_cells_nearest(fine, coarse, x.quad, x.u, x.v, near);
     for (int m = 0; m < n; m++) {
       Cell y = {x.quad, near[m][0], near[m][1]};
-      const bool inside = y.u >= 0 && y.v >= 0 && y.u < coarse.dim && y.v < coarse.dim;
+      const bool inside = hexify::quad_holds(t, y.quad, y.u, y.v, coarse.dim);
       if (!inside && !hexify::substrate_ij_canonicalize(y.quad, y.u, y.v, coarse.dim,
                                                         coarse.vertex_cells())) {
         continue;
@@ -870,10 +925,13 @@ List cpp_globe_table(NumericVector icosa, List levels, NumericVector cell_id,
           words[key] = word;
         });
       };
+      // The cells held at places `from` to `to` of row u of quad q's box
       auto each = [&](int q, long long u, long long r, long long from, long long to) {
         for (long long col = std::max(from, 0LL); col < std::min(to, per_row); col++) {
-          const uint32_t word = words[own_slot(L, q, u, col)];
-          if (word != kAbsent) spread({q, u, col * n + r}, word);
+          Cell x = {q, u, col * n + r};
+          hexify::quad_unslot(t, q, x.u, x.v, top);
+          const uint32_t word = words[own_slot(L, q, x.u, row_place(L.f, x.v))];
+          if (word != kAbsent) spread(x, word);
         }
       };
       for (int q = 1; q <= t.n_diamonds(); q++) {

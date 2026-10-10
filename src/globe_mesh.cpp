@@ -728,9 +728,11 @@ List cpp_globe_faces(NumericVector icosa, double max_len) {
 // along which the face's azimuth is read (azimuth = atan2(p . b, p . a)), each
 // followed by a zero, then the face's quad, its 60-degree turns into the quad
 // and the offset after them. 'edges': 36 integers per quad: the quad of its
-// far corner, whether it is a vertex quad, two zeros, then for each edge in
-// QuadEdge order its QuadEdgeMap: the quad across it, the vertex quad of a
-// far edge's starting corner (-1 for none), and the six coefficients.
+// far corner, whether it is a vertex quad, its fold axis (-1 for none, see
+// SolidTopology::fold_axis), whether any quad of the solid folds, then for
+// each edge in QuadEdge order its
+// QuadEdgeMap: the quad across it, the vertex quad of a far edge's starting
+// corner (-1 for none), and the six coefficients.
 // 'n_faces' and 'n_quads' count the solid's faces and quads.
 // [[Rcpp::export]]
 List cpp_globe_projection(NumericVector icosa) {
@@ -773,6 +775,8 @@ List cpp_globe_projection(NumericVector icosa) {
     int* row = &edges[36 * q];
     row[0] = t.corner[q][kCornerFar];
     row[1] = t.is_pole(q) ? 1 : 0;
+    row[2] = t.fold_axis[q];
+    row[3] = t.has_folds ? 1 : 0;
     if (t.is_pole(q)) continue;
     for (int e = 0; e < 4; e++) {
       const QuadEdgeMap& m = t.edge[q][e];

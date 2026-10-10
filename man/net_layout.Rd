@@ -14,7 +14,7 @@ net_layout(
 }
 \arguments{
 \item{x}{A HexGridInfo object from \code{\link{hex_grid}}, built on the
-icosahedron or the octahedron.}
+icosahedron, the octahedron or the tetrahedron.}
 
 \item{layout}{Name of the layout; see Details.}
 
@@ -54,7 +54,8 @@ The layouts are:
 \describe{
 \item{\code{"plane"}}{The faces in the PLANE layout of DGGRID, the layout
 \code{\link{hexify_cell_to_plane}} reads: five strips of four triangles
-on the icosahedron, four diamonds side by side on the octahedron.}
+on the icosahedron, four diamonds side by side on the octahedron, one
+triangle of edge 2 on the tetrahedron.}
 \item{\code{"gosper"}}{Van de Sande's Gosper World on the octahedron: four
 regular hexagons, each one face of the octahedron and a third of each of
 its three neighbours, the three neighbouring faces cut along the lines

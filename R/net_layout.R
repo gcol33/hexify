@@ -27,7 +27,8 @@
 #' \describe{
 #'   \item{\code{"plane"}}{The faces in the PLANE layout of DGGRID, the layout
 #'     \code{\link{hexify_cell_to_plane}} reads: five strips of four triangles
-#'     on the icosahedron, four diamonds side by side on the octahedron.}
+#'     on the icosahedron, four diamonds side by side on the octahedron, one
+#'     triangle of edge 2 on the tetrahedron.}
 #'   \item{\code{"gosper"}}{Van de Sande's Gosper World on the octahedron: four
 #'     regular hexagons, each one face of the octahedron and a third of each of
 #'     its three neighbours, the three neighbouring faces cut along the lines
@@ -62,7 +63,7 @@
 #' orientation of the octahedron.
 #'
 #' @param x A HexGridInfo object from \code{\link{hex_grid}}, built on the
-#'   icosahedron or the octahedron.
+#'   icosahedron, the octahedron or the tetrahedron.
 #' @param layout Name of the layout; see Details.
 #' @param centre For the Gosper layouts, the point \code{c(lon, lat)} whose
 #'   tile lies in the middle, at the origin. The map is turned so the
@@ -210,7 +211,7 @@ net_project <- function(layout, lon, lat) {
 #' the icosa argument, `centre`, `mirror` and `land`, and returns the pieces.
 #' @noRd
 NET_LAYOUTS <- list(
-  plane = list(polyhedra = c("icosahedron", "octahedron"),
+  plane = list(polyhedra = c("icosahedron", "octahedron", "tetrahedron"),
                build = function(faces, icosa, ...) layout_plane(faces, icosa)),
   gosper = list(polyhedra = "octahedron", centred = TRUE,
                 build = function(faces, icosa, centre, mirror, ...) {
@@ -226,7 +227,7 @@ NET_LAYOUTS <- list(
                        build = function(faces, icosa, centre, mirror, ...) {
                          layout_gosper(faces, icosa, centre, mirror, "flower")
                        }),
-  land = list(polyhedra = c("icosahedron", "octahedron"), joins_land = TRUE,
+  land = list(polyhedra = c("icosahedron", "octahedron", "tetrahedron"), joins_land = TRUE,
               build = function(faces, icosa, land, ...) layout_land(faces, icosa, land))
 )
 
