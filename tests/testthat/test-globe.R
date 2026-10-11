@@ -388,10 +388,7 @@ test_that("hex_globe checks its arguments", {
 })
 
 test_that("hex_globe_png in Chrome saves the view as a PNG of the asked size", {
-  skip_on_cran()
-  skip_if_not_installed("htmlwidgets")
-  skip_if_not_installed("chromote")
-  skip_if(is.null(suppressMessages(chromote::find_chrome())), "no Chromium browser")
+  skip_without_gpu_browser()
   g <- hex_grid(resolution = 2, aperture = 3)
   file <- tempfile(fileext = ".png")
   on.exit(unlink(file))
@@ -554,21 +551,6 @@ test_that("unsigned words above 2^31 keep their bits", {
   expect_equal(hexify:::le32(c(-1, -2^31, 5), "i32"),
                writeBin(c(-1L, NA_integer_, 5L), raw(), size = 4L, endian = "little"))
 })
-
-skip_without_gpu_browser <- function() {
-  skip_on_cran()
-  skip_if_not_installed("htmlwidgets")
-  skip_if_not_installed("chromote")
-  skip_if(is.null(suppressMessages(chromote::find_chrome())), "no Chromium browser")
-}
-
-skip_without_wgpu <- function() {
-  skip_on_cran()
-  skip_if_not_installed("htmlwidgets")
-  skip_if_not_installed("hexglobe")
-  skip_if(inherits(try(hexglobe::gpu_adapter(), silent = TRUE), "try-error"),
-          "no graphics adapter for wgpu")
-}
 
 test_that("hex_globe_png through wgpu saves the view as a PNG of the asked size", {
   skip_without_wgpu()
