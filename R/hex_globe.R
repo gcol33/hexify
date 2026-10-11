@@ -1,7 +1,7 @@
 # hex_globe.R
 # An interactive globe of a grid, drawn with WebGPU
 
-#' Interactive globe of a grid
+#' Interactive Globe of a Grid
 #'
 #' Draws the cells of a grid on a globe that turns under the mouse, rendered
 #' on the graphics card through WebGPU. A slider folds the solid the
@@ -213,7 +213,7 @@ hex_globe <- function(x,
   )
 }
 
-#' Save a globe as a PNG image
+#' Save a Globe as a PNG Image
 #'
 #' Draws a globe made by \code{\link{hex_globe}} with the same WebGPU
 #' shader and pipelines the widget uses, and saves the view it opens with,
@@ -243,10 +243,11 @@ hex_globe <- function(x,
 #'
 #' @export
 #' @examples
-#' \dontrun{
-#' grid <- hex_grid(resolution = 3, aperture = 3)
-#' globe <- hex_globe(grid, surface = "solid", center = "pacific")
-#' hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
+#' # Drawing needs the hexglobe package and a GPU adapter
+#' if (requireNamespace("hexglobe", quietly = TRUE) && interactive()) {
+#'   grid <- hex_grid(resolution = 3, aperture = 3)
+#'   globe <- hex_globe(grid, surface = "solid", center = "pacific")
+#'   hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 #' }
 hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
                           timeout = 30, renderer = c("wgpu", "chrome")) {

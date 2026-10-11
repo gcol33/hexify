@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify.R
 \name{hexify}
 \alias{hexify}
-\title{Assign hexagonal DGGS cell IDs to geographic points}
+\title{Assign Hexagonal DGGS Cell IDs to Geographic Points}
 \usage{
 hexify(
   data,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_cell_to_index}
 \alias{hexify_cell_to_index}
-\title{Convert cell coordinates to index string}
+\title{Convert Cell Coordinates to Index String}
 \usage{
 hexify_cell_to_index(
   face,

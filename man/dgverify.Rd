@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_grid.R
 \name{dgverify}
 \alias{dgverify}
-\title{Verify grid object}
+\title{Verify Grid Object}
 \usage{
 dgverify(dggs)
 }
@@ -28,3 +28,4 @@ dgverify(hex_grid(area_km2 = 1000))
 bad_grid <- list(aperture = 5)
 try(dgverify(bad_grid))  # Will error
 }
+\keyword{internal}

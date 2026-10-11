@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_face_centers}
 \alias{hexify_face_centers}
-\title{Get face centers of a solid}
+\title{Get Face Centers of a Solid}
 \usage{
 hexify_face_centers(polyhedron = c("icosahedron", "octahedron", "tetrahedron"))
 }
@@ -31,3 +31,4 @@ Other projection:
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}
+\keyword{internal}

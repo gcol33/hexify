@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_map.R
 \name{plot_world}
 \alias{plot_world}
-\title{Quick world map plot}
+\title{Quick World Map Plot}
 \usage{
 plot_world(fill = "gray90", border = "gray50", ...)
 }

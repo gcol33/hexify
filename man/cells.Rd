@@ -15,3 +15,7 @@ A vector of cell IDs
 \description{
 Extract the unique cell IDs present in a HexData object.
 }
+\examples{
+df <- data.frame(lon = c(0, 0.01, 20), lat = c(45, 45, 55))
+cells(hexify(df, lon = "lon", lat = "lat", area_km2 = 1000))
+}

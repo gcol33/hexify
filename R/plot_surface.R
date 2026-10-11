@@ -1,7 +1,7 @@
 # plot_surface.R
 # A grid drawn on the sphere and on the solid it is built on
 
-#' Globe center presets
+#' Globe Center Presets
 #'
 #' Named list of lon/lat coordinates for common globe views, accepted by the
 #' \code{center} argument of the grid \code{\link[=plot,HexGridInfo,missing-method]{plot}}
@@ -42,9 +42,9 @@ globe_centers <- list(
   antarctic     = c(lon = 0,    lat = -90)
 )
 
-#' Plot a grid on the sphere, on its solid, or on the unfolded net
-#'
-#' Draws the cells of a grid in 3D, seen from above a chosen point: on the
+#' @rdname HexGridInfo-class
+#' @section Plotting a grid:
+#' \code{plot()} draws the cells of a grid in 3D, seen from above a chosen point: on the
 #' sphere, or on the flat faces of the solid the grid is built on. All
 #' surfaces take their cell boundaries from the same points, so a cell on the
 #' solid is the cell on the sphere folded flat.
@@ -85,7 +85,6 @@ globe_centers <- list(
 #' the camera sees, and \code{rotation} turns the view about the line of sight
 #' in either projection.
 #'
-#' @param x A HexGridInfo object from \code{\link{hex_grid}}
 #' @param y Ignored
 #' @param surface \code{"sphere"}, \code{"solid"} or \code{"net"}.
 #'   \code{"solid"} draws the flat faces of the grid's polyhedron (the
@@ -156,9 +155,6 @@ globe_centers <- list(
 #' @param step Spacing of the points along a cell boundary, as a fraction of
 #'   a face edge.
 #' @param main Plot title.
-#' @param ... Ignored
-#'
-#' @return The grid, invisibly
 #'
 #' @references Carr, D. B., Kahn, R., Sahr, K., Olsen, A. R. (1997). ISEA
 #'   discrete global grids. Statistical Computing & Graphics Newsletter
@@ -720,8 +716,7 @@ surface_land <- function(land) {
     stop("land must be TRUE, FALSE, or an sf/sfc object", call. = FALSE)
   }
   land <- sf::st_transform(land, 4326)
-  old <- suppressMessages(sf::sf_use_s2(TRUE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(TRUE)
   land <- suppressMessages(sf::st_make_valid(land))
   land[!sf::st_is_empty(land)]
 }
@@ -729,8 +724,7 @@ surface_land <- function(land) {
 #' Polygons of land within a spherical cap, as lists of lon/lat rings
 #' @noRd
 land_in_cap <- function(land, lon, lat, radius_deg) {
-  old <- suppressMessages(sf::sf_use_s2(TRUE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(TRUE)
   cap <- sf::st_buffer(sf::st_sfc(sf::st_point(c(lon, lat)), crs = 4326),
                        radius_deg * pi / 180 * EARTH_RADIUS_KM * 1000)
   part <- suppressMessages(sf::st_intersection(land, cap))
@@ -918,8 +912,7 @@ face_land <- function(face, tri, land, icosa, regions = list(NULL)) {
   }
   tri_t <- to_tri(vec_lonlat(tri, icosa))
 
-  old <- suppressMessages(sf::sf_use_s2(FALSE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(FALSE)
   flat <- sf::st_sfc(lapply(polys, function(p) {
     sf::st_polygon(lapply(p, function(r) {
       t_r <- to_tri(r)
@@ -938,8 +931,7 @@ face_land <- function(face, tri, land, icosa, regions = list(NULL)) {
 #' coordinates
 #' @noRd
 clip_land <- function(flat, outline, region) {
-  old <- suppressMessages(sf::sf_use_s2(FALSE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(FALSE)
   triangle <- sf::st_sfc(sf::st_polygon(list(rbind(region, region[1, ]))))
   filled <- suppressWarnings(sf::st_intersection(flat, triangle))
   filled <- filled[!sf::st_is_empty(filled)]

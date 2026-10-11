@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_stats.R
 \name{dg_closest_res_to_area}
 \alias{dg_closest_res_to_area}
-\title{Find closest resolution for target cell area}
+\title{Find Closest Resolution for Target Cell Area}
 \usage{
 dg_closest_res_to_area(
   dggs,
@@ -32,14 +32,8 @@ This is primarily used internally by \code{\link{hexify_grid}} and
 \code{\link{hex_grid}}. Most users should use those functions directly.
 }
 \examples{
-# Create a temporary grid to get aperture settings
-temp_grid <- list(aperture = 3, topology = "HEXAGON")
-class(temp_grid) <- "hexify_grid"
-
-# Find resolution for 1000 km^2 cells
-res <- dg_closest_res_to_area(temp_grid, area = 1000, 
-                               metric = TRUE, show_info = TRUE)
-print(res)
+grid <- hex_grid(resolution = 5, aperture = 3)
+dg_closest_res_to_area(grid, area = 1000, show_info = TRUE)
 }
 \seealso{
 Other grid statistics:

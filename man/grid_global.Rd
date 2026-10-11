@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{grid_global}
 \alias{grid_global}
-\title{Generate a global hexagon grid}
+\title{Generate a Global Hexagon Grid}
 \usage{
 grid_global(grid, wrap_dateline = TRUE)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_smooth.R
 \name{hex_smooth}
 \alias{hex_smooth}
-\title{Smooth cell values over neighbouring cells}
+\title{Smooth Cell Values Over Neighbouring Cells}
 \usage{
 hex_smooth(cell_id, value, grid, steps = 1L, self_weight = 1, group = NULL)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_resolution_to_eff_res}
 \alias{hexify_resolution_to_eff_res}
-\title{Convert index resolution to effective resolution}
+\title{Convert Index Resolution to Effective Resolution}
 \usage{
 hexify_resolution_to_eff_res(resolution)
 }
@@ -13,7 +13,7 @@ hexify_resolution_to_eff_res(resolution)
 Effective resolution
 }
 \description{
-Convert index resolution to effective resolution
+Convert Index Resolution to Effective Resolution
 }
 \seealso{
 Other grid statistics:

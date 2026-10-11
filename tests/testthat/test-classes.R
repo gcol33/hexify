@@ -38,9 +38,12 @@ test_that("HexGridInfo show() prints correctly", {
   grid <- hex_grid(area_km2 = 1000)
 
   output <- capture.output(show(grid))
-  expect_true(any(grepl("HexGridInfo", output)))
-  expect_true(any(grepl("Aperture", output)))
-  expect_true(any(grepl("Resolution", output)))
+  expect_length(output, 1)
+  expect_match(output, "^<HexGridInfo> aperture 3, resolution ")
+
+  detail <- capture.output(print(summary(grid)))
+  expect_true(any(grepl("Aperture", detail)))
+  expect_true(any(grepl("Resolution", detail)))
 })
 
 test_that("HexGridInfo show() handles mixed aperture", {
@@ -196,9 +199,13 @@ test_that("HexData show() prints correctly", {
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
   output <- capture.output(show(result))
-  expect_true(any(grepl("HexData", output)))
-  expect_true(any(grepl("Rows", output)))
-  expect_true(any(grepl("Cells", output)))
+  expect_length(output, 2)
+  expect_match(output[1], "^<HexData> 2 rows, 3 columns, 2 cells")
+  expect_match(output[2], "grid: aperture 3")
+
+  detail <- capture.output(print(summary(result)))
+  expect_true(any(grepl("Rows", detail)))
+  expect_true(any(grepl("Cells", detail)))
 })
 
 test_that("HexData show() handles sf data", {
@@ -220,7 +227,7 @@ test_that("HexData show() handles many columns", {
   )
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
 
-  output <- capture.output(show(result))
+  output <- capture.output(print(summary(result)))
   expect_true(any(grepl("\\.\\.\\.", output)))  # Truncated columns
 })
 
@@ -419,7 +426,7 @@ test_that("HexData show() handles more than 3 rows", {
   )
   result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 5000)
 
-  output <- capture.output(show(result))
+  output <- capture.output(print(summary(result)))
   expect_true(any(grepl("more rows", output)))
 })
 
@@ -437,7 +444,7 @@ test_that("n_cells reports the cell count a grid prints", {
   )
 
   for (grid in grids) {
-    printed <- utils::capture.output(suppressMessages(show(grid)))
+    printed <- utils::capture.output(suppressMessages(print(summary(grid))))
     total <- printed[grepl("^Total Cells:", printed)]
     expect_length(total, 1)
 
@@ -475,9 +482,12 @@ test_that("summary of a grid carries what the grid prints", {
   expect_equal(s$n_cells, n_cells(grid))
   expect_true(s$earth)
 
-  # Printing the object prints the summary
-  expect_equal(utils::capture.output(show(grid)),
-               utils::capture.output(print(s)))
+  # Printing the object gives one line; its summary gives the detail
+  shown <- utils::capture.output(show(grid))
+  expect_length(shown, 1)
+  expect_match(shown, formatC(n_cells(grid), format = "f", digits = 0, big.mark = ","),
+               fixed = TRUE)
+  expect_lt(length(shown), length(utils::capture.output(print(s))))
 })
 
 test_that("summary of gridded data carries what the object prints", {
@@ -493,6 +503,7 @@ test_that("summary of gridded data carries what the object prints", {
   expect_equal(s$type, "data.frame")
   expect_s3_class(s$grid, "hexify_grid_summary")
 
-  expect_equal(utils::capture.output(show(result)),
-               utils::capture.output(print(s)))
+  shown <- utils::capture.output(show(result))
+  expect_length(shown, 2)
+  expect_lt(length(shown), length(utils::capture.output(print(s))))
 })

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_map.R
 \name{hexify_heatmap}
 \alias{hexify_heatmap}
-\title{Create a ggplot2 visualization of hexagonal grid cells}
+\title{Create a ggplot2 Visualization of Hexagonal Grid Cells}
 \usage{
 hexify_heatmap(
   data,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_aggregate.R
 \name{hex_aggregate}
 \alias{hex_aggregate}
-\title{Aggregate cell values to a coarser resolution}
+\title{Aggregate Cell Values to a Coarser Resolution}
 \usage{
 hex_aggregate(
   cell_id,

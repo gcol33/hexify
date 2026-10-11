@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_build_icosa}
 \alias{hexify_build_icosa}
-\title{Set the default icosahedron orientation}
+\title{Set the Default Icosahedron Orientation}
 \usage{
 hexify_build_icosa(
   vert0_lon = ISEA_VERT0_LON_DEG,
@@ -44,3 +44,4 @@ Other projection:
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}
+\keyword{internal}

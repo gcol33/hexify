@@ -2,7 +2,7 @@
 % Please edit documentation in R/net_layout.R
 \name{net_project}
 \alias{net_project}
-\title{Place points on a net layout}
+\title{Place Points on a Net Layout}
 \usage{
 net_project(layout, lon, lat)
 }

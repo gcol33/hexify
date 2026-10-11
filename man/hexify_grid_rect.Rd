@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_cell_to_sf.R
 \name{hexify_grid_rect}
 \alias{hexify_grid_rect}
-\title{Generate a rectangular grid of hexagon polygons}
+\title{Generate a Rectangular Grid of Hexagon Polygons}
 \usage{
 hexify_grid_rect(
   minlon,

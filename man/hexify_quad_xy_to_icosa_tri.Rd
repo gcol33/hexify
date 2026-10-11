@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_quad_xy_to_icosa_tri}
 \alias{hexify_quad_xy_to_icosa_tri}
-\title{Convert Quad XY to Icosa Triangle coordinates}
+\title{Convert Quad XY to Icosa Triangle Coordinates}
 \usage{
 hexify_quad_xy_to_icosa_tri(quad, quad_x, quad_y)
 }

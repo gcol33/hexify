@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_glyphs.R
 \name{hex_rays}
 \alias{hex_rays}
-\title{Ray glyphs for cell values}
+\title{Ray Glyphs for Cell Values}
 \usage{
 hex_rays(
   cell_id,

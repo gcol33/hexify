@@ -2,7 +2,7 @@
 % Please edit documentation in R/dggrid.R
 \name{dggrid_43h_sequence}
 \alias{dggrid_43h_sequence}
-\title{Create DGGRID 43H aperture sequence}
+\title{Create DGGRID 43H Aperture Sequence}
 \usage{
 dggrid_43h_sequence(num_ap4, num_ap3)
 }

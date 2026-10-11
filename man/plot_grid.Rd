@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_methods.R
 \name{plot_grid}
 \alias{plot_grid}
-\title{Plot hexagonal grid clipped to a polygon boundary}
+\title{Plot Hexagonal Grid Clipped to a Polygon Boundary}
 \usage{
 plot_grid(
   boundary,

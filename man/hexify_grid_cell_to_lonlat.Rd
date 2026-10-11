@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_grid_cell_to_lonlat}
 \alias{hexify_grid_cell_to_lonlat}
-\title{Convert cell ID to longitude/latitude using a grid object}
+\title{Convert Cell ID to Longitude/Latitude Using a Grid Object}
 \usage{
 hexify_grid_cell_to_lonlat(grid, cell_id)
 }

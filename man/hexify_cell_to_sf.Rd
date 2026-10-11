@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_cell_to_sf.R
 \name{hexify_cell_to_sf}
 \alias{hexify_cell_to_sf}
-\title{Convert cell IDs to sf polygons}
+\title{Convert Cell IDs to sf Polygons}
 \usage{
 hexify_cell_to_sf(
   cell_id,

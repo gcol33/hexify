@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_icosa_tri_to_plane}
 \alias{hexify_icosa_tri_to_plane}
-\title{Convert Icosa Triangle coordinates to PLANE coordinates}
+\title{Convert Icosa Triangle Coordinates to PLANE Coordinates}
 \usage{
 hexify_icosa_tri_to_plane(
   icosa_triangle_face,

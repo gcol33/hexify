@@ -409,7 +409,8 @@ center_pts <- st_as_sf(
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray95", color = "gray70", linewidth = 0.2) +
   geom_sf(data = center_pts, color = "#E63946", size = 2.5) +
-  geom_sf_text(data = center_pts, aes(label = face), nudge_y = 9, size = 4.5) +
+  geom_sf_text(data = center_pts, aes(label = face), fun.geometry = sf::st_centroid,
+               nudge_y = 9, size = 4.5) +
   coord_sf(expand = FALSE) +
   labs(title = "ISEA Icosahedron Face Centers",
        subtitle = "20 triangular faces, numbered 0-19", x = NULL, y = NULL) +
@@ -1303,19 +1304,19 @@ cat("H3 Res  Avg Area (km²)  ISEA Ap7 Equivalent\n")
 cat("------  --------------  -------------------\n")
 for (h3_res in 0:8) {
   g_h3 <- hex_grid(resolution = h3_res, type = "h3")
-  h3_area <- g_h3@area_km2
+  h3_area <- summary(g_h3)$area_km2
 
   # Find closest ISEA ap7 resolution by brute force
   best_res <- 0
   best_diff <- Inf
   for (r in 0:15) {
     g_test <- hex_grid(resolution = r, aperture = 7)
-    d <- abs(log(g_test@area_km2) - log(h3_area))
+    d <- abs(log(summary(g_test)$area_km2) - log(h3_area))
     if (d < best_diff) { best_diff <- d; best_res <- r }
   }
   g_isea <- hex_grid(resolution = best_res, aperture = 7)
   cat(sprintf("   %2d   %14.1f  res %d (%.1f km²)\n",
-              h3_res, h3_area, best_res, g_isea@area_km2))
+              h3_res, h3_area, best_res, summary(g_isea)$area_km2))
 }
 ```
 

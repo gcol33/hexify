@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_cell_to_icosa_tri}
 \alias{hexify_cell_to_icosa_tri}
-\title{Convert Cell ID to Icosa Triangle coordinates}
+\title{Convert Cell ID to Icosa Triangle Coordinates}
 \usage{
 hexify_cell_to_icosa_tri(cell_id, resolution, aperture = 3L)
 }

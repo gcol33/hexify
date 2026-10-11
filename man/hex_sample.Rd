@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_sample.R
 \name{hex_sample}
 \alias{hex_sample}
-\title{Random points inside cells}
+\title{Random Points Inside Cells}
 \usage{
 hex_sample(cell_id, grid, n = 1L)
 }

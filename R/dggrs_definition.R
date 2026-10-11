@@ -1,6 +1,6 @@
 # DGGRS definitions in the JSON schema of OGC API - DGGS
 
-#' Definition of a grid as a Discrete Global Grid Reference System
+#' Definition of a Grid as a Discrete Global Grid Reference System
 #'
 #' Describes a grid in the DGGRS definition schema of OGC API - Discrete
 #' Global Grid Systems: the hierarchy of grids (solid, refinement ratio,

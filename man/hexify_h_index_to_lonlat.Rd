@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_h_index_to_lonlat}
 \alias{hexify_h_index_to_lonlat}
-\title{Convert hierarchical index strings to longitude/latitude centers}
+\title{Convert Hierarchical Index Strings to Longitude/Latitude Centers}
 \usage{
 hexify_h_index_to_lonlat(grid, h_index)
 }

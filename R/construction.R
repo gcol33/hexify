@@ -1,7 +1,7 @@
 # construction.R
 # Lambert's construction of Snyder's projection, step by step
 
-#' Points through the steps of Snyder's projection
+#' Points Through the Steps of Snyder's Projection
 #'
 #' Snyder's equal-area projection of a face is Lambert's azimuthal equal-area
 #' projection about the face's centre, adjusted to fill the face's plane

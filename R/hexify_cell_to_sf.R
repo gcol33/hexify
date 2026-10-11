@@ -8,7 +8,7 @@
 # CORE POLYGON GENERATION
 # =============================================================================
 
-#' Convert cell IDs to sf polygons
+#' Convert Cell IDs to sf Polygons
 #'
 #' Creates polygon geometries for hexagonal grid cells from their cell IDs.
 #' Returns an sf object by default, or a data frame for lightweight workflows.
@@ -99,7 +99,7 @@ hexify_cell_to_sf <- function(cell_id, resolution = NULL, aperture = NULL,
 # GRID GENERATION
 # =============================================================================
 
-#' Generate a rectangular grid of hexagon polygons
+#' Generate a Rectangular Grid of Hexagon Polygons
 #'
 #' Creates hexagon polygons covering a rectangular geographic region.
 #'
@@ -136,7 +136,7 @@ hexify_grid_rect <- function(minlon, maxlon, minlat, maxlat,
   grid_rect(c(minlon, minlat, maxlon, maxlat), grid)
 }
 
-#' Generate a global grid of hexagon polygons
+#' Generate a Global Grid of Hexagon Polygons
 #'
 #' Creates hexagon polygons covering a whole body.
 #'
@@ -171,7 +171,7 @@ hexify_grid_global <- function(area, aperture = 3L, resround = "nearest",
 # LOW-LEVEL SF HELPERS
 # =============================================================================
 
-#' Build an sf POLYGON from six (lon, lat) corner pairs
+#' Build an sf POLYGON from Six (lon, lat) Corner Pairs
 #'
 #' Low-level helper to create a single hexagon polygon from corner coordinates.
 #' Most users should use \code{\link{cell_to_sf}} instead.

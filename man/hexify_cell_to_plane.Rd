@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_cell_to_plane}
 \alias{hexify_cell_to_plane}
-\title{Convert Cell ID to PLANE coordinates}
+\title{Convert Cell ID to PLANE Coordinates}
 \usage{
 hexify_cell_to_plane(cell_id, resolution, aperture = 3L)
 }

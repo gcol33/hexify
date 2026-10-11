@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{HexGridInfo_to_hexify_grid}
 \alias{HexGridInfo_to_hexify_grid}
-\title{Convert HexGridInfo to legacy hexify_grid}
+\title{Convert HexGridInfo to Legacy hexify_grid}
 \usage{
 HexGridInfo_to_hexify_grid(x)
 }

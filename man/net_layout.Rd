@@ -2,7 +2,7 @@
 % Please edit documentation in R/net_layout.R
 \name{net_layout}
 \alias{net_layout}
-\title{Lay out the faces of a grid's solid in the plane}
+\title{Lay Out the Faces of a Grid's Solid in the Plane}
 \usage{
 net_layout(
   x,

@@ -2,7 +2,7 @@
 # Cells on a net layout: the parts a cell is cut into by the pieces of the
 # net, and which of them the map shows joined.
 
-#' The parts of cells on a net layout
+#' The Parts of Cells on a Net Layout
 #'
 #' Cuts each cell into its parts on the pieces of a net layout and places
 #' them in the plane. A cell on one piece has one part. A cell that crosses

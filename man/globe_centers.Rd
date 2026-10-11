@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_surface.R
 \name{globe_centers}
 \alias{globe_centers}
-\title{Globe center presets}
+\title{Globe Center Presets}
 \format{
 Named list with elements:
 \describe{

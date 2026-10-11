@@ -2,7 +2,7 @@
 % Please edit documentation in R/net_cells.R
 \name{net_cells}
 \alias{net_cells}
-\title{The parts of cells on a net layout}
+\title{The Parts of Cells on a Net Layout}
 \usage{
 net_cells(layout, grid, cells = NULL)
 }

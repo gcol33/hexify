@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_globe.R
 \name{hex_globe_png}
 \alias{hex_globe_png}
-\title{Save a globe as a PNG image}
+\title{Save a Globe as a PNG Image}
 \usage{
 hex_globe_png(
   widget,
@@ -47,10 +47,11 @@ Chrome or Edge, that \code{chromote::find_chrome()} finds; the browser is
 started with its GPU, which WebGPU draws on.
 }
 \examples{
-\dontrun{
-grid <- hex_grid(resolution = 3, aperture = 3)
-globe <- hex_globe(grid, surface = "solid", center = "pacific")
-hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
+# Drawing needs the hexglobe package and a GPU adapter
+if (requireNamespace("hexglobe", quietly = TRUE) && interactive()) {
+  grid <- hex_grid(resolution = 3, aperture = 3)
+  globe <- hex_globe(grid, surface = "solid", center = "pacific")
+  hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 }
 }
 \seealso{

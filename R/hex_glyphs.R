@@ -2,7 +2,7 @@
 # Glyphs drawn inside cells: ray glyphs and the triangles towards each
 # neighbour (Carr et al. 1997)
 
-#' Ray glyphs for cell values
+#' Ray Glyphs for Cell Values
 #'
 #' Draws one ray per cell from its centre whose angle shows a value, as in
 #' Carr et al. (1997): the ray points down for the smallest value, level
@@ -106,7 +106,7 @@ hex_rays <- function(cell_id, value, grid, lower = NULL, upper = NULL,
   wrap_cells_at_dateline(out)
 }
 
-#' The triangles of cells towards each neighbour
+#' The Triangles of Cells Towards Each Neighbour
 #'
 #' Cuts each cell into one triangle per wall, from the centre to that wall:
 #' six for a hexagon, five for a pentagon. With values, each triangle carries

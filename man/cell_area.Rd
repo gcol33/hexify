@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{cell_area}
 \alias{cell_area}
-\title{Compute per-cell area in km²}
+\title{Compute Per-Cell Area in km²}
 \usage{
 cell_area(cell_id = NULL, grid)
 }

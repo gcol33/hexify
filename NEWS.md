@@ -1,5 +1,38 @@
 # hexify (development version)
 
+## Printing and documentation
+
+* A grid prints as one line (`<HexGridInfo> aperture 3, resolution 10:
+  590,492 cells of 863.8 km^2`) and gridded data as two; `summary()` keeps
+  the full listing, which for gridded data now includes the grid's
+  orientation and ellipsoid (#108). The list `hexify_grid()` builds and the
+  `dggs` list `as_dggrid()` returns print as one line too.
+
+* Each class has one help page listing its methods: `?HexGridInfo-class` and
+  `?HexData-class` carry `show()`, `summary()`, `plot()`, `st_as_sf()`,
+  `st_crs()`, `as_tibble()` and the accessors (#110). Help titles are in
+  Title Case. The empty pages `hexify-conversions`, `hexify-grid` and
+  `hexify-stats` are gone, and `hexify_grid()`, `dgverify()`,
+  `hexify_compare_resolutions()`, `hexify_roundtrip_test()` and the
+  projection-level helpers (`hexify_forward()`, `hexify_inverse()`,
+  `hexify_forward_to_face()`, `hexify_which_face()`, `hexify_face_centers()`,
+  `hexify_build_icosa()`) are marked internal: `hex_grid()` is the grid
+  constructor.
+
+* Every exported user-facing topic has a runnable example; the
+  `hex_globe_png()` example runs in an interactive session with hexglobe
+  installed (#109).
+
+* `hex_grid(area_km2 = , type = "h3")` no longer warns on every call: the
+  note that H3 cells are not equal-area is one message per session on both
+  the area and the resolution path (#112). `grid_clip()`, `hexify_heatmap()`
+  and `plot()` no longer print sf's s2 switch and planar-assumption
+  messages, and `dg_closest_res_to_area(show_info = TRUE)` reports in one
+  message.
+
+* The README and vignettes read grids and data through `summary()`,
+  `as.data.frame()`, `n_cells()` and `$` columns.
+
 ## Breaking changes
 
 * ISEA cell IDs are 64-bit integers (`bit64::integer64`, a new import), exact

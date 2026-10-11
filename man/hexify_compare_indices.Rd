@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_compare_indices}
 \alias{hexify_compare_indices}
-\title{Compare two indices}
+\title{Compare Two Indices}
 \usage{
 hexify_compare_indices(idx1, idx2)
 }

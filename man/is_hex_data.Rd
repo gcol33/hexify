@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{is_hex_data}
 \alias{is_hex_data}
-\title{Check if object is HexData}
+\title{Check If an Object Is a HexData}
 \usage{
 is_hex_data(x)
 }
@@ -13,5 +13,10 @@ is_hex_data(x)
 Logical
 }
 \description{
-Check if object is HexData
+Check If an Object Is a HexData
+}
+\examples{
+df <- data.frame(lon = c(0, 10), lat = c(45, 50))
+is_hex_data(hexify(df, lon = "lon", lat = "lat", area_km2 = 1000))
+is_hex_data(df)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_quad_ij_to_cell}
 \alias{hexify_quad_ij_to_cell}
-\title{Convert Quad IJ coordinates to cell ID}
+\title{Convert Quad IJ Coordinates to Cell ID}
 \usage{
 hexify_quad_ij_to_cell(quad, i, j, resolution, aperture = 3L)
 }

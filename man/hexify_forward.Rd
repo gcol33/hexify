@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_forward}
 \alias{hexify_forward}
-\title{Forward face projection}
+\title{Forward Face Projection}
 \usage{
 hexify_forward(
   lon,
@@ -53,3 +53,4 @@ Other projection:
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}
+\keyword{internal}

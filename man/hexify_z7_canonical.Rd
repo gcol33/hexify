@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_z7_canonical}
 \alias{hexify_z7_canonical}
-\title{Get canonical form of Z7 index}
+\title{Get Canonical Form of Z7 Index}
 \usage{
 hexify_z7_canonical(index, max_iterations = 128L)
 }

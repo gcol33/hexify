@@ -2,7 +2,7 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{from_dggrid}
 \alias{from_dggrid}
-\title{Convert 'dggridR' grid object to hexify_grid}
+\title{Convert 'dggridR' Grid Object to hexify_grid}
 \usage{
 from_dggrid(dggs, radius_km = EARTH_RADIUS_KM)
 }
@@ -40,6 +40,10 @@ The function validates that the 'dggridR' grid uses compatible settings:
 \item Topology must be "HEXAGON" (DIAMOND, TRIANGLE not supported)
 \item Aperture must be 3, 4, or 7
 }
+}
+\examples{
+dggs <- as_dggrid(hex_grid(resolution = 4, aperture = 4))
+from_dggrid(dggs)
 }
 \seealso{
 Other 'dggridR' compatibility:

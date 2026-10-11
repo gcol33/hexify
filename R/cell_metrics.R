@@ -1,6 +1,6 @@
 # Shape and spacing metrics of grid cells
 
-#' Shape metrics of cells: area, perimeter and compactness
+#' Shape Metrics of Cells: Area, Perimeter and Compactness
 #'
 #' Measures each cell on the sphere: its area, the length of its boundary and
 #' how close its shape is to a circle.
@@ -85,8 +85,8 @@ cell_metrics <- function(cell_id = NULL, grid) {
              stringsAsFactors = FALSE)
 }
 
-#' Spacing metrics of neighbouring cells: wall length, centre distance and
-#' cell wall midpoint ratio
+#' Spacing Metrics of Neighbouring Cells: Wall Length, Centre Distance and
+#' Cell Wall Midpoint Ratio
 #'
 #' Measures every wall between a cell and an adjacent cell: how long it is,
 #' how far apart the two cell centres are, and how far the wall's midpoint lies

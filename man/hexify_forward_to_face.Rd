@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_forward_to_face}
 \alias{hexify_forward_to_face}
-\title{Forward projection to specific face}
+\title{Forward Projection to Specific Face}
 \usage{
 hexify_forward_to_face(
   face,
@@ -46,3 +46,4 @@ Other projection:
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}
+\keyword{internal}

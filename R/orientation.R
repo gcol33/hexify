@@ -116,6 +116,11 @@ grid_orientation <- function(x) {
 #' @noRd
 FACE_PROJECTIONS <- c(isea = 0, fuller = 1, ivea = 2, ak = 3, akw = 4)
 
+#' Names of the face projections, as a grid's printed line gives them
+#' @noRd
+PROJECTION_LABELS <- c(isea = "Snyder", fuller = "Fuller", ivea = "IVEA",
+                       ak = "Kaseorg", akw = "Kaseorg warped")
+
 #' Face projections that keep every cell of a resolution the same area
 #' @noRd
 EQUAL_AREA_PROJECTIONS <- c("isea", "ivea")
@@ -378,8 +383,7 @@ region_centre <- function(region) {
   }
   if (is.na(sf::st_crs(geom))) sf::st_crs(geom) <- 4326
   if (!isTRUE(sf::st_is_longlat(geom))) geom <- sf::st_transform(geom, 4326)
-  old <- suppressMessages(sf::sf_use_s2(TRUE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(TRUE)
   centre <- sf::st_coordinates(sf::st_centroid(sf::st_union(geom)))
   unname(centre[1, 1:2])
 }

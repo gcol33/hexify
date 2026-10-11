@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_globe.R
 \name{hex_globe}
 \alias{hex_globe}
-\title{Interactive globe of a grid}
+\title{Interactive Globe of a Grid}
 \usage{
 hex_globe(
   x,
@@ -38,7 +38,8 @@ hex_globe(
 )
 }
 \arguments{
-\item{x}{A HexGridInfo object from \code{\link{hex_grid}}}
+\item{x}{A HexGridInfo object; for \code{print()}, a grid summary as
+\code{summary()} returns one}
 
 \item{values}{Numeric values, one per cell in \code{cells}, filling the
 cells. \code{NULL} draws no fill.}

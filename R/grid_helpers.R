@@ -259,7 +259,7 @@ isea_cells_to_sfc <- function(cell_id, resolution, aperture, icosa, crs = 4326,
 # COORDINATE CONVERSION HELPERS
 # =============================================================================
 
-#' Convert longitude/latitude to cell ID
+#' Convert Longitude/Latitude to Cell ID
 #'
 #' Converts geographic coordinates to DGGS cell IDs using a grid specification.
 #'
@@ -304,7 +304,7 @@ lonlat_to_cell <- function(lon, lat, grid) {
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
-#' Convert cell ID to longitude/latitude
+#' Convert Cell ID to Longitude/Latitude
 #'
 #' Converts DGGS cell IDs back to geographic coordinates (cell centers).
 #'
@@ -334,7 +334,7 @@ cell_to_lonlat <- function(cell_id, grid) {
                      lv$resolution, lv$aperture, lv$ap_seq)
 }
 
-#' Convert cell IDs to sf polygons
+#' Convert Cell IDs to sf Polygons
 #'
 #' Creates sf polygon geometries for hexagonal grid cells.
 #'
@@ -495,7 +495,7 @@ cell_to_sf <- function(cell_id = NULL, grid, wrap_dateline = TRUE,
 # GRID GENERATION HELPERS
 # =============================================================================
 
-#' Generate a rectangular grid of hexagons
+#' Generate a Rectangular Grid of Hexagons
 #'
 #' Creates hexagon polygons covering a rectangular geographic region.
 #' All cells that overlap the bounding box are included (not just cells whose
@@ -558,6 +558,25 @@ grid_rect <- function(bbox, grid) {
   cell_to_sf(cell_ids, g)
 }
 
+#' Switch sf's spherical geometry (s2) on or off until the calling function
+#' returns, without sf's switch messages
+#' @param use TRUE for s2, FALSE for planar geometry
+#' @param frame Frame whose exit restores the previous setting
+#' @noRd
+local_s2 <- function(use, frame = parent.frame()) {
+  old <- suppressMessages(sf::sf_use_s2(use))
+  do.call(on.exit, list(bquote(suppressMessages(sf::sf_use_s2(.(old)))),
+                        add = TRUE), envir = frame)
+  invisible(old)
+}
+
+#' Evaluate a planar sf operation on lon/lat geometry without sf's
+#' planar-assumption messages and warnings
+#' @noRd
+sf_planar <- function(expr) {
+  suppressMessages(suppressWarnings(expr))
+}
+
 #' Close a set of ISEA cells over the cells meeting a lon/lat box
 #'
 #' The cells whose polygon meets a rectangle form one edge-connected set, so
@@ -570,8 +589,7 @@ grid_rect <- function(bbox, grid) {
 #' @return integer64 vector of cell IDs
 #' @noRd
 isea_cells_meeting_box <- function(seeds, bbox, g) {
-  old <- suppressMessages(sf::sf_use_s2(FALSE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(FALSE)
   box <- sf::st_as_sfc(sf::st_bbox(
     c(xmin = bbox[1], ymin = bbox[2], xmax = bbox[3], ymax = bbox[4]),
     crs = grid_crs(g)))
@@ -608,7 +626,7 @@ h3_all_cells <- function(resolution) {
   unlist(cpp_h3_cellToChildren(base, as.integer(resolution)), use.names = FALSE)
 }
 
-#' Generate a global hexagon grid
+#' Generate a Global Hexagon Grid
 #'
 #' Creates hexagon polygons covering the entire Earth.
 #'
@@ -662,7 +680,7 @@ grid_global <- function(grid, wrap_dateline = TRUE) {
   cell_to_sf(as_cell_id(seq_len(n_cells)), g, wrap_dateline = wrap_dateline)
 }
 
-#' Clip hexagon grid to polygon boundary
+#' Clip Hexagon Grid to Polygon Boundary
 #'
 #' Creates hexagon polygons clipped to a given polygon boundary. This is useful
 #' for generating grids that conform to country borders, study areas, or other
@@ -732,15 +750,13 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
   # H3 path: fill boundary polygon using native C backend
   if (is_h3_grid(g)) {
     # Disable S2 for spatial operations
-    s2_state <- sf::sf_use_s2()
-    sf::sf_use_s2(FALSE)
-    on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+    local_s2(FALSE)
 
     boundary_geom <- sf::st_geometry(boundary)
     if (length(boundary_geom) > 1) {
-      boundary_geom <- sf::st_union(boundary_geom)
+      boundary_geom <- sf_planar(sf::st_union(boundary_geom))
     }
-    boundary_geom <- sf::st_make_valid(boundary_geom)
+    boundary_geom <- sf_planar(sf::st_make_valid(boundary_geom))
 
     # Extract polygon rings for cpp_h3_polygonToCells
     polys <- sf::st_cast(boundary_geom, "POLYGON")
@@ -756,13 +772,13 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
     hex_sf <- cell_to_sf(cell_ids, g)
 
     if (crop) {
-      hex_sf <- sf::st_make_valid(hex_sf)
+      hex_sf <- sf_planar(sf::st_make_valid(hex_sf))
       result <- tryCatch({
-        suppressWarnings(sf::st_intersection(hex_sf, boundary_geom))
+        sf_planar(sf::st_intersection(hex_sf, boundary_geom))
       }, error = function(e) {
         boundary_buf <- sf::st_buffer(boundary_geom, 0)
         hex_buf <- sf::st_buffer(hex_sf, 0)
-        suppressWarnings(sf::st_intersection(hex_buf, boundary_buf))
+        sf_planar(sf::st_intersection(hex_buf, boundary_buf))
       })
       geom_types <- sf::st_geometry_type(result)
       result <- result[geom_types %in% c("POLYGON", "MULTIPOLYGON"), ]
@@ -775,39 +791,37 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
   bbox <- sf::st_bbox(boundary)
 
   # Disable S2 for all spatial operations (spherical geometry can cause issues)
-  s2_state <- sf::sf_use_s2()
-  sf::sf_use_s2(FALSE)
-  on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+  local_s2(FALSE)
 
   # Generate rectangular grid covering the boundary
   rect_grid <- grid_rect(bbox, g)
-  rect_grid <- sf::st_make_valid(rect_grid)
+  rect_grid <- sf_planar(sf::st_make_valid(rect_grid))
 
   # Get boundary geometry and ensure it's valid
   boundary_geom <- sf::st_geometry(boundary)
-  boundary_geom <- sf::st_make_valid(boundary_geom)
+  boundary_geom <- sf_planar(sf::st_make_valid(boundary_geom))
   if (inherits(boundary, "sf") || length(boundary_geom) > 1) {
-    boundary_geom <- sf::st_union(boundary_geom)
-    boundary_geom <- sf::st_make_valid(boundary_geom)
+    boundary_geom <- sf_planar(sf::st_union(boundary_geom))
+    boundary_geom <- sf_planar(sf::st_make_valid(boundary_geom))
   }
 
   if (crop) {
     # Crop hexagons to boundary
     result <- tryCatch({
-      suppressWarnings(sf::st_intersection(rect_grid, boundary_geom))
+      sf_planar(sf::st_intersection(rect_grid, boundary_geom))
     }, error = function(e) {
       # If intersection fails, try with buffered geometries
       boundary_buf <- sf::st_buffer(boundary_geom, 0)
       rect_buf <- sf::st_buffer(rect_grid, 0)
-      suppressWarnings(sf::st_intersection(rect_buf, boundary_buf))
+      sf_planar(sf::st_intersection(rect_buf, boundary_buf))
     })
     # Keep only polygon geometries (filter out points/lines from edge cases)
     geom_types <- sf::st_geometry_type(result)
     result <- result[geom_types %in% c("POLYGON", "MULTIPOLYGON"), ]
   } else {
     # Filter to hexagons whose centroids fall within boundary
-    centroids <- suppressWarnings(sf::st_centroid(rect_grid))
-    within <- suppressWarnings(
+    centroids <- sf_planar(sf::st_centroid(rect_grid))
+    within <- sf_planar(
       sf::st_within(centroids, boundary_geom, sparse = FALSE)
     )
     result <- rect_grid[apply(within, 1, any), ]
@@ -820,7 +834,7 @@ grid_clip <- function(boundary, grid, crop = TRUE) {
 # CELL AREA COMPUTATION
 # =============================================================================
 
-#' Compute per-cell area in km²
+#' Compute Per-Cell Area in km²
 #'
 #' Returns the area of each cell in square kilometers. On the ISEA and IVEA
 #' projections every hexagon of a resolution has the same area, the 12
@@ -1007,7 +1021,7 @@ isea_index_to_cells <- function(index, aperture_int, index_type, icosa) {
   out
 }
 
-#' Convert cell ID to hierarchical index string
+#' Convert Cell ID to Hierarchical Index String
 #'
 #' Advanced function for working with hierarchical index strings.
 #' Most users don't need this - use cell IDs directly.
@@ -1136,7 +1150,7 @@ cell_to_index <- function(cell_id, grid,
   isea_cells_to_index(cell_id, g@resolution, aperture_int, index_type, icosa_arg(g))
 }
 
-#' Convert hierarchical index to cell ID
+#' Convert Hierarchical Index to Cell ID
 #'
 #' The inverse of [cell_to_index()]: the cells of `grid` that index strings,
 #' IGEO7 integer forms or OGC zone identifiers name.
@@ -1255,7 +1269,7 @@ check_index_resolution <- function(res, resolution, index) {
   invisible(TRUE)
 }
 
-#' Get parent cell
+#' Get Parent Cell
 #'
 #' Returns the parent cell at a coarser resolution.
 #'
@@ -1395,7 +1409,7 @@ cell_corner_rings <- function(cell_id, g) {
                   tolerance = 0, max_arc = 0)
 }
 
-#' Sibling cells
+#' Sibling Cells
 #'
 #' Returns the other children of each cell's parent.
 #'
@@ -1428,7 +1442,7 @@ get_siblings <- function(cell_id, grid, include_self = FALSE) {
   lapply(seq_along(cell_id), function(k) kids[[k]][kids[[k]] != cell_id[k]])
 }
 
-#' Get children cells
+#' Get Children Cells
 #'
 #' Returns the child cells at a finer resolution.
 #'

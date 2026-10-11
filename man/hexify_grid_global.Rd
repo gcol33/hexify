@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_cell_to_sf.R
 \name{hexify_grid_global}
 \alias{hexify_grid_global}
-\title{Generate a global grid of hexagon polygons}
+\title{Generate a Global Grid of Hexagon Polygons}
 \usage{
 hexify_grid_global(
   area,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_lonlat_to_quad_ij}
 \alias{hexify_lonlat_to_quad_ij}
-\title{Convert longitude/latitude to Quad IJ coordinates}
+\title{Convert Longitude/Latitude to Quad IJ Coordinates}
 \usage{
 hexify_lonlat_to_quad_ij(lon, lat, resolution, aperture = 3L)
 }

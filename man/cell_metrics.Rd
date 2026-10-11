@@ -2,7 +2,7 @@
 % Please edit documentation in R/cell_metrics.R
 \name{cell_metrics}
 \alias{cell_metrics}
-\title{Shape metrics of cells: area, perimeter and compactness}
+\title{Shape Metrics of Cells: Area, Perimeter and Compactness}
 \usage{
 cell_metrics(cell_id = NULL, grid)
 }

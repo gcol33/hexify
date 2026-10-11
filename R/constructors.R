@@ -444,10 +444,6 @@ hex_grid <- function(area_km2 = NULL,
       }
       # Find closest H3 resolution by area
       resolution <- closest_h3_resolution(area_km2, radius_km)
-      warning(sprintf(
-        "H3 cells are not exactly equal-area. Closest resolution %d has average area ~%.3f km^2 (requested %.3f km^2)",
-        resolution, h3_avg_area_km2(resolution, radius_km), area_km2
-      ))
     } else {
       if (!is.numeric(resolution) || length(resolution) != 1 || is.na(resolution)) {
         stop("resolution must be a single non-NA number")
@@ -457,12 +453,12 @@ hex_grid <- function(area_km2 = NULL,
         stop(sprintf("H3 resolution must be between %d and %d",
                      H3_MIN_RESOLUTION, H3_MAX_RESOLUTION))
       }
-      rlang::inform(
-        "H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.",
-        .frequency = "once",
-        .frequency_id = "hexify_h3_not_equal_area"
-      )
     }
+    rlang::inform(
+      "H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.",
+      .frequency = "once",
+      .frequency_id = "hexify_h3_not_equal_area"
+    )
 
     if (radius_km != EARTH_RADIUS_KM) {
       rlang::inform(
@@ -632,12 +628,7 @@ new_hex_data <- function(data,
 # TIBBLE COERCION (if tibble is available)
 # =============================================================================
 
-#' Convert HexData to tibble
-#'
-#' @param x A HexData object
-#' @param ... Additional arguments (ignored)
-#' @return A tibble
-#'
+#' @rdname HexData-class
 #' @exportS3Method tibble::as_tibble
 as_tibble.HexData <- function(x, ...) {
   if (!requireNamespace("tibble", quietly = TRUE)) {
@@ -657,40 +648,12 @@ as_tibble.HexData <- function(x, ...) {
 # SF COERCION
 # =============================================================================
 
-#' Convert gridded data or a grid to sf
-#'
-#' Methods for \code{sf::st_as_sf()}. Gridded data comes back as one feature per
-#' row, carrying either the centre of the cell each row fell in or that cell's
-#' boundary. A grid specification comes back as its global cell set.
-#'
-#' @param x A HexData or HexGridInfo object
-#' @param ... For a HexGridInfo, passed on to \code{\link{grid_global}}
-#' @param geometry Type of geometry: "point" (default) or "polygon"
-#' @param shape,depth Cell shape for polygon geometry, as for
-#'   \code{\link{cell_to_sf}}
-#'
-#' @return An sf object
-#'
-#' @details
-#' For point geometry, cell centers (cell_cen_lon, cell_cen_lat) are used.
-#' For polygon geometry, cell boundaries are computed using the grid specification.
-#'
-#' @seealso \code{\link{cell_to_sf}} for the cells of named cell IDs,
-#'   \code{\link{grid_global}} for every cell of a grid
-#'
+#' @rdname HexData-class
+#' @param geometry For \code{st_as_sf()}: "point" (default) gives each row
+#'   the centre of its cell, "polygon" the cell's boundary
+#' @param shape,depth Cell shape for polygon geometry and for \code{plot()},
+#'   as for \code{\link{cell_to_sf}}
 #' @export
-#' @examples
-#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
-#' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
-#'
-#' # Get sf points
-#' sf_pts <- st_as_sf(result)
-#'
-#' # Get sf polygons
-#' sf_poly <- st_as_sf(result, geometry = "polygon")
-#'
-#' # Every cell of a coarse grid
-#' cells <- st_as_sf(hex_grid(resolution = 2))
 st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon"),
                              shape = c("hexagon", "gosper", "descendants"),
                              depth = 3L) {
@@ -741,35 +704,20 @@ st_as_sf.HexData <- function(x, ..., geometry = c("point", "polygon"),
   }
 }
 
-#' @rdname st_as_sf.HexData
+#' @rdname HexGridInfo-class
 #' @export
 st_as_sf.HexGridInfo <- function(x, ...) {
   grid_global(x, ...)
 }
 
-#' Coordinate reference system of a grid
-#'
-#' Reads the CRS a grid's coordinates are in, as \code{sf::st_crs()} does for
-#' any spatial object. An Earth grid returns 'WGS84'; a grid built on another
-#' body returns a longlat CRS on the sphere of its radius.
-#'
-#' @param x A HexGridInfo or HexData object
-#' @param ... Passed on to \code{sf::st_crs()}
-#' @return An object of class \code{crs}, as \code{sf::st_crs()} returns:
-#'   a list carrying the reference system in 'PROJ' and 'WKT' form. It says how
-#'   to read the coordinates that the grid's cells, centres and sf exports come
-#'   back in.
-#'
+#' @rdname HexGridInfo-class
 #' @importFrom sf st_crs
 #' @export
-#' @examples
-#' st_crs(hex_grid(resolution = 5))
-#' st_crs(hex_grid(resolution = 5, radius_km = "mars"))
 st_crs.HexGridInfo <- function(x, ...) {
   grid_crs(x)
 }
 
-#' @rdname st_crs.HexGridInfo
+#' @rdname HexData-class
 #' @export
 st_crs.HexData <- function(x, ...) {
   grid_crs(x@grid)

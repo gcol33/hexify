@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_roundtrip_test}
 \alias{hexify_roundtrip_test}
-\title{Round-trip accuracy test}
+\title{Round-Trip Accuracy Test}
 \usage{
 hexify_roundtrip_test(grid, lon, lat, units = "km")
 }
@@ -49,3 +49,4 @@ Other coordinate conversion:
 \code{\link[=hexify_quad_xy_to_icosa_tri]{hexify_quad_xy_to_icosa_tri()}}
 }
 \concept{coordinate conversion}
+\keyword{internal}

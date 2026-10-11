@@ -2,7 +2,7 @@
 % Please edit documentation in R/dggrs_definition.R
 \name{dggrs_definition}
 \alias{dggrs_definition}
-\title{Definition of a grid as a Discrete Global Grid Reference System}
+\title{Definition of a Grid as a Discrete Global Grid Reference System}
 \usage{
 dggrs_definition(grid)
 }

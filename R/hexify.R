@@ -3,7 +3,7 @@
 #
 # This is the primary entry point for the hexify package.
 
-#' Assign hexagonal DGGS cell IDs to geographic points
+#' Assign Hexagonal DGGS Cell IDs to Geographic Points
 #'
 #' Takes a data.frame or sf object with geographic coordinates and returns
 #' a HexData object that stores the original data plus cell assignments.

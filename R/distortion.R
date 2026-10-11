@@ -2,7 +2,7 @@
 # Distortion of the face projection: Tissot's indicatrix of the map from the
 # sphere onto the faces of the solid
 
-#' Distortion of a grid's face projection
+#' Distortion of a Grid's Face Projection
 #'
 #' Tissot's indicatrix of the projection that maps the sphere onto the faces
 #' of the grid's solid (Snyder's or the vertex-oriented equal-area projection,

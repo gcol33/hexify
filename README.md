@@ -126,7 +126,7 @@ coords <- data.frame(
 result <- hexify(coords, lon = "lon", lat = "lat", grid = grid)
 
 # Access cell IDs
-result@cell_id
+result$cell_id
 ```
 
 ### Working with sf Objects
@@ -172,7 +172,6 @@ occ_hex <- hexify(occurrences, lon = "lon", lat = "lat", grid = grid)
 
 # Count per cell
 occ_df <- as.data.frame(occ_hex)
-occ_df$cell_id <- occ_hex@cell_id
 
 cell_counts <- aggregate(species ~ cell_id, data = occ_df, FUN = length)
 names(cell_counts)[2] <- "n_records"

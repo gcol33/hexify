@@ -442,7 +442,7 @@ generate_bin_labels <- function(breaks) {
 # hexify_map() removed - use plot() method on HexData objects instead
 
 
-#' Quick world map plot
+#' Quick World Map Plot
 #'
 #' Simple wrapper to plot the built-in world map.
 #'
@@ -468,7 +468,7 @@ plot_world <- function(fill = "gray90", border = "gray50", ...) {
 }
 
 
-#' Create a ggplot2 visualization of hexagonal grid cells
+#' Create a ggplot2 Visualization of Hexagonal Grid Cells
 #'
 #' Creates a ggplot2-based visualization of hexagonal grid cells, optionally
 #' colored by a value column. Supports continuous and discrete color scales,
@@ -657,9 +657,7 @@ hexify_heatmap <- function(data,
   }
 
   # Disable S2 for geometry operations (avoids edge crossing errors)
-  s2_was_used <- sf::sf_use_s2()
-  sf::sf_use_s2(FALSE)
-  on.exit(sf::sf_use_s2(s2_was_used), add = TRUE)
+  local_s2(FALSE)
 
   # Create mask for areas outside basemap (if requested)
   mask_sf <- NULL

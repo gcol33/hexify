@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{index_to_cell}
 \alias{index_to_cell}
-\title{Convert hierarchical index to cell ID}
+\title{Convert Hierarchical Index to Cell ID}
 \usage{
 index_to_cell(
   index,

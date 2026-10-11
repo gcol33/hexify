@@ -2,7 +2,7 @@
 % Please edit documentation in R/construction.R
 \name{projection_stages}
 \alias{projection_stages}
-\title{Points through the steps of Snyder's projection}
+\title{Points Through the Steps of Snyder's Projection}
 \usage{
 projection_stages(x, lon, lat, face = NULL)
 }

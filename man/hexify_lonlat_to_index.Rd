@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_lonlat_to_index}
 \alias{hexify_lonlat_to_index}
-\title{Convert longitude/latitude to index string}
+\title{Convert Longitude/Latitude to Index String}
 \usage{
 hexify_lonlat_to_index(
   lon,

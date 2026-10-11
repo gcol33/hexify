@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_default_index_type}
 \alias{hexify_default_index_type}
-\title{Get default index type for aperture}
+\title{Get Default Index Type for Aperture}
 \usage{
 hexify_default_index_type(aperture)
 }

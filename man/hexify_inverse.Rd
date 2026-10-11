@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_inverse}
 \alias{hexify_inverse}
-\title{Inverse face projection}
+\title{Inverse Face Projection}
 \usage{
 hexify_inverse(
   x,
@@ -49,3 +49,4 @@ Other projection:
 \code{\link[=hexify_which_face]{hexify_which_face()}}
 }
 \concept{projection}
+\keyword{internal}

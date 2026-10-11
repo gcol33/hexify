@@ -76,7 +76,8 @@ test_that("hex_grid() takes an ellipsoid by name or by its axes", {
   expect_identical(g@crs, 4326L)
   expect_true(is_earth_grid(g))
   expect_identical(summary(g)$ellipsoid, ELLIPSOIDS$wgs84)
-  expect_output(print(g), "Ellipsoid:   WGS84, authalic radius 6371.0072 km")
+  expect_output(print(summary(g)), "Ellipsoid:   WGS84, authalic radius 6371.0072 km")
+  expect_output(print(g), "WGS84 ellipsoid")
 
   expect_identical(grid_ellipsoid(hex_grid(resolution = 4, ellipsoid = "earth")),
                    ELLIPSOIDS$wgs84)

@@ -2,7 +2,9 @@
 % Please edit documentation in R/hexify_grid.R
 \name{hexify_grid}
 \alias{hexify_grid}
-\title{Create a hexagonal grid specification}
+\alias{format.hexify_grid}
+\alias{print.hexify_grid}
+\title{Create a Legacy Grid Specification}
 \usage{
 hexify_grid(
   area,
@@ -13,6 +15,10 @@ hexify_grid(
   projection = "ISEA",
   radius_km = EARTH_RADIUS_KM
 )
+
+\method{format}{hexify_grid}(x, ...)
+
+\method{print}{hexify_grid}(x, ...)
 }
 \arguments{
 \item{area}{Target cell area in km^2 (if metric=TRUE) or area code}
@@ -30,6 +36,10 @@ hexify_grid(
 
 \item{radius_km}{Radius of the body the grid covers, in kilometers, or a body
 name such as "mars" (default Earth). See \code{\link{hex_grid}}.}
+
+\item{x}{A hexify_grid object}
+
+\item{...}{Ignored}
 }
 \value{
 A hexify_grid object containing:
@@ -42,8 +52,11 @@ A hexify_grid object containing:
 \item{index_type}{Index encoding type ("z3", "z7", or "zorder")}
 }
 \description{
-Creates a discrete global grid system (DGGS) object with hexagonal cells
-at a specified resolution. This is the main constructor for hexify grids.
+Builds the list-based grid specification of earlier hexify versions, kept
+for code written against them and for 'dggridR' interchange. New code uses
+\code{\link{hex_grid}}, which returns a \code{\link{HexGridInfo-class}}
+object and covers every grid hexify supports. A hexify_grid prints as one
+line.
 }
 \examples{
 # Create a grid with ~1000 km^2 cells
@@ -61,3 +74,4 @@ Other hexify main:
 \code{\link[=hexify]{hexify()}}
 }
 \concept{hexify main}
+\keyword{internal}

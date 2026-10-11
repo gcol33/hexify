@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{grid_rect}
 \alias{grid_rect}
-\title{Generate a rectangular grid of hexagons}
+\title{Generate a Rectangular Grid of Hexagons}
 \usage{
 grid_rect(bbox, grid)
 }

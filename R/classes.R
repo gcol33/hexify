@@ -71,6 +71,17 @@ setClassUnion("HexCRS", c("integer", "character"))
 #' @seealso \code{\link{hex_grid}} for the constructor function,
 #'   \code{\link{HexData-class}} for hexified data objects
 #'
+#' @examples
+#' grid <- hex_grid(area_km2 = 100000)
+#' grid
+#' summary(grid)
+#' summary(grid)$n_cells
+#' n_cells(grid)
+#' grid$resolution
+#' st_crs(grid)
+#'
+#' # Every cell of a coarse grid as sf polygons
+#' cells_sf <- st_as_sf(hex_grid(resolution = 2))
 #' @exportClass HexGridInfo
 setClass(
   "HexGridInfo",
@@ -131,6 +142,26 @@ setClass(
 #' @seealso \code{\link{hexify}} for creating HexData objects,
 #'   \code{\link{HexGridInfo-class}} for grid specifications
 #'
+#' @examples
+#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55), n = 1:3)
+#' result <- hexify(df, lon = "lon", lat = "lat", area_km2 = 1000)
+#' result
+#' summary(result)
+#' summary(result)$column_names
+#' cells(result)
+#' n_cells(result)
+#' head(as.data.frame(result))
+#' result$cell_id
+#' result[1:2, ]
+#' st_crs(result)
+#'
+#' # sf points at the cell centres, or the cells as polygons
+#' sf_pts <- st_as_sf(result)
+#' sf_poly <- st_as_sf(result, geometry = "polygon")
+#'
+#' if (requireNamespace("tibble", quietly = TRUE)) {
+#'   tibble::as_tibble(result)
+#' }
 #' @exportClass HexData
 setClass(
   "HexData",
@@ -337,6 +368,9 @@ setGeneric("grid_info", function(x) standardGeneric("grid_info"))
 #' @return A vector of cell IDs
 #'
 #' @export
+#' @examples
+#' df <- data.frame(lon = c(0, 0.01, 20), lat = c(45, 45, 55))
+#' cells(hexify(df, lon = "lon", lat = "lat", area_km2 = 1000))
 setGeneric("cells", function(x) standardGeneric("cells"))
 
 #' Get Number of Cells
@@ -379,40 +413,48 @@ grid_n_cells <- function(grid) {
 # ACCESSORS FOR HexGridInfo
 # =============================================================================
 
-#' HexGridInfo S4 Methods
-#'
-#' S4 methods for HexGridInfo objects. These provide standard R operations
-#' like `$`, `names()`, `show()`, and `as.list()`.
-#'
-#' @name HexGridInfo-methods
-#' @param x HexGridInfo object
+#' @name HexGridInfo-class
+#' @param x A HexGridInfo object; for \code{print()}, a grid summary as
+#'   \code{summary()} returns one
 #' @param name Slot name
-#' @param object HexGridInfo object (for show)
-#' @param ... Additional arguments
+#' @param object A HexGridInfo object
+#' @param ... For \code{st_as_sf()}, passed on to \code{\link{grid_global}};
+#'   for \code{st_crs()}, passed on to \code{sf::st_crs()}; ignored by the
+#'   other methods
 #' @return
-#' - `$`: The value of the requested slot
-#' - `names`: Character vector of slot names
-#' - `n_cells`: The number of cells the grid contains
-#' - `show`: The object, invisibly (called for side effect of printing)
-#' - `as.list`: A named list of slot values
-#' @keywords internal
+#' - `show()`: the object, invisibly, after printing one line naming the grid
+#' - `summary()`: a list of class \code{hexify_grid_summary} carrying
+#'   \code{grid_type}, \code{aperture}, \code{resolution}, \code{area_km2},
+#'   \code{diagonal_km}, \code{crs}, \code{radius_km}, \code{earth},
+#'   \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)}, empty for
+#'   H3), \code{projection} (\code{NA} for H3), \code{polyhedron} (\code{NA}
+#'   for H3), \code{ellipsoid} (\code{c(a_km, f)}, empty for a grid on the
+#'   sphere) and \code{n_cells}; printing it lists every property and returns
+#'   it invisibly
+#' - `$`: the value of the requested slot
+#' - `names()`: character vector of slot names
+#' - `n_cells()`: the number of cells the grid contains
+#' - `as.list()`: a named list of slot values
+#' - `plot()`: the grid, invisibly
+#' - `st_as_sf()`: an sf object of the grid's global cell set
+#' - `st_crs()`: an object of class \code{crs}, as \code{sf::st_crs()}
+#'   returns: an Earth grid gives 'WGS84', a grid on another body a longlat
+#'   CRS on the sphere of its radius
 NULL
 
-#' @rdname HexGridInfo-methods
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("$", "HexGridInfo", function(x, name) {
   slot(x, name)
 })
 
-#' @rdname HexGridInfo-methods
-#' @keywords internal
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("n_cells", "HexGridInfo", function(x) {
   grid_n_cells(x)
 })
 
-#' @rdname HexGridInfo-methods
-#' @keywords internal
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("names", "HexGridInfo", function(x) {
   slotNames(x)
@@ -422,86 +464,84 @@ setMethod("names", "HexGridInfo", function(x) {
 # ACCESSORS FOR HexData
 # =============================================================================
 
-#' HexData S4 Methods
-#'
-#' S4 methods for HexData objects. These provide standard R operations
-#' for accessing data, subsetting, and conversion.
-#'
-#' @name HexData-methods
-#' @param x HexData object
+#' @name HexData-class
+#' @param x A HexData object; for \code{print()}, a data summary as
+#'   \code{summary()} returns one
 #' @param name Column name
-#' @param object HexData object (for show)
+#' @param object A HexData object
 #' @param i,j Row/column indices
 #' @param value Replacement value
 #' @param drop Logical, whether to drop dimensions
 #' @param row.names Optional row names
 #' @param optional Logical (ignored)
-#' @param ... Additional arguments
+#' @param ... For \code{plot()}, passed on to base \code{plot()}; ignored by
+#'   the other methods
 #' @return
-#' - `grid_info`: HexGridInfo object containing grid specification
-#' - `cells`: Numeric vector of unique cell IDs
-#' - `n_cells`: Integer count of unique cells
-#' - `nrow`, `ncol`, `dim`: Integer dimensions
-#' - `names`: Character vector of column names (including virtual cell columns)
-#' - `$`, `[[`: The requested column or cell data as a vector
-#' - `$<-`, `[[<-`: The modified HexData object
-#' - `[`: Subsetted HexData object or extracted data
-#' - `show`: The object, invisibly (called for side effect of printing)
-#' - `as.data.frame`: Data frame with original data plus cell columns
-#' - `as.list`: Named list containing data, grid, cell_id, and cell_center
-#' @keywords internal
+#' - `show()`: the object, invisibly, after printing two lines: rows, columns
+#'   and cells, and the grid
+#' - `summary()`: a list of class \code{hexify_data_summary} carrying
+#'   \code{rows}, \code{columns}, \code{column_names}, \code{n_cells},
+#'   \code{type}, the \code{grid} summary and a \code{preview} of the first
+#'   rows; printing it lists all of these and returns it invisibly
+#' - `grid_info()`: HexGridInfo object containing grid specification
+#' - `cells()`: vector of unique cell IDs
+#' - `n_cells()`: integer count of unique cells
+#' - `nrow()`, `ncol()`, `dim()`: integer dimensions
+#' - `names()`: character vector of column names (including virtual cell columns)
+#' - `$`, `[[`: the requested column or cell data as a vector
+#' - `$<-`, `[[<-`: the modified HexData object
+#' - `[`: subsetted HexData object or extracted data
+#' - `as.data.frame()`: data frame with original data plus cell columns
+#' - `as.list()`: named list containing data, grid, cell_id, and cell_center
+#' - `as_tibble()`: the original data (without geometry) as a tibble
+#' - `plot()`: the object, invisibly
+#' - `st_as_sf()`: an sf object, one feature per row
+#' - `st_crs()`: the grid's coordinate reference system, as for a HexGridInfo
 NULL
 
-#' @rdname HexData-methods
+#' @rdname HexData-class
 #' @export
 setMethod("grid_info", "HexData", function(x) {
   x@grid
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("cells", "HexData", function(x) {
   unique(x@cell_id)
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("n_cells", "HexData", function(x) {
   length(unique(x@cell_id))
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("nrow", "HexData", function(x) {
   nrow(x@data)
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("ncol", "HexData", function(x) {
   ncol(x@data) + 5L  # +5 for cell_id, cell_cen_lon, cell_cen_lat, cell_area_km2, cell_diag_km
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("dim", "HexData", function(x) {
   dim(x@data)
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("names", "HexData", function(x) {
   c(names(x@data), "cell_id", "cell_cen_lon", "cell_cen_lat", "cell_area_km2", "cell_diag_km")
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("$", "HexData", function(x, name) {
   # Virtual cell columns
@@ -524,16 +564,14 @@ setMethod("$", "HexData", function(x, name) {
   x@data[[name]]
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("$<-", "HexData", function(x, name, value) {
   x@data[[name]] <- value
   x
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @details
 #' Unlike \code{[.data.frame}, \code{drop} defaults to \code{FALSE}: selecting
 #' a single column returns a \code{HexData} object (preserving \code{grid}/
@@ -566,8 +604,7 @@ setMethod("[", c("HexData", "ANY", "ANY"), function(x, i, j, ..., drop = FALSE) 
   }
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("[[", c("HexData", "ANY"), function(x, i) {
   # Virtual cell columns by name
@@ -581,8 +618,7 @@ setMethod("[[", c("HexData", "ANY"), function(x, i) {
   x@data[[i]]
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value) {
   x@data[[i]] <- value
@@ -593,48 +629,44 @@ setMethod("[[<-", c("HexData", "ANY", "missing", "ANY"), function(x, i, j, value
 # SHOW / PRINT METHODS
 # =============================================================================
 
-#' @rdname HexGridInfo-methods
-#' @keywords internal
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("show", "HexGridInfo", function(object) {
-  print(summary(object))
+  cat("<HexGridInfo> ", grid_line(summary(object)), "\n", sep = "")
   invisible(object)
 })
 
-#' Summary of a grid or of gridded data
-#'
-#' Reports what printing the object reports, as a list, so that a caller can
-#' read the cell count, area, diagonal or column names without reaching into
-#' slots. Printing an object prints its summary, so the two agree.
-#'
-#' @param object A HexGridInfo or HexData object
-#' @param x A summary, as \code{summary()} returns one
-#' @param ... Ignored
-#'
-#' @return For a HexGridInfo, a list of class \code{hexify_grid_summary}
-#'   carrying \code{grid_type}, \code{aperture}, \code{resolution},
-#'   \code{area_km2}, \code{diagonal_km}, \code{crs}, \code{radius_km},
-#'   \code{earth}, \code{orientation} (\code{c(vert0_lon, vert0_lat, azimuth)},
-#'   empty for H3), \code{projection} (\code{"isea"}, \code{"ivea"} or \code{"fuller"},
-#'   \code{NA} for H3), \code{polyhedron} (\code{"icosahedron"} or
-#'   \code{"octahedron"}, \code{NA} for H3), \code{ellipsoid}
-#'   (\code{c(a_km, f)}, empty for a grid on the sphere) and \code{n_cells}.
-#'   For a HexData, a list of class
-#'   \code{hexify_data_summary} carrying \code{rows}, \code{columns},
-#'   \code{column_names}, \code{n_cells}, \code{type}, the \code{grid} summary
-#'   and a \code{preview} of the first rows. The print methods return their
-#'   input invisibly.
-#'
-#' @name hexify-summary
-#' @examples
-#' grid <- hex_grid(area_km2 = 100000)
-#' summary(grid)$n_cells
-#'
-#' df <- data.frame(lon = c(0, 10, 20), lat = c(45, 50, 55))
-#' summary(hexify(df, lon = "lon", lat = "lat", grid = grid))$column_names
-NULL
+#' One line naming a grid: system, aperture, resolution, solid, projection,
+#' body, cell count and cell area
+#' @param s A grid summary, as `summary()` of a HexGridInfo returns one
+#' @return A character string
+#' @noRd
+grid_line <- function(s) {
+  n <- formatC(s$n_cells, format = "f", digits = 0, big.mark = ",")
+  area <- format(signif(s$area_km2, 5), big.mark = ",", scientific = FALSE)
+  if (s$grid_type == "h3") {
+    return(sprintf("H3 resolution %d: %s cells, mean area %s km^2 (not equal-area)",
+                   s$resolution, n, area))
+  }
+  where <- character(0)
+  if (!is.null(s$polyhedron) && !identical(s$polyhedron, "icosahedron")) {
+    where <- c(where, sprintf("on the %s", s$polyhedron))
+  }
+  if (!identical(s$projection, "isea")) {
+    where <- c(where, sprintf("%s projection", PROJECTION_LABELS[[s$projection]]))
+  }
+  if (length(s$ellipsoid) == 2L) {
+    where <- c(where, sprintf("%s ellipsoid", ellipsoid_label(s$ellipsoid)))
+  } else if (!s$earth) {
+    where <- c(where, sprintf("radius %s km", format(s$radius_km)))
+  }
+  sprintf("aperture %s, resolution %d%s: %s cells of %s%s km^2",
+          s$aperture, s$resolution,
+          if (length(where)) paste0(", ", paste(where, collapse = ", ")) else "",
+          n, if (is_equal_area_projection(s$projection)) "" else "mean ", area)
+}
 
-#' @rdname hexify-summary
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("summary", "HexGridInfo", function(object, ...) {
   gt <- tryCatch(object@grid_type, error = function(e) "isea")
@@ -659,7 +691,7 @@ setMethod("summary", "HexGridInfo", function(object, ...) {
   )
 })
 
-#' @rdname hexify-summary
+#' @rdname HexGridInfo-class
 #' @export
 print.hexify_grid_summary <- function(x, ...) {
   if (x$grid_type == "h3") {
@@ -721,15 +753,18 @@ print.hexify_grid_summary <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("show", "HexData", function(object) {
-  print(summary(object))
+  cat(sprintf("<HexData> %s rows, %d columns, %s cells (%s)\n",
+              format(nrow(object@data), big.mark = ","), ncol(object@data),
+              format(n_cells(object), big.mark = ","),
+              if (inherits(object@data, "sf")) "sf" else "data.frame"))
+  cat("  grid: ", grid_line(summary(object@grid)), "\n", sep = "")
   invisible(object)
 })
 
-#' @rdname hexify-summary
+#' @rdname HexData-class
 #' @export
 setMethod("summary", "HexData", function(object, ...) {
   preview <- NULL
@@ -756,7 +791,7 @@ setMethod("summary", "HexData", function(object, ...) {
   )
 })
 
-#' @rdname hexify-summary
+#' @rdname HexData-class
 #' @export
 print.hexify_data_summary <- function(x, ...) {
   cat("HexData Object\n")
@@ -771,27 +806,15 @@ print.hexify_data_summary <- function(x, ...) {
     cat("Type:    data.frame\n")
   }
 
-  cat("\nGrid:\n")
-  if (x$grid$grid_type == "h3") {
-    cat(sprintf("  H3 Resolution %d", x$grid$resolution))
-    if (!is.na(x$grid$area_km2)) {
-      cat(sprintf(" (~%.4f km^2 avg)", x$grid$area_km2))
-    }
-  } else {
-    cat(sprintf("  Aperture %s, Resolution %d",
-                x$grid$aperture, x$grid$resolution))
-    if (!is.na(x$grid$area_km2)) {
-      cat(sprintf(" (~%.1f km^2)", x$grid$area_km2))
-    }
-  }
-  cat("\n")
-
-  cat("\nColumns: ")
+  cat("Columns: ")
   if (length(x$column_names) > 8) {
     cat(paste(x$column_names[1:8], collapse = ", "), ", ...\n")
   } else {
     cat(paste(x$column_names, collapse = ", "), "\n")
   }
+
+  cat("\n")
+  print(x$grid)
 
   if (!is.null(x$preview)) {
     cat("\nData preview (with cell assignments):\n")
@@ -809,8 +832,7 @@ print.hexify_data_summary <- function(x, ...) {
 # COERCION METHODS
 # =============================================================================
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
                                                 optional = FALSE, ...) {
@@ -832,8 +854,7 @@ setMethod("as.data.frame", "HexData", function(x, row.names = NULL,
   df
 })
 
-#' @rdname HexGridInfo-methods
-#' @keywords internal
+#' @rdname HexGridInfo-class
 #' @export
 setMethod("as.list", "HexGridInfo", function(x, ...) {
   list(
@@ -851,8 +872,7 @@ setMethod("as.list", "HexGridInfo", function(x, ...) {
   )
 })
 
-#' @rdname HexData-methods
-#' @keywords internal
+#' @rdname HexData-class
 #' @export
 setMethod("as.list", "HexData", function(x, ...) {
   list(
@@ -867,25 +887,32 @@ setMethod("as.list", "HexData", function(x, ...) {
 # HELPER FUNCTIONS FOR CLASS CONSTRUCTION
 # =============================================================================
 
-#' Check if object is HexGridInfo
+#' Check If an Object Is a HexGridInfo
 #'
 #' @param x Object to check
 #' @return Logical
 #' @export
+#' @examples
+#' is_hex_grid(hex_grid(resolution = 3))
+#' is_hex_grid(list(resolution = 3))
 is_hex_grid <- function(x) {
   inherits(x, "HexGridInfo")
 }
 
-#' Check if object is HexData
+#' Check If an Object Is a HexData
 #'
 #' @param x Object to check
 #' @return Logical
 #' @export
+#' @examples
+#' df <- data.frame(lon = c(0, 10), lat = c(45, 50))
+#' is_hex_data(hexify(df, lon = "lon", lat = "lat", area_km2 = 1000))
+#' is_hex_data(df)
 is_hex_data <- function(x) {
   inherits(x, "HexData")
 }
 
-#' Extract grid from various objects
+#' Extract Grid from Various Objects
 #'
 #' Internal function to extract a HexGridInfo from different input types.
 #' Accepts HexGridInfo, HexData, or legacy hexify_grid objects.
@@ -985,7 +1012,7 @@ upgrade_grid <- function(g) {
   g
 }
 
-#' Convert legacy hexify_grid to HexGridInfo
+#' Convert Legacy hexify_grid to HexGridInfo
 #'
 #' @param x A hexify_grid object (S3)
 #' @return A HexGridInfo object (S4)
@@ -1007,7 +1034,7 @@ hexify_grid_to_HexGridInfo <- function(x) {
       ellipsoid = grid_ellipsoid(x))
 }
 
-#' Convert HexGridInfo to legacy hexify_grid
+#' Convert HexGridInfo to Legacy hexify_grid
 #'
 #' For backwards compatibility with existing functions.
 #'

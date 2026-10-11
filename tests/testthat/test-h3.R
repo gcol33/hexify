@@ -18,10 +18,7 @@ test_that("hex_grid() creates H3 grid by resolution", {
 })
 
 test_that("hex_grid() creates H3 grid by area_km2", {
-  expect_warning(
-    grid <- hex_grid(area_km2 = 1.0, type = "h3"),
-    "not exactly equal-area"
-  )
+  expect_no_warning(grid <- hex_grid(area_km2 = 1.0, type = "h3"))
   expect_s4_class(grid, "HexGridInfo")
   expect_equal(grid@grid_type, "h3")
   # Resolution 8 has area ~0.737 km^2, closest to 1.0
@@ -224,7 +221,7 @@ test_that("show() for H3 HexGridInfo mentions H3", {
   grid <- hex_grid(resolution = 8, type = "h3")
   output <- capture.output(show(grid))
   expect_true(any(grepl("H3", output)))
-  expect_true(any(grepl("not exactly equal-area", output, ignore.case = TRUE)))
+  expect_true(any(grepl("not equal-area", output, ignore.case = TRUE)))
 })
 
 test_that("show() for H3 HexData mentions H3", {

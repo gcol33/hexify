@@ -1,7 +1,7 @@
 # R/hex_smooth.R
 # Neighbour smoothing of cell values
 
-#' Smooth cell values over neighbouring cells
+#' Smooth Cell Values Over Neighbouring Cells
 #'
 #' Replaces each cell's value by the weighted mean of its own value and the
 #' values of its edge neighbours, and repeats this \code{steps} times: the

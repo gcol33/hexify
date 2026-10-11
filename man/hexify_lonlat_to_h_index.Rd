@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_lonlat_to_h_index}
 \alias{hexify_lonlat_to_h_index}
-\title{Convert longitude/latitude to hexagonal cell hierarchical index}
+\title{Convert Longitude/Latitude to Hexagonal Cell Hierarchical Index}
 \usage{
 hexify_lonlat_to_h_index(grid, lon, lat)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_is_valid_index_type}
 \alias{hexify_is_valid_index_type}
-\title{Check if index type is valid for aperture}
+\title{Check If Index Type Is Valid for Aperture}
 \usage{
 hexify_is_valid_index_type(
   aperture,
@@ -18,7 +18,7 @@ hexify_is_valid_index_type(
 Logical: TRUE if valid combination
 }
 \description{
-Check if index type is valid for aperture
+Check If Index Type Is Valid for Aperture
 }
 \seealso{
 Other hierarchical index:

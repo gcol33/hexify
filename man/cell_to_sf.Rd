@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{cell_to_sf}
 \alias{cell_to_sf}
-\title{Convert cell IDs to sf polygons}
+\title{Convert Cell IDs to sf Polygons}
 \usage{
 cell_to_sf(
   cell_id = NULL,

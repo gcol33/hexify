@@ -10,7 +10,7 @@ test_that("hex_grid() carries the projection on every grid solid", {
   expect_identical(icosa_arg(g)[4], 2)
   expect_identical(summary(g)$projection, "ivea")
   expect_output(print(g), "IVEA")
-  expect_output(print(g), "Area: ")
+  expect_output(print(summary(g)), "Area: ")
   go <- hex_grid(resolution = 3, aperture = 4, projection = "ivea", polyhedron = "octahedron")
   expect_identical(go@projection, "ivea")
   expect_error(hex_grid(resolution = 4, type = "h3", projection = "ivea"),

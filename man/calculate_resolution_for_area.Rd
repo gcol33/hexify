@@ -2,7 +2,7 @@
 % Please edit documentation in R/aperture_sequence.R
 \name{calculate_resolution_for_area}
 \alias{calculate_resolution_for_area}
-\title{Calculate resolution for target area}
+\title{Calculate Resolution for Target Area}
 \usage{
 calculate_resolution_for_area(
   target_area_km2,

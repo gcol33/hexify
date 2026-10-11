@@ -2,8 +2,8 @@
 % Please edit documentation in R/cell_metrics.R
 \name{wall_metrics}
 \alias{wall_metrics}
-\title{Spacing metrics of neighbouring cells: wall length, centre distance and
-cell wall midpoint ratio}
+\title{Spacing Metrics of Neighbouring Cells: Wall Length, Centre Distance and
+Cell Wall Midpoint Ratio}
 \usage{
 wall_metrics(cell_id = NULL, grid)
 }

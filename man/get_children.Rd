@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{get_children}
 \alias{get_children}
-\title{Get children cells}
+\title{Get Children Cells}
 \usage{
 get_children(cell_id, grid, levels = 1L, as_sf = FALSE)
 }

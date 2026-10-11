@@ -2,7 +2,7 @@
 % Please edit documentation in R/classes.R
 \name{extract_grid}
 \alias{extract_grid}
-\title{Extract grid from various objects}
+\title{Extract Grid from Various Objects}
 \usage{
 extract_grid(x, allow_null = FALSE)
 }

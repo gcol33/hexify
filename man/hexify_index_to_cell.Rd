@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_index_to_cell}
 \alias{hexify_index_to_cell}
-\title{Convert index string to cell coordinates}
+\title{Convert Index String to Cell Coordinates}
 \usage{
 hexify_index_to_cell(
   index,

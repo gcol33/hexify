@@ -36,7 +36,7 @@ ensure_hex9_warp <- function() {
   invisible(TRUE)
 }
 
-#' Download Hex9's warp field
+#' Download Hex9's Warp Field
 #'
 #' Hex9's own projection (\code{hex_grid(aperture = 9, projection = "akw")})
 #' is Kaseorg's octahedral projection with an area-correcting warp that Griffin

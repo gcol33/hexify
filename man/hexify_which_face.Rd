@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_projection.R
 \name{hexify_which_face}
 \alias{hexify_which_face}
-\title{Determine which face contains a point}
+\title{Determine Which Face Contains a Point}
 \usage{
 hexify_which_face(
   lon,
@@ -38,3 +38,4 @@ Other projection:
 \code{\link[=hexify_inverse]{hexify_inverse()}}
 }
 \concept{projection}
+\keyword{internal}

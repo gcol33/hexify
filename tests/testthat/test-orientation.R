@@ -22,7 +22,7 @@ test_that("a grid takes the standard orientation unless told otherwise", {
   g <- hex_grid(resolution = 4)
   expect_identical(g@orientation, ISEA_ORIENTATION)
   expect_identical(summary(g)$orientation, ISEA_ORIENTATION)
-  expect_false(any(grepl("Orientation", capture.output(print(g)))))
+  expect_false(any(grepl("Orientation", capture.output(print(summary(g))))))
 })
 
 test_that("a numeric orientation is stored normalised", {
@@ -34,7 +34,7 @@ test_that("a numeric orientation is stored normalised", {
                     orientation = c(azimuth = 5, vert0_lat = -20, vert0_lon = 40))
   expect_equal(unname(named@orientation), c(40, -20, 5))
 
-  expect_true(any(grepl("Orientation", capture.output(print(g)))))
+  expect_true(any(grepl("Orientation", capture.output(print(summary(g))))))
   expect_equal(as.list(g)$orientation, g@orientation)
 })
 

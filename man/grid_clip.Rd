@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{grid_clip}
 \alias{grid_clip}
-\title{Clip hexagon grid to polygon boundary}
+\title{Clip Hexagon Grid to Polygon Boundary}
 \usage{
 grid_clip(boundary, grid, crop = TRUE)
 }

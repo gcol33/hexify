@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_stats.R
 \name{dgearthstat}
 \alias{dgearthstat}
-\title{Get grid statistics for whole-body coverage}
+\title{Get Grid Statistics for Whole-Body Coverage}
 \usage{
 dgearthstat(dggs)
 }

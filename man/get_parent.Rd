@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{get_parent}
 \alias{get_parent}
-\title{Get parent cell}
+\title{Get Parent Cell}
 \usage{
 get_parent(cell_id, grid, levels = 1L, overlapping = FALSE)
 }

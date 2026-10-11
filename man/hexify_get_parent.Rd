@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_get_parent}
 \alias{hexify_get_parent}
-\title{Get parent index}
+\title{Get Parent Index}
 \usage{
 hexify_get_parent(
   index,

@@ -13,7 +13,7 @@
 # rigidly, so an equal-area face projection gives an equal-area map. A piece
 # may be placed more than once.
 
-#' Lay out the faces of a grid's solid in the plane
+#' Lay Out the Faces of a Grid's Solid in the Plane
 #'
 #' Builds a flat map of the sphere from the faces of the solid an ISEA grid is
 #' built on: the face projection of the grid (Snyder's equal-area projection,
@@ -155,7 +155,7 @@ print.hexify_net <- function(x, ...) {
   invisible(x)
 }
 
-#' Place points on a net layout
+#' Place Points on a Net Layout
 #'
 #' Projects longitude/latitude points onto their face of the grid's solid
 #' and places them where the layout puts that part of the face. A point on a
@@ -417,8 +417,7 @@ arc_land_share <- function(from, to, land, icosa = NULL) {
     slerp(from[j, ], to[j, ], 0.25 * pi / 180)
   })
   ll <- vec_lonlat(do.call(rbind, probe), icosa)
-  old <- suppressMessages(sf::sf_use_s2(TRUE))
-  on.exit(suppressMessages(sf::sf_use_s2(old)), add = TRUE)
+  local_s2(TRUE)
   pts <- sf::st_as_sf(data.frame(lon = ll[, 1], lat = ll[, 2]),
                       coords = c("lon", "lat"), crs = 4326)
   on_land <- lengths(sf::st_intersects(pts, sf::st_union(land))) > 0L
@@ -518,8 +517,9 @@ RHOMBIC_5X6 <- matrix(c(
 #' The affine map carrying the three points (rows) of `s` to those of `d`
 #' @noRd
 affine_of <- function(s, d) {
-  A <- cbind(d[2, ] - d[1, ], d[3, ] - d[1, ]) %*%
-    solve(cbind(s[2, ] - s[1, ], s[3, ] - s[1, ]))
+  S <- cbind(s[2, ] - s[1, ], s[3, ] - s[1, ])
+  D <- cbind(d[2, ] - d[1, ], d[3, ] - d[1, ])
+  A <- t(solve(t(S), t(D)))
   list(A = A, b = d[1, ] - drop(A %*% s[1, ]))
 }
 

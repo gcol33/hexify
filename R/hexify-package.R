@@ -1,7 +1,3 @@
-#' hexify
-#'
-#' Core icosahedron and 'Snyder' projection helpers.
-#'
 #' @useDynLib hexify, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom methods new setClass setMethod setGeneric setValidity is as

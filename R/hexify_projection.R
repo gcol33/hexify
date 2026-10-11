@@ -16,7 +16,7 @@
 # ICOSAHEDRON INITIALIZATION
 # =============================================================================
 
-#' Set the default icosahedron orientation
+#' Set the Default Icosahedron Orientation
 #'
 #' Sets the orientation read by the functions that take no grid: the
 #' projection functions in this family and the low-level conversions that take
@@ -33,6 +33,7 @@
 #'
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 #' @examples
 #' # Use standard ISEA3H orientation
@@ -51,7 +52,7 @@ hexify_build_icosa <- function(vert0_lon = ISEA_VERT0_LON_DEG,
   invisible(NULL)
 }
 
-#' Get face centers of a solid
+#' Get Face Centers of a Solid
 #'
 #' Returns the center coordinates of every face of the solid: 20 on the
 #' icosahedron, 8 on the octahedron, 4 on the tetrahedron.
@@ -62,6 +63,7 @@ hexify_build_icosa <- function(vert0_lon = ISEA_VERT0_LON_DEG,
 #' @return Data frame with one row per face and columns lon, lat (radians)
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 #' @examples
 #' centers <- hexify_face_centers()
@@ -75,7 +77,7 @@ hexify_face_centers <- function(polyhedron = c("icosahedron", "octahedron", "tet
 # FORWARD PROJECTION (lon/lat -> face coordinates)
 # =============================================================================
 
-#' Determine which face contains a point
+#' Determine Which Face Contains a Point
 #'
 #' Returns the index of the face of the solid containing the given
 #' coordinates (0-19 on the icosahedron).
@@ -87,6 +89,7 @@ hexify_face_centers <- function(polyhedron = c("icosahedron", "octahedron", "tet
 #' @return Integer face index
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 #' @examples
 #' face <- hexify_which_face(16.37, 48.21)
@@ -96,7 +99,7 @@ hexify_which_face <- function(lon, lat, polyhedron = c("icosahedron", "octahedro
                  as.numeric(lon), as.numeric(lat))
 }
 
-#' Forward face projection
+#' Forward Face Projection
 #'
 #' Projects geographic coordinates onto a face of the solid, returning
 #' face index and planar coordinates (tx, ty).
@@ -121,6 +124,7 @@ hexify_which_face <- function(lon, lat, polyhedron = c("icosahedron", "octahedro
 #' typically in range \[0, 1\].
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 #' @examples
 #' result <- hexify_forward(16.37, 48.21)
@@ -132,7 +136,7 @@ hexify_forward <- function(lon, lat, projection = c("isea", "fuller", "ivea", "a
                     as.numeric(lat))
 }
 
-#' Forward projection to specific face
+#' Forward Projection to Specific Face
 #'
 #' Projects to a known face (skips face detection).
 #'
@@ -144,6 +148,7 @@ hexify_forward <- function(lon, lat, projection = c("isea", "fuller", "ivea", "a
 #' @return Named numeric vector: c(icosa_triangle_x, icosa_triangle_y)
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fuller", "ivea", "ak", "akw"),
                                    polyhedron = c("icosahedron", "octahedron", "tetrahedron")) {
@@ -155,7 +160,7 @@ hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fulle
 # INVERSE PROJECTION (face coordinates -> lon/lat)
 # =============================================================================
 
-#' Inverse face projection
+#' Inverse Face Projection
 #'
 #' Converts face plane coordinates back to geographic coordinates.
 #'
@@ -167,6 +172,7 @@ hexify_forward_to_face <- function(face, lon, lat, projection = c("isea", "fulle
 #' @return Named numeric vector: c(lon_deg, lat_deg)
 #'
 #' @family projection
+#' @keywords internal
 #' @export
 #' @examples
 #' coords <- hexify_inverse(0.5, 0.3, face = 2)

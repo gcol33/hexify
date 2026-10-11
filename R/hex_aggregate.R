@@ -1,7 +1,7 @@
 # R/hex_aggregate.R
 # Aggregation of cell values into the cells of a coarser resolution
 
-#' Aggregate cell values to a coarser resolution
+#' Aggregate Cell Values to a Coarser Resolution
 #'
 #' Adds up, or averages, values given on cells into the cells \code{levels}
 #' resolutions coarser. The hexagons of successive resolutions do not nest, so

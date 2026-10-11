@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_eff_res_to_resolution}
 \alias{hexify_eff_res_to_resolution}
-\title{Convert effective resolution to index resolution}
+\title{Convert Effective Resolution to Index Resolution}
 \usage{
 hexify_eff_res_to_resolution(eff_res)
 }

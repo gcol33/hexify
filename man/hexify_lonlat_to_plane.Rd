@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_lonlat_to_plane}
 \alias{hexify_lonlat_to_plane}
-\title{Convert longitude/latitude to PLANE coordinates}
+\title{Convert Longitude/Latitude to PLANE Coordinates}
 \usage{
 hexify_lonlat_to_plane(
   lon,

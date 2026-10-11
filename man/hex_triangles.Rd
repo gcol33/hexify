@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex_glyphs.R
 \name{hex_triangles}
 \alias{hex_triangles}
-\title{The triangles of cells towards each neighbour}
+\title{The Triangles of Cells Towards Each Neighbour}
 \usage{
 hex_triangles(cell_id, grid, value = NULL)
 }

@@ -4,12 +4,7 @@
 # This file contains functions for calculating grid statistics and
 # other utility functions for working with hexagonal grids.
 
-#' @title Grid Statistics
-#' @description Functions for calculating grid statistics and utilities
-#' @name hexify-stats
-NULL
-
-#' Get grid statistics for whole-body coverage
+#' Get Grid Statistics for Whole-Body Coverage
 #'
 #' Calculates statistics about the hexagonal grid at the current resolution,
 #' including total number of cells, cell area, and cell spacing. Figures follow
@@ -96,7 +91,7 @@ h3_level_stats <- function(resolution, radius_km) {
                    grid_type = "h3")
 }
 
-#' Find closest resolution for target cell area
+#' Find Closest Resolution for Target Cell Area
 #'
 #' Finds the grid resolution that produces cells closest to the target area.
 #' This is primarily used internally by \code{\link{hexify_grid}} and
@@ -113,14 +108,8 @@ h3_level_stats <- function(resolution, radius_km) {
 #' @keywords internal
 #' @export
 #' @examples
-#' # Create a temporary grid to get aperture settings
-#' temp_grid <- list(aperture = 3, topology = "HEXAGON")
-#' class(temp_grid) <- "hexify_grid"
-#' 
-#' # Find resolution for 1000 km^2 cells
-#' res <- dg_closest_res_to_area(temp_grid, area = 1000, 
-#'                                metric = TRUE, show_info = TRUE)
-#' print(res)
+#' grid <- hex_grid(resolution = 5, aperture = 3)
+#' dg_closest_res_to_area(grid, area = 1000, show_info = TRUE)
 #' @family grid statistics
 dg_closest_res_to_area <- function(dggs, area, round = "nearest",
                                    metric = TRUE, show_info = FALSE) {
@@ -133,23 +122,20 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
                                              grid_radius_km(dggs), round)
 
   if (show_info) {
-    # Calculate actual area at this resolution
-    temp_grid <- dggs
+    temp_grid <- if (is_hex_grid(dggs)) HexGridInfo_to_hexify_grid(dggs) else dggs
     temp_grid$resolution <- resolution
     temp_grid$res <- resolution
     stats <- dgearthstat(temp_grid)
-    
-    message(sprintf("Resolution %d:", resolution))
-    message(sprintf("  Cell area: %.2f km^2", stats$cell_area_km2))
-    message(sprintf("  Cell spacing: %.2f km", stats$cell_spacing_km))
-    message(sprintf("  Total cells: %.0f", stats$n_cells))
+    message(sprintf("Resolution %d: cell area %.2f km^2, spacing %.2f km, %.0f cells",
+                    resolution, stats$cell_area_km2, stats$cell_spacing_km,
+                    stats$n_cells))
   }
   
   return(resolution)
 }
 
 
-#' Compare grid resolutions
+#' Compare Grid Resolutions
 #'
 #' Generates a table comparing different resolution levels for a given
 #' grid configuration. Useful for choosing appropriate resolution.
@@ -167,6 +153,7 @@ dg_closest_res_to_area <- function(dggs, area, round = "nearest",
 #'   If print=TRUE: invisibly returns the data frame after printing.
 #'
 #' @family grid statistics
+#' @keywords internal
 #' @export
 #' @examples
 #' # Get data frame of resolutions 0-10 for aperture 3

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{dggrid_is_compatible}
 \alias{dggrid_is_compatible}
-\title{Validate 'dggridR' grid compatibility with hexify}
+\title{Validate 'dggridR' Grid Compatibility with hexify}
 \usage{
 dggrid_is_compatible(dggs, strict = TRUE)
 }
@@ -18,6 +18,11 @@ TRUE if compatible, FALSE if not compatible (when strict=FALSE)
 \description{
 Checks whether a 'dggridR' grid object is compatible with hexify functions.
 Returns TRUE if compatible, or throws an error describing incompatibilities.
+}
+\examples{
+dggrid_is_compatible(as_dggrid(hex_grid(resolution = 4, aperture = 7)))
+dggrid_is_compatible(list(projection = "ISEA", topology = "DIAMOND",
+                          aperture = 4, res = 4), strict = FALSE)
 }
 \seealso{
 Other 'dggridR' compatibility:

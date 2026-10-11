@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_grid_to_cell}
 \alias{hexify_grid_to_cell}
-\title{Convert longitude/latitude to cell ID using a grid object}
+\title{Convert Longitude/Latitude to Cell ID Using a Grid Object}
 \usage{
 hexify_grid_to_cell(grid, lon, lat)
 }

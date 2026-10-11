@@ -4,14 +4,9 @@
 # This file contains functions for converting between geographic coordinates
 # (longitude/latitude) and hexagonal cell indices.
 
-#' @title Coordinate Conversions
-#' @description Functions for converting between coordinate systems
-#' @name hexify-conversions
-NULL
-
 # Validation: use validate_aperture() / validate_resolution() from constants.R
 
-#' Convert longitude/latitude to hexagonal cell hierarchical index
+#' Convert Longitude/Latitude to Hexagonal Cell Hierarchical Index
 #'
 #' Converts geographic coordinates (longitude, latitude) to hexagonal cell
 #' hierarchical index strings. These strings encode the face, resolution, and
@@ -67,7 +62,7 @@ hexify_lonlat_to_h_index <- function(grid, lon, lat) {
   ))
 }
 
-#' Convert hierarchical index strings to longitude/latitude centers
+#' Convert Hierarchical Index Strings to Longitude/Latitude Centers
 #'
 #' Converts hierarchical cell index strings back to geographic coordinates,
 #' returning the center point of each cell. This is the inverse operation
@@ -109,7 +104,7 @@ hexify_h_index_to_lonlat <- function(grid, h_index) {
 # GRID-BASED WRAPPERS FOR CELL IDs (DGGRID-COMPATIBLE)
 # =============================================================================
 
-#' Convert longitude/latitude to cell ID using a grid object
+#' Convert Longitude/Latitude to Cell ID Using a Grid Object
 #'
 #' Grid-based wrapper for \code{\link{hexify_lonlat_to_cell}}. Converts
 #' geographic coordinates to DGGRID-compatible cell IDs using
@@ -136,7 +131,7 @@ hexify_grid_to_cell <- function(grid, lon, lat) {
   hexify_lonlat_to_cell(lon, lat, grid$resolution, grid$aperture)
 }
 
-#' Convert cell ID to longitude/latitude using a grid object
+#' Convert Cell ID to Longitude/Latitude Using a Grid Object
 #'
 #' Grid-based wrapper for \code{\link{hexify_cell_to_lonlat}}. Converts
 #' DGGRID-compatible cell IDs back to cell center coordinates
@@ -168,7 +163,7 @@ hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
 # =============================================================================
 
 
-#' Round-trip accuracy test
+#' Round-Trip Accuracy Test
 #' 
 #' Tests the accuracy of the coordinate conversion functions by converting
 #' coordinates to cells and back, measuring the distance between original
@@ -186,6 +181,7 @@ hexify_grid_cell_to_lonlat <- function(grid, cell_id) {
 #'   \item{error}{Distance between original and reconstructed}
 #'
 #' @family coordinate conversion
+#' @keywords internal
 #' @export
 hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
   # Convert to hierarchical index
@@ -235,7 +231,7 @@ hexify_roundtrip_test <- function(grid, lon, lat, units = "km") {
 # - Advanced applications requiring direct grid access
 # =============================================================================
 
-#' Convert longitude/latitude to Quad IJ coordinates
+#' Convert Longitude/Latitude to Quad IJ Coordinates
 #'
 #' Converts geographic coordinates to the intermediate Quad IJ representation
 #' used internally by ISEA DGGS. Returns the quad number (0-11) and integer
@@ -283,7 +279,7 @@ hexify_lonlat_to_quad_ij <- function(lon, lat, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Quad IJ coordinates to cell ID
+#' Convert Quad IJ Coordinates to Cell ID
 #'
 #' Converts Quad IJ coordinates to a global cell identifier.
 #' This is the final step in the coordinate pipeline.
@@ -320,7 +316,7 @@ hexify_quad_ij_to_cell <- function(quad, i, j, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Quad IJ to Quad XY (continuous coordinates)
+#' Convert Quad IJ to Quad XY (Continuous Coordinates)
 #'
 #' Converts discrete cell indices to continuous quad coordinates.
 #' Useful for computing cell centers or understanding the cell geometry.
@@ -356,7 +352,7 @@ hexify_quad_ij_to_xy <- function(quad, i, j, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Icosa Triangle to Quad XY coordinates
+#' Convert Icosa Triangle to Quad XY Coordinates
 #'
 #' Converts icosahedral triangle coordinates (from Snyder projection)
 #' to quad XY coordinates. This is an intermediate step in the pipeline.
@@ -395,7 +391,7 @@ hexify_icosa_tri_to_quad_xy <- function(icosa_triangle_face,
   )
 }
 
-#' Convert Icosa Triangle to Quad IJ coordinates
+#' Convert Icosa Triangle to Quad IJ Coordinates
 #'
 #' Converts icosahedral triangle coordinates directly to Quad IJ,
 #' combining the transformation and quantization steps.
@@ -445,7 +441,7 @@ hexify_icosa_tri_to_quad_ij <- function(icosa_triangle_face,
   )
 }
 
-#' Convert Quad XY to Icosa Triangle coordinates
+#' Convert Quad XY to Icosa Triangle Coordinates
 #'
 #' Inverse transformation from quad coordinates back to icosahedral
 #' triangle coordinates. Useful for projecting cell centers back to lon/lat.
@@ -483,7 +479,7 @@ hexify_quad_xy_to_icosa_tri <- function(quad, quad_x, quad_y) {
 # coordinate representations, compatible with 'dggridR' conversion functions.
 # =============================================================================
 
-#' Convert Cell ID to Quad IJ coordinates
+#' Convert Cell ID to Quad IJ Coordinates
 #'
 #' Converts DGGRID-compatible cell IDs to Quad IJ coordinates.
 #' This is the inverse of hexify_quad_ij_to_cell().
@@ -525,7 +521,7 @@ hexify_cell_to_quad_ij <- function(cell_id, resolution, aperture = 3L) {
                                     integer(0)))
 }
 
-#' Convert Cell ID to Icosa Triangle coordinates
+#' Convert Cell ID to Icosa Triangle Coordinates
 #'
 #' Converts DGGRID-compatible cell IDs to icosahedral triangle
 #' coordinates (face, x, y). These are the coordinates produced by the
@@ -570,7 +566,7 @@ hexify_cell_to_icosa_tri <- function(cell_id, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Quad IJ to Icosa Triangle coordinates
+#' Convert Quad IJ to Icosa Triangle Coordinates
 #'
 #' Converts Quad IJ coordinates to icosahedral triangle coordinates.
 #' This is useful for understanding where a cell is located on the
@@ -623,7 +619,7 @@ hexify_quad_ij_to_icosa_tri <- function(quad, i, j, resolution, aperture = 3L) {
 # representation in quad space. Equivalent to 'dggridR' Q2DD coordinate system.
 # =============================================================================
 
-#' Convert Cell ID to Quad XY coordinates
+#' Convert Cell ID to Quad XY Coordinates
 #'
 #' Converts DGGRID-compatible cell IDs to Quad XY coordinates
 #' (continuous quad space). This is the cell center in quad coordinates.
@@ -667,7 +663,7 @@ hexify_cell_to_quad_xy <- function(cell_id, resolution, aperture = 3L) {
   )
 }
 
-#' Convert Quad XY coordinates to Cell ID
+#' Convert Quad XY Coordinates to Cell ID
 #'
 #' Converts Quad XY coordinates (continuous quad space) to DGGRID-compatible
 #' cell IDs. The coordinates are quantized to the nearest cell.
@@ -724,7 +720,7 @@ hexify_quad_xy_to_cell <- function(quad, quad_x, quad_y, resolution,
 # - Creating custom map projections
 # =============================================================================
 
-#' Convert Icosa Triangle coordinates to PLANE coordinates
+#' Convert Icosa Triangle Coordinates to PLANE Coordinates
 #'
 #' Transforms icosahedral triangle coordinates to the 2D PLANE representation
 #' (unfolded icosahedron). Each triangle is rotated and translated to its
@@ -781,7 +777,7 @@ hexify_icosa_tri_to_plane <- function(icosa_triangle_face,
   )
 }
 
-#' Convert Cell ID to PLANE coordinates
+#' Convert Cell ID to PLANE Coordinates
 #'
 #' Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 #' Returns the cell center in the unfolded icosahedron layout.
@@ -820,7 +816,7 @@ hexify_cell_to_plane <- function(cell_id, resolution, aperture = 3L) {
   )
 }
 
-#' Convert longitude/latitude to PLANE coordinates
+#' Convert Longitude/Latitude to PLANE Coordinates
 #'
 #' Converts geographic coordinates directly to PLANE coordinates
 #' (the unfolded solid). Combines forward 'Snyder' projection with

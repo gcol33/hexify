@@ -4,15 +4,13 @@
 # This file contains the fundamental grid construction functions that form
 # the foundation of the hexify package.
 
-#' @title Core Grid Construction
-#' @description Core functions for hexify grid construction and validation
-#' @name hexify-grid
-NULL
-
-#' Create a hexagonal grid specification
+#' Create a Legacy Grid Specification
 #'
-#' Creates a discrete global grid system (DGGS) object with hexagonal cells
-#' at a specified resolution. This is the main constructor for hexify grids.
+#' Builds the list-based grid specification of earlier hexify versions, kept
+#' for code written against them and for 'dggridR' interchange. New code uses
+#' \code{\link{hex_grid}}, which returns a \code{\link{HexGridInfo-class}}
+#' object and covers every grid hexify supports. A hexify_grid prints as one
+#' line.
 #'
 #' @param area Target cell area in km^2 (if metric=TRUE) or area code
 #' @param topology Grid topology (only "HEXAGON" supported)
@@ -21,6 +19,8 @@ NULL
 #' @param aperture Aperture sequence (3, 4, or 7)
 #' @param projection Face projection, DGGRID's \code{dggs_proj}: 'ISEA'
 #'   (default) or 'FULLER'
+#' @param x A hexify_grid object
+#' @param ... Ignored
 #' @param radius_km Radius of the body the grid covers, in kilometers, or a body
 #'   name such as "mars" (default Earth). See \code{\link{hex_grid}}.
 #'
@@ -36,6 +36,7 @@ NULL
 #' @family hexify main
 #' @seealso \code{\link{hexify}} for the main user function,
 #'   \code{\link{hexify_grid_to_cell}} for coordinate conversion
+#' @keywords internal
 #' @export
 #' @examples
 #' # Create a grid with ~1000 km^2 cells
@@ -102,8 +103,23 @@ hexify_grid <- function(area,
   return(grid)
 }
 
+#' @rdname hexify_grid
+#' @export
+format.hexify_grid <- function(x, ...) {
+  sprintf("<hexify_grid> %s aperture %s, resolution %d (requested cell area %s km^2)",
+          x$projection, paste(x$aperture, collapse = ","), as.integer(x$resolution),
+          format(x$area))
+}
 
-#' Verify grid object
+#' @rdname hexify_grid
+#' @export
+print.hexify_grid <- function(x, ...) {
+  cat(format(x), "\n", sep = "")
+  invisible(x)
+}
+
+
+#' Verify Grid Object
 #'
 #' Validates that a grid object has all required fields and valid values.
 #' This function is called internally by most hexify functions to ensure
@@ -112,6 +128,7 @@ hexify_grid <- function(area,
 #' @param dggs Grid object to verify (from hexify_grid() or hex_grid())
 #' @return TRUE (invisibly) if valid, otherwise throws an error
 #'
+#' @keywords internal
 #' @export
 #' @examples
 #' grid <- hexify_grid(area = 1000, aperture = 3)

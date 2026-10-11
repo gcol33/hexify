@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_cell_to_sf.R
 \name{hex_corners_to_sf}
 \alias{hex_corners_to_sf}
-\title{Build an sf POLYGON from six (lon, lat) corner pairs}
+\title{Build an sf POLYGON from Six (lon, lat) Corner Pairs}
 \usage{
 hex_corners_to_sf(lon, lat, crs = 4326)
 }

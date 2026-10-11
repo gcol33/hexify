@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_area_to_eff_res}
 \alias{hexify_area_to_eff_res}
-\title{Convert area to effective resolution}
+\title{Convert Area to Effective Resolution}
 \usage{
 hexify_area_to_eff_res(area_km2)
 }

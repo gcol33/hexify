@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{get_siblings}
 \alias{get_siblings}
-\title{Sibling cells}
+\title{Sibling Cells}
 \usage{
 get_siblings(cell_id, grid, include_self = FALSE)
 }

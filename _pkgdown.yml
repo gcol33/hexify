@@ -84,12 +84,8 @@ reference:
   desc: Extract and convert HexData
   contents:
   - grid_info
-  - st_crs.HexGridInfo
   - cells
   - n_cells
-  - hexify-summary
-  - st_as_sf.HexData
-  - as_tibble.HexData
   - is_hex_grid
   - is_hex_data
   - hex_summarize
@@ -138,7 +134,6 @@ reference:
   - hexify_heatmap
   - plot_grid
   - plot_world
-  - starts_with("plot,HexGridInfo")
   - net_layout
   - net_project
   - net_cells
@@ -149,7 +144,6 @@ reference:
   - hexify_world
   - globe_centers
   - hex_browse
-  - starts_with("plot,HexData")
 - title: dggridR Compatibility
   desc: Interoperability with dggridR
   contents:
@@ -199,11 +193,6 @@ reference:
   desc: Package internals
   contents:
   - hexify-package
-  - hexify-conversions
-  - hexify-grid
-  - hexify-stats
-  - HexGridInfo-methods
-  - HexData-methods
   - new_hex_data
   - extract_grid
   - calculate_resolution_for_area

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_assign.R
 \name{hexify_assign}
 \alias{hexify_assign}
-\title{Assign hex cells ('ISEA3H', aperture 3) for lon/lat}
+\title{Assign Hex Cells ('ISEA3H', Aperture 3) for lon/lat}
 \usage{
 hexify_assign(lon, lat, effective_res, make_polygons = FALSE)
 }

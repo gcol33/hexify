@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_helpers.R
 \name{lonlat_to_cell}
 \alias{lonlat_to_cell}
-\title{Convert longitude/latitude to cell ID}
+\title{Convert Longitude/Latitude to Cell ID}
 \usage{
 lonlat_to_cell(lon, lat, grid)
 }

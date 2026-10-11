@@ -395,8 +395,8 @@ test_that("sf output carries the grid's own CRS", {
 })
 
 test_that("a grid prints its CRS in either form", {
-  expect_output(show(hex_grid(resolution = 5)), "CRS: +EPSG:4326")
-  expect_output(show(hex_grid(resolution = 5, radius_km = "mars")),
+  expect_output(print(summary(hex_grid(resolution = 5))), "CRS: +EPSG:4326")
+  expect_output(print(summary(hex_grid(resolution = 5, radius_km = "mars"))),
                 "CRS: +[+]proj=longlat")
 })
 

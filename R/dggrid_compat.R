@@ -8,13 +8,15 @@
 # GRID OBJECT CONVERSION
 # =============================================================================
 
-#' Convert hexify grid to 'dggridR'-compatible grid object
+#' Convert hexify Grid to 'dggridR'-compatible Grid Object
 #'
 #' Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
 #' The resulting object can be used with 'dggridR' functions that accept a dggs
 #' object.
 #'
-#' @param grid A hexify_grid object from hexify_grid()
+#' @param grid A grid from \code{\link{hex_grid}}, or a legacy hexify_grid
+#' @param x A dggs object
+#' @param ... Ignored
 #'
 #' @details
 #' A dggs carries no body radius, so a grid built on another body cannot be
@@ -31,9 +33,15 @@
 #'   \item{topology}{Grid topology ("HEXAGON")}
 #'   \item{projection}{Face projection ('ISEA' or 'FULLER')}
 #'   \item{precision}{Output decimal precision (default 7)}
+#'   It prints as one line naming the grid in DGGRID's terms.
 #'
 #' @family 'dggridR' compatibility
 #' @export
+#' @examples
+#' dggs <- as_dggrid(hex_grid(resolution = 5, aperture = 3))
+#' dggs
+#' dggrid_is_compatible(dggs)
+#' from_dggrid(dggs)
 as_dggrid <- function(grid) {
 
   # Accept the modern HexGridInfo (S4) object by converting to the legacy
@@ -85,7 +93,22 @@ as_dggrid <- function(grid) {
   dggs
 }
 
-#' Convert 'dggridR' grid object to hexify_grid
+#' @rdname as_dggrid
+#' @export
+format.dggs <- function(x, ...) {
+  sprintf("<dggs> %s%s%s resolution %s; vertex 0 at %s, %s, azimuth %s",
+          x$projection, x$aperture, substr(x$topology, 1L, 1L), x$res,
+          format(x$pole_lon_deg), format(x$pole_lat_deg), format(x$azimuth_deg))
+}
+
+#' @rdname as_dggrid
+#' @export
+print.dggs <- function(x, ...) {
+  cat(format(x), "\n", sep = "")
+  invisible(x)
+}
+
+#' Convert 'dggridR' Grid Object to hexify_grid
 #'
 #' Creates a hexify_grid object from a 'dggridR' dggs object. This allows
 #' using hexify functions with grids created by 'dggridR' dgconstruct().
@@ -118,6 +141,9 @@ as_dggrid <- function(grid) {
 #'
 #' @family 'dggridR' compatibility
 #' @export
+#' @examples
+#' dggs <- as_dggrid(hex_grid(resolution = 4, aperture = 4))
+#' from_dggrid(dggs)
 from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
   # Validate dggridR object
 
@@ -179,7 +205,7 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
   grid
 }
 
-#' Validate 'dggridR' grid compatibility with hexify
+#' Validate 'dggridR' Grid Compatibility with hexify
 #'
 #' Checks whether a 'dggridR' grid object is compatible with hexify functions.
 #' Returns TRUE if compatible, or throws an error describing incompatibilities.
@@ -192,6 +218,10 @@ from_dggrid <- function(dggs, radius_km = EARTH_RADIUS_KM) {
 #'
 #' @family 'dggridR' compatibility
 #' @export
+#' @examples
+#' dggrid_is_compatible(as_dggrid(hex_grid(resolution = 4, aperture = 7)))
+#' dggrid_is_compatible(list(projection = "ISEA", topology = "DIAMOND",
+#'                           aperture = 4, res = 4), strict = FALSE)
 dggrid_is_compatible <- function(dggs, strict = TRUE) {
   issues <- character()
 

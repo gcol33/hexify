@@ -169,7 +169,7 @@ aperture_n_cells <- function(aperture, resolution, polyhedron = "icosahedron") {
   suppressWarnings(as.numeric(isea_cell_count(aperture, resolution, polyhedron)))
 }
 
-#' Calculate resolution for target area
+#' Calculate Resolution for Target Area
 #'
 #' Uses the cell count formula N = d * aperture^res + 2, d the solid's diamond
 #' quads; on the icosahedron (d = 10) this is the 'ISEA3H'/'ISEA4H'/'ISEA7H'

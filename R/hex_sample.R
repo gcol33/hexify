@@ -1,7 +1,7 @@
 # hex_sample.R
 # Random points inside cells
 
-#' Random points inside cells
+#' Random Points Inside Cells
 #'
 #' Draws points uniformly over the area of each cell on the sphere, as
 #' DGGRID's \code{randpts} output does; on a grid with an \code{ellipsoid},

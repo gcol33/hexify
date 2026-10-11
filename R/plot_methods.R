@@ -139,12 +139,12 @@ jitter_points_in_cells <- function(cell_ids, grid, jitter = TRUE) {
 # BASE R PLOT METHOD
 # =============================================================================
 
-#' Plot HexData objects
+#' @rdname HexData-class
+#' @section Plotting data:
+#' \code{plot()} draws the cells the data falls in, with an optional basemap.
+#' It builds polygons for the cells present in the data when it draws them,
+#' rather than storing them, to keep memory use low.
 #'
-#' Default plot method for HexData objects. Draws hexagonal grid cells
-#' with an optional basemap.
-#'
-#' @param x A HexData object from \code{hexify()}
 #' @param y Ignored (for S4 method compatibility)
 #' @param basemap Basemap specification:
 #'   \itemize{
@@ -182,15 +182,6 @@ jitter_points_in_cells <- function(cell_ids, grid, jitter = TRUE) {
 #' @param crop Crop to data extent (default TRUE)
 #' @param crop_expand Expansion factor for crop (default 0.1)
 #' @param main Plot title
-#' @inheritParams cell_to_sf
-#' @param ... Additional arguments passed to base plot()
-#'
-#' @return Invisibly returns the HexData object
-#'
-#' @details
-#' This function generates polygon geometries for the cells present in
-#' the data and plots them. Polygons are computed on demand, not stored,
-#' to minimize memory usage.
 #'
 #' @seealso \code{\link{hexify_heatmap}} for ggplot2 plotting
 #'
@@ -284,9 +275,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
     if (!is.null(basemap_sf)) {
       if (clip_basemap) {
         # Disable S2 for clipping to avoid spherical geometry edge-crossing errors
-        s2_state <- sf::sf_use_s2()
-        suppressMessages(sf::sf_use_s2(FALSE))
-        on.exit(sf::sf_use_s2(s2_state), add = TRUE)
+        local_s2(FALSE)
 
         # Clip basemap to extent
         clip_box <- sf::st_bbox(c(xmin = unname(xlim[1]),
@@ -369,7 +358,7 @@ setMethod("plot", signature(x = "HexData", y = "missing"),
 # PLOT GRID CLIPPED TO BOUNDARY
 # =============================================================================
 
-#' Plot hexagonal grid clipped to a polygon boundary
+#' Plot Hexagonal Grid Clipped to a Polygon Boundary
 #'
 #' A convenience function that creates a grid, clips it to a boundary polygon,
 #' and plots the result in a single call.

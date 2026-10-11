@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_cell_to_lonlat}
 \alias{hexify_cell_to_lonlat}
-\title{Convert cell ID to longitude/latitude}
+\title{Convert Cell ID to Longitude/Latitude}
 \usage{
 hexify_cell_to_lonlat(cell_id, resolution, aperture)
 }

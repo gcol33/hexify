@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_conversions.R
 \name{hexify_quad_ij_to_xy}
 \alias{hexify_quad_ij_to_xy}
-\title{Convert Quad IJ to Quad XY (continuous coordinates)}
+\title{Convert Quad IJ to Quad XY (Continuous Coordinates)}
 \usage{
 hexify_quad_ij_to_xy(quad, i, j, resolution, aperture = 3L)
 }

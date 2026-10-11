@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_stats.R
 \name{hexify_compare_resolutions}
 \alias{hexify_compare_resolutions}
-\title{Compare grid resolutions}
+\title{Compare Grid Resolutions}
 \usage{
 hexify_compare_resolutions(
   aperture = 3,
@@ -58,3 +58,4 @@ Other grid statistics:
 \code{\link[=hexify_resolution_to_eff_res]{hexify_resolution_to_eff_res()}}
 }
 \concept{grid statistics}
+\keyword{internal}

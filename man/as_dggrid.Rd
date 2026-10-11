@@ -2,12 +2,22 @@
 % Please edit documentation in R/dggrid_compat.R
 \name{as_dggrid}
 \alias{as_dggrid}
-\title{Convert hexify grid to 'dggridR'-compatible grid object}
+\alias{format.dggs}
+\alias{print.dggs}
+\title{Convert hexify Grid to 'dggridR'-compatible Grid Object}
 \usage{
 as_dggrid(grid)
+
+\method{format}{dggs}(x, ...)
+
+\method{print}{dggs}(x, ...)
 }
 \arguments{
-\item{grid}{A hexify_grid object from hexify_grid()}
+\item{grid}{A grid from \code{\link{hex_grid}}, or a legacy hexify_grid}
+
+\item{x}{A dggs object}
+
+\item{...}{Ignored}
 }
 \value{
 A list with 'dggridR'-compatible fields:
@@ -20,6 +30,7 @@ A list with 'dggridR'-compatible fields:
 \item{topology}{Grid topology ("HEXAGON")}
 \item{projection}{Face projection ('ISEA' or 'FULLER')}
 \item{precision}{Output decimal precision (default 7)}
+It prints as one line naming the grid in DGGRID's terms.
 }
 \description{
 Creates a 'dggridR'-compatible grid specification from a hexify_grid object.
@@ -30,6 +41,12 @@ object.
 A dggs carries no body radius, so a grid built on another body cannot be
 expressed as one: 'dggridR' reads every dggs on Earth's radius, and its areas,
 spacings and CLS come back on Earth. Converting such a grid warns.
+}
+\examples{
+dggs <- as_dggrid(hex_grid(resolution = 5, aperture = 3))
+dggs
+dggrid_is_compatible(dggs)
+from_dggrid(dggs)
 }
 \seealso{
 Other 'dggridR' compatibility:

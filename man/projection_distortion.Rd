@@ -2,7 +2,7 @@
 % Please edit documentation in R/distortion.R
 \name{projection_distortion}
 \alias{projection_distortion}
-\title{Distortion of a grid's face projection}
+\title{Distortion of a Grid's Face Projection}
 \usage{
 projection_distortion(x, lon, lat, stage = c("face", "lambert", "nudge"))
 }

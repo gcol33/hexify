@@ -2,7 +2,7 @@
 % Please edit documentation in R/hex9_warp.R
 \name{hex9_warp_download}
 \alias{hex9_warp_download}
-\title{Download Hex9's warp field}
+\title{Download Hex9's Warp Field}
 \usage{
 hex9_warp_download(path = hex9_warp_path(), quiet = FALSE)
 }

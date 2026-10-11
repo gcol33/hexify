@@ -2,7 +2,7 @@
 % Please edit documentation in R/hexify_index.R
 \name{hexify_get_resolution}
 \alias{hexify_get_resolution}
-\title{Get index resolution}
+\title{Get Index Resolution}
 \usage{
 hexify_get_resolution(
   index,
