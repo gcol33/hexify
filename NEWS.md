@@ -1,4 +1,4 @@
-# hexify (development version)
+# hexify 0.9.0
 
 ## Printing and documentation
 
@@ -304,18 +304,6 @@
   keeps groups such as land and ocean apart; `NA` values and unlisted cells
   do not contribute.
 
-## Bug fixes
-
-* `grid_global()` returns every cell of an ISEA grid. It sampled points and
-  kept the cells they hit, which missed small polar cells from about 40,000
-  cells on: 2 of 40,962 cells at aperture 4 resolution 6, 54 of 168,072 at
-  aperture 7 resolution 5. It now lists the cell IDs 1 to n.
-
-* `get_parent()` on a mixed aperture grid finds the parent in exact lattice
-  coordinates (#85). After an aperture-3 step a child centre sits on a
-  corner of three parents, and after an aperture-4 step on an edge shared by
-  two; the parent of such a child was decided by floating-point rounding of
-  the projected centre, so a hexagonal parent received anywhere from 1 to 7
 * Zone queries of OGC Topic 21 (#105). `get_parent(overlapping = TRUE)`
   returns every coarser cell a cell reaches into (Topic 21's `parent()` with
   `inheritID` false): three for an aperture-3 cell on a parent corner, two
@@ -342,6 +330,18 @@
   and taking the parent disagree with binning at the parent's resolution
   (#105, #106).
 
+## Bug fixes
+
+* `grid_global()` returns every cell of an ISEA grid. It sampled points and
+  kept the cells they hit, which missed small polar cells from about 40,000
+  cells on: 2 of 40,962 cells at aperture 4 resolution 6, 54 of 168,072 at
+  aperture 7 resolution 5. It now lists the cell IDs 1 to n.
+
+* `get_parent()` on a mixed aperture grid finds the parent in exact lattice
+  coordinates (#85). After an aperture-3 step a child centre sits on a
+  corner of three parents, and after an aperture-4 step on an edge shared by
+  two; the parent of such a child was decided by floating-point rounding of
+  the projected centre, so a hexagonal parent received anywhere from 1 to 7
   children. A fixed tie rule now gives every hexagonal parent inside a quad
   exactly as many children as the step's aperture. Children whose centre
   lies strictly inside a parent keep their parent. `get_children()` and

@@ -4,12 +4,13 @@ pkgdown_sha: ~
 articles:
   articles/globe: globe.html
   h3: h3.html
+  articles/lambert: lambert.html
   articles/ogc-conformance: ogc-conformance.html
   quickstart: quickstart.html
   theory: theory.html
   visualization: visualization.html
   workflows: workflows.html
-last_built: 2026-10-07T23:37Z
+last_built: 2026-10-12T18:06Z
 urls:
   reference: https://gillescolling.com/hexify/reference
   article: https://gillescolling.com/hexify/articles

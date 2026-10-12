@@ -1,4 +1,4 @@
-# hexify
+# hexify <img src="man/figures/logo.svg" align="right" height="139" alt="hexify logo" />
 
 [![CRAN status](https://www.r-pkg.org/badges/version/hexify)](https://CRAN.R-project.org/package=hexify)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/hexify)](https://cran.r-project.org/package=hexify)

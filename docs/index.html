@@ -14,6 +14,7 @@
 <meta property="og:title" content="Equal-Area Hex Grids on the Snyder ISEA Icosahedron">
 <meta name="description" content="Provides functions to build and use hexagonal discrete global grids using the Icosahedral Snyder Equal Area (ISEA) projection (Snyder 1992 &lt;doi:10.3138/27H7-8K88-4882-1752&gt;) and the H3 hierarchical hexagonal system (Uber Technologies). Implements the ISEA discrete global grid system (Sahr, White and Kimerling 2003 &lt;doi:10.1559/152304003100011090&gt;) and the Hex9 octahedral grid (Griffin 2026 &lt;arXiv:2608.00022&gt;). Includes a fast C++ core for ISEA projection and aperture quantization, an included H3 v4.4.1 C library for native H3 grid operations, and sf/terra-compatible R wrappers for grid generation and coordinate assignment. Output is compatible with dggridR for interoperability.">
 <meta property="og:description" content="Provides functions to build and use hexagonal discrete global grids using the Icosahedral Snyder Equal Area (ISEA) projection (Snyder 1992 &lt;doi:10.3138/27H7-8K88-4882-1752&gt;) and the H3 hierarchical hexagonal system (Uber Technologies). Implements the ISEA discrete global grid system (Sahr, White and Kimerling 2003 &lt;doi:10.1559/152304003100011090&gt;) and the Hex9 octahedral grid (Griffin 2026 &lt;arXiv:2608.00022&gt;). Includes a fast C++ core for ISEA projection and aperture quantization, an included H3 v4.4.1 C library for native H3 grid operations, and sf/terra-compatible R wrappers for grid generation and coordinate assignment. Output is compatible with dggridR for interoperability.">
+<meta property="og:image" content="https://gillescolling.com/hexify/logo.svg">
 <script>
 (function () {
   var D = String.fromCharCode(36);
@@ -82,8 +83,10 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="hexify">hexify<a class="anchor" aria-label="anchor" href="#hexify"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.svg" class="logo" alt=""><h1 id="hexify-">hexify <a class="anchor" aria-label="anchor" href="#hexify-"></a>
+</h1>
+</div>
 <p><a href="https://CRAN.R-project.org/package=hexify" class="external-link"><img src="https://www.r-pkg.org/badges/version/hexify" alt="CRAN status"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/hexify" alt="CRAN downloads"></a> <a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/hexify" alt="Monthly downloads"></a> <a href="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://app.codecov.io/gh/gcol33/hexify" class="external-link"><img src="https://codecov.io/gh/gcol33/hexify/graph/badge.svg" alt="Codecov test coverage"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
 <p><strong>Equal-Area Hexagonal Grids for Global Spatial Analysis</strong></p>
 <p align="center">
@@ -234,7 +237,7 @@
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hexify.html">hexify</a></span><span class="op">(</span><span class="va">coords</span>, lon <span class="op">=</span> <span class="st">"lon"</span>, lat <span class="op">=</span> <span class="st">"lat"</span>, grid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access cell IDs</span></span>
-<span><span class="va">result</span><span class="op">@</span><span class="va">cell_id</span></span></code></pre></div>
+<span><span class="va">result</span><span class="op">$</span><span class="va">cell_id</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="working-with-sf-objects">Working with sf Objects<a class="anchor" aria-label="anchor" href="#working-with-sf-objects"></a>
@@ -280,7 +283,6 @@
 <span></span>
 <span><span class="co"># Count per cell</span></span>
 <span><span class="va">occ_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">occ_hex</span><span class="op">)</span></span>
-<span><span class="va">occ_df</span><span class="op">$</span><span class="va">cell_id</span> <span class="op">&lt;-</span> <span class="va">occ_hex</span><span class="op">@</span><span class="va">cell_id</span></span>
 <span></span>
 <span><span class="va">cell_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">species</span> <span class="op">~</span> <span class="va">cell_id</span>, data <span class="op">=</span> <span class="va">occ_df</span>, FUN <span class="op">=</span> <span class="va">length</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cell_counts</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"n_records"</span></span>
