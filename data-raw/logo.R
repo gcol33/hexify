@@ -5,7 +5,8 @@
 # the lattice of the net's cells is continued over the hex, and the cells
 # whose centres fall on land (hexify_world) are filled. Towards the bottom
 # the tessellation bends away like the lower half of a globe, and ends in a
-# curve above the name, which sits on plain paper. The land cells pulse
+# curve above the name, which sits on plain paper; the cells fade out over
+# the last part of the bend, so the curve has no ragged row of cut cells. The land cells pulse
 # slowly, in a wave running from west to east. Under prefers-reduced-motion
 # they stay still.
 #
@@ -34,7 +35,7 @@ pts_attr <- function(m) paste(sprintf("%.1f,%.1f", m[, 1], m[, 2]), collapse = "
 edge <- 230
 net_x <- 2.9
 net_y <- 1.45
-grid <- hex_grid(resolution = 4, aperture = 3)
+grid <- hex_grid(resolution = 3, aperture = 3)
 g <- extract_grid(grid)
 net <- net_layout(grid, "plane")
 resolve_layout(net, g)
@@ -78,12 +79,14 @@ centres <- cbind(c0[1] + ij$i * a1[1] + ij$j * a2[1], c0[2] + ij$i * a1[2] + ij$
 # turned away round a globe by up to `turn` radians (depth sin(t turn) /
 # turn, slope 1 at t = 0 so the fold has no crease), drawn in towards the
 # axis, and lifted at the sides, so its lower edge becomes a curve. Cells
-# with centres below bend_to are left out.
-bend_from <- 200
-bend_to <- 430
-turn <- 1
+# with centres below bend_to are left out. The cells are an ISEA3H
+# resolution-3 grid, large enough to read as hexagons at README size.
+bend_from <- 150
+bend_to <- 480
+turn <- 1.3
 lift <- 45
-squeeze <- 0.08
+squeeze <- 0.1
+fade_from <- 0.55
 warp <- function(m) {
   t <- pmin(pmax((m[, 2] - bend_from) / (bend_to - bend_from), 0), 1)
   u <- (m[, 1] - cx) / (W / 2)
@@ -108,18 +111,25 @@ hex_d <- function(p, s = 1) {
   m <- warp(cbind(p[1] + s * r * rad_k * cos(ang), p[2] + s * r * rad_k * sin(ang)))
   sprintf("M%sZ", paste(sprintf("%.1f,%.1f", m[, 1], m[, 2]), collapse = "L"))
 }
-sea_d <- vapply(which(!is_land), function(i) hex_d(centres[i, ]), "")
+# Cells fade out over the last part of the bend, like a globe's limb.
+t_c <- pmin(pmax((centres[, 2] - bend_from) / (bend_to - bend_from), 0), 1)
+fade <- round(pmin(1, (1 - t_c) / (1 - fade_from)), 1)
+sea <- which(!is_land & fade > 0)
+sea_svg <- vapply(split(sea, fade[sea]), function(i) {
+  sprintf('<path class="sea" stroke-opacity="%s" d="%s"/>', fade[i[1]],
+          paste(vapply(i, function(k) hex_d(centres[k, ]), ""), collapse = ""))
+}, "")
 
 # Land cells pulse in a wave from west to east: each cell's delay is its
 # place across the hex, so the wave runs over the land once per period.
 period <- 4
-land_svg <- vapply(which(is_land), function(i) {
-  sprintf('<path class="land" d="%s" style="animation-delay:-%.2fs"/>',
-          hex_d(centres[i, ], 0.9), period * (1 - pmin(pmax(centres[i, 1] / W, 0), 1)))
+land_svg <- vapply(which(is_land & fade > 0), function(i) {
+  sprintf('<path class="land" fill-opacity="%s" d="%s" style="animation-delay:-%.2fs"/>',
+          fade[i], hex_d(centres[i, ], 0.9), period * (1 - pmin(pmax(centres[i, 1] / W, 0), 1)))
 }, "")
 
 css <- sprintf('
-.sea { fill: none; stroke: %1$s; stroke-width: 2; stroke-linejoin: round; }
+.sea { fill: none; stroke: %1$s; stroke-width: 2.5; stroke-linejoin: round; }
 .land { fill: %2$s; animation: pulse %3$gs ease-in-out infinite; }
 @keyframes pulse { 0%%, 100%% { opacity: 1; } 50%% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) { .land { animation: none; } }
@@ -134,7 +144,7 @@ svg <- c(
   "</defs>",
   sprintf('<polygon points="%s" fill="%s"/>', pts_attr(hex_pts(R - 12)), col[["paper"]]),
   '<g clip-path="url(#inner)">',
-  sprintf('<path class="sea" d="%s"/>', paste(sea_d, collapse = "")),
+  sea_svg,
   land_svg,
   sprintf('<text x="%.1f" y="%d" text-anchor="middle" font-family="Georgia, \'Times New Roman\', serif" font-style="italic" font-weight="bold" font-size="78" fill="%s" stroke="%s" stroke-width="10" stroke-linejoin="round" paint-order="stroke">hexify</text>',
           cx, 472, col[["name"]], col[["paper"]]),
