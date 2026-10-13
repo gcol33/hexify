@@ -10,7 +10,7 @@
 **Equal-Area Hexagonal Grids for Global Spatial Analysis**
 
 <p align="center">
-  <img src="man/figures/hexify-hero.png" alt="Multi-resolution hexagonal grids" width="100%">
+  <img src="man/figures/hexify-hero.png" alt="World land covered by equal-area hexagons, cell area stepping from 210,000 km² over the Americas to 7,800 km² over Oceania" width="100%">
 </p>
 
 `hexify` assigns geographic coordinates to equal-area hexagonal grid cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every cell has the same area regardless of latitude, eliminating the sampling bias inherent in rectangular lat-lon grids. H3 is supported for compatibility with existing H3 workflows.
