@@ -76,6 +76,7 @@ reference:
   desc: Create grids and assign points to cells
   contents:
   - hex_grid
+  - hex9_warp_download
   - hexify
   - hexify_assign
   - HexGridInfo-class

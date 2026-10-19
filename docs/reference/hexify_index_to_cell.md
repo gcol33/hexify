@@ -1,4 +1,4 @@
-# Convert index string to cell coordinates
+# Convert Index String to Cell Coordinates
 
 Decodes a hierarchical index string back to its cell coordinates and
 resolution. For Z7, valid indices round-trip exactly through

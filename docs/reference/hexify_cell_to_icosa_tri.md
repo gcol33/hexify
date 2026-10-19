@@ -1,4 +1,4 @@
-# Convert Cell ID to Icosa Triangle coordinates
+# Convert Cell ID to Icosa Triangle Coordinates
 
 Converts DGGRID-compatible cell IDs to icosahedral triangle coordinates
 (face, x, y). These are the coordinates produced by the 'Snyder' 'ISEA'

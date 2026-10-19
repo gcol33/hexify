@@ -1,4 +1,4 @@
-# Convert cell coordinates to index string
+# Convert Cell Coordinates to Index String
 
 Converts cell coordinates (`face`, `i`, `j`) to a hierarchical index
 string. The index type is selected from `aperture` when

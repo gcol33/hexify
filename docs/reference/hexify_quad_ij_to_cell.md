@@ -1,4 +1,4 @@
-# Convert Quad IJ coordinates to cell ID
+# Convert Quad IJ Coordinates to Cell ID
 
 Converts Quad IJ coordinates to a global cell identifier. This is the
 final step in the coordinate pipeline.

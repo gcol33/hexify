@@ -1,4 +1,4 @@
-# Round-trip accuracy test
+# Round-Trip Accuracy Test
 
 Tests the accuracy of the coordinate conversion functions by converting
 coordinates to cells and back, measuring the distance between original

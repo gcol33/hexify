@@ -1,4 +1,4 @@
-# Convert Quad XY to Icosa Triangle coordinates
+# Convert Quad XY to Icosa Triangle Coordinates
 
 Inverse transformation from quad coordinates back to icosahedral
 triangle coordinates. Useful for projecting cell centers back to

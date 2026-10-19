@@ -1,4 +1,4 @@
-# Determine which face contains a point
+# Determine Which Face Contains a Point
 
 Returns the index of the face of the solid containing the given
 coordinates (0-19 on the icosahedron).

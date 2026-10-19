@@ -1,4 +1,4 @@
-# Get canonical form of Z7 index
+# Get Canonical Form of Z7 Index
 
 Decodes and re-encodes a Z7 index until it reaches a stable form. Every
 valid index is already canonical and comes back unchanged. A string

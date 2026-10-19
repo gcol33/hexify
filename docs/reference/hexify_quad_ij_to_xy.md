@@ -1,4 +1,4 @@
-# Convert Quad IJ to Quad XY (continuous coordinates)
+# Convert Quad IJ to Quad XY (Continuous Coordinates)
 
 Converts discrete cell indices to continuous quad coordinates. Useful
 for computing cell centers or understanding the cell geometry.

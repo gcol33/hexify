@@ -1,4 +1,4 @@
-# Get face centers of a solid
+# Get Face Centers of a Solid
 
 Returns the center coordinates of every face of the solid: 20 on the
 icosahedron, 8 on the octahedron, 4 on the tetrahedron.

@@ -3,15 +3,24 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
       fill: none;
-      stroke: #000000;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
+      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -37,12 +46,12 @@
 <polyline points='32.00,72.53 472.00,72.53 ' style='stroke-width: 0.75;' />
 <polyline points='325.49,109.70 325.56,109.33 325.62,108.96 325.69,108.58 325.75,108.21 325.82,107.84 325.88,107.47 325.94,107.10 326.01,106.72 326.07,106.35 326.13,105.98 326.19,105.61 326.25,105.23 326.31,104.86 326.36,104.49 326.42,104.11 326.48,103.74 326.54,103.37 326.59,103.00 326.65,102.62 326.70,102.25 326.75,101.87 326.81,101.50 326.86,101.13 326.91,100.75 326.96,100.38 327.01,100.01 327.06,99.63 327.11,99.26 327.16,98.88 327.20,98.51 327.25,98.13 327.30,97.76 327.34,97.38 327.38,97.01 327.43,96.63 327.47,96.26 327.51,95.88 327.56,95.51 327.60,95.13 327.64,94.76 327.68,94.38 327.72,94.01 327.76,93.63 327.79,93.26 327.83,92.88 327.87,92.51 327.90,92.13 327.94,91.75 327.97,91.38 328.01,91.00 328.04,90.63 328.07,90.25 328.10,89.87 328.13,89.50 328.16,89.12 328.19,88.75 328.22,88.37 328.25,87.99 328.28,87.62 328.31,87.24 328.33,86.86 328.36,86.49 328.38,86.11 328.41,85.73 328.43,85.36 328.45,84.98 328.48,84.60 328.50,84.23 328.52,83.85 328.54,83.47 328.56,83.10 328.58,82.72 328.59,82.34 328.61,81.97 328.63,81.59 328.64,81.21 328.66,80.83 328.67,80.46 328.69,80.08 328.70,79.70 328.71,79.33 328.73,78.95 328.74,78.57 328.75,78.19 328.76,77.82 328.77,77.44 328.78,77.06 328.78,76.68 328.79,76.31 328.80,75.93 328.80,75.55 328.81,75.18 328.81,74.80 328.82,74.42 328.82,74.04 328.82,73.67 328.82,73.29 328.82,72.91 328.82,72.53 ' style='stroke-width: 1.12; stroke: #0072B2;' />
 <line x1='120.00' y1='72.53' x2='325.49' y2='109.70' style='stroke-width: 0.75; stroke-dasharray: 4.00,4.00;' />
-<circle cx='120.00' cy='72.53' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='325.49' cy='109.70' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
-<circle cx='328.82' cy='72.53' r='2.16' style='stroke-width: 0.75; fill: #000000;' />
-<text x='120.00' y='65.33' text-anchor='middle' style='font-size: 12.00px; font-family: "Arial";' textLength='7.33px' lengthAdjust='spacingAndGlyphs'>T</text>
-<text x='332.69' y='112.56' style='font-size: 12.00px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>S</text>
-<text x='328.82' y='65.33' text-anchor='middle' style='font-size: 12.00px; font-family: "Arial";' textLength='6.67px' lengthAdjust='spacingAndGlyphs'>L</text>
+<circle class='theme-fill-fg' cx='120.00' cy='72.53' r='2.16' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='325.49' cy='109.70' r='2.16' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<circle class='theme-fill-fg' cx='328.82' cy='72.53' r='2.16' style='stroke-width: 0.75; fill: #3E3F3A;' />
+<text x='120.00' y='65.33' text-anchor='middle' style='font-size: 1.2em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>T</text>
+<text x='332.69' y='112.56' style='font-size: 1.2em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>S</text>
+<text x='328.82' y='65.33' text-anchor='middle' style='font-size: 1.2em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>L</text>
 </g>
 </g>
 </svg>

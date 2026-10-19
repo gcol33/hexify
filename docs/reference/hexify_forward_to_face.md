@@ -1,4 +1,4 @@
-# Forward projection to specific face
+# Forward Projection to Specific Face
 
 Projects to a known face (skips face detection).
 
@@ -9,7 +9,7 @@ hexify_forward_to_face(
   face,
   lon,
   lat,
-  projection = c("isea", "fuller"),
+  projection = c("isea", "fuller", "ivea", "ak", "akw"),
   polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 ```
@@ -30,8 +30,11 @@ hexify_forward_to_face(
 
 - projection:
 
-  Face projection: `"isea"` (Snyder's equal-area projection) or
-  `"fuller"` (Fuller's projection, defined on the icosahedron only)
+  Face projection: `"isea"` (Snyder's equal-area projection), `"ivea"`
+  (van Leeuwen and Strebe's vertex-oriented equal-area projection),
+  `"fuller"` (Fuller's projection, defined on the icosahedron only),
+  `"ak"` (Kaseorg's octahedral projection) or `"akw"` (Kaseorg's with
+  Hex9's trained warp), both defined on the octahedron only
 
 - polyhedron:
 

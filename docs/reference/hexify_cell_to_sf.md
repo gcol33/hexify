@@ -1,4 +1,4 @@
-# Convert cell IDs to sf polygons
+# Convert Cell IDs to sf Polygons
 
 Creates polygon geometries for hexagonal grid cells from their cell IDs.
 Returns an sf object by default, or a data frame for lightweight

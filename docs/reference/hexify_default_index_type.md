@@ -1,4 +1,4 @@
-# Get default index type for aperture
+# Get Default Index Type for Aperture
 
 Returns the recommended index type:
 

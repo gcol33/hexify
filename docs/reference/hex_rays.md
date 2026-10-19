@@ -1,4 +1,4 @@
-# Ray glyphs for cell values
+# Ray Glyphs for Cell Values
 
 Draws one ray per cell from its centre whose angle shows a value, as in
 Carr et al. (1997): the ray points down for the smallest value, level

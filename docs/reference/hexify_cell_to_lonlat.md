@@ -1,4 +1,4 @@
-# Convert cell ID to longitude/latitude
+# Convert Cell ID to Longitude/Latitude
 
 Converts cell identifiers back to cell center coordinates. This is the
 inverse of

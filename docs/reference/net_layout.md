@@ -1,4 +1,4 @@
-# Lay out the faces of a grid's solid in the plane
+# Lay Out the Faces of a Grid's Solid in the Plane
 
 Builds a flat map of the sphere from the faces of the solid an ISEA grid
 is built on: the face projection of the grid (Snyder's equal-area
@@ -6,7 +6,7 @@ projection, or Fuller's) maps the sphere onto the faces, and the layout
 cuts the faces into pieces and places each piece in the plane by a
 rotation and a translation (the rhombic layout also shears). Draw a grid
 on it with
-[`plot`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)`(grid, surface = "net", layout = )`,
+[`plot`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)`(grid, surface = "net", layout = )`,
 and place points on it with
 [`net_project`](https://gillescolling.com/hexify/reference/net_project.md).
 
@@ -28,7 +28,7 @@ net_layout(
 
   A HexGridInfo object from
   [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md),
-  built on the icosahedron or the octahedron.
+  built on the icosahedron, the octahedron or the tetrahedron.
 
 - layout:
 
@@ -71,7 +71,8 @@ The layouts are:
   The faces in the PLANE layout of DGGRID, the layout
   [`hexify_cell_to_plane`](https://gillescolling.com/hexify/reference/hexify_cell_to_plane.md)
   reads: five strips of four triangles on the icosahedron, four diamonds
-  side by side on the octahedron.
+  side by side on the octahedron, one triangle of edge 2 on the
+  tetrahedron.
 
 - `"gosper"`:
 

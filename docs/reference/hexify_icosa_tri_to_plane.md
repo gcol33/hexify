@@ -1,4 +1,4 @@
-# Convert Icosa Triangle coordinates to PLANE coordinates
+# Convert Icosa Triangle Coordinates to PLANE Coordinates
 
 Transforms icosahedral triangle coordinates to the 2D PLANE
 representation (unfolded icosahedron). Each triangle is rotated and

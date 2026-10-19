@@ -14,13 +14,27 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 **Equal-Area Hexagonal Grids for Global Spatial Analysis**
 
-![Multi-resolution hexagonal grids](reference/figures/hexify-hero.png)
+![World land covered by equal-area hexagons, cell area stepping from
+210,000 km² over the Americas to 7,800 km² over
+Oceania](reference/figures/hexify-hero.png)
 
 `hexify` assigns geographic coordinates to equal-area hexagonal grid
 cells using the ISEA (Icosahedral Snyder Equal Area) projection. Every
 cell has the same area regardless of latitude, eliminating the sampling
 bias inherent in rectangular lat-lon grids. H3 is supported for
 compatibility with existing H3 workflows.
+
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
 
 ## Quick Start
 
@@ -134,18 +148,6 @@ cell at 60°N has half the area of the same cell at the equator.
 - **H3 support**: `hex_grid(resolution = 8, type = "h3")` — vendored H3
   C library, no extra install needed
 
-## Installation
-
-``` r
-
-# Install from CRAN
-install.packages("hexify")
-
-# Or install development version from GitHub
-# install.packages("pak")
-pak::pak("gcol33/hexify")
-```
-
 ## Usage Examples
 
 ### Basic Point Assignment
@@ -174,7 +176,7 @@ coords <- data.frame(
 result <- hexify(coords, lon = "lon", lat = "lat", grid = grid)
 
 # Access cell IDs
-result@cell_id
+result$cell_id
 ```
 
 ### Working with sf Objects
@@ -223,7 +225,6 @@ occ_hex <- hexify(occurrences, lon = "lon", lat = "lat", grid = grid)
 
 # Count per cell
 occ_df <- as.data.frame(occ_hex)
-occ_df$cell_id <- occ_hex@cell_id
 
 cell_counts <- aggregate(species ~ cell_id, data = occ_df, FUN = length)
 names(cell_counts)[2] <- "n_records"

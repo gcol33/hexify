@@ -1,4 +1,4 @@
-# Convert Quad XY coordinates to Cell ID
+# Convert Quad XY Coordinates to Cell ID
 
 Converts Quad XY coordinates (continuous quad space) to
 DGGRID-compatible cell IDs. The coordinates are quantized to the nearest

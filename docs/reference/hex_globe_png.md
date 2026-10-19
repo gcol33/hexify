@@ -1,4 +1,4 @@
-# Save a globe as a PNG image
+# Save a Globe as a PNG Image
 
 Draws a globe made by
 [`hex_globe`](https://gillescolling.com/hexify/reference/hex_globe.md)
@@ -64,15 +64,16 @@ finds; the browser is started with its GPU, which WebGPU draws on.
 
 ## See also
 
-[`plot`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)
+[`plot`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 for a static plot that needs no graphics card
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-grid <- hex_grid(resolution = 3, aperture = 3)
-globe <- hex_globe(grid, surface = "solid", center = "pacific")
-hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
-} # }
+# Drawing needs the hexglobe package and a GPU adapter
+if (requireNamespace("hexglobe", quietly = TRUE) && interactive()) {
+  grid <- hex_grid(resolution = 3, aperture = 3)
+  globe <- hex_globe(grid, surface = "solid", center = "pacific")
+  hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
+}
 ```

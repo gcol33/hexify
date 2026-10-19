@@ -1,4 +1,4 @@
-# Shape metrics of cells: area, perimeter and compactness
+# Shape Metrics of Cells: Area, Perimeter and Compactness
 
 Measures each cell on the sphere: its area, the length of its boundary
 and how close its shape is to a circle.
@@ -43,13 +43,14 @@ a small regular hexagon 0.952, pentagon 0.930, square 0.886 and triangle
 The normalized area is the cell's area over the mean area of the grid's
 cells, the body's surface over the cell count; an equal-area grid of
 \\N\\ cells gives \\N / (N - 2)\\ for its hexagons, 5/6 of that for the
-pentagons of the icosahedron and 4/6 for the squares of the octahedron.
-The isoperimetric quotient `ipq` is \\4\pi a / p^2\\, for a circle 1, a
-small regular hexagon 0.907, square 0.785 and triangle 0.605. Kmoch et
-al. (2022) compare grids by these two measures, reading area and
-perimeter in an equal-area plane centred on each cell; here both are
-read on the sphere, which adds \\(a/(rp))^2\\ to `compactness`^2, a few
-parts in a million for cells of a few thousand square kilometres.
+pentagons of the icosahedron, 4/6 for the squares of the octahedron and
+3/6 for the triangles of the tetrahedron. The isoperimetric quotient
+`ipq` is \\4\pi a / p^2\\, for a circle 1, a small regular hexagon
+0.907, square 0.785 and triangle 0.605. Kmoch et al. (2022) compare
+grids by these two measures, reading area and perimeter in an equal-area
+plane centred on each cell; here both are read on the sphere, which adds
+\\(a/(rp))^2\\ to `compactness`^2, a few parts in a million for cells of
+a few thousand square kilometres.
 
 ## References
 

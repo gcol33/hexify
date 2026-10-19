@@ -1,4 +1,4 @@
-# Build an sf POLYGON from six (lon, lat) corner pairs
+# Build an sf POLYGON from Six (lon, lat) Corner Pairs
 
 Low-level helper to create a single hexagon polygon from corner
 coordinates. Most users should use

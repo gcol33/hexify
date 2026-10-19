@@ -1,4 +1,4 @@
-# Generate a rectangular grid of hexagons
+# Generate a Rectangular Grid of Hexagons
 
 Creates hexagon polygons covering a rectangular geographic region. All
 cells that overlap the bounding box are included (not just cells whose

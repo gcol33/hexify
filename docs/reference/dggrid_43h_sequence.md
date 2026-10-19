@@ -1,4 +1,4 @@
-# Create DGGRID 43H aperture sequence
+# Create DGGRID 43H Aperture Sequence
 
 Create an aperture sequence following DGGRID's 43H pattern: first
 num_ap4 resolutions use aperture 4, then aperture 3.

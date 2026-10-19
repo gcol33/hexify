@@ -1,4 +1,4 @@
-# Convert longitude/latitude to cell ID
+# Convert Longitude/Latitude to Cell ID
 
 Converts geographic coordinates to DGGRID-compatible cell identifiers.
 This is the primary function for geocoding points to grid cells.

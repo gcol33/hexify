@@ -1,4 +1,4 @@
-# Clip hexagon grid to polygon boundary
+# Clip Hexagon Grid to Polygon Boundary
 
 Creates hexagon polygons clipped to a given polygon boundary. This is
 useful for generating grids that conform to country borders, study

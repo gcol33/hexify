@@ -1,4 +1,4 @@
-# Convert effective resolution to area
+# Convert Effective Resolution to Area
 
 Calculates approximate cell area for ISEA3H (aperture 3) grids. Based on
 calibration: eff_res 10 = 863.8006 km^2.

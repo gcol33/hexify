@@ -1,4 +1,4 @@
-# Calculate resolution for target area
+# Calculate Resolution for Target Area
 
 Uses the cell count formula N = d \* aperture^res + 2, d the solid's
 diamond quads; on the icosahedron (d = 10) this is the

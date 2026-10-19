@@ -1,4 +1,4 @@
-# Get parent index
+# Get Parent Index
 
 Returns the parent index (one resolution coarser).
 

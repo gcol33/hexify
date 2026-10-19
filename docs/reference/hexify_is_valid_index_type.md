@@ -1,6 +1,6 @@
-# Check if index type is valid for aperture
+# Check If Index Type Is Valid for Aperture
 
-Check if index type is valid for aperture
+Check If Index Type Is Valid for Aperture
 
 ## Usage
 

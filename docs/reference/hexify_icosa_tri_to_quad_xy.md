@@ -1,4 +1,4 @@
-# Convert Icosa Triangle to Quad XY coordinates
+# Convert Icosa Triangle to Quad XY Coordinates
 
 Converts icosahedral triangle coordinates (from Snyder projection) to
 quad XY coordinates. This is an intermediate step in the pipeline.

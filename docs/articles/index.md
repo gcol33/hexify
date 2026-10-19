@@ -18,5 +18,7 @@
 
 - [Mathematical
   Foundations](https://gillescolling.com/hexify/articles/theory.md):
+- [Lambert's Construction of Snyder's
+  Projection](https://gillescolling.com/hexify/articles/lambert.md):
 - [OGC Topic 21
   Conformance](https://gillescolling.com/hexify/articles/ogc-conformance.md):

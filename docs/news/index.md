@@ -1,6 +1,67 @@
 # Changelog
 
-## hexify (development version)
+## hexify 0.9.0
+
+### Printing and documentation
+
+- A grid prints as one line
+  (`<HexGridInfo> aperture 3, resolution 10: 590,492 cells of 863.8 km^2`)
+  and gridded data as two;
+  [`summary()`](https://rdrr.io/r/base/summary.html) keeps the full
+  listing, which for gridded data now includes the grid’s orientation
+  and ellipsoid ([\#108](https://github.com/gcol33/hexify/issues/108)).
+  The list
+  [`hexify_grid()`](https://gillescolling.com/hexify/reference/hexify_grid.md)
+  builds and the `dggs` list
+  [`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md)
+  returns print as one line too.
+
+- Each class has one help page listing its methods: `?HexGridInfo-class`
+  and `?HexData-class` carry
+  [`show()`](https://rdrr.io/r/methods/show.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  [`st_as_sf()`](https://r-spatial.github.io/sf/reference/st_as_sf.html),
+  [`st_crs()`](https://r-spatial.github.io/sf/reference/st_crs.html),
+  `as_tibble()` and the accessors
+  ([\#110](https://github.com/gcol33/hexify/issues/110)). Help titles
+  are in Title Case. The empty pages `hexify-conversions`, `hexify-grid`
+  and `hexify-stats` are gone, and
+  [`hexify_grid()`](https://gillescolling.com/hexify/reference/hexify_grid.md),
+  [`dgverify()`](https://gillescolling.com/hexify/reference/dgverify.md),
+  [`hexify_compare_resolutions()`](https://gillescolling.com/hexify/reference/hexify_compare_resolutions.md),
+  [`hexify_roundtrip_test()`](https://gillescolling.com/hexify/reference/hexify_roundtrip_test.md)
+  and the projection-level helpers
+  ([`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md),
+  [`hexify_inverse()`](https://gillescolling.com/hexify/reference/hexify_inverse.md),
+  [`hexify_forward_to_face()`](https://gillescolling.com/hexify/reference/hexify_forward_to_face.md),
+  [`hexify_which_face()`](https://gillescolling.com/hexify/reference/hexify_which_face.md),
+  [`hexify_face_centers()`](https://gillescolling.com/hexify/reference/hexify_face_centers.md),
+  [`hexify_build_icosa()`](https://gillescolling.com/hexify/reference/hexify_build_icosa.md))
+  are marked internal:
+  [`hex_grid()`](https://gillescolling.com/hexify/reference/hex_grid.md)
+  is the grid constructor.
+
+- Every exported user-facing topic has a runnable example; the
+  [`hex_globe_png()`](https://gillescolling.com/hexify/reference/hex_globe_png.md)
+  example runs in an interactive session with hexglobe installed
+  ([\#109](https://github.com/gcol33/hexify/issues/109)).
+
+- `hex_grid(area_km2 = , type = "h3")` no longer warns on every call:
+  the note that H3 cells are not equal-area is one message per session
+  on both the area and the resolution path
+  ([\#112](https://github.com/gcol33/hexify/issues/112)).
+  [`grid_clip()`](https://gillescolling.com/hexify/reference/grid_clip.md),
+  [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) no longer
+  print sf’s s2 switch and planar-assumption messages, and
+  `dg_closest_res_to_area(show_info = TRUE)` reports in one message.
+
+- The README and vignettes read grids and data through
+  [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html),
+  [`n_cells()`](https://gillescolling.com/hexify/reference/n_cells.md)
+  and `$` columns.
 
 ### Breaking changes
 
@@ -102,6 +163,30 @@
   ([\#84](https://github.com/gcol33/hexify/issues/84)).
 
 ### New features
+
+- `hex_grid(projection = "ivea")` builds a grid on van Leeuwen and
+  Strebe’s
+
+  2006. vertex-oriented great-circle projection, the third face
+        projection beside Snyder’s and Fuller’s: DGGAL’s IVEA3H and
+        IVEA7H, and any aperture, aperture sequence, orientation, the
+        octahedron, and
+        [`hex_globe()`](https://gillescolling.com/hexify/reference/hex_globe.md).
+        It is equal-area, so
+        [`cell_area()`](https://gillescolling.com/hexify/reference/cell_area.md)
+        gives every hexagon of a resolution the same area, and its
+        inverse is in closed form. With DGGAL’s orientation
+        (`orientation = c(11.20, 58.282525588538995, 0)`) every zone of
+        IVEA3H at levels 1 to 8 and of IVEA7H at levels 1 to 5 is a
+        hexify cell, centres and corners within a micrometre
+        (`paper/bench/bench_dggal_agreement.R`).
+        [`hexify_forward()`](https://gillescolling.com/hexify/reference/hexify_forward.md)
+        and
+        [`hexify_inverse()`](https://gillescolling.com/hexify/reference/hexify_inverse.md)
+        take it on the tetrahedron too. DGGRID has no IVEA, so
+        [`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md)
+        refuses such a grid
+        ([\#92](https://github.com/gcol33/hexify/issues/92)).
 
 - [`projection_distortion()`](https://gillescolling.com/hexify/reference/projection_distortion.md)
   gives Tissot’s indicatrix of a grid’s face projection at any point:
@@ -358,22 +443,6 @@
   `group` keeps groups such as land and ocean apart; `NA` values and
   unlisted cells do not contribute.
 
-### Bug fixes
-
-- [`grid_global()`](https://gillescolling.com/hexify/reference/grid_global.md)
-  returns every cell of an ISEA grid. It sampled points and kept the
-  cells they hit, which missed small polar cells from about 40,000 cells
-  on: 2 of 40,962 cells at aperture 4 resolution 6, 54 of 168,072 at
-  aperture 7 resolution 5. It now lists the cell IDs 1 to n.
-
-- [`get_parent()`](https://gillescolling.com/hexify/reference/get_parent.md)
-  on a mixed aperture grid finds the parent in exact lattice coordinates
-  ([\#85](https://github.com/gcol33/hexify/issues/85)). After an
-  aperture-3 step a child centre sits on a corner of three parents, and
-  after an aperture-4 step on an edge shared by two; the parent of such
-  a child was decided by floating-point rounding of the projected
-  centre, so a hexagonal parent received anywhere from 1 to 7
-
 - Zone queries of OGC Topic 21
   ([\#105](https://github.com/gcol33/hexify/issues/105)).
   `get_parent(overlapping = TRUE)` returns every coarser cell a cell
@@ -410,9 +479,24 @@
   ([\#105](https://github.com/gcol33/hexify/issues/105),
   [\#106](https://github.com/gcol33/hexify/issues/106)).
 
-  children. A fixed tie rule now gives every hexagonal parent inside a
-  quad exactly as many children as the step’s aperture. Children whose
-  centre lies strictly inside a parent keep their parent.
+### Bug fixes
+
+- [`grid_global()`](https://gillescolling.com/hexify/reference/grid_global.md)
+  returns every cell of an ISEA grid. It sampled points and kept the
+  cells they hit, which missed small polar cells from about 40,000 cells
+  on: 2 of 40,962 cells at aperture 4 resolution 6, 54 of 168,072 at
+  aperture 7 resolution 5. It now lists the cell IDs 1 to n.
+
+- [`get_parent()`](https://gillescolling.com/hexify/reference/get_parent.md)
+  on a mixed aperture grid finds the parent in exact lattice coordinates
+  ([\#85](https://github.com/gcol33/hexify/issues/85)). After an
+  aperture-3 step a child centre sits on a corner of three parents, and
+  after an aperture-4 step on an edge shared by two; the parent of such
+  a child was decided by floating-point rounding of the projected
+  centre, so a hexagonal parent received anywhere from 1 to 7 children.
+  A fixed tie rule now gives every hexagonal parent inside a quad
+  exactly as many children as the step’s aperture. Children whose centre
+  lies strictly inside a parent keep their parent.
   [`get_children()`](https://gillescolling.com/hexify/reference/get_children.md)
   and
   [`cell_to_index()`](https://gillescolling.com/hexify/reference/cell_to_index.md)
@@ -732,7 +816,7 @@
 - [`tibble::as_tibble()`](https://tibble.tidyverse.org/reference/as_tibble.html)
   on a `HexData` reached tibble’s default method and stopped there,
   unable to coerce an S4 object.
-  [`as_tibble.HexData()`](https://gillescolling.com/hexify/reference/as_tibble.HexData.md)
+  [`as_tibble.HexData()`](https://gillescolling.com/hexify/reference/HexData-class.md)
   was exported rather than registered, so dispatch never found it. It is
   registered on tibble’s generic now, and tibble stays in Suggests.
 
@@ -1066,7 +1150,8 @@ CRAN release: 2026-08-22
   default they are at (11.25, 58.28) and (-168.75, -58.28), about 3500
   km away. Both now come from folding the cell through the quad frame,
   as the polygon and mixed-sequence paths already did, so a point
-  assigned to one gets its own cell’s centre back. `index_to_cell()`’s
+  assigned to one gets its own cell’s centre back.
+  [`index_to_cell()`](https://gillescolling.com/hexify/reference/index_to_cell.md)’s
   inverse carried the same hardcoded pair and is fixed with it.
 
 - [`hexify_assign()`](https://gillescolling.com/hexify/reference/hexify_assign.md)

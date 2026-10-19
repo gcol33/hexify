@@ -1,4 +1,4 @@
-# Convert Quad IJ to Icosa Triangle coordinates
+# Convert Quad IJ to Icosa Triangle Coordinates
 
 Converts Quad IJ coordinates to icosahedral triangle coordinates. This
 is useful for understanding where a cell is located on the icosahedral

@@ -1,5 +1,17 @@
 # Mathematical Foundations
 
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Overview
 
 hexify implements the **ISEA (Icosahedral Snyder Equal Area)** discrete
@@ -341,6 +353,143 @@ the face center approached along a vertex radius. The Jacobian
 determinant of the projection equals 1 everywhere on the face, which is
 the equal-area property in differential form.
 
+### The Truncated Icosahedron
+
+Snyder’s construction applied to the truncated icosahedron deforms
+angles by at most 3.75° on its 20 hexagons and 2.65° on its 12 pentagons
+(Snyder, 1992, Table 1, p. 12). Cutting each corner of the icosahedron
+at a third of the edge places every hexagon in an icosahedron face
+plane, centred on the face centre (the cut keeps the face’s three-fold
+symmetry), and every pentagon in a plane normal to a vertex axis,
+centred on the vertex (five-fold symmetry). A spherical icosahedron face
+is therefore the spherical hexagon plus a fifth of each of the three
+pentagons at its corners, and the solid’s face centres are the centres
+of the icosahedral grid’s faces and pentagon cells. The question is
+whether the hexagonal cells, indexed on the icosahedron’s plane triangle
+as now, could be projected through the truncated icosahedron’s faces
+instead. Three properties of that composite settle it.
+
+**Area shares.** Snyder’s right triangles have areas 0.0376062647 on the
+hexagon and 0.0295072264 on the pentagon (unit sphere; Snyder, 1992,
+eqs. 2 and 24), so the spherical hexagon covers 0.71823 of a face and
+each pentagon fifth 0.09392. The plane hexagon cut at a third covers 2/3
+of the plane triangle and each corner 1/9. An equal-area map cannot send
+the solid’s vertices to the third points of the plane edges with
+straight sides between them. A slice map (Snyder’s construction from a
+polygon centre) followed by an affine map of its plane triangle is again
+a slice map, so the only way to carry the construction into the plane
+triangle with straight pieces, three-fold symmetry and exact area is to
+slice the 18 spherical right triangles of a face onto 18 plane triangles
+of proportional area. Their corners are then fixed: the solid’s vertices
+at 0.32044 of the edge from each corner, and the midpoint of each
+hexagon-pentagon edge at 0.25384 of the edge along the bisector, so the
+hexagon-pentagon boundary bends at the bisector. The pentagons take the
+hexagons’ area scale here, where Snyder’s projection gives them a 1.28
+percent larger one (Snyder, 1992, p. 11).
+
+**Seams.** A slice map spaces the points of the edge opposite its apex
+by area. On the right spherical triangle with legs $`h`$ (apex to the
+foot $`M`$ of its perpendicular to the edge) and $`x`$ (from $`M`$ along
+the edge), the area is $`2\arctan(\tan\frac{h}{2}\tan\frac{x}{2})`$, so
+a point at $`x`$ goes to the share
+$`\arctan(\tan\frac{h}{2}\tan\frac{x}{2}) / \arctan(\tan\frac{h}{2}\tan\frac{X}{2})`$
+of the half-edge $`X`$. This share grows strictly with $`h`$ at every
+interior $`x`$. A hexagon-pentagon edge is perpendicular to the arc from
+the hexagon’s centre to the pentagon’s, so both apexes have $`M`$ as
+their foot, at different distances: the two sides send the same point to
+two places. The offset reaches $`1.74 \times 10^{-5}`$ of the half-edge,
+21.7 m on the Earth, which is the offset Snyder reports for his own
+projection (“less than 0.000018 of length BC”, Snyder, 1992, p. 16). On
+Snyder’s icosahedron and on the vertex-oriented equal-area projection
+(`projection = "ivea"`; van Leeuwen and Strebe, 2006) every edge inside
+the map joins two mirror images, which space it alike. A continuous
+equal-area composite would have to bend the images of the slicing arcs,
+and no closed form for it is known.
+
+**A bound at the vertices.** Five plane triangles meet at each vertex of
+the face frame, with 300° about it. Measure the frame in units in which
+its area equals the sphere’s. A circle of radius $`\rho`$ about the
+vertex then has length $`\frac{5\pi}{3}\rho`$ and encloses the area
+$`A = \frac{5\pi}{6}\rho^2`$. Under an equal-area projection its
+preimage on the unit sphere is a closed curve enclosing the same area,
+so its length $`\ell`$ satisfies the spherical isoperimetric inequality
+$`\ell^2 \ge A(4\pi - A)`$. Where the projection has scale factors
+$`a \ge b`$ with $`ab = 1`$, the inverse stretches lengths by at most
+$`a = \sqrt{a/b}`$. Hence some point of the circle has
+
+``` math
+\frac{a}{b} \ge \frac{\ell^2}{(5\pi\rho/3)^2} \ge \frac{6}{5} - \frac{\rho^2}{4}, \qquad \omega = 2\arcsin\frac{a/b - 1}{a/b + 1} \ \to\ 2\arcsin\frac{1}{11} = 10.43° \quad (\rho \to 0).
+```
+
+Every equal-area projection onto the icosahedron’s faces has points with
+$`\omega \ge 10.43°`$ arbitrarily close to each vertex, whatever solid
+it passes through on the way. The truncated icosahedron’s 2.65° is
+measured on its own flat pentagon, which has 360° about its centre; in
+the icosahedron’s frame those 360° close to 300°.
+
+Measured over a face (`paper/bench/bench_trunc_icosa.R`; 100,000 points
+on one face for the composite, 2,000,000 on the sphere for the others,
+and a cap of 0.5° about a vertex):
+
+| Face projection | Equal-area | Continuous | Mean $`\omega`$ | 95th percentile | Max $`\omega`$ | Max $`\omega`$ within 0.5° of a vertex |
+|----|----|----|----|----|----|----|
+| Truncated icosahedron in the face frame | yes | no (21.7 m) | 8.83° | 11.27° | 11.71° | 11.71° |
+| Snyder (`"isea"`) | yes | yes | 9.55° | 15.33° | 17.26° | 15.70° |
+| Vertex-oriented (`"ivea"`) | yes | yes | 8.11° | 10.52° | 11.12° | 11.12° |
+| Fuller (`"fuller"`) | no | yes | 7.04° | 11.33° | 13.13° | 13.14° |
+
+The vertex-oriented projection is continuous, has a closed-form inverse,
+and has smaller mean and maximum deformation than the
+truncated-icosahedron composite. Its maximum, reached at the vertices,
+lies 0.68° above the bound, which caps what any equal-area projection
+onto the icosahedron’s faces could gain there. hexify therefore offers
+no truncated-icosahedron projection.
+
+### The Earth as an Ellipsoid
+
+Snyder’s projection is equal-area on the sphere. By default hexify, like
+DGGRID and H3, reads a geodetic latitude $`\varphi`$ as a latitude on
+the sphere whose area is the WGS84 ellipsoid’s. A small region at
+$`\varphi`$ then has $`MN/R_q^2`$ times its spherical area on the
+ellipsoid, with $`M`$ and $`N`$ the meridional and prime-vertical radii
+of curvature and $`R_q`$ the radius of that sphere. Measured
+geodesically on WGS84, the cells’ areas run from 0.9955 times the
+reported area at the equator to 1.0090 times it at the poles
+(`paper/bench/bench_ellipsoid_area.R`).
+
+The authalic latitude $`\beta`$ removes the factor. With $`e`$ the
+eccentricity,
+
+``` math
+q(\varphi) = (1 - e^2)\left[\frac{\sin\varphi}{1 - e^2\sin^2\varphi} + \frac{\operatorname{artanh}(e \sin\varphi)}{e}\right], \qquad \sin\beta = \frac{q(\varphi)}{q(\pi/2)}, \qquad R_q = a\sqrt{q(\pi/2)/2},
+```
+
+the ellipsoid below $`\varphi`$ holds as much area as the sphere of
+radius $`R_q`$ below $`\beta`$, so
+$`(\lambda, \varphi) \mapsto (\lambda, \beta)`$ keeps every area, and
+cells equal-area on that sphere are equal-area on the ellipsoid.
+`hex_grid(ellipsoid = "WGS84")` converts geodetic latitude to $`\beta`$
+where a point enters the projection and back where it leaves, and sizes
+the grid on $`R_q`$ (6371.0072 km). hexify evaluates both directions by
+a sine series in $`2\varphi`$ (or $`2\beta`$) whose coefficients it
+reads off the closed form above when the grid is used; on WGS84 a
+latitude moves by up to 0.128°. The cells’ geodesic areas then agree
+with the reported ones to the measurement’s own error, about
+$`2 \times 10^{-6}`$.
+
+The ISEA3H, ISEA7H, IVEA3H and IVEA7H definitions OGC registers are
+built this way, with the first vertex at 11.20°E and authalic latitude
+$`\arctan\phi`$ (`orientation = "ogc"`), which is geodetic latitude
+58.397145907431° on WGS84:
+
+``` r
+
+ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+                orientation = "ogc")
+ogc
+#> <HexGridInfo> aperture 3, resolution 8, WGS84 ellipsoid: 65,612 cells of 7,774 km^2
+```
+
 ### The Unfolded Projection
 
 Applying the per-face projection to all 20 faces and unfolding them into
@@ -426,6 +575,85 @@ axis plus one step along the next, a vector of length $`\sqrt{7}`$ child
 spacings at angle
 $`\arctan\!\big(\tfrac{\sqrt{3}/2}{2 + 1/2}\big) = \arctan(\sqrt{3}/5) \approx 19.107°`$
 to the axis (DGGRID Manual, 2023).
+
+### How a Cell Divides Among Its Parents
+
+Since successive resolutions do not nest, a cell can lie partly in two
+or three coarser cells (Carr et al., 1997). Within a face the cells of
+one resolution are the Voronoi cells of a hexagonal lattice and those
+one resolution coarser the Voronoi cells of a sublattice of index 3, 4
+or 7, so the share of a cell in each coarser cell follows from the
+lattices alone.
+
+After an aperture-3 step the children are centred on the parent centres
+and corners. The three parent edges meeting at a corner run through
+every second edge midpoint of the child centred there and cut it into
+thirds. After an aperture-4 step the children are centred on the parent
+centres and edge midpoints, and a parent edge runs through the centre
+and two opposite corners of the child on its midpoint, cutting it in
+half.
+
+After an aperture-7 step every child centre lies inside a parent. Take
+the finer lattice as the Eisenstein integers $`\mathbb{Z}[\omega]`$,
+$`\omega = e^{2\pi i/3}`$, with unit spacing, so a cell has circumradius
+$`s = 1/\sqrt{3}`$ and area $`\tfrac{3\sqrt{3}}{2}s^2`$. The coarser
+lattice is $`\mu\,\mathbb{Z}[\omega]`$ with $`\mu = 3 + \omega`$:
+$`|\mu|^2 = 7`$ and $`\arg \mu = \arctan(\sqrt{3}/5)`$, the turn in the
+table above, and the other twist is its mirror image $`3 + \bar\omega`$.
+The centre child, of circumradius $`s \approx 0.577`$, lies inside its
+parent, of inradius $`\sqrt{7}/2 \approx 1.323`$. The parent edge facing
+the neighbour at $`\mu`$ runs between the parent corners
+$`\mu(1-\omega)/3`$ and $`\mu(2+\omega)/3`$, through its midpoint
+$`\mu/2`$, and two of these points belong to the child tiling:
+
+``` math
+\frac{\mu(1-\omega)}{3} = 1 + \frac{1-\omega}{3}, \qquad \frac{\mu}{2} = \frac{1 + (2+\omega)}{2}.
+```
+
+The first is a corner $`A`$ of the ring child centred at $`1`$; the
+second is the midpoint of the edge this child shares with the child at
+$`2 + \omega`$, the second edge from $`A`$. The child’s other corners
+lie inside the parent, so the part beyond it is the triangle of $`A`$,
+the next corner $`B`$ and $`\mu/2`$, whose sides $`s`$ and $`s/2`$ meet
+at $`120°`$:
+
+``` math
+\frac{\tfrac{1}{2} \cdot s \cdot \tfrac{s}{2} \cdot \sin 120°}{\tfrac{3\sqrt{3}}{2}\, s^2} = \frac{\sqrt{3}\, s^2 / 8}{3\sqrt{3}\, s^2 / 2} = \frac{1}{12}.
+```
+
+The half-turn about $`\mu/2`$ maps both lattices onto themselves and
+swaps the parents at $`0`$ and $`\mu`$, so the other half of the edge
+cuts $`1/12`$ off the child at $`2 + \omega`$ the other way. Every ring
+child lies $`11/12`$ in its parent and $`1/12`$ in one neighbour, and
+the parent’s area checks:
+$`1 + 6 \cdot \tfrac{11}{12} + 6 \cdot \tfrac{1}{12} = 7`$ child areas.
+
+The vertices of the solid are cell centres at every resolution, and the
+turn by the angle deficit about a vertex maps both lattices onto
+themselves, so the cells around a vertex are cut as in the plane and the
+cell at a vertex lies wholly in the vertex cell above it. Snyder’s
+projection is equal-area, so these shares hold on the sphere for every
+cell, across face edges and at the vertices.
+`get_parent(overlapping = TRUE)` returns the coarser cells a cell
+reaches into, and
+[`hex_aggregate()`](https://gillescolling.com/hexify/reference/hex_aggregate.md)
+divides each cell’s value among them by these shares, one level at a
+time, each level by the shares of its own aperture:
+
+``` r
+
+g7 <- hex_grid(resolution = 3, aperture = 7)
+ids <- grid_global(g7)$cell_id
+table(lengths(get_parent(ids, g7, overlapping = TRUE)))
+#> 
+#>    1    2 
+#>  492 2940
+
+# A uniform density adds up to each parent's area, the twelve pentagons included
+up <- hex_aggregate(ids, cell_area(ids, g7), g7)
+range(up$value / cell_area(up$cell_id, hex_grid(resolution = 2, aperture = 7)))
+#> [1] 1 1
+```
 
 ### Cell Count Growth
 
@@ -625,6 +853,106 @@ stopifnot(identical(
 ))
 ```
 
+#### Z7 as a 64-bit integer
+
+IGEO7 also writes the Z7 index as one 64-bit integer (Kmoch et al.,
+2025): the base cell in the top four bits, then three bits per digit
+from resolution 1 down to resolution 20, with the digit 7 at every level
+below the cell’s own. The string and the integer hold the same fields,
+so `"033000"` packs to `0x3600ffffffffffff`, and the packed form stops
+at resolution 20, IGEO7’s finest. The monotonic ID reads the string as a
+number in base 7,
+
+``` math
+m = B \cdot 7^r + \sum_{k=1}^{r} D_k\, 7^{r-k},
+```
+
+so `"033000"` is $`3 \cdot 7^4 + 3 \cdot 7^3 = 8232`$ (Kmoch et al.,
+2026). Within a resolution it sorts as the strings do, and the numbers
+of the pentagons’ deleted subsequences go unused.
+[`cell_to_index()`](https://gillescolling.com/hexify/reference/cell_to_index.md)
+writes the packed index as `form = "int"` (an integer64) or `"hex"` (16
+hexadecimal digits, DGGRID’s INT64 output) and the monotonic ID as
+`"monotonic"`;
+[`index_to_cell()`](https://gillescolling.com/hexify/reference/index_to_cell.md)
+reads all of them back. integer64 is a signed type: the packed indices
+of base cells 08–11 have the top bit set and appear as negative numbers,
+and the one index whose bits are $`2^{63}`$, the resolution-20 pentagon
+of base cell 08, is the bit pattern bit64 uses for `NA`. The hexadecimal
+form carries every index exactly.
+
+``` r
+
+g7 <- hex_grid(resolution = 4, aperture = 7)
+cell <- index_to_cell("033000", g7)
+cell_to_index(cell, g7, form = "hex")
+#> [1] "3600ffffffffffff"
+cell_to_index(cell, g7, form = "int")
+#> integer64
+#> [1] 3891391553024819199
+cell_to_index(cell, g7, form = "monotonic")
+#> integer64
+#> [1] 8232
+```
+
+#### OGC zone identifiers
+
+OGC’s ISEA3H, ISEA7H, IVEA3H and IVEA7H name a zone by a root rhombus,
+two faces of the icosahedron (hexify’s diamond quads, in DGGAL’s order,
+A and B for the poles), a sub-rhombus counted row by row within it, and
+a letter for the zone at that sub-rhombus, for example `"E6-317-A"`; the
+same fields packed into 64 bits are the uint64ZIRS.
+[`cell_to_index()`](https://gillescolling.com/hexify/reference/cell_to_index.md)
+writes them as `form = "textZIRS"` and `"uint64ZIRS"`, and
+[`index_to_cell()`](https://gillescolling.com/hexify/reference/index_to_cell.md)
+reads them back; they equal DGGAL’s for every zone up to ISEA3H level 10
+and ISEA7H level 5 (`paper/bench/bench_dggal_zirs.R`).
+
+``` r
+
+cell <- index_to_cell("E6-317-A", ogc, form = "textZIRS")
+cell_to_lonlat(cell, ogc)
+#>    lon_deg  lat_deg
+#> 1 34.78017 45.42938
+cell_to_index(cell, ogc, form = "uint64ZIRS")
+#> integer64
+#> [1] 630503947831872604
+```
+
+#### Neighbours by digit arithmetic
+
+A step in direction $`d`$ from a cell changes its last digit and may
+carry a direction $`c`$ into the level above:
+$`u(D_r) + u(d) = u(D_r') + \operatorname{down}_r u(c)`$, where $`u`$ is
+a digit’s unit vector and $`\operatorname{down}_r`$ the aperture-7
+scaling of level $`r`$, whose rotation alternates between levels. Two
+$`7 \times 7`$ tables, one per rotation sense, give $`D_r'`$ and $`c`$:
+the addition of generalized balanced ternary (Gibson and Lucas, 1982;
+Sahr, 2019), which hexify builds from the same scaling operations its
+index walk uses. A carry out of resolution 1 leaves the base cell for a
+neighbouring pentagon, and a $`12 \times 6`$ table names that pentagon
+and the number of 60° turns that bring the digits into its frame, the
+part H3’s base-cell neighbour tables play for H3. Inside a base cell, a
+step into the deleted subsequence crosses the pentagon’s seam, and the
+cell there is the one a 60° turn away.
+
+On aperture-7 grids of the icosahedron,
+[`get_neighbors()`](https://gillescolling.com/hexify/reference/get_neighbors.md)
+takes a cell’s six neighbours from the quad lattice when all six lie in
+its quad and from this arithmetic when one does not. The arithmetic is
+exact and needs no projection; on cells along quad edges it is two and a
+half to eight times faster than sending the step through longitude and
+latitude (`paper/bench/bench_z7_neighbors.R`).
+
+The Z3 and Z-order digits of apertures 3 and 4 are the base-3 and base-2
+digits of the quad coordinates $`(i, j)`$, recoded (Z3) or interleaved
+(Z-order), rather than the children of a central-place hierarchy. A
+neighbour step written in those digits is the step in $`(i, j)`$ carried
+digit by digit: the same result the quad lattice reaches in one integer
+addition, at $`O(r)`$ cost, with the same quad-edge crossing. Digit
+arithmetic gives those grids nothing, so their neighbours stay on the
+quad lattice.
+
 #### Z3 Index (Aperture 3)
 
 The Z3 index encodes the aperture-3 subdivision hierarchy using **digit
@@ -693,9 +1021,9 @@ cat(sprintf("Aperture 4: Cell %s -> Z-order index: %s\n", as.character(cell), id
 | **Index length** (res $`r`$) | $`2 + r`$ | $`2 + 2\lceil r/2\rceil`$ | $`2 + r`$ or $`2 + 2r`$ |
 
 All three hexify encodings are bijective: each cell maps to exactly one
-index string, and each valid string to one cell. hexify stores indices
-as character strings to support arbitrary precision and avoid integer
-overflow at high resolutions.
+index string, and each valid string to one cell. The strings hold every
+resolution; on aperture-7 grids of the icosahedron the Z7 index is also
+available as IGEO7’s 64-bit integer up to resolution 20 (see above).
 
 ### SEQNUM: The Flat Cell ID
 
@@ -816,19 +1144,19 @@ cat("------  --------------  -------------------\n")
 #> ------  --------------  -------------------
 for (h3_res in 0:8) {
   g_h3 <- hex_grid(resolution = h3_res, type = "h3")
-  h3_area <- g_h3@area_km2
+  h3_area <- summary(g_h3)$area_km2
 
   # Find closest ISEA ap7 resolution by brute force
   best_res <- 0
   best_diff <- Inf
   for (r in 0:15) {
     g_test <- hex_grid(resolution = r, aperture = 7)
-    d <- abs(log(g_test@area_km2) - log(h3_area))
+    d <- abs(log(summary(g_test)$area_km2) - log(h3_area))
     if (d < best_diff) { best_diff <- d; best_res <- r }
   }
   g_isea <- hex_grid(resolution = best_res, aperture = 7)
   cat(sprintf("   %2d   %14.1f  res %d (%.1f km²)\n",
-              h3_res, h3_area, best_res, g_isea@area_km2))
+              h3_res, h3_area, best_res, summary(g_isea)$area_km2))
 }
 #>     0        4357449.4  res 1 (7084244.7 km²)
 #>     1         609788.4  res 2 (1036718.7 km²)
@@ -897,11 +1225,25 @@ for (ap in c(3, 4, 7)) {
 - Bradley, A.D. (1946). Equal-area projection on the icosahedron.
   *Geographical Review*, 36(1), 101-104.
 
+- Carr, D.B., Kahn, R., Sahr, K., & Olsen, A.R. (1997). ISEA discrete
+  global grids. *Statistical Computing & Graphics Newsletter*, 8(2/3),
+  31-39.
+
 - Coxeter, H.S.M. (1973). *Regular Polytopes* (3rd ed.). Dover
   Publications.
 
 - DGGRID Manual (2023). *DGGRID Version 7.8 Documentation*.
   <https://github.com/sahrk/DGGRID>
+
+- Gibson, L., & Lucas, D. (1982). Vectorization of raster images using
+  hierarchical methods. *Computer Graphics and Image Processing*, 20(1),
+  82-89. <https://doi.org/10.1016/0146-664x(82)90075-2>
+
+- Kmoch, A., Renoud, W., Chan, W.T., Jimenez Shaw, J., Chrapkiewicz, K.,
+  & Uuemaa, E. (2026). Efficient Neighbourhood Computation and
+  Cloud-Native Storage for the IGEO7 DGGS Using the Z7 GBT Indexing.
+  Talk, FOSS4G Europe 2026, Timisoara, 29 June 2026.
+  <https://talks.osgeo.org/foss4g-europe-2026/talk/HSFXR3/>
 
 - Kmoch, A., Sahr, K., Chan, W.T., & Uuemaa, E. (2025). IGEO7: A new
   hierarchically indexed hexagonal equal-area discrete global grid
@@ -922,6 +1264,11 @@ for (ap in c(3, 4, 7)) {
   discrete global grids. *Computers, Environment and Urban Systems*,
   32(3), 174-187.
 
+- Sahr, K. (2019). Central Place Indexing: Hierarchical Linear Indexing
+  Systems for Mixed-Aperture Hexagonal Discrete Global Grid Systems.
+  *Cartographica*, 54(1), 16-29.
+  <https://doi.org/10.3138/cart.54.1.2018-0022>
+
 - Sahr, K., White, D., & Kimerling, A.J. (2003). Geodesic Discrete
   Global Grid Systems. *Cartography and Geographic Information Science*,
   30(2), 121-134.
@@ -931,6 +1278,10 @@ for (ap in c(3, 4, 7)) {
 
 - Snyder, J.P. (1992). An equal-area map projection for polyhedral
   globes. *Cartographica*, 29(1), 10-21.
+
+- van Leeuwen, D., & Strebe, D. (2006). A “slice-and-dice” approach to
+  area equivalence in polyhedral map projections. *Cartography and
+  Geographic Information Science*, 33(4), 269-286.
 
 - White, D., Kimerling, A.J., & Overton, W.S. (1992). Cartographic and
   geometric components of a global sampling design for environmental

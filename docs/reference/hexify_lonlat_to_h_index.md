@@ -1,4 +1,4 @@
-# Convert longitude/latitude to hexagonal cell hierarchical index
+# Convert Longitude/Latitude to Hexagonal Cell Hierarchical Index
 
 Converts geographic coordinates (longitude, latitude) to hexagonal cell
 hierarchical index strings. These strings encode the face, resolution,

@@ -1,4 +1,4 @@
-# Verify grid object
+# Verify Grid Object
 
 Validates that a grid object has all required fields and valid values.
 This function is called internally by most hexify functions to ensure

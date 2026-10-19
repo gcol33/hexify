@@ -1,4 +1,4 @@
-# The triangles of cells towards each neighbour
+# The Triangles of Cells Towards Each Neighbour
 
 Cuts each cell into one triangle per wall, from the centre to that wall:
 six for a hexagon, five for a pentagon. With values, each triangle

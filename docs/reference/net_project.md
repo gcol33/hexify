@@ -1,4 +1,4 @@
-# Place points on a net layout
+# Place Points on a Net Layout
 
 Projects longitude/latitude points onto their face of the grid's solid
 and places them where the layout puts that part of the face. A point on

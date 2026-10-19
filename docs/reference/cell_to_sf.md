@@ -1,4 +1,4 @@
-# Convert cell IDs to sf polygons
+# Convert Cell IDs to sf Polygons
 
 Creates sf polygon geometries for hexagonal grid cells.
 
@@ -111,7 +111,7 @@ cell by
 
 [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md) for
 grid specifications,
-[`st_as_sf`](https://gillescolling.com/hexify/reference/st_as_sf.HexData.md)
+[`st_as_sf`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for converting HexData to sf
 
 ## Examples

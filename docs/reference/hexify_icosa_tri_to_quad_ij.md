@@ -1,4 +1,4 @@
-# Convert Icosa Triangle to Quad IJ coordinates
+# Convert Icosa Triangle to Quad IJ Coordinates
 
 Converts icosahedral triangle coordinates directly to Quad IJ, combining
 the transformation and quantization steps.

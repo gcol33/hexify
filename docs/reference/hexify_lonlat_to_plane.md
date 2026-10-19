@@ -1,4 +1,4 @@
-# Convert longitude/latitude to PLANE coordinates
+# Convert Longitude/Latitude to PLANE Coordinates
 
 Converts geographic coordinates directly to PLANE coordinates (the
 unfolded solid). Combines forward 'Snyder' projection with the PLANE

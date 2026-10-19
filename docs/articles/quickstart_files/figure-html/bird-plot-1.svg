@@ -3,15 +3,24 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
       fill: none;
-      stroke: #000000;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
+      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -19,7 +28,7 @@
     }
   ]]></style>
 </defs>
-<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA='>
     <rect x='0.00' y='0.00' width='504.00' height='378.00' />
@@ -33,7 +42,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpNDcuMjJ8NDU2Ljc4fDAuMDB8Mzc4LjAw)'>
-<rect x='47.22' y='0.00' width='409.57' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect rx='4' x='47.22' y='0.00' width='409.57' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #F5F6F8;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
 </g>
@@ -567,7 +576,7 @@
 <path d='M 280.31 325.25 L 279.81 325.25 L 279.31 325.25 L 278.81 325.26 L 278.30 325.27 L 277.80 325.27 L 277.30 325.29 L 276.80 325.30 L 276.31 325.32 L 275.97 325.76 L 275.64 326.20 L 275.30 326.65 L 274.97 327.11 L 274.64 327.56 L 274.30 328.02 L 273.97 328.48 L 273.80 328.72 L 273.64 328.95 L 274.95 332.34 L 275.20 332.32 L 275.45 332.30 L 275.70 332.28 L 275.95 332.26 L 276.21 332.24 L 276.46 332.22 L 276.71 332.21 L 276.96 332.19 L 277.22 332.18 L 277.47 332.16 L 277.73 332.15 L 277.98 332.14 L 278.24 332.13 L 278.49 332.12 L 278.75 332.11 L 279.00 332.11 L 279.34 331.67 L 279.68 331.23 L 280.36 330.37 L 281.03 329.51 L 281.70 328.66 L 281.00 326.95 L 280.31 325.25 Z' style='fill-rule: evenodd; fill: #0D0887; stroke-width: 0.64; stroke: #FFFFFF; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
-<text x='332.77' y='160.67' style='font-size: 18.00px; font-family: "Arial";' textLength='106.08px' lengthAdjust='spacingAndGlyphs'>Observations</text>
+<text x='332.77' y='160.67' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Observations</text>
 <image width='23.04' height='115.20' x='332.77' y='171.54' preserveAspectRatio='none' xlink:href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAEsCAYAAAACUNnVAAAA4klEQVQ4jY2QS5LDMAhEH9wk97/cbFMV07NwjAWWYu+A/kr8vV9yZLgF7BMCt7DJCk4YbkpyyizRXVHXMaMB1b651FZD2mnV/BKwoV/RNt4lbaIYAMMly8m/BpKtKOdPzgCOKVbA6ta06uHN4HzMb/LSdDLFrUt7grqV4eJqcNFWP4rVk4w1mUc1brRxT1nKoAB9bSW5BXKNJ6bHGvpVI5pilpFAtDS1LmfaQnGu0RSAC+EyHQ1QAeCLxnCrZON6q+SolP1WM8Imzs2v1phRovpFTYuUjWtOBr7lbUP4BvgH8Q/tz8IBGi+44gAAAABJRU5ErkJggg=='/>
 <polyline points='351.20,286.54 355.81,286.54 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='351.20,253.73 355.81,253.73 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
@@ -581,14 +590,14 @@
 <polyline points='337.38,207.33 332.77,207.33 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='337.38,188.63 332.77,188.63 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='337.38,171.73 332.77,171.73 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
-<text x='364.78' y='291.70' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='364.78' y='258.89' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>2</text>
-<text x='364.78' y='233.71' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='364.78' y='212.48' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>4</text>
-<text x='364.78' y='193.79' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>5</text>
-<text x='364.78' y='176.88' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>6</text>
-<text x='56.18' y='50.83' style='font-size: 18.00px; font-family: "Arial";' textLength='370.77px' lengthAdjust='spacingAndGlyphs'>ISEA3H grid at resolution 6 (~69949 km² cells)</text>
-<text x='56.18' y='24.42' style='font-size: 21.60px; font-family: "Arial";' textLength='362.53px' lengthAdjust='spacingAndGlyphs'>Bird Observations in Equal-Area Cells</text>
+<text x='364.78' y='291.70' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>1</text>
+<text x='364.78' y='258.89' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>2</text>
+<text x='364.78' y='233.71' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>3</text>
+<text x='364.78' y='212.48' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>4</text>
+<text x='364.78' y='193.79' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>5</text>
+<text x='364.78' y='176.88' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>6</text>
+<text x='56.18' y='50.83' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>ISEA3H grid at resolution 6 (~69949 km² cells)</text>
+<text x='56.18' y='24.42' style='font-size: 2.16em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Bird Observations in Equal-Area Cells</text>
 </g>
 </g>
 </svg>

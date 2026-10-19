@@ -1,4 +1,4 @@
-# Convert hierarchical index strings to longitude/latitude centers
+# Convert Hierarchical Index Strings to Longitude/Latitude Centers
 
 Converts hierarchical cell index strings back to geographic coordinates,
 returning the center point of each cell. This is the inverse operation

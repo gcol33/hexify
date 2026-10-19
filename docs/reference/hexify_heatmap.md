@@ -1,4 +1,4 @@
-# Create a ggplot2 visualization of hexagonal grid cells
+# Create a ggplot2 Visualization of Hexagonal Grid Cells
 
 Creates a ggplot2-based visualization of hexagonal grid cells,
 optionally colored by a value column. Supports continuous and discrete

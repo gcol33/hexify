@@ -12,6 +12,18 @@ This page sets hexify against each of them, gives the measurements a few
 of them ask for, and shows the functions that answer Topic 21’s zone
 queries.
 
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Earth model and area error
 
 Topic 21 lets a DGGS sit on a sphere or an ellipsoid; the misfit of a

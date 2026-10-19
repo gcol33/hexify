@@ -1,4 +1,4 @@
-# Set the default icosahedron orientation
+# Set the Default Icosahedron Orientation
 
 Sets the orientation read by the functions that take no grid: the
 projection functions in this family and the low-level conversions that

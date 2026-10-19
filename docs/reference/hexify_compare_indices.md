@@ -1,4 +1,4 @@
-# Compare two indices
+# Compare Two Indices
 
 Lexicographic comparison of two index strings.
 

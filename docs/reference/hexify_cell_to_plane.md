@@ -1,4 +1,4 @@
-# Convert Cell ID to PLANE coordinates
+# Convert Cell ID to PLANE Coordinates
 
 Converts DGGRID-compatible cell IDs directly to PLANE coordinates.
 Returns the cell center in the unfolded icosahedron layout.

@@ -1,4 +1,4 @@
-# Convert longitude/latitude to index string
+# Convert Longitude/Latitude to Index String
 
 Projects geographic coordinates to grid cells and returns their
 hierarchical index strings. Inputs are vectorized over `lon` and `lat`.

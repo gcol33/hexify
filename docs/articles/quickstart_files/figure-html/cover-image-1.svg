@@ -3,15 +3,24 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
       fill: none;
-      stroke: #000000;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
+      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -19,7 +28,7 @@
     }
   ]]></style>
 </defs>
-<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwyNTIuMDA='>
     <rect x='0.00' y='0.00' width='504.00' height='252.00' />
@@ -33,12 +42,12 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MTQuNzB8MjM3LjMw)'>
-<rect x='0.00' y='14.70' width='504.00' height='222.61' style='stroke-width: 0.00; stroke: none;' />
+<rect x='0.00' y='14.70' width='504.00' height='222.61' style='stroke-width: 0.00; stroke: none;' /> fill: #F5F6F8;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwyNTIuMDA=)'>
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MTQuNzB8MjM3LjMw)'>
-<rect x='0.00' y='14.70' width='504.00' height='222.61' style='stroke-width: 0.00; stroke: none; fill: #FFFFFF;' />
+<rect rx='4' x='0.00' y='14.70' width='504.00' height='222.61' style='stroke-width: 0.00; stroke: none; fill: #F5F6F8;' />
 <path d='M 263.52 176.41 L 263.13 176.24 L 262.01 176.28 L 260.55 175.94 L 260.00 176.03 L 259.53 175.79 L 259.40 175.33 L 258.47 175.03 L 257.58 174.89 L 256.89 173.95 L 256.95 172.97 L 256.18 172.87 L 256.07 172.26 L 255.08 171.80 L 254.14 171.14 L 253.74 170.30 L 253.72 170.04 L 253.40 169.51 L 252.90 168.96 L 252.41 168.16 L 252.47 167.93 L 253.17 167.99 L 253.58 168.23 L 254.44 168.18 L 255.26 168.39 L 255.70 168.24 L 256.47 167.42 L 257.05 166.59 L 257.37 166.28 L 258.23 165.85 L 258.89 165.61 L 259.02 165.41 L 259.17 164.61 L 259.86 164.22 L 260.67 163.98 L 261.89 163.98 L 261.97 164.63 L 263.43 164.68 L 263.89 164.96 L 264.26 165.03 L 264.72 165.42 L 265.27 165.46 L 266.57 165.94 L 266.44 166.26 L 266.61 166.94 L 266.58 168.47 L 266.65 168.98 L 266.40 169.72 L 266.14 170.16 L 266.39 170.35 L 266.25 170.87 L 266.67 171.76 L 266.65 171.97 L 266.06 172.94 L 265.70 173.30 L 265.70 173.74 L 265.48 174.08 L 265.51 174.45 L 263.78 176.22 L 263.52 176.41 Z' style='fill-rule: evenodd; fill: #F2F2F2; stroke-width: 0.32; stroke: #CCCCCC; stroke-linecap: butt;' />
 <path d='M 261.89 163.98 L 260.67 163.98 L 259.86 164.22 L 259.17 164.61 L 259.02 165.41 L 258.89 165.61 L 258.23 165.85 L 257.37 166.28 L 257.05 166.59 L 256.47 167.42 L 255.70 168.24 L 255.26 168.39 L 254.44 168.18 L 253.58 168.23 L 253.17 167.99 L 252.47 167.93 L 251.88 167.47 L 250.67 167.36 L 249.03 167.65 L 248.25 167.00 L 247.06 165.90 L 246.78 165.73 L 246.46 164.55 L 246.46 162.36 L 246.46 159.12 L 249.88 159.12 L 250.15 158.05 L 250.09 157.49 L 250.11 156.61 L 250.25 156.18 L 250.11 155.20 L 250.42 155.48 L 250.75 155.57 L 251.12 156.24 L 251.39 156.08 L 252.34 155.88 L 252.64 156.58 L 253.88 157.07 L 254.93 157.22 L 255.57 157.09 L 255.75 156.57 L 256.03 156.55 L 256.10 156.88 L 256.44 157.17 L 256.64 157.63 L 257.24 157.80 L 258.15 158.16 L 258.51 158.81 L 258.73 158.86 L 259.36 159.79 L 259.70 159.85 L 260.35 159.57 L 260.53 159.88 L 260.79 159.84 L 260.79 157.56 L 260.36 157.65 L 260.11 158.07 L 259.45 157.92 L 259.06 157.50 L 258.38 156.93 L 258.15 156.32 L 258.50 155.07 L 258.67 154.83 L 258.61 154.33 L 258.65 153.29 L 258.49 152.69 L 258.23 152.17 L 258.63 151.89 L 259.18 151.21 L 259.28 150.77 L 262.54 150.27 L 262.69 150.63 L 263.14 151.04 L 263.64 151.03 L 263.98 151.23 L 264.23 151.59 L 264.68 151.65 L 264.72 151.86 L 265.62 152.04 L 266.52 152.51 L 266.65 152.90 L 267.02 152.91 L 267.31 153.34 L 267.23 153.67 L 267.63 154.03 L 267.87 154.68 L 267.14 155.24 L 267.36 155.73 L 267.08 156.42 L 267.21 157.07 L 267.12 157.48 L 267.39 158.18 L 266.70 158.44 L 266.60 159.53 L 266.39 159.96 L 266.06 160.24 L 266.65 161.00 L 267.03 160.98 L 264.33 161.87 L 263.98 162.02 L 262.40 162.46 L 261.59 162.78 L 261.81 163.44 L 261.89 163.98 Z' style='fill-rule: evenodd; fill: #F2F2F2; stroke-width: 0.32; stroke: #CCCCCC; stroke-linecap: butt;' />
 <path d='M 305.49 111.90 L 306.09 112.10 L 305.39 112.46 L 304.41 112.49 L 303.90 112.14 L 304.11 111.90 L 304.49 111.82 L 304.72 111.95 L 305.49 111.90 Z' style='fill-rule: evenodd; fill: #F2F2F2; stroke-width: 0.32; stroke: #CCCCCC; stroke-linecap: butt;' />

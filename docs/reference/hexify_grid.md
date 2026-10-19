@@ -1,8 +1,13 @@
-# Create a hexagonal grid specification
+# Create a Legacy Grid Specification
 
-Creates a discrete global grid system (DGGS) object with hexagonal cells
-at a specified resolution. This is the main constructor for hexify
-grids.
+Builds the list-based grid specification of earlier hexify versions,
+kept for code written against them and for 'dggridR' interchange. New
+code uses
+[`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md),
+which returns a
+[`HexGridInfo-class`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
+object and covers every grid hexify supports. A hexify_grid prints as
+one line.
 
 ## Usage
 
@@ -16,6 +21,12 @@ hexify_grid(
   projection = "ISEA",
   radius_km = EARTH_RADIUS_KM
 )
+
+# S3 method for class 'hexify_grid'
+format(x, ...)
+
+# S3 method for class 'hexify_grid'
+print(x, ...)
 ```
 
 ## Arguments
@@ -49,6 +60,14 @@ hexify_grid(
   Radius of the body the grid covers, in kilometers, or a body name such
   as "mars" (default Earth). See
   [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md).
+
+- x:
+
+  A hexify_grid object
+
+- ...:
+
+  Ignored
 
 ## Value
 

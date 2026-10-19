@@ -1,4 +1,4 @@
-# Convert index string to longitude/latitude
+# Convert Index String to Longitude/Latitude
 
 Returns the geographic coordinates of an indexed cell's center. This is
 a cell-level inverse of

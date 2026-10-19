@@ -1,4 +1,4 @@
-# Get children cells
+# Get Children Cells
 
 Returns the child cells at a finer resolution.
 

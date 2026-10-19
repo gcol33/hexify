@@ -66,8 +66,11 @@ cell and neighbour, with columns `cell_id`, `neighbor_id` and
 ## Details
 
 For **ISEA grids**, neighbors are computed using axial coordinate
-offsets in the quad IJ space. Cells at quad boundaries are handled by
-reprojection through lon/lat coordinates.
+offsets in the quad IJ space. On aperture-7 grids of the icosahedron, a
+cell at a quad boundary takes its neighbors from digit arithmetic on its
+IGEO7 Z7 index, which is exact and needs no projection; on other ISEA
+grids such a cell's neighbors are found by reprojection through lon/lat
+coordinates.
 
 For **H3 grids**, neighbors use the vendored H3 `gridDisk` /
 `gridDiskDistances` functions.

@@ -1,4 +1,4 @@
-# Plot hexagonal grid clipped to a polygon boundary
+# Plot Hexagonal Grid Clipped to a Polygon Boundary
 
 A convenience function that creates a grid, clips it to a boundary
 polygon, and plots the result in a single call.

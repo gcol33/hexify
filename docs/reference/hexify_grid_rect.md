@@ -1,4 +1,4 @@
-# Generate a rectangular grid of hexagon polygons
+# Generate a Rectangular Grid of Hexagon Polygons
 
 Creates hexagon polygons covering a rectangular geographic region.
 

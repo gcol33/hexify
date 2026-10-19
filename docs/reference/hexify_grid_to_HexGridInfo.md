@@ -1,6 +1,6 @@
-# Convert legacy hexify_grid to HexGridInfo
+# Convert Legacy hexify_grid to HexGridInfo
 
-Convert legacy hexify_grid to HexGridInfo
+Convert Legacy hexify_grid to HexGridInfo
 
 ## Usage
 

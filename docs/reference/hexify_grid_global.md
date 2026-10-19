@@ -1,4 +1,4 @@
-# Generate a global grid of hexagon polygons
+# Generate a Global Grid of Hexagon Polygons
 
 Creates hexagon polygons covering a whole body.
 

@@ -1,4 +1,4 @@
-# Sibling cells
+# Sibling Cells
 
 Returns the other children of each cell's parent.
 

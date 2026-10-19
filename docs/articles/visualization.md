@@ -4,6 +4,18 @@ Base R [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
 [`hexify_heatmap()`](https://gillescolling.com/hexify/reference/hexify_heatmap.md)
 for ggplot2, and building custom maps from scratch.
 
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Sample Data
 
 We’ll use European cities throughout:
@@ -37,8 +49,6 @@ plot(result, main = "European Cities")
 
 ![](visualization_files/figure-html/plot-basic-1.svg)
 
-    #> Spherical geometry (s2) switched on
-
 ### Customizing Colors and Styling
 
 ``` r
@@ -53,8 +63,6 @@ plot(result,
 ```
 
 ![](visualization_files/figure-html/plot-custom-1.svg)
-
-    #> Spherical geometry (s2) switched on
 
 ### Disabling the Basemap
 
@@ -84,8 +92,6 @@ plot(result,
 
 ![](visualization_files/figure-html/plot-extent-1.svg)
 
-    #> Spherical geometry (s2) switched on
-
 ## Showing Points
 
 Points can be displayed on top of hexagon cells. By default, points are
@@ -102,8 +108,6 @@ plot(result,
 ```
 
 ![](visualization_files/figure-html/plot-points-1.svg)
-
-    #> Spherical geometry (s2) switched on
 
 ### Point Size Presets
 
@@ -124,22 +128,21 @@ oldpar <- par(mfrow = c(2, 2), cex = 1, cex.main = 1)
 
 plot(result, show_points = TRUE, point_size = "small",
      point_color = "red", main = "small (~5%)")
-#> Spherical geometry (s2) switched on
 plot(result, show_points = TRUE, point_size = "normal",
      point_color = "red", main = "normal (~10%)")
-#> Spherical geometry (s2) switched on
 plot(result, show_points = TRUE, point_size = "large",
      point_color = "red", main = "large (~20%)")
-#> Spherical geometry (s2) switched on
 plot(result, show_points = TRUE, point_size = "very large",
      point_color = "red", main = "very large (~35%)")
 ```
 
 ![](visualization_files/figure-html/point-sizes-1.svg)
 
-    #> Spherical geometry (s2) switched on
+``` r
 
-    par(oldpar)
+
+par(oldpar)
+```
 
 ### Custom Point Styling
 
@@ -157,8 +160,6 @@ plot(result,
 
 ![](visualization_files/figure-html/plot-points-custom-1.svg)
 
-    #> Spherical geometry (s2) switched on
-
 ### Disabling Jitter
 
 For exact point locations (no randomization):
@@ -174,8 +175,6 @@ plot(result,
 
 ![](visualization_files/figure-html/plot-no-jitter-1.svg)
 
-    #> Spherical geometry (s2) switched on
-
 ## ggplot2 with hexify_heatmap()
 
 For ggplot2 users,
@@ -187,8 +186,6 @@ returns a ggplot object that can be further customized.
 ``` r
 
 hexify_heatmap(result, basemap = "world", title = "European Cities")
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/ggplot-basic-1.svg)
@@ -212,8 +209,6 @@ hexify_heatmap(result, basemap = "world") +
     plot.title = element_text(face = "bold", size = 14),
     panel.grid = element_blank()
   )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/ggplot-custom-1.svg)
@@ -222,20 +217,12 @@ hexify_heatmap(result, basemap = "world") +
 
 ``` r
 
-# Get the city coordinates
-city_points <- st_as_sf(cities, coords = c("lon", "lat"), crs = 4326)
-
-hexify_heatmap(result, basemap = "world", title = "Cities with Labels") +
-  geom_sf(data = city_points, color = "red", size = 2) +
-  geom_sf_label(data = city_points, aes(label = name),
-               nudge_y = 0.8, size = 5) +
-  coord_sf(xlim = c(-5, 25), ylim = c(45, 55))
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
-#> Coordinate system already present.
-#> ℹ Adding new coordinate system, which will replace the existing one.
-#> Warning in st_point_on_surface.sfc(sf::st_zm(x)): st_point_on_surface may not
-#> give correct results for longitude/latitude data
+# The map is in longitude/latitude, so the cities go on as plain points
+hexify_heatmap(result, basemap = "world", title = "Cities with Labels",
+               xlim = c(-5, 25), ylim = c(45, 55)) +
+  geom_point(data = cities, aes(x = lon, y = lat), color = "red", size = 2) +
+  geom_label(data = cities, aes(x = lon, y = lat, label = name),
+             nudge_y = 0.8, size = 5)
 ```
 
 ![](visualization_files/figure-html/ggplot-layers-1.svg)
@@ -273,8 +260,6 @@ hexify_heatmap(
   value = "count",
   title = "Observation Counts"
 )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/heatmap-basic-1.svg)
@@ -289,8 +274,6 @@ hexify_heatmap(
   colors = "YlOrRd",
   title = "Yellow-Orange-Red Palette"
 )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/heatmap-colors-1.svg)
@@ -310,12 +293,8 @@ or
 
 p1 <- hexify_heatmap(obs_hex, value = "count", colors = "viridis",
                      title = "viridis", xlim = c(-20, 35), ylim = c(35, 65))
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 p2 <- hexify_heatmap(obs_hex, value = "count", colors = "YlGnBu",
                      title = "YlGnBu", xlim = c(-20, 35), ylim = c(35, 65))
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 
 gridExtra::grid.arrange(p1, p2, ncol = 2)
 ```
@@ -334,8 +313,6 @@ hexify_heatmap(
   title = "Zoomed to Region",
   legend_title = "Count"
 )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/heatmap-extent-1.svg)
@@ -353,8 +330,6 @@ hexify_heatmap(
   ylim = c(35, 65),
   title = "With World Basemap"
 )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/heatmap-basemap-1.svg)
@@ -370,8 +345,6 @@ hexify_heatmap(
   ylim = c(35, 65),
   title = "No Basemap"
 )
-#> Spherical geometry (s2) switched off
-#> Spherical geometry (s2) switched on
 ```
 
 ![](visualization_files/figure-html/heatmap-no-basemap-1.svg)
@@ -484,7 +457,7 @@ Visualizing uniformly sampled cells across Earth:
 
 # Grid parameters (coarse for faster build)
 grid <- hex_grid(area_km2 = 200000, aperture = 3)
-max_cell <- 10 * (3^grid@resolution) + 2
+max_cell <- n_cells(grid)
 
 # Sample random cell IDs
 set.seed(123)
@@ -499,7 +472,7 @@ ggplot() +
   geom_sf(data = sample_polys, fill = alpha("forestgreen", 0.5),
           color = "darkgreen", linewidth = 0.4) +
   labs(title = sprintf("Random Sample of %d Cells", N),
-       subtitle = sprintf("~%.0f km2 each", grid@area_km2)) +
+       subtitle = sprintf("~%.0f km2 each", summary(grid)$area_km2)) +
   theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
@@ -526,7 +499,6 @@ stations_hex <- hexify(stations, lon = "lon", lat = "lat", grid = grid)
 
 # Aggregate temperature by cell
 stations_df <- as.data.frame(stations_hex)
-stations_df$cell_id <- stations_hex@cell_id
 cell_temps <- aggregate(temperature ~ cell_id, data = stations_df, FUN = mean)
 
 # Generate polygons and merge data

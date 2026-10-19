@@ -1,4 +1,4 @@
-# Inverse face projection
+# Inverse Face Projection
 
 Converts face plane coordinates back to geographic coordinates.
 
@@ -9,7 +9,7 @@ hexify_inverse(
   x,
   y,
   face,
-  projection = c("isea", "fuller"),
+  projection = c("isea", "fuller", "ivea", "ak", "akw"),
   polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 ```
@@ -30,8 +30,11 @@ hexify_inverse(
 
 - projection:
 
-  Face projection: `"isea"` (Snyder's equal-area projection) or
-  `"fuller"` (Fuller's projection, defined on the icosahedron only)
+  Face projection: `"isea"` (Snyder's equal-area projection), `"ivea"`
+  (van Leeuwen and Strebe's vertex-oriented equal-area projection),
+  `"fuller"` (Fuller's projection, defined on the icosahedron only),
+  `"ak"` (Kaseorg's octahedral projection) or `"akw"` (Kaseorg's with
+  Hex9's trained warp), both defined on the octahedron only
 
 - polyhedron:
 

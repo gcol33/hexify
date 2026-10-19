@@ -1,6 +1,6 @@
-# Convert index resolution to effective resolution
+# Convert Index Resolution to Effective Resolution
 
-Convert index resolution to effective resolution
+Convert Index Resolution to Effective Resolution
 
 ## Usage
 

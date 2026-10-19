@@ -1,4 +1,4 @@
-# Quick world map plot
+# Quick World Map Plot
 
 Simple wrapper to plot the built-in world map.
 

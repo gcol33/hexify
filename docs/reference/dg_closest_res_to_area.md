@@ -1,4 +1,4 @@
-# Find closest resolution for target cell area
+# Find Closest Resolution for Target Cell Area
 
 Finds the grid resolution that produces cells closest to the target
 area. This is primarily used internally by
@@ -58,12 +58,6 @@ Other grid statistics:
 ## Examples
 
 ``` r
-# Create a temporary grid to get aperture settings
-temp_grid <- list(aperture = 3, topology = "HEXAGON")
-class(temp_grid) <- "hexify_grid"
-
-# Find resolution for 1000 km^2 cells
-res <- dg_closest_res_to_area(temp_grid, area = 1000, 
-                               metric = TRUE, show_info = TRUE)
-print(res)
+grid <- hex_grid(resolution = 5, aperture = 3)
+dg_closest_res_to_area(grid, area = 1000, show_info = TRUE)
 ```

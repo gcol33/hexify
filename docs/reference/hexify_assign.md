@@ -1,4 +1,4 @@
-# Assign hex cells ('ISEA3H', aperture 3) for lon/lat
+# Assign Hex Cells ('ISEA3H', Aperture 3) for lon/lat
 
 Forward projection -\> quantize -\> cell centre -\> inverse to lon/lat,
 on the aperture-3 pipeline used by

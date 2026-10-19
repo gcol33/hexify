@@ -11,6 +11,18 @@ The globes on this page need a browser with WebGPU (see [Where the globe
 draws](#where-the-globe-draws)); without it each one shows a notice in
 its place.
 
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## Values per cell
 
 `values` holds one number per cell of `cells`, or one per cell of the
@@ -23,6 +35,25 @@ grid <- hex_grid(resolution = 3, aperture = 3)
 cells <- seq_len(n_cells(grid))
 centres <- cell_to_lonlat(cells, grid)
 hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3",
+          width = "100%", height = 560)
+```
+
+The values go to the graphics card as a texture laid out like the grid’s
+quads, one block per quad, padded with the cells across each quad’s
+edges, at the grid’s resolution and at every coarser one (Jubair et
+al. 2016 store icosahedral data in such blocks). Where the cells on
+screen shrink below a pixel, the fill is read from the coarser grid
+whose cells are about a pixel wide; its cells hold the mean of the
+values in them, and are as opaque as the share of them the given cells
+cover. A fine grid seen whole shows the pattern of its values rather
+than noise, and a few scattered cells fade rather than flicker.
+
+`smooth = TRUE` blends the values of neighbouring cells linearly across
+the triangles of cell centres, as a field sampled at the centres.
+
+``` r
+
+hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3", smooth = TRUE,
           width = "100%", height = 560)
 ```
 
@@ -106,3 +137,9 @@ RStudio’s viewer draws the globe: RStudio 2026.08 is built on Electron
 the browsers above, for example with
 [`htmlwidgets::saveWidget()`](https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html)
 and a browser.
+
+## Reference
+
+Jubair, M. I., Alim, U., Röber, N., Clyne, J., and Mahdavi-Amiri, A.
+(2016). Icosahedral maps for a multiresolution representation of Earth
+data. In *Vision, Modeling, and Visualization (VMV 2016)*.

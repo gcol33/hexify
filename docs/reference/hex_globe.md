@@ -1,4 +1,4 @@
-# Interactive globe of a grid
+# Interactive Globe of a Grid
 
 Draws the cells of a grid on a globe that turns under the mouse,
 rendered on the graphics card through WebGPU. A slider folds the solid
@@ -13,6 +13,8 @@ hex_globe(
   values = NULL,
   cells = NULL,
   surface = c("sphere", "solid"),
+  lambert = NULL,
+  lambert_path = c("steps", "single"),
   center = c(lon = 15, lat = 32),
   projection = c("orthographic", "perspective"),
   distance = NULL,
@@ -32,6 +34,7 @@ hex_globe(
   palette = "viridis",
   limits = NULL,
   na_fill = NA,
+  smooth = FALSE,
   step = 0.01,
   width = NULL,
   height = NULL,
@@ -43,8 +46,9 @@ hex_globe(
 
 - x:
 
-  A HexGridInfo object from
-  [`hex_grid`](https://gillescolling.com/hexify/reference/hex_grid.md)
+  A HexGridInfo object; for
+  [`print()`](https://rdrr.io/r/base/print.html), a grid summary as
+  [`summary()`](https://rdrr.io/r/base/summary.html) returns one
 
 - values:
 
@@ -60,6 +64,19 @@ hex_globe(
   Surface shown first, `"sphere"` or `"solid"`, the flat faces of the
   grid's polyhedron; the slider folds one into the other. An H3 grid is
   drawn on the sphere only.
+
+- lambert:
+
+  `NULL`, or a number from 0 to 3: the slider follows Lambert's
+  construction of Snyder's projection, and the globe opens at that step
+  (0 the sphere, 1 the Lambert points, 2 the nudged points, 3 the
+  faces), in place of `surface`. Needs a grid with
+  `projection = "isea"`.
+
+- lambert_path:
+
+  How the points move along the construction: `"steps"`, its three steps
+  one after the other, or `"single"`, one path each.
 
 - center:
 
@@ -153,6 +170,12 @@ hex_globe(
 
   Fill colour of cells whose value is `NA`; `NA` leaves them unfilled.
 
+- smooth:
+
+  Whether the fill of an ISEA grid blends between the values of
+  neighbouring cells, linearly across the triangles of cell centres,
+  rather than filling each cell with its own value.
+
 - step:
 
   Spacing of the points along a cell boundary, as a fraction of a face
@@ -177,16 +200,39 @@ the same projection and cell numbering as
 [`lonlat_to_cell`](https://gillescolling.com/hexify/reference/lonlat_to_cell.md),
 so the page holds the grid's description and the values rather than the
 cells' outlines, and a grid of any resolution draws as fast as a coarse
-one. Borders keep their width at every zoom and fade out where the cells
-get too small to see. The pointer shows the ID and value of the cell
-under it. H3 cells are drawn from their outlines.
+one. Hex9 grids are found the same way; on Hex9's own projection
+(`projection = "akw"`) the page also carries the warp field
+([`hex9_warp_download`](https://gillescolling.com/hexify/reference/hex9_warp_download.md)),
+9.6 MB as a texture. The values sit on the graphics card as a texture
+laid out like the grid's quads, one block per quad and resolution, which
+the shader reads at the place it finds a cell. Where the cells shrink
+below a pixel the fill is read from the grid one resolution coarser, and
+so on, whose cells take the mean of the values in them, so a fine grid
+seen whole shows its pattern rather than noise. Borders keep their width
+at every zoom and fade out where the cells get too small to see. The
+pointer shows the ID and value of the cell under it. H3 cells are drawn
+from their outlines.
+
+With `lambert`, the slider instead follows Lambert's construction of
+Snyder's projection (see
+[`projection_stages`](https://gillescolling.com/hexify/reference/projection_stages.md)),
+on a grid with that projection: from the sphere (0), every point swings
+about its face's centre down onto the plane touching the sphere there,
+keeping its distance from the centre (1, Lambert's azimuthal equal-area
+projection); within that plane it moves to Snyder's azimuth and radius
+(2); and the plane scales about the sphere's centre onto the face (3),
+the face of the solid whose faces have the area of theirs on the sphere.
+The neighbouring faces' planes come apart along the way and meet again
+on the solid. A menu beside the slider switches between these three
+steps and one path per point that changes the angle, azimuth and radius
+together.
 
 Drag to turn the globe. Drag with Shift held to turn the view about the
 line of sight and, in the perspective view, to tilt the camera. The
 mouse wheel moves the perspective camera closer or zooms the
 orthographic view. The view starts where the camera arguments, those of
 the grid's
-[`plot`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)
+[`plot`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 method, place it.
 
 The globe needs the 'htmlwidgets' package and a viewer or browser with
@@ -198,7 +244,7 @@ versions.
 
 ## See also
 
-[`plot`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)
+[`plot`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 for the same view as a static plot
 
 ## Examples
@@ -212,5 +258,9 @@ if (requireNamespace("htmlwidgets", quietly = TRUE)) {
   cells <- seq_len(n_cells(grid))
   centres <- cell_to_lonlat(cells, grid)
   hex_globe(grid, values = centres$lat_deg, palette = "Blue-Red 3")
+
+  # Lambert's construction of Snyder's projection, opened at the Lambert
+  # points
+  hex_globe(grid, lambert = 1, land = FALSE)
 }
 ```

@@ -1,4 +1,4 @@
-# Convert HexGridInfo to legacy hexify_grid
+# Convert HexGridInfo to Legacy hexify_grid
 
 For backwards compatibility with existing functions.
 

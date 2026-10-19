@@ -1,4 +1,4 @@
-# Convert cell ID to longitude/latitude using a grid object
+# Convert Cell ID to Longitude/Latitude Using a Grid Object
 
 Grid-based wrapper for
 [`hexify_cell_to_lonlat`](https://gillescolling.com/hexify/reference/hexify_cell_to_lonlat.md).

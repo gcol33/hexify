@@ -1,4 +1,4 @@
-# Generate a global hexagon grid
+# Generate a Global Hexagon Grid
 
 Creates hexagon polygons covering the entire Earth.
 

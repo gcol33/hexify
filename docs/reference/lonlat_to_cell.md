@@ -1,4 +1,4 @@
-# Convert longitude/latitude to cell ID
+# Convert Longitude/Latitude to Cell ID
 
 Converts geographic coordinates to DGGS cell IDs using a grid
 specification.

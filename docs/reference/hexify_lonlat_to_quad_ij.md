@@ -1,4 +1,4 @@
-# Convert longitude/latitude to Quad IJ coordinates
+# Convert Longitude/Latitude to Quad IJ Coordinates
 
 Converts geographic coordinates to the intermediate Quad IJ
 representation used internally by ISEA DGGS. Returns the quad number

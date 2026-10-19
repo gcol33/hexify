@@ -1,4 +1,4 @@
-# Assign hexagonal DGGS cell IDs to geographic points
+# Assign Hexagonal DGGS Cell IDs to Geographic Points
 
 Takes a data.frame or sf object with geographic coordinates and returns
 a HexData object that stores the original data plus cell assignments.
@@ -118,7 +118,7 @@ You can create a grid specification once and reuse it:
 grid specification,
 [`HexData-class`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for return object details,
-[`st_as_sf`](https://gillescolling.com/hexify/reference/st_as_sf.HexData.md)
+[`st_as_sf`](https://gillescolling.com/hexify/reference/HexData-class.md)
 for converting to sf
 
 Other hexify main:

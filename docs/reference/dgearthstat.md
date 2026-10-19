@@ -1,4 +1,4 @@
-# Get grid statistics for whole-body coverage
+# Get Grid Statistics for Whole-Body Coverage
 
 Calculates statistics about the hexagonal grid at the current
 resolution, including total number of cells, cell area, and cell

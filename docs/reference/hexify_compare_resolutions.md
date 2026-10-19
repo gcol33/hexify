@@ -1,4 +1,4 @@
-# Compare grid resolutions
+# Compare Grid Resolutions
 
 Generates a table comparing different resolution levels for a given grid
 configuration. Useful for choosing appropriate resolution.

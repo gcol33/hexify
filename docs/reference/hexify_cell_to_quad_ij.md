@@ -1,4 +1,4 @@
-# Convert Cell ID to Quad IJ coordinates
+# Convert Cell ID to Quad IJ Coordinates
 
 Converts DGGRID-compatible cell IDs to Quad IJ coordinates. This is the
 inverse of hexify_quad_ij_to_cell().

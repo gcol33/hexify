@@ -1,4 +1,4 @@
-# Convert cell ID to longitude/latitude
+# Convert Cell ID to Longitude/Latitude
 
 Converts DGGS cell IDs back to geographic coordinates (cell centers).
 

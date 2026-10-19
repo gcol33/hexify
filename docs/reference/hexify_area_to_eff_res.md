@@ -1,4 +1,4 @@
-# Convert area to effective resolution
+# Convert Area to Effective Resolution
 
 Finds the effective resolution that gives approximately the target area.
 

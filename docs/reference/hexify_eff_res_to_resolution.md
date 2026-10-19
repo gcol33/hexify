@@ -1,4 +1,4 @@
-# Convert effective resolution to index resolution
+# Convert Effective Resolution to Index Resolution
 
 For aperture 3: res_index = 2 \* eff_res - 1 for odd index resolutions.
 

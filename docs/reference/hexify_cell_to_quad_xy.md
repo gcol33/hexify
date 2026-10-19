@@ -1,4 +1,4 @@
-# Convert Cell ID to Quad XY coordinates
+# Convert Cell ID to Quad XY Coordinates
 
 Converts DGGRID-compatible cell IDs to Quad XY coordinates (continuous
 quad space). This is the cell center in quad coordinates.

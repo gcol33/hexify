@@ -17,3 +17,10 @@ cells(x)
 ## Value
 
 A vector of cell IDs
+
+## Examples
+
+``` r
+df <- data.frame(lon = c(0, 0.01, 20), lat = c(45, 45, 55))
+cells(hexify(df, lon = "lon", lat = "lat", area_km2 = 1000))
+```

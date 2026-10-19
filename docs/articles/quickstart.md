@@ -1,5 +1,17 @@
 # Quick Start
 
+### Installation
+
+``` r
+
+install.packages("hexify")
+
+# Development version
+# pak::pak("gcol33/hexify")
+
+library(hexify)
+```
+
 ![](quickstart_files/figure-html/cover-image-1.svg)
 
 ## Spatial Analysis Done Right
@@ -18,18 +30,6 @@ cells of **equal area**, regardless of latitude. hexify implements the
 ISEA (Icosahedral Snyder Equal Area) projection, providing hexagonal
 cells that are all the same size from the equator to the Arctic.
 
-### Installation
-
-``` r
-
-install.packages("hexify")
-
-# Development version
-# pak::pak("gcol33/hexify")
-
-library(hexify)
-```
-
 ### Basic Usage
 
 ``` r
@@ -44,36 +44,13 @@ cities <- data.frame(
 # Create a grid specification
 grid <- hex_grid(area_km2 = 10000)
 grid
-#> HexGridInfo Specification
-#> -------------------------
-#> Aperture:    3
-#> Resolution:  8
-#> Area:        7773.97 km^2
-#> Diagonal:    94.74 km
-#> CRS:         EPSG:4326
-#> Total Cells: 65612
+#> <HexGridInfo> aperture 3, resolution 8: 65,612 cells of 7,774 km^2
 
 # Assign cities to hexagonal cells
 result <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
 result
-#> HexData Object
-#> --------------
-#> Rows:    5
-#> Columns: 3
-#> Cells:   5 unique
-#> Type:    data.frame
-#> 
-#> Grid:
-#>   Aperture 3, Resolution 8 (~7774.0 km^2)
-#> 
-#> Columns: name, lon, lat 
-#> 
-#> Data preview (with cell assignments):
-#>    name   lon   lat cell_id
-#>  Vienna 16.37 48.21   14092
-#>   Paris  2.35 48.86   13272
-#>  Madrid -3.70 40.42   13260
-#> ... with 2 more rows
+#> <HexData> 5 rows, 3 columns, 5 cells (data.frame)
+#>   grid: aperture 3, resolution 8: 65,612 cells of 7,774 km^2
 ```
 
 #### Accessing HexData
@@ -82,14 +59,7 @@ result
 
 # Get the grid specification
 grid_info(result)
-#> HexGridInfo Specification
-#> -------------------------
-#> Aperture:    3
-#> Resolution:  8
-#> Area:        7773.97 km^2
-#> Diagonal:    94.74 km
-#> CRS:         EPSG:4326
-#> Total Cells: 65612
+#> <HexGridInfo> aperture 3, resolution 8: 65,612 cells of 7,774 km^2
 
 # Get unique cell IDs
 cells(result)
@@ -101,18 +71,18 @@ n_cells(result)
 #> [1] 5
 
 # Access all cell IDs (one per row)
-result@cell_id
+result$cell_id
 #> integer64
 #> [1] 14092 13272 13260 13688 14247
 
 # Access cell centers
-head(result@cell_center)
-#>            lon      lat
-#> [1,] 15.968349 48.25028
-#> [2,]  2.460284 48.49334
-#> [3,] -3.482737 40.05509
-#> [4,] 13.428088 52.18073
-#> [5,] 12.466432 41.61442
+head(as.data.frame(result)[c("cell_cen_lon", "cell_cen_lat")])
+#>   cell_cen_lon cell_cen_lat
+#> 1    15.968349     48.25028
+#> 2     2.460284     48.49334
+#> 3    -3.482737     40.05509
+#> 4    13.428088     52.18073
+#> 5    12.466432     41.61442
 
 # Extract original data as data.frame
 head(as.data.frame(result))
@@ -202,7 +172,6 @@ birds_hex <- hexify(birds, lon = "lon", lat = "lat", grid = grid)
 
 # Extract data with cell IDs
 birds_gridded <- as.data.frame(birds_hex)
-birds_gridded$cell_id <- birds_hex@cell_id
 
 # Count observations per cell
 obs_counts <- aggregate(
@@ -250,7 +219,7 @@ ggplot() +
   labs(
     title = "Bird Observations in Equal-Area Cells",
     subtitle = sprintf("ISEA3H grid at resolution %d (~%.0f km² cells)",
-                       grid@resolution, grid@area_km2)
+                       summary(grid)$resolution, summary(grid)$area_km2)
   ) +
   theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(

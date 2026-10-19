@@ -3,6 +3,18 @@
 Shared grids across datasets, polygon generation, resolution selection,
 and GIS export.
 
+## Installation
+
+``` r
+
+# Install from CRAN
+install.packages("hexify")
+
+# Or install development version from GitHub
+# install.packages("pak")
+pak::pak("gcol33/hexify")
+```
+
 ## One Grid, Many Datasets
 
 Define a grid once, reuse it everywhere. Same grid object = guaranteed
@@ -34,14 +46,7 @@ You want to:
 # This is your shared spatial reference system
 grid <- hex_grid(area_km2 = 5000)
 print(grid)
-#> HexGridInfo Specification
-#> -------------------------
-#> Aperture:    3
-#> Resolution:  8
-#> Area:        7773.97 km^2
-#> Diagonal:    94.74 km
-#> CRS:         EPSG:4326
-#> Total Cells: 65612
+#> <HexGridInfo> aperture 3, resolution 8: 65,612 cells of 7,774 km^2
 
 # Step 2: Create multiple datasets with different structures
 set.seed(123)
@@ -90,13 +95,10 @@ analysis. The `cell_id` becomes the shared spatial key:
 
 # Extract data frames with cell IDs
 birds_df <- as.data.frame(birds)
-birds_df$cell_id <- birds@cell_id
 
 mammals_df <- as.data.frame(mammals)
-mammals_df$cell_id <- mammals@cell_id
 
 climate_df <- as.data.frame(climate)
-climate_df$cell_id <- climate@cell_id
 
 # Aggregate each dataset by cell
 bird_richness <- aggregate(
@@ -156,7 +158,7 @@ ggplot() +
   geom_sf(data = europe, fill = "gray95", color = "gray60") +
   geom_sf(data = europe_hexes, fill = NA, color = "steelblue", linewidth = 0.4) +
   coord_sf(xlim = c(-10, 25), ylim = c(35, 60)) +
-  labs(title = sprintf("Hexagonal Grid (~%.0f km² cells)", grid@area_km2)) +
+  labs(title = sprintf("Hexagonal Grid (~%.0f km² cells)", summary(grid)$area_km2)) +
   theme_minimal(base_size = FIG_BASE_SIZE)
 ```
 
@@ -176,9 +178,8 @@ grid <- hex_grid(area_km2 = 2000)
 france_grid <- grid_rect(c(-5, 41, 10, 52), grid)
 
 # Clip grid to France boundary
-france_grid_clipped <- st_intersection(france_grid, st_geometry(france))
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
+france_grid_clipped <- st_intersection(st_set_agr(france_grid, "constant"),
+                                       st_geometry(france))
 
 ggplot() +
   geom_sf(data = france, fill = "gray95", color = "gray40", linewidth = 0.5) +
@@ -186,7 +187,7 @@ ggplot() +
           color = "steelblue", linewidth = 0.3) +
   coord_sf(xlim = c(-5, 10), ylim = c(41, 52)) +
   labs(title = "Hexagonal Grid Clipped to France",
-       subtitle = sprintf("~%.0f km² cells", grid@area_km2)) +
+       subtitle = sprintf("~%.0f km² cells", summary(grid)$area_km2)) +
   theme_minimal(base_size = FIG_BASE_SIZE)
 ```
 
@@ -203,7 +204,7 @@ global_hexes <- grid_global(grid)
 ggplot() +
   geom_sf(data = hexify_world, fill = "gray90", color = "gray70", linewidth = 0.2) +
   geom_sf(data = global_hexes, fill = NA, color = "darkgreen", linewidth = 0.3) +
-  labs(title = sprintf("Global Hexagonal Grid (~%.0f km² cells)", grid@area_km2)) +
+  labs(title = sprintf("Global Hexagonal Grid (~%.0f km² cells)", summary(grid)$area_km2)) +
   theme_minimal(base_size = FIG_BASE_SIZE) +
   theme(axis.text = element_blank(), axis.ticks = element_blank())
 ```
@@ -233,10 +234,10 @@ grid_coarse <- hex_grid(area_km2 = 10000)
 obs_coarse <- hexify(observations, lon = "lon", lat = "lat", grid = grid_coarse)
 
 cat(sprintf("Fine resolution: %d unique cells (area: %.1f km²)\n",
-            n_cells(obs_fine), grid_fine@area_km2))
+            n_cells(obs_fine), summary(grid_fine)$area_km2))
 #> Fine resolution: 98 unique cells (area: 863.8 km²)
 cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
-            n_cells(obs_coarse), grid_coarse@area_km2))
+            n_cells(obs_coarse), summary(grid_coarse)$area_km2))
 #> Coarse resolution: 93 unique cells (area: 7774.0 km²)
 ```
 
@@ -246,10 +247,8 @@ cat(sprintf("Coarse resolution: %d unique cells (area: %.1f km²)\n",
 
 # Extract data with cell IDs
 fine_df <- as.data.frame(obs_fine)
-fine_df$cell_id <- obs_fine@cell_id
 
 coarse_df <- as.data.frame(obs_coarse)
-coarse_df$cell_id <- obs_coarse@cell_id
 
 # Species richness at each scale
 richness_fine <- aggregate(species ~ cell_id, data = fine_df,
@@ -296,10 +295,8 @@ cities_hex <- hexify(cities, lon = "lon", lat = "lat", grid = grid)
 
 # Extract with cell IDs
 stations_df <- as.data.frame(stations_hex)
-stations_df$cell_id <- stations_hex@cell_id
 
 cities_df <- as.data.frame(cities_hex)
-cities_df$cell_id <- cities_hex@cell_id
 
 # Join by cell_id
 city_weather <- merge(
@@ -424,7 +421,7 @@ hex_summarize(stations_hex, mean_temp = mean(temperature), n_stations = length(t
 ``` r
 
 # The 6 cells surrounding a given cell (k = 1), or a wider ring with k > 1
-some_cell <- stations_hex@cell_id[1]
+some_cell <- stations_hex$cell_id[1]
 get_neighbors(some_cell, grid)
 #> [[1]]
 #> integer64
@@ -449,19 +446,19 @@ with `area_km2` to get the closest available resolution:
 # Target: 100 km² cells
 grid_100 <- hex_grid(area_km2 = 100, aperture = 3)
 cat(sprintf("Target ~100 km²: resolution %d (actual: %.1f km²)\n",
-            grid_100@resolution, grid_100@area_km2))
+            summary(grid_100)$resolution, summary(grid_100)$area_km2))
 #> Target ~100 km²: resolution 12 (actual: 96.0 km²)
 
 # Target: 1000 km² cells
 grid_1000 <- hex_grid(area_km2 = 1000, aperture = 3)
 cat(sprintf("Target ~1000 km²: resolution %d (actual: %.1f km²)\n",
-            grid_1000@resolution, grid_1000@area_km2))
+            summary(grid_1000)$resolution, summary(grid_1000)$area_km2))
 #> Target ~1000 km²: resolution 10 (actual: 863.8 km²)
 
 # Target: 10000 km² cells
 grid_10000 <- hex_grid(area_km2 = 10000, aperture = 3)
 cat(sprintf("Target ~10000 km²: resolution %d (actual: %.1f km²)\n",
-            grid_10000@resolution, grid_10000@area_km2))
+            summary(grid_10000)$resolution, summary(grid_10000)$area_km2))
 #> Target ~10000 km²: resolution 8 (actual: 7774.0 km²)
 ```
 
@@ -498,10 +495,10 @@ cat(sprintf("Target: ~%d km² cells\n\n", target_area))
 #> Target: ~1000 km² cells
 for (ap in c(3, 4, 7)) {
   grid <- hex_grid(area_km2 = target_area, aperture = ap)
-  n_cells <- 10 * (ap^grid@resolution) + 2
+  n_cell <- n_cells(grid)
   cat(sprintf("Aperture %d: resolution %d -> %.1f km² (%s cells globally)\n",
-              ap, grid@resolution, grid@area_km2,
-              format(n_cells, big.mark = ",")))
+              ap, summary(grid)$resolution, summary(grid)$area_km2,
+              format(n_cell, big.mark = ",")))
 }
 #> Aperture 3: resolution 10 -> 863.8 km² (590,492 cells globally)
 #> Aperture 4: resolution 8 -> 778.3 km² (655,362 cells globally)
@@ -524,18 +521,12 @@ radius in kilometres or the name of a body:
 
 mars <- hex_grid(area_km2 = 1000, radius_km = "mars")
 mars
-#> HexGridInfo Specification
-#> -------------------------
-#> Aperture:    3
-#> Resolution:  9
-#> Area:        733.48 km^2
-#> Diagonal:    29.10 km
-#> CRS:         +proj=longlat +R=3389500 +no_defs
-#> Radius:      3389.50 km
-#> Total Cells: 196832
+#> <HexGridInfo> aperture 3, resolution 9, radius 3389.5 km: 196,832 cells of 733.48 km^2
 
 # The same grid, by radius
-identical(mars@area_km2, hex_grid(resolution = mars@resolution, radius_km = 3389.5)@area_km2)
+identical(summary(mars)$area_km2,
+          summary(hex_grid(resolution = summary(mars)$resolution,
+                           radius_km = 3389.5))$area_km2)
 #> [1] TRUE
 ```
 
@@ -555,7 +546,7 @@ lat <- c(0, 48.21, -33.4)
 
 identical(lonlat_to_cell(lon, lat, moon), lonlat_to_cell(lon, lat, earth))
 #> [1] TRUE
-c(earth = earth@area_km2, moon = moon@area_km2)
+c(earth = summary(earth)$area_km2, moon = summary(moon)$area_km2)
 #>     earth      moon 
 #> 209730.93  15597.17
 ```
@@ -581,7 +572,7 @@ radius carries a longlat CRS on the sphere of that radius:
 
 ``` r
 
-mars@crs
+summary(mars)$crs
 #> [1] "+proj=longlat +R=3389500 +no_defs"
 ```
 
@@ -592,7 +583,7 @@ own works the same way through a radius in kilometres:
 ``` r
 
 world <- hex_grid(area_km2 = 5000, radius_km = 4200)
-world@crs
+summary(world)$crs
 #> [1] "+proj=longlat +R=4200000 +no_defs"
 ```
 
@@ -601,8 +592,8 @@ string, which is how a projected system for the body reaches the grid:
 
 ``` r
 
-hex_grid(area_km2 = 5000, radius_km = 4200,
-         crs = "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs")@crs
+summary(hex_grid(area_km2 = 5000, radius_km = 4200,
+                 crs = "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs"))$crs
 #> [1] "+proj=laea +lat_0=0 +lon_0=0 +R=4200000 +no_defs"
 ```
 
@@ -622,7 +613,7 @@ h3_mars <- hex_grid(resolution = 5, type = "h3", radius_km = "mars")
 #> H3 cells are not exactly equal-area; hexagon area varies ~2x within a resolution.
 #> H3 cell IDs name a position in H3's topology, which Uber's H3 reads on Earth. A grid on another body reuses that topology and its own radius for areas; the IDs are not interchangeable with Earth H3 data.
 #> This message is displayed once per session.
-h3_mars@area_km2 / hex_grid(resolution = 5, type = "h3")@area_km2
+summary(h3_mars)$area_km2 / summary(hex_grid(resolution = 5, type = "h3"))$area_km2
 #> [1] 0.2830447
 
 # H3 measures against the WGS84 authalic radius, so that is what divides out
@@ -714,8 +705,8 @@ result <- hexify(data_with_na, lon = "lon", lat = "lat", grid = grid)
 #> coordinate pairs contain NA values and will be skipped
 
 # Check which rows have valid cell assignments
-cat("Cell IDs:", result@cell_id, "\n")
-#> Cell IDs: 6.254575e-319 6.050624e-319
+cat("Cell IDs:", as.character(result$cell_id), "\n")
+#> Cell IDs: 126594 122466
 cat("NA indicates invalid coordinates\n")
 #> NA indicates invalid coordinates
 ```

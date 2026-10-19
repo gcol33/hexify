@@ -1,7 +1,8 @@
-# Random points inside cells
+# Random Points Inside Cells
 
 Draws points uniformly over the area of each cell on the sphere, as
-DGGRID's `randpts` output does. Each point is assigned back to its cell
+DGGRID's `randpts` output does; on a grid with an `ellipsoid`, uniformly
+over its area on the ellipsoid. Each point is assigned back to its cell
 by
 [`lonlat_to_cell`](https://gillescolling.com/hexify/reference/lonlat_to_cell.md),
 so the points of a cell are exactly the points the grid places in it.

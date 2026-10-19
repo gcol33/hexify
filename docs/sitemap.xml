@@ -3,6 +3,7 @@
 <url><loc>https://gillescolling.com/hexify/articles/globe.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/articles/h3.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/articles/index.html</loc></url>
+<url><loc>https://gillescolling.com/hexify/articles/lambert.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/articles/ogc-conformance.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/articles/quickstart.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/articles/theory.html</loc></url>
@@ -16,7 +17,6 @@
 <url><loc>https://gillescolling.com/hexify/news/index.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/as_dggrid.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/as_sf.html</loc></url>
-<url><loc>https://gillescolling.com/hexify/reference/as_tibble.HexData.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/calculate_resolution_for_area.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/cells.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/cell_area.html</loc></url>
@@ -42,6 +42,7 @@
 <url><loc>https://gillescolling.com/hexify/reference/grid_info.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/grid_rect.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/h3_crosswalk.html</loc></url>
+<url><loc>https://gillescolling.com/hexify/reference/hex9_warp_download.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/HexData-class.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/HexData-methods.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/HexGridInfo-class.html</loc></url>
@@ -109,6 +110,7 @@
 <url><loc>https://gillescolling.com/hexify/reference/hexify_which_face.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/hexify_world.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/hexify_z7_canonical.html</loc></url>
+<url><loc>https://gillescolling.com/hexify/reference/hex_aggregate.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/hex_browse.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/hex_compact.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/hex_corners_to_sf.html</loc></url>
@@ -126,6 +128,7 @@
 <url><loc>https://gillescolling.com/hexify/reference/hex_zonal.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/import_h3.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/index.html</loc></url>
+<url><loc>https://gillescolling.com/hexify/reference/index_to_cell.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/is_hex_data.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/is_hex_grid.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/is_pentagon.html</loc></url>
@@ -141,9 +144,8 @@
 <url><loc>https://gillescolling.com/hexify/reference/plot_grid.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/plot_world.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/projection_distortion.html</loc></url>
+<url><loc>https://gillescolling.com/hexify/reference/projection_stages.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/reexports.html</loc></url>
-<url><loc>https://gillescolling.com/hexify/reference/st_as_sf.HexData.html</loc></url>
-<url><loc>https://gillescolling.com/hexify/reference/st_crs.HexGridInfo.html</loc></url>
 <url><loc>https://gillescolling.com/hexify/reference/wall_metrics.html</loc></url>
 </urlset>
 

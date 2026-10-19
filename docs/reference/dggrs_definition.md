@@ -1,4 +1,4 @@
-# Definition of a grid as a Discrete Global Grid Reference System
+# Definition of a Grid as a Discrete Global Grid Reference System
 
 Describes a grid in the DGGRS definition schema of OGC API - Discrete
 Global Grid Systems: the hierarchy of grids (solid, refinement ratio,
@@ -33,13 +33,19 @@ writes, which carry their resolution and are unique across all
 resolutions, and the cell IDs, which number the cells of one resolution
 from 1 and are unique only together with it.
 
-The ISEA3H and ISEA7H definitions registered with OGC
-(<https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H>) are other grids:
-they convert WGS84 geodetic latitude to authalic latitude before
-projecting, and place the icosahedron's first vertex at 11.20 degrees E
-and authalic latitude \\\arctan(\phi)\\, where hexify, like DGGRID,
-reads latitude on the sphere and places it at 11.25 degrees E. A hexify
-grid is therefore described without an OGC URI.
+The ISEA3H, ISEA7H, IVEA3H and IVEA7H definitions registered with OGC
+(<https://www.opengis.net/def/dggrs/OGC/1.0/ISEA7H>) convert WGS84
+geodetic latitude to authalic latitude before projecting, and place the
+icosahedron's first vertex at 11.20 degrees E and authalic latitude
+\\\arctan(\phi)\\:
+`hex_grid(aperture = 3, ellipsoid = "WGS84", orientation = "ogc")`, its
+aperture-7 twin and the same with `projection = "ivea"`. For such a grid
+the definition carries OGC's zone identifiers
+(`cell_to_index(form = "textZIRS")`) and links to the OGC definition,
+which it matches in its hierarchy and zone identifiers; it carries no
+OGC URI, since hexify lists sub-zones in ascending order of cell ID
+rather than in OGC's scanlines. On a grid with an ellipsoid the
+orientation's latitude is geodetic, as OGC states it.
 
 ## References
 

@@ -8,19 +8,22 @@
 - **Uber Technologies, Inc.**. Contributor, copyright holder.\
   H3 C library, src/h3 (Apache-2.0)
 
+- **Ben Griffin**. Contributor, copyright holder.\
+  Hex9 address tables in src/hex9.cpp, from libhex9 (Apache-2.0)
+
 ## Citation
 
 Source:
 [`DESCRIPTION`](https://github.com/gcol33/hexify/blob/HEAD/DESCRIPTION)
 
 Colling G (2026). *hexify: Equal-Area Hex Grids on the Snyder ISEA
-Icosahedron*. R package version 0.8.4,
+Icosahedron*. R package version 0.9.0,
 <https://gillescolling.com/hexify/>.
 
     @Manual{,
       title = {hexify: Equal-Area Hex Grids on the Snyder ISEA Icosahedron},
       author = {Gilles Colling},
       year = {2026},
-      note = {R package version 0.8.4},
+      note = {R package version 0.9.0},
       url = {https://gillescolling.com/hexify/},
     }

@@ -1,4 +1,4 @@
-# Get children indices
+# Get Children Indices
 
 Returns all children indices (one resolution finer).
 

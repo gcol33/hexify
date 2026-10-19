@@ -1,4 +1,4 @@
-# Forward face projection
+# Forward Face Projection
 
 Projects geographic coordinates onto a face of the solid, returning face
 index and planar coordinates (tx, ty).
@@ -9,7 +9,7 @@ index and planar coordinates (tx, ty).
 hexify_forward(
   lon,
   lat,
-  projection = c("isea", "fuller"),
+  projection = c("isea", "fuller", "ivea", "ak", "akw"),
   polyhedron = c("icosahedron", "octahedron", "tetrahedron")
 )
 ```
@@ -26,8 +26,11 @@ hexify_forward(
 
 - projection:
 
-  Face projection: `"isea"` (Snyder's equal-area projection) or
-  `"fuller"` (Fuller's projection, defined on the icosahedron only)
+  Face projection: `"isea"` (Snyder's equal-area projection), `"ivea"`
+  (van Leeuwen and Strebe's vertex-oriented equal-area projection),
+  `"fuller"` (Fuller's projection, defined on the icosahedron only),
+  `"ak"` (Kaseorg's octahedral projection) or `"akw"` (Kaseorg's with
+  Hex9's trained warp), both defined on the octahedron only
 
 - polyhedron:
 

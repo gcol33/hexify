@@ -1,4 +1,4 @@
-# The parts of cells on a net layout
+# The Parts of Cells on a Net Layout
 
 Cuts each cell into its parts on the pieces of a net layout and places
 them in the plane. A cell on one piece has one part. A cell that crosses

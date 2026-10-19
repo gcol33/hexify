@@ -1,4 +1,4 @@
-# Get parent cell
+# Get Parent Cell
 
 Returns the parent cell at a coarser resolution.
 
@@ -41,10 +41,20 @@ successive resolutions do not nest, so a cell can also reach into one or
 two neighbours of that parent: an aperture-3 cell centred on a parent
 corner lies a third in each of three parents, an aperture-4 cell centred
 on a parent edge half in each of two, and an aperture-7 cell off the
-parent's centre 11/12 in its parent and 1/12 in one neighbour.
-`overlapping = TRUE` returns all of them, as the `parent()` query of OGC
-Topic 21 does when `inheritID` is false; the default is its
-`inheritID = true` answer.
+parent's centre 11/12 in its parent and 1/12 in one neighbour. A Hex9
+cell's parent is the coarser cell holding the cell's mode-0 half
+(Griffin 2026); six of every nine cells lie inside their parent, and the
+other three straddle its boundary, half in each of two cells. Several
+levels up, a Hex9 cell's parent is again the coarser cell holding its
+mode-0 half, Griffin's canonical ancestor ('libhex9”s
+`hex9_cell_ancestor`), and
+[`get_children`](https://gillescolling.com/hexify/reference/get_children.md)
+returns the cells it is the ancestor of; on every other grid it is the
+parent's parent. `overlapping = TRUE` returns all of them, as the
+`parent()` query of OGC Topic 21 does when `inheritID` is false; the
+default is its `inheritID = true` answer.
+[`hex_aggregate`](https://gillescolling.com/hexify/reference/hex_aggregate.md)
+divides cell values among them by these shares.
 
 Every part of a cell that lies in a coarser cell holds a corner of the
 cell, so the overlapping cells are the coarser cells holding the cell's

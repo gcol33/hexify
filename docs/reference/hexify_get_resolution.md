@@ -1,4 +1,4 @@
-# Get index resolution
+# Get Index Resolution
 
 Returns the resolution level encoded in an index string.
 

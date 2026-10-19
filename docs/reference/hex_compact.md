@@ -16,7 +16,7 @@ hex_compact(cell_ids, grid)
   Cell IDs to compact. For H3 grids, a character vector. For ISEA grids,
   a character vector of hierarchical index strings, as
   [`cell_to_index`](https://gillescolling.com/hexify/reference/cell_to_index.md)
-  returns for apertures 3, 4 and 7.
+  returns for apertures 3, 4, 7 and 9.
 
 - grid:
 

@@ -1,4 +1,4 @@
-# Convert cell ID to hierarchical index string
+# Convert Cell ID to Hierarchical Index String
 
 Advanced function for working with hierarchical index strings. Most
 users don't need this - use cell IDs directly.
@@ -6,7 +6,11 @@ users don't need this - use cell IDs directly.
 ## Usage
 
 ``` r
-cell_to_index(cell_id, grid)
+cell_to_index(
+  cell_id,
+  grid,
+  form = c("string", "int", "hex", "monotonic", "textZIRS", "uint64ZIRS")
+)
 ```
 
 ## Arguments
@@ -20,9 +24,24 @@ cell_to_index(cell_id, grid)
 
   A HexGridInfo or HexData object
 
+- form:
+
+  The form of the identifier. `"string"` (the default) is the
+  hierarchical index string. Aperture-7 grids on the icosahedron also
+  write IGEO7's integer forms of the Z7 index: `"int"`, the packed
+  64-bit index as
+  [`bit64::integer64`](https://bit64.r-lib.org/reference/bit64-package.html);
+  `"hex"`, the same 64 bits as 16 lowercase hexadecimal digits, as
+  DGGRID writes its INT64 Z7 output; and `"monotonic"`, the monotonic ID
+  as integer64. Aperture-3 and aperture-7 grids on the icosahedron also
+  write the zone identifiers of OGC's ISEA3H, ISEA7H, IVEA3H and IVEA7H
+  DGGRS definitions: `"textZIRS"`, strings such as "E6-317-A", and
+  `"uint64ZIRS"`, the same fields packed into a 64-bit integer as
+  integer64.
+
 ## Value
 
-Character vector of hierarchical index strings
+Character vector of hierarchical index strings, or the form `form` names
 
 ## Details
 
@@ -30,4 +49,77 @@ A cell ID numbers the cells of one resolution from 1, so it names a cell
 only together with its grid. The index string carries its resolution in
 its length and names one cell among all resolutions of the grid's
 family, and so serves as the zonal identifier of OGC Topic 21; an H3
-index carries its resolution in its bits.
+index carries its resolution in its bits. A Hex9 index is the cell's
+label in 'libhex9', Griffin's reference implementation: its digits, one
+per resolution (0-9 and a, b for the twelve cells of resolution 0), a
+dot, and the key tail (0-5), as in `"435878503.3"`.
+
+## IGEO7 integer forms
+
+The Z7 string of an aperture-7 cell is two decimal digits naming its
+base cell (00-11) and one digit 0-6 per resolution. The packed index
+holds the same fields in 64 bits (Kmoch et al. 2025): the base cell in
+bits 63-60, then three bits per digit, resolution 1 in bits 59-57 down
+to resolution 20 in bits 2-0, and the digit 7 (binary 111) at every
+resolution below the cell's own. "033000" packs to 0x3600ffffffffffff.
+The packed index exists up to resolution 20, IGEO7's finest.
+
+integer64 is a signed type, so `"int"` keeps the 64 bits and reads them
+as a signed number: the indices of base cells 08-11, whose top bit is
+set, print as negative numbers and sort before those of base cells
+00-07. The one packed index whose bits are 2^63, the pentagon of base
+cell 08 at resolution 20, is the bit pattern bit64 reserves for `NA`, so
+as integer64 it cannot be told from a missing value. `"hex"` carries
+every index exactly.
+
+The monotonic ID reads the Z7 string as a number: the base cell times
+7^r plus the r digits as a base-7 number, so "033000" is 3 \* 7^4 + 3 \*
+7^3 = 8232. Within one resolution it sorts as the strings do, and the
+deleted subsequence under each pentagon leaves its numbers unused. It
+reaches resolution 21, where it still fits in a signed 64-bit integer.
+
+## OGC zone identifiers
+
+`"textZIRS"` and `"uint64ZIRS"` are the identifiers DGGAL writes for
+OGC's ISEA3H, ISEA7H, IVEA3H and IVEA7H. textZIRS names a zone by its
+level (a letter; for aperture 3 the level of the even resolution at or
+below), a root rhombus 0-9 (two icosahedron faces; A and B for the two
+polar zones), a sub-rhombus counted row by row within it in hexadecimal,
+and a letter for the zone among those at that sub-rhombus. uint64ZIRS
+packs the same fields into one integer. They depend on which cell is
+which, not on where the solid sits, so they are written for any
+orientation and face projection; they name OGC's zones on
+`hex_grid(aperture = 3, ellipsoid = "WGS84", orientation = "ogc")`, its
+aperture-7 twin, and the same with `projection = "ivea"`. Aperture-7
+zones exist up to level 19.
+
+## References
+
+Kmoch, A., Sahr, K., Chan, W. T., Uuemaa, E. (2025). IGEO7: A new
+hierarchically indexed hexagonal equal-area discrete global grid system.
+AGILE: GIScience Series 6, 32.
+[doi:10.5194/agile-giss-6-32-2025](https://doi.org/10.5194/agile-giss-6-32-2025)
+
+Open Geospatial Consortium. OGC API - Discrete Global Grid Systems,
+DGGRS definition examples ISEA3H, ISEA7H, IVEA3H and IVEA7H.
+<https://github.com/opengeospatial/ogcapi-discrete-global-grid-systems>
+
+## See also
+
+[`index_to_cell()`](https://gillescolling.com/hexify/reference/index_to_cell.md)
+for the inverse
+
+## Examples
+
+``` r
+g <- hex_grid(resolution = 4, aperture = 7)
+cell <- index_to_cell("033000", g)
+cell_to_index(cell, g, form = "hex")
+cell_to_index(cell, g, form = "monotonic")
+
+ogc <- hex_grid(resolution = 8, aperture = 3, ellipsoid = "WGS84",
+                orientation = "ogc")
+crimea <- lonlat_to_cell(34.78, 45.43, ogc)
+cell_to_index(crimea, ogc, form = "textZIRS")
+cell_to_index(crimea, ogc, form = "uint64ZIRS")
+```

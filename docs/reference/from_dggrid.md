@@ -1,4 +1,4 @@
-# Convert 'dggridR' grid object to hexify_grid
+# Convert 'dggridR' Grid Object to hexify_grid
 
 Creates a hexify_grid object from a 'dggridR' dggs object. This allows
 using hexify functions with grids created by 'dggridR' dgconstruct().
@@ -54,3 +54,10 @@ Other 'dggridR' compatibility:
 [`as_dggrid()`](https://gillescolling.com/hexify/reference/as_dggrid.md),
 [`dggrid_43h_sequence()`](https://gillescolling.com/hexify/reference/dggrid_43h_sequence.md),
 [`dggrid_is_compatible()`](https://gillescolling.com/hexify/reference/dggrid_is_compatible.md)
+
+## Examples
+
+``` r
+dggs <- as_dggrid(hex_grid(resolution = 4, aperture = 4))
+from_dggrid(dggs)
+```

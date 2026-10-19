@@ -1,8 +1,8 @@
-# Globe center presets
+# Globe Center Presets
 
 Named list of lon/lat coordinates for common globe views, accepted by
 the `center` argument of the grid
-[`plot`](https://gillescolling.com/hexify/reference/plot-HexGridInfo-missing-method.md)
+[`plot`](https://gillescolling.com/hexify/reference/HexGridInfo-class.md)
 method.
 
 ## Usage

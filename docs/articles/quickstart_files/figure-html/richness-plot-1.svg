@@ -3,15 +3,24 @@
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
-    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+    /* theme-aware-processed */
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite circle {
       fill: none;
-      stroke: #000000;
+      stroke: #3E3F3A;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite > g > rect {
+      fill: none;
+      stroke: #3E3F3A;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-miterlimit: 10.00;
     }
     .svglite text {
       white-space: pre;
+      fill: #3E3F3A;
     }
     .svglite g.glyphgroup path {
       fill: inherit;
@@ -19,7 +28,7 @@
     }
   ]]></style>
 </defs>
-<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<rect class='svg-bg' width='100%' height='100%' style='stroke: none; fill: #F5F6F8;'/>
 <defs>
   <clipPath id='cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA='>
     <rect x='0.00' y='0.00' width='504.00' height='378.00' />
@@ -33,7 +42,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpNjMuMjN8NDQwLjc3fDAuMDB8Mzc4LjAw)'>
-<rect x='63.23' y='0.00' width='377.54' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect rx='4' x='63.23' y='0.00' width='377.54' height='378.00' style='stroke-width: 1.75; stroke: none; fill: #F5F6F8;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
 </g>
@@ -567,8 +576,8 @@
 <path d='M 296.33 325.25 L 295.83 325.25 L 295.32 325.25 L 294.82 325.26 L 294.32 325.27 L 293.82 325.27 L 293.32 325.29 L 292.82 325.30 L 292.32 325.32 L 291.99 325.76 L 291.65 326.20 L 291.32 326.65 L 290.99 327.11 L 290.65 327.56 L 290.32 328.02 L 289.99 328.48 L 289.82 328.72 L 289.65 328.95 L 290.97 332.34 L 291.22 332.32 L 291.47 332.30 L 291.72 332.28 L 291.97 332.26 L 292.22 332.24 L 292.47 332.22 L 292.73 332.21 L 292.98 332.19 L 293.23 332.18 L 293.49 332.16 L 293.74 332.15 L 294.00 332.14 L 294.25 332.13 L 294.51 332.12 L 294.76 332.11 L 295.02 332.11 L 295.36 331.67 L 295.70 331.23 L 296.37 330.37 L 297.04 329.51 L 297.71 328.66 L 297.02 326.95 L 296.33 325.25 Z' style='fill-rule: evenodd; fill: #DEF5E5; stroke-width: 0.64; stroke: #FFFFFF; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNzguMDA=)'>
-<text x='348.79' y='150.95' style='font-size: 18.00px; font-family: "Arial";' textLength='64.05px' lengthAdjust='spacingAndGlyphs'>Species</text>
-<text x='348.79' y='170.39' style='font-size: 18.00px; font-family: "Arial";' textLength='74.05px' lengthAdjust='spacingAndGlyphs'>Richness</text>
+<text x='348.79' y='150.95' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Species</text>
+<text x='348.79' y='170.39' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Richness</text>
 <image width='23.04' height='115.20' x='348.79' y='181.26' preserveAspectRatio='none' xlink:href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAEsCAYAAAACUNnVAAAAvElEQVQ4ja1PyxIDIQhLaHvq/38ve3BFQNSdTi9MXgTF9/1RIQVtiKExQELYhnSErmEYoA/DInfYqpAicdetVRvhBen4OpK1gq7vBgqGAjgtfp9Su+PNSxd2corY3ezKogqV0TV90hLeotvc1AeP2Cgm46TNBgtN8Y9mPYe1MLTYqKqSpvYZwlD85T0Y6CG8MpA0bgqShu3JE2Vd9bRlICEhL7AjEiJAR43yRP2uGY5i6xb0aa6k+LmUu9wF6sEQDhgmSYEAAAAASUVORK5CYII='/>
 <polyline points='367.22,296.26 371.83,296.26 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='367.22,267.56 371.83,267.56 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
@@ -580,13 +589,13 @@
 <polyline points='353.40,238.86 348.79,238.86 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='353.40,210.15 348.79,210.15 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
 <polyline points='353.40,181.45 348.79,181.45 ' style='stroke-width: 0.38; stroke: #FFFFFF; stroke-linecap: butt;' />
-<text x='380.79' y='301.42' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>1</text>
-<text x='380.79' y='272.71' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>2</text>
-<text x='380.79' y='244.01' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='380.79' y='215.30' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>4</text>
-<text x='380.79' y='186.60' style='font-size: 14.40px; font-family: "Arial";' textLength='8.00px' lengthAdjust='spacingAndGlyphs'>5</text>
-<text x='72.20' y='50.83' style='font-size: 18.00px; font-family: "Arial";' textLength='277.27px' lengthAdjust='spacingAndGlyphs'>Unique species per equal-area cell</text>
-<text x='72.20' y='24.42' style='font-size: 21.60px; font-family: "Arial";' textLength='298.89px' lengthAdjust='spacingAndGlyphs'>Species Richness per Grid Cell</text>
+<text x='380.79' y='301.42' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>1</text>
+<text x='380.79' y='272.71' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>2</text>
+<text x='380.79' y='244.01' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>3</text>
+<text x='380.79' y='215.30' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>4</text>
+<text x='380.79' y='186.60' style='font-size: 1.44em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>5</text>
+<text x='72.20' y='50.83' style='font-size: 1.8em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Unique species per equal-area cell</text>
+<text x='72.20' y='24.42' style='font-size: 2.16em; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;'>Species Richness per Grid Cell</text>
 </g>
 </g>
 </svg>

@@ -1,4 +1,4 @@
-# Spacing metrics of neighbouring cells: wall length, centre distance and cell wall midpoint ratio
+# Spacing Metrics of Neighbouring Cells: Wall Length, Centre Distance and Cell Wall Midpoint Ratio
 
 Measures every wall between a cell and an adjacent cell: how long it is,
 how far apart the two cell centres are, and how far the wall's midpoint
