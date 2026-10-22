@@ -38,3 +38,4 @@
 ^paper$
 ^vignettes/articles$
 ^refs$
+^LICENSE\.txt$
