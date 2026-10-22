@@ -41,9 +41,9 @@ one_resolution <- function(res) {
   g <- hex_grid(resolution = res, aperture = 7)
   ids <- seq_len(hexify:::grid_n_cells(g))
   lv <- hexify:::isea_levels(g@aperture, g@resolution)
-  nb <- hexify:::grid_neighbors_isea(ids, g)
+  nb <- lapply(hexify:::grid_neighbors_isea(ids, g), as.integer)
 
-  hr <- hexify:::cpp_cell_to_corners(hexify:::icosa_arg(g), ids, lv$resolution,
+  hr <- hexify:::cpp_cell_to_corners(hexify:::icosa_arg(g), hexify:::as_cell_id(ids), lv$resolution,
                                      lv$aperture, lv$ap_seq, 0)
   hc <- cell_to_lonlat(ids, g)
   dg <- dggrid_generate(cfg, res, ids, cells = TRUE)

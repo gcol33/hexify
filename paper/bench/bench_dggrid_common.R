@@ -108,8 +108,8 @@ dggrid_generate <- function(cfg, res, seqnum, cells = FALSE, icosa = NULL) {
                else "cell_output_type NONE",
                "point_output_type TEXT", paste("point_output_file_name", pstem),
                "densification 0", "precision 12"))
-  p <- read.csv(paste0(pstem, ".txt"), header = FALSE)
-  ctr <- data.frame(seqnum = as.numeric(p[[1]]), lon = p[[2]], lat = p[[3]])
+  p <- read.csv(paste0(pstem, ".txt"), header = FALSE, colClasses = c("character", NA, NA))
+  ctr <- data.frame(seqnum = hexify:::as_cell_id(p[[1]]), lon = p[[2]], lat = p[[3]])
   list(centres = ctr, cells = if (cells) read_aigen(paste0(cstem, ".gen")))
 }
 
@@ -121,7 +121,7 @@ read_aigen <- function(path) {
   starts <- c(1L, head(ends, -1) + 1L)
   keep <- starts < ends
   starts <- starts[keep]; ends <- ends[keep]
-  ids <- as.numeric(sub("\\s.*$", "", x[starts]))
+  ids <- hexify:::as_cell_id(sub("\\s.*$", "", x[starts]))
   corners <- lapply(seq_along(starts), function(k) {
     v <- x[(starts[k] + 1L):(ends[k] - 1L)]
     m <- do.call(rbind, lapply(strsplit(v, "[ ,]+"), as.numeric))
@@ -179,7 +179,7 @@ corner_check <- function(cfg, res, g, cells, icosa = NULL) {
   hexify_closed <- logical(length(gap_idx))
   if (length(gap_idx)) {
     nb <- hexify:::grid_neighbors_isea(dp$seqnum[gap_idx], g)
-    nb_ids <- unique(unlist(nb))
+    nb_ids <- unique(hexify:::cell_id_unlist(nb))
     dn <- dggrid_polygons(cfg, res, nb_ids, icosa)
     dn_rings <- dn$corners[match(nb_ids, dn$seqnum)]
     hn_rings <- rings_h(nb_ids)
