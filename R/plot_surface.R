@@ -177,6 +177,7 @@ globe_centers <- list(
 #'                  orientation = "gosper")
 #' plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
 #'
+#' \donttest{
 #' # Distortion of the face projections, with Tissot's indicatrix
 #' plot(grid, surface = "net", land = FALSE, distortion = "angular",
 #'      tissot = TRUE, graticule = 15, cells = numeric(0))
@@ -188,6 +189,7 @@ globe_centers <- list(
 #' plot(fine, surface = "net", land = FALSE, parents = 1, area_legend = TRUE)
 #' plot(grid, surface = "net", layout = "land", land = FALSE, seams = TRUE,
 #'      tabs = TRUE)
+#' }
 setMethod("plot", signature(x = "HexGridInfo", y = "missing"),
   function(x, y,
            surface = c("sphere", "solid", "net"),

@@ -7,7 +7,7 @@
 ^REFACTOR_PLAN\.md$
 ^refactor_mit_safe\.md$
 ^ref_polygons.*\.rds$
-^Rplots\.pdf$
+(^|/)Rplots\.pdf$
 ^CLAUDE\.md$
 ^nul$
 ^doc$

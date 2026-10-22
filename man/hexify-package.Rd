@@ -5,7 +5,9 @@
 \alias{hexify-package}
 \title{hexify: Equal-Area Hex Grids on the Snyder ISEA Icosahedron}
 \description{
-Provides functions to build and use hexagonal discrete global grids using the Icosahedral Snyder Equal Area ('ISEA') projection (Snyder 1992 \doi{10.3138/27H7-8K88-4882-1752}) and the 'H3' hierarchical hexagonal system (Uber Technologies). Implements the 'ISEA' discrete global grid system (Sahr, White and Kimerling 2003 \doi{10.1559/152304003100011090}) and the 'Hex9' octahedral grid (Griffin 2026 \href{https://arxiv.org/abs/2608.00022}{arXiv:2608.00022}). Includes a fast C++ core for 'ISEA' projection and aperture quantization, an included 'H3' v4.4.1 C library for native 'H3' grid operations, and 'sf'/'terra'-compatible R wrappers for grid generation and coordinate assignment. Output is compatible with 'dggridR' for interoperability.
+\if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
+
+Provides functions to build and use hexagonal discrete global grids using the Icosahedral Snyder Equal Area ('ISEA') projection (Snyder 1992 \doi{10.3138/27H7-8K88-4882-1752}) and the 'H3' hierarchical hexagonal system (Uber Technologies). Implements the 'ISEA' discrete global grid system (Sahr, White and Kimerling 2003 \doi{10.1559/152304003100011090}) and the 'Hex9' octahedral grid (Griffin 2026 \doi{10.48550/arXiv.2608.00022}). Includes a fast C++ core for 'ISEA' projection and aperture quantization, an included 'H3' v4.4.1 C library for native 'H3' grid operations, and 'sf'/'terra'-compatible R wrappers for grid generation and coordinate assignment. Output is compatible with 'dggridR' for interoperability.
 }
 \seealso{
 Useful links:

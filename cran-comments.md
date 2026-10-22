@@ -2,46 +2,50 @@
 
 0 errors | 0 warnings | 1 note
 
-The note comes from the incoming feasibility check, which lists ISEA,
-Icosahedral, Icosahedron, Kimerling, Sahr and Uber in DESCRIPTION as possibly
-misspelled. ISEA is the Icosahedral Snyder Equal Area projection, spelled out
-in the Description. Icosahedral and icosahedron name the geometry the grids
-are built on. Kimerling and Sahr are authors of the cited 2003 paper, and Uber
-Technologies holds the copyright on the H3 C library included in src/h3. All
-six are spelled as intended.
+The note comes from the incoming feasibility check, which lists "octahedral"
+in DESCRIPTION as possibly misspelled. It names the octahedron the Hex9 grid
+is built on and is spelled as intended.
 
-## Submission (v0.8.2)
+## Submission (v0.9.0)
 
-The version on CRAN is 0.6.5. This release carries the work published on GitHub
-since then, which NEWS.md lists in full. The parts that reach a user's stored
-results:
+The version on CRAN is 0.8.2. This release carries the work published on
+GitHub since then (0.8.3, 0.8.4 and 0.9.0), which NEWS.md lists in full. The
+parts that reach a user's code or stored results:
 
-* Aperture-7 cell IDs and 'Z7' index strings changed, and `hexify_assign()` now
-  names the cell a point falls in. Aperture-3 and aperture-4 cell IDs are
-  unchanged. NEWS.md lists these under Breaking changes.
+* ISEA cell IDs are 64-bit integers (`bit64::integer64`; bit64 is a new
+  import), exact at every resolution. As doubles they were exact only below
+  2^53, so aperture 4 from resolution 25 and aperture 7 from resolution 18
+  returned IDs that decoded to other cells. Functions taking cell IDs also
+  accept whole numbers below 2^53 and digit strings. A grid's resolution is
+  capped where its cell count passes 2^63 - 1.
 
-* An aperture-7 hexagon is drawn on the orientation of its own lattice, so its
-  boundary differs from 0.6.5. Cell centres and cell IDs are unaffected.
+* The aperture-7 Z7 index strings on the icosahedron now equal the ones
+  DGGRID writes, and a grid with one aperture per level stores its sequence
+  comma-separated ("4,4,7,3"). Cell IDs are unchanged by both.
 
-* `get_parent()` and `get_children()` honour their `levels` argument and are
-  inverse to each other on ISEA grids.
+* ISEA cell polygons follow the true, densified cell edges, and at odd
+  aperture-7 resolutions a point goes to the cell whose centre is nearest,
+  which changes the cell ID of points near cell edges there.
 
-* A grid is sized on any body: `hex_grid(radius_km = )` takes a radius in
-  kilometres or a body name, and the grid carries the coordinate reference
-  system of the body it sits on.
+* `as_sf()` is replaced by methods on `sf::st_as_sf()`, `plot_globe()` by
+  `plot(<grid>)`, and a few low-level helpers are removed or internal; NEWS.md
+  names each.
 
-* Apertures 3, 4 and 7 in any sequence, named as a family ("4/7") or one
-  aperture per resolution level.
+* New: Fuller's and van Leeuwen and Strebe's face projections, grids on the
+  octahedron, the Hex9 octahedral grid (Griffin 2026, address tables from
+  'libhex9' under Apache-2.0, recorded in Authors@R and inst/COPYRIGHTS),
+  orientations, grids on an ellipsoid, OGC zone identifiers, cell metrics and
+  an interactive WebGPU globe (`hex_globe()`).
 
-Uber Technologies, Inc. is now recorded in Authors@R as contributor and
-copyright holder for the H3 C library included in src/h3, which inst/COPYRIGHTS
-documents with its file paths and license.
+`hex9_warp_download()` saves a 19 MB data file from the 'libhex9' repository
+to `tools::R_user_dir("hexify", "data")` when the user calls it; its example
+runs only in an interactive session, and no other function writes outside
+`tempdir()`.
 
 ## Test environments
 
 * local: Windows 11, R 4.6.0, R CMD check --as-cran
-* win-builder: R-devel, R-release
-* GitHub Actions: ubuntu-latest (release, devel), macos-latest (release)
+* win-builder: R-devel (2026-10-21 r90733), R-release (4.6.1)
 
 ## Downstream dependencies
 
