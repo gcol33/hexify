@@ -39,3 +39,7 @@
 ^vignettes/articles$
 ^refs$
 ^LICENSE\.txt$
+^README\.Rmd$
+^\.run.*$
+^sidecars$
+^CITATION\.cff$

@@ -253,9 +253,8 @@ plot(
 
 ## Value
 
-- [`show()`](https://rdrr.io/r/methods/show.html): the object,
-  invisibly, after printing two lines: rows, columns and cells, and the
-  grid
+- `show()`: the object, invisibly, after printing two lines: rows,
+  columns and cells, and the grid
 
 - [`summary()`](https://rdrr.io/r/base/summary.html): a list of class
   `hexify_data_summary` carrying `rows`, `columns`, `column_names`,

@@ -286,8 +286,8 @@ plot(
 
 ## Value
 
-- [`show()`](https://rdrr.io/r/methods/show.html): the object,
-  invisibly, after printing one line naming the grid
+- `show()`: the object, invisibly, after printing one line naming the
+  grid
 
 - [`summary()`](https://rdrr.io/r/base/summary.html): a list of class
   `hexify_grid_summary` carrying `grid_type`, `aperture`, `resolution`,
@@ -487,6 +487,7 @@ octa <- hex_grid(resolution = 3, aperture = 4, polyhedron = "octahedron",
                  orientation = "gosper")
 plot(octa, surface = "net", layout = "gosper", seams = TRUE, graticule = TRUE)
 
+# \donttest{
 # Distortion of the face projections, with Tissot's indicatrix
 plot(grid, surface = "net", land = FALSE, distortion = "angular",
      tissot = TRUE, graticule = 15, cells = numeric(0))
@@ -498,4 +499,5 @@ fine <- hex_grid(resolution = 4, aperture = 3)
 plot(fine, surface = "net", land = FALSE, parents = 1, area_legend = TRUE)
 plot(grid, surface = "net", layout = "land", land = FALSE, seams = TRUE,
      tabs = TRUE)
+# }
 ```

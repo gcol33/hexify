@@ -14,16 +14,18 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/gcol33/hexify/blob/HEAD/DESCRIPTION)
+[`inst/CITATION`](https://github.com/gcol33/hexify/blob/HEAD/inst/CITATION)
 
 Colling G (2026). *hexify: Equal-Area Hex Grids on the Snyder ISEA
-Icosahedron*. R package version 0.9.0,
-<https://gillescolling.com/hexify/>.
+Icosahedron*.
+[doi:10.32614/CRAN.package.hexify](https://doi.org/10.32614/CRAN.package.hexify).
+R package version 0.9.0, <https://gillescolling.com/hexify/>.
 
-    @Manual{,
+    @Manual{colling2026hexify,
       title = {hexify: Equal-Area Hex Grids on the Snyder ISEA Icosahedron},
       author = {Gilles Colling},
       year = {2026},
       note = {R package version 0.9.0},
       url = {https://gillescolling.com/hexify/},
+      doi = {10.32614/CRAN.package.hexify},
     }

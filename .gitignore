@@ -39,3 +39,5 @@ paper/bench/data/
 
 # pkgdown renders every root .md; keep the dev notes off the site
 docs/CLAUDE.html
+
+.run*
