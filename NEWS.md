@@ -295,8 +295,11 @@
   between adjacent cells its length, the distance between the two centres and
   the cell wall midpoint ratio (Gregory et al. 2008). Without `cell_id` they
   measure every cell of the grid. ISEA walls are followed on the sphere as the
-  projection curves them, for Snyder's and Fuller's projections alike; H3
-  walls are read from H3's directed edges.
+  projection curves them, for Snyder's and Fuller's projections alike, each
+  piece halved until its length and area agree measured whole and as two
+  halves: perimeters and areas come out within about 1e-11 of their converged
+  values, at about a millisecond per cell. H3 walls are read from H3's
+  directed edges.
 
 * New `hex_smooth()` smooths cell values over neighbouring cells (#90): each
   step replaces a value by the weighted mean of the cell and its listed
