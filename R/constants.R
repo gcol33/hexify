@@ -27,13 +27,14 @@ CELL_EDGE_TOLERANCE <- 1e-3
 
 #' How closely cell walls are followed on the sphere to measure them
 #'
-#' Each wall is halved until the true wall's midpoint between two consecutive
-#' points lies within this fraction of their distance of the great-circle
-#' plane through them; lengths and areas are then corrected for the curve
-#' between them. Cell areas and perimeters come out within about 1e-8 of their
-#' converged values, and areas of a whole grid add up to the body's to 1e-14.
+#' Each piece of a wall is measured whole and as its two halves, and halved
+#' while the two lengths differ by more than this fraction of its chord or the
+#' two areas between it and its chord by more than this fraction of its chord
+#' times the cell's wall length. Cell perimeters come out within about 1e-12
+#' of their converged values, areas within about 1e-11, and wall midpoints
+#' within about 1e-12 radians.
 #' @noRd
-CELL_WALL_TOLERANCE <- 1e-4
+CELL_WALL_TOLERANCE <- 1e-10
 
 #' How far a corner is moved towards its cell's centre to find the coarser
 #' cells it lies in

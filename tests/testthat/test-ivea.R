@@ -71,7 +71,8 @@ test_that("IVEA cells are equal-area on the icosahedron, octahedron and tetrahed
     g <- hex_grid(resolution = res, aperture = ap, projection = "ivea", polyhedron = solid)
     ids <- as_cell_id(seq_len(n_cells(g)))
     lv <- isea_levels(g@aperture, g@resolution)
-    sa <- cpp_cell_solid_angle(icosa_arg(g), ids, lv$resolution, lv$aperture, lv$ap_seq, 1e-4)
+    sa <- cpp_cell_solid_angle(icosa_arg(g), ids, lv$resolution, lv$aperture, lv$ap_seq,
+                               CELL_WALL_TOLERANCE)
     sides <- isea_cell_sides(ids, g)
     hex <- 4 * pi / (length(ids) - 2)
     expect_equal(sa, sides / 6 * hex, tolerance = 1e-6,

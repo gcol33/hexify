@@ -69,6 +69,15 @@ inline double piece_length(const UnitVec& a, const UnitVec& m, const UnitVec& b)
     return (4.0 * (arc_angle(a, m) + arc_angle(m, b)) - arc_angle(a, b)) / 3.0;
 }
 
+// The parameter s, from 0 to 1, at which the wall piece a -> m -> b has run
+// t of its two chords am and mb, the run taken as the quadratic in s through
+// 0, am and am + mb at s = 0, 1/2 and 1.
+inline double piece_parameter(double am, double mb, double t) {
+    const double alpha = 3.0 * am - mb, beta = 2.0 * (mb - am);
+    const double root = std::sqrt(std::max(0.0, alpha * alpha + 4.0 * beta * t));
+    return alpha + root > 0.0 ? 2.0 * t / (alpha + root) : 0.0;
+}
+
 // Signed solid angle of the spherical triangle a b c, positive when a b c
 // turn counter-clockwise seen from outside (Van Oosterom and Strackee).
 inline double triangle_solid_angle(const UnitVec& a, const UnitVec& b, const UnitVec& c) {
@@ -110,7 +119,19 @@ struct WallShape {
     UnitVec midpoint;
 };
 
-inline WallShape wall_shape(const std::vector<UnitVec>& pts) {
+// Secant steps taken to place a wall's midpoint within its piece, and the
+// remaining length, as a fraction of the wall's, at which they stop.
+constexpr int kMidpointSteps = 8;
+constexpr double kMidpointSlack = 1e-15;
+
+// A wall's shape, the wall in the form above and 'point_at(k, s)' the point at
+// parameter s, from 0 to 1, of its k-th piece (pts[2k] -> pts[2k + 2]) on the
+// wall itself. The midpoint is placed on the wall, not on the points: in the
+// piece holding it, at the parameter s where the piece has run the remaining
+// length, its run to s measured as piece_length(a, point_at(k, s / 2),
+// point_at(k, s)) and s found by secant steps from piece_parameter()'s guess.
+template <class PointAt>
+inline WallShape wall_shape(const std::vector<UnitVec>& pts, PointAt point_at) {
     double length = 0.0;
     for (size_t i = 0; i + 2 < pts.size(); i += 2) {
         length += piece_length(pts[i], pts[i + 1], pts[i + 2]);
@@ -118,17 +139,36 @@ inline WallShape wall_shape(const std::vector<UnitVec>& pts) {
     double half = 0.5 * length;
     for (size_t i = 0; i + 2 < pts.size(); i += 2) {
         const double step = piece_length(pts[i], pts[i + 1], pts[i + 2]);
-        if (half <= step) {
-            // Along the two chords of the piece, in proportion
-            const double am = arc_angle(pts[i], pts[i + 1]);
-            const double mb = arc_angle(pts[i + 1], pts[i + 2]);
-            const double t = half / step * (am + mb);
-            if (t <= am) return {length, slerp(pts[i], pts[i + 1], am > 0.0 ? t / am : 0.0)};
-            return {length, slerp(pts[i + 1], pts[i + 2], mb > 0.0 ? (t - am) / mb : 0.0)};
+        if (half > step && i + 4 < pts.size()) {
+            half -= step;
+            continue;
         }
-        half -= step;
+        const size_t k = i / 2;
+        const UnitVec& a = pts[i];
+        const double am = arc_angle(a, pts[i + 1]);
+        const double mb = arc_angle(pts[i + 1], pts[i + 2]);
+        double s0 = 0.0, run0 = 0.0;
+        double s1 = piece_parameter(am, mb, std::min(half, step) / step * (am + mb));
+        UnitVec p = point_at(k, s1);
+        for (int it = 0; it < kMidpointSteps; it++) {
+            const double run1 = piece_length(a, point_at(k, 0.5 * s1), p);
+            if (std::fabs(run1 - half) <= kMidpointSlack * length || run1 == run0) break;
+            const double s2 = s1 + (half - run1) * (s1 - s0) / (run1 - run0);
+            s0 = s1;
+            run0 = run1;
+            s1 = std::min(1.0, std::max(0.0, s2));
+            p = point_at(k, s1);
+        }
+        return {length, p};
     }
     return {length, pts.back()};
+}
+
+// The shape of a wall whose pieces are great-circle arcs (great_circle_wall).
+inline WallShape wall_shape(const std::vector<UnitVec>& pts) {
+    return wall_shape(pts, [&pts](size_t k, double s) {
+        return slerp(pts[2 * k], pts[2 * k + 2], s);
+    });
 }
 
 // One wall between two cells, on the unit sphere: its length, the distance

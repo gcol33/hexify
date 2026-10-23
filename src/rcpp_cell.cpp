@@ -1934,63 +1934,112 @@ static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
 // piece across a cusp of the projection halves at the cusp until here.
 constexpr int kMaxMeasureSplits = 20;
 
+// Below this, in radians (and radians times the piece's chord for an area),
+// the two measures face_piece_sphere() compares differ by the rounding of the
+// unit vectors they are formed from, a few parts in 10^16 each, so halving
+// further changes nothing.
+constexpr double kMeasureRoundoff = 1e-14;
+
+// One piece of a wall as cell_walls_sphere() writes it: the straight segment
+// of a face's triangle coordinates whose image it is.
+struct WallPiece {
+    int face;
+    double ax, ay, bx, by;
+};
+
 // The face piece a -> b on the unit sphere as a wall in the form cell_walls.h
-// describes, from a and short of b: a, then the point the piece's midpoint
-// projects to, the piece halved while that point lies further than
-// 'tolerance' times the chord from the plane of the great circle through a
-// and b. A point's place along the curve does not enter the test.
+// describes, from a and short of b; m is the point the piece's midpoint
+// projects to. The piece is measured whole (a, m, b) and as its two halves,
+// through the points its quarter points project to: its length
+// (piece_length) and the area between it and its chord (enclosed_solid_angle's
+// sliver). Each pair is exact to the same leading order, so its difference
+// estimates the error of the whole piece's measure. The piece is halved while
+// the lengths differ by more than 'tolerance' times its chord or the areas by
+// more than 'tolerance' times its chord times 'span', the cell's wall length;
+// otherwise its two halves are kept, and their segments added to 'frames'.
+// Comparing measures, not testing the midpoint alone, also halves a piece
+// that bends both ways about a midpoint lying on its chord's great circle.
 static void face_piece_sphere(int face, double ax, double ay, const hexify::UnitVec& a,
-                              double bx, double by, const hexify::UnitVec& b,
-                              double tolerance, int depth,
-                              std::vector<hexify::UnitVec>& out) {
+                              const hexify::UnitVec& m, double bx, double by,
+                              const hexify::UnitVec& b, double tolerance, double span,
+                              int depth, std::vector<hexify::UnitVec>& out,
+                              std::vector<WallPiece>& frames) {
     const double mx = 0.5 * (ax + bx), my = 0.5 * (ay + by);
-    hexify::UnitVec m;
-    hexify::face_tri_to_sphere(face, mx, my, m.data());
+    hexify::UnitVec q1, q3;
+    hexify::face_tri_to_sphere(face, 0.5 * (ax + mx), 0.5 * (ay + my), q1.data());
+    hexify::face_tri_to_sphere(face, 0.5 * (mx + bx), 0.5 * (my + by), q3.data());
     if (depth < kMaxMeasureSplits) {
-        // n = a x (b - a) = a x b, whose length is the chord times the cosine
-        // of half the arc, the chord to within a part in 10^4 for any piece of
-        // a cell wall. m . n = (m - a) . n, as a . n = 0: formed from the short
-        // vectors m - a and b - a, its rounding error scales with the chord,
-        // so the test below stays meaningful however short the piece.
-        const double ux = m[0] - a[0], uy = m[1] - a[1], uz = m[2] - a[2];
-        const double vx = b[0] - a[0], vy = b[1] - a[1], vz = b[2] - a[2];
-        const double nx = a[1] * vz - a[2] * vy;
-        const double ny = a[2] * vx - a[0] * vz;
-        const double nz = a[0] * vy - a[1] * vx;
-        const double chord = std::sqrt(nx * nx + ny * ny + nz * nz);
-        const double off = std::fabs(ux * nx + uy * ny + uz * nz);
-        if (off > tolerance * chord * chord) {
-            face_piece_sphere(face, ax, ay, a, mx, my, m, tolerance, depth + 1, out);
-            face_piece_sphere(face, mx, my, m, bx, by, b, tolerance, depth + 1, out);
+        const double chord = hexify::arc_angle(a, b);
+        const double d_length = hexify::piece_length(a, q1, m) +
+                                hexify::piece_length(m, q3, b) -
+                                hexify::piece_length(a, m, b);
+        const double d_area = 4.0 / 3.0 * (hexify::triangle_solid_angle(a, q1, m) +
+                                           hexify::triangle_solid_angle(m, q3, b)) -
+                              hexify::triangle_solid_angle(a, m, b) / 3.0;
+        if (std::fabs(d_length) > tolerance * chord + kMeasureRoundoff ||
+            std::fabs(d_area) > (tolerance * span + kMeasureRoundoff) * chord) {
+            face_piece_sphere(face, ax, ay, a, q1, mx, my, m, tolerance, span, depth + 1,
+                              out, frames);
+            face_piece_sphere(face, mx, my, m, q3, bx, by, b, tolerance, span, depth + 1,
+                              out, frames);
             return;
         }
     }
     out.push_back(a);
+    out.push_back(q1);
     out.push_back(m);
+    out.push_back(q3);
+    frames.push_back({face, ax, ay, mx, my});
+    frames.push_back({face, mx, my, bx, by});
 }
 
 // The walls of one cell on the unit sphere in the form cell_walls.h
 // describes, each from one corner to the next, counter-clockwise, densified to
-// 'tolerance' (face_piece_sphere).
+// 'tolerance' (face_piece_sphere), with each wall's pieces in 'frames'.
 static void cell_walls_sphere(const CellPlanes& g, const CellPlane& c, double tolerance,
                               std::vector<PlaneEdge>& edges,
                               std::vector<FacePiece>& pieces,
-                              std::vector<std::vector<hexify::UnitVec>>& walls) {
+                              std::vector<std::vector<hexify::UnitVec>>& walls,
+                              std::vector<std::vector<WallPiece>>& frames) {
     cell_face_pieces(g, c, edges, pieces);
     int n_wall = 0;
     for (const FacePiece& p : pieces) n_wall = std::max(n_wall, p.wall + 1);
     walls.assign(n_wall, {});
-    hexify::UnitVec a, b;
+    frames.assign(n_wall, {});
+    if (n_wall == 0) return;
+    // Each piece's ends and midpoint on the sphere, and the mean wall's chord
+    std::vector<std::array<hexify::UnitVec, 3>> amb(pieces.size());
+    double span = 0.0;
     for (size_t i = 0; i < pieces.size(); i++) {
         const FacePiece& p = pieces[i];
-        hexify::face_tri_to_sphere(p.face, p.ax, p.ay, a.data());
-        hexify::face_tri_to_sphere(p.face, p.bx, p.by, b.data());
-        face_piece_sphere(p.face, p.ax, p.ay, a, p.bx, p.by, b, tolerance, 0,
-                          walls[p.wall]);
+        hexify::face_tri_to_sphere(p.face, p.ax, p.ay, amb[i][0].data());
+        hexify::face_tri_to_sphere(p.face, 0.5 * (p.ax + p.bx), 0.5 * (p.ay + p.by),
+                                   amb[i][1].data());
+        hexify::face_tri_to_sphere(p.face, p.bx, p.by, amb[i][2].data());
+        span += hexify::arc_angle(amb[i][0], amb[i][2]);
+    }
+    span /= n_wall;
+    for (size_t i = 0; i < pieces.size(); i++) {
+        const FacePiece& p = pieces[i];
+        face_piece_sphere(p.face, p.ax, p.ay, amb[i][0], amb[i][1], p.bx, p.by, amb[i][2],
+                          tolerance, span, 0, walls[p.wall], frames[p.wall]);
         if (i + 1 == pieces.size() || pieces[i + 1].wall != p.wall) {
-            walls[p.wall].push_back(b);
+            walls[p.wall].push_back(amb[i][2]);
         }
     }
+}
+
+// The shape of a wall from cell_walls_sphere(), its midpoint placed on the
+// projected wall through its pieces' segments.
+static hexify::WallShape projected_wall_shape(const std::vector<hexify::UnitVec>& wall,
+                                              const std::vector<WallPiece>& frames) {
+    return hexify::wall_shape(wall, [&frames](size_t k, double s) {
+        const WallPiece& p = frames[k];
+        hexify::UnitVec v;
+        hexify::face_tri_to_sphere(p.face, p.ax + s * (p.bx - p.ax), p.ay + s * (p.by - p.ay),
+                                   v.data());
+        return v;
+    });
 }
 
 // A cell's centre on the unit sphere.
@@ -2015,8 +2064,9 @@ static NumericVector cell_solid_angles(const NumericVector& cell_id,
     std::vector<PlaneEdge> edges;
     std::vector<FacePiece> pieces;
     std::vector<std::vector<hexify::UnitVec>> walls;
+    std::vector<std::vector<WallPiece>> frames;
     for (R_xlen_t k = 0; k < cell_id.size(); k++) {
-        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, walls);
+        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, walls, frames);
         out[k] = hexify::enclosed_solid_angle(walls);
     }
     return out;
@@ -2653,16 +2703,17 @@ List cpp_cell_walls(NumericVector icosa, NumericVector cell_id, int resolution,
     std::vector<PlaneEdge> edges;
     std::vector<FacePiece> pieces;
     std::vector<std::vector<hexify::UnitVec>> lines;
+    std::vector<std::vector<WallPiece>> frames;
     std::vector<hexify::WallShape> shapes;
     std::vector<hexify::UnitVec> nbr_centres;
     std::vector<std::pair<int, int>> pairs;
 
     for (R_xlen_t k = 0; k < n; k++) {
-        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, lines);
+        cell_walls_sphere(g, g.cells[k], tolerance, edges, pieces, lines, frames);
         shapes.clear();
         double p = 0.0;
-        for (const auto& line : lines) {
-            shapes.push_back(hexify::wall_shape(line));
+        for (size_t w = 0; w < lines.size(); w++) {
+            shapes.push_back(projected_wall_shape(lines[w], frames[w]));
             p += shapes.back().length;
         }
         perimeter[k] = p;

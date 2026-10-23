@@ -77,7 +77,8 @@ test_that("octahedral and tetrahedral cells tile the sphere with equal areas", {
                    tolerance = 1e-12)
       lv <- hexify:::isea_levels(g@aperture, g@resolution)
       sa <- hexify:::cpp_cell_solid_angle(hexify:::icosa_arg(g), as_cell_id(ids),
-                                           lv$resolution, lv$aperture, lv$ap_seq, 1e-4)
+                                           lv$resolution, lv$aperture, lv$ap_seq,
+                                           hexify:::CELL_WALL_TOLERANCE)
       hex <- 4 * pi / (length(ids) - 2)
       expect_equal(sa[sides == 6] / hex, rep(1, sum(sides == 6)), tolerance = 1e-5)
       expect_equal(sa[sides == sp$sides] / hex, rep(sp$sides / 6, sp$n_verts),
@@ -113,14 +114,13 @@ test_that("octahedral and tetrahedral cells round-trip, their neighbours symmetr
       sides <- hexify:::isea_cell_sides(ids, g)
       nb <- get_neighbors(ids, g)
       expect_equal(lengths(nb), sides)
-      for (k in ids) {
-        expect_true(all(vapply(as.integer(nb[[k]]), function(m) k %in% nb[[m]],
-                               logical(1))))
-      }
+      from <- rep(ids, lengths(nb))
+      to <- as.integer(hexify:::cell_id_unlist(nb))
+      expect_true(all(paste(to, from) %in% paste(from, to)))
       # Each wall of a cell faces one neighbour
       lv <- hexify:::isea_levels(g@aperture, g@resolution)
       w <- hexify:::cpp_cell_walls(hexify:::icosa_arg(g), as_cell_id(ids), lv$resolution,
-                                   lv$aperture, lv$ap_seq, 1e-6, TRUE)
+                                   lv$aperture, lv$ap_seq, hexify:::CELL_WALL_TOLERANCE, TRUE)
       expect_equal(nrow(w$walls), sum(sides))
     }
   }
