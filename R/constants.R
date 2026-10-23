@@ -30,11 +30,11 @@ CELL_EDGE_TOLERANCE <- 1e-3
 #' Each piece of a wall is measured whole and as its two halves, and halved
 #' while the two lengths differ by more than this fraction of its chord or the
 #' two areas between it and its chord by more than this fraction of its chord
-#' times the cell's wall length. Cell perimeters come out within about 1e-12
-#' of their converged values, areas within about 1e-11, and wall midpoints
+#' times the cell's wall length. Cell perimeters come out within about 1e-10
+#' of their converged values, areas within about 1e-9, and wall midpoints
 #' within about 1e-12 radians.
 #' @noRd
-CELL_WALL_TOLERANCE <- 1e-10
+CELL_WALL_TOLERANCE <- 1e-8
 
 #' How far a corner is moved towards its cell's centre to find the coarser
 #' cells it lies in
