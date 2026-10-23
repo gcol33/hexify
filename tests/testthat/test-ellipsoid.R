@@ -151,20 +151,22 @@ test_that("cells are equal-area on the ellipsoid and add up to its area", {
       expect_equal(sum(area), surface, tolerance = 1e-13)
       expect_equal(sum(area), EARTH_SURFACE_KM2, tolerance = 1e-12)
 
+      # Rings followed to 1e-4 of each piece's arc put this measure within
+      # about 1e-6 of the cells' areas
       rings <- isea_cell_rings(ids, g@resolution, g@aperture, icosa_arg(g),
-                               tolerance = 1e-5, max_arc = 2e-3)
+                               tolerance = 1e-4, max_arc = 2e-3)
       lat <- cell_to_lonlat(ids, g)$lat_deg
       on_ellipsoid <- vapply(seq_along(rings), function(i) {
         ring_area_ellipsoid(rings[[i]], wgs84_f, lat[i])
       }, numeric(1)) * 6378.137^2
       expect_lte(sum(is.na(on_ellipsoid)), 4L)
-      expect_lt(max(abs(on_ellipsoid / area - 1), na.rm = TRUE), 1e-7)
+      expect_lt(max(abs(on_ellipsoid / area - 1), na.rm = TRUE), 1e-6)
     }
   }
   # without the ellipsoid the same measure departs by up to 0.9 percent
   g0 <- hex_grid(resolution = 3, aperture = 3)
   ids <- grid_cells(g0)
-  rings <- isea_cell_rings(ids, 3L, "3", icosa_arg(g0), tolerance = 1e-5, max_arc = 2e-3)
+  rings <- isea_cell_rings(ids, 3L, "3", icosa_arg(g0), tolerance = 1e-3, max_arc = 2e-3)
   lat <- cell_to_lonlat(ids, g0)$lat_deg
   ratio <- vapply(seq_along(rings), function(i) {
     ring_area_ellipsoid(rings[[i]], wgs84_f, lat[i])

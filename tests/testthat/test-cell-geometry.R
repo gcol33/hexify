@@ -183,18 +183,20 @@ test_that("a drawn cell is the cell lonlat_to_cell assigns", {
     total <- aperture_n_cells(g@aperture, g@resolution)
     cells <- unique(c(seq_len(total)[is_pentagon(seq_len(total), g)],
                       round(seq(2, total - 1, length.out = 40))))
-    rings <- isea_cell_rings(cells, g@resolution, g@aperture, icosa_arg(g), 1e-6)
+    # The ring strays from the wall by at most 1e-5 of a piece's arc, a tenth
+    # of the step towards the centre
+    rings <- isea_cell_rings(cells, g@resolution, g@aperture, icosa_arg(g), 1e-5)
     centres <- cell_to_lonlat(cells, g)
-
-    for (k in seq_along(cells)) {
-      ring <- rings[[k]][-nrow(rings[[k]]), , drop = FALSE]
-      p <- xyz(ring[, 1], ring[, 2]) * (1 - 1e-4) +
-        xyz(centres$lon_deg[k], centres$lat_deg[k])[rep(1, nrow(ring)), ] * 1e-4
-      p <- p / sqrt(rowSums(p^2))
-      back <- lonlat_to_cell(atan2(p[, 2], p[, 1]) * 180 / pi, asin(p[, 3]) * 180 / pi, g)
-      expect_true(all(back == cells[k]),
-                  info = sprintf("aperture %s, resolution %d, cell %s",
-                                 case[[1]], case[[2]], cells[k]))
-    }
+    rings <- lapply(rings, function(r) r[-nrow(r), , drop = FALSE])
+    owner <- rep(seq_along(cells), vapply(rings, nrow, integer(1)))
+    ring <- do.call(rbind, rings)
+    p <- xyz(ring[, 1], ring[, 2]) * (1 - 1e-4) +
+      xyz(centres$lon_deg, centres$lat_deg)[owner, ] * 1e-4
+    p <- p / sqrt(rowSums(p^2))
+    back <- lonlat_to_cell(atan2(p[, 2], p[, 1]) * 180 / pi, asin(p[, 3]) * 180 / pi, g)
+    stray <- unique(cells[owner[back != cells[owner]]])
+    expect_true(length(stray) == 0,
+                info = sprintf("aperture %s, resolution %d, cells %s", case[[1]], case[[2]],
+                               paste(stray, collapse = ", ")))
   }
 })

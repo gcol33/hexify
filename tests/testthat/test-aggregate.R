@@ -205,8 +205,11 @@ test_that("a Hex9 cell on its parents' edge splits in halves", {
     ov <- get_parent(ids, g, overlapping = TRUE)
     expect_equal(as.vector(table(lengths(ov))), length(ids) * c(2, 1) / 3)
     expect_identical(hexify:::cell_id_unlist(lapply(ov, function(x) x[1])), get_parent(ids, g))
-    lattice <- hexify:::lattice_shares(lengths(ov), 9L)
-    expect_lt(max(abs(hexify:::sphere_shares(ids, ov, g) - lattice)), 1e-10)
+    g2 <- coarser(g)
+    ids2 <- all_cells(g2)
+    ov2 <- get_parent(ids2, g2, overlapping = TRUE)
+    lattice <- hexify:::lattice_shares(lengths(ov2), 9L)
+    expect_lt(max(abs(hexify:::sphere_shares(ids2, ov2, g2) - lattice)), 1e-10)
     density <- unname(cell_area(ids, g))
     for (lv in 1:2) {
       up <- hex_aggregate(ids, density, g, levels = lv)

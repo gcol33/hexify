@@ -214,13 +214,11 @@ test_that("get_children inverts get_parent, pentagons included", {
     kids <- get_children(seq_len(n_parent), grid)
 
     # Every child names its parent back
-    for (k in seq_len(n_parent)) {
-      expect_equal(unique(get_parent(kids[[k]], child_grid)), as_cell_id(k),
-                   info = sprintf("%s, parent %d", label, k))
-    }
+    claimed <- cell_id_unlist(kids)
+    expect_equal(get_parent(claimed, child_grid),
+                 as_cell_id(rep(seq_len(n_parent), lengths(kids))), info = label)
 
     # And between them the parents claim the whole child grid, once each
-    claimed <- cell_id_unlist(kids)
     expect_equal(sort(claimed), as_cell_id(seq_len(n_child)), info = label)
   }
 })

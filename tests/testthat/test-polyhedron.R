@@ -225,16 +225,17 @@ test_that("Snyder's projection inverts on the octahedron and the tetrahedron", {
   for (solid in c("octahedron", "tetrahedron")) {
     n_faces <- nrow(hexify_face_centers(solid))
     expect_equal(n_faces, c(octahedron = 8, tetrahedron = 4)[[solid]])
-    faces <- integer(0)
+    faces <- which_face <- gap <- numeric(length(lon))
     for (k in seq_along(lon)) {
       f <- hexify_forward(lon[k], lat[k], polyhedron = solid)
-      faces <- c(faces, f[["face"]])
-      expect_equal(hexify_which_face(lon[k], lat[k], polyhedron = solid), f[["face"]])
+      faces[k] <- f[["face"]]
+      which_face[k] <- hexify_which_face(lon[k], lat[k], polyhedron = solid)
       ll <- hexify_inverse(f[["icosa_triangle_x"]], f[["icosa_triangle_y"]], f[["face"]],
                            polyhedron = solid)
-      gap <- row_angle(hexify:::unit_vec(ll[[1]], ll[[2]]), hexify:::unit_vec(lon[k], lat[k]))
-      expect_lt(gap, 1e-11)
+      gap[k] <- row_angle(hexify:::unit_vec(ll[[1]], ll[[2]]), hexify:::unit_vec(lon[k], lat[k]))
     }
+    expect_equal(which_face, faces)
+    expect_lt(max(gap), 1e-11)
     expect_setequal(unique(faces), seq_len(n_faces) - 1)
     expect_error(hexify_forward(0, 0, projection = "fuller", polyhedron = solid))
   }
