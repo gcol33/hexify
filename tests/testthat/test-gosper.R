@@ -14,6 +14,7 @@ expect_tiling <- function(shapes, fine, expected_cell) {
 }
 
 test_that("a Gosper island keeps its cell's area", {
+  skip_on_cran()
   for (ap in c(7, 4, 3)) {
     g <- hex_grid(resolution = 1, aperture = ap)
     ids <- every_cell(g)

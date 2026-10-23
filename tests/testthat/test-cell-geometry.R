@@ -169,6 +169,7 @@ test_that("a point goes to the cell with the nearest centre", {
 })
 
 test_that("a drawn cell is the cell lonlat_to_cell assigns", {
+  skip_on_cran()
   # Trace each ring tightly, step every point a hair towards the centre on the
   # sphere, and read it back: it must land in the same cell. The sample holds
   # the 12 vertex cells and cells straddling quad edges.

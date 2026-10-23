@@ -3,6 +3,7 @@
 # Tests for plot methods
 
 test_that("plot.HexData works with default settings", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -40,6 +41,7 @@ test_that("jitter_points_in_cells(jitter = FALSE) snaps points to the cell centr
 })
 
 test_that("plot.HexData accepts jitter and point_alpha arguments", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -96,6 +98,7 @@ test_that("plot.HexData works with custom sf basemap", {
 })
 
 test_that("plot.HexData works with an sfc basemap", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(lon = c(2.35, 4.90), lat = c(48.86, 52.37))
@@ -112,6 +115,7 @@ test_that("plot.HexData works with an sfc basemap", {
 })
 
 test_that("plot.HexData works with a SpatRaster basemap", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
 
@@ -130,6 +134,7 @@ test_that("plot.HexData works with a SpatRaster basemap", {
 })
 
 test_that("plot.HexData works with the world_hires basemap", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("rnaturalearth")
   skip_if_not_installed("rnaturalearthdata")
@@ -145,6 +150,7 @@ test_that("plot.HexData works with the world_hires basemap", {
 })
 
 test_that("plot.HexData works with show_points", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -161,6 +167,7 @@ test_that("plot.HexData works with show_points", {
 })
 
 test_that("plot.HexData works with point_size presets", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -179,6 +186,7 @@ test_that("plot.HexData works with point_size presets", {
 })
 
 test_that("plot.HexData works with numeric point_size", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -195,6 +203,7 @@ test_that("plot.HexData works with numeric point_size", {
 })
 
 test_that("plot.HexData works with fill mapping", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -212,6 +221,7 @@ test_that("plot.HexData works with fill mapping", {
 })
 
 test_that("plot.HexData works with discrete fill", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -229,6 +239,7 @@ test_that("plot.HexData works with discrete fill", {
 })
 
 test_that("plot.HexData errors on invalid fill column", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -245,6 +256,7 @@ test_that("plot.HexData errors on invalid fill column", {
 })
 
 test_that("plot.HexData works with crop = FALSE", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -261,6 +273,7 @@ test_that("plot.HexData works with crop = FALSE", {
 })
 
 test_that("plot.HexData works with clip_basemap = FALSE", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -277,6 +290,7 @@ test_that("plot.HexData works with clip_basemap = FALSE", {
 })
 
 test_that("plot.HexData works with custom colors", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -298,6 +312,7 @@ test_that("plot.HexData works with custom colors", {
 })
 
 test_that("plot.HexData returns HexData invisibly", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -313,6 +328,7 @@ test_that("plot.HexData returns HexData invisibly", {
 })
 
 test_that("plot.HexData works with title", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(lon = c(2.35), lat = c(48.86))
@@ -326,6 +342,7 @@ test_that("plot.HexData works with title", {
 })
 
 test_that("plot.HexData warns on unknown point_size", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(lon = c(2.35), lat = c(48.86))
@@ -339,6 +356,7 @@ test_that("plot.HexData warns on unknown point_size", {
 })
 
 test_that("plot_grid creates ggplot", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -350,6 +368,7 @@ test_that("plot_grid creates ggplot", {
 })
 
 test_that("plot_grid works with custom colors", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -363,6 +382,7 @@ test_that("plot_grid works with custom colors", {
 })
 
 test_that("plot_grid works with crop = FALSE", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -374,6 +394,7 @@ test_that("plot_grid works with crop = FALSE", {
 })
 
 test_that("plot_grid auto-generates title", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -385,6 +406,7 @@ test_that("plot_grid auto-generates title", {
 })
 
 test_that("plot_grid accepts custom title", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   skip_if_not_installed("ggplot2")
 
@@ -396,6 +418,7 @@ test_that("plot_grid accepts custom title", {
 })
 
 test_that("plot.HexData works with 'very large' point_size", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(
@@ -412,6 +435,7 @@ test_that("plot.HexData works with 'very large' point_size", {
 })
 
 test_that("plot.HexData works with 'verylarge' point_size variant", {
+  skip_on_cran()
   skip_if_not_installed("sf")
 
   df <- data.frame(

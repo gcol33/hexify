@@ -139,6 +139,7 @@ test_that("an ellipsoid moves points by the authalic latitude and keeps cell IDs
 })
 
 test_that("cells are equal-area on the ellipsoid and add up to its area", {
+  skip_on_cran()
   for (spec in list(list(ap = 3, res = 3), list(ap = 7, res = 2))) {
     for (proj in c("isea", "ivea")) {
       g <- hex_grid(resolution = spec$res, aperture = spec$ap, projection = proj,
@@ -176,6 +177,7 @@ test_that("cells are equal-area on the ellipsoid and add up to its area", {
 })
 
 test_that("Fuller cells on an ellipsoid report their area on it", {
+  skip_on_cran()
   g <- hex_grid(resolution = 3, aperture = 3, projection = "fuller", ellipsoid = "WGS84")
   ids <- grid_cells(g)
   area <- cell_area(ids, g)

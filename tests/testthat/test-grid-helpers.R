@@ -199,6 +199,7 @@ test_that("cell_to_sf keeps non-crossing cells as POLYGON", {
 })
 
 test_that("grid_rect returns every ISEA cell meeting the box", {
+  skip_on_cran()
   skip_if_not_installed("sf")
   cases <- list(
     list(c(-74.3, 40.5, -73.7, 40.95), 3, 11),

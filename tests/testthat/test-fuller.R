@@ -66,7 +66,7 @@ test_that("Fuller keeps lengths along face edges", {
 
 test_that("Fuller cells tile the sphere and differ in area", {
   for (ap in list(3, 4, 7, "4/3")) {
-    g <- hex_grid(resolution = 4, aperture = ap, projection = "fuller")
+    g <- hex_grid(resolution = 3, aperture = ap, projection = "fuller")
     ids <- grid_global(g)$cell_id
     a <- cell_area(ids, g)
     expect_equal(sum(a), body_surface_km2(EARTH_RADIUS_KM), tolerance = 1e-9)

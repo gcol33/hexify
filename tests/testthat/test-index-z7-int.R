@@ -53,6 +53,7 @@ test_that("the integer forms of the slides' Table 3 rows are IGEO7's", {
 })
 
 test_that("the packed index is DGGRID's INT64 output for every cell", {
+  skip_on_cran()
   # paper/bench/make_dggrid_z7_int_fixture.R writes this from DGGRID: every cell
   # at resolutions 0 to 3 and the cells of random points at 5, 10, 15 and 20
   fx <- read.csv(test_path("data", "dggrid_z7_int.csv"),

@@ -300,6 +300,7 @@ draws <- function(expr) {
 }
 
 test_that("plot draws a grid on the sphere and on the icosahedron", {
+  skip_on_cran()
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g)), g)
   expect_identical(draws(plot(g, surface = "solid")), g)
@@ -310,6 +311,7 @@ test_that("plot draws a grid on the sphere and on the icosahedron", {
 })
 
 test_that("plot draws perspective, tilted and rotated views", {
+  skip_on_cran()
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g, projection = "perspective", distance = 1.5)), g)
   expect_identical(draws(plot(g, surface = "solid", projection = "perspective",
@@ -323,6 +325,7 @@ test_that("plot draws perspective, tilted and rotated views", {
 })
 
 test_that("plot takes land as an sf object", {
+  skip_on_cran()
   g <- hex_grid(resolution = 1, aperture = 4)
   europe <- hexify_world[hexify_world$continent == "Europe", ]
   expect_identical(draws(plot(g, surface = "solid", land = europe)), g)
@@ -388,6 +391,7 @@ test_that("a cell on one face is centred on its PLANE centre", {
 })
 
 test_that("plot draws a grid on the net", {
+  skip_on_cran()
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g, surface = "net")), g)
   expect_identical(draws(plot(g, surface = "net", land = FALSE, face_edges = FALSE,
@@ -401,6 +405,7 @@ test_that("plot draws a grid on the net", {
 })
 
 test_that("plot draws a grid on every net layout, with seams and a graticule", {
+  skip_on_cran()
   g <- hex_grid(resolution = 2, aperture = 4, polyhedron = "octahedron",
                 orientation = "gosper")
   for (layout in c("plane", "gosper", "gosper_flower", "land")) {
@@ -418,6 +423,7 @@ test_that("plot draws a grid on every net layout, with seams and a graticule", {
 })
 
 test_that("plot draws a graticule on the sphere and the solid", {
+  skip_on_cran()
   g <- hex_grid(resolution = 2, aperture = 3)
   expect_identical(draws(plot(g, graticule = TRUE)), g)
   expect_identical(draws(plot(g, surface = "solid", graticule = 20, land = FALSE)), g)
