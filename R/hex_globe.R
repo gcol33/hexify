@@ -259,7 +259,8 @@ hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
   for (pkg in pkgs) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       install <- if (pkg == "hexglobe") {
-        "remotes::install_github('gcol33/hexglobe')"
+        paste0("install.packages('hexglobe', repos = c('https://gcol33.r-universe.dev', ",
+               "getOption('repos')))")
       } else {
         paste0("install.packages('", pkg, "')")
       }

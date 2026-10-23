@@ -43,7 +43,7 @@ Suggests:
 VignetteBuilder: knitr
 LinkingTo: Rcpp
 Imports: sf, Rcpp, methods, rlang, bit64
-Remotes: gcol33/hexglobe
+Additional_repositories: https://gcol33.r-universe.dev
 URL: https://gillescolling.com/hexify/
 BugReports: https://github.com/gcol33/hexify/issues
 Config/testthat/edition: 3
