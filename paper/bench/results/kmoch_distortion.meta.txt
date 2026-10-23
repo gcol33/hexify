@@ -1,9 +1,9 @@
 script: bench_kmoch_distortion.R
-date: 2026-10-22 16:34:36 CEST
-hexify commit: bb146b3
-uncommitted changes in R/, src/ or paper/bench/: TRUE
+date: 2026-10-23 11:07:55 CEST
+hexify commit: 174c1c0
+uncommitted changes in R/, src/ or paper/bench/: FALSE
 hexify installed version: 0.9.0
-R: R version 4.6.0 (2026-04-24 ucrt)
+R: R version 4.6.1 (2026-06-24 ucrt)
 platform: x86_64-w64-mingw32
 cpu: Intel(R) Core(TM) i9-14900K
 hexify: 0.9.0
