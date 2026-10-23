@@ -2,9 +2,16 @@
 
 0 errors | 0 warnings | 1 note
 
-The note comes from the incoming feasibility check, which lists "octahedral"
-in DESCRIPTION as possibly misspelled. It names the octahedron the Hex9 grid
-is built on and is spelled as intended.
+The note comes from the incoming feasibility check:
+
+* It lists "octahedral" in DESCRIPTION as possibly misspelled. It names the
+  octahedron the Hex9 grid is built on and is spelled as intended.
+
+* It lists 'hexglobe' in Suggests as not in a mainstream repository.
+  'hexglobe' draws hexify's globes to a PNG on the graphics card through
+  'wgpu'; only `hex_globe_png(renderer = "wgpu")` uses it, after
+  `requireNamespace()`, and it is served from https://gcol33.r-universe.dev,
+  declared in Additional_repositories.
 
 ## Submission (v0.9.0)
 
@@ -44,8 +51,8 @@ runs only in an interactive session, and no other function writes outside
 
 ## Test environments
 
-* local: Windows 11, R 4.6.0, R CMD check --as-cran
-* win-builder: R-devel (2026-10-21 r90733), R-release (4.6.1)
+* local: Windows 11, R 4.6.1, R CMD check --as-cran
+* win-builder: R-devel (2026-10-22 r90748), R-release (4.6.1)
 
 ## Downstream dependencies
 
