@@ -1,6 +1,6 @@
 # Articles
 
-### Getting Started
+### Get started
 
 - [Quick
   Start](https://gillescolling.com/hexify/articles/quickstart.md):
@@ -14,7 +14,7 @@
   Globe](https://gillescolling.com/hexify/articles/globe.md):
 - [H3 Grid Support](https://gillescolling.com/hexify/articles/h3.md):
 
-### Mathematical Foundations
+### Mathematical foundations
 
 - [Mathematical
   Foundations](https://gillescolling.com/hexify/articles/theory.md):

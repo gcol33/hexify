@@ -2,6 +2,8 @@
 
 ## hexify 0.9.0
 
+CRAN release: 2026-10-23
+
 ### Printing and documentation
 
 - A grid prints as one line

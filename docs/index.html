@@ -52,20 +52,27 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/quickstart.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
-    <li><a class="dropdown-item" href="articles/workflows.html">Workflows</a></li>
+<li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
+    <li><a class="dropdown-item" href="articles/workflows.html">Practical Workflows</a></li>
     <li><a class="dropdown-item" href="articles/visualization.html">Visualization</a></li>
     <li><a class="dropdown-item" href="articles/globe.html">Interactive Globe</a></li>
-    <li><a class="dropdown-item" href="articles/h3.html">H3 Grids</a></li>
+    <li><a class="dropdown-item" href="articles/h3.html">H3 Grid Support</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Mathematical foundations</h6></li>
     <li><a class="dropdown-item" href="articles/theory.html">Mathematical Foundations</a></li>
     <li><a class="dropdown-item" href="articles/lambert.html">Lambert's Construction of Snyder's Projection</a></li>
     <li><a class="dropdown-item" href="articles/ogc-conformance.html">OGC Topic 21 Conformance</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -102,7 +109,7 @@
 <p>hexify supports:</p>
 <ul>
 <li>
-<strong>Equal-area grids at any cell size.</strong> ISEA grids take apertures 3, 4 and 7 in any sequence up to resolution 30, and the Hex9 grid on the octahedron (Griffin 2026). <a href="https://gillescolling.com/hexify/reference/hex_grid.html"><code>hex_grid()</code></a> picks the resolution whose cell area is closest to the area you ask for.</li>
+<strong>Equal-area grids at any cell size.</strong> ISEA grids take apertures 3, 4 and 7 in any sequence, up to resolution 30 at aperture 3, and the Hex9 grid on the octahedron (Griffin 2026). <a href="https://gillescolling.com/hexify/reference/hex_grid.html"><code>hex_grid()</code></a> picks the resolution whose cell area is closest to the area you ask for.</li>
 <li>
 <strong>H3 grids.</strong> The bundled <a href="https://h3geo.org/" class="external-link">H3</a> v4.4.1 C library builds H3 grids with no extra installation, and <a href="https://gillescolling.com/hexify/reference/h3_crosswalk.html"><code>h3_crosswalk()</code></a> maps cells between H3 and ISEA grids.</li>
 <li>
@@ -161,7 +168,7 @@
 <li>Build one grid with <code><a href="reference/hex_grid.html">hex_grid()</a></code> to reuse it across tables, and summarise per cell.</li>
 <li>Turn the cells into polygons with <code><a href="reference/cell_to_sf.html">cell_to_sf()</a></code> to map them or join them to other layers.</li>
 </ol>
-<p>The input is a data frame with longitude and latitude in decimal degrees (WGS84), in columns named <code>lon</code> and <code>lat</code> unless the <code>lon</code> and <code>lat</code> arguments name others. An <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object works in any coordinate reference system, which hexify transforms itself.</p>
+<p>The input is a data frame with longitude and latitude in decimal degrees (WGS84) in columns named <code>lon</code> and <code>lat</code>; other column names are given through the arguments of the same names. An <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> object works in any coordinate reference system, which hexify transforms itself.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gillescolling.com/hexify/">hexify</a></span><span class="op">)</span></span>
 <span></span>
@@ -178,7 +185,7 @@
 <span><span class="co">#&gt; 1 Vienna   14092      7774.205</span></span>
 <span><span class="co">#&gt; 2  Paris   13272      7774.205</span></span>
 <span><span class="co">#&gt; 3 Madrid   13260      7774.205</span></span></code></pre></div>
-<p>Each row receives the ID of its cell and the cell area, and the result also holds the cell centre and diagonal. The grid uses the resolution whose cell area is closest to <code>area_km2</code>, here 7,774 km².</p>
+<p>Each row receives the ID of its cell and the cell area; the other columns are the cell centre and its diagonal in km. The grid uses the resolution whose cell area is closest to <code>area_km2</code>, here 7,774 km².</p>
 <p>A grid built once with <code><a href="reference/hex_grid.html">hex_grid()</a></code> gives the same cell IDs for every table assigned to it, so counts from different datasets can be joined by <code>cell_id</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/hex_grid.html">hex_grid</a></span><span class="op">(</span>area_km2 <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span></span>
@@ -223,19 +230,13 @@
 <div class="section level2">
 <h2 id="h3-grids">H3 grids<a class="anchor" aria-label="anchor" href="#h3-grids"></a>
 </h2>
-<p><code>hex_grid(resolution = 8, type = "h3")</code> builds an H3 grid, which <code><a href="reference/hexify.html">hexify()</a></code>, <code><a href="reference/grid_rect.html">grid_rect()</a></code> and <code><a href="reference/grid_clip.html">grid_clip()</a></code> take in place of an ISEA grid. H3 has a fixed aperture of 7 and a maximum resolution of 15, with cells of about 0.9 m².</p>
+<p><code>hex_grid(resolution = 8, type = "h3")</code> builds an H3 grid, which the assignment and region functions above take in place of an ISEA grid. H3 has a fixed aperture of 7 and a maximum resolution of 15.</p>
 <p>H3 cells are not equal-area. Hexagon area varies by about a factor of 2 within a resolution, and by about 2.4 once the twelve pentagons are counted. The variation follows position on the icosahedron rather than latitude, with the smallest cells near face centres. Use ISEA where equal area matters, and <code><a href="reference/cell_area.html">cell_area()</a></code> to read the area of a given H3 cell. <a href="https://gillescolling.com/hexify/articles/h3.html">H3 Grid Support</a> works through H3 grids, their hierarchy and the crosswalk to ISEA.</p>
 </div>
 <div class="section level2">
-<h2 id="why-equal-area-hexagons">Why equal-area hexagons<a class="anchor" aria-label="anchor" href="#why-equal-area-hexagons"></a>
+<h2 id="equal-area-and-the-twelve-pentagons">Equal area and the twelve pentagons<a class="anchor" aria-label="anchor" href="#equal-area-and-the-twelve-pentagons"></a>
 </h2>
-<p>Hexagonal grids on the ISEA projection bring three properties to spatial binning:</p>
-<ol style="list-style-type: decimal">
-<li>Every cell covers the same surface area from equator to pole, because hexify places the cells with Snyder’s equal-area projection.</li>
-<li>All six neighbours of a cell share an edge and sit at the same distance from its centre, so neighbourhood statistics carry no directional bias.</li>
-<li>The hexagonal tiling has the smallest perimeter per unit area among partitions of a plane into equal areas (<a href="https://doi.org/10.1007/s004540010071" class="external-link">Hales 2001</a>), which keeps edge effects small.</li>
-</ol>
-<p>Any hexagonal tiling of a sphere needs exactly 12 pentagonal cells, at the vertices of the icosahedron. These cells have 5 neighbours instead of 6, and <code><a href="reference/is_pentagon.html">is_pentagon()</a></code> finds them. <a href="https://gillescolling.com/hexify/articles/theory.html">Mathematical Foundations</a> derives the projection, the aperture sequences and the cell indexing.</p>
+<p>Every cell of an ISEA grid covers the same surface area from equator to pole, because hexify places the cells with Snyder’s equal-area projection, whose area scale is constant over each icosahedron face. Any hexagonal tiling of a sphere also needs exactly 12 pentagonal cells, which Euler’s formula fixes at every resolution; they sit at the vertices of the icosahedron, with an area of 5/6 of a hexagon and five neighbours instead of six, and <code><a href="reference/is_pentagon.html">is_pentagon()</a></code> finds them. <a href="https://gillescolling.com/hexify/articles/theory.html">Mathematical Foundations</a> derives the projection, the aperture sequences, the pentagon count and the cell indexing.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
@@ -341,6 +342,8 @@ Icosahedron_. doi:10.32614/CRAN.package.hexify
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://CRAN.R-project.org/package=hexify" class="external-link"><img src="https://www.r-pkg.org/badges/version/hexify" alt="CRAN status"></a></li>
+<li><a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/hexify" alt="CRAN downloads"></a></li>
+<li><a href="https://cran.r-project.org/package=hexify" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/hexify" alt="Monthly downloads"></a></li>
 <li><a href="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/gcol33/hexify/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://app.codecov.io/gh/gcol33/hexify" class="external-link"><img src="https://codecov.io/gh/gcol33/hexify/graph/badge.svg" alt="Codecov test coverage"></a></li>
 <li><a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></li>
