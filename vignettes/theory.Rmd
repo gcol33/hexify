@@ -420,7 +420,7 @@ ggplot() +
 
 ## Snyder's ISEA Projection
 
-Snyder extended the Lambert projection to the icosahedron by introducing an azimuth-adjustment transformation that ensures seamless transitions between adjacent faces while maintaining the equal-area property (Snyder, 1992, p. 12).
+Snyder extended the Lambert projection to the icosahedron by introducing an azimuth-adjustment transformation that keeps the projection continuous across the edges between adjacent faces while maintaining the equal-area property (Snyder, 1992, p. 12).
 
 Bradley (1946) published an approximate equal-area graticule for the icosahedron, and an editorial footnote to that paper described an exact construction by Irving Fisher. Snyder rederived Fisher's approach and generalized it to the five Platonic solids after White, Kimerling, and Overton (1992) chose a truncated-icosahedron grid for the U.S. EPA's EMAP global sampling design (Snyder, 1992, p. 10). ISEA is the icosahedral member of this family.
 
