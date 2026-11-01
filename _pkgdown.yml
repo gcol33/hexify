@@ -35,17 +35,11 @@ navbar:
     - github
     - lightswitch
   components:
-    intro:
-      text: Get started
-      href: articles/quickstart.html
     github:
       icon: fab fa-github
       href: https://github.com/gcol33/hexify
       aria-label: GitHub
 articles:
-- title: Get started
-  contents:
-  - quickstart
 - title: Guides
   navbar: Guides
   contents:
@@ -187,3 +181,5 @@ reference:
   - calculate_resolution_for_area
   - hexify_grid_to_HexGridInfo
   - HexGridInfo_to_hexify_grid
+redirects:
+- ["articles/quickstart.html", "articles/hexify.html"]

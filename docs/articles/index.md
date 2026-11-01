@@ -1,10 +1,5 @@
 # Articles
 
-### Get started
-
-- [Quick
-  Start](https://gillescolling.com/hexify/articles/quickstart.md):
-
 ### Guides
 
 - [Practical

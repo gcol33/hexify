@@ -542,7 +542,7 @@ ggplot() +
 
 ## See Also
 
-- [`vignette("quickstart")`](https://gillescolling.com/hexify/articles/quickstart.md) -
+- [`vignette("hexify")`](https://gillescolling.com/hexify/articles/hexify.md) -
   Getting started with hexify
 
 - [`vignette("workflows")`](https://gillescolling.com/hexify/articles/workflows.md) -

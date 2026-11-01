@@ -578,7 +578,7 @@ projections render correctly without manual intervention.
 
 ## See Also
 
-- `vignette("quickstart")` - Getting started with hexify
+- `vignette("hexify")` - Getting started with hexify
 
 - `vignette("visualization")` - Plotting with `plot()`, `hexify_heatmap()`
 

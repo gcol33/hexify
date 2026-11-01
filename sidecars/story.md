@@ -21,12 +21,12 @@ Ecologists, epidemiologists and geographers who bin point data into spatial cell
 - evidence: vignettes/theory.Rmd; tests
 - limits: twelve pentagons per grid
 - home: vignettes/theory.Rmd
-- also: README, quickstart
+- also: README, hexify.Rmd
 
 ### A2 Points to cells to maps
 - question: how do I get from a table of coordinates to a map per cell?
 - answer: hexify(), hex_grid(), cell_to_sf(), grid_rect()/grid_clip(), plot()/hexify_heatmap()
-- home: vignettes/quickstart.Rmd
+- home: vignettes/hexify.Rmd
 - also: README Usage, workflows.Rmd, visualization.Rmd
 
 ### A3 H3 grids alongside ISEA
@@ -49,7 +49,7 @@ None stated in the docs.
 ## Documents
 - DESCRIPTION: claim, ISEA, H3, Hex9, dggridR compatibility
 - README / landing: claim, relation, first example, A1-A4 in one paragraph or section each, routing
-- Get Started (quickstart): one path from points to a map
+- Get Started (hexify.Rmd): one path from points to a map
 - articles: workflows, visualization, globe (how-to); h3 (how-to); theory, lambert, ogc-conformance (explanation)
 
 ## Open

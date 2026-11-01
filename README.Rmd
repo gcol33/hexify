@@ -143,7 +143,7 @@ Every cell of an ISEA grid covers the same surface area from equator to pole, be
 
 ## Documentation
 
-Start with [Quick Start](https://gillescolling.com/hexify/articles/quickstart.html): points assigned to cells, counted per cell and mapped.
+Start with [Quick Start](https://gillescolling.com/hexify/articles/hexify.html): points assigned to cells, counted per cell and mapped.
 
 - [Practical Workflows](https://gillescolling.com/hexify/articles/workflows.html): shared grids across datasets, cell polygons, choosing a resolution and export to GIS.
 - [Visualization](https://gillescolling.com/hexify/articles/visualization.html): maps with base R `plot()`, `hexify_heatmap()` and ggplot2.

@@ -752,7 +752,7 @@ intervention.
 
 ## See Also
 
-- [`vignette("quickstart")`](https://gillescolling.com/hexify/articles/quickstart.md) -
+- [`vignette("hexify")`](https://gillescolling.com/hexify/articles/hexify.md) -
   Getting started with hexify
 
 - [`vignette("visualization")`](https://gillescolling.com/hexify/articles/visualization.md) -

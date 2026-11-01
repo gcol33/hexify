@@ -227,7 +227,7 @@ the cell indexing.
 ## Documentation
 
 Start with [Quick
-Start](https://gillescolling.com/hexify/articles/quickstart.html):
+Start](https://gillescolling.com/hexify/articles/hexify.html):
 points assigned to cells, counted per cell and mapped.
 
 - [Practical

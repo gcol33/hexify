@@ -12,7 +12,7 @@ install.packages("hexify")
 library(hexify)
 ```
 
-![](quickstart_files/figure-html/cover-image-1.svg)
+![](hexify_files/figure-html/cover-image-1.svg)
 
 ## Spatial Analysis Done Right
 
@@ -229,7 +229,7 @@ ggplot() +
   )
 ```
 
-![](quickstart_files/figure-html/bird-plot-1.svg)
+![](hexify_files/figure-html/bird-plot-1.svg)
 
 #### Species Richness Map
 
@@ -252,7 +252,7 @@ ggplot() +
   )
 ```
 
-![](quickstart_files/figure-html/richness-plot-1.svg)
+![](hexify_files/figure-html/richness-plot-1.svg)
 
 ### Core Concepts
 

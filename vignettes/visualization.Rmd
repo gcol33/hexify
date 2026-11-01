@@ -452,6 +452,6 @@ ggplot() +
 
 ## See Also
 
-- `vignette("quickstart")` - Getting started with hexify
+- `vignette("hexify")` - Getting started with hexify
 
 - `vignette("workflows")` - Complete analysis workflows

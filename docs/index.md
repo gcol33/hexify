@@ -230,8 +230,8 @@ the cell indexing.
 ## Documentation
 
 Start with [Quick
-Start](https://gillescolling.com/hexify/articles/quickstart.html):
-points assigned to cells, counted per cell and mapped.
+Start](https://gillescolling.com/hexify/articles/hexify.html): points
+assigned to cells, counted per cell and mapped.
 
 - [Practical
   Workflows](https://gillescolling.com/hexify/articles/workflows.html):

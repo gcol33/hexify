@@ -327,7 +327,7 @@ knitr::kable(
 
 ## See Also
 
-- `vignette("quickstart")` - Getting started with hexify (ISEA-focused)
+- `vignette("hexify")` - Getting started with hexify (ISEA-focused)
 
 - `vignette("workflows")` - Grid generation, multi-resolution analysis, GIS export
 
