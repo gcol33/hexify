@@ -17,6 +17,12 @@ now take milliseconds. Perimeters change by at most 2e-13 relative.
 The linux-arm64 additional issue is likely the same hang; its log was not
 reachable to confirm.
 
+Where the compiler fuses multiply-adds (arm64, x86-64 with FMA), two inlined
+copies of one projection step could round their last digit differently, so a
+test asserting that `projection_stages()` ends on the forward projection bit
+for bit failed. Both now call one compiled function. Projected coordinates and
+cell IDs are unchanged where the compiler does not fuse.
+
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
@@ -39,9 +45,14 @@ runs only in an interactive session, and no other function writes outside
 ## Test environments
 
 * local: Windows 11, R 4.6.1, R CMD check --as-cran
-* macOS arm64: Apple M4 Pro, R 4.5.3, examples and tests
-* win-builder: R-devel, R-release
-* mac builder: R-release (macOS arm64)
+* local: macOS arm64 (Apple M4 Pro), R 4.5.3, R CMD check --as-cran
+  (examples 14 s, tests 56 s)
+* win-builder: R-devel (2026-11-06 r90845), R-release (4.6.2)
+* GitHub Actions: macOS (release), Windows (release), Ubuntu (devel,
+  release, oldrel-1)
+
+The mac builder returned "currently unavailable" on 2026-11-07, so the macOS
+arm64 check ran on my own machine.
 
 ## Downstream dependencies
 
