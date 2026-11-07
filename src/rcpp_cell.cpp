@@ -1586,6 +1586,10 @@ static void split_at_creases(std::vector<FacePiece>& pieces) {
 // face it is in form one interval: bisection on face membership finds where
 // the segment leaves it, and the walk goes on from the face it enters there.
 // Returns NULL, or what went wrong when part of the segment lies on no face.
+
+// A face crossing within this fraction of the segment of either end is that end.
+constexpr double kFaceEndSlack = 1e-12;
+
 static const char* plane_segment_faces(int quad, double ax, double ay,
                                        double bx, double by, int wall,
                                        std::vector<FacePiece>& out) {
@@ -1621,7 +1625,15 @@ static const char* plane_segment_faces(int quad, double ax, double ay,
         }
         double ex, ey;
         quad_point_face(quad, ax + lo * (bx - ax), ay + lo * (by - ay), f, ex, ey);
-        out.push_back({face, tx, ty, ex, ey, wall, s, lo});
+        // A crossing this close to the segment's end is the end lying on the
+        // face edge, which rounding put on the next face: the segment ends here.
+        if (lo >= 1.0 - kFaceEndSlack) {
+            out.push_back({face, tx, ty, ex, ey, wall, s, 1.0});
+            return nullptr;
+        }
+        // One this close to where the piece starts is its start lying on the
+        // edge: the piece is empty, and the walk goes on from the next face.
+        if (lo - s > kFaceEndSlack) out.push_back({face, tx, ty, ex, ey, wall, s, lo});
         if (!quad_point_face(quad, ax + hi * (bx - ax), ay + hi * (by - ay),
                              face, tx, ty)) {
             return "cell edge passes outside every face of the solid";
@@ -1934,10 +1946,12 @@ static void cell_face_pieces(const CellPlanes& g, const CellPlane& c,
 // piece across a cusp of the projection halves at the cusp until here.
 constexpr int kMaxMeasureSplits = 20;
 
-// Below this, in radians (and radians times the piece's chord for an area),
-// the two measures face_piece_sphere() compares differ by the rounding of the
-// unit vectors they are formed from, a few parts in 10^16 each, so halving
-// further changes nothing.
+// Below this, in radians for a length and steradians for an area, the two
+// measures face_piece_sphere() compares differ by the rounding of the unit
+// vectors they are formed from, a few parts in 10^16 each, so halving further
+// changes nothing. The floor is absolute for both: an arc between two unit
+// vectors and the triple product of three carry that rounding however close
+// the points lie, so a short piece's measures never fall below it.
 constexpr double kMeasureRoundoff = 1e-14;
 
 // One piece of a wall as cell_walls_sphere() writes it: the straight segment
@@ -1977,7 +1991,7 @@ static void face_piece_sphere(int face, double ax, double ay, const hexify::Unit
                                            hexify::triangle_solid_angle(m, q3, b)) -
                               hexify::triangle_solid_angle(a, m, b) / 3.0;
         if (std::fabs(d_length) > tolerance * chord + kMeasureRoundoff ||
-            std::fabs(d_area) > (tolerance * span + kMeasureRoundoff) * chord) {
+            std::fabs(d_area) > tolerance * span * chord + kMeasureRoundoff) {
             face_piece_sphere(face, ax, ay, a, q1, mx, my, m, tolerance, span, depth + 1,
                               out, frames);
             face_piece_sphere(face, mx, my, m, q3, bx, by, b, tolerance, span, depth + 1,

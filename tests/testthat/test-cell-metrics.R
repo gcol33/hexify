@@ -58,6 +58,27 @@ test_that("perimeters add up to twice the walls", {
   expect_equal(sum(m$perimeter_km), 2 * sum(w$wall_km), tolerance = 1e-12)
 })
 
+test_that("aperture-3 walls ending on a face edge add up to twice the walls", {
+  # At aperture 3 cell corners lie on the face edges, where rounding can put a
+  # wall's end on the next face; the wall then still ends there.
+  g <- hex_grid(resolution = 3, aperture = 3)
+  m <- cell_metrics(grid = g)
+  w <- wall_metrics(grid = g)
+  expect_equal(sum(m$perimeter_km), 2 * sum(w$wall_km), tolerance = 1e-12)
+})
+
+test_that("a fine cell's walls are its great-circle edges", {
+  # At resolution 20 a cell spans about 1e-5 radians, so its walls bend from
+  # the arcs between its corners by far less than the measuring tolerance.
+  g <- hex_grid(resolution = 20, aperture = 3)
+  ids <- lonlat_to_cell(c(16.37, -70.2, 120.5), c(48.21, 12.3, -33.3), g)
+  lv <- isea_levels(g@aperture, g@resolution)
+  corners <- cpp_cell_to_corners(icosa_arg(g), ids, lv$resolution, lv$aperture,
+                                 lv$ap_seq, 0)
+  p <- cell_metrics(ids, g)$perimeter_km / grid_radius_km(g)
+  expect_equal(p, vapply(corners, ring_length_rad, 0), tolerance = 1e-6)
+})
+
 test_that("an ISEA perimeter matches its boundary densified in lon/lat", {
   # Two densifications of the same curved walls: on the sphere (cell_metrics)
   # and in lon/lat (cell_to_sf's boundary), each to a tight tolerance. The

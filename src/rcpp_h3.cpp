@@ -238,7 +238,7 @@ Rcpp::CharacterVector cpp_h3_polygonToCells(Rcpp::NumericMatrix coords,
     std::vector<std::vector<LatLng>> hole_verts_storage;
 
     if (holes.isNotNull()) {
-        Rcpp::List holes_list(holes);
+        Rcpp::List holes_list(holes.get());
         int n_holes = holes_list.size();
         hole_loops.resize(n_holes);
         hole_verts_storage.resize(n_holes);
