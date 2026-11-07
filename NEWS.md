@@ -11,6 +11,11 @@
   now absolute, and a wall ending on a face edge ends there. Perimeters and
   wall lengths change by at most 2e-13 relative, midpoint ratios by at most
   2e-8 relative (aperture 3 and IVEA; apertures 4 and 7 are unchanged).
+* The last step of `projection_stages()` equals the forward projection bit for
+  bit also where the compiler fuses multiply-adds (arm64, x86-64 with FMA):
+  both now take Snyder's point from one compiled function, where before each
+  inlined copy could round its last digit differently. Projected coordinates
+  and cell IDs are unchanged where the compiler does not fuse.
 * The H3 polygon fill reads its optional holes explicitly, so the package
   compiles with toolchains where the implicit conversion is ambiguous.
 

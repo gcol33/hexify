@@ -9,6 +9,18 @@
 #include <stdexcept>
 #include <algorithm>
 #include <array>
+#include <type_traits>
+
+// A function compiled once and called, never inlined or cloned: every caller
+// then runs the same instructions and gets the same bits, whatever
+// multiply-adds the compiler fuses inside it.
+#if defined(__clang__)
+#define HEXIFY_ONE_COPY __attribute__((noinline))
+#elif defined(__GNUC__)
+#define HEXIFY_ONE_COPY __attribute__((noipa))
+#else
+#define HEXIFY_ONE_COPY
+#endif
 
 namespace hexify {
 
@@ -86,6 +98,29 @@ static inline void snyder_plane(const SnyderParams& sp, T z, int sector, T az_pr
   v = rho * cos(a);
 }
 
+// Snyder's point at arc z and azimuth az from a face centre, with the steps
+// construction_point() reports: the sector, Snyder's dz along az, the plane
+// azimuth within the sector, f, (u, v) from the face centre and the plane
+// triangle's (x, y).
+struct SnyderPoint {
+  int sector;
+  double dz, az_prime, f, u, v, x, y;
+};
+
+// The forward projection and construction_point() both take Snyder's point
+// from here, so the construction's last step is the forward bit for bit.
+HEXIFY_ONE_COPY static SnyderPoint snyder_point(const SnyderParams& sp, double z, double az) {
+  const SectorAzimuth<double> s = sector_azimuth(sp, az);
+  SnyderPoint p;
+  p.sector = s.sector;
+  p.dz = s.dz;
+  snyder_adjust(sp, s, p.az_prime, p.f);
+  snyder_plane(sp, z, s.sector, p.az_prime, p.f, p.u, p.v);
+  p.x = (p.u + sp.origin_x_off) / sp.edge;
+  p.y = (p.v + sp.origin_y_off) / sp.edge;
+  return p;
+}
+
 // The face projection `proj` of the point at arc z from a face centre and
 // azimuth az from the face's first vertex, both in radians, az in [0, 2 pi),
 // to face-plane (x, y). With `validate`, a point past the sector boundary
@@ -94,6 +129,15 @@ template <class T>
 static bool face_xy_from_polar(const SolidTopology& t, T z, T az, bool validate,
                                FaceProjection proj, T& x, T& y) {
   const SnyderParams& sp = t.snyder;
+  if constexpr (std::is_same<T, double>::value) {
+    if (proj == FaceProjection::ISEA) {
+      const SnyderPoint p = snyder_point(sp, z, az);
+      if (validate && z > p.dz + 1e-7) return false;
+      x = p.x;
+      y = p.y;
+      return true;
+    }
+  }
   const SectorAzimuth<T> s = sector_azimuth(sp, az);
 
   // The point must lie inside the sector boundary
@@ -159,8 +203,8 @@ static void stage_uv(const SolidTopology& t, T z, T az, ConstructionStage stage,
 
 // Arc z from a face centre and azimuth from the face's first vertex, in
 // [0, 2 pi), of a point.
-static void face_polar(const Geo& geo, const PolyData& ico_data, int face,
-                       double& z, double& azimuth) {
+HEXIFY_ONE_COPY static void face_polar(const Geo& geo, const PolyData& ico_data, int face,
+                                       double& z, double& azimuth) {
   const double glon = geo.lon;
   const double glat = geo.lat;
 
@@ -262,15 +306,15 @@ ConstructionPoint construction_point(const Geo& geo, int face) {
   face_polar(geo, ico_data, face, out.z, out.az);
   stage_uv(t, out.z, out.az, ConstructionStage::Lambert, FaceProjection::ISEA,
            out.lambert_u, out.lambert_v);
-  const SectorAzimuth<double> s = sector_azimuth(sp, out.az);
-  double az_prime;
-  snyder_adjust(sp, s, az_prime, out.f);
-  snyder_plane(sp, out.z, s.sector, az_prime, out.f, out.plane_u, out.plane_v);
-  out.az_prime = az_prime + s.sector * k2PiOver3;
+  const SnyderPoint p = snyder_point(sp, out.z, out.az);
+  out.f = p.f;
+  out.plane_u = p.u;
+  out.plane_v = p.v;
+  out.az_prime = p.az_prime + p.sector * k2PiOver3;
   if (out.az_prime < 0.0) out.az_prime += kTwoPi;
   if (out.az_prime >= kTwoPi) out.az_prime -= kTwoPi;
-  out.tx = (out.plane_u + sp.origin_x_off) / sp.edge;
-  out.ty = (out.plane_v + sp.origin_y_off) / sp.edge;
+  out.tx = p.x;
+  out.ty = p.y;
   return out;
 }
 
