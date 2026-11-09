@@ -4,7 +4,7 @@
 
 ![World land covered by equal-area hexagons, cell area stepping from
 210,000 km² over the Americas to 7,800 km² over
-Oceania](reference/figures/hexify-hero.png)
+Oceania](reference/figures/hexify-hero.svg)
 
 hexify assigns points on the globe to the cells of a hexagonal grid in
 which every cell has the same area, such as species records counted in
@@ -302,7 +302,7 @@ the files and their sources.
 Colling G (2026). _hexify: Equal-Area Hex Grids on the Snyder ISEA
 Icosahedron_. doi:10.32614/CRAN.package.hexify
 <https://doi.org/10.32614/CRAN.package.hexify>. R package version
-0.9.0, <https://gillescolling.com/hexify/>.
+0.9.1, <https://gillescolling.com/hexify/>.
 ```
 
 BibTeX:
@@ -312,7 +312,7 @@ BibTeX:
   title = {hexify: Equal-Area Hex Grids on the Snyder ISEA Icosahedron},
   author = {Gilles Colling},
   year = {2026},
-  note = {R package version 0.9.0},
+  note = {R package version 0.9.1},
   url = {https://gillescolling.com/hexify/},
   doi = {10.32614/CRAN.package.hexify},
 }

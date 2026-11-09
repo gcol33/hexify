@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,13 @@
       <small>Source: <a href="https://github.com/gcol33/hexify/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.1" id="hexify-091">hexify 0.9.1<a class="anchor" aria-label="anchor" href="#hexify-091"></a></h2><p class="text-muted">CRAN release: 2026-11-07</p>
+<ul><li>
+<code><a href="../reference/cell_metrics.html">cell_metrics()</a></code> and <code><a href="../reference/wall_metrics.html">wall_metrics()</a></code> no longer run for minutes on fine grids or on Apple silicon. Each wall is halved until two estimates of its length and of the area beside it agree; the area’s rounding floor shrank with the piece, so pieces shorter than about 1e-7 radians were halved down to 2^20 parts. That covered every cell from about resolution 18 (46 s for three resolution-20 cells), and on arm64, where a wall ending on a face edge can round onto the next face, a zero-length piece in aperture-3 grids (the <code><a href="../reference/cell_metrics.html">?cell_metrics</a></code> example ran past CRAN’s 30-minute limit). The floor is now absolute, and a wall ending on a face edge ends there. Perimeters and wall lengths change by at most 2e-13 relative, midpoint ratios by at most 2e-8 relative (aperture 3 and IVEA; apertures 4 and 7 are unchanged).</li>
+<li>The last step of <code><a href="../reference/projection_stages.html">projection_stages()</a></code> equals the forward projection bit for bit also where the compiler fuses multiply-adds (arm64, x86-64 with FMA): both now take Snyder’s point from one compiled function, where before each inlined copy could round its last digit differently. Projected coordinates and cell IDs are unchanged where the compiler does not fuse.</li>
+<li>The H3 polygon fill reads its optional holes explicitly, so the package compiles with toolchains where the implicit conversion is ambiguous.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0" id="hexify-090">hexify 0.9.0<a class="anchor" aria-label="anchor" href="#hexify-090"></a></h2><p class="text-muted">CRAN release: 2026-10-23</p>
 <div class="section level3">

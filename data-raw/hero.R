@@ -1,11 +1,11 @@
-# Build the README banner man/figures/hexify-hero.png.
+# Build the README banner man/figures/hexify-hero.svg.
 #
 # The land of hexify_world covered by aperture-3 ISEA grids whose cells shrink
 # threefold from one continent group to the next, west to east, drawn on the
 # Equal Earth projection so equal-area cells look equal in size.
 #
 # Run from the package root:  Rscript data-raw/hero.R
-# Needs sf and ggplot2 only here; they are not package dependencies.
+# Needs sf, ggplot2 and svglite only here; they are not package dependencies.
 
 suppressMessages({
   library(sf)
@@ -86,6 +86,14 @@ p <- ggplot() +
   theme(plot.background = element_rect(fill = "white", colour = NA),
         plot.margin = margin(8, 8, 8, 8))
 
-ggsave("man/figures/hexify-hero.png", p, width = width, height = height, dpi = dpi, bg = "white")
-file.copy("man/figures/hexify-hero.png", "docs/reference/figures/hexify-hero.png",
+# Text metrics come from Arial; the SVG names a common sans stack so GitHub and
+# pkgdown render the labels alike.
+ggsave("man/figures/hexify-hero.svg", p, width = width, height = height, bg = "white",
+       device = svglite::svglite, fix_text_size = FALSE,
+       system_fonts = list(sans = "Arial"))
+svg <- readLines("man/figures/hexify-hero.svg", warn = FALSE)
+svg <- gsub("font-family: \"Arial\";", "font-family: \"Segoe UI\", Helvetica, Arial, sans-serif;",
+            svg, fixed = TRUE)
+writeLines(svg, "man/figures/hexify-hero.svg")
+file.copy("man/figures/hexify-hero.svg", "docs/reference/figures/hexify-hero.svg",
           overwrite = TRUE)

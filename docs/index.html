@@ -43,7 +43,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hexify</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,7 +101,7 @@
 <!-- badges: start -->
 
 <p align="center">
-<img src="reference/figures/hexify-hero.png" alt="World land covered by equal-area hexagons, cell area stepping from 210,000 km² over the Americas to 7,800 km² over Oceania" width="100%"></p>
+<img src="reference/figures/hexify-hero.svg" alt="World land covered by equal-area hexagons, cell area stepping from 210,000 km² over the Americas to 7,800 km² over Oceania" width="100%"></p>
 <p>hexify assigns points on the globe to the cells of a hexagonal grid in which every cell has the same area, such as species records counted in cells of about 8,000 km² each, from the equator to the poles.</p>
 <p>Rectangular latitude-longitude grids shrink towards the poles: a 1° cell at 60°N has half the area of a 1° cell at the equator, so a count per cell mixes what was found with how large the cell is. hexify builds its grids on the Icosahedral Snyder Equal Area (ISEA) projection (Snyder 1992), the discrete global grid system of Sahr, White and Kimerling (2003) that <a href="https://github.com/r-barnes/dggridR/" class="external-link">dggridR</a> also provides, and computes it in C++ with no external libraries. A grid is set by its cell area or its resolution, and each point receives the ID of the cell that contains it. You can then count, summarise and map your data per cell, and choose the cell size that suits your analysis.</p>
 <p>hexify supports:</p>
@@ -290,13 +290,13 @@
 <pre class="text"><code>Colling G (2026). _hexify: Equal-Area Hex Grids on the Snyder ISEA
 Icosahedron_. doi:10.32614/CRAN.package.hexify
 &lt;https://doi.org/10.32614/CRAN.package.hexify&gt;. R package version
-0.9.0, &lt;https://gillescolling.com/hexify/&gt;.</code></pre>
+0.9.1, &lt;https://gillescolling.com/hexify/&gt;.</code></pre>
 <p>BibTeX:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="va">@Manual</span>{<span class="ot">colling2026hexify</span>,</span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="dt">title</span> = {hexify: Equal-Area Hex Grids on the Snyder ISEA Icosahedron},</span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="dt">author</span> = {Gilles Colling},</span>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="dt">year</span> = {2026},</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="dt">note</span> = {R package version 0.9.0},</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="dt">note</span> = {R package version 0.9.1},</span>
 <span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="dt">url</span> = {https://gillescolling.com/hexify/},</span>
 <span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="dt">doi</span> = {10.32614/CRAN.package.hexify},</span>
 <span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>}</span></code></pre></div>
