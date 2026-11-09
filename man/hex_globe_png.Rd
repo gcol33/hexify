@@ -11,7 +11,8 @@ hex_globe_png(
   height = 800,
   scale = 1,
   timeout = 30,
-  renderer = c("wgpu", "chrome")
+  renderer = c("wgpu", "chrome"),
+  background = NULL
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ resolution.}
 \item{timeout}{Seconds to wait for the globe to be drawn in Chrome.}
 
 \item{renderer}{\code{"wgpu"} or \code{"chrome"}, as above.}
+
+\item{background}{Colour behind the globe, or \code{NULL} for a clear
+background; drawn by \code{renderer = "wgpu"}.}
 }
 \value{
 \code{file}, invisibly.

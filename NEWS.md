@@ -1,3 +1,12 @@
+# hexify (development version)
+
+* `hex_globe_svg()` saves a globe as an SVG file in the view the widget opens
+  with, drawn on the CPU by hexglobe (0.2.0 or later) with no graphics card or
+  browser. The cells of an ISEA grid, which the widget finds per pixel, are
+  drawn as one path per colour and their borders as polylines; values blended
+  across cells (`smooth = TRUE`) are refused.
+* `hex_globe_png()` takes a `background` colour, drawn behind the globe.
+
 # hexify 0.9.1
 
 * `cell_metrics()` and `wall_metrics()` no longer run for minutes on fine

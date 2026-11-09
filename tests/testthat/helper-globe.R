@@ -25,3 +25,10 @@ skip_without_wgpu <- function() {
   skip_if(inherits(try(hexglobe::gpu_adapter(), silent = TRUE), "try-error"),
           "no graphics adapter for wgpu")
 }
+
+# hexglobe draws SVG files from 0.2.0 on, on the CPU.
+skip_without_svg <- function() {
+  skip_if_not(requireNamespace("hexglobe", quietly = TRUE) &&
+                utils::packageVersion("hexglobe") >= "0.2.0",
+              "hexglobe 0.2.0 or later is not installed")
+}

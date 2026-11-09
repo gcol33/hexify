@@ -151,12 +151,9 @@ hex_globe <- function(x,
   }
   if (is_h3_grid(g)) {
     if (smooth) stop("smooth blends the cells of ISEA grids only", call. = FALSE)
-    cells <- grid_cells(g, cells)
-    if (!is.null(values)) {
-      fill <- c(globe_mesh(h3_surface_mesh(cells, GLOBE_MESH_SPACING)),
-                values = cpp_base64_buffer(ramp_position(values, cells, limits), "f32"))
-    }
-    grid_lines <- globe_lines(grid_surface_paths(g, cells, step))
+    drawn <- globe_cell_layers(g, cells, values, limits, step)
+    fill <- drawn$cells
+    grid_lines <- drawn$grid_lines
   } else {
     grid <- globe_grid(g, cells, values, limits, smooth, globe_rgba(na_fill))
   }
@@ -203,7 +200,7 @@ hex_globe <- function(x,
     )
   )
 
-  htmlwidgets::createWidget(
+  widget <- htmlwidgets::createWidget(
     "hex_globe", x, width = width, height = height, package = "hexify",
     elementId = elementId,
     sizingPolicy = htmlwidgets::sizingPolicy(
@@ -211,6 +208,12 @@ hex_globe <- function(x,
       browser.fill = TRUE
     )
   )
+  # The grid and its cells as given, which hex_globe_svg() draws as paths
+  # where the widget finds an ISEA grid's cells per pixel; htmlwidgets sends
+  # only `x` to the browser.
+  widget$given <- list(grid = g, cells = cells, values = values, limits = limits,
+                       smooth = smooth, step = step)
+  widget
 }
 
 #' Save a Globe as a PNG Image
@@ -235,6 +238,8 @@ hex_globe <- function(x,
 #'   resolution.
 #' @param timeout Seconds to wait for the globe to be drawn in Chrome.
 #' @param renderer \code{"wgpu"} or \code{"chrome"}, as above.
+#' @param background Colour behind the globe, or \code{NULL} for a clear
+#'   background; drawn by \code{renderer = "wgpu"}.
 #'
 #' @return \code{file}, invisibly.
 #'
@@ -250,34 +255,103 @@ hex_globe <- function(x,
 #'   hex_globe_png(globe, tempfile(fileext = ".png"), scale = 2)
 #' }
 hex_globe_png <- function(widget, file, width = 800, height = 800, scale = 1,
-                          timeout = 30, renderer = c("wgpu", "chrome")) {
-  if (!inherits(widget, "hex_globe")) {
-    stop("widget must be a globe from hex_globe()", call. = FALSE)
-  }
+                          timeout = 30, renderer = c("wgpu", "chrome"),
+                          background = NULL) {
+  check_globe_widget(widget)
   renderer <- match.arg(renderer)
   pkgs <- if (renderer == "wgpu") "hexglobe" else c("chromote", "htmlwidgets")
   for (pkg in pkgs) {
-    if (!requireNamespace(pkg, quietly = TRUE)) {
-      install <- if (pkg == "hexglobe") {
-        paste0("install.packages('hexglobe', repos = c('https://gcol33.r-universe.dev', ",
-               "getOption('repos')))")
-      } else {
-        paste0("install.packages('", pkg, "')")
-      }
-      stop("hex_globe_png(renderer = \"", renderer, "\") needs the '", pkg,
-           "' package. Install with: ", install, call. = FALSE)
-    }
+    need_globe_package(pkg, paste0("hex_globe_png(renderer = \"", renderer, "\")"))
   }
   if (renderer == "wgpu") {
-    image <- hexglobe::render_scene(globe_scene(widget$x, width, height, scale))
-    hexglobe::write_png(image, file)
+    scene <- globe_scene(widget$x, width, height, scale, background)
+    hexglobe::write_png(hexglobe::render_scene(scene), file)
     return(invisible(file))
+  }
+  if (!is.null(background)) {
+    stop("background is drawn by renderer = \"wgpu\"", call. = FALSE)
   }
   png <- globe_in_chrome(widget, width, height, scale, timeout, function(session, read) {
     read("document.querySelector('.hexify-globe').hexGlobe.snapshot()")
   })
   writeBin(cpp_base64_decode(png), file)
   invisible(file)
+}
+
+#' Save a globe as an SVG file
+#'
+#' Draws a globe from \code{\link{hex_globe}} as an SVG drawing, in the view
+#' the widget opens with: the ocean, the land, the cells and every line as
+#' vector paths, placed and projected as the widget's shader places them.
+#' The drawing is made on the CPU by the 'hexglobe' package and needs no
+#' graphics card or browser.
+#'
+#' The cells of an ISEA grid, which the widget finds per pixel, are drawn as
+#' one path per colour and their borders as polylines, so the file grows
+#' with the number of cells drawn. Borders fade out where the cells shrink
+#' below a few pixels, as in the widget. Values blended across cells
+#' (\code{smooth = TRUE}) have no vector form and are refused;
+#' \code{\link{hex_globe_png}} draws them.
+#'
+#' @param widget A globe from \code{\link{hex_globe}}.
+#' @param file Path of the SVG file to write.
+#' @param width,height Size of the drawing in pixels.
+#' @param background Colour behind the globe, or \code{NULL} for none.
+#'
+#' @return \code{file}, invisibly.
+#'
+#' @seealso \code{\link{hex_globe_png}} for the same view as a PNG image
+#'
+#' @export
+#' @examples
+#' if (requireNamespace("hexglobe", quietly = TRUE)) {
+#'   grid <- hex_grid(resolution = 2, aperture = 3)
+#'   globe <- hex_globe(grid, land = FALSE)
+#'   hex_globe_svg(globe, tempfile(fileext = ".svg"), width = 300, height = 300)
+#' }
+hex_globe_svg <- function(widget, file, width = 800, height = 800, background = NULL) {
+  check_globe_widget(widget)
+  need_globe_package("hexglobe", "hex_globe_svg()", "0.2.0")
+  x <- widget$x
+  if (!is.null(x$grid)) {
+    given <- widget$given
+    if (isTRUE(given$smooth)) {
+      stop("smooth blends the values across cells per pixel, which an SVG ",
+           "cannot draw; hex_globe_png() draws it", call. = FALSE)
+    }
+    x[c("cells", "grid_lines")] <- globe_cell_layers(given$grid, given$cells, given$values,
+                                                     given$limits, given$step)
+    x["grid"] <- list(NULL)
+  }
+  svg <- hexglobe::render_svg(globe_scene(x, width, height, 1, background))
+  writeLines(svg, file, sep = "", useBytes = TRUE)
+  invisible(file)
+}
+
+#' Stop unless `widget` is a globe from hex_globe()
+#' @noRd
+check_globe_widget <- function(widget) {
+  if (!inherits(widget, "hex_globe")) {
+    stop("widget must be a globe from hex_globe()", call. = FALSE)
+  }
+}
+
+#' Stop unless package `pkg` (at `version` or later) is installed, naming
+#' the call that needs it and how to install it
+#' @noRd
+need_globe_package <- function(pkg, caller, version = NULL) {
+  ok <- requireNamespace(pkg, quietly = TRUE) &&
+    (is.null(version) || utils::packageVersion(pkg) >= version)
+  if (ok) return(invisible())
+  install <- if (pkg == "hexglobe") {
+    paste0("install.packages('hexglobe', repos = c('https://gcol33.r-universe.dev', ",
+           "getOption('repos')))")
+  } else {
+    paste0("install.packages('", pkg, "')")
+  }
+  stop(caller, " needs the '", pkg, "' package",
+       if (!is.null(version)) paste0(" (", version, " or later)"),
+       ". Install with: ", install, call. = FALSE)
 }
 
 #' The globe's place along Lambert's construction, as the widget reads it:
@@ -332,7 +406,7 @@ globe_frame <- function(view, fov, extent = NULL) {
 #' of `width` by `height` CSS pixels at `scale` pixels each. A mesh shared by
 #' two layers is one raw vector, which the renderer uploads once.
 #' @noRd
-globe_scene <- function(x, width, height, scale) {
+globe_scene <- function(x, width, height, scale, background = NULL) {
   w <- as.integer(round(width * scale))
   h <- as.integer(round(height * scale))
   s <- x$style
@@ -396,7 +470,8 @@ globe_scene <- function(x, width, height, scale) {
     line_layer(x$edge_lines, x$lift$edges, s$edge_col, s$edge_lwd)
   )
   list(shader = x$shader, camera = globe_camera_uniform(x, w, h), width = w,
-       height = h, layers = Filter(Negate(is.null), layers))
+       height = h, layers = Filter(Negate(is.null), layers),
+       background = if (!is.null(background)) le32(globe_rgba(background), "f32"))
 }
 
 #' The Camera uniform of globe.wgsl for the view a globe opens with
@@ -691,6 +766,42 @@ h3_surface_mesh <- function(cells, max_len) {
     list(b)
   })
   cpp_globe_polygons(numeric(0), rings, max_len)
+}
+
+#' A grid's cells as the widget draws an H3 grid's: their fill, a mesh with
+#' item k cell k of `cells` and its ramp position, when `values` are given,
+#' and their boundaries as paths
+#' @noRd
+globe_cell_layers <- function(g, cells, values, limits, step) {
+  cells <- grid_cells(g, cells)
+  fill <- NULL
+  if (!is.null(values)) {
+    mesh <- if (is_h3_grid(g)) {
+      h3_surface_mesh(cells, GLOBE_MESH_SPACING)
+    } else {
+      isea_surface_mesh(g, cells, step)
+    }
+    fill <- c(globe_mesh(mesh),
+              values = cpp_base64_buffer(ramp_position(values, cells, limits), "f32"))
+  }
+  list(cells = fill, grid_lines = globe_lines(grid_surface_paths(g, cells, step)))
+}
+
+#' ISEA cells filled as one mesh of the sphere, item k being cell k of
+#' `cells`: each cell's boundary from cpp_cell_surface_paths(), whose steps
+#' are short enough that the great circles between its points follow it
+#' @noRd
+isea_surface_mesh <- function(g, cells, step) {
+  icosa <- icosa_arg(g)
+  paths <- grid_surface_paths(g, cells, step)
+  ll <- xyz_to_lonlat(paths[, c("sphere_x", "sphere_y", "sphere_z"), drop = FALSE], icosa)
+  rings <- lapply(split(seq_len(nrow(paths)), paths[, "cell"]), function(rows) {
+    b <- ll[rows, , drop = FALSE]
+    b <- b[c(TRUE, rowSums(abs(diff(b))) > 0), , drop = FALSE]
+    if (any(b[1, ] != b[nrow(b), ])) b <- rbind(b, b[1, ])
+    list(lonlat_ring_coords(b))
+  })
+  cpp_globe_polygons(icosa, unname(rings), GLOBE_MESH_SPACING)
 }
 
 #' Coastlines placed on the faces, one path per ring

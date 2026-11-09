@@ -124,6 +124,7 @@ reference:
   - hex_triangles
   - hex_globe
   - hex_globe_png
+  - hex_globe_svg
   - hexify_world
   - globe_centers
   - hex_browse

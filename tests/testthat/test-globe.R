@@ -787,4 +787,64 @@ test_that("the cell under the centre of the view is the one looked at", {
 
 test_that("hex_globe_png takes only a globe", {
   expect_error(hex_globe_png(list(), tempfile()), "hex_globe")
+  expect_error(hex_globe_svg(list(), tempfile()), "hex_globe")
+})
+
+test_that("hex_globe_png draws the background behind the globe", {
+  skip_without_wgpu()
+  g <- hex_grid(resolution = 2, aperture = 3)
+  file <- tempfile(fileext = ".png")
+  on.exit(unlink(file))
+  hex_globe_png(hex_globe(g), file, width = 100, height = 100, background = "#336699")
+  img <- hexglobe::read_png(file)
+  expect_equal(as.integer(img$rgba[1:4]), c(0x33, 0x66, 0x99, 255))
+  expect_error(hex_globe_png(hex_globe(g), file, renderer = "chrome", background = "white"),
+               "wgpu")
+})
+
+test_that("hex_globe_svg draws an ISEA grid's cells as paths", {
+  skip_without_svg()
+  g <- hex_grid(resolution = 2, aperture = 3)
+  n <- as.numeric(grid_n_cells(g))
+  file <- tempfile(fileext = ".svg")
+  on.exit(unlink(file))
+  w <- hex_globe(g, values = seq_len(n), land = FALSE)
+  expect_equal(hex_globe_svg(w, file, width = 200, height = 150, background = "white"), file)
+  svg <- paste(readLines(file, warn = FALSE), collapse = "\n")
+  expect_match(svg, "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\"",
+               fixed = TRUE)
+  expect_match(svg, "<rect width=\"200\" height=\"150\" fill=\"#ffffff\"/>", fixed = TRUE)
+  # Each value is a colour of the ramp, so the cells in view are many fills,
+  # and their borders are one stroke in the grid's colour.
+  fills <- unique(regmatches(svg, gregexpr("fill=\"#[0-9a-f]{6}\"", svg))[[1]])
+  expect_gt(length(fills), 10L)
+  expect_match(svg, "stroke=\"#0072b2\"", fixed = TRUE)
+})
+
+test_that("the SVG's scene gives an ISEA grid as a cell mesh and border lines", {
+  g <- hex_grid(resolution = 2, aperture = 3)
+  cells <- c(1, 5, 9)
+  w <- hex_globe(g, cells = cells, values = c(1, 2, NA))
+  drawn <- hexify:::globe_cell_layers(w$given$grid, w$given$cells, w$given$values,
+                                      w$given$limits, w$given$step)
+  item <- readBin(hexify:::cpp_base64_decode(drawn$cells$item), "integer",
+                  n = 1e6, size = 4L)
+  expect_setequal(unique(item), 0:2)
+  values <- readBin(hexify:::cpp_base64_decode(drawn$cells$values), "numeric",
+                    n = 3, size = 4L)
+  expect_equal(values, c(0, 1, -1))
+  expect_gt(drawn$grid_lines$n_segment, 0)
+  x <- w$x
+  x[c("cells", "grid_lines")] <- drawn
+  x["grid"] <- list(NULL)
+  kinds <- vapply(hexify:::globe_scene(x, 100, 100, 1)$layers, `[[`, 1L, "kind")
+  expect_false(2L %in% kinds)
+  expect_true(all(c(1L, 3L) %in% kinds))
+})
+
+test_that("hex_globe_svg refuses values blended across cells", {
+  skip_without_svg()
+  g <- hex_grid(resolution = 2, aperture = 3)
+  w <- hex_globe(g, values = seq_len(as.numeric(grid_n_cells(g))), smooth = TRUE)
+  expect_error(hex_globe_svg(w, tempfile()), "smooth")
 })
