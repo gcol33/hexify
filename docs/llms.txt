@@ -486,6 +486,8 @@ Plotting functions
   : Interactive Globe of a Grid
 - [`hex_globe_png()`](https://gillescolling.com/hexify/reference/hex_globe_png.md)
   : Save a Globe as a PNG Image
+- [`hex_globe_svg()`](https://gillescolling.com/hexify/reference/hex_globe_svg.md)
+  : Save a globe as an SVG file
 - [`hexify_world`](https://gillescolling.com/hexify/reference/hexify_world.md)
   : Simplified World Map
 - [`globe_centers`](https://gillescolling.com/hexify/reference/globe_centers.md)

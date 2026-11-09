@@ -17,7 +17,8 @@ hex_globe_png(
   height = 800,
   scale = 1,
   timeout = 30,
-  renderer = c("wgpu", "chrome")
+  renderer = c("wgpu", "chrome"),
+  background = NULL
 )
 ```
 
@@ -47,6 +48,11 @@ hex_globe_png(
 - renderer:
 
   `"wgpu"` or `"chrome"`, as above.
+
+- background:
+
+  Colour behind the globe, or `NULL` for a clear background; drawn by
+  `renderer = "wgpu"`.
 
 ## Value
 

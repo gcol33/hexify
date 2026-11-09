@@ -66,6 +66,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="hexify-development-version">hexify (development version)<a class="anchor" aria-label="anchor" href="#hexify-development-version"></a></h2>
+<ul><li>
+<code><a href="../reference/hex_globe_svg.html">hex_globe_svg()</a></code> saves a globe as an SVG file in the view the widget opens with, drawn on the CPU by hexglobe (0.2.0 or later) with no graphics card or browser. The cells of an ISEA grid, which the widget finds per pixel, are drawn as one path per colour and their borders as polylines; values blended across cells (<code>smooth = TRUE</code>) are refused.</li>
+<li>
+<code><a href="../reference/hex_globe_png.html">hex_globe_png()</a></code> takes a <code>background</code> colour, drawn behind the globe.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.1" id="hexify-091">hexify 0.9.1<a class="anchor" aria-label="anchor" href="#hexify-091"></a></h2><p class="text-muted">CRAN release: 2026-11-07</p>
 <ul><li>
 <code><a href="../reference/cell_metrics.html">cell_metrics()</a></code> and <code><a href="../reference/wall_metrics.html">wall_metrics()</a></code> no longer run for minutes on fine grids or on Apple silicon. Each wall is halved until two estimates of its length and of the area beside it agree; the area’s rounding floor shrank with the piece, so pieces shorter than about 1e-7 radians were halved down to 2^20 parts. That covered every cell from about resolution 18 (46 s for three resolution-20 cells), and on arm64, where a wall ending on a face edge can round onto the next face, a zero-length piece in aperture-3 grids (the <code><a href="../reference/cell_metrics.html">?cell_metrics</a></code> example ran past CRAN’s 30-minute limit). The floor is now absolute, and a wall ending on a face edge ends there. Perimeters and wall lengths change by at most 2e-13 relative, midpoint ratios by at most 2e-8 relative (aperture 3 and IVEA; apertures 4 and 7 are unchanged).</li>
