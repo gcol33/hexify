@@ -6,6 +6,12 @@
 # 10,000 ISEA cells by hexify (cell_to_sf) and dggridR (dgcellstogrid).
 # Each task runs REPS times; the median elapsed time is reported.
 #
+# On a processor with performance and efficiency cores the operating system
+# may move the process between the two kinds during a run, which changes a
+# task's time by a factor of two or more. Pin the process to the performance
+# cores before timing; the affinity mask it ran under is written to the
+# .meta.txt (Windows only).
+#
 # Usage: Rscript paper/bench/bench_speed.R
 
 source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))),
@@ -26,6 +32,11 @@ set.seed(1)
 cells <- unique(lonlat_to_cell(pts$lon[1:(3 * N_POLY)], pts$lat[1:(3 * N_POLY)], g3))[1:N_POLY]
 xy <- cbind(pts$lon, pts$lat)
 
+# dggridR reads sequence numbers as doubles; hexify returns them as integer64.
+cells_dggridr <- as.numeric(cells)
+stopifnot(nrow(dgcellstogrid(d3, cells_dggridr)) == N_POLY,
+          nrow(cell_to_sf(cells, g3)) == N_POLY)
+
 tasks <- list(
   list("assign", "ISEA ap3 res10", "hexify", function() lonlat_to_cell(pts$lon, pts$lat, g3)),
   list("assign", "ISEA ap3 res10", "dggridR", function() dgGEO_to_SEQNUM(d3, pts$lon, pts$lat)$seqnum),
@@ -33,7 +44,7 @@ tasks <- list(
   list("assign", "H3 res7", "h3r", function() h3r::latLngToCell(pts$lat, pts$lon, 7L)),
   list("assign", "H3 res7", "h3o", function() h3o::h3_from_xy(pts$lon, pts$lat, 7L)),
   list("polygons", "ISEA ap3 res10", "hexify", function() cell_to_sf(cells, g3)),
-  list("polygons", "ISEA ap3 res10", "dggridR", function() dgcellstogrid(d3, cells))
+  list("polygons", "ISEA ap3 res10", "dggridR", function() dgcellstogrid(d3, cells_dggridr))
 )
 
 rows <- lapply(tasks, function(t) {
@@ -47,6 +58,16 @@ rows <- lapply(tasks, function(t) {
              per_second = n / median(el))
 })
 
+# Logical processors the process may run on, as a hexadecimal bit mask.
+affinity_mask <- function() {
+  if (Sys.info()[["sysname"]] != "Windows") return(NA_character_)
+  cmd <- sprintf("'{0:X}' -f [int64](Get-Process -Id %d).ProcessorAffinity", Sys.getpid())
+  out <- tryCatch(system2("powershell", c("-NoProfile", "-Command", shQuote(cmd)), stdout = TRUE),
+                  error = function(e) NA_character_)
+  trimws(out[1])
+}
+
 write_result(do.call(rbind, rows), "speed",
              extra = c(paste("reps:", REPS), paste("n_points:", N_POINTS),
-                       paste("n_polygons:", N_POLY)))
+                       paste("n_polygons:", N_POLY),
+                       paste("processor affinity mask:", affinity_mask())))

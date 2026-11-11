@@ -47,4 +47,5 @@ versions and the processor.
   `build/src/apps/dggrid/dggrid`.
 
 Run each script from the repository root with `Rscript paper/bench/<script>.R`.
-Run `bench_speed.R` alone on an otherwise idle machine.
+Run `bench_speed.R` alone on an otherwise idle machine, with the process pinned
+to the performance cores where the processor has two kinds of cores.
